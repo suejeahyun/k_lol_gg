@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R9_2026_09_13_MEMBER_COMMANDS";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -57,6 +57,58 @@ function v1GatewayFailureNotice(result, title) {
     return title + "\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.";
   }
   return title + "\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.";
+}
+
+function normalizePartyMemberMutationCommandText(value) {
+  var text = String(value || "");
+  try {
+    text = String(java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFKC));
+  } catch (ignoredJavaNormalizationError) {
+    try {
+      if (typeof text.normalize === "function") text = text.normalize("NFKC");
+    } catch (ignoredJsNormalizationError) { String(ignoredJsNormalizationError); }
+  }
+  return trimText(normalizeText(text).replace(/＃/g, "#")).replace(/[ \t]+/g, " ");
+}
+
+function partyMemberMutationNameLength(value) {
+  return String(value || "").replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "_").length;
+}
+
+function parsePartyMemberMutationCommand(value) {
+  var text = normalizePartyMemberMutationCommandText(value);
+  var match = null;
+  var recruitNumber = 0;
+  var name = "";
+  if (/[\r\n\u2028\u2029]/.test(text)) return null;
+  if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return null;
+  if (text.charAt(0) === "/") text = text.substring(1);
+  match = /^(?:구인상세|상세)\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|삭제)\s+(.+)$/.exec(text);
+  if (!match) return null;
+  recruitNumber = Number(match[1]);
+  name = String(match[3] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
+  if (recruitNumber < 1 || recruitNumber > 99 || partyMemberMutationNameLength(name) < 1 || partyMemberMutationNameLength(name) > 80) return null;
+  if (/[\/,，、;；]/.test(name) || /^(?:추가|삭제)(?:\s|$)/.test(name)) return null;
+  if (/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
+  return {
+    command: match[2] === "추가" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE",
+    recruitNumber: recruitNumber,
+    name: name
+  };
+}
+
+function handlePartyMemberMutationCommand(text, room, sender, replier) {
+  var parsed = parsePartyMemberMutationCommand(text);
+  if (!parsed) return false;
+  handlePartyRecruitApi(
+    parsed.command,
+    room || RECRUIT_ROOM_LABEL,
+    String(text || ""),
+    sender,
+    replier,
+    parsed.command === "PARTY_MEMBER_ADD" ? "구인구직 인원 추가" : "구인구직 인원 삭제"
+  );
+  return true;
 }
 
 function v1ExtractSeasonRecruitNoFromSnapshot(text) {

@@ -41,9 +41,12 @@ test("the generated unified phone file is standalone ES5 with one callback", asy
   assert.ok(source.length < 40_000);
 });
 
-test("builder owns only the unified paste-ready output", async () => {
+test("builder owns the unified output and refreshes deprecated split fixtures", async () => {
   const build = await read("scripts/build-messengerbot-v4.mjs");
   assert.match(build, /KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R\.js/u);
+  assert.match(build, /legacy-split-profiles/u);
+  assert.match(build, /KLOL_KAKAO_BOT_V4_RECRUIT\.js/u);
+  assert.match(build, /KLOL_KAKAO_BOT_V4_FEATURES\.js/u);
   assert.doesNotMatch(build, /for \(const profile of \["RECRUIT", "FEATURES"\]\)/u);
   assert.match(build, /writeFile/u);
   assert.match(build, /ecmaVersion:\s*5/u);

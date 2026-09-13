@@ -333,14 +333,72 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
     }
   ];
   for (const item of cases) {
-    const expected = replyFor(canonical, item.message, { sender: item.sender });
+    const expected = replyFor(canonical, item.message, { sender: item.sender }).map((reply) => item.message === "구인도움말"
+      ? reply.replace(
+        "현황: 구인현황\n종료: 번호ㅉ",
+        "현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ",
+      )
+      : reply);
     const actual = replyFor(strict, item.message, { sender: item.sender });
     assert.deepEqual(actual, expected, item.message);
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R9_2026_09_13_MEMBER_COMMANDS"],
   );
+});
+
+test("approved party member mutations parse safely and use one RECRUIT gateway request", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const accepted = [
+    ["상세 15 추가 재현", "PARTY_MEMBER_ADD", "재현"],
+    ["/상세 15 삭제 재현", "PARTY_MEMBER_REMOVE", "재현"],
+    ["구인상세 15 추가 김 별", "PARTY_MEMBER_ADD", "김 별"],
+    ["상세 #15 삭제 재현", "PARTY_MEMBER_REMOVE", "재현"],
+    [String.raw`상세 \#15 추가 재현`, "PARTY_MEMBER_ADD", "재현"],
+    ["／상세　＃１５　추가　ＡＢＣ", "PARTY_MEMBER_ADD", "ABC"],
+  ];
+  for (const [message, command, name] of accepted) {
+    const strict = evaluate(artifact, { responseBody: { reply: "[인원 변경 완료]" } });
+    const parsed = strict.parsePartyMemberMutationCommand(message);
+    assert.equal(parsed.command, command, message);
+    assert.equal(parsed.recruitNumber, 15, message);
+    assert.equal(parsed.name, name, message);
+    assert.deepEqual(replyFor(strict, message), ["[인원 변경 완료]"], message);
+    assert.equal(strict.http.calls, 1, message);
+    const body = JSON.parse(strict.http.body);
+    assert.equal(body.profileId, "RECRUIT", message);
+    assert.equal(body.text, message, message);
+  }
+});
+
+test("ambiguous party member text never reaches the mutation gateway", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const message of [
+    "15 추가 재현",
+    "상세 15 추기 재현",
+    "상세 15 추가",
+    "상세 0 추가 재현",
+    "상세 100 추가 재현",
+    "상세 15 추가 재현, 민서",
+    "상세 15 추가 재현/민서",
+    "상세 15 추가 삭제 재현",
+    "상세 15 추가 재현\n민서",
+    `상세 15 추가 ${"가".repeat(81)}`,
+  ]) {
+    const strict = evaluate(artifact);
+    assert.equal(strict.parsePartyMemberMutationCommand(message), null, message.slice(0, 30));
+    assert.deepEqual(replyFor(strict, message), [], message.slice(0, 30));
+    assert.equal(strict.http.calls, 0, message.slice(0, 30));
+  }
+});
+
+test("local recruit help documents member commands and keeps full-form guidance", async () => {
+  const strict = evaluate(await readFile(artifactPath, "utf8"));
+  const [reply] = replyFor(strict, "구인도움말");
+  assert.match(reply, /추가: 상세 번호 추가 이름/u);
+  assert.match(reply, /삭제: 상세 번호 삭제 이름/u);
+  assert.match(reply, /공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송/u);
 });
 
 test("command and form predicates are byte-derived and behaviorally equal to V1", async () => {

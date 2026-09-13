@@ -105,6 +105,10 @@ function withoutBlankLines(value) {
     .join("\n");
 }
 
+function compactBundleSource(value) {
+  return value.replace(/\/\*(?! eslint-disable \*\/)[\s\S]*?\*\//gu, "").replace(/^ {2}/gmu, "");
+}
+
 const source = await readFile(fixturePath, "utf8");
 if (sha256(source) !== sourceSha256Lf) {
   throw new Error("Canonical V1 source hash mismatch");
@@ -182,10 +186,10 @@ for (const node of sourceProgram.body) {
 const missing = [...selectedFunctionNames].filter((name) => !extractedNames.includes(name));
 if (missing.length > 0) throw new Error(`Missing canonical V1 functions: ${missing.join(", ")}`);
 
-const transport = (await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_TRANSPORT.js"), "utf8"))
+const transport = compactBundleSource(await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_TRANSPORT.js"), "utf8"))
   .replace(/\r\n?/gu, "\n")
   .trim();
-const adapter = (await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_ADAPTER.js"), "utf8"))
+const adapter = compactBundleSource(await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_ADAPTER.js"), "utf8"))
   .replace(/\r\n?/gu, "\n")
   .trim();
 const provenance = [
@@ -210,6 +214,7 @@ const entry = [
   "  KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
+  "    if (handlePartyMemberMutationCommand(msg, room, sender, replier)) return;",
   "    v1SourceResponse(room, msg, sender, isGroupChat, replier, imageDB, packageName);",
   "  } finally {",
   "    KLOL_V1_OPERATION_RAW_TEXT = \"\";",
@@ -233,7 +238,16 @@ const seasonCandidateBinding = [
   "  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text);",
   "};",
 ].join("\n");
-const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n\n${entry}\n`;
+const recruitHelpBinding = [
+  "var v1PartyHelp = getPartyRecruitHelpNotice;",
+  "getPartyRecruitHelpNotice = function () {",
+  "  return v1PartyHelp().replace(",
+  "    \"현황: 구인현황\\n종료: 번호ㅉ\",",
+  "    \"현황: 구인현황\\n추가: 상세 번호 추가 이름\\n삭제: 상세 번호 삭제 이름\\n종료: 번호ㅉ\"",
+  "  );",
+  "};",
+].join("\n");
+const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n${recruitHelpBinding}\n\n${entry}\n`;
 // The canonical V1 source contains many blank spacer lines. MessengerBot R may
 // store pasted LF text as CRLF, so remove only blank lines while preserving
 // every executable/comment line and the human-readable layout.
@@ -278,9 +292,15 @@ if (!output.includes("function isSeasonApplySnapshotEnvelope(text)")) {
 if (!output.includes("isPartyRecruitFormMessageWithoutSeasonSnapshot")) {
   throw new Error("V1-strict output must exclude in-house snapshots from party-form routing");
 }
+if (!output.includes("if (handlePartyMemberMutationCommand(msg, room, sender, replier)) return;")) {
+  throw new Error("V1-strict output must route explicit party member mutations before the V1 dispatcher");
+}
+if (!output.includes("추가: 상세 번호 추가 이름") || !output.includes("삭제: 상세 번호 삭제 이름")) {
+  throw new Error("V1-strict output must document the approved party member mutation commands");
+}
 if (output.length >= 65_535) throw new Error("V1-strict LF output exceeds MessengerBot R's 65,535-character limit");
 const crlfLength = output.replace(/\n/gu, "\r\n").length;
-if (crlfLength >= 65_535) throw new Error("V1-strict CRLF output exceeds MessengerBot R's 65,535-character limit");
+if (crlfLength >= 65_535) throw new Error(`V1-strict CRLF output is ${crlfLength} characters and exceeds MessengerBot R's 65,535-character limit`);
 if (Math.max(...output.split("\n").map((line) => line.length)) > 1_000) {
   throw new Error("V1-strict output contains an unreadably long line");
 }

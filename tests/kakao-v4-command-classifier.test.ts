@@ -45,8 +45,8 @@ function successfulProfile(text: string) {
 }
 
 test("classifier exposes a complete canonical/profile matrix", () => {
-  assert.equal(KAKAO_V4_CANONICAL_COMMANDS.length, 46);
-  assert.equal(new Set(KAKAO_V4_CANONICAL_COMMANDS).size, 46);
+  assert.equal(KAKAO_V4_CANONICAL_COMMANDS.length, 48);
+  assert.equal(new Set(KAKAO_V4_CANONICAL_COMMANDS).size, 48);
   assert.deepEqual(KAKAO_V4_COMMAND_FAMILIES, ["PARTY", "INHOUSE", "SCRIM", "PLAYER", "OPERATIONS", "LOCAL"]);
   for (const command of KAKAO_V4_CANONICAL_COMMANDS) {
     assert.ok(
@@ -123,7 +123,7 @@ test("double slash, URL slash, separated slash, and middle slash stay UNKNOWN", 
 });
 
 test("profile matrix routes recruit, features, and local commands explicitly", () => {
-  for (const text of ["5인파티", "구인현황", "스크림구인", "스크림상세 #1"]) {
+  for (const text of ["5인파티", "구인현황", "상세 15 추가 재현", "상세 15 삭제 재현", "스크림구인", "스크림상세 #1"]) {
     assert.notEqual(classifyKakaoV4Command({ profileId: "RECRUIT", text }).kind, "WRONG_PROFILE", text);
     assert.equal(classifyKakaoV4Command({ profileId: "FEATURES", text }).kind, "WRONG_PROFILE", text);
   }
@@ -204,6 +204,49 @@ test("party snapshot accepts absent start time/game info and populated optional 
     assert.equal(automatic.parameters.recruitNumber, null);
     assert.equal(automatic.parameters.automaticRecruitNumber, true);
   }
+});
+
+test("party member mutations require an explicit detail prefix and one safe single-line name", () => {
+  const accepted = [
+    ["상세 15 추가 재현", "PARTY_MEMBER_ADD", "재현"],
+    ["/상세 15 삭제 재현", "PARTY_MEMBER_REMOVE", "재현"],
+    ["구인상세 15 추가 김 별", "PARTY_MEMBER_ADD", "김 별"],
+    ["상세 #15 삭제 재현", "PARTY_MEMBER_REMOVE", "재현"],
+    [String.raw`상세 \#15 추가 재현`, "PARTY_MEMBER_ADD", "재현"],
+    ["／상세　＃１５　추가　ＡＢＣ", "PARTY_MEMBER_ADD", "ABC"],
+  ] as const;
+  for (const [text, command, name] of accepted) {
+    const result = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+    assert.equal(result.kind, "COMMAND", text);
+    if (result.kind === "COMMAND") {
+      assert.equal(result.command, command, text);
+      assert.equal(result.parameters.recruitNumber, 15, text);
+      assert.equal(result.parameters.name, name, text);
+    }
+    assert.equal(classifyKakaoV4Command({ profileId: "FEATURES", text }).kind, "WRONG_PROFILE", text);
+  }
+
+  for (const text of [
+    "15 추가 재현",
+    "상세 15 추기 재현",
+    "상세 15 추가",
+    "상세 0 추가 재현",
+    "상세 100 추가 재현",
+    "상세 15 추가 재현, 민서",
+    "상세 15 추가 재현/민서",
+    "상세 15 추가 삭제 재현",
+    "상세 15 추가 재현\n민서",
+    `상세 15 추가 ${"가".repeat(81)}`,
+  ]) {
+    assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text }).kind, "UNKNOWN", text.slice(0, 30));
+  }
+
+  const detail = classifyKakaoV4Command({ profileId: "RECRUIT", text: "상세 15" });
+  assert.equal(detail.kind, "COMMAND");
+  if (detail.kind === "COMMAND") assert.equal(detail.command, "PARTY_DETAIL");
+  const finish = classifyKakaoV4Command({ profileId: "RECRUIT", text: "15ㅉ" });
+  assert.equal(finish.kind, "COMMAND");
+  if (finish.kind === "COMMAND") assert.equal(finish.command, "PARTY_FINISH");
 });
 
 test("Kakao copy/paste party row variants still canonicalize to one SYNC member", () => {

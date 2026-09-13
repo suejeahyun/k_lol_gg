@@ -84,190 +84,185 @@ var KLOL_V1_TRANSPORT_SEAMS = [
   "replyManagedImageFallback"
 ];
 /* eslint-disable */
-/*
- * The only network boundary used by the V1-strict phone artifact.
- * This is the V4 HMAC command contract, kept ES5-compatible for MessengerBot R.
- */
 var KLOL_V1_GATEWAY = (function () {
-  var CONTRACT = "KLOL_KAKAO_COMMAND_V4";
-  var PROTOCOL = "KLOL_KAKAO_V1_STRICT";
-  var RESPONSE_FORMAT = "V1_SERVER_EXACT";
-  var ENDPOINT = "/api/integrations/kakao/v4/commands";
-  var BASE_URL_KEY = "KLOL_V2_BASE_URL";
-  var SIGNING_SECRET_KEY = "KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT";
-  var SIGNING_KEY_ID_KEY = "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT";
-  var IDENTITY_SECRET_KEY = "KLOL_V4_KAKAO_IDENTITY_SECRET";
-  var BOOT_ID = String(java.util.UUID.randomUUID().toString()).replace(/-/g, "").substring(0, 16);
-  var eventCounter = 0;
-  var settingCache = {};
-  var installationIdCache = {};
-  var baseUrlCache = null;
-  var currentLogId = "";
-  var currentUserHash = "";
-  var currentSender = "";
-  var deliveryCache = {};
-  var deliveryCacheOrder = [];
-  var DELIVERY_CACHE_LIMIT = 256;
-  function clean(value) {
-    return String(value == null ? "" : value).replace(/^\s+|\s+$/g, "");
+var CONTRACT = "KLOL_KAKAO_COMMAND_V4";
+var PROTOCOL = "KLOL_KAKAO_V1_STRICT";
+var RESPONSE_FORMAT = "V1_SERVER_EXACT";
+var ENDPOINT = "/api/integrations/kakao/v4/commands";
+var BASE_URL_KEY = "KLOL_V2_BASE_URL";
+var SIGNING_SECRET_KEY = "KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT";
+var SIGNING_KEY_ID_KEY = "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT";
+var IDENTITY_SECRET_KEY = "KLOL_V4_KAKAO_IDENTITY_SECRET";
+var BOOT_ID = String(java.util.UUID.randomUUID().toString()).replace(/-/g, "").substring(0, 16);
+var eventCounter = 0;
+var settingCache = {};
+var installationIdCache = {};
+var baseUrlCache = null;
+var currentLogId = "";
+var currentUserHash = "";
+var currentSender = "";
+var deliveryCache = {};
+var deliveryCacheOrder = [];
+var DELIVERY_CACHE_LIMIT = 256;
+function clean(value) {
+  return String(value == null ? "" : value).replace(/^\s+|\s+$/g, "");
+}
+function setting(key) {
+  if (Object.prototype.hasOwnProperty.call(settingCache, key)) return settingCache[key];
+  try {
+    settingCache[key] = clean(String(DataBase.getDataBase(key) || ""));
+  } catch (ignored) {
+    settingCache[key] = "";
   }
-  function setting(key) {
-    if (Object.prototype.hasOwnProperty.call(settingCache, key)) return settingCache[key];
-    try {
-      settingCache[key] = clean(String(DataBase.getDataBase(key) || ""));
-    } catch (ignored) {
-      settingCache[key] = "";
-    }
-    return settingCache[key];
+  return settingCache[key];
+}
+function utf8(value) {
+  return new java.lang.String(String(value)).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+}
+function hex(bytes) {
+  var builder = new java.lang.StringBuilder(bytes.length * 2);
+  var index = 0;
+  var value = 0;
+  for (index = 0; index < bytes.length; index += 1) {
+    value = bytes[index] & 255;
+    if (value < 16) builder.append("0");
+    builder.append(java.lang.Integer.toHexString(value));
   }
-  function utf8(value) {
-    return new java.lang.String(String(value)).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+  return String(builder.toString());
+}
+function sha256(value) {
+  return hex(java.security.MessageDigest.getInstance("SHA-256").digest(utf8(value)));
+}
+function hmac(secret, value) {
+  var mac = javax.crypto.Mac.getInstance("HmacSHA256");
+  mac.init(new javax.crypto.spec.SecretKeySpec(utf8(secret), "HmacSHA256"));
+  return hex(mac.doFinal(utf8(value)));
+}
+function requiredSecret(key, label) {
+  var value = setting(key);
+  if (utf8(value).length < 32) throw new Error(label + " 비공개 설정을 확인해 주세요.");
+  return value;
+}
+function profile(value) {
+  if (value !== "RECRUIT" && value !== "FEATURES") throw new Error("봇 기능 구분을 확인해 주세요.");
+  return value;
+}
+function baseUrl() {
+  var value = "";
+  if (baseUrlCache !== null) return baseUrlCache;
+  value = setting(BASE_URL_KEY).replace(/\/+$/, "");
+  if (!/^https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::443)?$/.test(value)) {
+    throw new Error("HTTPS 서버 주소 설정을 확인해 주세요.");
   }
-  function hex(bytes) {
-    var builder = new java.lang.StringBuilder(bytes.length * 2);
-    var index = 0;
-    var value = 0;
-    for (index = 0; index < bytes.length; index += 1) {
-      value = bytes[index] & 255;
-      if (value < 16) builder.append("0");
-      builder.append(java.lang.Integer.toHexString(value));
-    }
-    return String(builder.toString());
-  }
-  function sha256(value) {
-    return hex(java.security.MessageDigest.getInstance("SHA-256").digest(utf8(value)));
-  }
-  function hmac(secret, value) {
-    var mac = javax.crypto.Mac.getInstance("HmacSHA256");
-    mac.init(new javax.crypto.spec.SecretKeySpec(utf8(secret), "HmacSHA256"));
-    return hex(mac.doFinal(utf8(value)));
-  }
-  function requiredSecret(key, label) {
-    var value = setting(key);
-    if (utf8(value).length < 32) throw new Error(label + " 비공개 설정을 확인해 주세요.");
-    return value;
-  }
-  function profile(value) {
-    if (value !== "RECRUIT" && value !== "FEATURES") throw new Error("봇 기능 구분을 확인해 주세요.");
-    return value;
-  }
-  function baseUrl() {
-    var value = "";
-    if (baseUrlCache !== null) return baseUrlCache;
-    value = setting(BASE_URL_KEY).replace(/\/+$/, "");
-    if (!/^https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::443)?$/.test(value)) {
-      throw new Error("HTTPS 서버 주소 설정을 확인해 주세요.");
-    }
-    baseUrlCache = value;
-    return baseUrlCache;
-  }
-  function beginRequest(logId, userHash, sender) {
-    settingCache = {};
-    installationIdCache = {};
-    baseUrlCache = null;
-    currentLogId = clean(logId);
-    currentUserHash = clean(userHash);
-    currentSender = clean(sender);
-  }
-  function installationId(profileId) {
-    var canonicalProfile = profile(profileId);
-    if (!installationIdCache[canonicalProfile]) {
-      installationIdCache[canonicalProfile] = "install-" + hmac(
-        requiredSecret(IDENTITY_SECRET_KEY, "익명 식별 키"),
-        "installation-id\nKLOL_V4\n" + canonicalProfile
-      ).substring(0, 32);
-    }
-    return installationIdCache[canonicalProfile];
-  }
-  function senderId(sender) {
-    var stable = currentUserHash;
-    var prefix = stable ? "sender-user-" : "sender-display-";
-    if (!stable) stable = clean(sender) || currentSender;
-    return prefix + hmac(
+  baseUrlCache = value;
+  return baseUrlCache;
+}
+function beginRequest(logId, userHash, sender) {
+  settingCache = {};
+  installationIdCache = {};
+  baseUrlCache = null;
+  currentLogId = clean(logId);
+  currentUserHash = clean(userHash);
+  currentSender = clean(sender);
+}
+function installationId(profileId) {
+  var canonicalProfile = profile(profileId);
+  if (!installationIdCache[canonicalProfile]) {
+    installationIdCache[canonicalProfile] = "install-" + hmac(
       requiredSecret(IDENTITY_SECRET_KEY, "익명 식별 키"),
-      "sender-id\n" + stable
+      "installation-id\nKLOL_V4\n" + canonicalProfile
     ).substring(0, 32);
   }
-  function nextEventId(profileId) {
-    if (currentLogId) {
-      return "event-log-" + sha256(profile(profileId) + "\n" + BOOT_ID + "\n" + currentLogId).substring(0, 32);
-    }
-    eventCounter += 1;
-    return "event-boot-" + BOOT_ID + "-" + String(eventCounter);
+  return installationIdCache[canonicalProfile];
+}
+function senderId(sender) {
+  var stable = currentUserHash;
+  var prefix = stable ? "sender-user-" : "sender-display-";
+  if (!stable) stable = clean(sender) || currentSender;
+  return prefix + hmac(
+    requiredSecret(IDENTITY_SECRET_KEY, "익명 식별 키"),
+    "sender-id\n" + stable
+  ).substring(0, 32);
+}
+function nextEventId(profileId) {
+  if (currentLogId) {
+    return "event-log-" + sha256(profile(profileId) + "\n" + BOOT_ID + "\n" + currentLogId).substring(0, 32);
   }
-  function parseJson(value) {
-    try {
-      return JSON.parse(String(value || ""));
-    } catch (ignored) {
-      return null;
-    }
+  eventCounter += 1;
+  return "event-boot-" + BOOT_ID + "-" + String(eventCounter);
+}
+function parseJson(value) {
+  try {
+    return JSON.parse(String(value || ""));
+  } catch (ignored) {
+    return null;
   }
-  function delivery(profileId, text, sender) {
-    var cacheKey = currentLogId ? profile(profileId) + "\n" + currentLogId : "";
-    var cached = cacheKey ? deliveryCache[cacheKey] : null;
-    var eventId = "";
-    var body = "";
-    if (cached) return cached;
-    eventId = nextEventId(profileId);
-    body = JSON.stringify({
-      profileId: profile(profileId),
-      installationId: installationId(profileId),
-      senderId: senderId(sender),
-      eventId: eventId,
-      timestamp: Math.floor(new Date().getTime() / 1000),
-      nonce: String(java.util.UUID.randomUUID().toString()).replace(/-/g, ""),
-      text: String(text),
-      protocol: PROTOCOL,
-      responseFormat: RESPONSE_FORMAT
-    });
-    cached = { eventId: eventId, body: body };
-    if (cacheKey) {
-      deliveryCache[cacheKey] = cached;
-      deliveryCacheOrder.push(cacheKey);
-      if (deliveryCacheOrder.length > DELIVERY_CACHE_LIMIT) delete deliveryCache[deliveryCacheOrder.shift()];
-    }
-    return cached;
+}
+function delivery(profileId, text, sender) {
+  var cacheKey = currentLogId ? profile(profileId) + "\n" + currentLogId : "";
+  var cached = cacheKey ? deliveryCache[cacheKey] : null;
+  var eventId = "";
+  var body = "";
+  if (cached) return cached;
+  eventId = nextEventId(profileId);
+  body = JSON.stringify({
+    profileId: profile(profileId),
+    installationId: installationId(profileId),
+    senderId: senderId(sender),
+    eventId: eventId,
+    timestamp: Math.floor(new Date().getTime() / 1000),
+    nonce: String(java.util.UUID.randomUUID().toString()).replace(/-/g, ""),
+    text: String(text),
+    protocol: PROTOCOL,
+    responseFormat: RESPONSE_FORMAT
+  });
+  cached = { eventId: eventId, body: body };
+  if (cacheKey) {
+    deliveryCache[cacheKey] = cached;
+    deliveryCacheOrder.push(cacheKey);
+    if (deliveryCacheOrder.length > DELIVERY_CACHE_LIMIT) delete deliveryCache[deliveryCacheOrder.shift()];
   }
-  function send(profileId, text, sender) {
-    var keyId = setting(SIGNING_KEY_ID_KEY) || "current";
-    var item = delivery(profileId, text, sender);
-    var material = CONTRACT + "\n" + keyId + "\n" + sha256(item.body);
-    var responseValue = org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT)
-      .ignoreContentType(true)
-      .ignoreHttpErrors(true)
-      .method(org.jsoup.Connection.Method.POST)
-      .header("Content-Type", "application/json; charset=utf-8")
-      .header("Accept", "application/json")
-      .header("x-klol-key-id", keyId)
-      .header("x-klol-signature", "v4=" + hmac(requiredSecret(SIGNING_SECRET_KEY, "서명 키"), material))
-      .header("Idempotency-Key", item.eventId)
-      .timeout(5000)
-      .requestBody(item.body)
-      .execute();
-    var responseText = String(responseValue.body() || "");
-    return {
-      ok: responseValue.statusCode() >= 200 && responseValue.statusCode() < 300,
-      status: responseValue.statusCode(),
-      body: parseJson(responseText),
-      traceId: clean(responseValue.header("X-Trace-Id")),
-      replayed: clean(responseValue.header("Idempotency-Replayed")) === "true"
-    };
-  }
-  function replyText(result) {
-    if (result && result.body && typeof result.body.reply === "string") {
-      return String(result.body.reply);
-    }
-    return "";
-  }
+  return cached;
+}
+function send(profileId, text, sender) {
+  var keyId = setting(SIGNING_KEY_ID_KEY) || "current";
+  var item = delivery(profileId, text, sender);
+  var material = CONTRACT + "\n" + keyId + "\n" + sha256(item.body);
+  var responseValue = org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT)
+    .ignoreContentType(true)
+    .ignoreHttpErrors(true)
+    .method(org.jsoup.Connection.Method.POST)
+    .header("Content-Type", "application/json; charset=utf-8")
+    .header("Accept", "application/json")
+    .header("x-klol-key-id", keyId)
+    .header("x-klol-signature", "v4=" + hmac(requiredSecret(SIGNING_SECRET_KEY, "서명 키"), material))
+    .header("Idempotency-Key", item.eventId)
+    .timeout(5000)
+    .requestBody(item.body)
+    .execute();
+  var responseText = String(responseValue.body() || "");
   return {
-    beginRequest: beginRequest,
-    replyText: replyText,
-    send: send
+    ok: responseValue.statusCode() >= 200 && responseValue.statusCode() < 300,
+    status: responseValue.statusCode(),
+    body: parseJson(responseText),
+    traceId: clean(responseValue.header("X-Trace-Id")),
+    replayed: clean(responseValue.header("Idempotency-Replayed")) === "true"
   };
+}
+function replyText(result) {
+  if (result && result.body && typeof result.body.reply === "string") {
+    return String(result.body.reply);
+  }
+  return "";
+}
+return {
+  beginRequest: beginRequest,
+  replyText: replyText,
+  send: send
+};
 }());
 /* eslint-disable */
-/* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R9_2026_09_13_MEMBER_COMMANDS";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -275,7 +270,6 @@ var WEB_DISCIPLINE_EVIDENCE_URL = BASE_URL + "/discipline/evidence";
 var WEB_REGISTRATION_HUB_URL = BASE_URL + "/start";
 var WEB_ACCOUNT_DISCIPLINE_URL = BASE_URL + "/account#discipline";
 var RECRUIT_ROOM_LABEL = "K롤방 구인구직방";
-/* These are dispatch tags only. They are never used as URLs. */
 var PARTY_RECRUIT_CREATE_API_URL = "PARTY_CREATE";
 var PARTY_RECRUIT_SYNC_API_URL = "PARTY_SYNC";
 var PARTY_RECRUIT_FINISH_API_URL = "PARTY_FINISH";
@@ -290,416 +284,453 @@ var OPERATION_FORM_SAVE_KEY = "KLOL_OPERATION_FORM_LAST_HASH_V1";
 var lastOperationFormHash = "";
 var KLOL_V1_OPERATION_RAW_TEXT = "";
 function v1GatewaySucceeded(result) {
-  return Boolean(result && result.ok && v1GatewayFailureStatus(result) < 400 && (!result.body || result.body.ok !== false));
+return Boolean(result && result.ok && v1GatewayFailureStatus(result) < 400 && (!result.body || result.body.ok !== false));
 }
 function v1GatewayFailureStatus(result) {
-  var status = Number(result && result.status || 0);
-  var bodyStatus = Number(result && result.body && result.body.statusCode || 0);
-  if ((status === 0 || (status >= 200 && status < 300)) && bodyStatus >= 400) return bodyStatus;
-  return status;
+var status = Number(result && result.status || 0);
+var bodyStatus = Number(result && result.body && result.body.statusCode || 0);
+if ((status === 0 || (status >= 200 && status < 300)) && bodyStatus >= 400) return bodyStatus;
+return status;
 }
 function v1GatewayFailureNotice(result, title) {
-  var status = v1GatewayFailureStatus(result);
-  var code = String(result && result.body && result.body.code || "");
-  if (code === "WRONG_PROFILE") {
-    return "[K-LOL.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.";
-  }
-  if (code === "KAKAO_V4_TIMESTAMP_STALE") {
-    return "[K-LOL.GG 휴대폰 시간 확인]\n휴대폰 날짜와 시간을 자동으로 설정한 뒤 다시 시도해 주세요.";
-  }
-  if (code === "INVALID_SIGNATURE") {
-    return "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.";
-  }
-  if (status === 401 || status === 403) {
-    return title + "\n요청 권한을 확인하지 못했습니다. 최신 전체 설치본인지 확인해 주세요.";
-  }
-  if (status === 400) {
-    var validationReply = String(result && result.body && result.body.reply || "");
-    if (validationReply !== "") return validationReply;
-    return title + "\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.";
-  }
-  return title + "\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.";
+var status = v1GatewayFailureStatus(result);
+var code = String(result && result.body && result.body.code || "");
+if (code === "WRONG_PROFILE") {
+  return "[K-LOL.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.";
+}
+if (code === "KAKAO_V4_TIMESTAMP_STALE") {
+  return "[K-LOL.GG 휴대폰 시간 확인]\n휴대폰 날짜와 시간을 자동으로 설정한 뒤 다시 시도해 주세요.";
+}
+if (code === "INVALID_SIGNATURE") {
+  return "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.";
+}
+if (status === 401 || status === 403) {
+  return title + "\n요청 권한을 확인하지 못했습니다. 최신 전체 설치본인지 확인해 주세요.";
+}
+if (status === 400) {
+  var validationReply = String(result && result.body && result.body.reply || "");
+  if (validationReply !== "") return validationReply;
+  return title + "\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.";
+}
+return title + "\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.";
+}
+function normalizePartyMemberMutationCommandText(value) {
+var text = String(value || "");
+try {
+  text = String(java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFKC));
+} catch (ignoredJavaNormalizationError) {
+  try {
+    if (typeof text.normalize === "function") text = text.normalize("NFKC");
+  } catch (ignoredJsNormalizationError) { String(ignoredJsNormalizationError); }
+}
+return trimText(normalizeText(text).replace(/＃/g, "#")).replace(/[ \t]+/g, " ");
+}
+function partyMemberMutationNameLength(value) {
+return String(value || "").replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "_").length;
+}
+function parsePartyMemberMutationCommand(value) {
+var text = normalizePartyMemberMutationCommandText(value);
+var match = null;
+var recruitNumber = 0;
+var name = "";
+if (/[\r\n\u2028\u2029]/.test(text)) return null;
+if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return null;
+if (text.charAt(0) === "/") text = text.substring(1);
+match = /^(?:구인상세|상세)\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|삭제)\s+(.+)$/.exec(text);
+if (!match) return null;
+recruitNumber = Number(match[1]);
+name = String(match[3] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
+if (recruitNumber < 1 || recruitNumber > 99 || partyMemberMutationNameLength(name) < 1 || partyMemberMutationNameLength(name) > 80) return null;
+if (/[\/,，、;；]/.test(name) || /^(?:추가|삭제)(?:\s|$)/.test(name)) return null;
+if (/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
+return {
+  command: match[2] === "추가" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE",
+  recruitNumber: recruitNumber,
+  name: name
+};
+}
+function handlePartyMemberMutationCommand(text, room, sender, replier) {
+var parsed = parsePartyMemberMutationCommand(text);
+if (!parsed) return false;
+handlePartyRecruitApi(
+  parsed.command,
+  room || RECRUIT_ROOM_LABEL,
+  String(text || ""),
+  sender,
+  replier,
+  parsed.command === "PARTY_MEMBER_ADD" ? "구인구직 인원 추가" : "구인구직 인원 삭제"
+);
+return true;
 }
 function v1ExtractSeasonRecruitNoFromSnapshot(text) {
-  var lines = normalizeText(String(text || "")).split("\n");
-  var headerText = lines.slice(0, 8).join("\n");
-  var match = headerText.match(/(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i);
-  if (!match) match = headerText.match(/#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i);
-  if (!match) match = headerText.match(/(?:협곡\s*내전|협곡내전|내전)\s*(?:하실분|하실\s*분|구인|모집)?\s*#\s*(\d{1,3})/i);
-  if (!match) match = headerText.match(/(?:협곡\s*내전|협곡내전|내전)\s*#\s*(\d{1,3})/i);
-  if (match && Number(match[1]) >= 1 && Number(match[1]) <= 999) return Number(match[1]);
-  return 1;
+var lines = normalizeText(String(text || "")).split("\n");
+var headerText = lines.slice(0, 8).join("\n");
+var match = headerText.match(/(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i);
+if (!match) match = headerText.match(/#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i);
+if (!match) match = headerText.match(/(?:협곡\s*내전|협곡내전|내전)\s*(?:하실분|하실\s*분|구인|모집)?\s*#\s*(\d{1,3})/i);
+if (!match) match = headerText.match(/(?:협곡\s*내전|협곡내전|내전)\s*#\s*(\d{1,3})/i);
+if (match && Number(match[1]) >= 1 && Number(match[1]) <= 999) return Number(match[1]);
+return 1;
 }
 function v1SeasonApplyCompleteNotice() {
-  return "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n내전 시작 10분전에 디스코드 내전 대기방으로 와주세요.";
+return "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n내전 시작 10분전에 디스코드 내전 대기방으로 와주세요.";
 }
 function isSeasonApplySnapshotEnvelope(text) {
-  var normalized = trimText(normalizeText(String(text || "")));
-  if (normalized.indexOf("//") === 0 || /^\/\s/.test(normalized)) return false;
-  if (normalized.charAt(0) === "/") normalized = normalized.substring(1);
-  return /^📢\s*내전하실분\s*#\s*\d{1,3}\s*(?:\n|$)/.test(normalized) &&
-    /^\s*》\s*(?:협곡|칼바람|증바람|증강칼바람)\s*$/m.test(normalized) &&
-    /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+(?:[01]?\d|2[0-3])\s*:\s*[0-5]\d\s*시작(?:\s+.*?)?\s*$/m.test(normalized) &&
-    /^\s*👥\s*\d{1,2}\s*\/\s*\d{1,2}\s*명\s*$/m.test(normalized) &&
-    /^\s*\*참가\s*신청\s*양식\*\s*$/m.test(normalized) &&
-    /^\s*EX\)\s*1\./im.test(normalized);
+var normalized = trimText(normalizeText(String(text || "")));
+if (normalized.indexOf("//") === 0 || /^\/\s/.test(normalized)) return false;
+if (normalized.charAt(0) === "/") normalized = normalized.substring(1);
+return /^📢\s*내전하실분\s*#\s*\d{1,3}\s*(?:\n|$)/.test(normalized) &&
+  /^\s*》\s*(?:협곡|칼바람|증바람|증강칼바람)\s*$/m.test(normalized) &&
+  /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+(?:[01]?\d|2[0-3])\s*:\s*[0-5]\d\s*시작(?:\s+.*?)?\s*$/m.test(normalized) &&
+  /^\s*👥\s*\d{1,2}\s*\/\s*\d{1,2}\s*명\s*$/m.test(normalized) &&
+  /^\s*\*참가\s*신청\s*양식\*\s*$/m.test(normalized) &&
+  /^\s*EX\)\s*1\./im.test(normalized);
 }
 function isCompleteEmptySeasonApplySnapshot(text) {
-  var lines = [];
-  var capacityMatch = null;
-  var capacity = 0;
-  var slots = {};
-  var row = null;
-  var i = 0;
-  var slotNo = 0;
-  var value = "";
-  text = trimText(normalizeText(String(text || "")));
-  if (!isSeasonApplySnapshotEnvelope(text)) return false;
-  if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return false;
-  if (text.charAt(0) === "/") text = text.substring(1);
-  capacityMatch = text.match(/^\s*👥\s*\d{1,2}\s*\/\s*(\d{1,2})\s*명\s*$/m);
-  if (!capacityMatch) return false;
-  capacity = Number(capacityMatch[1]);
-  if (capacity < 2 || capacity > 20) return false;
-  lines = text.split("\n");
-  for (i = 0; i < lines.length; i += 1) {
-    row = trimText(String(lines[i] || "")).match(/^(\d{1,2})\s*\\?\s*[.)]\s*(.*)$/);
-    if (!row) continue;
-    slotNo = Number(row[1]);
-    if (slotNo < 1 || slotNo > capacity) return false;
-    value = trimText(String(row[2] || ""));
-    if (value !== "") return false;
-    slots[String(slotNo)] = true;
-  }
-  for (i = 1; i <= capacity; i += 1) {
-    if (!slots[String(i)]) return false;
-  }
-  return Object.keys(slots).length === capacity;
+var lines = [];
+var capacityMatch = null;
+var capacity = 0;
+var slots = {};
+var row = null;
+var i = 0;
+var slotNo = 0;
+var value = "";
+text = trimText(normalizeText(String(text || "")));
+if (!isSeasonApplySnapshotEnvelope(text)) return false;
+if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return false;
+if (text.charAt(0) === "/") text = text.substring(1);
+capacityMatch = text.match(/^\s*👥\s*\d{1,2}\s*\/\s*(\d{1,2})\s*명\s*$/m);
+if (!capacityMatch) return false;
+capacity = Number(capacityMatch[1]);
+if (capacity < 2 || capacity > 20) return false;
+lines = text.split("\n");
+for (i = 0; i < lines.length; i += 1) {
+  row = trimText(String(lines[i] || "")).match(/^(\d{1,2})\s*\\?\s*[.)]\s*(.*)$/);
+  if (!row) continue;
+  slotNo = Number(row[1]);
+  if (slotNo < 1 || slotNo > capacity) return false;
+  value = trimText(String(row[2] || ""));
+  if (value !== "") return false;
+  slots[String(slotNo)] = true;
+}
+for (i = 1; i <= capacity; i += 1) {
+  if (!slots[String(i)]) return false;
+}
+return Object.keys(slots).length === capacity;
 }
 function isSeasonApplyCandidateMessage(text) {
-  var lines = [];
-  var i = 0;
-  var line = "";
-  var row = null;
-  text = normalizeText(String(text || ""));
-  if (isPartyRecruitLikeMessage(text)) return false;
-  if (!hasSeasonApplyForm(text) && !hasSeasonApplyWord(text)) return false;
-  lines = text.split("\n");
-  for (i = 0; i < lines.length; i++) {
-    line = trimText(String(lines[i] || ""));
-    if (isSeasonApplyExampleLine(line)) continue;
-    row = line.match(/^(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*)$/);
-    if (row && trimText(String(row[2] || "")) != "") return true;
-  }
-  return isCompleteEmptySeasonApplySnapshot(text);
+var lines = [];
+var i = 0;
+var line = "";
+var row = null;
+text = normalizeText(String(text || ""));
+if (isPartyRecruitLikeMessage(text)) return false;
+if (!hasSeasonApplyForm(text) && !hasSeasonApplyWord(text)) return false;
+lines = text.split("\n");
+for (i = 0; i < lines.length; i++) {
+  line = trimText(String(lines[i] || ""));
+  if (isSeasonApplyExampleLine(line)) continue;
+  row = line.match(/^(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*)$/);
+  if (row && trimText(String(row[2] || "")) != "") return true;
+}
+return isCompleteEmptySeasonApplySnapshot(text);
 }
 function sendSearchPlayerCommand(text, room, sender, replier) {
-  var result = null;
-  var reply = "";
-  try {
-    result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
-    if (v1GatewayFailureStatus(result) === 429) {
-      replier.reply("[전적 검색 제한]\n잠시 후 다시 시도해주세요.");
-      return;
-    }
-    if (!v1GatewaySucceeded(result)) {
-      replier.reply(v1GatewayFailureNotice(result, "[전적 검색 오류]"));
-      return;
-    }
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (reply != "") {
-      replier.reply(reply);
-      return;
-    }
-    replier.reply("[전적 검색 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
-  } catch (error) {
-    replier.reply("[전적 검색 처리 오류]\n잠시 후 다시 시도해주세요.");
+var result = null;
+var reply = "";
+try {
+  result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
+  if (v1GatewayFailureStatus(result) === 429) {
+    replier.reply("[전적 검색 제한]\n잠시 후 다시 시도해주세요.");
+    return;
   }
+  if (!v1GatewaySucceeded(result)) {
+    replier.reply(v1GatewayFailureNotice(result, "[전적 검색 오류]"));
+    return;
+  }
+  reply = KLOL_V1_GATEWAY.replyText(result);
+  if (reply != "") {
+    replier.reply(reply);
+    return;
+  }
+  replier.reply("[전적 검색 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
+} catch (error) {
+  replier.reply("[전적 검색 처리 오류]\n잠시 후 다시 시도해주세요.");
+}
 }
 function sendOpenchatCommand(text, replier) {
-  var result = null;
-  var reply = "";
-  try {
-    result = KLOL_V1_GATEWAY.send("FEATURES", text, "");
-    if (!v1GatewaySucceeded(result)) {
-      replier.reply(v1GatewayFailureNotice(result, "[전적/명령어 서버 오류]"));
-      return;
-    }
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (reply != "") {
-      replier.reply(reply);
-      return;
-    }
-    replier.reply("[전적/명령어 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
-  } catch (error) {
-    replier.reply("[전적/명령어 처리 오류]\n잠시 후 다시 시도해주세요.");
+var result = null;
+var reply = "";
+try {
+  result = KLOL_V1_GATEWAY.send("FEATURES", text, "");
+  if (!v1GatewaySucceeded(result)) {
+    replier.reply(v1GatewayFailureNotice(result, "[전적/명령어 서버 오류]"));
+    return;
   }
+  reply = KLOL_V1_GATEWAY.replyText(result);
+  if (reply != "") {
+    replier.reply(reply);
+    return;
+  }
+  replier.reply("[전적/명령어 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
+} catch (error) {
+  replier.reply("[전적/명령어 처리 오류]\n잠시 후 다시 시도해주세요.");
+}
 }
 function fetchSeasonRecruitStatusText(roomLabel, text, sender) {
-  var result = null;
-  var reply = "";
-  try {
-    result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
-    if (!result.body) return "[내전현황 API 오류]\nJSON 응답이 아닙니다.\n잠시 후 다시 시도해주세요.";
-    if (!v1GatewaySucceeded(result)) return v1GatewayFailureNotice(result, "[내전현황 오류]");
-    if (result.body.empty === true) return "__NO_SEASON_RECRUIT_STATUS__";
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (reply != "") return reply;
-    return "[내전현황]\n현황 응답이 비어 있습니다.";
-  } catch (error) {
-    return "[내전현황 API 오류]\n잠시 후 다시 시도해주세요.";
-  }
+var result = null;
+var reply = "";
+try {
+  result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
+  if (!result.body) return "[내전현황 API 오류]\nJSON 응답이 아닙니다.\n잠시 후 다시 시도해주세요.";
+  if (!v1GatewaySucceeded(result)) return v1GatewayFailureNotice(result, "[내전현황 오류]");
+  if (result.body.empty === true) return "__NO_SEASON_RECRUIT_STATUS__";
+  reply = KLOL_V1_GATEWAY.replyText(result);
+  if (reply != "") return reply;
+  return "[내전현황]\n현황 응답이 비어 있습니다.";
+} catch (error) {
+  return "[내전현황 API 오류]\n잠시 후 다시 시도해주세요.";
+}
 }
 function handleSeasonApplyMessage(roomLabel, text, sender, replier) {
-  var hash = "";
-  var saved = "";
-  var result = null;
-  var reply = "";
-  var recruitNo = v1ExtractSeasonRecruitNoFromSnapshot(text);
-  try {
-    text = normalizeText(text);
-    hash = makeHash("season-apply:" + roomLabel + ":" + sender + ":" + String(Math.floor(new Date().getTime() / 10000)) + ":" + String(recruitNo) + ":" + text);
-    if (lastRecruitHash == hash) return;
-    saved = DataBase.getDataBase(RECRUIT_SAVE_KEY);
-    if (saved == hash) {
-      lastRecruitHash = hash;
-      return;
-    }
-    result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
-    if (!v1GatewaySucceeded(result)) {
-      replier.reply(v1GatewayFailureNotice(result, "[참가 신청 등록 오류]"));
-      return;
-    }
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (reply != "") {
-      replier.reply(reply);
-      lastRecruitHash = hash;
-      DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
-      return;
-    }
-    if (result.body && result.body.ok === true && Number(result.body.pending || 0) === 0) {
-      replier.reply(v1SeasonApplyCompleteNotice());
-      lastRecruitHash = hash;
-      DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
-      return;
-    }
-    replier.reply("[참가 신청 등록 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
-  } catch (error) {
-    replier.reply("[참가 신청 등록 API 오류]\n잠시 후 다시 시도해주세요.");
+var hash = "";
+var saved = "";
+var result = null;
+var reply = "";
+var recruitNo = v1ExtractSeasonRecruitNoFromSnapshot(text);
+try {
+  text = normalizeText(text);
+  hash = makeHash("season-apply:" + roomLabel + ":" + sender + ":" + String(Math.floor(new Date().getTime() / 10000)) + ":" + String(recruitNo) + ":" + text);
+  if (lastRecruitHash == hash) return;
+  saved = DataBase.getDataBase(RECRUIT_SAVE_KEY);
+  if (saved == hash) {
+    lastRecruitHash = hash;
+    return;
   }
+  result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
+  if (!v1GatewaySucceeded(result)) {
+    replier.reply(v1GatewayFailureNotice(result, "[참가 신청 등록 오류]"));
+    return;
+  }
+  reply = KLOL_V1_GATEWAY.replyText(result);
+  if (reply != "") {
+    replier.reply(reply);
+    lastRecruitHash = hash;
+    DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
+    return;
+  }
+  if (result.body && result.body.ok === true && Number(result.body.pending || 0) === 0) {
+    replier.reply(v1SeasonApplyCompleteNotice());
+    lastRecruitHash = hash;
+    DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
+    return;
+  }
+  replier.reply("[참가 신청 등록 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
+} catch (error) {
+  replier.reply("[참가 신청 등록 API 오류]\n잠시 후 다시 시도해주세요.");
+}
 }
 function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label) {
-  var result = null;
-  var reply = "";
-  try {
-    result = KLOL_V1_GATEWAY.send("RECRUIT", text, sender);
-    if (!v1GatewaySucceeded(result)) {
-      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG " + label + "]"));
-      return false;
-    }
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (result.body && (result.body.ignored === true || result.body.empty === true) && !result.body.reply) {
-      return v1GatewaySucceeded(result);
-    }
-    if (result.body && result.body.reply !== undefined && String(result.body.reply || "") === "" && result.ok) {
-      return result.body.ok !== false;
-    }
-    if (reply != "") {
-      replier.reply(reply);
-      return v1GatewaySucceeded(result);
-    }
-    replier.reply("[K-LOL.GG " + label + "]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
-    return false;
-  } catch (error) {
-    replier.reply("[K-LOL.GG " + label + "]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+var result = null;
+var reply = "";
+try {
+  result = KLOL_V1_GATEWAY.send("RECRUIT", text, sender);
+  if (!v1GatewaySucceeded(result)) {
+    replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG " + label + "]"));
     return false;
   }
+  reply = KLOL_V1_GATEWAY.replyText(result);
+  if (result.body && (result.body.ignored === true || result.body.empty === true) && !result.body.reply) {
+    return v1GatewaySucceeded(result);
+  }
+  if (result.body && result.body.reply !== undefined && String(result.body.reply || "") === "" && result.ok) {
+    return result.body.ok !== false;
+  }
+  if (reply != "") {
+    replier.reply(reply);
+    return v1GatewaySucceeded(result);
+  }
+  replier.reply("[K-LOL.GG " + label + "]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
+  return false;
+} catch (error) {
+  replier.reply("[K-LOL.GG " + label + "]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+  return false;
+}
 }
 function fetchPartyRecruitStatusText(silentWhenEmpty, messageText, room, sender) {
-  var result = null;
-  try {
-    result = KLOL_V1_GATEWAY.send("RECRUIT", messageText, sender);
-    if (!v1GatewaySucceeded(result)) return v1GatewayFailureNotice(result, "[K-LOL.GG 구인구직 현황]");
-    if (result.body && result.body.empty === true && silentWhenEmpty) return "__NO_ACTIVE_PARTY_RECRUIT__";
-    return KLOL_V1_GATEWAY.replyText(result);
-  } catch (error) {
-    return "[K-LOL.GG 구인구직 현황]\n\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.";
-  }
+var result = null;
+try {
+  result = KLOL_V1_GATEWAY.send("RECRUIT", messageText, sender);
+  if (!v1GatewaySucceeded(result)) return v1GatewayFailureNotice(result, "[K-LOL.GG 구인구직 현황]");
+  if (result.body && result.body.empty === true && silentWhenEmpty) return "__NO_ACTIVE_PARTY_RECRUIT__";
+  return KLOL_V1_GATEWAY.replyText(result);
+} catch (error) {
+  return "[K-LOL.GG 구인구직 현황]\n\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.";
+}
 }
 function handleOperationFormMessage(room, text, sender, replier) {
-  var hash = "";
-  var saved = "";
-  var result = null;
-  var reply = "";
-  try {
-    text = canonicalizeOperationCandidateForGateway(KLOL_V1_OPERATION_RAW_TEXT || text);
-    hash = makeHash("operation-form:" + room + ":" + sender + ":" + text);
-    if (lastOperationFormHash == hash) return;
-    saved = DataBase.getDataBase(OPERATION_FORM_SAVE_KEY);
-    if (saved == hash) {
-      lastOperationFormHash = hash;
-      return;
-    }
-    result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
-    if (!v1GatewaySucceeded(result)) {
-      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG 운영 양식]"));
-      return;
-    }
-    if (result.body && result.body.duplicate === true && v1GatewaySucceeded(result)) {
+var hash = "";
+var saved = "";
+var result = null;
+var reply = "";
+try {
+  text = canonicalizeOperationCandidateForGateway(KLOL_V1_OPERATION_RAW_TEXT || text);
+  hash = makeHash("operation-form:" + room + ":" + sender + ":" + text);
+  if (lastOperationFormHash == hash) return;
+  saved = DataBase.getDataBase(OPERATION_FORM_SAVE_KEY);
+  if (saved == hash) {
+    lastOperationFormHash = hash;
+    return;
+  }
+  result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
+  if (!v1GatewaySucceeded(result)) {
+    replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG 운영 양식]"));
+    return;
+  }
+  if (result.body && result.body.duplicate === true && v1GatewaySucceeded(result)) {
+    lastOperationFormHash = hash;
+    DataBase.setDataBase(OPERATION_FORM_SAVE_KEY, hash);
+    return;
+  }
+  reply = KLOL_V1_GATEWAY.replyText(result);
+  if (reply != "") {
+    replier.reply(reply);
+    if (v1GatewaySucceeded(result)) {
       lastOperationFormHash = hash;
       DataBase.setDataBase(OPERATION_FORM_SAVE_KEY, hash);
-      return;
     }
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (reply != "") {
-      replier.reply(reply);
-      if (v1GatewaySucceeded(result)) {
-        lastOperationFormHash = hash;
-        DataBase.setDataBase(OPERATION_FORM_SAVE_KEY, hash);
-      }
-      return;
-    }
-    replier.reply("[K-LOL.GG 운영 양식]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
-  } catch (error) {
-    replier.reply("[K-LOL.GG 운영 양식]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+    return;
   }
+  replier.reply("[K-LOL.GG 운영 양식]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
+} catch (error) {
+  replier.reply("[K-LOL.GG 운영 양식]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
 }
-/*
- * V40 R2's active site-first branch never creates a managed image session.
- * With normal settings and a clean session store, imageDB therefore produces
- * no reply and no HTTP request. Keep that exact active behavior here.
- */
+}
 function handleManagedImage(room, sender, imageBase64, replier) {
-  return false;
+return false;
 }
 function replyManagedImageFallback(room, sender, replier) {
-  return false;
+return false;
 }
-/*
- * Operation-form routing is intentionally structural. The canonical V1
- * predicate remains available as isOperationFormCompleteMessage in the built
- * artifact, while response() uses this candidate predicate so an incomplete
- * form can receive the server's field-specific validation reply.
- */
 function normalizeOperationCandidateText(value) {
-  var input = String(value || "");
-  var output = "";
-  var index = 0;
-  var code = 0;
-  input = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  input = input.replace(/[\u00a0\u2007\u202f\u3000]/g, " ");
-  for (index = 0; index < input.length; index += 1) {
-    code = input.charCodeAt(index);
-    output += code >= 65281 && code <= 65374 ? String.fromCharCode(code - 65248) : input.charAt(index);
-  }
-  return output;
+var input = String(value || "");
+var output = "";
+var index = 0;
+var code = 0;
+input = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+input = input.replace(/[\u00a0\u2007\u202f\u3000]/g, " ");
+for (index = 0; index < input.length; index += 1) {
+  code = input.charCodeAt(index);
+  output += code >= 65281 && code <= 65374 ? String.fromCharCode(code - 65248) : input.charAt(index);
+}
+return output;
 }
 function makeOperationCandidateLabelRegex(label) {
-  var compact = normalizeOperationCandidateText(label).replace(/\s+/g, "");
-  var pattern = "";
-  var index = 0;
-  var character = "";
-  for (index = 0; index < compact.length; index += 1) {
-    character = compact.charAt(index).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    if (index > 0) pattern += "\\s*";
-    pattern += character;
-  }
-  return new RegExp(
-    "^\\s*(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?(?:[.)]\\s*)?)?" +
-    pattern + "(?:\\s*:\\s*|\\s+|(?=$)|(?=\\())"
-  );
+var compact = normalizeOperationCandidateText(label).replace(/\s+/g, "");
+var pattern = "";
+var index = 0;
+var character = "";
+for (index = 0; index < compact.length; index += 1) {
+  character = compact.charAt(index).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (index > 0) pattern += "\\s*";
+  pattern += character;
+}
+return new RegExp(
+  "^\\s*(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?(?:[.)]\\s*)?)?" +
+  pattern + "(?:\\s*:\\s*|\\s+|(?=$)|(?=\\())"
+);
 }
 function hasOperationCandidateLabelWithSyntax(text, label) {
-  var lines = normalizeOperationCandidateText(text).split("\n");
-  var pattern = makeOperationCandidateLabelRegex(label);
-  var index = 0;
-  for (index = 0; index < lines.length; index += 1) {
-    if (hasOperationCandidateFieldSyntax(lines[index]) && pattern.test(lines[index])) return true;
-  }
-  return false;
+var lines = normalizeOperationCandidateText(text).split("\n");
+var pattern = makeOperationCandidateLabelRegex(label);
+var index = 0;
+for (index = 0; index < lines.length; index += 1) {
+  if (hasOperationCandidateFieldSyntax(lines[index]) && pattern.test(lines[index])) return true;
+}
+return false;
 }
 function hasOperationCandidateFieldSyntax(line) {
-  line = normalizeOperationCandidateText(line);
-  return /^\s*(?:\(\s*)?\d+\s*(?:\\\s*)?[.)]/.test(line) || /:/.test(line);
+line = normalizeOperationCandidateText(line);
+return /^\s*(?:\(\s*)?\d+\s*(?:\\\s*)?[.)]/.test(line) || /:/.test(line);
 }
 function operationCandidateDefinitions() {
-  return [
-    ["friends", "지인", ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"]],
-    ["suggestions", "건의", ["본인 이름 및 닉네임", "건의 사유", "건의 내용"]],
-    ["meetups", "(?:모임|정모)", ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"]],
-    ["leaves", "외출", ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"]]
-  ];
+return [
+  ["friends", "지인", ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"]],
+  ["suggestions", "건의", ["본인 이름 및 닉네임", "건의 사유", "건의 내용"]],
+  ["meetups", "(?:모임|정모)", ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"]],
+  ["leaves", "외출", ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"]]
+];
 }
 function detectOperationFormHeaderType(text, forms) {
-  var lines = normalizeOperationCandidateText(text).split("\n");
-  var formIndex = 0;
-  var lineIndex = 0;
-  var pattern = null;
-  for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
-    pattern = new RegExp(
-      "^\\s*(?:[-*#>》•▪▶]\\s*)?(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?[.)]\\s*)?" +
-      "(?:<|&lt;)\\s*" + forms[formIndex][1] + "\\s*(?:>|&gt;)\\s*$",
-      "i"
-    );
-    for (lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
-      if (pattern.test(lines[lineIndex])) return forms[formIndex][0];
-    }
+var lines = normalizeOperationCandidateText(text).split("\n");
+var formIndex = 0;
+var lineIndex = 0;
+var pattern = null;
+for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
+  pattern = new RegExp(
+    "^\\s*(?:[-*#>》•▪▶]\\s*)?(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?[.)]\\s*)?" +
+    "(?:<|&lt;)\\s*" + forms[formIndex][1] + "\\s*(?:>|&gt;)\\s*$",
+    "i"
+  );
+  for (lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    if (pattern.test(lines[lineIndex])) return forms[formIndex][0];
   }
-  return "";
+}
+return "";
 }
 function detectOperationFormCandidateType(text) {
-  var forms = operationCandidateDefinitions();
-  var normalized = normalizeOperationCandidateText(text);
-  var headerType = detectOperationFormHeaderType(normalized, forms);
-  var bestType = "";
-  var bestScore = 0;
-  var tied = false;
-  var formIndex = 0;
-  var labelIndex = 0;
-  var score = 0;
-  if (headerType != "") return headerType;
-  for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
-    score = 0;
-    for (labelIndex = 0; labelIndex < forms[formIndex][2].length; labelIndex += 1) {
-      if (hasOperationCandidateLabelWithSyntax(normalized, forms[formIndex][2][labelIndex])) score += 1;
-    }
-    if (score > bestScore) {
-      bestType = forms[formIndex][0];
-      bestScore = score;
-      tied = false;
-    } else if (score == bestScore && score > 0) {
-      tied = true;
-    }
+var forms = operationCandidateDefinitions();
+var normalized = normalizeOperationCandidateText(text);
+var headerType = detectOperationFormHeaderType(normalized, forms);
+var bestType = "";
+var bestScore = 0;
+var tied = false;
+var formIndex = 0;
+var labelIndex = 0;
+var score = 0;
+if (headerType != "") return headerType;
+for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
+  score = 0;
+  for (labelIndex = 0; labelIndex < forms[formIndex][2].length; labelIndex += 1) {
+    if (hasOperationCandidateLabelWithSyntax(normalized, forms[formIndex][2][labelIndex])) score += 1;
   }
-  return bestScore >= 2 && !tied ? bestType : "";
+  if (score > bestScore) {
+    bestType = forms[formIndex][0];
+    bestScore = score;
+    tied = false;
+  } else if (score == bestScore && score > 0) {
+    tied = true;
+  }
+}
+return bestScore >= 2 && !tied ? bestType : "";
 }
 function isOperationFormCandidateMessage(text) {
-  return detectOperationFormCandidateType(text) != "";
+return detectOperationFormCandidateType(text) != "";
 }
 function canonicalizeOperationCandidateForGateway(text) {
-  var normalized = normalizeOperationCandidateText(text);
-  var formType = detectOperationFormCandidateType(normalized);
-  var forms = operationCandidateDefinitions();
-  var labels = [];
-  var lines = normalized.split("\n");
-  var formIndex = 0;
-  var lineIndex = 0;
-  var labelIndex = 0;
-  var match = null;
-  for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
-    if (forms[formIndex][0] == formType) labels = forms[formIndex][2];
+var normalized = normalizeOperationCandidateText(text);
+var formType = detectOperationFormCandidateType(normalized);
+var forms = operationCandidateDefinitions();
+var labels = [];
+var lines = normalized.split("\n");
+var formIndex = 0;
+var lineIndex = 0;
+var labelIndex = 0;
+var match = null;
+for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
+  if (forms[formIndex][0] == formType) labels = forms[formIndex][2];
+}
+if (formType == "") return trimText(normalized);
+for (lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+  for (labelIndex = 0; labelIndex < labels.length; labelIndex += 1) {
+    if (!hasOperationCandidateFieldSyntax(lines[lineIndex])) continue;
+    match = makeOperationCandidateLabelRegex(labels[labelIndex]).exec(lines[lineIndex]);
+    if (!match) continue;
+    lines[lineIndex] = labels[labelIndex] + ": " + lines[lineIndex].substring(match[0].length);
+    break;
   }
-  if (formType == "") return trimText(normalized);
-  for (lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
-    for (labelIndex = 0; labelIndex < labels.length; labelIndex += 1) {
-      if (!hasOperationCandidateFieldSyntax(lines[lineIndex])) continue;
-      match = makeOperationCandidateLabelRegex(labels[labelIndex]).exec(lines[lineIndex]);
-      if (!match) continue;
-      lines[lineIndex] = labels[labelIndex] + ": " + lines[lineIndex].substring(match[0].length);
-      break;
-    }
-  }
-  return trimText(lines.join("\n"));
+}
+return trimText(lines.join("\n"));
 }
 function isKlolBotEchoSender(sender) {
   sender = trimText(String(sender || ""));
@@ -1780,10 +1811,18 @@ isPartyRecruitFormMessage = function (text) {
   if (isSeasonApplySnapshotEnvelope(text)) return false;
   return isPartyRecruitFormMessageWithoutSeasonSnapshot(text);
 };
+var v1PartyHelp = getPartyRecruitHelpNotice;
+getPartyRecruitHelpNotice = function () {
+  return v1PartyHelp().replace(
+    "현황: 구인현황\n종료: 번호ㅉ",
+    "현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ"
+  );
+};
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);
   KLOL_V1_OPERATION_RAW_TEXT = String(msg || "");
   try {
+    if (handlePartyMemberMutationCommand(msg, room, sender, replier)) return;
     v1SourceResponse(room, msg, sender, isGroupChat, replier, imageDB, packageName);
   } finally {
     KLOL_V1_OPERATION_RAW_TEXT = "";

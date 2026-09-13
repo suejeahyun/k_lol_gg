@@ -1,4 +1,4 @@
-# MessengerBot R V1 strict R8 설치 안내
+# MessengerBot R V1 strict R9 설치 안내
 
 ## 현재 설치본
 
@@ -21,7 +21,7 @@
 2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
 3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
 4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
-5. 파일 안에서 `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12`를 검색한다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R9_2026_09_13_MEMBER_COMMANDS`를 검색한다.
 6. 마지막 줄이 `response.__kakaoBotEntryPoint = true;`인지 확인한다.
 7. 저장·컴파일 후 봇을 다시 시작한다.
 8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
@@ -33,8 +33,8 @@
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| 공개·비밀값 없음 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 62,037 | 63,829 | 1,793 | `a9e83edad5deadf49d782ad606ef7784bd40aa50809884fe61dca3d62dabc725` |
-| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 62,545 | 64,345 | 1,801 | `6ef9a734ee10ed9e79f1494a5ec2a8bd7bcecfaa74a145416c08d83ad604e5fc` |
+| 공개·비밀값 없음 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 62,443 | 64,274 | 1,831 | `974e0ebf2e913c7cc711ffe06810dea06043869a76995446cda1fc7e0139d60d` |
+| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 62,951 | 64,790 | 1,839 | `532d4037a8a516d0799351c118bacd6f0fbaa7a9ad4c970584facdb467152017` |
 
 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. V1 원본의 실행·주석 줄은 유지하고 의미 없는 빈 줄만 제거했다.
 
@@ -67,8 +67,9 @@ node scripts/verify-private-messengerbot-v1-strict-live.mjs
 
 1. `5인파티` → 양식만 출력되고 사용자에게 보이는 구인은 아직 시작되지 않음
 2. 출력 양식에 참가자를 넣어 다시 전송 → 저장 후 최신 구인현황 표시
-3. `구인현황`, `상세 번호`, 다른 사용자가 만든 `번호ㅉ`
-4. `스크림구인`, `스크림현황`
+3. `상세 번호 추가 이름`, `상세 번호 삭제 이름` → 최신 현황과 함께 1명만 변경
+4. `구인현황`, `상세 번호`, 다른 사용자가 만든 `번호ㅉ`
+5. `스크림구인`, `스크림현황`
 
 기능방:
 

@@ -113,3 +113,33 @@ test("[P4-C05] unified entry preserves one send site, five-second timeout, and d
   assert.match(unified, /KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_11_R5_FORM_DEFAULTS/u);
   assert.match(shared, /function publicProfileId/u);
 });
+
+test("[P4-C02B] member shortcuts tolerate mobile normalization and reject ambiguous mutations", async () => {
+  const { KLOL_V4 } = await sharedContext();
+  for (const input of [
+    "상세 15 추가 재현",
+    "/상세 15 삭제 재현",
+    "구인상세 15 추가 김 별",
+    "상세 #15 삭제 재현",
+    String.raw`상세 \#15 추가 재현`,
+    "／상세　＃１５　추가　ＡＢＣ",
+  ]) {
+    assert.equal(KLOL_V4.acceptsPublicText("RECRUIT", input), true, input);
+    assert.equal(KLOL_V4.acceptsPublicText("FEATURES", input), false, input);
+    assert.equal(KLOL_V4.publicProfileId(input), "RECRUIT", input);
+  }
+  for (const input of [
+    "15 추가 재현",
+    "상세 15 추기 재현",
+    "상세 15 추가",
+    "상세 0 추가 재현",
+    "상세 100 추가 재현",
+    "상세 15 추가 재현, 민서",
+    "상세 15 추가 재현/민서",
+    "상세 15 추가 삭제 재현",
+    "상세 15 추가 재현\n민서",
+    `상세 15 추가 ${"가".repeat(81)}`,
+  ]) {
+    assert.equal(KLOL_V4.acceptsPublicText("RECRUIT", input), false, input.slice(0, 30));
+  }
+});

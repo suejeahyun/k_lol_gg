@@ -23,6 +23,8 @@ export const KAKAO_V4_CANONICAL_COMMANDS = [
   "PARTY_STATUS",
   "PARTY_DETAIL",
   "PARTY_FINISH",
+  "PARTY_MEMBER_ADD",
+  "PARTY_MEMBER_REMOVE",
   "PARTY_SNAPSHOT",
   "INHOUSE_CREATE",
   "INHOUSE_STATUS",
@@ -108,6 +110,8 @@ const COMMAND_PROFILE_MATRIX = Object.freeze({
   PARTY_STATUS: RECRUIT_ONLY,
   PARTY_DETAIL: RECRUIT_ONLY,
   PARTY_FINISH: RECRUIT_ONLY,
+  PARTY_MEMBER_ADD: RECRUIT_ONLY,
+  PARTY_MEMBER_REMOVE: RECRUIT_ONLY,
   PARTY_SNAPSHOT: RECRUIT_ONLY,
   INHOUSE_CREATE: FEATURES_ONLY,
   INHOUSE_STATUS: FEATURES_ONLY,
@@ -265,6 +269,23 @@ function classifyLocal(text: string): KakaoV4RecognizedCommand | null {
 function classifyParty(text: string): KakaoV4RecognizedCommand | null {
   if (["현재구인구직현황", "현재구인현황", "구인구직현황", "구인현황", "현황"].includes(text)) {
     return recognized("PARTY_STATUS", text);
+  }
+  const memberMutationText = text.normalize("NFKC");
+  if (!/[\r\n\u2028\u2029]/u.test(memberMutationText)) {
+    const memberMutation = /^(?:구인상세|상세)\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|삭제)\s+(.+)$/u.exec(memberMutationText);
+    if (memberMutation) {
+      const recruitNumber = Number(memberMutation[1]);
+      const name = memberMutation[3]!.trim().replace(/\s+/gu, " ");
+      const nameLength = Array.from(name).length;
+      const ambiguousName = /[\/,，、;；]/u.test(name) || /^(?:추가|삭제)(?:\s|$)/u.test(name);
+      const unsafeName = /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/u.test(name);
+      if (recruitNumber >= 1 && recruitNumber <= 99 && nameLength >= 1 && nameLength <= 80 && !ambiguousName && !unsafeName) {
+        return recognized(memberMutation[2] === "추가" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE", memberMutationText, {
+          recruitNumber,
+          name,
+        });
+      }
+    }
   }
   const detail = /^(?:구인상세|상세)\s*#?\s*(\d+)$/u.exec(text);
   if (detail) return recognized("PARTY_DETAIL", text, { recruitNumber: Number(detail[1]) });
