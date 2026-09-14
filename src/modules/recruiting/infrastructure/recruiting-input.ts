@@ -6,7 +6,7 @@ import type { RecruitingCommand } from "../application/commands";
 
 const COMMAND_TYPES = new Set<RecruitingCommand["type"]>([
   "CREATE_PARTY", "SYNC_PARTY", "PARTY_MEMBER_ADD", "PARTY_MEMBER_REMOVE", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY",
-  "CREATE_SCRIM", "SYNC_SCRIM", "ADD_SCRIM_PARTICIPANT", "REMOVE_SCRIM_PARTICIPANT", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
+  "CREATE_SCRIM", "SYNC_SCRIM", "ADD_SCRIM_PARTICIPANT", "REMOVE_SCRIM_PARTICIPANT", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "FINISH_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
 ]);
 const POSITIONS = new Set(["TOP", "JGL", "MID", "ADC", "SUP"]);
 
@@ -87,6 +87,7 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
     case "RESET_PARTY":
     case "REOPEN_SCRIM":
     case "CONFIRM_SCRIM":
+    case "FINISH_SCRIM":
     case "COMPLETE_SCRIM":
     case "CANCEL_SCRIM":
       return exactKeys(payload, []) ? {} : null;

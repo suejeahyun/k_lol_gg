@@ -227,6 +227,7 @@ const entry = [
   "  };",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
+  "    if (/^\\/?(?:내전|스크림)[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) return handlePartyRecruitApi(\"\", room, msg, sender, guardedReplier, \"\", msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\");",
   "    if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;",
   "    v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, imageDB, packageName);",
   "  } finally {",
@@ -236,7 +237,6 @@ const entry = [
   "response.__kakaoBotEntryPoint = true;"
 ].join("\n");
 const operationCandidateBinding = [
-  "/* Preserve the byte-derived completion predicate for diagnostics, but route candidates to V4. */",
   "var isOperationFormCompleteMessage = isOperationFormMessage;",
   "isOperationFormMessage = isOperationFormCandidateMessage;",
 ].join("\n");
@@ -314,6 +314,9 @@ if (!output.includes("isPartyRecruitFormMessageWithoutSeasonSnapshot")) {
 }
 if (!output.includes("function isPartyMetadataActivationForm(text)")) {
   throw new Error("V1-strict output must route metadata-only party activation forms");
+}
+if (!output.includes("msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\"")) {
+  throw new Error("V1-strict output must route scoped in-house and scrim finish commands");
 }
 if (!output.includes("if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;")) {
   throw new Error("V1-strict output must route explicit member mutations before the V1 dispatcher");

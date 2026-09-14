@@ -46,8 +46,10 @@ function successfulProfile(text: string) {
 }
 
 test("classifier exposes a complete canonical/profile matrix", () => {
-  assert.equal(KAKAO_V4_CANONICAL_COMMANDS.length, 52);
-  assert.equal(new Set(KAKAO_V4_CANONICAL_COMMANDS).size, 52);
+  assert.equal(KAKAO_V4_CANONICAL_COMMANDS.length, 54);
+  assert.equal(new Set(KAKAO_V4_CANONICAL_COMMANDS).size, 54);
+  assert.ok(KAKAO_V4_CANONICAL_COMMANDS.includes("INHOUSE_FINISH"));
+  assert.ok(KAKAO_V4_CANONICAL_COMMANDS.includes("SCRIM_FINISH"));
   assert.deepEqual(KAKAO_V4_COMMAND_FAMILIES, ["PARTY", "INHOUSE", "SCRIM", "PLAYER", "OPERATIONS", "LOCAL"]);
   for (const command of KAKAO_V4_CANONICAL_COMMANDS) {
     assert.ok(

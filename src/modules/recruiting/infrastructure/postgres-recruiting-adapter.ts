@@ -193,6 +193,7 @@ export class PostgresRecruitingAdapter implements
         eq(scrimRecruits.recruitDate, input.recruitDate),
         eq(scrimRecruits.scrimNumber, input.recruitNumber),
         eq(scrimRecruits.isDraft, false),
+        input.allowedScrimStatuses ? inArray(scrimRecruits.status, input.allowedScrimStatuses) : undefined,
       )).limit(1))[0] ?? null;
   }
 

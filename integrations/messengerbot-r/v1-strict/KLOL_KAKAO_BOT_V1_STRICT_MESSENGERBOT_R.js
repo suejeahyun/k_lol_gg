@@ -206,7 +206,7 @@ markReplySent: markReplySent
 };
 }());
 /* eslint-disable */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R12_2026_09_13_TRANSCRIPT_DEDUPE";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R13_2026_09_14_SCOPED_FINISH";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -1765,7 +1765,6 @@ function isImagePlaceholderMessage(text) {
   text = trimText(normalizeText(String(text || "")));
   return text == "사진" || text == "[사진]" || text == "Photo" || text == "photo";
 }
-/* Preserve the byte-derived completion predicate for diagnostics, but route candidates to V4. */
 var isOperationFormCompleteMessage = isOperationFormMessage;
 isOperationFormMessage = isOperationFormCandidateMessage;
 /* Keep V1 routing, but let recoverable numbered rows reach the V4 row parser. */
@@ -1804,6 +1803,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
   };
   KLOL_V1_OPERATION_RAW_TEXT = String(msg || "");
   try {
+    if (/^\/?(?:내전|스크림)[ \t]+[1-9]\d{0,2}[ \t]*ㅉ$/.test(msg)) return handlePartyRecruitApi("", room, msg, sender, guardedReplier, "", msg.indexOf("내전") >= 0 ? "FEATURES" : "RECRUIT");
     if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;
     v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, imageDB, packageName);
   } finally {

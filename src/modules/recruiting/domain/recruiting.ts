@@ -525,7 +525,7 @@ export function toPublicRecruitPartyDto(party: RecruitParty): PublicRecruitParty
 export function transitionScrimRecruit(input: Readonly<{
   scrim: ScrimRecruit;
   expectedRevision: number;
-  command: "JOIN" | "CONFIRM" | "COMPLETE" | "CANCEL" | "REOPEN";
+  command: "JOIN" | "CONFIRM" | "FINISH" | "COMPLETE" | "CANCEL" | "REOPEN";
   opponentTeamId?: string | null;
   opponentSenderId?: string | null;
 }>): ScrimRecruit {
@@ -541,6 +541,8 @@ export function transitionScrimRecruit(input: Readonly<{
     status = "MATCHED";
   } else if (input.command === "CONFIRM" && input.scrim.status === "MATCHED" && opponentTeamId) {
     status = "CONFIRMED";
+  } else if (input.command === "FINISH" && ["RECRUITING", "MATCHED", "CONFIRMED"].includes(input.scrim.status)) {
+    status = "COMPLETED";
   } else if (input.command === "COMPLETE" && input.scrim.status === "CONFIRMED") {
     status = "COMPLETED";
   } else if (input.command === "CANCEL" && !["COMPLETED", "CANCELED"].includes(input.scrim.status)) {

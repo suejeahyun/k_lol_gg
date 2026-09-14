@@ -167,6 +167,11 @@ export type KakaoSeasonSnapshotCommand =
       participants: readonly KakaoSeasonSnapshotParticipant[];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
+      action: "FINISH";
+      recruitNo: number;
+      participants: readonly [];
+    }>)
+  | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "ADD_PARTICIPANT";
       recruitNo: number;
       name: string;
@@ -189,7 +194,7 @@ export type KakaoSeasonSnapshotCommand =
 
 export type KakaoSeasonCommandAccess = "MEMBER_SAFE" | "TRUSTED_OPERATOR";
 
-/** Kakao room members may submit/read snapshots; explicit force-cancel stays operator-only. */
+/** Kakao room members may submit/read/finish snapshots; explicit force-cancel stays operator-only. */
 export function kakaoSeasonCommandAccess(action: KakaoSeasonSnapshotCommand["action"]): KakaoSeasonCommandAccess {
   return action === "CANCEL" ? "TRUSTED_OPERATOR" : "MEMBER_SAFE";
 }
@@ -444,7 +449,7 @@ export function parseSeasonSnapshotBody(value: unknown): KakaoSeasonSnapshotComm
     throw new KakaoAssistantError("INVALID_INPUT");
   }
   const statusAllRounds = value.action === "STATUS" && value.recruitNo === null;
-  if (!["SYNC", "CANCEL", "STATUS"].includes(value.action) || typeof value.seasonId !== "string" ||
+  if (!["SYNC", "CANCEL", "FINISH", "STATUS"].includes(value.action) || typeof value.seasonId !== "string" ||
       !UUID.test(value.seasonId) || typeof value.applyDate !== "string" || !DATE.test(value.applyDate) ||
       (authoritativeMutation && value.mode !== "RIFT") ||
       (!statusAllRounds && (!Number.isSafeInteger(value.recruitNo) || Number(value.recruitNo) < 1 || Number(value.recruitNo) > 999))) {
@@ -473,6 +478,13 @@ export function parseSeasonSnapshotBody(value: unknown): KakaoSeasonSnapshotComm
     recruitNo: Number(value.recruitNo),
     mode: "RIFT" as const,
     participants: Object.freeze(participants),
+  });
+  if (value.action === "FINISH") return Object.freeze({
+    action: "FINISH" as const,
+    seasonId: value.seasonId,
+    applyDate: value.applyDate,
+    recruitNo: Number(value.recruitNo),
+    participants: Object.freeze([] as const),
   });
   return Object.freeze({
     action: "STATUS" as const,

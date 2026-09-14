@@ -31,6 +31,7 @@ export const KAKAO_V4_CANONICAL_COMMANDS = [
   "INHOUSE_DETAIL",
   "INHOUSE_MEMBER_ADD",
   "INHOUSE_MEMBER_REMOVE",
+  "INHOUSE_FINISH",
   "INHOUSE_JOIN_GUIDE",
   "INHOUSE_SNAPSHOT",
   "SCRIM_CREATE",
@@ -38,6 +39,7 @@ export const KAKAO_V4_CANONICAL_COMMANDS = [
   "SCRIM_DETAIL",
   "SCRIM_MEMBER_ADD",
   "SCRIM_MEMBER_REMOVE",
+  "SCRIM_FINISH",
   "SCRIM_LEGACY_JOIN",
   "SCRIM_LEGACY_CONFIRM",
   "SCRIM_LEGACY_CANCEL",
@@ -122,6 +124,7 @@ const COMMAND_PROFILE_MATRIX = Object.freeze({
   INHOUSE_DETAIL: FEATURES_ONLY,
   INHOUSE_MEMBER_ADD: FEATURES_ONLY,
   INHOUSE_MEMBER_REMOVE: FEATURES_ONLY,
+  INHOUSE_FINISH: FEATURES_ONLY,
   INHOUSE_JOIN_GUIDE: FEATURES_ONLY,
   INHOUSE_SNAPSHOT: FEATURES_ONLY,
   SCRIM_CREATE: RECRUIT_ONLY,
@@ -129,6 +132,7 @@ const COMMAND_PROFILE_MATRIX = Object.freeze({
   SCRIM_DETAIL: RECRUIT_ONLY,
   SCRIM_MEMBER_ADD: RECRUIT_ONLY,
   SCRIM_MEMBER_REMOVE: RECRUIT_ONLY,
+  SCRIM_FINISH: RECRUIT_ONLY,
   SCRIM_LEGACY_JOIN: RECRUIT_ONLY,
   SCRIM_LEGACY_CONFIRM: RECRUIT_ONLY,
   SCRIM_LEGACY_CANCEL: RECRUIT_ONLY,
@@ -359,6 +363,8 @@ function classifyInhouse(text: string): KakaoV4RecognizedCommand | null {
       name: memberMutation.name,
     });
   }
+  const finish = /^내전\s*#?\s*(\d{1,3})\s*(?:쫑|ㅉ|마감|종료)$/u.exec(text);
+  if (finish) return recognized("INHOUSE_FINISH", text, { recruitNumber: Number(finish[1]) });
   const detail = /^내전상세(?:\s*#?(\d+))?$/u.exec(text);
   if (detail) return recognized("INHOUSE_DETAIL", text, { recruitNumber: detail[1] ? Number(detail[1]) : null });
   const status = /^(?:내전현황|시즌내전현황|AI공지)(?:\s*#?(\d+))?$/u.exec(text);
@@ -384,6 +390,8 @@ function classifyScrim(text: string): KakaoV4RecognizedCommand | null {
       name: memberMutation.name,
     });
   }
+  const finish = /^(?:멸망전\s*)?스크림\s*#?\s*(\d{1,2})\s*(?:쫑|ㅉ|마감|종료)$/u.exec(text);
+  if (finish) return recognized("SCRIM_FINISH", text, { scrimNumber: Number(finish[1]) });
   const prefix = "(?:멸망전\\s*)?스크림\\s*";
   const lifecycle = [
     ["참가", "SCRIM_LEGACY_JOIN"],

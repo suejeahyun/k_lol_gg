@@ -254,6 +254,7 @@ function legacyInhouseDetail(
     lines.push("");
     reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${index + 1}`, entry, namesOnly)));
   }
+  lines.push("", `마감: 내전 ${recruitNo}ㅉ`);
   return lines.join("\n");
 }
 
@@ -843,6 +844,81 @@ export class PostgresKakaoAssistant {
           metadataUpdated: true, roundMetadata: toSeasonRoundMetadata(row),
         });
       }
+      const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo ?? "all"}:${roomScope}`;
+      await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`kakao-season:${roundKey}`}, 0))`);
+
+      let cancelledCount = 0;
+      let createdCount = 0;
+      let updatedCount = 0;
+      let metadataUpdated = false;
+      if (command.action === "FINISH") {
+        const activeRounds = await transaction.select().from(seasonInhouseRounds).where(and(
+          eq(seasonInhouseRounds.seasonId, command.seasonId),
+          eq(seasonInhouseRounds.applyDate, command.applyDate),
+          eq(seasonInhouseRounds.recruitNo, command.recruitNo),
+          eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
+          eq(seasonInhouseRounds.status, "IN_PROGRESS"),
+        )).orderBy(asc(seasonInhouseRounds.id)).for("update");
+        if (activeRounds.length === 0) throw new KakaoAssistantError("NOT_FOUND");
+        const roundIds = activeRounds.map((round) => round.id);
+        const modes = [...new Set(activeRounds.map((round) => round.mode))];
+        const closedRounds = await transaction.update(seasonInhouseRounds).set({
+          status: "CANCELED",
+          sourceReferenceHash: Buffer.from(input.intent.bodyDigestHex, "hex"),
+          revision: sql`${seasonInhouseRounds.revision} + 1`,
+          updatedAt: now,
+        }).where(and(
+          inArray(seasonInhouseRounds.id, roundIds),
+          eq(seasonInhouseRounds.status, "IN_PROGRESS"),
+        )).returning({ id: seasonInhouseRounds.id });
+        if (closedRounds.length !== activeRounds.length) throw new KakaoAssistantError("CONFLICT");
+        const cancelledApplications = await transaction.update(seasonApplications).set({
+          status: "CANCELLED",
+          cancelledAt: now,
+          reviewNote: null,
+          reviewedByUserAccountId: null,
+          reviewedAt: null,
+          revision: sql`${seasonApplications.revision} + 1`,
+          updatedAt: now,
+        }).where(and(
+          eq(seasonApplications.seasonId, command.seasonId),
+          eq(seasonApplications.applyDate, command.applyDate),
+          eq(seasonApplications.recruitNo, command.recruitNo),
+          eq(seasonApplications.source, "KAKAO"),
+          eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
+          inArray(seasonApplications.sourceMode, modes),
+          inArray(seasonApplications.status, ["APPLIED", "RESERVE"]),
+        )).returning({ id: seasonApplications.id });
+        const cancelledPending = await transaction.update(seasonKakaoPendingApplications).set({
+          status: "CANCELLED",
+          cancelledAt: now,
+          revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
+          updatedAt: now,
+        }).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash),
+          inArray(seasonKakaoPendingApplications.sourceMode, modes),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        )).returning({ id: seasonKakaoPendingApplications.id });
+        cancelledCount = cancelledApplications.length + cancelledPending.length;
+        metadataUpdated = true;
+        await transaction.insert(auditEvents).values({
+          requestId: input.requestId,
+          action: "KAKAO_SEASON_ROUND_FINISHED",
+          targetType: "SEASON_RECRUIT_ROUND",
+          targetId: roundKey,
+          metadataJson: {
+            cancelledCount,
+            closedRoundCount: closedRounds.length,
+            sourceRoomDigest: roomScope,
+            modes,
+          },
+          createdAt: now,
+        });
+      }
+
       const commandMode = command.action === "SYNC" || command.action === "CANCEL"
         ? command.mode
         : command.action === "ADD_PARTICIPANT" || command.action === "REMOVE_PARTICIPANT"
@@ -855,16 +931,9 @@ export class PostgresKakaoAssistant {
       if ((command.action === "ADD_PARTICIPANT" || command.action === "REMOVE_PARTICIPANT") && !commandMode) {
         throw new KakaoAssistantError("NOT_FOUND");
       }
-      const sourceMode = command.action === "STATUS" ? "RIFT" as const : commandMode!;
-      // Lock the room/date/round independent of mode so an authoritative mode
-      // correction cannot race another snapshot for the same visible round.
-      const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo ?? "all"}:${roomScope}`;
-      await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`kakao-season:${roundKey}`}, 0))`);
-
-      let cancelledCount = 0;
-      let createdCount = 0;
-      let updatedCount = 0;
-      let metadataUpdated = false;
+      const sourceMode = command.action === "STATUS" || command.action === "FINISH" ? "RIFT" as const : commandMode!;
+      // The advisory lock above serializes all mode corrections and manual
+      // finishes for the same visible room/date/round.
       const legacyChanges: LegacySeasonSyncChanges = {
         added: [],
         updated: [],
@@ -1408,17 +1477,19 @@ export class PostgresKakaoAssistant {
         });
       }
 
+      const allRoundProjection = command.action === "STATUS" || command.action === "FINISH";
+      const projectedRecruitNo = command.action === "FINISH" ? null : command.recruitNo;
       const applicationCandidates = await transaction.select({ application: seasonApplications, player: players }).from(seasonApplications)
         .innerJoin(players, eq(players.id, seasonApplications.playerId)).where(and(
           eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.applyDate, command.applyDate),
-          command.recruitNo === null ? undefined : eq(seasonApplications.recruitNo, command.recruitNo),
+          projectedRecruitNo === null ? undefined : eq(seasonApplications.recruitNo, projectedRecruitNo),
           inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
           or(
             eq(seasonApplications.source, "SITE"),
             and(
               eq(seasonApplications.source, "KAKAO"),
               eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
-              command.action === "STATUS"
+              allRoundProjection
                 ? inArray(seasonApplications.sourceMode, INHOUSE_MODES)
                 : eq(seasonApplications.sourceMode, sourceMode),
             ),
@@ -1428,21 +1499,21 @@ export class PostgresKakaoAssistant {
         .leftJoin(players, eq(players.id, seasonKakaoPendingApplications.matchedPlayerId)).where(and(
           eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
           eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
-          command.recruitNo === null ? undefined : eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          projectedRecruitNo === null ? undefined : eq(seasonKakaoPendingApplications.recruitNo, projectedRecruitNo),
           eq(seasonKakaoPendingApplications.status, "ACTIVE"),
           eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash),
-          command.action === "STATUS"
+          allRoundProjection
             ? inArray(seasonKakaoPendingApplications.sourceMode, INHOUSE_MODES)
             : eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
         )).orderBy(asc(seasonKakaoPendingApplications.recruitNo), asc(seasonKakaoPendingApplications.slotNo), asc(seasonKakaoPendingApplications.createdAt), asc(seasonKakaoPendingApplications.id));
-      const metadataRows = await transaction.select().from(seasonInhouseRounds).where(and(
+      const scopedMetadataRows = await transaction.select().from(seasonInhouseRounds).where(and(
         eq(seasonInhouseRounds.seasonId, command.seasonId),
         eq(seasonInhouseRounds.applyDate, command.applyDate),
-        command.recruitNo === null ? undefined : eq(seasonInhouseRounds.recruitNo, command.recruitNo),
+        projectedRecruitNo === null ? undefined : eq(seasonInhouseRounds.recruitNo, projectedRecruitNo),
         eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
-        command.action === "STATUS" ? inArray(seasonInhouseRounds.mode, INHOUSE_MODES) : eq(seasonInhouseRounds.mode, sourceMode),
-        eq(seasonInhouseRounds.status, "IN_PROGRESS"),
+        allRoundProjection ? inArray(seasonInhouseRounds.mode, INHOUSE_MODES) : eq(seasonInhouseRounds.mode, sourceMode),
       )).orderBy(asc(seasonInhouseRounds.recruitNo), desc(seasonInhouseRounds.updatedAt), desc(seasonInhouseRounds.id));
+      const metadataRows = scopedMetadataRows.filter((row) => row.status === "IN_PROGRESS");
       const roundMetadataList = metadataRows.map(toSeasonRoundMetadata);
       const metadataByRecruitNo = new Map<number, KakaoSeasonRoundMetadataDto>();
       for (const metadata of roundMetadataList) {
@@ -1453,9 +1524,14 @@ export class PostgresKakaoAssistant {
       // most recently updated metadata and its Kakao roster instead of merging
       // incompatible modes. SITE applications remain shared and appear once.
       const selectedMode = (recruitNo: number) => metadataByRecruitNo.get(recruitNo)?.mode ?? "RIFT";
+      const roundVisible = (recruitNo: number) => {
+        const rows = scopedMetadataRows.filter((row) => row.recruitNo === recruitNo);
+        return rows.length === 0 || rows.some((row) => row.status === "IN_PROGRESS");
+      };
       const applications = applicationCandidates.filter(({ application }) =>
-        application.source === "SITE" || application.sourceMode === selectedMode(application.recruitNo));
-      const pending = pendingCandidates.filter(({ pending: item }) => item.sourceMode === selectedMode(item.recruitNo));
+        roundVisible(application.recruitNo) && (application.source === "SITE" || application.sourceMode === selectedMode(application.recruitNo)));
+      const pending = pendingCandidates.filter(({ pending: item }) =>
+        roundVisible(item.recruitNo) && item.sourceMode === selectedMode(item.recruitNo));
       const legacyEntries: LegacySeasonEntry[] = [
         ...applications.map(({ application, player }) => ({
           recruitNo: application.recruitNo,
@@ -1505,6 +1581,28 @@ export class PostgresKakaoAssistant {
           confirmedCount: applications.filter(({ application }) => application.status === "CONFIRMED").length,
           pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
           cancelledCount: 0,
+          availableRecruitNos: Object.freeze(availableRecruitNos),
+          roundMetadataList: Object.freeze(roundMetadataList),
+          legacyReply: legacyInhouseOverview(command.applyDate, legacyGrouped, metadataByRecruitNo),
+          v1StrictLegacyReply: v1StrictLegacyInhouseStatus(command.applyDate, legacyGrouped, metadataByRecruitNo),
+        });
+      }
+      if (command.action === "FINISH") {
+        const availableRecruitNos = [...new Set([...legacyGrouped.keys(), ...metadataByRecruitNo.keys()])]
+          .sort((left, right) => left - right);
+        return Object.freeze({
+          kind: "SEASON_APPLICATION_SNAPSHOT" as const,
+          seasonId: command.seasonId,
+          applyDate: command.applyDate,
+          recruitNo: command.recruitNo,
+          entries: Object.freeze([]),
+          appliedCount: applications.filter(({ application }) => application.status === "APPLIED").length,
+          reserveCount: applications.filter(({ application }) => application.status === "RESERVE").length +
+            pending.filter(({ pending: item }) => item.matchState === "MATCHED_RESERVE").length,
+          confirmedCount: applications.filter(({ application }) => application.status === "CONFIRMED").length,
+          pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
+          cancelledCount,
+          metadataUpdated,
           availableRecruitNos: Object.freeze(availableRecruitNos),
           roundMetadataList: Object.freeze(roundMetadataList),
           legacyReply: legacyInhouseOverview(command.applyDate, legacyGrouped, metadataByRecruitNo),

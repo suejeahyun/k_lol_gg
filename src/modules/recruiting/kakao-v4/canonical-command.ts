@@ -105,6 +105,7 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "SCRIM"; action: "STATUS" }>
   | Readonly<{ domain: "SCRIM"; action: "DETAIL"; target: KakaoV4RecruitTarget }>
   | Readonly<{ domain: "SCRIM"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
+  | Readonly<{ domain: "SCRIM"; action: "FINISH"; target: KakaoV4RecruitTarget }>
   | Readonly<{ domain: "SCRIM"; action: "SYNC"; target: KakaoV4RecruitTarget; payload: SyncScrimCommandPayload }>
   | Readonly<{ domain: "SCRIM"; action: "DEPRECATED_JOIN" | "DEPRECATED_CONFIRM" | "DEPRECATED_CANCEL" | "DEPRECATED_FINISH" }>
   | Readonly<{
@@ -126,6 +127,7 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "SEASON"; action: "STATUS"; seasonId: string | null; applyDate: string }>
   | Readonly<{ domain: "SEASON"; action: "DETAIL"; seasonId: string | null; applyDate: string; recruitNumber: number }>
   | Readonly<{ domain: "SEASON"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; seasonId: string | null; applyDate: string; recruitNumber: number; name: string }>
+  | Readonly<{ domain: "SEASON"; action: "FINISH"; seasonId: string | null; applyDate: string; recruitNumber: number }>
   | Readonly<{
       domain: "SEASON";
       action: "SYNC";
@@ -529,6 +531,12 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
       name,
     });
   }
+  if (classification.command === "INHOUSE_FINISH") {
+    const recruitNumber = numberParameter(parameters, "recruitNumber");
+    return recruitNumber
+      ? Object.freeze({ domain: "SEASON" as const, action: "FINISH" as const, seasonId: null, applyDate: partyDate, recruitNumber })
+      : null;
+  }
   if (classification.command === "INHOUSE_SNAPSHOT") return inhouseSnapshot(classification.canonicalText, partyDate);
   if (classification.command === "SCRIM_CREATE") {
     return Object.freeze({ domain: "SCRIM" as const, action: "RESERVE" as const, recruitDate: partyDate });
@@ -552,6 +560,12 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
       target: Object.freeze({ recruitDate: partyDate, recruitNumber }),
       name,
     });
+  }
+  if (classification.command === "SCRIM_FINISH") {
+    const recruitNumber = numberParameter(parameters, "scrimNumber");
+    return recruitNumber
+      ? Object.freeze({ domain: "SCRIM" as const, action: "FINISH" as const, target: Object.freeze({ recruitDate: partyDate, recruitNumber }) })
+      : null;
   }
   if (classification.command.startsWith("SCRIM_LEGACY_")) {
     const action = classification.command.slice("SCRIM_LEGACY_".length) as "JOIN" | "CONFIRM" | "CANCEL" | "FINISH";

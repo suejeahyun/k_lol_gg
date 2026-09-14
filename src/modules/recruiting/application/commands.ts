@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { RecruitMember, RecruitPartyPatchState, RecruitPartySlotPatch, RecruitPartyStatus, RecruitPartyType, ScrimLineup, ScrimParticipantTeam } from "../domain/recruiting";
+import type { RecruitMember, RecruitPartyPatchState, RecruitPartySlotPatch, RecruitPartyStatus, RecruitPartyType, ScrimLineup, ScrimParticipantTeam, ScrimRecruitStatus } from "../domain/recruiting";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
@@ -108,6 +108,7 @@ export type ScrimCommand =
   | Command<"JOIN_SCRIM", Readonly<{ opponentTeamId: string }>>
   | Command<"REOPEN_SCRIM", Readonly<Record<string, never>>>
   | Command<"CONFIRM_SCRIM", Readonly<Record<string, never>>>
+  | Command<"FINISH_SCRIM", Readonly<Record<string, never>>>
   | Command<"COMPLETE_SCRIM", Readonly<Record<string, never>>>
   | Command<"CANCEL_SCRIM", Readonly<Record<string, never>>>;
 
@@ -130,6 +131,7 @@ const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Se
   "SYNC_SCRIM",
   "ADD_SCRIM_PARTICIPANT",
   "REMOVE_SCRIM_PARTICIPANT",
+  "FINISH_SCRIM",
 ]);
 
 /** PARTY compatibility lookups must select only states mutable by the command. */
@@ -137,6 +139,14 @@ export function partyCompatTargetStatuses(type: RecruitingCommand["type"]): read
   if (type === "FINISH_PARTY") return ["IN_PROGRESS"];
   if (type === "SYNC_PARTY") return ["DRAFT", "IN_PROGRESS"];
   if (type === "PARTY_MEMBER_ADD" || type === "PARTY_MEMBER_REMOVE") return ["IN_PROGRESS"];
+  return undefined;
+}
+
+/** SCRIM compatibility lookups must not route a close command to a terminal row. */
+export function scrimCompatTargetStatuses(type: RecruitingCommand["type"]): readonly Exclude<ScrimRecruitStatus, "DRAFT">[] | undefined {
+  if (type === "FINISH_SCRIM" || type === "SYNC_SCRIM" || type === "ADD_SCRIM_PARTICIPANT" || type === "REMOVE_SCRIM_PARTICIPANT") {
+    return ["RECRUITING", "MATCHED", "CONFIRMED"];
+  }
   return undefined;
 }
 
@@ -170,6 +180,7 @@ const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> 
   JOIN_SCRIM: "recruiting:scrim:join",
   REOPEN_SCRIM: "recruiting:scrim:reopen",
   CONFIRM_SCRIM: "recruiting:scrim:confirm",
+  FINISH_SCRIM: "recruiting:scrim:finish",
   COMPLETE_SCRIM: "recruiting:scrim:complete",
   CANCEL_SCRIM: "recruiting:scrim:cancel",
 };

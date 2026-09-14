@@ -758,6 +758,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       "📢 내전하실분 #8", " 》협곡", ` 》${today} 21:00 시작`, "👥 1/10명", "",
       "*참가 신청 양식*", "이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD", "",
       `1. 사이트-${suffix}/D/M/TOP/AD`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
+      "", "마감: 내전 8ㅉ",
     ].join("\n"));
 
     await database.update(seasonApplications).set({
@@ -1103,6 +1104,196 @@ test("in-house shortcuts and full snapshots enforce integrated SITE capacity whi
         { slotNo: 3, name: `셋째-${suffix}`, riotId: null, mainPosition: "ALL", subPositions: [], reserve: false },
       ],
     }), (error: unknown) => error instanceof KakaoAssistantError && error.code === "CONFLICT");
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test("in-house finish cancels only mutable same-room rows, hides the round, and replays without writes", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const assistant = new PostgresKakaoAssistant(database);
+  const now = new Date();
+  const today = recruitingOperatingDateKey(now);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const reviewerId = randomUUID();
+  const room = `room-inhouse-finish-${suffix}`;
+  const foreignRoom = `room-inhouse-finish-foreign-${suffix}`;
+  const roomHash = createHash("sha256").update(`klol-v2:kakao-season-room:v1\0${room}`).digest();
+  const foreignRoomHash = createHash("sha256").update(`klol-v2:kakao-season-room:v1\0${foreignRoom}`).digest();
+  const targetRoundId = randomUUID();
+  const draftRoundId = randomUUID();
+  const foreignRoundId = randomUUID();
+  const terminalRoundId = randomUUID();
+  const playerIds = {
+    applied: randomUUID(), reserve: randomUUID(), site: randomUUID(), confirmed: randomUUID(), foreign: randomUUID(),
+  };
+  const applicationIds = {
+    applied: randomUUID(), reserve: randomUUID(), site: randomUUID(), confirmed: randomUUID(), foreign: randomUUID(),
+  };
+  const pendingIds = { target: randomUUID(), foreign: randomUUID() };
+  const finishPrincipalId = `bot:kakao:v4:inhouse-finish-${suffix}`;
+  const finishEventId = `event-inhouse-finish-${suffix}`;
+  const finishIntent = intent(
+    `nonce-inhouse-finish-${suffix}`,
+    `inhouse-finish-${suffix}`,
+    room,
+    `sender-not-creator-${suffix}`,
+  );
+  const finishRequestId = randomUUID();
+  const finishInput: Parameters<PostgresKakaoAssistant["syncSeasonSnapshot"]>[0] = {
+    actorPrincipalId: finishPrincipalId,
+    intent: finishIntent,
+    requestKey: finishEventId,
+    scope: KAKAO_V4_EVENT_SCOPE,
+    command: { action: "FINISH", seasonId, applyDate: today, recruitNo: 86, participants: [] },
+    requestId: finishRequestId,
+    now,
+  };
+
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({
+      id: reviewerId, loginId: `inhouse-finish-reviewer-${suffix}`,
+      loginIdNormalized: `inhouse-finish-reviewer-${suffix}`, role: "ADMIN", status: "APPROVED",
+    });
+    await database.insert(seasons).values({
+      id: seasonId, name: `Inhouse finish ${suffix}`, nameNormalized: `inhouse finish ${suffix}`,
+      status: "ACTIVE", activatedAt: now,
+    });
+    await database.insert(players).values(Object.entries(playerIds).map(([key, id]) => ({
+      id,
+      memberName: `${key}-${suffix}`,
+      memberNameNormalized: `${key}-${suffix}`,
+      nickname: `${key}${suffix}`,
+      nicknameNormalized: `${key}${suffix}`.toLowerCase(),
+      tagLine: "KR1",
+      tagLineNormalized: "kr1",
+    })));
+    await database.insert(seasonInhouseRounds).values([
+      {
+        id: targetRoundId, seasonId, applyDate: today, recruitNo: 86, sourceRoomIdHash: roomHash,
+        mode: "RIFT", status: "IN_PROGRESS", capacity: 10, sourceReferenceHash: randomBytes(32), revision: 4,
+      },
+      {
+        id: draftRoundId, seasonId, applyDate: today, recruitNo: 86, sourceRoomIdHash: roomHash,
+        mode: "ARAM", status: "DRAFT", capacity: 10, sourceReferenceHash: randomBytes(32), revision: 1,
+      },
+      {
+        id: foreignRoundId, seasonId, applyDate: today, recruitNo: 86, sourceRoomIdHash: foreignRoomHash,
+        mode: "RIFT", status: "IN_PROGRESS", capacity: 10, sourceReferenceHash: randomBytes(32),
+      },
+      {
+        id: terminalRoundId, seasonId, applyDate: today, recruitNo: 87, sourceRoomIdHash: roomHash,
+        mode: "RIFT", status: "CANCELED", capacity: 10, sourceReferenceHash: randomBytes(32), revision: 2,
+      },
+    ]);
+    await database.insert(seasonApplications).values([
+      {
+        id: applicationIds.applied, seasonId, playerId: playerIds.applied, applyDate: today, recruitNo: 86,
+        sourceSlotNo: 1, mainPosition: "TOP", status: "APPLIED", source: "KAKAO",
+        sourceReferenceHash: randomBytes(32), sourceRoomIdHash: roomHash, sourceMode: "RIFT",
+      },
+      {
+        id: applicationIds.reserve, seasonId, playerId: playerIds.reserve, applyDate: today, recruitNo: 86,
+        sourceSlotNo: 2, mainPosition: "JGL", status: "RESERVE", source: "KAKAO",
+        sourceReferenceHash: randomBytes(32), sourceRoomIdHash: roomHash, sourceMode: "RIFT",
+        reviewedByUserAccountId: reviewerId, reviewedAt: now,
+      },
+      {
+        id: applicationIds.site, seasonId, playerId: playerIds.site, applyDate: today, recruitNo: 86,
+        sourceSlotNo: 3, mainPosition: "MID", status: "APPLIED", source: "SITE",
+      },
+      {
+        id: applicationIds.confirmed, seasonId, playerId: playerIds.confirmed, applyDate: today, recruitNo: 86,
+        sourceSlotNo: 4, mainPosition: "ADC", status: "CONFIRMED", source: "KAKAO",
+        sourceReferenceHash: randomBytes(32), sourceRoomIdHash: roomHash, sourceMode: "RIFT",
+        reviewedByUserAccountId: reviewerId, reviewedAt: now,
+      },
+      {
+        id: applicationIds.foreign, seasonId, playerId: playerIds.foreign, applyDate: today, recruitNo: 86,
+        sourceSlotNo: 1, mainPosition: "SUP", status: "APPLIED", source: "KAKAO",
+        sourceReferenceHash: randomBytes(32), sourceRoomIdHash: foreignRoomHash, sourceMode: "RIFT",
+      },
+    ]);
+    await database.insert(seasonKakaoPendingApplications).values([
+      {
+        id: pendingIds.target, seasonId, applyDate: today, recruitNo: 86, slotNo: 5,
+        suppliedName: `pending-${suffix}`, suppliedRiotId: null, mainPosition: "ALL", reserve: false,
+        matchState: "UNMATCHED", status: "ACTIVE", sourceReferenceHash: randomBytes(32),
+        sourceRoomIdHash: roomHash, sourceMode: "RIFT",
+      },
+      {
+        id: pendingIds.foreign, seasonId, applyDate: today, recruitNo: 86, slotNo: 5,
+        suppliedName: `foreign-pending-${suffix}`, suppliedRiotId: null, mainPosition: "ALL", reserve: false,
+        matchState: "UNMATCHED", status: "ACTIVE", sourceReferenceHash: randomBytes(32),
+        sourceRoomIdHash: foreignRoomHash, sourceMode: "RIFT",
+      },
+    ]);
+
+    const first = await assistant.syncSeasonSnapshot(finishInput);
+    assert.equal(first.replayed, false);
+    assert.equal(first.body.cancelledCount, 3);
+    assert.equal(first.body.metadataUpdated, true);
+    assert.deepEqual(first.body.availableRecruitNos, []);
+    assert.doesNotMatch(first.body.v1StrictLegacyReply ?? "", /#86/u);
+
+    const replay = await assistant.syncSeasonSnapshot(finishInput);
+    assert.equal(replay.replayed, true);
+    assert.deepEqual(replay.body, first.body);
+
+    const rounds = new Map((await database.select().from(seasonInhouseRounds)).map((row) => [row.id, row]));
+    assert.equal(rounds.get(targetRoundId)?.status, "CANCELED");
+    assert.equal(rounds.get(targetRoundId)?.revision, 5);
+    assert.equal(rounds.get(draftRoundId)?.status, "DRAFT");
+    assert.equal(rounds.get(draftRoundId)?.revision, 1);
+    assert.equal(rounds.get(foreignRoundId)?.status, "IN_PROGRESS");
+    assert.equal(rounds.get(foreignRoundId)?.revision, 0);
+    assert.equal(rounds.get(terminalRoundId)?.status, "CANCELED");
+    assert.equal(rounds.get(terminalRoundId)?.revision, 2);
+
+    const applications = new Map((await database.select().from(seasonApplications)).map((row) => [row.id, row]));
+    assert.equal(applications.get(applicationIds.applied)?.status, "CANCELLED");
+    assert.equal(applications.get(applicationIds.applied)?.revision, 1);
+    assert.ok(applications.get(applicationIds.applied)?.cancelledAt);
+    assert.equal(applications.get(applicationIds.reserve)?.status, "CANCELLED");
+    assert.equal(applications.get(applicationIds.reserve)?.revision, 1);
+    assert.equal(applications.get(applicationIds.reserve)?.reviewedByUserAccountId, null);
+    assert.equal(applications.get(applicationIds.site)?.status, "APPLIED");
+    assert.equal(applications.get(applicationIds.site)?.revision, 0);
+    assert.equal(applications.get(applicationIds.confirmed)?.status, "CONFIRMED");
+    assert.equal(applications.get(applicationIds.confirmed)?.revision, 0);
+    assert.equal(applications.get(applicationIds.foreign)?.status, "APPLIED");
+    assert.equal(applications.get(applicationIds.foreign)?.revision, 0);
+
+    const pending = new Map((await database.select().from(seasonKakaoPendingApplications)).map((row) => [row.id, row]));
+    assert.equal(pending.get(pendingIds.target)?.status, "CANCELLED");
+    assert.equal(pending.get(pendingIds.target)?.revision, 1);
+    assert.ok(pending.get(pendingIds.target)?.cancelledAt);
+    assert.equal(pending.get(pendingIds.foreign)?.status, "ACTIVE");
+    assert.equal(pending.get(pendingIds.foreign)?.revision, 0);
+
+    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.requestId, finishRequestId))).length, 1);
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(and(
+      eq(recruitingCommandReceipts.actorPrincipalId, finishPrincipalId),
+      eq(recruitingCommandReceipts.scope, KAKAO_V4_EVENT_SCOPE),
+    ))).length, 1);
+
+    const status = await assistant.syncSeasonSnapshot({
+      actorPrincipalId: finishPrincipalId,
+      intent: intent(`nonce-inhouse-status-${suffix}`, `inhouse-status-${suffix}`, room),
+      requestKey: `inhouse-status-${suffix}`,
+      scope: "kakao:season-applications:status-after-finish",
+      command: { action: "STATUS", seasonId, applyDate: today, recruitNo: null, participants: [] },
+      requestId: randomUUID(),
+      now,
+    });
+    assert.equal(status.body.availableRecruitNos?.includes(86), false);
+    assert.doesNotMatch(status.body.v1StrictLegacyReply ?? "", /#86/u);
   } finally {
     await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();

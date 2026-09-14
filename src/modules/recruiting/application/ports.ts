@@ -15,6 +15,8 @@ export type RecruitingCompatTargetInput = Readonly<{
   recruitNumber: number;
   /** PARTY lookups may be narrowed to the states accepted by the caller's command. */
   allowedPartyStatuses?: readonly RecruitParty["status"][];
+  /** SCRIM lookups may be narrowed to the states accepted by the caller's command. */
+  allowedScrimStatuses?: readonly Exclude<ScrimRecruit["status"], "DRAFT">[];
 }>;
 
 export interface RecruitingUnitOfWork {

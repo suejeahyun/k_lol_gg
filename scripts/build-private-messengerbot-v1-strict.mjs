@@ -62,6 +62,7 @@ const outputSha256 = createHash("sha256").update(output).digest("hex");
 if ((output.match(/function\s+response\s*\(/gu) ?? []).length !== 1) throw new Error("Private V1 strict output must define one response callback");
 if (!version) throw new Error("Private V1 strict output must expose BOT_CODE_VERSION");
 if (!output.includes("function isPartyMetadataActivationForm(text)")) throw new Error("Private V1 strict output must include party metadata activation routing");
+if (!output.includes("msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\"")) throw new Error("Private V1 strict output must include scoped finish routing");
 if (output.length >= 65_535 || crlfLength >= 65_535) {
   throw new Error("Private V1 strict output exceeds MessengerBot R's LF/CRLF 65,535-character limit");
 }

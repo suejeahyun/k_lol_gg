@@ -5,6 +5,7 @@ import {
   KAKAO_V4_EVENT_SCOPE,
   hashKakaoV4EventId,
   partyCompatTargetStatuses,
+  scrimCompatTargetStatuses,
   sealRecruitingCommand,
   type RecruitingCommand,
 } from "../application/commands";
@@ -442,6 +443,7 @@ function scrimDetailReply(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Str
     "수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송",
     `빠른 추가: 스크림상세 ${scrim.scrimNumber} 추가 이름`,
     `빠른 삭제: 스크림상세 ${scrim.scrimNumber} 삭제 이름`,
+    `마감: 스크림 ${scrim.scrimNumber}ㅉ`,
   ].join("\n");
 }
 
@@ -452,6 +454,7 @@ function scrimTemplate(recruitDate: string, scrimNumber: number | null = null) {
     "상대팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ", "",
     "주최자를 입력해 전체 전송하면 모집이 시작됩니다.",
     `활성화 후 스크림상세 ${scrimNumber ?? "번호"} 추가 이름으로 참가할 수 있습니다.`,
+    `마감: 스크림 ${scrimNumber ?? "번호"}ㅉ`,
   ].join("\n");
 }
 
@@ -496,7 +499,12 @@ function inhouseTemplate(command: Readonly<{
     ? ["이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD"]
     : ["이름", "EX) 1.지후"]), "");
   for (let slot = 1; slot <= command.capacity; slot += 1) lines.push(`${slot}.`);
-  lines.push("", `빠른 추가: 내전상세 ${command.recruitNumber} 추가 이름`, `빠른 삭제: 내전상세 ${command.recruitNumber} 삭제 이름`);
+  lines.push(
+    "",
+    `빠른 추가: 내전상세 ${command.recruitNumber} 추가 이름`,
+    `빠른 삭제: 내전상세 ${command.recruitNumber} 삭제 이름`,
+    `마감: 내전 ${command.recruitNumber}ㅉ`,
+  );
   return lines.join("\n");
 }
 
@@ -1091,6 +1099,44 @@ export class KakaoV4CommandDispatcher {
         replayed: result.replayed,
       });
     }
+    if (command.action === "FINISH") {
+      const v1Strict = usesKakaoV1StrictResponse(context.envelope);
+      const target = await this.dependencies.recruiting.resolveCompatTarget({
+        kind: "SCRIM",
+        sourceRoomId: context.authorization.roomId,
+        recruitDate: command.target.recruitDate,
+        recruitNumber: command.target.recruitNumber,
+        allowedScrimStatuses: scrimCompatTargetStatuses("FINISH_SCRIM"),
+      });
+      if (!target) {
+        const reply = [
+          "[K-LOL.GG 스크림 마무리]",
+          `현재 운영일의 진행 중인 스크림 #${String(command.target.recruitNumber)}을 찾지 못했습니다.`,
+          "최신 스크림현황을 확인해 주세요.",
+        ].join("\n");
+        return Object.freeze({
+          kind: "SCRIM",
+          action: command.action,
+          aggregate: null,
+          legacyReply: await this.appendLatestScrimStatus(context, reply, v1Strict),
+          replayed: false,
+        });
+      }
+      const result = await this.dependencies.recruiting.handle(sealRecruitingCommand({
+        type: "FINISH_SCRIM",
+        aggregateId: target.id,
+        metadata: commandMetadata(context, target.revision),
+        payload: {},
+      }));
+      const reply = `[K-LOL.GG 스크림 #${String(command.target.recruitNumber)}]\n모집을 마감했습니다.`;
+      return Object.freeze({
+        kind: "SCRIM",
+        action: command.action,
+        aggregate: result.body,
+        legacyReply: await this.appendLatestScrimStatus(context, reply, v1Strict),
+        replayed: result.replayed,
+      });
+    }
     if (
       command.action === "DEPRECATED_JOIN" ||
       command.action === "DEPRECATED_CONFIRM" ||
@@ -1335,6 +1381,51 @@ export class KakaoV4CommandDispatcher {
     if (command.action === "JOIN_GUIDE") {
       const publicOrigin = (this.dependencies.publicOrigin ?? "https://k-lol-gg.vercel.app").replace(/\/$/u, "");
       return Object.freeze({ kind: "SEASON", action: command.action, aggregate: null, legacyReply: participationGuide(publicOrigin), replayed: false });
+    }
+    if (command.action === "FINISH") {
+      let result: Awaited<ReturnType<KakaoV4AssistantPort["syncSeasonSnapshot"]>>;
+      try {
+        result = await this.dependencies.assistant.syncSeasonSnapshot({
+          ...signedInput(context),
+          requestId: context.requestId,
+          command: {
+            action: "FINISH",
+            seasonId: command.seasonId,
+            applyDate: command.applyDate,
+            recruitNo: command.recruitNumber,
+            participants: [],
+          },
+        });
+      } catch (error) {
+        if (error instanceof KakaoAssistantError && error.code === "NOT_FOUND") {
+          return Object.freeze({
+            kind: "SEASON",
+            action: command.action,
+            aggregate: null,
+            legacyReply: [
+              "[K-LOL.GG 내전 마무리]",
+              `현재 운영일의 진행 중인 내전 #${String(command.recruitNumber)}을 찾지 못했습니다.`,
+              "최신 내전현황을 확인해 주세요.",
+            ].join("\n"),
+            replayed: false,
+          });
+        }
+        throw error;
+      }
+      const statusReply = usesKakaoV1StrictResponse(context.envelope)
+        ? result.body.v1StrictLegacyReply
+        : result.body.legacyReply;
+      return Object.freeze({
+        kind: "SEASON",
+        action: command.action,
+        aggregate: result.body,
+        legacyReply: [
+          `[K-LOL.GG 내전 #${String(command.recruitNumber)}]`,
+          "모집을 마감했습니다.",
+          ...(statusReply ? ["", statusReply] : []),
+        ].join("\n"),
+        replayed: result.replayed,
+      });
     }
     if (command.action === "ADD_MEMBER" || command.action === "REMOVE_MEMBER") {
       let result: Awaited<ReturnType<KakaoV4AssistantPort["syncSeasonSnapshot"]>>;

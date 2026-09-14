@@ -1,6 +1,6 @@
 {
-  "contractVersion": "KLOL_KAKAO_V4_V1_COMPAT_2026_09_14_R4",
-  "clientArtifactVersion": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R12_2026_09_13_TRANSCRIPT_DEDUPE",
+  "contractVersion": "KLOL_KAKAO_V4_V1_COMPAT_2026_09_14_R5",
+  "clientArtifactVersion": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R13_2026_09_14_SCOPED_FINISH",
   "source": {
     "v1Artifact": "pasted-text.txt (delegated attachment; not committed)",
     "v1Sha256": "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7",
@@ -145,8 +145,8 @@
   "inhouse": {
     "modeSelectorReply": "[K-LOL.GG 내전 종목 선택]\n✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️\n\n아래 명령어 중 하나를 입력해주세요.\n- /내전구인 협곡\n- /내전구인 칼바람\n- /내전구인 증바람\n\n날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00\n모집번호·정원 지정: /내전구인 칼바람 #2 10명\n\n협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.\n칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
     "invalidModeSelectorReply": "[K-LOL.GG 내전 종목 선택]\n지원하지 않는 종목입니다: 양식\n✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️\n\n아래 명령어 중 하나를 입력해주세요.\n- /내전구인 협곡\n- /내전구인 칼바람\n- /내전구인 증바람\n\n날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00\n모집번호·정원 지정: /내전구인 칼바람 #2 10명\n\n협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.\n칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
-    "riftTemplate": "📢 내전하실분 #2\n 》협곡\n 》2026-09-09 21:30 시작\n 》게임정보 :\n 》주최자 :\n👥 0/10명\n\n*참가 신청 양식*\n이름/현티어/최고티어/주라인/부라인\nEX) 1.지후/P/E/AD/MD\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n빠른 추가: 내전상세 2 추가 이름\n빠른 삭제: 내전상세 2 삭제 이름",
-    "aramTemplate": "📢 내전하실분 #3\n 》칼바람\n 》2026-09-09 21:30 시작\n 》게임정보 :\n 》주최자 :\n👥 0/10명\n\n*참가 신청 양식*\n이름\nEX) 1.지후\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n빠른 추가: 내전상세 3 추가 이름\n빠른 삭제: 내전상세 3 삭제 이름",
+    "riftTemplate": "📢 내전하실분 #2\n 》협곡\n 》2026-09-09 21:30 시작\n 》게임정보 :\n 》주최자 :\n👥 0/10명\n\n*참가 신청 양식*\n이름/현티어/최고티어/주라인/부라인\nEX) 1.지후/P/E/AD/MD\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n빠른 추가: 내전상세 2 추가 이름\n빠른 삭제: 내전상세 2 삭제 이름\n마감: 내전 2ㅉ",
+    "aramTemplate": "📢 내전하실분 #3\n 》칼바람\n 》2026-09-09 21:30 시작\n 》게임정보 :\n 》주최자 :\n👥 0/10명\n\n*참가 신청 양식*\n이름\nEX) 1.지후\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n빠른 추가: 내전상세 3 추가 이름\n빠른 삭제: 내전상세 3 삭제 이름\n마감: 내전 3ㅉ",
     "multiRoundStatusReply": "[K-LOL.GG 내전현황]\n🔎 전체 명단: 내전상세 번호\n\n#1 2026-9-9 21:00 시작 (2/10)\n└ 내전상세 1\n#2 2026-9-9 21:30 시작 (1/10 / 예비 1)\n└ 내전상세 2\n\n상세 명령: 내전상세 1 / 내전상세 2",
     "modes": {
       "RIFT": { "labels": ["협곡", "rift"], "memberFields": ["이름", "현티어", "최고티어", "주라인", "부라인"], "seasonRoster": true },
@@ -156,10 +156,10 @@
     "zeroParticipants": "The accepted full form withdraws/cancels the same-installation-scope, same-round participant snapshot"
   },
   "scrim": {
-    "initialTemplate": "[K-LOL.GG 스크림 구인 양식]\n\n운영일: 2026-09-09\n번호: #7\n\n일시: \n방식: 3판2선\n주최자: \n\n우리팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n상대팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n주최자를 입력해 전체 전송하면 모집이 시작됩니다.\n활성화 후 스크림상세 7 추가 이름으로 참가할 수 있습니다.",
+    "initialTemplate": "[K-LOL.GG 스크림 구인 양식]\n\n운영일: 2026-09-09\n번호: #7\n\n일시: \n방식: 3판2선\n주최자: \n\n우리팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n상대팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n주최자를 입력해 전체 전송하면 모집이 시작됩니다.\n활성화 후 스크림상세 7 추가 이름으로 참가할 수 있습니다.\n마감: 스크림 7ㅉ",
     "emptyStatusReply": "[K-LOL.GG 스크림 현황]\n\n현재 모집중/확정된 스크림이 없습니다.",
     "statusReply": "[K-LOL.GG 스크림 현황]\n🔎 전체 양식: 스크림상세 번호\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n주최자: 미입력 · 참여 하늘탑, 하늘정글, 하늘미드, 하늘원딜, 하늘서폿, 꽃잎탑, 꽃잎정글, 꽃잎미드, 꽃잎원딜, 꽃잎서폿\n└ 스크림상세 7",
-    "detailReply": "[K-LOL.GG 멸망전 스크림 상세]\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n주최자: 미입력 · 참여 하늘탑, 하늘정글, 하늘미드, 하늘원딜, 하늘서폿, 꽃잎탑, 꽃잎정글, 꽃잎미드, 꽃잎원딜, 꽃잎서폿\n\n운영일: 2026-09-09\n번호: #7\n일시: 9/9 21:00\n방식: 3판2선\n주최자: \n\n우리팀: 하늘단\nTOP: 하늘탑\nJUG: 하늘정글\nMID: 하늘미드\nADC: 하늘원딜\nSUP: 하늘서폿\n\n상대팀: 꽃잎단\nTOP: 꽃잎탑\nJUG: 꽃잎정글\nMID: 꽃잎미드\nADC: 꽃잎원딜\nSUP: 꽃잎서폿\n\n수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송\n빠른 추가: 스크림상세 7 추가 이름\n빠른 삭제: 스크림상세 7 삭제 이름",
+    "detailReply": "[K-LOL.GG 멸망전 스크림 상세]\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n주최자: 미입력 · 참여 하늘탑, 하늘정글, 하늘미드, 하늘원딜, 하늘서폿, 꽃잎탑, 꽃잎정글, 꽃잎미드, 꽃잎원딜, 꽃잎서폿\n\n운영일: 2026-09-09\n번호: #7\n일시: 9/9 21:00\n방식: 3판2선\n주최자: \n\n우리팀: 하늘단\nTOP: 하늘탑\nJUG: 하늘정글\nMID: 하늘미드\nADC: 하늘원딜\nSUP: 하늘서폿\n\n상대팀: 꽃잎단\nTOP: 꽃잎탑\nJUG: 꽃잎정글\nMID: 꽃잎미드\nADC: 꽃잎원딜\nSUP: 꽃잎서폿\n\n수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송\n빠른 추가: 스크림상세 7 추가 이름\n빠른 삭제: 스크림상세 7 삭제 이름\n마감: 스크림 7ㅉ",
     "newFormReply": "[K-LOL.GG 스크림 등록 완료]",
     "deprecatedReplies": {
       "DEPRECATED_JOIN": "[K-LOL.GG 스크림 참가 명령 사용 안 함]\n스크림 양식에 직접 입력해주세요.",

@@ -252,6 +252,28 @@ test("V1 strict routes organizer-only metadata activation forms with or without 
   }
 });
 
+test("V1 strict R13 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const [message, profileId] of [
+    ["내전 2ㅉ", "FEATURES"],
+    ["/내전 2ㅉ", "FEATURES"],
+    ["스크림 7ㅉ", "RECRUIT"],
+    ["/스크림 7ㅉ", "RECRUIT"],
+  ]) {
+    const runtime = evaluate(artifact, { responseBody: { reply: "[서버 마감 응답]" } });
+    assert.deepEqual(replyFor(runtime, message), ["[서버 마감 응답]"]);
+    assert.equal(runtime.http.calls, 1);
+    const request = JSON.parse(runtime.http.body);
+    assert.equal(request.profileId, profileId);
+    assert.equal(request.text, message);
+  }
+  for (const message of ["//내전 2ㅉ", "내전2ㅉ", "내전 0ㅉ", "스크림 1000ㅉ", "내전\n2ㅉ"]) {
+    const runtime = evaluate(artifact);
+    assert.deepEqual(replyFor(runtime, message), [], message);
+    assert.equal(runtime.http.calls, 0, message);
+  }
+});
+
 test("V1 strict routes the full organizer-only template returned by the production server", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   const message = [
@@ -396,7 +418,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R12_2026_09_13_TRANSCRIPT_DEDUPE"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R13_2026_09_14_SCOPED_FINISH"],
   );
 });
 

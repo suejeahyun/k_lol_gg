@@ -124,6 +124,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
   assert.match(inhouse.legacyReply, /내전하실분 #7/u);
   assert.match(inhouse.legacyReply, /》주최자\s*:/u);
   assert.match(inhouse.legacyReply, /내전상세 7 추가 이름/u);
+  assert.match(inhouse.legacyReply, /마감: 내전 7ㅉ/u);
 
   const scrimContext = dispatchContext("RECRUIT", "스크림구인", "event-scrim-reserve-0000001");
   const scrimClassified = classifyKakaoV4Command(scrimContext.envelope);
@@ -135,6 +136,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
   assert.match(scrim.legacyReply, /번호: #6/u);
   assert.match(scrim.legacyReply, /주최자:/u);
   assert.match(scrim.legacyReply, /스크림상세 6 추가 이름/u);
+  assert.match(scrim.legacyReply, /마감: 스크림 6ㅉ/u);
 });
 
 test("내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은 활성화 명령이 되지 않는다", async () => {

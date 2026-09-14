@@ -445,11 +445,12 @@ export class RecruitingCommandHandler {
       case "JOIN_SCRIM":
       case "REOPEN_SCRIM":
       case "CONFIRM_SCRIM":
+      case "FINISH_SCRIM":
       case "COMPLETE_SCRIM":
       case "CANCEL_SCRIM":
         nextScrim = transitionScrimRecruit({
           scrim: scrim!, expectedRevision: command.metadata.expectedRevision,
-          command: command.type === "JOIN_SCRIM" ? "JOIN" : command.type === "REOPEN_SCRIM" ? "REOPEN" : command.type === "CONFIRM_SCRIM" ? "CONFIRM" : command.type === "COMPLETE_SCRIM" ? "COMPLETE" : "CANCEL",
+          command: command.type === "JOIN_SCRIM" ? "JOIN" : command.type === "REOPEN_SCRIM" ? "REOPEN" : command.type === "CONFIRM_SCRIM" ? "CONFIRM" : command.type === "FINISH_SCRIM" ? "FINISH" : command.type === "COMPLETE_SCRIM" ? "COMPLETE" : "CANCEL",
           opponentTeamId: command.type === "JOIN_SCRIM" ? command.payload.opponentTeamId : undefined,
           opponentSenderId: command.type === "JOIN_SCRIM" && command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.senderId : undefined,
         });

@@ -40,6 +40,7 @@ const scopes: Record<RecruitingCommand["type"], string> = {
   JOIN_SCRIM: "bot:recruiting:scrim:join",
   REOPEN_SCRIM: "bot:recruiting:scrim:reopen",
   CONFIRM_SCRIM: "bot:recruiting:scrim:confirm",
+  FINISH_SCRIM: "bot:recruiting:scrim:finish",
   COMPLETE_SCRIM: "bot:recruiting:scrim:complete",
   CANCEL_SCRIM: "bot:recruiting:scrim:cancel",
 };

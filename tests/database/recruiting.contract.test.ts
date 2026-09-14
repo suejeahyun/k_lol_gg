@@ -8,6 +8,7 @@ import {
   hashKakaoV4EventId,
   hashRecruitingRequestKey,
   recruitingCommandScope,
+  scrimCompatTargetStatuses,
   sealRecruitingCommand,
   RecruitingApplicationError,
   RecruitingCommandHandler,
@@ -350,6 +351,115 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
   } finally {
     if (previousAllowedSenders === undefined) delete process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS;
     else process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = previousAllowedSenders;
+    await pool.end();
+  }
+});
+
+test("V4 scrim finish completes only the active same-room target and replays without duplicate writes", { concurrency: false }, async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const adapter = new PostgresRecruitingAdapter(database);
+  const handler = new RecruitingCommandHandler({
+    unitOfWork: adapter, repository: adapter, authorization: adapter, receipts: adapter,
+    audit: adapter.auditPort(), outbox: adapter.outboxPort(),
+    clock: { now: () => new Date(), receiptExpiresAt: (createdAt) => new Date(createdAt.getTime() + 86_400_000) },
+  });
+  const suffix = randomBytes(8).toString("hex");
+  const principalId = `bot:kakao:v4:scrim-finish-${suffix}`;
+  const roomId = `room-v4-scrim-finish-${suffix}`;
+  const foreignRoomId = `room-v4-scrim-foreign-${suffix}`;
+  const recruitDate = "2099-12-27";
+  const targetId = randomUUID();
+  const foreignId = randomUUID();
+  const terminalId = randomUUID();
+
+  function finishCommand(aggregateId: string, expectedRevision: number) {
+    const eventId = `event-scrim-finish-${suffix}`;
+    const bodyDigestHex = createHash("sha256").update(`scrim-finish-${suffix}`).digest("hex");
+    const issuedAt = new Date(Math.floor(Date.now() / 1_000) * 1_000);
+    return sealRecruitingCommand({
+      type: "FINISH_SCRIM",
+      aggregateId,
+      metadata: {
+        actor: {
+          kind: "BOT", principalId, commandSource: "KAKAO_V4",
+          authorizationIntent: {
+            kind: "KAKAO_HMAC", keyId: "recruit-current", timestampSeconds: Math.floor(issuedAt.getTime() / 1_000),
+            nonce: `scrim_finish_nonce_${suffix}`, installationId: `install-${suffix}`,
+            deliveryId: eventId, roomId, senderId: `sender-not-creator-${suffix}`, bodyDigestHex,
+            requireNonceClaim: true, transactionRecheck: true,
+          },
+        },
+        requestId: randomUUID(), expectedRevision, issuedAt: issuedAt.toISOString(),
+        idempotency: {
+          scope: recruitingCommandScope("BOT", "FINISH_SCRIM", "KAKAO_V4"),
+          keyHash: hashKakaoV4EventId(eventId), requestFingerprint: new Uint8Array(32), bodyDigestHex,
+        },
+      },
+      payload: {},
+    });
+  }
+
+  try {
+    await applyMigrations(database);
+    await database.insert(scrimRecruits).values([
+      {
+        id: targetId, sourceRoomId: roomId, sourceSenderId: `sender-creator-${suffix}`,
+        recruitDate, scrimNumber: 81, tournamentId: randomUUID(), requesterTeamId: randomUUID(),
+        status: "RECRUITING", isDraft: false,
+      },
+      {
+        id: foreignId, sourceRoomId: foreignRoomId, sourceSenderId: `sender-foreign-${suffix}`,
+        recruitDate, scrimNumber: 82, tournamentId: randomUUID(), requesterTeamId: randomUUID(),
+        status: "RECRUITING", isDraft: false,
+      },
+      {
+        id: terminalId, sourceRoomId: roomId, sourceSenderId: `sender-terminal-${suffix}`,
+        recruitDate, scrimNumber: 83, tournamentId: randomUUID(), requesterTeamId: randomUUID(),
+        status: "COMPLETED", isDraft: false, revision: 3,
+      },
+    ]);
+
+    const activeStatuses = scrimCompatTargetStatuses("FINISH_SCRIM");
+    const resolved = await adapter.resolveCompatTarget({
+      kind: "SCRIM", sourceRoomId: roomId, recruitDate, recruitNumber: 81,
+      allowedScrimStatuses: activeStatuses,
+    });
+    assert.deepEqual(resolved, { id: targetId, revision: 0 });
+    assert.equal(await adapter.resolveCompatTarget({
+      kind: "SCRIM", sourceRoomId: foreignRoomId, recruitDate, recruitNumber: 81,
+      allowedScrimStatuses: activeStatuses,
+    }), null, "the same number cannot resolve through another room");
+    assert.equal(await adapter.resolveCompatTarget({
+      kind: "SCRIM", sourceRoomId: roomId, recruitDate, recruitNumber: 83,
+      allowedScrimStatuses: activeStatuses,
+    }), null, "a terminal scrim is not a finish target");
+
+    const command = finishCommand(resolved.id, resolved.revision);
+    const first = await handler.handle(command);
+    assert.equal(first.replayed, false);
+    assert.equal(first.body.status, "COMPLETED");
+    assert.equal(first.revision, 1);
+
+    const replay = await handler.handle(command);
+    assert.equal(replay.replayed, true);
+    assert.deepEqual(replay.body, first.body);
+    assert.equal(replay.revision, first.revision);
+
+    const rows = new Map((await database.select().from(scrimRecruits)).map((row) => [row.id, row]));
+    assert.equal(rows.get(targetId)?.status, "COMPLETED");
+    assert.equal(rows.get(targetId)?.revision, 1);
+    assert.equal(rows.get(foreignId)?.status, "RECRUITING");
+    assert.equal(rows.get(foreignId)?.revision, 0);
+    assert.equal(rows.get(terminalId)?.status, "COMPLETED");
+    assert.equal(rows.get(terminalId)?.revision, 3);
+    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetId, targetId))).length, 1);
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, targetId))).length, 1);
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, principalId))).length, 1);
+    assert.equal((await database.select().from(recruitingNonceBindings).where(eq(recruitingNonceBindings.actorPrincipalId, principalId))).length, 1);
+  } finally {
     await pool.end();
   }
 });
