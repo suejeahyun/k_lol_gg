@@ -1,8 +1,21 @@
 # 카카오 내전·스크림 번호 마감 R13 QA
 
-검토일: 2026-09-14 KST  
-대상: V4 서버 마감 명령, MessengerBot R V1 strict R13, PostgreSQL 데이터 경계  
-판정: 소스·일반 테스트·빌드·격리 PostgreSQL 검증 통과, 운영 배포 및 휴대폰 설치는 별도 근거 필요
+검토일: 2026-09-14 KST
+
+대상: V4 서버 마감 명령, MessengerBot R V1 strict R13, PostgreSQL 데이터 경계
+
+판정: 소스·일반 테스트·빌드·격리 PostgreSQL·private gateway 검증 및 Vercel 운영 배포 완료, 휴대폰 설치는 미확인
+
+## 릴리스와 운영 배포
+
+- 기능 커밋: `3bf2aa5fdef1d135c15b6c25646676b86467d256`
+- 릴리스 tag: `kakao-r13-scoped-finish-v1.0.0`
+- Vercel Production: `Ready`
+- 배포 참조: `9d6ZCVgCB6rFRzKxwJaAhkfHmhus`
+- 불변 URL: `https://k-lol-m0nwiyr4f-tjdmswo11-3715s-projects.vercel.app`
+- 운영 alias: `https://k-lol-gg.vercel.app`
+- 운영 확인: `2026-09-14T04:54:28.9176376Z` · `/api/health` HTTP 200 · `status: ready`
+- private gateway live 점검: RECRUIT HTTP 200, FEATURES HTTP 200, 자격 증명 출력 없음
 
 ## 요구사항과 결과
 
@@ -60,7 +73,7 @@ PASS
 
 ## 운영 반영 상태와 남은 위험
 
-- 기능 커밋·tag·Vercel 배포 정보는 배포 확인 후 이 문서와 릴리스 레지스트리에 추가한다.
+- 서버 기능과 운영 alias는 Production 배포됐다.
 - 실제 휴대폰의 기존 소스 백업, R13 private 전체 교체, 컴파일, `/봇버전`, 두 방의 실방 왕복은 사용자 휴대폰에서 확인해야 한다.
 - 공개 생성본의 CRLF 여유가 103자뿐이므로 다음 휴대폰 기능 추가 전 압축 여유 확보가 필요하다.
 - 내전 DB enum에는 정상 종료 전용 값이 없어 현 terminal 값 `CANCELED`를 사용한다. 사용자 현황에서는 종료된 모집으로 숨기지만, 향후 운영 분석에서 취소와 정상 마감을 분리하려면 별도 migration이 필요하다.

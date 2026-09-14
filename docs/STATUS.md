@@ -1,5 +1,20 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-14 카카오 내전·스크림 번호 마감 R13 운영 릴리스
+
+- 기능 커밋: `3bf2aa5fdef1d135c15b6c25646676b86467d256`
+- 릴리스 tag: `kakao-r13-scoped-finish-v1.0.0`
+- 상태: 소스·전체 테스트·격리 PostgreSQL·private gateway 검증 및 Vercel 운영 배포 완료, 휴대폰 MessengerBot R 설치 대기
+- 운영 배포: `9d6ZCVgCB6rFRzKxwJaAhkfHmhus`
+- 운영 URL: `https://k-lol-m0nwiyr4f-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
+- 테스트: 일반 779개 중 778 PASS·DB 전용 1 skip, PostgreSQL 전체 계약, 내전·스크림 마감 4/4, static generation 93/93
+- private 설치본: R13, LF 61,450 / CRLF 63,255, SHA-256 `348ad262701f834d983dc432c80552b7d556a7c07b71c6c374c75e8bb5a14c6e`
+- 주요 범위: `내전 Nㅉ`, `/내전 Nㅉ`, `스크림 Nㅉ`, `/스크림 Nㅉ` 번호 마감, 동일 방 일반 사용자 허용, 최신 현황 응답, 다른 방·운영일·종료 상태·SITE 및 확정 신청 보존
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r13-scoped-finish-2026-09-14/README.md`](./qa-evidence/kakao-r13-scoped-finish-2026-09-14/README.md)에 있다.
+
 ## 2026-09-14 카카오 파티 주최자 자동 참가 운영 릴리스
 
 - 기능 커밋: `bd4a2ea506120883ec1513827cc6abdbe165d92d`

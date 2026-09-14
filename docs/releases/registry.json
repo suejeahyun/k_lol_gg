@@ -490,6 +490,32 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "kakao-r13-scoped-finish",
+      "version": "1.0.0",
+      "gitTag": "kakao-r13-scoped-finish-v1.0.0",
+      "commit": "3bf2aa5fdef1d135c15b6c25646676b86467d256",
+      "releasedAt": "2026-09-14T13:54:28+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-r13-scoped-finish-2026-09-14/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-14-kakao-r13-scoped-finish.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "9d6ZCVgCB6rFRzKxwJaAhkfHmhus",
+        "url": "https://k-lol-m0nwiyr4f-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-14T04:54:28.9176376Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R13_2026_09_14_SCOPED_FINISH",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
