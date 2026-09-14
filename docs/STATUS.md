@@ -1,8 +1,21 @@
 # K-LOL.GG V2 상태
 
-## 2026-09-14 카카오 R16 내전·파티 동일 흐름
+## 2026-09-14 카카오 R17 내전 종목별 전체 양식
 
 - 상태: 소스·전체 앱 검사·격리 PostgreSQL·Rhino 정적 검사 완료, Vercel 운영 배포 진행 중, 휴대폰 MessengerBot R 설치 대기
+- 릴리스 tag: `kakao-r17-mode-forms-v1.0.0`
+- 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R17_2026_09_14`
+- 주요 범위: 파티 무변경, 협곡 티어·라인 10칸, 칼바람·증바람 이름 10칸, 양식 전송 후 활성화, 이름만/상세 빠른 추가 병행
+- private 설치본: LF 61,326 / CRLF 63,126, SHA-256 `b8f7577e84ca6f3a45e98b981f88ec74f12648824ec13c94dbe217229275cd8f`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r17-mode-forms-2026-09-14/README.md`](./qa-evidence/kakao-r17-mode-forms-2026-09-14/README.md)에 있다.
+
+## 2026-09-14 카카오 R16 내전·파티 동일 흐름
+
+- 상태: 소스·전체 앱 검사·격리 PostgreSQL·Rhino 정적 검사·Vercel 운영 배포 완료, R17로 대체, 휴대폰 MessengerBot R 설치 대기
+- 기능 커밋: `04404e61de21940a1eee7c98682ce3a1046fe1a2`
+- 운영 배포: `CjPCThSJRKUcDCLQ3VAAqnEYa8Wa`
 - 릴리스 tag: `kakao-r16-inhouse-party-flow-v1.0.0`
 - 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R16_2026_09_14`
 - 주요 범위: 내전 양식 생성→작성→활성화, 주최자 1번 자동 참가, 상세 추가·삭제·마감, 최신 상세 응답, 기존 전체 양식 호환

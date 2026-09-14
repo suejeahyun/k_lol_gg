@@ -161,9 +161,9 @@ async function expectExactReply(profile: KakaoV4ProfileId, text: string, expecte
 const INHOUSE_REPLY_CASES = [
   ["내전구인", fixture.inhouse.modeSelectorReply],
   ["내전구인 양식", fixture.inhouse.invalidModeSelectorReply],
-  ["내전구인 협곡 2026-09-09 21:30 #2 10명", fixture.inhouse.riftActivationTemplate],
-  ["내전구인 칼바람 2026-09-09 21:30 #3 10명", fixture.inhouse.aramActivationTemplate],
-  ["내전구인 증바람 2026-09-09 21:30 #3 10명", fixture.inhouse.aramActivationTemplate.replace("칼바람", "증바람")],
+  ["내전구인 협곡 2026-09-09 21:30 #2 10명", fixture.inhouse.riftTemplate],
+  ["내전구인 칼바람 2026-09-09 21:30 #3 10명", fixture.inhouse.aramTemplate],
+  ["내전구인 증바람 2026-09-09 21:30 #3 10명", fixture.inhouse.aramTemplate.replace("칼바람", "증바람")],
   ["내전현황", fixture.inhouse.multiRoundStatusReply],
   ["내전상세 2", inhouseTemplate("협곡", ["재현/P/E/AD/MD", "민서/D/M/MD/SUP"])],
 ] as const;

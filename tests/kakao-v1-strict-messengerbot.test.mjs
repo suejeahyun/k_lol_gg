@@ -281,7 +281,7 @@ test("V1 strict routes organizer-only metadata activation forms with or without 
   }
 });
 
-test("V1 strict R16 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
+test("V1 strict R17 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const [message, profileId] of [
     ["내전 2ㅉ", "FEATURES"],
@@ -336,38 +336,6 @@ test("V1 strict routes the full organizer-only template returned by the producti
   const request = JSON.parse(runtime.http.body);
   assert.equal(request.profileId, "RECRUIT");
   assert.equal(request.text, message);
-});
-
-test("V1 strict routes completed in-house activation forms and ignores the untouched draft", async () => {
-  const artifact = await readFile(artifactPath, "utf8");
-  const draft = [
-    "[K-LOL.GG 내전 구인 양식]",
-    "같이 내전할 사람~",
-    "",
-    "📢 내전하실분 #4",
-    "》증바람",
-    "》2026-09-14 21:00 시작",
-    "》게임정보 :",
-    "》주최자 :",
-    "👥 0/10명",
-    "",
-    "위 항목을 작성해 전체 전송해주세요.",
-    "활성화 후 내전상세 4 추가 이름으로 참가할 수 있습니다.",
-  ].join("\n");
-  const completed = draft.replace("》주최자 :", "》주최자 : 민서");
-  const untouched = evaluate(artifact);
-  assert.equal(untouched.isSeasonApplySnapshotEnvelope(draft), true);
-  assert.equal(untouched.isSeasonApplyCandidateMessage(draft), false);
-  assert.deepEqual(replyFor(untouched, draft), []);
-  assert.equal(untouched.http.calls, 0);
-
-  for (const prefix of ["", "/", "／"]) {
-    const runtime = evaluate(artifact, { responseBody: { reply: "[내전 활성화 완료]" } });
-    assert.equal(runtime.isCompletedSeasonActivationForm(`${prefix}${completed}`), true);
-    assert.deepEqual(replyFor(runtime, `${prefix}${completed}`), ["[내전 활성화 완료]"]);
-    assert.equal(runtime.http.calls, 1);
-    assert.equal(JSON.parse(runtime.http.body).profileId, "FEATURES");
-  }
 });
 
 test("artifact excludes legacy HTTP, bearer, and embedded secret material", async () => {
@@ -479,7 +447,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R16_2026_09_14"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R17_2026_09_14"],
   );
 });
 
@@ -511,6 +479,8 @@ test("inhouse and scrim member shortcuts reach the matching profile gateway", as
   const artifact = await readFile(artifactPath, "utf8");
   for (const [message, surface, command, profileId] of [
     ["/내전상세 #3 추가 재현", "INHOUSE", "ADD", "FEATURES"],
+    ["/내전상세 #3 추가 재현/M/M/ALL", "INHOUSE", "ADD", "FEATURES"],
+    ["내전상세 3 추가 재현/M/M/MID/TOP,SUP", "INHOUSE", "ADD", "FEATURES"],
     ["내전 명단 3 삭재 재현", "INHOUSE", "REMOVE", "FEATURES"],
     ["스크림상세 4 참가 재현", "SCRIM", "ADD", "RECRUIT"],
     [String.raw`/스크림 명단 \#4 제외 재현`, "SCRIM", "REMOVE", "RECRUIT"],
@@ -694,6 +664,24 @@ test("completed augment-ARAM in-house forms reach the FEATURES gateway and alway
   assert.equal(strict.http.calls, 1);
   assert.equal(JSON.parse(strict.http.body).profileId, "FEATURES");
   assert.equal(JSON.parse(strict.http.body).text, message);
+});
+
+test("completed augment-ARAM metadata with ten empty name rows activates through FEATURES", async () => {
+  const strict = evaluate(await readFile(artifactPath, "utf8"), {
+    responseBody: { reply: "[K-LOL.GG 내전 #7 명단/정보 업데이트]\n현재: 1/10" },
+  });
+  const message = [
+    "📢 내전하실분 #7", "》증바람", "》2026-09-14 21:00 시작",
+    "》게임정보 : teset", "》주최자 : test", "👥 0/10명", "",
+    "*참가 신청 양식*", "이름", "EX) 1.지후", "",
+    ...Array.from({ length: 10 }, (_, index) => `${index + 1}.`),
+    "", "빠른 추가: 내전상세 7 추가 이름", "빠른 삭제: 내전상세 7 삭제 이름", "마감: 내전 7ㅉ",
+  ].join("\n");
+  assert.equal(strict.isSeasonApplySnapshotEnvelope(message), true);
+  assert.equal(strict.isSeasonApplyCandidateMessage(message), true);
+  assert.deepEqual(replyFor(strict, message), ["[K-LOL.GG 내전 #7 명단/정보 업데이트]\n현재: 1/10"]);
+  assert.equal(strict.http.calls, 1);
+  assert.equal(JSON.parse(strict.http.body).profileId, "FEATURES");
 });
 
 test("a complete empty season snapshot reaches the gateway once for authoritative cancellation", async () => {

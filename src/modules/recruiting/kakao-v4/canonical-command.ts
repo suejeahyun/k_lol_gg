@@ -126,7 +126,7 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "SEASON"; action: "JOIN_GUIDE" }>
   | Readonly<{ domain: "SEASON"; action: "STATUS"; seasonId: string | null; applyDate: string }>
   | Readonly<{ domain: "SEASON"; action: "DETAIL"; seasonId: string | null; applyDate: string; recruitNumber: number }>
-  | Readonly<{ domain: "SEASON"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; seasonId: string | null; applyDate: string; recruitNumber: number; name: string }>
+  | Readonly<{ domain: "SEASON"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; seasonId: string | null; applyDate: string; recruitNumber: number; name: string; mainPosition?: SeasonApplicationPosition; subPositions?: readonly SeasonApplicationPosition[] }>
   | Readonly<{ domain: "SEASON"; action: "FINISH"; seasonId: string | null; applyDate: string; recruitNumber: number }>
   | Readonly<{
       domain: "SEASON";
@@ -530,13 +530,21 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     const recruitNumber = numberParameter(parameters, "recruitNumber");
     const name = textParameter(parameters, "name");
     if (!recruitNumber || !name) return null;
+    const detailed = classification.command === "INHOUSE_MEMBER_ADD" && name.includes("/")
+      ? parseKakaoV4InhouseParticipantRow(`1.${name}`, "RIFT")
+      : null;
+    if (detailed && (!detailed.matched || !detailed.valid || !detailed.participant)) return null;
     return Object.freeze({
       domain: "SEASON" as const,
       action: classification.command === "INHOUSE_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
       seasonId: null,
       applyDate: partyDate,
       recruitNumber,
-      name,
+      name: detailed?.matched && detailed.participant ? detailed.participant.name : name,
+      ...(detailed?.matched && detailed.participant ? {
+        mainPosition: detailed.participant.mainPosition,
+        subPositions: detailed.participant.subPositions,
+      } : {}),
     });
   }
   if (classification.command === "INHOUSE_FINISH") {

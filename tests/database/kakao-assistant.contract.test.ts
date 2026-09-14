@@ -1073,7 +1073,7 @@ test("in-house shortcuts and full snapshots enforce integrated SITE capacity whi
 
     const added = await call({
       action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
-      name: `미확인-${suffix}`, mainPosition: "ALL", participants: [],
+      name: `미확인-${suffix}`, mainPosition: "MID", subPositions: ["TOP", "SUP"], participants: [],
     });
     assert.equal(added.body.pendingCount, 1);
     const addedPending = (await database.select().from(seasonKakaoPendingApplications).where(and(
@@ -1081,6 +1081,8 @@ test("in-house shortcuts and full snapshots enforce integrated SITE capacity whi
       eq(seasonKakaoPendingApplications.status, "ACTIVE"),
     )))[0];
     assert.equal(addedPending?.slotNo, 3, "quick add skips SITE and confirmed Kakao slots");
+    assert.equal(addedPending?.mainPosition, "MID");
+    assert.deepEqual(addedPending?.subPositions, ["TOP", "SUP"]);
     await assert.rejects(call({
       action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
       name: `초과-${suffix}`, mainPosition: "ALL", participants: [],

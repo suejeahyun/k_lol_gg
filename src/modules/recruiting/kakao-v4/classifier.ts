@@ -335,7 +335,7 @@ type DetailMemberMutation = Readonly<{
  * common mobile spacing and typing variants without treating ordinary chat as
  * a command or allowing an accidental multi-person edit.
  */
-function detailMemberMutation(text: string, prefixes: readonly string[]): DetailMemberMutation | null {
+function detailMemberMutation(text: string, prefixes: readonly string[], allowStructuredAdd = false): DetailMemberMutation | null {
   if (/[\r\n\u2028\u2029]/u.test(text)) return null;
   const prefixPattern = prefixes
     .map((prefix) => prefix.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&").replace(/\s+/gu, "\\s*"))
@@ -347,19 +347,23 @@ function detailMemberMutation(text: string, prefixes: readonly string[]): Detail
   if (!match) return null;
   const recruitNumber = Number(match[1]);
   const name = match[3]!.trim().replace(/\s+/gu, " ");
+  const action = /^(?:추가|추기|등록|참가)/u.test(match[2]!) ? "ADD" as const : "REMOVE" as const;
   const nameLength = Array.from(name).length;
-  const ambiguousName = /[\/,，、;；]/u.test(name) || /^(?:추가|삭제|등록|제외|참가|탈퇴)(?:\s|$)/u.test(name);
+  const structuredIntent = allowStructuredAdd && action === "ADD" && name.includes("/");
+  const structuredAdd = structuredIntent && /^[^/]+\/[^/]*\/[^/]*\/[^/]+(?:\/.*)?$/u.test(name);
+  const ambiguousName = /[;；]/u.test(name) || (!structuredAdd && /[\/,，、]/u.test(name)) ||
+    /^(?:추가|삭제|등록|제외|참가|탈퇴)(?:\s|$)/u.test(name);
   const unsafeName = /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/u.test(name);
   if (recruitNumber < 1 || recruitNumber > 99 || nameLength < 1 || nameLength > 80 || ambiguousName || unsafeName) return null;
   return Object.freeze({
-    action: /^(?:추가|추기|등록|참가)/u.test(match[2]!) ? "ADD" : "REMOVE",
+    action,
     recruitNumber,
     name,
   });
 }
 
 function classifyInhouse(text: string): KakaoV4RecognizedCommand | null {
-  const memberMutation = detailMemberMutation(text, ["내전상세", "내전 상세", "내전명단", "내전 명단"]);
+  const memberMutation = detailMemberMutation(text, ["내전상세", "내전 상세", "내전명단", "내전 명단"], true);
   if (memberMutation) {
     return recognized(memberMutation.action === "ADD" ? "INHOUSE_MEMBER_ADD" : "INHOUSE_MEMBER_REMOVE", text, {
       recruitNumber: memberMutation.recruitNumber,

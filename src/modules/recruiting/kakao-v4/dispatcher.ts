@@ -472,8 +472,8 @@ function inhouseModeSelection(unsupportedMode: string | null) {
     "날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00",
     "모집번호·정원 지정: /내전구인 칼바람 #2 10명",
     "",
-    "종목을 고르면 시작시간·게임정보·주최자 입력 양식이 생성됩니다.",
-    "양식을 전송해 활성화한 뒤 내전상세 번호 추가/삭제 이름으로 명단을 관리합니다.",
+    "협곡은 티어·라인 10칸, 칼바람·증바람은 이름 10칸 양식이 생성됩니다.",
+    "양식을 전송해 활성화한 뒤 전체 양식 또는 내전상세 번호 추가/삭제로 명단을 관리합니다.",
   ].join("\n");
 }
 
@@ -486,11 +486,6 @@ function inhouseTemplate(command: Readonly<{
 }>) {
   const mode = command.mode === "RIFT" ? "협곡" : command.mode === "ARAM" ? "칼바람" : "증바람";
   const lines = [
-    "[K-LOL.GG 내전 구인 양식]",
-    "같이 내전할 사람~",
-    "",
-    "아래 양식의 모집번호는 유지해서 작성해주세요.",
-    "",
     `📢 내전하실분 #${command.recruitNumber}`,
     ` 》${mode}`,
     ` 》${command.applyDate} ${command.time} 시작`,
@@ -498,15 +493,18 @@ function inhouseTemplate(command: Readonly<{
     " 》주최자 :",
     `👥 0/${command.capacity}명`,
     "",
-    "위 항목을 작성해 전체 전송해주세요.",
-    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
-    "주최자는 활성화와 동시에 참가자 1번으로 등록됩니다.",
-    `활성화 후 내전상세 ${command.recruitNumber} 추가 이름으로 참가할 수 있습니다.`,
+    "*참가 신청 양식*",
+  ];
+  lines.push(...(command.mode === "RIFT"
+    ? ["이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD"]
+    : ["이름", "EX) 1.지후"]), "");
+  for (let slot = 1; slot <= command.capacity; slot += 1) lines.push(`${slot}.`);
+  lines.push(
     "",
     `빠른 추가: 내전상세 ${command.recruitNumber} 추가 이름`,
     `빠른 삭제: 내전상세 ${command.recruitNumber} 삭제 이름`,
     `마감: 내전 ${command.recruitNumber}ㅉ`,
-  ];
+  );
   return lines.join("\n");
 }
 
@@ -1442,8 +1440,8 @@ export class KakaoV4CommandDispatcher {
                 applyDate: command.applyDate,
                 recruitNo: command.recruitNumber,
                 name: command.name,
-                mainPosition: "ALL",
-                subPositions: [],
+                mainPosition: command.mainPosition ?? "ALL",
+                subPositions: command.subPositions ?? [],
                 reserve: false,
                 participants: [],
               }

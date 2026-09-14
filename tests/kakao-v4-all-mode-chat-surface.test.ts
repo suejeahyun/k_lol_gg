@@ -42,6 +42,24 @@ test("내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백�
   }
 });
 
+test("협곡 내전 빠른 추가는 이름만 또는 티어·라인 전체 입력을 모두 허용한다", () => {
+  for (const [text, mainPosition, subPositions] of [
+    ["내전상세 6 추가 재현", "ALL", []],
+    ["/내전상세 #6 추가 재현/m/m/ALL", "ALL", []],
+    ["내전 상세 6 추가 재현/M/M/Mid/Top", "MID", ["TOP"]],
+    ["내전명단 6 추가 재현/M/M/MID/TOP,SUP", "MID", ["TOP", "SUP"]],
+  ] as const) {
+    const input = envelope("FEATURES", text);
+    const classified = classifyKakaoV4Command(input);
+    assert.equal(classified.kind, "COMMAND", text);
+    const canonical = canonicalizeKakaoV4Command(classified, input);
+    if (!canonical || canonical.domain !== "SEASON" || canonical.action !== "ADD_MEMBER") assert.fail(text);
+    assert.equal(canonical.name, "재현", text);
+    assert.equal(canonical.mainPosition ?? "ALL", mainPosition, text);
+    assert.deepEqual(canonical.subPositions ?? [], subPositions, text);
+  }
+});
+
 test("빠른 추가·삭제는 명확한 번호와 한 명의 안전한 이름만 허용한다", () => {
   for (const [profileId, text] of [
     ["FEATURES", "내전상세 0 추가 재현"],
@@ -235,6 +253,7 @@ test("내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고
 
   for (const [profileId, text, eventId] of [
     ["FEATURES", "/내전상세 3 추가 재현", "event-inhouse-member-00001"],
+    ["FEATURES", "/내전상세 3 추가 재현/M/M/MID/TOP", "event-inhouse-member-00002"],
     ["RECRUIT", "스크림상세 6 추가 재현", "event-scrim-member-00000001"],
   ] as const) {
     const context = dispatchContext(profileId, text, eventId);
@@ -246,5 +265,10 @@ test("내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고
   }
   assert.equal(seasonCalls[0]?.action, "ADD_PARTICIPANT");
   if (seasonCalls[0]?.action === "ADD_PARTICIPANT") assert.equal(seasonCalls[0].mainPosition, "ALL");
+  assert.equal(seasonCalls[1]?.action, "ADD_PARTICIPANT");
+  if (seasonCalls[1]?.action === "ADD_PARTICIPANT") {
+    assert.equal(seasonCalls[1].mainPosition, "MID");
+    assert.deepEqual(seasonCalls[1].subPositions, ["TOP"]);
+  }
   assert.equal(recruitingCalls[0]?.type, "ADD_SCRIM_PARTICIPANT");
 });
