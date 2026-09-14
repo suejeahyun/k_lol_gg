@@ -4,7 +4,7 @@
 
 대상: MessengerBot R V1 strict 생성기, 공개 검토본, private 휴대폰 설치본, 카카오 V4 내전 분류기
 
-판정: 소스 수정·전체 앱 검사·격리 PostgreSQL·private 게이트웨이 검증 통과, Vercel 운영 배포 진행 중이다. 휴대폰 실기기 설치와 실제 카카오톡 응답은 사용자 설치 후 확인 대상이다.
+판정: 소스 수정·전체 앱 검사·격리 PostgreSQL·Vercel 운영 배포·private 게이트웨이 검증 통과, 휴대폰 실기기 설치와 실제 카카오톡 응답만 사용자 설치 후 확인 대상이다.
 
 ## 증상·원인·수정
 
@@ -48,11 +48,15 @@ node scripts/verify-private-messengerbot-v1-strict-live.mjs
 PASS — RECRUIT HTTP 200, FEATURES HTTP 200, 응답 본문·비밀값 비노출
 ```
 
-운영 배포 근거는 릴리스 완료 후 같은 문서에 기록한다.
-
 ## 운영 반영 상태와 남은 확인
 
-- 기능 커밋·tag·운영 배포: 릴리스 진행 중
+- 기능 커밋: `6e2195c7d6e3f1f4c19f10a01d274d922d519275`
+- 릴리스 tag: `kakao-r15-all-mode-snapshot-v1.0.0`
+- Vercel 운영 배포: `HHi9vL5Ynji5fMZWQ1WqN2FVcGHq`
+- 운영 URL: `https://k-lol-m00yikghu-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app`
+- 운영 확인: 2026-09-14 15:01:01 KST · `/api/health` HTTP 200 · `status: ready`
+- R15 운영 배포 후 private 설치본의 RECRUIT·FEATURES 게이트웨이도 각각 HTTP 200을 재확인했다.
 - DB migration·운영 데이터 직접 변경·삭제: 없음
 - 휴대폰에서는 기존 스크립트를 모두 지운 뒤 R15 private 파일 전체를 한 번만 붙여넣어야 한다.
 - 실제 휴대폰 컴파일, `/봇버전`, 제보한 증바람 #4 양식의 응답 확인은 사용자 실기기 설치 후 남는다.

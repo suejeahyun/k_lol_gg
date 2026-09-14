@@ -2,7 +2,12 @@
 
 ## 2026-09-14 카카오 R15 내전 전체 양식 무응답 수정
 
-- 상태: 소스 수정·전체 앱 검사·카카오 회귀·격리 PostgreSQL·private 게이트웨이 검증 완료, Vercel 운영 배포 진행 중
+- 기능 커밋: `6e2195c7d6e3f1f4c19f10a01d274d922d519275`
+- 릴리스 tag: `kakao-r15-all-mode-snapshot-v1.0.0`
+- 상태: 소스·전체 앱 검사·카카오 회귀·격리 PostgreSQL·Vercel 운영 배포·라이브 API 검증 완료, 휴대폰 MessengerBot R 설치 대기
+- 운영 배포: `HHi9vL5Ynji5fMZWQ1WqN2FVcGHq`
+- 운영 URL: `https://k-lol-m00yikghu-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
 - 휴대폰 버전: `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R15_2026_09_14_ALL_MODE_SNAPSHOT`
 - 제보 재현: 증바람 #4 완성 양식이 `게임정보` 때문에 파티로 오인되어 HTTP 0회·응답 0회
 - 수정 검증: 동일 원문이 FEATURES 게이트웨이로 1회 전달되고 응답 1회, 불완전 양식은 계속 차단
