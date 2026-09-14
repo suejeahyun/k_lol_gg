@@ -291,6 +291,14 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       /^》\s*20\d{2}-\d{2}-\d{2}\s+/u.test(candidate) ||
       /^》?\s*(?:게임정보|주최자)\s*[:：]/u.test(candidate) ||
       /^👥\s*\d{1,3}\s*\/\s*\d{1,3}\s*명$/u.test(candidate) ||
+      /^\[K-LOL\.GG 내전 구인 양식\]$/u.test(candidate) ||
+      /^같이 내전할 사람~$/u.test(candidate) ||
+      /^아래 양식의 모집번호는 유지해서 작성해주세요\.$/u.test(candidate) ||
+      /^위 항목을 작성해 전체 전송해주세요\.$/u.test(candidate) ||
+      /^비워 둔 시간과 게임 정보는 자동으로 채워집니다\.$/u.test(candidate) ||
+      /^주최자는 활성화와 동시에 참가자 1번으로 등록됩니다\.$/u.test(candidate) ||
+      /^활성화 후 내전상세 \d+ 추가 이름으로 참가할 수 있습니다\.$/u.test(candidate) ||
+      /^(?:빠른 추가|빠른 삭제|마감)\s*:/u.test(candidate) ||
       /^\*참가 신청 양식\*$/u.test(candidate) ||
       /^이름(?:\/현티어\/최고티어\/주라인\/부라인)?$/u.test(candidate) ||
       /^EX\)\s*/iu.test(candidate) ||

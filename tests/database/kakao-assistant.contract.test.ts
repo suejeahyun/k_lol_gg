@@ -443,6 +443,7 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
                 gameInfo: null, organizerText, noticeText: null,
               },
               participants: [],
+              ...(action === "SYNC" ? { preserveSlotNos: Array.from({ length: 10 }, (_, index) => index + 1) } : {}),
             },
         requestId: randomUUID(),
         now,
@@ -455,7 +456,27 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.equal(hiddenDraft.body.roundMetadata, null, "reserved draft must stay out of public inhouse status DTOs");
     const activatedDraft = await reserveRound("SYNC", "재현");
     assert.equal(activatedDraft.body.roundMetadata?.organizerText, "재현");
-    assert.equal((await reserveRound("STATUS", null)).body.roundMetadata?.recruitNo, 62);
+    assert.equal(activatedDraft.body.pendingCount, 1);
+    assert.deepEqual(activatedDraft.body.entries.map((entry) => ({ slotNo: entry.slotNo, name: entry.suppliedName })), [
+      { slotNo: 1, name: "재현" },
+    ]);
+    assert.match(activatedDraft.body.v1StrictLegacyReply ?? "", /1\. 재현/u);
+    const activatedStatus = await reserveRound("STATUS", null);
+    assert.equal(activatedStatus.body.roundMetadata?.recruitNo, 62);
+    assert.match(activatedStatus.body.v1StrictLegacyReply ?? "", /》주최자 : 재현/u);
+    sequence += 1;
+    const removedOrganizer = await assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId,
+      intent: intent(`nonce-draft-${suffix}-${String(sequence).padStart(4, "0")}`, `draft-${suffix}-${sequence}`, roomA),
+      requestKey: `draft-${suffix}-${sequence}`,
+      scope: "kakao:season-applications:draft-regression",
+      command: { action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 62, name: "재현", participants: [] },
+      requestId: randomUUID(),
+      now,
+    });
+    assert.equal(removedOrganizer.body.entries.length, 0);
+    const metadataResubmission = await reserveRound("SYNC", "재현");
+    assert.equal(metadataResubmission.body.entries.length, 0, "active metadata edits must not reinsert a removed organizer");
 
     const first = await sync({ room: roomA, mode: "RIFT", name: `방A-${suffix}`, time: "20:00", notice: "승리팀 랜덤 1인 스킨 증정" });
     assert.equal(first.body.metadataUpdated, true);
@@ -755,10 +776,10 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     assert.equal(siteRound.body.entries.length, 1);
     assert.equal(siteRound.body.entries[0]?.source, "SITE");
     assert.equal(siteRound.body.legacyReply, [
-      "📢 내전하실분 #8", " 》협곡", ` 》${today} 21:00 시작`, "👥 1/10명", "",
+      "📢 내전하실분 #8", " 》협곡", ` 》${today} 21:00 시작`, " 》게임정보 : 미입력", " 》주최자 : 미입력", "👥 1/10명", "",
       "*참가 신청 양식*", "이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD", "",
       `1. 사이트-${suffix}/D/M/TOP/AD`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
-      "", "마감: 내전 8ㅉ",
+      "", "빠른 추가: 내전상세 8 추가 이름", "빠른 삭제: 내전상세 8 삭제 이름", "마감: 내전 8ㅉ",
     ].join("\n"));
 
     await database.update(seasonApplications).set({

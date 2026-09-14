@@ -225,7 +225,10 @@ function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
   }
 
   const inhouseNumber = /^\s*📢\s*내전하실분\s*#(\d+)\s*$/mu.exec(text)?.[1];
-  if (inhouseNumber && /^\s*\*참가 신청 양식\*\s*$/mu.test(text) && /^\s*》\s*(?:협곡|칼바람|증바람|증강칼바람)\s*$/mu.test(text)) {
+  const isLegacyInhouseForm = /^\s*\*참가 신청 양식\*\s*$/mu.test(text);
+  const isInhouseActivationForm = /^\s*\[K-LOL\.GG 내전 구인 양식\]\s*$/mu.test(text) &&
+    /^\s*》\s*게임정보\s*[:：]/mu.test(text) && /^\s*》\s*주최자\s*[:：]/mu.test(text);
+  if (inhouseNumber && (isLegacyInhouseForm || isInhouseActivationForm) && /^\s*》\s*(?:협곡|칼바람|증바람|증강칼바람)\s*$/mu.test(text)) {
     const modeLabel = /^\s*》\s*(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(text)?.[1] ?? "";
     const mode = modeLabel === "협곡" ? "RIFT" : modeLabel === "칼바람" ? "ARAM" : "AUGMENT_ARAM";
     return recognized("INHOUSE_SNAPSHOT", text, {

@@ -45,7 +45,7 @@ function canMutateRecruit({ targetScopeId, actorScopeId, actorVerified }) {
 }
 
 test("contract fixture has traceable V1 evidence and all required domains", () => {
-  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R15_2026_09_14_ALL_MODE_SNAPSHOT");
+  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_R16_2026_09_14");
   assert.match(contract.contractVersion, /^KLOL_KAKAO_V4_V1_COMPAT_/u);
   assert.match(contract.source.v1Sha256, /^[a-f0-9]{64}$/u);
   assert.ok(contract.source.currentGoldenTests.length >= 7);
@@ -174,6 +174,8 @@ test("Rift, ARAM, and Augment ARAM preserve their V1 field policies", () => {
     assert.equal(mode.seasonRoster, false);
   }
   assert.match(contract.inhouse.zeroParticipants, /withdraws\/cancels/u);
+  assert.match(contract.inhouse.riftActivationTemplate, /\[K-LOL\.GG 내전 구인 양식\][\s\S]*》주최자 :/u);
+  assert.match(contract.inhouse.aramActivationTemplate, /주최자는 활성화와 동시에 참가자 1번으로 등록됩니다\./u);
   assert.match(contract.inhouse.riftTemplate, /이름\/현티어\/최고티어\/주라인\/부라인/u);
   assert.match(contract.inhouse.aramTemplate, /\*참가 신청 양식\*\n이름\nEX\) 1\.지후/u);
 });

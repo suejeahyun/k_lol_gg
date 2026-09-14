@@ -20,7 +20,7 @@ type ParityFixture = Readonly<{
 type CompatibilityFixture = Readonly<{
   routes: readonly Readonly<{ domain: string; action: string; aliases: readonly string[] }>[];
   party: Readonly<{ initialFivePersonTemplate: string; legacyFivePersonTemplate: string }>;
-  inhouse: Readonly<{ riftTemplate: string; aramTemplate: string }>;
+  inhouse: Readonly<{ riftTemplate: string; aramTemplate: string; riftActivationTemplate: string; aramActivationTemplate: string }>;
   scrim: Readonly<{ initialTemplate: string }>;
   operationForms: Readonly<{ forms: Readonly<Record<string, readonly string[]>> }>;
 }>;
@@ -177,7 +177,8 @@ test("party, inhouse, and scrim full forms win over command parsing as SNAPSHOT"
     .replace("》게임정보 :", "》게임정보 : 증바람")
     .replace("》주최자 :", "》주최자 : 민서")
     .replace("\n1.\n", "\n1. 민서\n");
-  for (const text of [compatibilityFixture.inhouse.riftTemplate, compatibilityFixture.inhouse.aramTemplate, augmentAramPopulated]) {
+  const activatedDraft = compatibilityFixture.inhouse.riftActivationTemplate.replace("》주최자 :", "》주최자 : 재현");
+  for (const text of [compatibilityFixture.inhouse.riftTemplate, compatibilityFixture.inhouse.aramTemplate, augmentAramPopulated, activatedDraft]) {
     const result = classifyKakaoV4Command({ profileId: "FEATURES", text });
     assert.equal(result.kind, "SNAPSHOT");
     if (result.kind === "SNAPSHOT") {

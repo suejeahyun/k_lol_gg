@@ -198,7 +198,7 @@ shouldSuppressReply: shouldSuppressReply,
 markReplySent: markReplySent
 };
 }());
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R15_2026_09_14_ALL_MODE_SNAPSHOT";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R16_2026_09_14";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -335,14 +335,27 @@ return "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n내전 시작 10
 }
 function isSeasonApplySnapshotEnvelope(text) {
 var normalized = trimText(normalizeText(String(text || "")));
+var legacyForm = false;
+var activationForm = false;
 if (normalized.indexOf("//") === 0 || /^\/\s/.test(normalized)) return false;
 if (normalized.charAt(0) === "/") normalized = normalized.substring(1);
-return /^📢\s*내전하실분\s*#\s*\d{1,3}\s*(?:\n|$)/.test(normalized) &&
+legacyForm = /^\s*\*참가\s*신청\s*양식\*\s*$/m.test(normalized) && /^\s*EX\)\s*1\./im.test(normalized);
+activationForm = /^\s*\[K-LOL\.GG 내전 구인 양식\]\s*$/m.test(normalized) &&
+/^\s*》\s*게임정보\s*[:：]/m.test(normalized) && /^\s*》\s*주최자\s*[:：]/m.test(normalized);
+return /^\s*📢\s*내전하실분\s*#\s*\d{1,3}\s*$/m.test(normalized) &&
 /^\s*》\s*(?:협곡|칼바람|증바람|증강칼바람)\s*$/m.test(normalized) &&
 /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+(?:[01]?\d|2[0-3])\s*:\s*[0-5]\d\s*시작(?:\s+.*?)?\s*$/m.test(normalized) &&
 /^\s*👥\s*\d{1,2}\s*\/\s*\d{1,2}\s*명\s*$/m.test(normalized) &&
-/^\s*\*참가\s*신청\s*양식\*\s*$/m.test(normalized) &&
-/^\s*EX\)\s*1\./im.test(normalized);
+(legacyForm || activationForm);
+}
+function isCompletedSeasonActivationForm(text) {
+var normalized = trimText(normalizeText(String(text || "")));
+var organizer = null;
+if (!isSeasonApplySnapshotEnvelope(normalized)) return false;
+if (normalized.charAt(0) === "/") normalized = normalized.substring(1);
+if (!/^\s*\[K-LOL\.GG 내전 구인 양식\]\s*$/m.test(normalized)) return false;
+organizer = normalized.match(/^[ \t]*》[ \t]*주최자[ \t]*[:：][ \t]*(.*?)[ \t]*$/m);
+return !!organizer && trimText(String(organizer[1] || "")) !== "";
 }
 function isCompleteEmptySeasonApplySnapshot(text) {
 var lines = [];
@@ -383,6 +396,7 @@ var line = "";
 var row = null;
 text = normalizeText(String(text || ""));
 if (isPartyRecruitLikeMessage(text) && !isSeasonApplySnapshotEnvelope(text)) return false;
+if (isCompletedSeasonActivationForm(text)) return true;
 if (!hasSeasonApplyForm(text) && !hasSeasonApplyWord(text)) return false;
 lines = text.split("\n");
 for (i = 0; i < lines.length; i++) {

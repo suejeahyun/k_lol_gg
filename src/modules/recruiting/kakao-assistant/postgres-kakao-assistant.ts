@@ -240,6 +240,8 @@ function legacyInhouseDetail(
     `📢 내전하실분 #${recruitNo}`,
     ` 》${legacyInhouseModeLabel(metadata?.mode)}`,
     ` 》${applyDate} ${legacyInhouseStartTime(metadata)} 시작`,
+    ` 》게임정보 : ${metadata?.gameInfo || "미입력"}`,
+    ` 》주최자 : ${metadata?.organizerText || "미입력"}`,
     `👥 ${mainEntries.length}/${capacity}명`,
     "",
     "*참가 신청 양식*",
@@ -254,7 +256,12 @@ function legacyInhouseDetail(
     lines.push("");
     reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${index + 1}`, entry, namesOnly)));
   }
-  lines.push("", `마감: 내전 ${recruitNo}ㅉ`);
+  lines.push(
+    "",
+    `빠른 추가: 내전상세 ${recruitNo} 추가 이름`,
+    `빠른 삭제: 내전상세 ${recruitNo} 삭제 이름`,
+    `마감: 내전 ${recruitNo}ㅉ`,
+  );
   return lines.join("\n");
 }
 
@@ -276,6 +283,9 @@ function legacyInhouseOverview(
     const reserveText = reserveCount > 0 ? ` / 예비 ${reserveCount}` : "";
     const modeText = metadata ? ` · ${legacyInhouseModeLabel(metadata.mode)}` : "";
     lines.push(`#${recruitNo} ${legacyInhouseDate(applyDate)} ${legacyInhouseStartTime(metadata)} 시작${modeText} (${mainCount}/${metadata?.capacity ?? LEGACY_INHOUSE_CAPACITY}${reserveText})`);
+    if (metadata?.gameInfo || metadata?.organizerText) {
+      lines.push(`게임정보: ${metadata?.gameInfo || "미입력"} · 주최자: ${metadata?.organizerText || "미입력"}`);
+    }
     if (metadata?.noticeText) lines.push(`공지: ${oneLineInhouseNotice(metadata.noticeText)}`);
     lines.push(`└ 내전상세 ${recruitNo}`);
   }
@@ -1118,18 +1128,27 @@ export class PostgresKakaoAssistant {
           legacyChanges.removed.push(...previousModePending.map((pending) =>
             `${pending.reserve ? `예비 ${pending.slotNo}` : pending.slotNo}. ${pending.suppliedName}`));
         }
+        const activatingDraft = currentMetadata?.status === "DRAFT";
+        const requestedOrganizer = requestedMetadata?.organizerText?.trim() || null;
+        let snapshotParticipants: readonly KakaoSeasonSnapshotParticipant[] = command.participants;
+        if (activatingDraft && command.participants.length === 0) {
+          if (!requestedOrganizer) throw new KakaoAssistantError("INVALID_INPUT");
+          snapshotParticipants = Object.freeze([Object.freeze({
+            slotNo: 1,
+            name: requestedOrganizer,
+            riotId: null,
+            mainPosition: "ALL" as const,
+            subPositions: Object.freeze([]),
+            reserve: false,
+          })]);
+        }
         if (requestedMetadata) {
         const scheduledStartAt = requestedMetadata.scheduledStartAt === null
           ? null
           : new Date(requestedMetadata.scheduledStartAt);
-        const activatingDraft = currentMetadata?.status === "DRAFT";
-        if (activatingDraft && command.participants.length === 0 && !requestedMetadata.organizerText?.trim() &&
-            !requestedMetadata.noticeText?.trim() && !requestedMetadata.gameInfo?.trim()) {
-          throw new KakaoAssistantError("INVALID_INPUT");
-        }
         const startTimeText = requestedMetadata.startTimeText ?? (activatingDraft ? kakaoRecruitTimeText(now) : currentMetadata?.startTimeText ?? null);
         const gameInfo = requestedMetadata.gameInfo?.trim() || (activatingDraft ? "미입력" : currentMetadata?.gameInfo ?? null);
-        const organizerText = requestedMetadata.organizerText?.trim() || currentMetadata?.organizerText || null;
+        const organizerText = requestedOrganizer || currentMetadata?.organizerText || null;
         metadataUpdated = !currentMetadata ||
           currentMetadata.status !== "IN_PROGRESS" ||
           currentMetadata.capacity !== requestedMetadata.capacity ||
@@ -1174,6 +1193,7 @@ export class PostgresKakaoAssistant {
         legacyChanges.metadataChanged = metadataUpdated;
         }
         const preserveSlotNos = new Set(command.preserveSlotNos ?? []);
+        if (snapshotParticipants !== command.participants) preserveSlotNos.delete(1);
         const siteApplications = await transaction.select().from(seasonApplications).where(and(
           eq(seasonApplications.seasonId, command.seasonId),
           eq(seasonApplications.applyDate, command.applyDate),
@@ -1186,7 +1206,7 @@ export class PostgresKakaoAssistant {
           candidates: (typeof players.$inferSelect)[];
         }> = [];
         const resolvedPlayerIds = new Set<string>();
-        for (const participant of command.participants) {
+        for (const participant of snapshotParticipants) {
           const riot = splitRiotId(participant.riotId);
           const identity = normalizedIdentity(participant.name);
           let candidates = participant.reviewRequired
@@ -1437,8 +1457,8 @@ export class PostgresKakaoAssistant {
           targetType: "SEASON_RECRUIT_ROUND",
           targetId: roundKey,
           metadataJson: {
-            participantCount: command.participants.length,
-            reviewRequiredCount: command.participants.filter((participant) => participant.reviewRequired).length,
+            participantCount: snapshotParticipants.length,
+            reviewRequiredCount: snapshotParticipants.filter((participant) => participant.reviewRequired).length,
             preservedSlotCount: preserveSlotNos.size,
             createdCount,
             updatedCount,
@@ -1659,7 +1679,11 @@ export class PostgresKakaoAssistant {
         metadataUpdated,
         roundMetadata: command.recruitNo === null ? null : metadataByRecruitNo.get(command.recruitNo) ?? null,
         ...(command.action === "STATUS" ? {} : { createdCount, updatedCount, mode: sourceMode }),
-        ...(command.action === "SYNC" ? { v1StrictLegacyReply: legacySeasonSyncReply(command.recruitNo, legacyChanges) } : {}),
+        ...(command.action === "SYNC" ? { v1StrictLegacyReply: [
+          legacySeasonSyncReply(command.recruitNo, legacyChanges),
+          "",
+          legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries, metadataByRecruitNo.get(command.recruitNo)),
+        ].join("\n") } : {}),
         ...(command.action === "STATUS" && command.recruitNo !== null ? {
           legacyReply: legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries, metadataByRecruitNo.get(command.recruitNo)),
           v1StrictLegacyReply: legacyEntries.length > 0 || metadataByRecruitNo.has(command.recruitNo)
