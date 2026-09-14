@@ -281,7 +281,7 @@ test("V1 strict routes organizer-only metadata activation forms with or without 
   }
 });
 
-test("V1 strict R14 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
+test("V1 strict R15 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const [message, profileId] of [
     ["내전 2ㅉ", "FEATURES"],
@@ -447,7 +447,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R14_2026_09_14_RHINO_CLEAN"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R15_2026_09_14_ALL_MODE_SNAPSHOT"],
   );
 });
 
@@ -629,6 +629,38 @@ test("recoverable season rows reach the gateway once even with whitespace number
 
   assert.deepEqual(replyFor(strict, message), ["[참가 신청 반영]\n정상 1 · 확인 필요 1"]);
   assert.equal(strict.http.calls, 1);
+  assert.equal(JSON.parse(strict.http.body).text, message);
+});
+
+test("completed augment-ARAM in-house forms reach the FEATURES gateway and always reply", async () => {
+  const strict = evaluate(await readFile(artifactPath, "utf8"), {
+    responseBody: { reply: "[K-LOL.GG 내전 #4 명단/정보 업데이트]\n추가: 1. 민서\n현재: 1/10" },
+  });
+  const message = [
+    "📢 내전하실분 #4",
+    "》증바람",
+    "》2026-09-14 21:00 시작",
+    "》게임정보 : 증바람",
+    "》주최자 : 민서",
+    "👥 0/10명",
+    "",
+    "*참가 신청 양식*",
+    "이름",
+    "EX) 1.지후",
+    "",
+    "1. 민서",
+    ...Array.from({ length: 9 }, (_, index) => `${index + 2}.`),
+    "",
+    "빠른 추가: 내전상세 4 추가 이름",
+    "빠른 삭제: 내전상세 4 삭제 이름",
+    "마감: 내전 4ㅉ",
+  ].join("\n");
+
+  assert.equal(strict.isSeasonApplySnapshotEnvelope(message), true);
+  assert.equal(strict.isSeasonApplyCandidateMessage(message), true);
+  assert.deepEqual(replyFor(strict, message), ["[K-LOL.GG 내전 #4 명단/정보 업데이트]\n추가: 1. 민서\n현재: 1/10"]);
+  assert.equal(strict.http.calls, 1);
+  assert.equal(JSON.parse(strict.http.body).profileId, "FEATURES");
   assert.equal(JSON.parse(strict.http.body).text, message);
 });
 

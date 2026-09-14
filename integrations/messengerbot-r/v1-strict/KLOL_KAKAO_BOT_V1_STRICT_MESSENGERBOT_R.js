@@ -198,7 +198,7 @@ shouldSuppressReply: shouldSuppressReply,
 markReplySent: markReplySent
 };
 }());
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R14_2026_09_14_RHINO_CLEAN";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R15_2026_09_14_ALL_MODE_SNAPSHOT";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -382,7 +382,7 @@ var i = 0;
 var line = "";
 var row = null;
 text = normalizeText(String(text || ""));
-if (isPartyRecruitLikeMessage(text)) return false;
+if (isPartyRecruitLikeMessage(text) && !isSeasonApplySnapshotEnvelope(text)) return false;
 if (!hasSeasonApplyForm(text) && !hasSeasonApplyWord(text)) return false;
 lines = text.split("\n");
 for (i = 0; i < lines.length; i++) {

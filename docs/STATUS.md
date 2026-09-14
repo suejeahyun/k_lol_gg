@@ -1,5 +1,16 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-14 카카오 R15 내전 전체 양식 무응답 수정
+
+- 상태: 소스 수정·전체 앱 검사·카카오 회귀·격리 PostgreSQL·private 게이트웨이 검증 완료, Vercel 운영 배포 진행 중
+- 휴대폰 버전: `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R15_2026_09_14_ALL_MODE_SNAPSHOT`
+- 제보 재현: 증바람 #4 완성 양식이 `게임정보` 때문에 파티로 오인되어 HTTP 0회·응답 0회
+- 수정 검증: 동일 원문이 FEATURES 게이트웨이로 1회 전달되고 응답 1회, 불완전 양식은 계속 차단
+- private 설치본: LF 61,165 / CRLF 62,964, SHA-256 `06106d007879cc9f29451ed1960414219d8c11628e8ec3aa6f4f3a1c6b0b16b7`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r15-all-mode-snapshot-2026-09-14/README.md`](./qa-evidence/kakao-r15-all-mode-snapshot-2026-09-14/README.md)에 있다.
+
 ## 2026-09-14 카카오 R14 Rhino 반환·주석 정리 운영 릴리스
 
 - 기능 커밋: `c12683c1794eb6f9d61fc950b113ad30328eb8d6`

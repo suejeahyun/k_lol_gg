@@ -172,12 +172,17 @@ test("party, inhouse, and scrim full forms win over command parsing as SNAPSHOT"
     assert.equal(party.parameters.gameInfoOptional, true);
   }
 
-  for (const text of [compatibilityFixture.inhouse.riftTemplate, compatibilityFixture.inhouse.aramTemplate]) {
+  const augmentAramPopulated = compatibilityFixture.inhouse.aramTemplate
+    .replace("》칼바람", "》증바람")
+    .replace("》게임정보 :", "》게임정보 : 증바람")
+    .replace("》주최자 :", "》주최자 : 민서")
+    .replace("\n1.\n", "\n1. 민서\n");
+  for (const text of [compatibilityFixture.inhouse.riftTemplate, compatibilityFixture.inhouse.aramTemplate, augmentAramPopulated]) {
     const result = classifyKakaoV4Command({ profileId: "FEATURES", text });
     assert.equal(result.kind, "SNAPSHOT");
     if (result.kind === "SNAPSHOT") {
       assert.equal(result.command, "INHOUSE_SNAPSHOT");
-      assert.equal(result.parameters.memberCount, 0);
+      assert.equal(result.parameters.memberCount, text === augmentAramPopulated ? 1 : 0);
     }
   }
 
