@@ -4,7 +4,7 @@
 
 대상: MessengerBot R V1 strict 생성기, 공개 검토본, private 휴대폰 설치본
 
-판정: 소스·전체 테스트·빌드·격리 PostgreSQL 검증 통과, 운영 배포와 휴대폰 설치는 별도 근거 필요
+판정: 소스·전체 테스트·빌드·격리 PostgreSQL·Vercel 운영 배포·라이브 API 검증 통과, 휴대폰 설치만 사용자 실기기 확인 대기
 
 ## 원인과 수정
 
@@ -43,7 +43,13 @@ PASS
 
 ## 운영 반영 상태와 남은 확인
 
-- 기능 커밋·tag·Vercel 배포 정보는 배포 확인 후 추가한다.
+- 기능 커밋: `c12683c1794eb6f9d61fc950b113ad30328eb8d6`
+- 릴리스 tag: `kakao-r14-rhino-clean-v1.0.0`
+- Vercel 운영 배포: `AdxpFyJ2Jbi7VA7vL4ssQi2RMXho`
+- 운영 URL: `https://k-lol-6zdv6s72b-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app`
+- 운영 확인: 2026-09-14 14:21:15 KST · `/api/health` HTTP 200 · `status: ready`
+- private 설치본의 RECRUIT·FEATURES 게이트웨이도 운영 도메인에서 각각 HTTP 200을 확인했다.
 - 실제 휴대폰의 기존 코드 백업, R14 private 전체 교체, 컴파일, `/봇버전`, 두 방 실사용 확인은 사용자 휴대폰에서 진행해야 한다.
 - DB migration·운영 데이터 직접 변경·삭제는 없다.
 

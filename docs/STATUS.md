@@ -1,5 +1,20 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-14 카카오 R14 Rhino 반환·주석 정리 운영 릴리스
+
+- 기능 커밋: `c12683c1794eb6f9d61fc950b113ad30328eb8d6`
+- 릴리스 tag: `kakao-r14-rhino-clean-v1.0.0`
+- 상태: 소스·전체 테스트·격리 PostgreSQL·Vercel 운영 배포·라이브 API 검증 완료, 휴대폰 MessengerBot R 설치 대기
+- 운영 배포: `AdxpFyJ2Jbi7VA7vL4ssQi2RMXho`
+- 운영 URL: `https://k-lol-6zdv6s72b-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
+- 테스트: 일반 779개 중 778 PASS·DB 전용 1 skip, PostgreSQL 전체 계약, 카카오 focused 48/48, static generation 93/93
+- private 설치본: R14, LF 61,119 / CRLF 62,918, SHA-256 `17bd22219237a8d821fe354e05cbab65f542a7828ba6e519273ff59767b90caf`
+- 주요 범위: Rhino `#1798` 혼합 return 제거, 생성본 JavaScript 주석 0건, 혼합 return 0건 정적 차단
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r14-rhino-clean-2026-09-14/README.md`](./qa-evidence/kakao-r14-rhino-clean-2026-09-14/README.md)에 있다.
+
 ## 2026-09-14 카카오 내전·스크림 번호 마감 R13 운영 릴리스
 
 - 기능 커밋: `3bf2aa5fdef1d135c15b6c25646676b86467d256`

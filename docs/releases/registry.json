@@ -516,6 +516,32 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "kakao-r14-rhino-clean",
+      "version": "1.0.0",
+      "gitTag": "kakao-r14-rhino-clean-v1.0.0",
+      "commit": "c12683c1794eb6f9d61fc950b113ad30328eb8d6",
+      "releasedAt": "2026-09-14T14:21:15+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-r14-rhino-clean-2026-09-14/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-14-kakao-r14-rhino-clean.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "AdxpFyJ2Jbi7VA7vL4ssQi2RMXho",
+        "url": "https://k-lol-6zdv6s72b-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-14T05:21:15.6075085Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R14_2026_09_14_RHINO_CLEAN",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
