@@ -38,6 +38,23 @@ function functionSources(source) {
   return functions;
 }
 
+function withoutComments(source) {
+  const comments = [];
+  acorn.parse(source, {
+    ecmaVersion: 5,
+    allowReserved: true,
+    preserveParens: true,
+    onComment: comments,
+  });
+  let output = source;
+  for (let index = comments.length - 1; index >= 0; index -= 1) {
+    const comment = comments[index];
+    const newlineCount = (output.slice(comment.start, comment.end).match(/\n/gu) ?? []).length;
+    output = `${output.slice(0, comment.start)} ${"\n".repeat(newlineCount)}${output.slice(comment.end)}`;
+  }
+  return output;
+}
+
 function identifierCalls(node, output = new Set()) {
   if (!node || typeof node !== "object") return output;
   if (node.type === "CallExpression" && node.callee.type === "Identifier") output.add(node.callee.name);
@@ -225,7 +242,8 @@ test("builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact
   execFileSync(process.execPath, ["scripts/build-messengerbot-v1-strict.mjs"], { cwd: root });
   const canonical = canonicalSource();
   const artifact = await readFile(artifactPath, "utf8");
-  const program = acorn.parse(artifact, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
+  const comments = [];
+  const program = acorn.parse(artifact, { ecmaVersion: 5, allowReserved: true, preserveParens: true, onComment: comments });
   const findings = analyzeRhinoStatic(program);
 
   assert.equal(sha256(canonical), sourceSha256);
@@ -239,6 +257,17 @@ test("builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact
   assert.deepEqual(findings.unsafeSequenceOperands, []);
   assert.deepEqual(findings.voidExpressions, []);
   assert.deepEqual(findings.bareAssignmentConditions, []);
+  assert.deepEqual(findings.inconsistentReturnFunctions, []);
+  assert.deepEqual(comments, []);
+});
+
+test("Rhino audit detects functions that mix value and bare returns", () => {
+  const program = acorn.parse("function mixed(flag) { if (flag) return 1; return; }", {
+    ecmaVersion: 5,
+    allowReserved: true,
+    preserveParens: true,
+  });
+  assert.deepEqual(analyzeRhinoStatic(program).inconsistentReturnFunctions.map((finding) => finding.name), ["mixed"]);
 });
 
 test("V1 strict routes organizer-only metadata activation forms with or without one slash", async () => {
@@ -252,7 +281,7 @@ test("V1 strict routes organizer-only metadata activation forms with or without 
   }
 });
 
-test("V1 strict R13 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
+test("V1 strict R14 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const [message, profileId] of [
     ["내전 2ㅉ", "FEATURES"],
@@ -332,7 +361,7 @@ test("artifact excludes legacy HTTP, bearer, and embedded secret material", asyn
   }
 });
 
-test("all response-reachable non-transport V1 function lines are preserved except blank spacers", async () => {
+test("all response-reachable non-transport V1 executable lines are preserved without comments or blank spacers", async () => {
   const canonical = canonicalSource();
   const artifact = await readFile(artifactPath, "utf8");
   const strict = evaluate(artifact);
@@ -347,7 +376,7 @@ test("all response-reachable non-transport V1 function lines are preserved excep
   assert.equal(requiredOriginal.length, 63);
   assert.deepEqual(new Set(strict.KLOL_V1_SOURCE_FUNCTIONS), new Set(requiredOriginal));
   for (const name of strict.KLOL_V1_SOURCE_FUNCTIONS) {
-    const expected = canonicalFunctions.get(name);
+    const expected = withoutComments(canonicalFunctions.get(name));
     const actualName = name === "response" ? "v1SourceResponse" : name;
     let actual = artifactFunctions.get(actualName);
     assert.ok(expected, `canonical function missing: ${name}`);
@@ -418,7 +447,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R13_2026_09_14_SCOPED_FINISH"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R14_2026_09_14_RHINO_CLEAN"],
   );
 });
 

@@ -38,15 +38,11 @@ const settings = [
   "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT",
 ].map((name) => [name, privateSetting(settingsSource, name)]);
 const publicSource = (await readFile(publicPath, "utf8")).replace(/\r\n?/gu, "\n");
-const executableMarker = "/* eslint-disable */";
+const executableMarker = "var KLOL_V1_GATEWAY =";
 const executableSourceIndex = publicSource.indexOf(executableMarker);
 if (executableSourceIndex < 0) throw new Error("Public V1 strict executable marker is missing");
-// Provenance arrays are useful in the reviewed public artifact but are never
-// read at runtime. Leave them in that immutable artifact and omit them only
-// from the phone installer so the settings preamble also fits after CRLF paste.
 const phoneSource = publicSource.slice(executableSourceIndex);
 const preamble = [
-  "/* PRIVATE LOCAL V1-STRICT INSTALLER. DO NOT COMMIT OR SHARE. */",
   "var KLOL_V1_PRIVATE_SETTINGS_APPLIED = (function () {",
   ...settings.map(([name, value]) => `  DataBase.setDataBase(${JSON.stringify(name)}, ${JSON.stringify(value)});`),
   "  return true;",
@@ -54,19 +50,21 @@ const preamble = [
   "",
 ].join("\n");
 const output = `${preamble}${phoneSource}`;
-const program = acorn.parse(output, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
+const outputComments = [];
+const program = acorn.parse(output, { ecmaVersion: 5, allowReserved: true, preserveParens: true, onComment: outputComments });
 const findings = analyzeRhinoStatic(program);
 const crlfLength = output.replace(/\n/gu, "\r\n").length;
 const version = /var BOT_CODE_VERSION = "([^"]+)";/u.exec(output)?.[1];
 const outputSha256 = createHash("sha256").update(output).digest("hex");
 if ((output.match(/function\s+response\s*\(/gu) ?? []).length !== 1) throw new Error("Private V1 strict output must define one response callback");
 if (!version) throw new Error("Private V1 strict output must expose BOT_CODE_VERSION");
+if (outputComments.length !== 0) throw new Error("Private V1 strict output must not contain JavaScript comments");
 if (!output.includes("function isPartyMetadataActivationForm(text)")) throw new Error("Private V1 strict output must include party metadata activation routing");
 if (!output.includes("msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\"")) throw new Error("Private V1 strict output must include scoped finish routing");
 if (output.length >= 65_535 || crlfLength >= 65_535) {
   throw new Error("Private V1 strict output exceeds MessengerBot R's LF/CRLF 65,535-character limit");
 }
-if (findings.statementCandidates.length || findings.unsafeSequenceOperands.length || findings.voidExpressions.length || findings.bareAssignmentConditions.length) {
+if (findings.statementCandidates.length || findings.unsafeSequenceOperands.length || findings.voidExpressions.length || findings.bareAssignmentConditions.length || findings.inconsistentReturnFunctions.length) {
   throw new Error("Private V1 strict output contains Rhino static warning candidates");
 }
 

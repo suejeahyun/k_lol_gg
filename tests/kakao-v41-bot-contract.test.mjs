@@ -95,6 +95,7 @@ test("mobile installer has no Rhino CODE_HAS_NO_SIDE_EFFECTS statement candidate
     unsafeSequenceOperands: [],
     voidExpressions: [],
     bareAssignmentConditions: [],
+    inconsistentReturnFunctions: [],
   });
 });
 

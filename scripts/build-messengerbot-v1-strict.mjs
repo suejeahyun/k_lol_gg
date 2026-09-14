@@ -105,8 +105,25 @@ function withoutBlankLines(value) {
     .join("\n");
 }
 
+function withoutComments(value) {
+  const comments = [];
+  acorn.parse(value, {
+    ecmaVersion: 5,
+    allowReserved: true,
+    preserveParens: true,
+    onComment: comments,
+  });
+  let output = value;
+  for (let index = comments.length - 1; index >= 0; index -= 1) {
+    const comment = comments[index];
+    const newlineCount = (output.slice(comment.start, comment.end).match(/\n/gu) ?? []).length;
+    output = `${output.slice(0, comment.start)} ${"\n".repeat(newlineCount)}${output.slice(comment.end)}`;
+  }
+  return output;
+}
+
 function compactBundleSource(value) {
-  return value.replace(/\/\*(?! eslint-disable \*\/)[\s\S]*?\*\//gu, "").replace(/^[ \t]+/gmu, "");
+  return value.replace(/^[ \t]+/gmu, "");
 }
 
 function compactStringArray(values) {
@@ -209,7 +226,7 @@ const provenance = [
   " */",
   `var KLOL_V1_SOURCE_COMMIT = "${sourceCommit}";`,
   `var KLOL_V1_SOURCE_SHA256 = "${sourceSha256Lf}";`,
-  `var KLOL_V1_EXTRACTED_SHA256 = "${sha256(withoutBlankLines(extracted.join("\n\n")))}";`,
+  `var KLOL_V1_EXTRACTED_SHA256 = "${sha256(withoutBlankLines(withoutComments(extracted.join("\n\n"))))}";`,
   `var KLOL_V1_SOURCE_FUNCTIONS = ${compactStringArray(extractedNames)};`,
   `var KLOL_V1_TRANSPORT_SEAMS = ${compactStringArray([...transportSeamNames])};`
 ].join("\n");
@@ -227,7 +244,10 @@ const entry = [
   "  };",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
-  "    if (/^\\/?(?:내전|스크림)[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) return handlePartyRecruitApi(\"\", room, msg, sender, guardedReplier, \"\", msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\");",
+  "    if (/^\\/?(?:내전|스크림)[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) {",
+  "      handlePartyRecruitApi(\"\", room, msg, sender, guardedReplier, \"\", msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\");",
+  "      return;",
+  "    }",
   "    if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;",
   "    v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, imageDB, packageName);",
   "  } finally {",
@@ -271,11 +291,13 @@ const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${ext
 // The canonical V1 source contains many blank spacer lines. MessengerBot R may
 // store pasted LF text as CRLF, so remove only blank lines while preserving
 // every executable/comment line and the human-readable layout.
-const output = `${withoutBlankLines(uncompressedOutput)}\n`;
+const output = `${withoutBlankLines(withoutComments(uncompressedOutput))}\n`;
+const outputComments = [];
 const program = acorn.parse(output, {
   ecmaVersion: 5,
   allowReserved: true,
-  preserveParens: true
+  preserveParens: true,
+  onComment: outputComments,
 });
 const findings = analyzeRhinoStatic(program);
 const responseCount = output.match(/function\s+response\s*\(/gu)?.length ?? 0;
@@ -293,6 +315,7 @@ const bannedTransport = [
 
 if (responseCount !== 1) throw new Error("V1-strict output must define exactly one response callback");
 if (connectCount !== 1) throw new Error("V1-strict output must contain exactly one HTTP boundary");
+if (outputComments.length !== 0) throw new Error("V1-strict output must not contain JavaScript comments");
 if (!output.includes(".timeout(5000)")) throw new Error("V1-strict transport must use the five-second timeout");
 if (!output.includes("var isOperationFormCompleteMessage = isOperationFormMessage;")) {
   throw new Error("V1-strict output must preserve the operation-form completion predicate");
@@ -344,7 +367,8 @@ if (
   findings.statementCandidates.length ||
   findings.unsafeSequenceOperands.length ||
   findings.voidExpressions.length ||
-  findings.bareAssignmentConditions.length
+  findings.bareAssignmentConditions.length ||
+  findings.inconsistentReturnFunctions.length
 ) {
   throw new Error("V1-strict output contains Rhino static warning candidates");
 }

@@ -25,7 +25,41 @@ export function analyzeRhinoStatic(program) {
   const unsafeSequenceOperands = [];
   const voidExpressions = [];
   const bareAssignmentConditions = [];
+  const inconsistentReturnFunctions = [];
   const conditionRoots = new Set();
+
+  const isFunctionNode = (node) =>
+    node?.type === "FunctionDeclaration" ||
+    node?.type === "FunctionExpression" ||
+    node?.type === "ArrowFunctionExpression";
+
+  const inspectFunctionReturns = (functionNode) => {
+    let hasBareReturn = false;
+    let hasValueReturn = false;
+
+    const visitFunctionBody = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (node !== functionNode && isFunctionNode(node)) return;
+      if (node.type === "ReturnStatement") {
+        if (node.argument) hasValueReturn = true;
+        else hasBareReturn = true;
+        return;
+      }
+      for (const [key, value] of Object.entries(node)) {
+        if (key === "start" || key === "end" || key === "loc" || key === "range") continue;
+        if (Array.isArray(value)) for (const item of value) visitFunctionBody(item);
+        else visitFunctionBody(value);
+      }
+    };
+
+    visitFunctionBody(functionNode.body);
+    if (hasBareReturn && hasValueReturn) {
+      inconsistentReturnFunctions.push({
+        offset: functionNode.start,
+        name: functionNode.id?.name ?? "<anonymous>",
+      });
+    }
+  };
 
   const collectConditions = (node) => {
     if (!node || typeof node !== "object") return;
@@ -42,6 +76,7 @@ export function analyzeRhinoStatic(program) {
 
   const visit = (node) => {
     if (!node || typeof node !== "object") return;
+    if (isFunctionNode(node)) inspectFunctionReturns(node);
     if (node.type === "ExpressionStatement" && !node.directive && !rhinoHasSideEffects(node.expression)) {
       statementCandidates.push({ offset: node.start, type: node.expression.type });
     }
@@ -59,5 +94,11 @@ export function analyzeRhinoStatic(program) {
     }
   };
   visit(program);
-  return { statementCandidates, unsafeSequenceOperands, voidExpressions, bareAssignmentConditions };
+  return {
+    statementCandidates,
+    unsafeSequenceOperands,
+    voidExpressions,
+    bareAssignmentConditions,
+    inconsistentReturnFunctions,
+  };
 }

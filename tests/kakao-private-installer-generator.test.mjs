@@ -74,6 +74,7 @@ test("private installer generator preserves shared settings and creates one iden
         unsafeSequenceOperands: [],
         voidExpressions: [],
         bareAssignmentConditions: [],
+        inconsistentReturnFunctions: [],
       });
     }
   } finally {
