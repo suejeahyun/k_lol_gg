@@ -4,7 +4,7 @@
 
 대상: 내전 종목별 양식, 양식 활성화, 협곡 빠른 상세 추가, 기존 파티 회귀, MessengerBot R V1 strict 공개·비공개 설치본
 
-판정: 소스 수정, 전체 앱 검사, 격리 PostgreSQL 계약, 프로덕션 빌드, Rhino 정적 검사를 통과했다. Vercel 운영 배포와 라이브 API 결과는 배포 후 이 문서에 추가한다. 휴대폰 실기기 설치와 실제 카카오톡 송수신은 사용자 설치 후 확인 대상이다.
+판정: 소스 수정, 전체 앱 검사, 격리 PostgreSQL 계약, 프로덕션 빌드, Rhino 정적 검사, Vercel 운영 배포와 라이브 서명 검증을 통과했다. 휴대폰 실기기 설치와 실제 카카오톡 송수신은 사용자 설치 후 확인 대상이다.
 
 ## 확정 동작
 
@@ -50,10 +50,13 @@ PASS — ES5, warning candidate 0, mixed return 0, 주석 0, 버전 선언 1, re
 
 ## 운영 반영 상태와 남은 확인
 
-- 기능 커밋: 배포 전
+- 기능 커밋: `0bc6d9552a3dbe8ce4c842ea0f8ed021b327b794`
 - 릴리스 tag: `kakao-r17-mode-forms-v1.0.0`
-- Vercel 운영 배포: 배포 전
+- Vercel 운영 배포: `dpl_E4BS9JnU8cdxR4cb2343EBQp25zK` · Ready · Production
+- 운영 URL: `https://k-lol-fn0awjv8i-tjdmswo11-3715s-projects.vercel.app`
 - 운영 별칭: `https://k-lol-gg.vercel.app`
+- 운영 검증: 2026-09-14T07:32:07.022Z · `/api/health` HTTP 200 · `status: ready`
+- private 서명 검증: RECRUIT HTTP 200, FEATURES HTTP 200, command gateway 정상, 자격증명 출력 없음
 - DB migration·운영 데이터 직접 변경·삭제: 없음
 - 실제 휴대폰 컴파일, `/봇버전`, 협곡·칼바람·증바람 각각의 활성화→추가→삭제→마감 확인은 사용자 실기기 설치 후 남는다.
 

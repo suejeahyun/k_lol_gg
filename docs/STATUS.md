@@ -2,10 +2,15 @@
 
 ## 2026-09-14 카카오 R17 내전 종목별 전체 양식
 
-- 상태: 소스·전체 앱 검사·격리 PostgreSQL·Rhino 정적 검사 완료, Vercel 운영 배포 진행 중, 휴대폰 MessengerBot R 설치 대기
+- 기능 커밋: `0bc6d9552a3dbe8ce4c842ea0f8ed021b327b794`
+- 상태: 소스·전체 앱 검사·격리 PostgreSQL·Rhino 정적 검사·Vercel 운영 배포·라이브 서명 검증 완료, 휴대폰 MessengerBot R 설치 대기
 - 릴리스 tag: `kakao-r17-mode-forms-v1.0.0`
+- 운영 배포: `dpl_E4BS9JnU8cdxR4cb2343EBQp25zK`
+- 운영 URL: `https://k-lol-fn0awjv8i-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
 - 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R17_2026_09_14`
 - 주요 범위: 파티 무변경, 협곡 티어·라인 10칸, 칼바람·증바람 이름 10칸, 양식 전송 후 활성화, 이름만/상세 빠른 추가 병행
+- 테스트: focused 102/102, 일반 779 PASS·1 intentional skip, PostgreSQL 전체 계약, static generation 93/93, 운영 RECRUIT·FEATURES 서명 요청 HTTP 200
 - private 설치본: LF 61,326 / CRLF 63,126, SHA-256 `b8f7577e84ca6f3a45e98b981f88ec74f12648824ec13c94dbe217229275cd8f`
 - DB migration·운영 데이터 직접 수정·삭제: 없음
 

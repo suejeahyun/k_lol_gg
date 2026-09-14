@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "kakao-r17-mode-forms",
+      "version": "1.0.0",
+      "gitTag": "kakao-r17-mode-forms-v1.0.0",
+      "commit": "0bc6d9552a3dbe8ce4c842ea0f8ed021b327b794",
+      "releasedAt": "2026-09-14T16:32:24+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-r17-mode-forms-2026-09-14/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-14-kakao-r17-mode-forms.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_E4BS9JnU8cdxR4cb2343EBQp25zK",
+        "url": "https://k-lol-fn0awjv8i-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-14T07:32:07.022Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_R17_2026_09_14",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
       "featureId": "kakao-r12-transcript-dedupe",
       "version": "1.0.0",
       "gitTag": "kakao-r12-transcript-dedupe-v1.0.0",
