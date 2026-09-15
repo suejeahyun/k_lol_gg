@@ -2,7 +2,12 @@
 
 ## 2026-09-16 카카오 R18 신규 입장 안내
 
-- 상태: 소스·집중 회귀·전체 앱 검사·Rhino 정적 검사 완료, Git·Vercel 배포 및 휴대폰 MessengerBot R 설치 대기
+- 기능 커밋: `1fc6e5fc63d429d82b05acc2cddc29efbd58dffa`
+- 상태: 소스·집중 회귀·전체 앱 검사·Rhino 정적 검사·Git·Vercel 운영 배포 완료, 휴대폰 MessengerBot R 설치 대기
+- 릴리스 tag: `kakao-r18-join-guides-v1.0.0`
+- 운영 배포: `dpl_H9LFWVMfxLYe3FBts2uKqzWAER6C`
+- 운영 URL: `https://k-lol-5tqmcg82l-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
 - 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R18_2026_09_16`
 - 주요 범위: 입장 시 닉네임 변경, 구인구직방, 디스코드 안내를 순서대로 로컬 전송
 - 테스트: focused 46/46, 일반 779 PASS·1 intentional skip, 홈 여성 챔피언 가이드 68장, 프로덕션 빌드 93 pages

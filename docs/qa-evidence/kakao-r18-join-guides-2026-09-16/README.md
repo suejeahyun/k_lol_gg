@@ -4,7 +4,7 @@
 
 대상: MessengerBot R 신규 입장 로컬 안내, V1 strict 회귀, 공개·비공개 전체 복붙 설치본
 
-판정: 소스 구현, 집중 자동 검증, 전체 앱 검사와 프로덕션 빌드를 통과했다. Vercel 릴리스 증거는 배포 단계에서 확정한다. 휴대폰 실기기 설치와 실제 카카오톡 신규 입장 수신은 사용자 설치 후 확인 대상이다.
+판정: 소스 구현, 집중 자동 검증, 전체 앱 검사, 프로덕션 빌드와 Vercel 운영 배포를 통과했다. 휴대폰 실기기 설치와 실제 카카오톡 신규 입장 수신은 사용자 설치 후 확인 대상이다.
 
 ## 확정 동작
 
@@ -40,9 +40,14 @@ PASS — lint 오류 0, 타입 검사, 일반 테스트 779 PASS·1 intentional 
 
 ## 운영 반영 상태와 남은 확인
 
+- 기능 커밋: `1fc6e5fc63d429d82b05acc2cddc29efbd58dffa`
+- 릴리스 tag: `kakao-r18-join-guides-v1.0.0`
+- Vercel 운영 배포: `dpl_H9LFWVMfxLYe3FBts2uKqzWAER6C` · Ready · Production · Latest
+- 운영 URL: `https://k-lol-5tqmcg82l-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app`
+- 운영 검증: 2026-09-15T20:08:15.960Z · `/api/health` HTTP 200 · `status: ready`
 - 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R18_2026_09_16`
 - DB migration·운영 데이터 직접 변경·삭제: 없음
-- 남음: Git commit·tag·push, Vercel Ready/health 검증
 - 외부 확인: 실제 휴대폰 전체 교체·컴파일, `/봇버전`, 실제 신규 입장 시 세 안내 순서와 중복 여부
 
 ## 다음 패치 추천
