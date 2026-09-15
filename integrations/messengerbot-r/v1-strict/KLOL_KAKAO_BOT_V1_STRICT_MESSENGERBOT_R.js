@@ -198,7 +198,7 @@ shouldSuppressReply: shouldSuppressReply,
 markReplySent: markReplySent
 };
 }());
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R17_2026_09_14";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R18_2026_09_16";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -1788,6 +1788,12 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
       KLOL_V1_GATEWAY.markReplySent();
     }
   };
+  if (String(msg || "").indexOf("들어왔습니다") >= 0) {
+    sourceReplier.reply("< 닉네임 변경 >\n\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n- Ex) 98 영훈 탑갱와줘요오 U(G)\n\n💫 닉네임 변경시에 띄어쓰기 확인 바랍니다 !!");
+    sourceReplier.reply("https://open.kakao.com/o/gAxaVdxh\n\n참여코드 : 7942\n\n1. 구인 글 이외 대화금지\n2. 소통방과 닉네임은 동일하게 입장");
+    sourceReplier.reply("https://discord.gg/k-lol");
+    return;
+  }
   KLOL_V1_OPERATION_RAW_TEXT = String(msg || "");
   try {
     if (/^\/?(?:내전|스크림)[ \t]+[1-9]\d{0,2}[ \t]*ㅉ$/.test(msg)) {

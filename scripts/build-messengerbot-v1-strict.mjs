@@ -16,6 +16,9 @@ const sourceSha256Lf = "0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a15
 const sourceSha256Crlf = "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7";
 const fixturePath = resolve(root, "tests/fixtures/kakao/v1", sourcePath);
 const outputName = "KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js";
+const joinNicknameNotice = "< 닉네임 변경 >\n\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n- Ex) 98 영훈 탑갱와줘요오 U(G)\n\n💫 닉네임 변경시에 띄어쓰기 확인 바랍니다 !!";
+const joinRecruitNotice = "https://open.kakao.com/o/gAxaVdxh\n\n참여코드 : 7942\n\n1. 구인 글 이외 대화금지\n2. 소통방과 닉네임은 동일하게 입장";
+const joinDiscordNotice = "https://discord.gg/k-lol";
 
 const selectedFunctionNames = new Set([
   "isKlolBotEchoSender",
@@ -242,6 +245,12 @@ const entry = [
   "      KLOL_V1_GATEWAY.markReplySent();",
   "    }",
   "  };",
+  "  if (String(msg || \"\").indexOf(\"들어왔습니다\") >= 0) {",
+  `    sourceReplier.reply(${JSON.stringify(joinNicknameNotice)});`,
+  `    sourceReplier.reply(${JSON.stringify(joinRecruitNotice)});`,
+  `    sourceReplier.reply(${JSON.stringify(joinDiscordNotice)});`,
+  "    return;",
+  "  }",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
   "    if (/^\\/?(?:내전|스크림)[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) {",

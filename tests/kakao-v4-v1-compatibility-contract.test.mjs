@@ -45,7 +45,7 @@ function canMutateRecruit({ targetScopeId, actorScopeId, actorVerified }) {
 }
 
 test("contract fixture has traceable V1 evidence and all required domains", () => {
-  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_R17_2026_09_14");
+  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_R18_2026_09_16");
   assert.match(contract.contractVersion, /^KLOL_KAKAO_V4_V1_COMPAT_/u);
   assert.match(contract.source.v1Sha256, /^[a-f0-9]{64}$/u);
   assert.ok(contract.source.currentGoldenTests.length >= 7);

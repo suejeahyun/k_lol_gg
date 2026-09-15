@@ -281,7 +281,7 @@ test("V1 strict routes organizer-only metadata activation forms with or without 
   }
 });
 
-test("V1 strict R17 routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
+test("V1 strict routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const [message, profileId] of [
     ["내전 2ㅉ", "FEATURES"],
@@ -426,7 +426,6 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
     { message: "결과현황" },
     { message: "구인도움말" },
     { message: "/구인웹도우미" },
-    { message: "홍길동님이 들어왔습니다" },
     { message: "홍길동님이 나갔습니다" },
     { message: "홍길동님이 초대되었습니다" },
     { message: "아무 관계 없는 대화" },
@@ -447,8 +446,20 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R17_2026_09_14"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R18_2026_09_16"],
   );
+});
+
+test("R18 sends the three requested local guides in order when a member joins", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const strict = evaluate(artifact);
+
+  assert.deepEqual(replyFor(strict, "춤추는 어피치님이 들어왔습니다."), [
+    "< 닉네임 변경 >\n\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n- Ex) 98 영훈 탑갱와줘요오 U(G)\n\n💫 닉네임 변경시에 띄어쓰기 확인 바랍니다 !!",
+    "https://open.kakao.com/o/gAxaVdxh\n\n참여코드 : 7942\n\n1. 구인 글 이외 대화금지\n2. 소통방과 닉네임은 동일하게 입장",
+    "https://discord.gg/k-lol",
+  ]);
+  assert.equal(strict.http.calls, 0);
 });
 
 test("approved party member mutations parse safely and use one RECRUIT gateway request", async () => {

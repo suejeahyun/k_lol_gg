@@ -1,5 +1,17 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-16 카카오 R18 신규 입장 안내
+
+- 상태: 소스·집중 회귀·전체 앱 검사·Rhino 정적 검사 완료, Git·Vercel 배포 및 휴대폰 MessengerBot R 설치 대기
+- 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R18_2026_09_16`
+- 주요 범위: 입장 시 닉네임 변경, 구인구직방, 디스코드 안내를 순서대로 로컬 전송
+- 테스트: focused 46/46, 일반 779 PASS·1 intentional skip, 홈 여성 챔피언 가이드 68장, 프로덕션 빌드 93 pages
+- public 설치 검토본: LF 63,476 / CRLF 65,285, SHA-256 `ea71eb7fb533e812d265969f989a72be83a1e552b164576251dd3c7f1f7963bb`
+- private 설치본: LF 61,690 / CRLF 63,496, SHA-256 `cb4ff5b4cc151b67a96198e41ca127ccf02daf818155f3263d5f9479ce2a6c52`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r18-join-guides-2026-09-16/README.md`](./qa-evidence/kakao-r18-join-guides-2026-09-16/README.md)에 있다.
+
 ## 2026-09-14 카카오 R17 내전 종목별 전체 양식
 
 - 기능 커밋: `0bc6d9552a3dbe8ce4c842ea0f8ed021b327b794`
