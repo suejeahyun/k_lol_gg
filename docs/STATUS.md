@@ -1,5 +1,17 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-16 카카오 R19 랜덤 입장 안내 톤
+
+- 상태: 소스·집중 회귀·전체 앱 검사·Rhino 정적 검사 완료, Git·Vercel 배포 및 휴대폰 MessengerBot R 설치 대기
+- 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R19_2026_09_16`
+- 주요 범위: `오픈채팅봇`의 `입장시 할 일` 문구 인식, 환영·공지·게임·가벼운 퀘스트 네 톤 중 하나 선택, 필수 정보 공통 유지, 원시 입장 중복 억제
+- 테스트: focused 47/47, 일반 779 PASS·1 intentional skip, 홈 여성 챔피언 가이드 68장, 프로덕션 빌드 93 pages, 공개·비공개 ES5/Rhino 경고 후보 0건
+- public 설치 검토본: LF 63,671 / CRLF 65,480, SHA-256 `e4fbfba2695b89d2972d72ee0192c7c0dc9d3d0bfddc190a08c47e4f6442b48a`
+- private 설치본: LF 61,957 / CRLF 63,764, SHA-256 `8f742076c8c7aa179e033805471cd97caa84382cc79379500baf548fdfefa61d`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r19-random-join-tones-2026-09-16/README.md`](./qa-evidence/kakao-r19-random-join-tones-2026-09-16/README.md)에 있다.
+
 ## 2026-09-16 카카오 R18 신규 입장 안내
 
 - 기능 커밋: `1fc6e5fc63d429d82b05acc2cddc29efbd58dffa`

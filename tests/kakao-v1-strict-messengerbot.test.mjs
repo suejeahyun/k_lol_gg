@@ -446,19 +446,47 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R18_2026_09_16"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R19_2026_09_16"],
   );
 });
 
-test("R18 sends the three requested local guides in order when a member joins", async () => {
+test("R19 chooses one complete tone when the OpenChat entry guide appears", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const core = "\n\n1️⃣ 닉네임\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n예시) 98 영훈 탑갱와줘요오 U(G)\n띄어쓰기 확인!\n\n2️⃣ 구인구직방\n🔗 https://open.kakao.com/o/gAxaVdxh\n🔐 참여코드: 7942\n• 구인 글 외 대화 자제하기\n• 소통방과 같은 닉네임 사용하기\n\n3️⃣ 디스코드\n🔗 https://discord.gg/k-lol\n\n";
+  const intros = [
+    "💜 반가워요! K-LOL에 오신 걸 환영해요 😊",
+    "📌 K-LOL 안내",
+    "🎮 K-LOL 합류 준비 완료!",
+    "😎 입장 전 간단 퀘스트!",
+  ];
+  const endings = [
+    "앞으로 즐겁게 함께해요 💕",
+    "확인 감사합니다. 즐거운 시간 보내세요.",
+    "준비 끝! 오늘도 즐겜해요 🔥",
+    "퀘스트 완료! 같이 달려봐요 🎉",
+  ];
+  for (const [randomValue, index] of [[0, 0], [0.25, 1], [0.5, 2], [0.75, 3], [0.999999, 3]]) {
+    const strict = evaluate(artifact);
+    strict.__randomCalls = 0;
+    vm.runInContext(`Math.random = function () { __randomCalls += 1; return ${randomValue}; };`, strict);
+    const heading = randomValue === 0.999999 ? "⭐ 입 장 시 할 일 !! ⭐" : "⭐ 입장시 할 일 !! ⭐\n공지 본문";
+    const replies = replyFor(strict, heading, { sender: "오픈채팅봇" });
+    assert.deepEqual(replies, [intros[index] + core + endings[index]]);
+    assert.equal(strict.__randomCalls, 1);
+    assert.equal(strict.http.calls, 0);
+  }
+});
+
+test("R19 consumes the raw join event and accepts only the OpenChat entry heading", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   const strict = evaluate(artifact);
+  strict.__randomCalls = 0;
+  vm.runInContext("Math.random = function () { __randomCalls += 1; return 0; };", strict);
 
-  assert.deepEqual(replyFor(strict, "춤추는 어피치님이 들어왔습니다."), [
-    "< 닉네임 변경 >\n\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n- Ex) 98 영훈 탑갱와줘요오 U(G)\n\n💫 닉네임 변경시에 띄어쓰기 확인 바랍니다 !!",
-    "https://open.kakao.com/o/gAxaVdxh\n\n참여코드 : 7942\n\n1. 구인 글 이외 대화금지\n2. 소통방과 닉네임은 동일하게 입장",
-    "https://discord.gg/k-lol",
-  ]);
+  assert.deepEqual(replyFor(strict, "춤추는 어피치님이 들어왔습니다."), []);
+  assert.deepEqual(replyFor(strict, "⭐ 입장시 할 일 !! ⭐", { sender: "일반 사용자" }), []);
+  assert.deepEqual(replyFor(strict, "⭐ 입장 후 할 일 !! ⭐", { sender: "오픈채팅봇" }), []);
+  assert.equal(strict.__randomCalls, 0);
   assert.equal(strict.http.calls, 0);
 });
 

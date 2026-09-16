@@ -16,9 +16,13 @@ const sourceSha256Lf = "0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a15
 const sourceSha256Crlf = "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7";
 const fixturePath = resolve(root, "tests/fixtures/kakao/v1", sourcePath);
 const outputName = "KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js";
-const joinNicknameNotice = "< 닉네임 변경 >\n\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n- Ex) 98 영훈 탑갱와줘요오 U(G)\n\n💫 닉네임 변경시에 띄어쓰기 확인 바랍니다 !!";
-const joinRecruitNotice = "https://open.kakao.com/o/gAxaVdxh\n\n참여코드 : 7942\n\n1. 구인 글 이외 대화금지\n2. 소통방과 닉네임은 동일하게 입장";
-const joinDiscordNotice = "https://discord.gg/k-lol";
+const joinGuideCore = "\n\n1️⃣ 닉네임\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n예시) 98 영훈 탑갱와줘요오 U(G)\n띄어쓰기 확인!\n\n2️⃣ 구인구직방\n🔗 https://open.kakao.com/o/gAxaVdxh\n🔐 참여코드: 7942\n• 구인 글 외 대화 자제하기\n• 소통방과 같은 닉네임 사용하기\n\n3️⃣ 디스코드\n🔗 https://discord.gg/k-lol\n\n";
+const joinGuideTones = [
+  ["💜 반가워요! K-LOL에 오신 걸 환영해요 😊", "앞으로 즐겁게 함께해요 💕"],
+  ["📌 K-LOL 안내", "확인 감사합니다. 즐거운 시간 보내세요."],
+  ["🎮 K-LOL 합류 준비 완료!", "준비 끝! 오늘도 즐겜해요 🔥"],
+  ["😎 입장 전 간단 퀘스트!", "퀘스트 완료! 같이 달려봐요 🎉"],
+];
 
 const selectedFunctionNames = new Set([
   "isKlolBotEchoSender",
@@ -227,7 +231,6 @@ const provenance = [
   ` * User-provided CRLF SHA-256: ${sourceSha256Crlf}`,
   " * V1 executable/comment lines are preserved; blank spacer lines are removed for the phone limit.",
   " */",
-  `var KLOL_V1_SOURCE_COMMIT = "${sourceCommit}";`,
   `var KLOL_V1_SOURCE_SHA256 = "${sourceSha256Lf}";`,
   `var KLOL_V1_EXTRACTED_SHA256 = "${sha256(withoutBlankLines(withoutComments(extracted.join("\n\n"))))}";`,
   `var KLOL_V1_SOURCE_FUNCTIONS = ${compactStringArray(extractedNames)};`,
@@ -245,10 +248,11 @@ const entry = [
   "      KLOL_V1_GATEWAY.markReplySent();",
   "    }",
   "  };",
-  "  if (String(msg || \"\").indexOf(\"들어왔습니다\") >= 0) {",
-  `    sourceReplier.reply(${JSON.stringify(joinNicknameNotice)});`,
-  `    sourceReplier.reply(${JSON.stringify(joinRecruitNotice)});`,
-  `    sourceReplier.reply(${JSON.stringify(joinDiscordNotice)});`,
+  "  var localText = String(msg || \"\");",
+  "  if (localText.indexOf(\"들어왔습니다\") >= 0) return;",
+  "  if (String(sender || \"\") === \"오픈채팅봇\" && localText.replace(/[ \\t]/g, \"\").indexOf(\"입장시할일\") >= 0) {",
+  `    var joinTone = ${JSON.stringify(joinGuideTones)}[Math.floor(Math.random() * ${joinGuideTones.length})];`,
+  `    sourceReplier.reply(joinTone[0] + ${JSON.stringify(joinGuideCore)} + joinTone[1]);`,
   "    return;",
   "  }",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
@@ -264,11 +268,11 @@ const entry = [
   "  }",
   "}",
   "response.__kakaoBotEntryPoint = true;"
-].join("\n");
+].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
 const operationCandidateBinding = [
   "var isOperationFormCompleteMessage = isOperationFormMessage;",
   "isOperationFormMessage = isOperationFormCandidateMessage;",
-].join("\n");
+].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
 const seasonCandidateBinding = [
   "/* Keep V1 routing, but let recoverable numbered rows reach the V4 row parser. */",
   "var isSeasonApplyCompleteMessage = isSeasonApplyFormMessage;",
@@ -286,7 +290,7 @@ const seasonCandidateBinding = [
   "  if (isSeasonApplySnapshotEnvelope(text)) return false;",
   "  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text) || isPartyMetadataActivationForm(text);",
   "};",
-].join("\n");
+].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
 const recruitHelpBinding = [
   "var v1PartyHelp = getPartyRecruitHelpNotice;",
   "getPartyRecruitHelpNotice = function () {",
@@ -295,7 +299,7 @@ const recruitHelpBinding = [
   "    \"활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\\n현황: 구인현황\\n추가: 상세 번호 추가 이름\\n삭제: 상세 번호 삭제 이름\\n종료: 번호ㅉ\"",
   "  );",
   "};",
-].join("\n");
+].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
 const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n${recruitHelpBinding}\n\n${entry}\n`;
 // The canonical V1 source contains many blank spacer lines. MessengerBot R may
 // store pasted LF text as CRLF, so remove only blank lines while preserving

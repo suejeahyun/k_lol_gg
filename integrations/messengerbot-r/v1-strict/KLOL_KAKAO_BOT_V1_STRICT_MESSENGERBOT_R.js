@@ -1,4 +1,3 @@
-var KLOL_V1_SOURCE_COMMIT = "4f84e84aa0a4ee986c2aad2c7377d8e3bcf2e097";
 var KLOL_V1_SOURCE_SHA256 = "0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2";
 var KLOL_V1_EXTRACTED_SHA256 = "30b769beda4dcc2d83adbbe7edff674ebaa707753ab71dd05e4ab3f224febd4a";
 var KLOL_V1_SOURCE_FUNCTIONS = ["isKlolBotEchoSender","isKlolServerEchoMessage","response","isScrimRecruitFormMessageForBot","isScrimRecruitCommand","getScrimRecruitApiUrl","handleScrimRecruitCommand","isLolKCommand","isRecruitCommand","handleLolKCommand","handleRecruitCommand","isSeasonRecruitTemplateCommand",
@@ -198,7 +197,7 @@ shouldSuppressReply: shouldSuppressReply,
 markReplySent: markReplySent
 };
 }());
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R18_2026_09_16";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R19_2026_09_16";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -1759,51 +1758,52 @@ isOperationFormMessage = isOperationFormCandidateMessage;
 var isSeasonApplyCompleteMessage = isSeasonApplyFormMessage;
 isSeasonApplyFormMessage = isSeasonApplyCandidateMessage;
 function isPartyMetadataActivationForm(text) {
-  text = normalizeText(String(text || ""));
-  return hasPartyRecruitNumber(text) && isPartyRecruitLikeMessage(text) &&
-    /^\s*[》>]?\s*시작\s*시간\s*[:：]?/m.test(text) &&
-    /^\s*[》>]?\s*게임\s*정보\s*[:：]?/m.test(text) &&
-    /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?/m.test(text);
+text = normalizeText(String(text || ""));
+return hasPartyRecruitNumber(text) && isPartyRecruitLikeMessage(text) &&
+  /^\s*[》>]?\s*시작\s*시간\s*[:：]?/m.test(text) &&
+  /^\s*[》>]?\s*게임\s*정보\s*[:：]?/m.test(text) &&
+  /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?/m.test(text);
 }
 var isPartyRecruitFormMessageWithoutSeasonSnapshot = isPartyRecruitFormMessage;
 isPartyRecruitFormMessage = function (text) {
-  if (isSeasonApplySnapshotEnvelope(text)) return false;
-  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text) || isPartyMetadataActivationForm(text);
+if (isSeasonApplySnapshotEnvelope(text)) return false;
+return isPartyRecruitFormMessageWithoutSeasonSnapshot(text) || isPartyMetadataActivationForm(text);
 };
 var v1PartyHelp = getPartyRecruitHelpNotice;
 getPartyRecruitHelpNotice = function () {
-  return v1PartyHelp().replace(
-    "현황: 구인현황\n종료: 번호ㅉ",
-    "활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ"
-  );
+return v1PartyHelp().replace(
+  "현황: 구인현황\n종료: 번호ㅉ",
+  "활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ"
+);
 };
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
-  KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);
-  if (isOpenChatBotInhouseLoadingNotice(msg, sender)) return;
-  var sourceReplier = replier;
-  var guardedReplier = {
-    reply: function (value) {
-      if (KLOL_V1_GATEWAY.shouldSuppressReply()) return;
-      sourceReplier.reply(value);
-      KLOL_V1_GATEWAY.markReplySent();
-    }
-  };
-  if (String(msg || "").indexOf("들어왔습니다") >= 0) {
-    sourceReplier.reply("< 닉네임 변경 >\n\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n- Ex) 98 영훈 탑갱와줘요오 U(G)\n\n💫 닉네임 변경시에 띄어쓰기 확인 바랍니다 !!");
-    sourceReplier.reply("https://open.kakao.com/o/gAxaVdxh\n\n참여코드 : 7942\n\n1. 구인 글 이외 대화금지\n2. 소통방과 닉네임은 동일하게 입장");
-    sourceReplier.reply("https://discord.gg/k-lol");
+KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);
+if (isOpenChatBotInhouseLoadingNotice(msg, sender)) return;
+var sourceReplier = replier;
+var guardedReplier = {
+  reply: function (value) {
+    if (KLOL_V1_GATEWAY.shouldSuppressReply()) return;
+    sourceReplier.reply(value);
+    KLOL_V1_GATEWAY.markReplySent();
+  }
+};
+var localText = String(msg || "");
+if (localText.indexOf("들어왔습니다") >= 0) return;
+if (String(sender || "") === "오픈채팅봇" && localText.replace(/[ \t]/g, "").indexOf("입장시할일") >= 0) {
+  var joinTone = [["💜 반가워요! K-LOL에 오신 걸 환영해요 😊","앞으로 즐겁게 함께해요 💕"],["📌 K-LOL 안내","확인 감사합니다. 즐거운 시간 보내세요."],["🎮 K-LOL 합류 준비 완료!","준비 끝! 오늘도 즐겜해요 🔥"],["😎 입장 전 간단 퀘스트!","퀘스트 완료! 같이 달려봐요 🎉"]][Math.floor(Math.random() * 4)];
+  sourceReplier.reply(joinTone[0] + "\n\n1️⃣ 닉네임\n👋 년도 본명 닉네임 티어(22년 이후 최고티어)\n예시) 98 영훈 탑갱와줘요오 U(G)\n띄어쓰기 확인!\n\n2️⃣ 구인구직방\n🔗 https://open.kakao.com/o/gAxaVdxh\n🔐 참여코드: 7942\n• 구인 글 외 대화 자제하기\n• 소통방과 같은 닉네임 사용하기\n\n3️⃣ 디스코드\n🔗 https://discord.gg/k-lol\n\n" + joinTone[1]);
+  return;
+}
+KLOL_V1_OPERATION_RAW_TEXT = String(msg || "");
+try {
+  if (/^\/?(?:내전|스크림)[ \t]+[1-9]\d{0,2}[ \t]*ㅉ$/.test(msg)) {
+    handlePartyRecruitApi("", room, msg, sender, guardedReplier, "", msg.indexOf("내전") >= 0 ? "FEATURES" : "RECRUIT");
     return;
   }
-  KLOL_V1_OPERATION_RAW_TEXT = String(msg || "");
-  try {
-    if (/^\/?(?:내전|스크림)[ \t]+[1-9]\d{0,2}[ \t]*ㅉ$/.test(msg)) {
-      handlePartyRecruitApi("", room, msg, sender, guardedReplier, "", msg.indexOf("내전") >= 0 ? "FEATURES" : "RECRUIT");
-      return;
-    }
-    if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;
-    v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, imageDB, packageName);
-  } finally {
-    KLOL_V1_OPERATION_RAW_TEXT = "";
-  }
+  if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;
+  v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, imageDB, packageName);
+} finally {
+  KLOL_V1_OPERATION_RAW_TEXT = "";
+}
 }
 response.__kakaoBotEntryPoint = true;
