@@ -45,6 +45,54 @@ function seasonPosition(value: string): SeasonApplicationPosition | null {
   return ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"].includes(token) ? token as SeasonApplicationPosition : null;
 }
 
+const RIFT_POSITIONS = Object.freeze(["TOP", "JGL", "MID", "ADC", "SUP"] as const);
+const LEGACY_TIER_TOKEN = /^(?:[IBSGPEDMCU]|GM|IRON|BRONZE|SILVER|GOLD|PLATINUM|EMERALD|DIAMOND|MASTER|GRANDMASTER|CHALLENGER|UNRANKED|아이언|브론즈|실버|골드|플래티넘|에메랄드|다이아(?:몬드)?|마스터|그랜드마스터|챌린저|언랭|미정|-)(?:[1-4])?$/iu;
+
+function looksLikeLegacyFullParticipant(value: string) {
+  const fields = value.split("/").map((field) => field.trim());
+  return fields.length >= 4 && fields[1] !== undefined && fields[2] !== undefined &&
+    (fields[1] === "" || LEGACY_TIER_TOKEN.test(fields[1])) &&
+    (fields[2] === "" || LEGACY_TIER_TOKEN.test(fields[2]));
+}
+
+export function parseKakaoV4InhousePositionShortcut(value: string): KakaoV4InhouseParticipant | null {
+  const normalized = value.normalize("NFKC").trim();
+  if (!normalized || /[\r\n\u2028\u2029]/u.test(normalized)) return null;
+  const fields = normalized.split("/").map((field) => field.trim());
+  if (fields.length < 2 || fields.some((field) => !field)) return null;
+  const name = fields[0]!;
+  const positionTokens = fields.slice(1).flatMap((field) => field.split(/[\s,，、]+/u)).filter(Boolean);
+  if (positionTokens.length < 1) return null;
+  const positions = positionTokens.map(seasonPosition);
+  if (positions.some((position) => position === null)) return null;
+  const mainPosition = positions[0]!;
+  const requestedSubPositions = positions.slice(1) as SeasonApplicationPosition[];
+  if (mainPosition === "ALL" && requestedSubPositions.length > 0) return null;
+  const subPositions = requestedSubPositions.includes("ALL")
+    ? RIFT_POSITIONS.filter((position) => position !== mainPosition)
+    : [...new Set(requestedSubPositions.filter((position) => position !== mainPosition))];
+  return Object.freeze({
+    slotNo: 1,
+    name,
+    riotId: null,
+    mainPosition,
+    subPositions: Object.freeze(subPositions),
+    reserve: false,
+  });
+}
+
+export function isKakaoV4InhouseStructuredAddName(value: string) {
+  return /^[^/]+\/[^/]*\/[^/]*\/[^/]+(?:\/.*)?$/u.test(value) || parseKakaoV4InhousePositionShortcut(value) !== null;
+}
+
+export function parseKakaoV4InhouseStructuredAdd(value: string): KakaoV4InhouseParticipant | null {
+  const shortcut = parseKakaoV4InhousePositionShortcut(value);
+  if (shortcut && !looksLikeLegacyFullParticipant(value.normalize("NFKC"))) return shortcut;
+  const legacy = parseKakaoV4InhouseParticipantRow(`1.${value}`, "RIFT");
+  if (legacy.matched && legacy.valid && legacy.participant) return legacy.participant;
+  return shortcut;
+}
+
 function isEmptySubPosition(value: string) {
   return /^(?:없음|-|미정)$/u.test(value.trim());
 }

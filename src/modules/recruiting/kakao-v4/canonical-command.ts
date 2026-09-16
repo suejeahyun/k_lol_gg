@@ -7,7 +7,7 @@ import { encodeV1StrictScrimTimeText, parseV1StrictScrimTime } from "../domain/v
 import { isOperationFormType, type OperationFormPayloadByType, type OperationFormType } from "../operation-forms/domain";
 import type { KakaoV4CommandClassification } from "./classifier";
 import { usesKakaoV1StrictResponse, type KakaoV4CommandEnvelope } from "./domain";
-import { parseKakaoV4InhouseParticipantRow, type KakaoV4InhouseParticipant } from "./inhouse-snapshot-parser";
+import { parseKakaoV4InhouseParticipantRow, parseKakaoV4InhouseStructuredAdd, type KakaoV4InhouseParticipant } from "./inhouse-snapshot-parser";
 import { parseKakaoV4OperationForm } from "./operation-form";
 import { parsePartyForm, type ParsedPartyForm } from "./party-snapshot-parser";
 
@@ -531,19 +531,19 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     const name = textParameter(parameters, "name");
     if (!recruitNumber || !name) return null;
     const detailed = classification.command === "INHOUSE_MEMBER_ADD" && name.includes("/")
-      ? parseKakaoV4InhouseParticipantRow(`1.${name}`, "RIFT")
+      ? parseKakaoV4InhouseStructuredAdd(name)
       : null;
-    if (detailed && (!detailed.matched || !detailed.valid || !detailed.participant)) return null;
+    if (name.includes("/") && !detailed) return null;
     return Object.freeze({
       domain: "SEASON" as const,
       action: classification.command === "INHOUSE_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
       seasonId: null,
       applyDate: partyDate,
       recruitNumber,
-      name: detailed?.matched && detailed.participant ? detailed.participant.name : name,
-      ...(detailed?.matched && detailed.participant ? {
-        mainPosition: detailed.participant.mainPosition,
-        subPositions: detailed.participant.subPositions,
+      name: detailed ? detailed.name : name,
+      ...(detailed ? {
+        mainPosition: detailed.mainPosition,
+        subPositions: detailed.subPositions,
       } : {}),
     });
   }

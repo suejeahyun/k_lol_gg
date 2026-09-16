@@ -2,9 +2,10 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 import type { KakaoWebhookSecret } from "../infrastructure/kakao-signature";
 import type { KakaoRoomCapabilityProfile } from "../kakao-access/domain";
+import { isKakaoV4InhouseStructuredAddName } from "./inhouse-snapshot-parser";
 
 export const KAKAO_V4_COMMAND_CONTRACT = "KLOL_KAKAO_COMMAND_V4";
-export const KAKAO_V4_V1_CONTRACT = "KLOL_KAKAO_V4_V1_COMPAT_2026_09_14_R5";
+export const KAKAO_V4_V1_CONTRACT = "KLOL_KAKAO_V4_V1_COMPAT_2026_09_16_R8";
 export const KAKAO_V1_STRICT_PROTOCOL = "KLOL_KAKAO_V1_STRICT";
 export const KAKAO_V1_STRICT_RESPONSE_FORMAT = "V1_SERVER_EXACT";
 export const KAKAO_V4_MAXIMUM_BODY_BYTES = 32 * 1_024;
@@ -98,7 +99,8 @@ export function canonicalKakaoV4CommandText(value: string) {
   )).join("").trim();
   if (!text || text === "/" || text.startsWith("//")) return null;
   if (/^[a-z][a-z0-9+.-]*:\/\//iu.test(text)) return null;
-  const structuredInhouseAdd = /^\/?내전\s*(?:상세|명단)\s*(?:\\?#\s*)?\d{1,2}\s+(?:추가(?:해|하기)?|추기|등록|참가)\s+[^/]+\/[^/]*\/[^/]*\/[^/]+(?:\/.*)?$/u.test(text);
+  const structuredMatch = /^\/?내전\s*(?:상세|명단)\s*(?:\\?#\s*)?\d{1,2}\s+(?:추가(?:해|하기)?|추기|등록|참가)\s+(.+)$/u.exec(text);
+  const structuredInhouseAdd = Boolean(structuredMatch && isKakaoV4InhouseStructuredAddName(structuredMatch[1]!));
   if (!text.includes("\n") && text.indexOf("/") > 0 && !structuredInhouseAdd) return null;
   if (!text.startsWith("/")) return text;
   const stripped = text.slice(1);

@@ -135,8 +135,8 @@ function compactBundleSource(value) {
 
 function compactStringArray(values) {
   const rows = [];
-  for (let index = 0; index < values.length; index += 12) {
-    rows.push(values.slice(index, index + 12).map((value) => JSON.stringify(value)).join(","));
+  for (let index = 0; index < values.length; index += 24) {
+    rows.push(values.slice(index, index + 24).map((value) => JSON.stringify(value)).join(","));
   }
   return `[${rows.join(",\n")}]`;
 }

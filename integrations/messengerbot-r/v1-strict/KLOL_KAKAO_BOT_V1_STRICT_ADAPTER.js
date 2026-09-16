@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R19_2026_09_16";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R20_2026_09_16";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -109,7 +109,7 @@ function parseMemberMutationCommand(value) {
   action = String(match[3] || "");
   name = String(match[4] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
   if (recruitNumber < 1 || recruitNumber > 99 || partyMemberMutationNameLength(name) < 1 || partyMemberMutationNameLength(name) > 80) return null;
-  if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /^(?:추가|추가해|추가하기|추기|등록|참가)$/.test(action) && /^[^/]+\/[^/]*\/[^/]*\/[^/]+(?:\/.*)?$/.test(name))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
+  if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /^(?:추가|추가해|추가하기|추기|등록|참가)$/.test(action) && (/^[^/]+(\/[^/]*){3,}$/.test(name) || /^[^/]+\/[a-z,\/ ]+$/i.test(name)))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
   if (/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
   return {
     surface: prefix.indexOf("내전") === 0 ? "INHOUSE" : prefix.indexOf("스크림") === 0 ? "SCRIM" : "PARTY",

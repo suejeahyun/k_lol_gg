@@ -1,4 +1,5 @@
 import { canonicalKakaoV4CommandText, type KakaoV4ProfileId } from "./domain";
+import { isKakaoV4InhouseStructuredAddName } from "./inhouse-snapshot-parser";
 import { detectKakaoV4OperationFormCandidate } from "./operation-form-parser";
 import { parsePartyForm, parsePartyNumberedRow, parsePartyPositionRow, parsePartyReserveRow } from "./party-snapshot-parser";
 
@@ -350,7 +351,7 @@ function detailMemberMutation(text: string, prefixes: readonly string[], allowSt
   const action = /^(?:추가|추기|등록|참가)/u.test(match[2]!) ? "ADD" as const : "REMOVE" as const;
   const nameLength = Array.from(name).length;
   const structuredIntent = allowStructuredAdd && action === "ADD" && name.includes("/");
-  const structuredAdd = structuredIntent && /^[^/]+\/[^/]*\/[^/]*\/[^/]+(?:\/.*)?$/u.test(name);
+  const structuredAdd = structuredIntent && isKakaoV4InhouseStructuredAddName(name);
   const ambiguousName = /[;；]/u.test(name) || (!structuredAdd && /[\/,，、]/u.test(name)) ||
     /^(?:추가|삭제|등록|제외|참가|탈퇴)(?:\s|$)/u.test(name);
   const unsafeName = /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/u.test(name);

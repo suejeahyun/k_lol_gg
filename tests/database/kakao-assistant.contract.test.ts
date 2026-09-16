@@ -1083,6 +1083,28 @@ test("in-house shortcuts and full snapshots enforce integrated SITE capacity whi
     assert.equal(addedPending?.slotNo, 3, "quick add skips SITE and confirmed Kakao slots");
     assert.equal(addedPending?.mainPosition, "MID");
     assert.deepEqual(addedPending?.subPositions, ["TOP", "SUP"]);
+    const updated = await call({
+      action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
+      name: `미확인-${suffix}`, mainPosition: "ADC", subPositions: ["TOP", "JGL", "MID", "SUP"], participants: [],
+    });
+    assert.equal(updated.body.createdCount, 0);
+    assert.equal(updated.body.updatedCount, 1);
+    const updatedPending = (await database.select().from(seasonKakaoPendingApplications).where(
+      eq(seasonKakaoPendingApplications.id, addedPending!.id),
+    ))[0];
+    assert.equal(updatedPending?.slotNo, 3, "a position update preserves the existing slot");
+    assert.equal(updatedPending?.mainPosition, "ADC");
+    assert.deepEqual(updatedPending?.subPositions, ["TOP", "JGL", "MID", "SUP"]);
+    const nameOnlyReplay = await call({
+      action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
+      name: `미확인-${suffix}`, participants: [],
+    });
+    assert.equal(nameOnlyReplay.body.updatedCount, 0, "name-only add does not erase saved positions");
+    const protectedSiteUpdate = await call({
+      action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
+      name: `사이트-${suffix}`, mainPosition: "MID", subPositions: ["SUP"], participants: [],
+    });
+    assert.equal(protectedSiteUpdate.body.updatedCount, 0, "Kakao shortcuts do not overwrite SITE applications");
     await assert.rejects(call({
       action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
       name: `초과-${suffix}`, mainPosition: "ALL", participants: [],

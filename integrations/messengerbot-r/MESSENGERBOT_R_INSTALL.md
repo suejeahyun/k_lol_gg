@@ -1,4 +1,4 @@
-# MessengerBot R V1 strict R19 설치 안내
+# MessengerBot R V1 strict R20 설치 안내
 
 ## 현재 설치본
 
@@ -6,7 +6,7 @@
 
 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
 
-`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 휴대폰 설치에는 이 공개 파일이나 과거 설치본을 사용하지 말고, 위 `.private` R19 파일만 사용한다.
+`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 휴대폰 설치에는 이 공개 파일이나 과거 설치본을 사용하지 말고, 위 `.private` R20 파일만 사용한다.
 
 이 설치본은 사용자가 제공한 V1/V40의 명령 판정, 양식, 정상 응답과 무응답 동작을 유지하고 HTTP 전송 경계만 현재 V4 서명 API로 연결한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.
 
@@ -23,7 +23,7 @@
 2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
 3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
 4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
-5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R19_2026_09_16`을 검색한다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R20_2026_09_16`을 검색한다.
 6. 마지막 줄이 `response.__kakaoBotEntryPoint = true;`인지 확인한다.
 7. 저장·컴파일 후 봇을 다시 시작한다.
 8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
@@ -36,8 +36,8 @@
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,671 | 65,480 | 1,810 | `e4fbfba2695b89d2972d72ee0192c7c0dc9d3d0bfddc190a08c47e4f6442b48a` |
-| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,957 | 63,764 | 1,808 | `8f742076c8c7aa179e033805471cd97caa84382cc79379500baf548fdfefa61d` |
+| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,690 | 65,496 | 1,810 | `240615cd3d09b9fde5c64cfd1dc51bc4c9675228b38e41441226b2239448f30c` |
+| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,979 | 63,786 | 1,808 | `e1c09efd76630f228becdc34bcc7f89fd1c658613e76ac7886d4a9c64aa7f649` |
 
 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. V1 원본의 실행·주석 줄은 유지하고 의미 없는 빈 줄만 제거했다.
 
@@ -77,9 +77,12 @@ node scripts/verify-private-messengerbot-v1-strict-live.mjs
 기능방:
 
 1. `내전구인`, `내전현황`, `내전 번호ㅉ`
-2. 전체 내전 양식의 참가자 추가·수정·빈칸 취소
-3. `전적 RiotID#태그`, `최근 RiotID#태그`, `랭킹`
-4. 외출·지인·건의·모임 양식
+2. `내전상세 번호 추가 이름/mid/ad` 또는 `이름/mid,ad` → 첫 라인은 주라인, 이후 라인은 부라인
+3. `내전상세 번호 추가 이름/mid,all` → MID를 제외한 네 라인을 부라인으로 저장
+4. 같은 이름에 라인을 다시 보내면 기존 슬롯을 유지하고 라인만 수정
+5. 전체 내전 양식의 참가자 추가·수정·빈칸 취소
+6. `전적 RiotID#태그`, `최근 RiotID#태그`, `랭킹`
+7. 외출·지인·건의·모임 양식
 
 모든 명령은 맨 앞 `/`가 있거나 없어도 같게 처리한다. 구인 운영일은 KST 오전 6시에 바뀌며 이전 운영일의 파티·스크림은 새 현황에서 보이지 않는다.
 

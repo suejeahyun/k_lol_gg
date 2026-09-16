@@ -1,11 +1,8 @@
 var KLOL_V1_SOURCE_SHA256 = "0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2";
 var KLOL_V1_EXTRACTED_SHA256 = "30b769beda4dcc2d83adbbe7edff674ebaa707753ab71dd05e4ab3f224febd4a";
-var KLOL_V1_SOURCE_FUNCTIONS = ["isKlolBotEchoSender","isKlolServerEchoMessage","response","isScrimRecruitFormMessageForBot","isScrimRecruitCommand","getScrimRecruitApiUrl","handleScrimRecruitCommand","isLolKCommand","isRecruitCommand","handleLolKCommand","handleRecruitCommand","isSeasonRecruitTemplateCommand",
-"isSeasonRecruitStatusCommand","isPartyRecruitLikeMessage","isSeasonApplyFormMessage","hasSeasonApplySlash","hasSeasonApplyWord","hasSeasonApplyForm","countFilledSeasonApplyLines","isBadSeasonApplyName","isSeasonApplyExampleLine","isPartyRecruitWebHelperCommand","isPartyRecruitHelpCommand","isPartyRecruitStatusCommand",
-"isPartyRecruitCreateCommand","isPartyRecruitFinishCommand","hasPartyRecruitNumber","isPartyRecruitFormWithoutNumber","isPartyRecruitFormMessage","handlePartyRecruitSync","getParticipationGuideNotice","getPartyRecruitWebHelperNotice","getPartyRecruitHelpNotice","getUnifiedHelpNotice","stripOperationLinePrefix","canonicalOperationText",
-"escapeOperationRegExp","makeOperationLabelRegex","lineStartsWithOperationLabel","removeOperationLabelPrefix","includesAllKeywords","isOperationNextLabelLine","readOperationField","cleanOperationField","hasRealOperationValue","detectOperationFormType","isOperationFormMessage","normalizeText",
-"trimText","normalizeCommandText","makeHash","isRegistrationHubCommand","isGuidedRegistrationShortcut","getRegistrationHubNotice","getGuidedInhouseRegistrationNotice","getGuidedDisciplineRegistrationNotice","getGuidedEvidenceNotice","getGuidedDisciplineStatusNotice","getGuidedInhouseStatusNotice","handleGuidedRegistrationShortcut",
-"handleSiteFirstManagedWorkflow","isManagedWorkflowMessage","isImagePlaceholderMessage"];
+var KLOL_V1_SOURCE_FUNCTIONS = ["isKlolBotEchoSender","isKlolServerEchoMessage","response","isScrimRecruitFormMessageForBot","isScrimRecruitCommand","getScrimRecruitApiUrl","handleScrimRecruitCommand","isLolKCommand","isRecruitCommand","handleLolKCommand","handleRecruitCommand","isSeasonRecruitTemplateCommand","isSeasonRecruitStatusCommand","isPartyRecruitLikeMessage","isSeasonApplyFormMessage","hasSeasonApplySlash","hasSeasonApplyWord","hasSeasonApplyForm","countFilledSeasonApplyLines","isBadSeasonApplyName","isSeasonApplyExampleLine","isPartyRecruitWebHelperCommand","isPartyRecruitHelpCommand","isPartyRecruitStatusCommand",
+"isPartyRecruitCreateCommand","isPartyRecruitFinishCommand","hasPartyRecruitNumber","isPartyRecruitFormWithoutNumber","isPartyRecruitFormMessage","handlePartyRecruitSync","getParticipationGuideNotice","getPartyRecruitWebHelperNotice","getPartyRecruitHelpNotice","getUnifiedHelpNotice","stripOperationLinePrefix","canonicalOperationText","escapeOperationRegExp","makeOperationLabelRegex","lineStartsWithOperationLabel","removeOperationLabelPrefix","includesAllKeywords","isOperationNextLabelLine","readOperationField","cleanOperationField","hasRealOperationValue","detectOperationFormType","isOperationFormMessage","normalizeText",
+"trimText","normalizeCommandText","makeHash","isRegistrationHubCommand","isGuidedRegistrationShortcut","getRegistrationHubNotice","getGuidedInhouseRegistrationNotice","getGuidedDisciplineRegistrationNotice","getGuidedEvidenceNotice","getGuidedDisciplineStatusNotice","getGuidedInhouseStatusNotice","handleGuidedRegistrationShortcut","handleSiteFirstManagedWorkflow","isManagedWorkflowMessage","isImagePlaceholderMessage"];
 var KLOL_V1_TRANSPORT_SEAMS = ["sendSearchPlayerCommand","sendOpenchatCommand","fetchSeasonRecruitStatusText","handleSeasonApplyMessage","handlePartyRecruitApi","fetchPartyRecruitStatusText","handleOperationFormMessage","handleManagedImage","replyManagedImageFallback"];
 var KLOL_V1_GATEWAY = (function () {
 var CONTRACT = "KLOL_KAKAO_COMMAND_V4";
@@ -197,7 +194,7 @@ shouldSuppressReply: shouldSuppressReply,
 markReplySent: markReplySent
 };
 }());
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R19_2026_09_16";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R20_2026_09_16";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -295,7 +292,7 @@ recruitNumber = Number(match[2]);
 action = String(match[3] || "");
 name = String(match[4] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
 if (recruitNumber < 1 || recruitNumber > 99 || partyMemberMutationNameLength(name) < 1 || partyMemberMutationNameLength(name) > 80) return null;
-if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /^(?:추가|추가해|추가하기|추기|등록|참가)$/.test(action) && /^[^/]+\/[^/]*\/[^/]*\/[^/]+(?:\/.*)?$/.test(name))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
+if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /^(?:추가|추가해|추가하기|추기|등록|참가)$/.test(action) && (/^[^/]+(\/[^/]*){3,}$/.test(name) || /^[^/]+\/[a-z,\/ ]+$/i.test(name)))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
 if (/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
 return {
 surface: prefix.indexOf("내전") === 0 ? "INHOUSE" : prefix.indexOf("스크림") === 0 ? "SCRIM" : "PARTY",

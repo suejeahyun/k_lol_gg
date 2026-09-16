@@ -639,13 +639,17 @@ function seasonReply(body: KakaoSeasonSnapshotDto, allowLegacyReply = true) {
 
 function inhouseMemberReply(
   body: KakaoSeasonSnapshotDto,
-  input: Readonly<{ action: "ADD" | "REMOVE"; recruitNumber: number; name: string }>,
+  input: Readonly<{ action: "ADD" | "REMOVE"; recruitNumber: number; name: string; positionsSpecified?: boolean }>,
 ) {
   const applied = input.action === "ADD"
     ? (body.createdCount ?? 0) + (body.updatedCount ?? 0) > 0
     : body.cancelledCount > 0;
   const outcome = input.action === "ADD"
-    ? applied ? `추가 완료: ${input.name}` : `이미 명단에 있습니다: ${input.name}`
+    ? applied
+      ? input.positionsSpecified && (body.createdCount ?? 0) === 0 && (body.updatedCount ?? 0) > 0
+        ? `라인 수정 완료: ${input.name}`
+        : `추가 완료: ${input.name}`
+      : `이미 명단에 있습니다: ${input.name}`
     : applied ? `삭제 완료: ${input.name}` : `명단에서 찾지 못했습니다: ${input.name}`;
   const capacity = body.roundMetadata?.capacity ?? 10;
   const entries = body.entries
@@ -1440,8 +1444,8 @@ export class KakaoV4CommandDispatcher {
                 applyDate: command.applyDate,
                 recruitNo: command.recruitNumber,
                 name: command.name,
-                mainPosition: command.mainPosition ?? "ALL",
-                subPositions: command.subPositions ?? [],
+                ...(command.mainPosition === undefined ? {} : { mainPosition: command.mainPosition }),
+                ...(command.subPositions === undefined ? {} : { subPositions: command.subPositions }),
                 reserve: false,
                 participants: [],
               }
@@ -1474,6 +1478,7 @@ export class KakaoV4CommandDispatcher {
           action: command.action === "ADD_MEMBER" ? "ADD" : "REMOVE",
           recruitNumber: command.recruitNumber,
           name: command.name,
+          positionsSpecified: command.mainPosition !== undefined,
         }),
         replayed: result.replayed,
       });

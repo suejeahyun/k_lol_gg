@@ -955,6 +955,11 @@ export class PostgresKakaoAssistant {
         roundMetadata: null,
       };
       if (command.action === "ADD_PARTICIPANT" || command.action === "REMOVE_PARTICIPANT") {
+        const positionsSpecified = command.action === "ADD_PARTICIPANT" &&
+          (command.mainPosition !== undefined || command.subPositions !== undefined);
+        if (positionsSpecified && (command.mainPosition === undefined || sourceMode !== "RIFT")) {
+          throw new KakaoAssistantError("INVALID_INPUT");
+        }
         const identity = normalizedIdentity(command.name);
         const activeApplications = await transaction.select({ application: seasonApplications, player: players })
           .from(seasonApplications).innerJoin(players, eq(players.id, seasonApplications.playerId)).where(and(
@@ -995,6 +1000,38 @@ export class PostgresKakaoAssistant {
               status: "CANCELLED", cancelledAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
             }).where(eq(seasonKakaoPendingApplications.id, pendingMatches[0].id));
             cancelledCount += 1;
+          }
+        } else if (positionsSpecified && applicationMatches.length + pendingMatches.length > 0) {
+          if (applicationMatches.length + pendingMatches.length > 1) throw new KakaoAssistantError("CONFLICT");
+          const mainPosition = command.mainPosition!;
+          const subPositions = [...(command.subPositions ?? [])];
+          const sourceReferenceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
+          const applicationMatch = applicationMatches[0];
+          if (applicationMatch && applicationMatch.application.source === "KAKAO" &&
+              (applicationMatch.application.status === "APPLIED" || applicationMatch.application.status === "RESERVE")) {
+            const previousSubPositions = applicationMatch.application.subPositions;
+            const changed = applicationMatch.application.mainPosition !== mainPosition ||
+              previousSubPositions.length !== subPositions.length ||
+              previousSubPositions.some((position, index) => position !== subPositions[index]);
+            if (changed) {
+              await transaction.update(seasonApplications).set({
+                mainPosition, subPositions, sourceReferenceHash,
+                revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
+              }).where(eq(seasonApplications.id, applicationMatch.application.id));
+              updatedCount += 1;
+            }
+          } else if (pendingMatches[0]) {
+            const previousSubPositions = pendingMatches[0].subPositions;
+            const changed = pendingMatches[0].mainPosition !== mainPosition ||
+              previousSubPositions.length !== subPositions.length ||
+              previousSubPositions.some((position, index) => position !== subPositions[index]);
+            if (changed) {
+              await transaction.update(seasonKakaoPendingApplications).set({
+                mainPosition, subPositions, sourceReferenceHash,
+                revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
+              }).where(eq(seasonKakaoPendingApplications.id, pendingMatches[0].id));
+              updatedCount += 1;
+            }
           }
         } else if (applicationMatches.length + pendingMatches.length === 0) {
           const metadata = (await transaction.select().from(seasonInhouseRounds).where(and(
