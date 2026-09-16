@@ -1,5 +1,20 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-16 카카오 R20 내전 빠른 라인 입력
+
+- 기능 커밋: `97ed27cfdadc09bf2e260987dce37e7364d4a57c`
+- 상태: 소스·집중 회귀·격리 PostgreSQL·전체 앱 검사·Rhino 정적 검사·Git·Vercel 운영 배포 완료, 휴대폰 MessengerBot R 설치 대기
+- 릴리스 tag: `kakao-r20-inhouse-quick-positions-v1.0.0`
+- Vercel Production: `dpl_CmmJdtGvYaZJKZtBVHRJrjbkNK5V` (`https://k-lol-5zug11ush-tjdmswo11-3715s-projects.vercel.app`), Ready·Production, 운영 alias `/api/health` HTTP 200 `ready`
+- 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R20_2026_09_16`
+- 주요 범위: `이름/mid/ad`·`이름/mid,ad`, `mid,all` 보완 확장, 동일 참가자 슬롯 유지 라인 수정, SITE·확정 신청 보호
+- 테스트: focused 7/7 + MessengerBot 28/28, 격리 PostgreSQL recruiting 51/51, 일반 779 PASS·1 intentional skip, 홈 여성 챔피언 가이드 68장, 프로덕션 빌드 93 pages, 공개·비공개 ES5/Rhino 경고 후보 0건
+- public 설치 검토본: LF 63,690 / CRLF 65,496, SHA-256 `240615cd3d09b9fde5c64cfd1dc51bc4c9675228b38e41441226b2239448f30c`
+- private 설치본: LF 61,979 / CRLF 63,786, SHA-256 `e1c09efd76630f228becdc34bcc7f89fd1c658613e76ac7886d4a9c64aa7f649`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r20-inhouse-quick-positions-2026-09-16/README.md`](./qa-evidence/kakao-r20-inhouse-quick-positions-2026-09-16/README.md)에 있다.
+
 ## 2026-09-16 카카오 R19 랜덤 입장 안내 톤
 
 - 기능 커밋: `a0310333d9ee7ff048944bef63495bebdd05c8e8`

@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "kakao-r20-inhouse-quick-positions",
+      "version": "1.0.0",
+      "gitTag": "kakao-r20-inhouse-quick-positions-v1.0.0",
+      "commit": "97ed27cfdadc09bf2e260987dce37e7364d4a57c",
+      "releasedAt": "2026-09-16T15:55:22+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-r20-inhouse-quick-positions-2026-09-16/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-16-kakao-r20-inhouse-quick-positions.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_CmmJdtGvYaZJKZtBVHRJrjbkNK5V",
+        "url": "https://k-lol-5zug11ush-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-16T06:55:22.191Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_R20_2026_09_16",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
       "featureId": "kakao-r19-random-join-tones",
       "version": "1.0.0",
       "gitTag": "kakao-r19-random-join-tones-v1.0.0",
