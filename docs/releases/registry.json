@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "kakao-r19-random-join-tones",
+      "version": "1.0.0",
+      "gitTag": "kakao-r19-random-join-tones-v1.0.0",
+      "commit": "a0310333d9ee7ff048944bef63495bebdd05c8e8",
+      "releasedAt": "2026-09-16T14:04:37+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-r19-random-join-tones-2026-09-16/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-16-kakao-r19-random-join-tones.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_8fzzJakpYoprXoNsUUBmP3RVNdxS",
+        "url": "https://k-lol-fvbbulkfx-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-16T05:05:08.661Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_R19_2026_09_16",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
       "featureId": "kakao-r18-join-guides",
       "version": "1.0.0",
       "gitTag": "kakao-r18-join-guides-v1.0.0",

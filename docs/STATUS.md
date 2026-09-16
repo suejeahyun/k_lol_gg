@@ -2,7 +2,10 @@
 
 ## 2026-09-16 카카오 R19 랜덤 입장 안내 톤
 
-- 상태: 소스·집중 회귀·전체 앱 검사·Rhino 정적 검사 완료, Git·Vercel 배포 및 휴대폰 MessengerBot R 설치 대기
+- 기능 커밋: `a0310333d9ee7ff048944bef63495bebdd05c8e8`
+- 상태: 소스·집중 회귀·전체 앱 검사·Rhino 정적 검사·Git·Vercel 운영 배포 완료, 휴대폰 MessengerBot R 설치 대기
+- 릴리스 tag: `kakao-r19-random-join-tones-v1.0.0`
+- Vercel Production: `dpl_8fzzJakpYoprXoNsUUBmP3RVNdxS` (`https://k-lol-fvbbulkfx-tjdmswo11-3715s-projects.vercel.app`), Ready·Latest·Production, 운영 alias `/api/health` HTTP 200 `ready`
 - 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R19_2026_09_16`
 - 주요 범위: `오픈채팅봇`의 `입장시 할 일` 문구 인식, 환영·공지·게임·가벼운 퀘스트 네 톤 중 하나 선택, 필수 정보 공통 유지, 원시 입장 중복 억제
 - 테스트: focused 47/47, 일반 779 PASS·1 intentional skip, 홈 여성 챔피언 가이드 68장, 프로덕션 빌드 93 pages, 공개·비공개 ES5/Rhino 경고 후보 0건

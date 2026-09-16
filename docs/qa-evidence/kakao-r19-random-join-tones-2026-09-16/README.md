@@ -4,7 +4,18 @@
 
 대상: `입장시 할 일` 로컬 트리거, 네 가지 안내 톤, V1 strict 회귀, 공개·비공개 전체 복붙 설치본
 
-판정: 구현, 집중 자동 검증, 전체 앱 검사와 Rhino 정적 검사를 통과했다. Vercel 릴리스 증거는 배포 단계에서 확정한다. 휴대폰 실기기 설치와 실제 카카오톡 수신은 사용자 설치 후 확인 대상이다.
+판정: 구현, 집중 자동 검증, 전체 앱 검사, Rhino 정적 검사와 Vercel 운영 배포를 통과했다. 휴대폰 실기기 설치와 실제 카카오톡 수신은 사용자 설치 후 확인 대상이다.
+
+## 릴리스 증거
+
+- 기능 커밋: `a0310333d9ee7ff048944bef63495bebdd05c8e8`
+- 릴리스 tag: `kakao-r19-random-join-tones-v1.0.0`
+- Vercel deployment: `dpl_8fzzJakpYoprXoNsUUBmP3RVNdxS`
+- immutable URL: `https://k-lol-fvbbulkfx-tjdmswo11-3715s-projects.vercel.app`
+- 운영 alias: `https://k-lol-gg.vercel.app`
+- Vercel UI: Ready · Latest · Production, source commit `a0310333d9ee7ff048944bef63495bebdd05c8e8`
+- 운영 alias `/api/health`: 2026-09-16T05:05:08.661Z, HTTP 200, `status=ready`
+- immutable URL 직접 요청은 Vercel Deployment Protection 로그인 화면으로 보호되므로 운영 health 판정은 alias 응답과 Vercel UI 상태를 함께 사용했다.
 
 ## 확정 동작
 
@@ -46,5 +57,6 @@ PASS — ES5, warning candidate 0, mixed return 0
 
 - 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R19_2026_09_16`
 - DB migration·운영 데이터 직접 변경·삭제: 없음
-- 남음: Git commit·tag·push, Vercel Ready/health 검증
+- 서버 배포: 완료
+- 남음: 휴대폰 MessengerBot R 전체 교체·컴파일과 실제 카카오톡 수신 확인
 - 외부 확인: 실제 휴대폰 전체 교체·컴파일, `/봇버전`, 실제 입장 시 허용된 안내 한 건과 gateway 요청 0건
