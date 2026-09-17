@@ -126,7 +126,7 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "SEASON"; action: "JOIN_GUIDE" }>
   | Readonly<{ domain: "SEASON"; action: "STATUS"; seasonId: string | null; applyDate: string }>
   | Readonly<{ domain: "SEASON"; action: "DETAIL"; seasonId: string | null; applyDate: string; recruitNumber: number }>
-  | Readonly<{ domain: "SEASON"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; seasonId: string | null; applyDate: string; recruitNumber: number; name: string; mainPosition?: SeasonApplicationPosition; subPositions?: readonly SeasonApplicationPosition[] }>
+  | Readonly<{ domain: "SEASON"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; seasonId: string | null; applyDate: string; recruitNumber: number; name: string; reserve?: boolean; mainPosition?: SeasonApplicationPosition; subPositions?: readonly SeasonApplicationPosition[] }>
   | Readonly<{ domain: "SEASON"; action: "FINISH"; seasonId: string | null; applyDate: string; recruitNumber: number }>
   | Readonly<{
       domain: "SEASON";
@@ -138,6 +138,7 @@ export type CanonicalKakaoV4Command =
       roundMetadata?: KakaoV4InhouseRoundMetadata;
       participants: readonly KakaoV4SeasonParticipant[];
       preserveSlotNos?: readonly number[];
+      reserveSectionObserved?: boolean;
     }>
   | Readonly<{ domain: "PLAYER"; action: "RECORD" | "RECENT"; query: string }>
   | Readonly<{ domain: "PLAYER"; action: "RANKING" }>
@@ -321,13 +322,19 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     ...participant,
     reviewRequired: true,
   });
+  let reserveSectionObserved = false;
   for (const line of normalized.split("\n")) {
+    const reserveRow = /^\s*(?:예비|대기)\s*\d{1,2}(?:(?:\s*\\?\s*[.)])|\s+)/u.test(line.normalize("NFKC"));
     const row = parseKakaoV4InhouseParticipantRow(line, mode);
     if (!row.matched) continue;
-    const slotNo = row.slotNo;
-    if (slotNo < 1 || slotNo > capacity) continue;
+    if (reserveRow) reserveSectionObserved = true;
+    const slotNo = reserveRow ? capacity + row.slotNo : row.slotNo;
+    if (row.slotNo < 1 || row.slotNo > capacity) continue;
+    const participant = row.participant
+      ? Object.freeze({ ...row.participant, slotNo, reserve: reserveRow || row.participant.reserve })
+      : null;
     const next: SlotValue = row.participant
-      ? Object.freeze({ state: "PARTICIPANT", participant: row.participant })
+      ? Object.freeze({ state: "PARTICIPANT", participant: participant! })
       : row.valid
         ? Object.freeze({ state: "EMPTY" })
         : Object.freeze({ state: "PRESERVE" });
@@ -360,10 +367,10 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const preserveSlotNos: number[] = [];
   const participants: KakaoV4SeasonParticipant[] = [];
   const seenNames = new Set<string>();
-  for (let slotNo = 1; slotNo <= capacity; slotNo += 1) {
+  for (let slotNo = 1; slotNo <= capacity * 2; slotNo += 1) {
     const slot = slots.get(slotNo);
     if (!slot || slot.state === "PRESERVE") {
-      preserveSlotNos.push(slotNo);
+      if (slotNo <= capacity) preserveSlotNos.push(slotNo);
       continue;
     }
     if (slot.state !== "PARTICIPANT") continue;
@@ -382,6 +389,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     roundMetadata: Object.freeze({ capacity, startTimeText, scheduledStartAt, gameInfo, organizerText, noticeText }),
     participants: Object.freeze(participants),
     ...(preserveSlotNos.length > 0 ? { preserveSlotNos: Object.freeze(preserveSlotNos) } : {}),
+    ...(reserveSectionObserved ? { reserveSectionObserved: true } : {}),
   });
 }
 
@@ -541,6 +549,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
       applyDate: partyDate,
       recruitNumber,
       name: detailed ? detailed.name : name,
+      ...(parameters.reserve === true ? { reserve: true } : {}),
       ...(detailed ? {
         mainPosition: detailed.mainPosition,
         subPositions: detailed.subPositions,

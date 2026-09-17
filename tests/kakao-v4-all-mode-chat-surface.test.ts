@@ -25,6 +25,8 @@ test("내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백�
     ["FEATURES", "내전상세 3 추가 재현", "INHOUSE_MEMBER_ADD", "ADD_MEMBER"],
     ["FEATURES", "/내전 상세 #3 삭제 김 별", "INHOUSE_MEMBER_REMOVE", "REMOVE_MEMBER"],
     ["FEATURES", "／내전명단　＃３　추기　재현", "INHOUSE_MEMBER_ADD", "ADD_MEMBER"],
+    ["FEATURES", "내전상세 3 예비추가 정민/all", "INHOUSE_MEMBER_ADD", "ADD_MEMBER"],
+    ["FEATURES", "/내전 상세 #3 예비 삭제 정민", "INHOUSE_MEMBER_REMOVE", "REMOVE_MEMBER"],
     ["RECRUIT", "스크림상세 4 참가 재현", "SCRIM_MEMBER_ADD", "ADD_MEMBER"],
     ["RECRUIT", "/스크림 명단 #4 제외 김 별", "SCRIM_MEMBER_REMOVE", "REMOVE_MEMBER"],
     ["RECRUIT", "스크림상세 4 삭재 재현", "SCRIM_MEMBER_REMOVE", "REMOVE_MEMBER"],
@@ -36,9 +38,10 @@ test("내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백�
     assert.equal(classified.kind, "COMMAND", text);
     if (classified.kind !== "COMMAND") continue;
     assert.equal(classified.command, commandId, text);
-    assert.equal(classified.parameters.name, text.includes("김 별") ? "김 별" : "재현", text);
+    assert.equal(classified.parameters.name, text.includes("김 별") ? "김 별" : text.includes("정민") ? (text.includes("all") ? "정민/all" : "정민") : "재현", text);
     const canonical = canonicalizeKakaoV4Command(classified, input);
     assert.equal(canonical?.action, action, text);
+    if (canonical?.domain === "SEASON" && text.includes("예비")) assert.equal(canonical.reserve, true, text);
   }
 });
 
@@ -64,6 +67,26 @@ test("협곡 내전 빠른 추가는 이름만 또는 티어·라인 전체 입�
     assert.equal(canonical.mainPosition ?? "ALL", mainPosition, text);
     assert.deepEqual(canonical.subPositions ?? [], subPositions, text);
   }
+});
+
+test("내전 전체 양식은 일반 명단과 예비 명단을 함께 동기화한다", () => {
+  const text = [
+    "📢 내전하실분 #1", "》협곡", "》2026-09-17 21:00 시작", "》게임정보 : 미입력", "》주최자 : 서지오", "👥 2/10명", "",
+    "*참가 신청 양식*", "이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD", "",
+    "1. 지오/G/E/MD/TOP", "2. 주현/U/U/TOP/MD", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "",
+    "예비 1. 정민/all", "예비 2.", "",
+    "빠른 추가: 내전상세 1 추가 이름/주라인/부라인", "빠른 삭제: 내전상세 1 삭제 이름",
+    "빠른 예비 추가: 내전상세 1 예비추가 이름/주라인/부라인", "빠른 예비 삭제: 내전상세 1 예비삭제 이름", "마감: 내전 1ㅉ",
+  ].join("\n");
+  const input = envelope("FEATURES", text);
+  const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command(input), input);
+  if (!canonical || canonical.domain !== "SEASON" || canonical.action !== "SYNC") assert.fail("expected inhouse sync");
+  assert.equal(canonical.reserveSectionObserved, true);
+  assert.deepEqual(canonical.participants.map(({ slotNo, name, mainPosition, subPositions, reserve }) => ({ slotNo, name, mainPosition, subPositions, reserve })), [
+    { slotNo: 1, name: "지오", mainPosition: "MID", subPositions: ["TOP"], reserve: false },
+    { slotNo: 2, name: "주현", mainPosition: "TOP", subPositions: ["MID"], reserve: false },
+    { slotNo: 11, name: "정민", mainPosition: "ALL", subPositions: [], reserve: true },
+  ]);
 });
 
 test("빠른 추가·삭제는 명확한 번호와 한 명의 안전한 이름만 허용한다", () => {
@@ -265,13 +288,14 @@ test("내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고
     ["FEATURES", "/내전상세 3 추가 재현/M/M/MID/TOP", "event-inhouse-member-00002"],
     ["FEATURES", "/내전상세 3 추가 민혁/mid/ad", "event-inhouse-member-00003"],
     ["FEATURES", "/내전상세 3 추가 민혁/mid,all", "event-inhouse-member-00004"],
+    ["FEATURES", "/내전상세 3 예비추가 정민/mid,ad", "event-inhouse-member-00005"],
     ["RECRUIT", "스크림상세 6 추가 재현", "event-scrim-member-00000001"],
   ] as const) {
     const context = dispatchContext(profileId, text, eventId);
     const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command(context.envelope), context.envelope);
     assert.ok(canonical);
     const result = await dispatcher.dispatch(context, canonical);
-    assert.match(result.legacyReply, text.includes("민혁") ? /추가 완료: 민혁/u : /추가 완료: 재현/u);
+    assert.match(result.legacyReply, text.includes("민혁") ? /추가 완료: 민혁/u : text.includes("정민") ? /예비 추가 완료: 정민/u : /추가 완료: 재현/u);
     assert.match(result.legacyReply, /재현/u);
   }
   assert.equal(seasonCalls[0]?.action, "ADD_PARTICIPANT");
@@ -288,6 +312,11 @@ test("내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고
   if (seasonCalls[3]?.action === "ADD_PARTICIPANT") {
     assert.equal(seasonCalls[3].mainPosition, "MID");
     assert.deepEqual(seasonCalls[3].subPositions, ["TOP", "JGL", "ADC", "SUP"]);
+  }
+  if (seasonCalls[4]?.action === "ADD_PARTICIPANT") {
+    assert.equal(seasonCalls[4].reserve, true);
+    assert.equal(seasonCalls[4].mainPosition, "MID");
+    assert.deepEqual(seasonCalls[4].subPositions, ["ADC"]);
   }
   assert.equal(recruitingCalls[0]?.type, "ADD_SCRIM_PARTICIPANT");
 });

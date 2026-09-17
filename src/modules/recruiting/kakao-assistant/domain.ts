@@ -159,6 +159,8 @@ export type KakaoSeasonSnapshotCommand =
       participants: readonly KakaoSeasonSnapshotParticipant[];
       /** In-process V4 only; absent numbered rows preserve their current state. */
       preserveSlotNos?: readonly number[];
+      /** In-process V4 only; an explicit reserve section makes reserve rows authoritative. */
+      reserveSectionObserved?: boolean;
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "CANCEL";
@@ -208,6 +210,7 @@ export type KakaoSeasonSnapshotEntryDto = Readonly<{
   mainPosition: SeasonApplicationPosition;
   subPositions: readonly SeasonApplicationPosition[];
   player: Readonly<{ playerId: string; displayName: string; riotId: string }> | null;
+  reserve?: boolean;
 }>;
 
 export type KakaoPlayerRecordDto = Readonly<{

@@ -255,11 +255,15 @@ function legacyInhouseDetail(
   if (reserveEntries.length > 0) {
     lines.push("");
     reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${index + 1}`, entry, namesOnly)));
-  }
+    lines.push(`예비 ${reserveEntries.length + 1}.`);
+  } else lines.push("", "예비 1.");
+  const memberShape = namesOnly ? "이름" : "이름/주라인/부라인";
   lines.push(
     "",
-    `빠른 추가: 내전상세 ${recruitNo} 추가 이름`,
+    `빠른 추가: 내전상세 ${recruitNo} 추가 ${memberShape}`,
     `빠른 삭제: 내전상세 ${recruitNo} 삭제 이름`,
+    `빠른 예비 추가: 내전상세 ${recruitNo} 예비추가 ${memberShape}`,
+    `빠른 예비 삭제: 내전상세 ${recruitNo} 예비삭제 이름`,
     `마감: 내전 ${recruitNo}ㅉ`,
   );
   return lines.join("\n");
@@ -321,8 +325,10 @@ type LegacySeasonSyncChanges = {
 function legacySeasonParticipantLabel(
   participant: KakaoSeasonSnapshotParticipant,
   playerName?: string | null,
+  capacity = LEGACY_INHOUSE_CAPACITY,
 ) {
-  const prefix = participant.reserve ? `예비 ${participant.slotNo}` : String(participant.slotNo);
+  const reserveSlot = participant.slotNo > capacity ? participant.slotNo - capacity : participant.slotNo;
+  const prefix = participant.reserve ? `예비 ${reserveSlot}` : String(participant.slotNo);
   return `${prefix}. ${String(playerName || participant.name).normalize("NFKC").replace(/[\r\n/]+/gu, " ").replace(/\s+/gu, " ").trim()}`;
 }
 
@@ -804,7 +810,7 @@ export class PostgresKakaoAssistant {
           new Set(preserved).size !== preserved.length ||
           command.participants.some((participant) => preserved.includes(participant.slotNo)) ||
           !Number.isSafeInteger(roundMetadata.capacity) || roundMetadata.capacity < 2 || roundMetadata.capacity > 20 ||
-          command.participants.some((participant) => participant.slotNo > roundMetadata.capacity) ||
+          command.participants.some((participant) => participant.slotNo > roundMetadata.capacity * (participant.reserve ? 2 : 1)) ||
           (roundMetadata.startTimeText !== null && !/^(?:[01]\d|2[0-3]):[0-5]\d$/u.test(roundMetadata.startTimeText)) ||
           (roundMetadata.scheduledStartAt !== null && Number.isNaN(new Date(roundMetadata.scheduledStartAt).getTime())) ||
           (roundMetadata.gameInfo != null && (roundMetadata.gameInfo.trim().length < 1 || roundMetadata.gameInfo.length > 500)) ||
@@ -1039,18 +1045,24 @@ export class PostgresKakaoAssistant {
             eq(seasonInhouseRounds.recruitNo, command.recruitNo), eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
             eq(seasonInhouseRounds.status, "IN_PROGRESS"),
           )).for("update").limit(1))[0]!;
-          if (activeApplications.length + scopedPending.length >= metadata.capacity) throw new KakaoAssistantError("CONFLICT");
+          const reserve = command.reserve ?? false;
+          const mainCount = activeApplications.filter(({ application }) => application.status !== "RESERVE").length +
+            scopedPending.filter((pending) => !pending.reserve).length;
+          const reserveCount = activeApplications.filter(({ application }) => application.status === "RESERVE").length +
+            scopedPending.filter((pending) => pending.reserve).length;
+          if ((!reserve && mainCount >= metadata.capacity) || (reserve && reserveCount >= metadata.capacity)) {
+            throw new KakaoAssistantError("CONFLICT");
+          }
           const usedSlots = new Set([
             ...activeApplications.map(({ application }) => application.sourceSlotNo).filter((slot): slot is number => slot !== null),
             ...scopedPending.map((pending) => pending.slotNo),
           ]);
-          let slotNo = 1;
+          let slotNo = reserve ? metadata.capacity + 1 : 1;
           while (usedSlots.has(slotNo)) slotNo += 1;
-          if (slotNo > metadata.capacity) throw new KakaoAssistantError("CONFLICT");
+          if (slotNo > metadata.capacity * (reserve ? 2 : 1)) throw new KakaoAssistantError("CONFLICT");
           const candidates = await transaction.select().from(players).where(and(
             eq(players.status, "ACTIVE"), or(eq(players.memberNameNormalized, identity), eq(players.nicknameNormalized, identity)),
           )).orderBy(asc(players.id)).limit(3);
-          const reserve = command.reserve ?? false;
           const mainPosition = command.mainPosition ?? "ALL";
           const subPositions = command.subPositions ?? [];
           const sourceReferenceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
@@ -1285,10 +1297,10 @@ export class PostgresKakaoAssistant {
           if (representedBySite) return item;
           let slotNo = item.participant.slotNo;
           if (occupiedSlots.has(slotNo)) {
-            slotNo = 1;
+            slotNo = item.participant.reserve ? capacity + 1 : 1;
             while (occupiedSlots.has(slotNo)) slotNo += 1;
           }
-          if (slotNo > capacity) throw new KakaoAssistantError("CONFLICT");
+          if (slotNo > capacity * (item.participant.reserve ? 2 : 1)) throw new KakaoAssistantError("CONFLICT");
           occupiedSlots.add(slotNo);
           return slotNo === item.participant.slotNo ? item : { ...item, participant: { ...item.participant, slotNo } };
         });
@@ -1350,6 +1362,7 @@ export class PostgresKakaoAssistant {
           eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
         )).for("update");
         for (const pending of currentPending) {
+          if (pending.reserve && !command.reserveSectionObserved) continue;
           if (pending.status !== "ACTIVE" || activeSlots.has(pending.slotNo)) continue;
           await transaction.update(seasonKakaoPendingApplications).set({
             status: "CANCELLED", cancelledAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
@@ -1394,7 +1407,7 @@ export class PostgresKakaoAssistant {
                   updatedAt: now,
                 }).where(eq(seasonApplications.id, current.id));
                 updatedCount += 1;
-                legacyChanges.updated.push(legacySeasonParticipantLabel(participant, matchedPlayer.memberName));
+                legacyChanges.updated.push(legacySeasonParticipantLabel(participant, matchedPlayer.memberName, capacity));
               }
             } else if (mergePlan.action === "CREATE_KAKAO") {
               await transaction.insert(seasonApplications).values({
@@ -1405,7 +1418,7 @@ export class PostgresKakaoAssistant {
                 createdAt: now, updatedAt: now,
               });
               createdCount += 1;
-              legacyChanges.added.push(legacySeasonParticipantLabel(participant, matchedPlayer.memberName));
+              legacyChanges.added.push(legacySeasonParticipantLabel(participant, matchedPlayer.memberName, capacity));
             }
             const existingPending = currentPending.find((pending) => pending.slotNo === participant.slotNo);
             if (existingPending?.status === "ACTIVE") {
@@ -1452,7 +1465,7 @@ export class PostgresKakaoAssistant {
               }).where(eq(seasonKakaoPendingApplications.id, existing.id));
               updatedCount += 1;
               (participant.reserve ? legacyChanges.reserve : legacyChanges.pending)
-                .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName));
+                .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName, capacity));
             }
           } else {
             await transaction.insert(seasonKakaoPendingApplications).values({
@@ -1462,10 +1475,10 @@ export class PostgresKakaoAssistant {
             });
             createdCount += 1;
             (participant.reserve ? legacyChanges.reserve : legacyChanges.pending)
-              .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName));
+              .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName, capacity));
           }
         }
-        const integratedApplications = await transaction.select({ id: seasonApplications.id }).from(seasonApplications).where(and(
+        const integratedApplications = await transaction.select({ id: seasonApplications.id, status: seasonApplications.status }).from(seasonApplications).where(and(
           eq(seasonApplications.seasonId, command.seasonId),
           eq(seasonApplications.applyDate, command.applyDate),
           eq(seasonApplications.recruitNo, command.recruitNo),
@@ -1479,7 +1492,7 @@ export class PostgresKakaoAssistant {
             ),
           ),
         ));
-        const integratedPending = await transaction.select({ id: seasonKakaoPendingApplications.id }).from(seasonKakaoPendingApplications).where(and(
+        const integratedPending = await transaction.select({ id: seasonKakaoPendingApplications.id, reserve: seasonKakaoPendingApplications.reserve }).from(seasonKakaoPendingApplications).where(and(
           eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
           eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
           eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
@@ -1487,7 +1500,11 @@ export class PostgresKakaoAssistant {
           eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
           eq(seasonKakaoPendingApplications.status, "ACTIVE"),
         ));
-        if (integratedApplications.length + integratedPending.length > capacity) throw new KakaoAssistantError("CONFLICT");
+        const integratedMainCount = integratedApplications.filter((application) => application.status !== "RESERVE").length +
+          integratedPending.filter((item) => !item.reserve).length;
+        const integratedReserveCount = integratedApplications.filter((application) => application.status === "RESERVE").length +
+          integratedPending.filter((item) => item.reserve).length;
+        if (integratedMainCount > capacity || integratedReserveCount > capacity) throw new KakaoAssistantError("CONFLICT");
         await transaction.insert(auditEvents).values({
           requestId: input.requestId,
           action: "KAKAO_SEASON_SNAPSHOT_SYNCED",
@@ -1675,6 +1692,7 @@ export class PostgresKakaoAssistant {
           suppliedRiotId: `${player.nickname}#${player.tagLine}`,
           mainPosition: application.mainPosition,
           subPositions: application.subPositions,
+          reserve: application.status === "RESERVE",
           player: { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` },
         })),
         ...pending.map(({ pending: item, player }) => ({
@@ -1685,6 +1703,7 @@ export class PostgresKakaoAssistant {
           suppliedRiotId: item.suppliedRiotId,
           mainPosition: item.mainPosition,
           subPositions: item.subPositions,
+          reserve: item.reserve,
           player: player ? { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` } : null,
         })),
       ];

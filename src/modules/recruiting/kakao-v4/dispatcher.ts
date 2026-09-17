@@ -499,10 +499,14 @@ function inhouseTemplate(command: Readonly<{
     ? ["이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD"]
     : ["이름", "EX) 1.지후"]), "");
   for (let slot = 1; slot <= command.capacity; slot += 1) lines.push(`${slot}.`);
+  lines.push("", "예비 1.");
+  const memberShape = command.mode === "RIFT" ? "이름/주라인/부라인" : "이름";
   lines.push(
     "",
-    `빠른 추가: 내전상세 ${command.recruitNumber} 추가 이름`,
+    `빠른 추가: 내전상세 ${command.recruitNumber} 추가 ${memberShape}`,
     `빠른 삭제: 내전상세 ${command.recruitNumber} 삭제 이름`,
+    `빠른 예비 추가: 내전상세 ${command.recruitNumber} 예비추가 ${memberShape}`,
+    `빠른 예비 삭제: 내전상세 ${command.recruitNumber} 예비삭제 이름`,
     `마감: 내전 ${command.recruitNumber}ㅉ`,
   );
   return lines.join("\n");
@@ -639,7 +643,7 @@ function seasonReply(body: KakaoSeasonSnapshotDto, allowLegacyReply = true) {
 
 function inhouseMemberReply(
   body: KakaoSeasonSnapshotDto,
-  input: Readonly<{ action: "ADD" | "REMOVE"; recruitNumber: number; name: string; positionsSpecified?: boolean }>,
+  input: Readonly<{ action: "ADD" | "REMOVE"; recruitNumber: number; name: string; reserve?: boolean; positionsSpecified?: boolean }>,
 ) {
   const applied = input.action === "ADD"
     ? (body.createdCount ?? 0) + (body.updatedCount ?? 0) > 0
@@ -647,21 +651,27 @@ function inhouseMemberReply(
   const outcome = input.action === "ADD"
     ? applied
       ? input.positionsSpecified && (body.createdCount ?? 0) === 0 && (body.updatedCount ?? 0) > 0
-        ? `라인 수정 완료: ${input.name}`
-        : `추가 완료: ${input.name}`
+        ? `${input.reserve ? "예비 " : ""}라인 수정 완료: ${input.name}`
+        : `${input.reserve ? "예비 " : ""}추가 완료: ${input.name}`
       : `이미 명단에 있습니다: ${input.name}`
     : applied ? `삭제 완료: ${input.name}` : `명단에서 찾지 못했습니다: ${input.name}`;
   const capacity = body.roundMetadata?.capacity ?? 10;
   const entries = body.entries
     .filter((entry) => entry.status !== "CANCELLED")
     .sort((left, right) => left.slotNo - right.slotNo);
+  const reserveEntries = entries.filter((entry) => entry.reserve || entry.status === "RESERVE" || entry.status === "MATCHED_RESERVE");
+  const mainEntries = entries.filter((entry) => !reserveEntries.includes(entry));
+  const memberShape = body.roundMetadata?.mode === "RIFT" ? "이름/주라인/부라인" : "이름";
   return [
     `[K-LOL.GG 내전 #${input.recruitNumber} 명단]`, outcome,
-    `현재 ${entries.length}/${capacity}명`, "",
-    ...entries.map((entry) => `${entry.slotNo}. ${entry.suppliedName}`),
+    `현재 ${mainEntries.length}/${capacity}명 · 예비 ${reserveEntries.length}명`, "",
+    ...mainEntries.map((entry) => `${entry.slotNo}. ${entry.suppliedName}`),
+    ...reserveEntries.map((entry, index) => `예비 ${index + 1}. ${entry.suppliedName}`),
     ...(entries.length === 0 ? ["아직 참가자가 없습니다."] : []), "",
-    `빠른 추가: 내전상세 ${input.recruitNumber} 추가 이름`,
+    `빠른 추가: 내전상세 ${input.recruitNumber} 추가 ${memberShape}`,
     `빠른 삭제: 내전상세 ${input.recruitNumber} 삭제 이름`,
+    `빠른 예비 추가: 내전상세 ${input.recruitNumber} 예비추가 ${memberShape}`,
+    `빠른 예비 삭제: 내전상세 ${input.recruitNumber} 예비삭제 이름`,
   ].join("\n");
 }
 
@@ -1446,7 +1456,7 @@ export class KakaoV4CommandDispatcher {
                 name: command.name,
                 ...(command.mainPosition === undefined ? {} : { mainPosition: command.mainPosition }),
                 ...(command.subPositions === undefined ? {} : { subPositions: command.subPositions }),
-                reserve: false,
+                reserve: command.reserve ?? false,
                 participants: [],
               }
             : {
@@ -1478,6 +1488,7 @@ export class KakaoV4CommandDispatcher {
           action: command.action === "ADD_MEMBER" ? "ADD" : "REMOVE",
           recruitNumber: command.recruitNumber,
           name: command.name,
+          reserve: command.reserve,
           positionsSpecified: command.mainPosition !== undefined,
         }),
         replayed: result.replayed,
@@ -1493,6 +1504,7 @@ export class KakaoV4CommandDispatcher {
           roundMetadata: command.roundMetadata,
           participants: command.participants,
           ...(command.preserveSlotNos ? { preserveSlotNos: command.preserveSlotNos } : {}),
+          ...(command.reserveSectionObserved ? { reserveSectionObserved: true } : {}),
         }
       : {
           action: "STATUS",

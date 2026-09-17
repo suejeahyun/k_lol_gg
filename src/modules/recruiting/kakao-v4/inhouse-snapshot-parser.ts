@@ -130,15 +130,15 @@ export function parseKakaoV4InhouseParticipantRow(
   mode: "RIFT" | "ARAM" | "AUGMENT_ARAM",
 ): KakaoV4InhouseParticipantRowResult {
   const line = rawLine.normalize("NFKC");
-  const row = /^\s*(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*?)\s*$/u.exec(line);
+  const row = /^\s*((?:예비|대기)\s*)?(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*?)\s*$/u.exec(line);
   if (!row) return Object.freeze({ matched: false });
-  const slotNo = Number(row[1]);
-  const value = row[2]!.trim();
+  const slotNo = Number(row[2]);
+  const value = row[3]!.trim();
+  const reserve = Boolean(row[1]);
   if (!value) return Object.freeze({ matched: true, valid: true, slotNo, participant: null, diagnostics: Object.freeze([]) });
 
   const fields = value.split("/").map((field) => field.trim());
   const name = fields[0] ?? "";
-  const reserve = /(?:예비|대기)/u.test(value);
   if (!name) return invalid(slotNo, "name", null);
   if (mode !== "RIFT") {
     return Object.freeze({
@@ -149,7 +149,17 @@ export function parseKakaoV4InhouseParticipantRow(
       diagnostics: Object.freeze([]),
     });
   }
-  if (fields.length < 4) return invalid(slotNo, "mainPosition", reviewParticipant(slotNo, name, "ALL", [], reserve));
+  if (fields.length < 4) {
+    const shortcut = parseKakaoV4InhousePositionShortcut(value);
+    if (shortcut) return Object.freeze({
+      matched: true,
+      valid: true,
+      slotNo,
+      participant: Object.freeze({ ...shortcut, slotNo, reserve }),
+      diagnostics: Object.freeze([]),
+    });
+    return invalid(slotNo, "mainPosition", reviewParticipant(slotNo, name, "ALL", [], reserve));
+  }
 
   const positionFields = fields.slice(3);
   const positionTokens = positionFields.flatMap((field) => field.split(/[\s,，]+/u)).filter(Boolean);

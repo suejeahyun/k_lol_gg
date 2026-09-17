@@ -465,6 +465,35 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.equal(activatedStatus.body.roundMetadata?.recruitNo, 62);
     assert.match(activatedStatus.body.v1StrictLegacyReply ?? "", /》주최자 : 재현/u);
     sequence += 1;
+    const quickReserve = await assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId,
+      intent: intent(`nonce-draft-${suffix}-${String(sequence).padStart(4, "0")}`, `reserve-add-${suffix}`, roomA),
+      requestKey: `reserve-add-${suffix}`,
+      scope: "kakao:season-applications:draft-regression",
+      command: {
+        action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 62,
+        name: `예비-${suffix}`, mainPosition: "MID", subPositions: ["ADC"], reserve: true, participants: [],
+      },
+      requestId: randomUUID(),
+      now,
+    });
+    const quickReserveEntry = quickReserve.body.entries.find((entry) => entry.suppliedName === `예비-${suffix}`);
+    assert.equal(quickReserveEntry?.reserve, true);
+    assert.equal(quickReserveEntry?.slotNo, 11);
+    assert.equal(quickReserveEntry?.mainPosition, "MID");
+    assert.deepEqual(quickReserveEntry?.subPositions, ["ADC"]);
+    sequence += 1;
+    const quickReserveRemoved = await assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId,
+      intent: intent(`nonce-draft-${suffix}-${String(sequence).padStart(4, "0")}`, `reserve-remove-${suffix}`, roomA),
+      requestKey: `reserve-remove-${suffix}`,
+      scope: "kakao:season-applications:draft-regression",
+      command: { action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 62, name: `예비-${suffix}`, participants: [] },
+      requestId: randomUUID(),
+      now,
+    });
+    assert.equal(quickReserveRemoved.body.entries.some((entry) => entry.suppliedName === `예비-${suffix}`), false);
+    sequence += 1;
     const removedOrganizer = await assistant.syncSeasonSnapshot({
       actorPrincipalId: principalId,
       intent: intent(`nonce-draft-${suffix}-${String(sequence).padStart(4, "0")}`, `draft-${suffix}-${sequence}`, roomA),
@@ -687,6 +716,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     const assistant = new PostgresKakaoAssistant(database);
     const command = {
       action: "SYNC" as const, seasonId, applyDate: today, recruitNo: 7, mode: "RIFT" as const,
+      reserveSectionObserved: true,
       participants: [
         { slotNo: 1, name: `정확-${suffix}`, riotId: `Exact${suffix}#KR1`, mainPosition: "MID" as const, subPositions: ["SUP" as const], reserve: false },
         { slotNo: 2, name: `없는-${suffix}`, riotId: null, mainPosition: "TOP" as const, subPositions: [], reserve: false },
@@ -718,6 +748,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       suppliedRiotId: `Exact${suffix}#KR1`,
       mainPosition: "MID",
       subPositions: ["SUP"],
+      reserve: false,
       player: { playerId: exactPlayerId, displayName: `Exact${suffix}`, riotId: `Exact${suffix}#KR1` },
     });
     assert.equal((await assistant.syncSeasonSnapshot(firstInput)).replayed, true);
@@ -779,7 +810,8 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       "📢 내전하실분 #8", " 》협곡", ` 》${today} 21:00 시작`, " 》게임정보 : 미입력", " 》주최자 : 미입력", "👥 1/10명", "",
       "*참가 신청 양식*", "이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD", "",
       `1. 사이트-${suffix}/D/M/TOP/AD`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
-      "", "빠른 추가: 내전상세 8 추가 이름", "빠른 삭제: 내전상세 8 삭제 이름", "마감: 내전 8ㅉ",
+      "", "예비 1.", "", "빠른 추가: 내전상세 8 추가 이름/주라인/부라인", "빠른 삭제: 내전상세 8 삭제 이름",
+      "빠른 예비 추가: 내전상세 8 예비추가 이름/주라인/부라인", "빠른 예비 삭제: 내전상세 8 예비삭제 이름", "마감: 내전 8ㅉ",
     ].join("\n"));
 
     await database.update(seasonApplications).set({

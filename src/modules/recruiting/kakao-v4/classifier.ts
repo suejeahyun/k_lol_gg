@@ -329,6 +329,7 @@ type DetailMemberMutation = Readonly<{
   action: "ADD" | "REMOVE";
   recruitNumber: number;
   name: string;
+  reserve: boolean;
 }>;
 
 /**
@@ -342,13 +343,14 @@ function detailMemberMutation(text: string, prefixes: readonly string[], allowSt
     .map((prefix) => prefix.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&").replace(/\s+/gu, "\\s*"))
     .join("|");
   const match = new RegExp(
-    `^(?:${prefixPattern})\\s*(?:\\\\?#\\s*)?(\\d{1,2})\\s+(추가(?:해|하기)?|추기|등록|참가|삭제(?:해|하기)?|삭재|제외|탈퇴)\\s+(.+)$`,
+    `^(?:${prefixPattern})\\s*(?:\\\\?#\\s*)?(\\d{1,2})\\s+((?:(?:예비|대기)\\s*)?(?:추가(?:해|하기)?|추기|등록|참가|삭제(?:해|하기)?|삭재|제외|탈퇴))\\s+(.+)$`,
     "u",
   ).exec(text.normalize("NFKC"));
   if (!match) return null;
   const recruitNumber = Number(match[1]);
   const name = match[3]!.trim().replace(/\s+/gu, " ");
-  const action = /^(?:추가|추기|등록|참가)/u.test(match[2]!) ? "ADD" as const : "REMOVE" as const;
+  const action = /(?:추가|추기|등록|참가)/u.test(match[2]!) ? "ADD" as const : "REMOVE" as const;
+  const reserve = /^(?:예비|대기)/u.test(match[2]!);
   const nameLength = Array.from(name).length;
   const structuredIntent = allowStructuredAdd && action === "ADD" && name.includes("/");
   const structuredAdd = structuredIntent && isKakaoV4InhouseStructuredAddName(name);
@@ -360,6 +362,7 @@ function detailMemberMutation(text: string, prefixes: readonly string[], allowSt
     action,
     recruitNumber,
     name,
+    reserve,
   });
 }
 
@@ -369,6 +372,7 @@ function classifyInhouse(text: string): KakaoV4RecognizedCommand | null {
     return recognized(memberMutation.action === "ADD" ? "INHOUSE_MEMBER_ADD" : "INHOUSE_MEMBER_REMOVE", text, {
       recruitNumber: memberMutation.recruitNumber,
       name: memberMutation.name,
+      reserve: memberMutation.reserve,
     });
   }
   const finish = /^내전\s*#?\s*(\d{1,3})\s*(?:쫑|ㅉ|마감|종료)$/u.exec(text);

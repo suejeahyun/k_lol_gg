@@ -446,7 +446,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R20_2026_09_16"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R21_2026_09_17"],
   );
 });
 
@@ -521,6 +521,8 @@ test("inhouse and scrim member shortcuts reach the matching profile gateway", as
     ["/내전상세 #3 추가 민혁/mid/ad", "INHOUSE", "ADD", "FEATURES"],
     ["내전상세 3 추가 민혁/mid,ad", "INHOUSE", "ADD", "FEATURES"],
     ["내전상세 3 추가 민혁/mid,all", "INHOUSE", "ADD", "FEATURES"],
+    ["내전상세 3 예비추가 정민/mid,ad", "INHOUSE", "ADD", "FEATURES"],
+    ["내전 상세 3 예비 삭제 정민", "INHOUSE", "REMOVE", "FEATURES"],
     ["/내전상세 #3 추가 재현/M/M/ALL", "INHOUSE", "ADD", "FEATURES"],
     ["내전상세 3 추가 재현/M/M/MID/TOP,SUP", "INHOUSE", "ADD", "FEATURES"],
     ["내전 명단 3 삭재 재현", "INHOUSE", "REMOVE", "FEATURES"],
