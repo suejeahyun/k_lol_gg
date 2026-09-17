@@ -36,8 +36,8 @@
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,690 | 65,496 | 1,810 | `240615cd3d09b9fde5c64cfd1dc51bc4c9675228b38e41441226b2239448f30c` |
-| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,979 | 63,786 | 1,808 | `e1c09efd76630f228becdc34bcc7f89fd1c658613e76ac7886d4a9c64aa7f649` |
+| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,681 | 65,487 | 1,806 | `5bce4e91ef38067d3206768407b599c9e16417d350dbbc26ca0de545ccb5cd43` |
+| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,970 | 63,777 | 1,807 | `aefe5a336a353bb397c57cbfc7ca036ce3a207a76ef8fe44206a7e4fb724b66e` |
 
 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. V1 원본의 실행·주석 줄은 유지하고 의미 없는 빈 줄만 제거했다.
 

@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "kakao-r21-inhouse-reserve-dual-input",
+      "version": "1.0.0",
+      "gitTag": "kakao-r21-inhouse-reserve-dual-input-v1.0.0",
+      "commit": "b6ead14aef8a8991bb519805ffdcd2f6c72ac699",
+      "releasedAt": "2026-09-17T15:24:48+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-r21-inhouse-reserve-dual-input-2026-09-17/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-17-kakao-r21-inhouse-reserve-dual-input.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_CzikbQKinnSZeDWJW9ovjdRKWfht",
+        "url": "https://k-lol-53bugwtpf-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-17T06:24:26.090Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_R21_2026_09_17",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
       "featureId": "kakao-r20-inhouse-quick-positions",
       "version": "1.0.0",
       "gitTag": "kakao-r20-inhouse-quick-positions-v1.0.0",

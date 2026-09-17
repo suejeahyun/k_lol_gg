@@ -1,5 +1,20 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-17 카카오 R21 내전 일반·예비 이중 입력
+
+- 기능 커밋: `b6ead14aef8a8991bb519805ffdcd2f6c72ac699`
+- 상태: 소스·집중 회귀·격리 PostgreSQL·전체 앱 검사·Rhino 정적 검사·Git·Vercel 운영 배포·라이브 서명 검증 완료, 휴대폰 MessengerBot R 설치 대기
+- 릴리스 tag: `kakao-r21-inhouse-reserve-dual-input-v1.0.0`
+- Vercel Production: `dpl_CzikbQKinnSZeDWJW9ovjdRKWfht` (`https://k-lol-53bugwtpf-tjdmswo11-3715s-projects.vercel.app`), Ready·Production, 운영 alias `/api/health` HTTP 200 `ready`
+- 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R21_2026_09_17`
+- 주요 범위: 일반·예비 명단 채팅 추가/삭제, 전체 양식 예비 동기화·취소, 옛 양식 예비 보존, 일반·예비 정원 분리
+- 테스트: focused 8/8 + MessengerBot 28/28, 전체 DB 계약 PASS, 일반 780 PASS·1 intentional skip, 계약 401/401, 홈 여성 챔피언 가이드 68/68, 프로덕션 빌드 93 pages, 공개·비공개 ES5/Rhino 경고 후보 0건
+- public 검토본: LF 63,681 / CRLF 65,487, SHA-256 `5bce4e91ef38067d3206768407b599c9e16417d350dbbc26ca0de545ccb5cd43`
+- private 설치본: LF 61,970 / CRLF 63,777, SHA-256 `aefe5a336a353bb397c57cbfc7ca036ce3a207a76ef8fe44206a7e4fb724b66e`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r21-inhouse-reserve-dual-input-2026-09-17/README.md`](./qa-evidence/kakao-r21-inhouse-reserve-dual-input-2026-09-17/README.md)에 있다.
+
 ## 2026-09-16 카카오 R20 내전 빠른 라인 입력
 
 - 기능 커밋: `97ed27cfdadc09bf2e260987dce37e7364d4a57c`
