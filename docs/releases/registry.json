@@ -3,6 +3,26 @@
   "releases": [
     {
       "featureId": "site-wide-effects",
+      "version": "1.2.0",
+      "gitTag": "site-wide-effects-v1.2.0",
+      "commit": "c17ea57d1d98f038b2b0e0b7783f345a7ae7e714",
+      "releasedAt": "2026-09-18T21:10:03+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/site-wide-effects-1.2.0-2026-09-18/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-18-site-wide-effects-v1.2.0.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_5YbfphVdpQ25S4TuoUUvgFgR923L",
+        "url": "https://k-lol-qibau9i4v-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-18T12:10:03.143Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
+    },
+    {
+      "featureId": "site-wide-effects",
       "version": "1.1.0",
       "gitTag": "site-wide-effects-v1.1.0",
       "commit": "a79d3fc79edc18b234bb04e39018580ca237d49f",

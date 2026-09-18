@@ -4,7 +4,9 @@
 - 기능 버전: `site-wide-effects@1.2.0`
 - 범위: 공개·계정·인증·관리자 105개 페이지
 - 데이터 변경: 없음
-- 운영 배포: 기능 커밋 확정 후 기록
+- 기능 커밋: `c17ea57d1d98f038b2b0e0b7783f345a7ae7e714`
+- 운영 배포: `dpl_5YbfphVdpQ25S4TuoUUvgFgR923L` · Ready
+- 운영 URL: `https://k-lol-gg.vercel.app`
 
 ## 반영 범위
 
@@ -30,6 +32,8 @@
 | 격리 PostgreSQL·복구 계약 | PASS |
 | 전체 화면 합성 QA | 105페이지·339캡처·HTTP 200·issue 0 |
 | 로컬 production 브라우저 품질 | 27/27 PASS, issue 0 |
+| 운영 production 브라우저 품질 | 27/27 PASS, issue 0 |
+| 운영 health | HTTP 200 · `ready` |
 | `git diff --check` | PASS |
 
 ## 브라우저 품질
@@ -44,6 +48,10 @@
 - 최대 전송량: 517,705 bytes
 - 최대 script: 215,624 bytes
 - 수평 넘침·키보드 focus 누락·감속 모션 위반·axe 위반: 0
+
+운영 URL 재검사 결과는 최대 TTFB 22ms, LCP 884ms, CLS 0.0174,
+long task 180ms였고 27개 대상 모두 예산 안에서 통과했다. 최초 콜드 요청의
+홈 LCP는 2,560ms였으나 예열 후 동일 검사에서 884ms로 안정화됐다.
 
 ## 전체 화면 캡처
 
@@ -62,6 +70,7 @@
 | `summary.json` | `95C8BED4CFD70E6CF3919E6DE2F2C5461C14A9339BD9475D995306FF9D0315F0` |
 | `screenshots/index.json` | `B2F59701EEAC9079D9847203CBCE0E003109CC6CF33AF4C3279C72CEC9D81695` |
 | `browser-quality-local.json` | `2DE95EFED7B9C7CF7DC32ED1F6A16C3F15964A74DA3FC64ADE65BA0CE4295E48` |
+| `browser-quality-production.json` | `D4FC44275C2E56D3F3FBC283C540AC6F3796A6429C1328752541D03CFE23E7B4` |
 
 ## 육안 검수
 
