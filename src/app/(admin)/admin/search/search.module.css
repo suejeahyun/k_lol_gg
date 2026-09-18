@@ -16,3 +16,10 @@
 .page li span { color: #64738a; font-size: .8rem; line-height: 1.55; }
 .empty { border: 1px dashed #cfdcec; border-radius: 1rem; color: #64738a; padding: 2rem; text-align: center; }
 @media (max-width: 680px) { .page { padding: 1rem 1rem 6.25rem; } .page ul { grid-template-columns: 1fr; } }
+
+.search button:active:not(:disabled) { transform: translateY(1px); }
+.page li a:focus-visible { border-color: #91add2; outline: 3px solid rgb(49 94 170 / 18%); outline-offset: 2px; background: #f8fbff; }
+@media (hover: hover) and (pointer: fine) { .page li a:hover { border-color: #b2c7df; background: #fbfdff; transform: translateY(-1px); } }
+@media (prefers-reduced-motion: no-preference) { .search > div, .search button, .page li a { transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 100ms ease; } }
+@media (prefers-reduced-motion: reduce) { .search button:active:not(:disabled), .page li a:hover { transform: none; } }
+@media (forced-colors: active) { .search > div, .page li a, .empty { border-color: CanvasText; box-shadow: none; } .search > div:focus-within, .page li a:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; } }

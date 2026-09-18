@@ -272,7 +272,7 @@ export function SubmissionForm({
         <h2 id="resume-title">접수 코드로 이어하기</h2>
         <form className={styles.resume} onSubmit={continueByCode}><input value={resumeCode} onChange={(event) => setResumeCode(event.target.value)} maxLength={19} placeholder="MR2…" aria-label="접수 코드" /><button type="submit">불러오기</button></form><Link href="/matches/submissions">내 접수 기록 전체 보기</Link>
       </section>
-      {message ? <p className={styles.status} data-error={error} role={error ? "alert" : "status"}>{message}</p> : null}
+      {message ? <p className={styles.status} data-error={error} data-busy={busy ? "true" : undefined} role={error ? "alert" : "status"}>{message}</p> : null}
       {!submission ? (
         <section className={styles.panel} aria-labelledby="new-submission-title">
           <h2 id="new-submission-title">새 결과 접수</h2>
@@ -290,10 +290,14 @@ export function SubmissionForm({
           </form>
         </section>
       ) : (
-        <section className={styles.panel} aria-labelledby="upload-title">
+        <section className={styles.panel} data-submission-status={submission.status} aria-busy={busy} aria-labelledby="upload-title">
           <div className={styles.code}><span>이어하기 코드</span><strong>{submission.publicCode}</strong><button type="button" onClick={() => { void navigator.clipboard.writeText(submission.publicCode).then(() => { setError(false); setMessage("이어하기 코드를 복사했습니다."); }, () => { setError(true); setMessage("클립보드에 접근할 수 없어 코드를 직접 복사해 주세요."); }); }}>복사</button></div>
           <h2 id="upload-title">게임별 스코어보드</h2>
           <p>{submission.title} · {submission.organizer} · 현재 상태 {STATUS_LABEL[submission.status]}</p>
+          <div className={styles.uploadProgress} role="progressbar" aria-label={`스코어보드 이미지 ${submission.expectedGameCount}장 중 ${submission.receivedGameNumbers.length}장 등록`} aria-valuemin={0} aria-valuemax={submission.expectedGameCount} aria-valuenow={submission.receivedGameNumbers.length}>
+            <span><strong>{submission.receivedGameNumbers.length}</strong> / {submission.expectedGameCount}장 등록</span>
+            <i aria-hidden="true"><b style={{ width: `${submission.receivedGameNumbers.length / submission.expectedGameCount * 100}%` }} /></i>
+          </div>
           {submission.status === "AWAITING_UPLOAD" ? <div className={styles.actions}><button type="button" disabled={busy} onClick={() => setEditing((current) => !current)}>{editing ? "수정 닫기" : "접수 정보 수정"}</button><button type="button" disabled={busy} data-danger="true" onClick={cancelSubmission}>접수 취소</button></div> : submission.status === "PENDING_REVIEW" ? <div className={styles.actions}><button type="button" disabled={busy} data-danger="true" onClick={cancelSubmission}>검토 요청 취소</button></div> : null}
           {editing ? <form className={styles.form} onSubmit={updateSubmission}>
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} defaultValue={submission.title} /></label>

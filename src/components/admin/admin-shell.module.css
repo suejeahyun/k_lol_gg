@@ -249,3 +249,31 @@
   .environment,
   .logoutError { border-color: CanvasText; }
 }
+
+.nav a[aria-current="page"] { position: relative; }
+.nav a[aria-current="page"]::after { position: absolute; right: .7rem; width: .42rem; height: .42rem; border-radius: 50%; background: #4e85cd; content: ""; }
+.logoutError { border-left-width: 4px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .brand:hover .brandMark,
+  .brand:hover > span { transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand > span { transition: transform 150ms ease; }
+  .logoutError { animation: admin-logout-error-in 160ms ease-out both; }
+  .mobileMenu { animation: admin-mobile-menu-in 180ms ease-out both; transform-origin: bottom center; }
+}
+
+@keyframes admin-logout-error-in { from { opacity: 0; transform: translateY(4px); } }
+@keyframes admin-mobile-menu-in { from { opacity: 0; transform: translateY(8px) scale(.99); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand:hover > span { transform: none; }
+  .mobileMenu,
+  .logoutError { animation: none; }
+}
+
+@media (forced-colors: active) {
+  .nav a[aria-current="page"]::after { background: Highlight; }
+}

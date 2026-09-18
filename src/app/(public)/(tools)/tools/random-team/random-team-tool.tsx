@@ -207,9 +207,9 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
           </div>
         ) : (
           <>
-            <div className={styles.teams} aria-live="polite">
+            <div className={styles.teams} data-result-kind={result.kind} aria-live="polite">
               {(["teamOne", "teamTwo"] as const).map((teamKey, teamIndex) => (
-                <article className={styles.teamCard} key={teamKey}>
+                <article className={styles.teamCard} data-team={teamIndex === 0 ? "blue" : "red"} key={teamKey}>
                   <h3>{teamIndex === 0 ? "1팀" : "2팀"}<span>5명</span></h3>
                   <ol>
                     {result.value[teamKey].map((participant) => (
@@ -223,7 +223,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
               ))}
             </div>
             {result.kind === "tier" ? (
-              <div className={styles.resultSummary}>
+              <div className={styles.resultSummary} data-balance={result.value.difference === 0 ? "perfect" : result.value.difference <= 5 ? "close" : "open"}>
                 <span>팀 점수 {result.value.teamOneScore} : {result.value.teamTwoScore}</span>
                 <span>최소 차이 {result.value.difference}점</span>
                 <span>동률 최적안 {result.value.equallyOptimalLayoutCount}개 중 고정 규칙 선택</span>

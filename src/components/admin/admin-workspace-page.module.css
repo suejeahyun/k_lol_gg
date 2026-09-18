@@ -56,3 +56,20 @@
   .emptyIcon { border: 1px solid CanvasText; box-shadow: none; }
   .back:focus-visible { outline-color: Highlight; }
 }
+
+.empty:focus-within,
+.contract:focus-within { border-color: var(--workspace-border-strong); box-shadow: 0 0 0 3px rgb(47 110 200 / 9%); }
+.notice { position: relative; overflow: hidden; }
+.notice::before { position: absolute; inset: 0 auto 0 0; width: 4px; background: #b47a13; content: ""; }
+
+@media (hover: hover) and (pointer: fine) {
+  .contract li:hover { transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .empty,
+  .contract,
+  .contract li { transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease; }
+}
+
+@media (prefers-reduced-motion: reduce) { .contract li:hover { transform: none; } }

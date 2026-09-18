@@ -314,7 +314,7 @@ export function TeamBalanceBuilder() {
   }
 
   return (
-    <form className={styles.balanceForm} onSubmit={submit}>
+    <form className={styles.balanceForm} data-complete={selectedRows.length === 10 ? "true" : undefined} aria-busy={pending} onSubmit={submit}>
       <div className={styles.heading}>
         <div><span>NEW DRAFT</span><h2>두 단계로 팀 만들기</h2></div>
         <strong className={styles.count}>{selectedRows.length} / 10명</strong>
@@ -351,7 +351,7 @@ export function TeamBalanceBuilder() {
           </div>
 
           <div className={styles.selectedRoster} aria-label="선택한 참가자">
-            {rows.map((row, index) => row.playerId ? <span key={row.playerId}><b>{index + 1}</b>{row.playerLabel}<button type="button" aria-label={`${row.playerLabel} 선택 해제`} onClick={() => removePlayer(index)}><X aria-hidden="true" /></button></span> : <span data-empty="true" key={`empty-${index}`}><b>{index + 1}</b>참가자 대기</span>)}
+            {rows.map((row, index) => row.playerId ? <span data-filled="true" key={row.playerId}><b>{index + 1}</b>{row.playerLabel}<button type="button" aria-label={`${row.playerLabel} 선택 해제`} onClick={() => removePlayer(index)}><X aria-hidden="true" /></button></span> : <span data-empty="true" key={`empty-${index}`}><b>{index + 1}</b>참가자 대기</span>)}
           </div>
         </div> : null}
       </section>
@@ -364,7 +364,7 @@ export function TeamBalanceBuilder() {
         {stepTwoOpen ? <div className={styles.balanceStepBody}>
           {selectedRows.length === 0 ? <p className={styles.stepEmpty}>먼저 1단계에서 참가자를 선택해 주세요.</p> : <div className={styles.balanceRows}>
             {rows.map((row, index) => !row.playerId ? null : (
-              <article key={row.playerId} className={styles.balancePositionRow}>
+              <article key={row.playerId} className={styles.balancePositionRow} data-all-positions={row.allPositions ? "true" : undefined}>
                 <div className={styles.balancePositionHeader}>
                   <span className={styles.balancePlayerIdentity}><b>{index + 1}</b><strong>{row.playerLabel}</strong></span>
                   <div className={styles.mainPositionButtons} role="group" aria-label={`${row.playerLabel} 주 포지션`}>

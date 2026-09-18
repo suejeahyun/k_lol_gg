@@ -137,3 +137,77 @@
 .secretBox code { display: block; min-height: 2.75rem; padding: .75rem; border-radius: .65rem; background: #18233b; color: #f7f9ff; overflow-wrap: anywhere; user-select: text; }
 .secretBox > div { display: flex; flex-wrap: wrap; gap: .5rem; }
 .secretBox p { margin: 0; color: var(--admin-muted); }
+
+/* Dense operational screens use focus and state cues instead of decorative motion. */
+.search:focus-within { border-color: #9bb7da; box-shadow: 0 0 0 3px rgb(49 94 170 / 10%), 0 .7rem 2.2rem rgb(53 78 118 / 6%); }
+.field:focus-within { color: #315eaa; }
+.field:focus-within input,
+.actionPanel:focus-within,
+.identityGroup:focus-within { border-color: #9bb7da; box-shadow: 0 0 0 3px rgb(49 94 170 / 9%); }
+.table tbody tr:focus-within { background: #eef5ff; box-shadow: inset 3px 0 #4e85cd; }
+.status::before { width: .4rem; height: .4rem; flex: 0 0 auto; margin-right: .3rem; border-radius: 50%; background: currentColor; content: ""; }
+.form[aria-busy="true"] .formActions button,
+.actionPanel form[aria-busy="true"] button { cursor: wait; }
+.formMessage[data-tone="error"],
+.formMessage[data-tone="success"] { min-height: 2.5rem; border: 1px solid currentColor; border-left-width: 4px; border-radius: .75rem; padding: .55rem .7rem; }
+.formMessage[data-tone="error"] { background: #fff6f8; }
+.formMessage[data-tone="success"] { background: #effaf6; }
+.identityHelp[data-changed="true"] { border-left: 4px solid #c38b25; }
+.actionPanel button:active:not(:disabled),
+.danger button:active:not(:disabled),
+.recovery button:active:not(:disabled) { transform: translateY(1px); }
+
+@media (hover: hover) and (pointer: fine) {
+  .primaryLink:hover { transform: translateY(-1px); box-shadow: 0 .8rem 1.8rem rgb(66 111 192 / 22%); }
+  .facts div:hover { border-color: #c6d7eb; background: #fff; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .search,
+  .field,
+  .field input,
+  .identityGroup,
+  .actionPanel,
+  .facts div,
+  .primaryLink,
+  .ghostLink,
+  .table tbody tr,
+  .tabs a { transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 100ms ease; }
+  .formMessage[data-tone="error"],
+  .formMessage[data-tone="success"],
+  .identityHelp[data-changed="true"] { animation: admin-player-status-in 180ms ease-out both; }
+  .form[aria-busy="true"] .formActions button,
+  .actionPanel form[aria-busy="true"] button { animation: admin-player-busy 1.2s ease-in-out infinite alternate; }
+}
+
+@keyframes admin-player-status-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes admin-player-busy { to { filter: brightness(1.08); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryLink:hover,
+  .actionPanel button:active:not(:disabled),
+  .danger button:active:not(:disabled),
+  .recovery button:active:not(:disabled) { transform: none; }
+  .form[aria-busy="true"] .formActions button,
+  .actionPanel form[aria-busy="true"] button { animation: none; }
+}
+
+@media (forced-colors: active) {
+  .search,
+  .tableWrap,
+  .formCard,
+  .summaryCard,
+  .integrationCard,
+  .accountCard,
+  .identityGroup,
+  .actionPanel,
+  .danger,
+  .recovery,
+  .status,
+  .formMessage[data-tone="error"],
+  .formMessage[data-tone="success"] { border-color: CanvasText; box-shadow: none; }
+  .search:focus-within,
+  .identityGroup:focus-within,
+  .actionPanel:focus-within { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; }
+  .table tbody tr:focus-within { outline: 2px solid Highlight; box-shadow: none; }
+}

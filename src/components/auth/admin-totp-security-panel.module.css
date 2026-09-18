@@ -31,3 +31,33 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 32rem) { .copyRow { grid-template-columns: 1fr; } .section button { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+.section:focus-within { border-color: #aac1e0; box-shadow: 0 0 0 3px rgb(49 94 170 / 9%); }
+.codeForm:focus-within label,
+.secretBox:focus-within label { color: #315eaa; }
+.success,
+.error { border-left: 4px solid currentColor; }
+.section button:active:not(:disabled) { transform: translateY(1px); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .section,
+  .section button,
+  .codeForm label,
+  .secretBox label { transition: border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, background-color 150ms ease, transform 100ms ease; }
+  .success,
+  .error { animation: totp-status-in 180ms ease-out both; }
+}
+
+@keyframes totp-status-in { from { opacity: 0; transform: translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) { .section button:active:not(:disabled) { transform: none; } }
+
+@media (forced-colors: active) {
+  .statusRow,
+  .section,
+  .secretBox,
+  .success,
+  .error,
+  .notice { border: 1px solid CanvasText; box-shadow: none; }
+  .section:focus-within { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; }
+}

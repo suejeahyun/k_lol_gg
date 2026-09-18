@@ -46,3 +46,20 @@
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation: none; }
 }
+
+.field:focus-within label { color: #315eaa; }
+.form[aria-busy="true"] .submit { cursor: wait; }
+.message { border-left: 4px solid var(--destructive); box-shadow: 0 .55rem 1.4rem rgb(111 43 62 / 8%); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .field label { transition: color 150ms ease; }
+  .message { animation: login-message-in 180ms ease-out both; }
+  .form[aria-busy="true"] .submit { animation: login-busy 1.2s ease-in-out infinite alternate; }
+}
+
+@keyframes login-message-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes login-busy { to { filter: brightness(1.08); } }
+
+@media (forced-colors: active) {
+  .message { border-color: CanvasText; border-left-color: Highlight; box-shadow: none; }
+}

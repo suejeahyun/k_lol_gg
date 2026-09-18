@@ -79,3 +79,30 @@
   .card header span[data-status],.statusJourney li[data-state="current"]{color:HighlightText;background:Highlight}
   .card:focus-visible{outline-color:Highlight}
 }
+
+.card[data-kind="event"]::after,.card[data-kind="destruction"]::after{position:absolute;inset:auto -35% -70% auto;width:13rem;height:13rem;border-radius:50%;opacity:.24;pointer-events:none;transition:opacity 180ms ease,transform 180ms ease;content:""}
+.card[data-kind="event"]::after{background:radial-gradient(circle,#9bd9f2,transparent 67%)}
+.card[data-kind="destruction"]::after{background:radial-gradient(circle,#e8b36e,transparent 67%)}
+.card[data-status="COMPLETED"]{border-color:rgba(204,163,61,.48);box-shadow:0 16px 38px rgba(174,129,39,.12)}
+.card[data-status="CANCELLED"]{filter:saturate(.72)}
+.statusJourney li:not(:last-child)::after{position:absolute;z-index:-1;top:50%;left:calc(100% + .08rem);width:.3rem;height:2px;background:#dce6f1;content:""}
+.statusJourney li[data-state="done"]::after{background:#78b99a}
+.championCallout{position:relative;overflow:hidden;isolation:isolate}
+.championCallout::after{position:absolute;z-index:-1;inset:-45% -5% auto 58%;height:180%;background:radial-gradient(circle,rgba(255,215,112,.38),transparent 67%);pointer-events:none;content:""}
+.fixture[data-complete="true"]{position:relative;overflow:hidden;box-shadow:inset 3px 0 #71aa83}
+.fixtureScore strong[data-winner="true"]::after{display:inline-block;margin-inline-start:.35rem;color:#a8751c;font-size:.62rem;font-weight:950;content:"WIN"}
+.competitionGallery a,.eventGallery figure{box-shadow:0 10px 28px rgba(67,101,146,.08);transition:border-color 180ms ease,box-shadow 180ms ease,transform 180ms ease}
+
+@media (hover:hover) and (pointer:fine){
+  .card:hover::after{opacity:.42;transform:scale(1.08)}
+  .competitionGallery a:hover,.eventGallery figure:hover{border-color:#91b6df;box-shadow:0 16px 34px rgba(67,101,146,.14);transform:translateY(-2px)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .card::after,.competitionGallery a,.eventGallery figure{transition:none}
+}
+
+@media (forced-colors:active){
+  .card::after,.championCallout::after,.statusJourney li::after{display:none}
+  .card[data-status],.fixture[data-complete="true"],.competitionGallery a,.eventGallery figure{border-color:CanvasText;box-shadow:none;filter:none}
+}

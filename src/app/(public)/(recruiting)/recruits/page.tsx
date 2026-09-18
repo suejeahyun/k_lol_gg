@@ -64,7 +64,15 @@ export default async function RecruitsPage() {
                       <small>{member.substitute ? "예비" : member.position ? positionLabel[member.position] : `${member.slotNo}번`}</small>
                     </li>)}</ul> : <p>아직 참여자가 없어요.</p>}
                   </section>
-                  <div className={styles.capacity} aria-label={`정원 ${party.maximumMembers}명 중 ${party.memberCount}명 참여`}><i style={{ width: `${Math.min(100, party.memberCount / party.maximumMembers * 100)}%` }} /></div>
+                  <div
+                    className={styles.capacity}
+                    data-level={party.memberCount >= party.maximumMembers ? "full" : party.memberCount / party.maximumMembers >= .8 ? "near" : party.memberCount === 0 ? "empty" : "open"}
+                    role="progressbar"
+                    aria-label={`정원 ${party.maximumMembers}명 중 ${party.memberCount}명 참여`}
+                    aria-valuemin={0}
+                    aria-valuemax={party.maximumMembers}
+                    aria-valuenow={party.memberCount}
+                  ><i aria-hidden="true" style={{ width: `${Math.min(100, party.memberCount / party.maximumMembers * 100)}%` }} /></div>
                 </article>)}
               </div>
             )}

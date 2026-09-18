@@ -9,7 +9,7 @@
 .filters { display: grid; grid-template-columns: repeat(4,minmax(130px,1fr)); gap: 12px; align-items: end; padding: 20px; border: 1px solid var(--border); border-radius: 24px; background: var(--card); }
 .filterWide { grid-column: span 2; }
 .filters label { display: grid; gap: 7px; color: var(--text-muted); font-size: 13px; font-weight: 800; }
-.filters input,.filters select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 13px; color: var(--foreground); background: #fff; }
+.filters input,.filters select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 13px; color: var(--foreground); background: #fff; transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease; }
 .filters input:focus-visible,.filters select:focus-visible,.filters button:focus-visible,.heroActions a:focus-visible,.card:focus-visible,.pager a:focus-visible { outline: 3px solid rgba(103,166,227,.44); outline-offset: 2px; }
 .filters button { min-height: 44px; padding: 10px 18px; border: 0; border-radius: 13px; color: #fff; background: var(--primary); font-weight: 900; cursor: pointer; }
 .heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
@@ -25,7 +25,7 @@
 .cardTop span,.meta { color: var(--text-muted); font-size: 13px; }
 .card h3 { margin: 0; color: var(--ink-strong); font-size: 20px; }
 .score { justify-content: center; font-size: 14px; font-weight: 900; }
-.score strong { font-size: 36px; color: #578fd0; text-shadow: 0 6px 18px rgba(87,143,208,.16); }
+.score strong { font-size: 36px; color: #578fd0; text-shadow: 0 6px 18px rgba(87,143,208,.16); transition: color .18s ease, transform .18s ease; }
 .score strong[data-team="red"] { color: #e07f9f; text-shadow: 0 6px 18px rgba(224,127,159,.16); }
 .score span[data-team="blue"] { color: #477ebd; }
 .score span[data-team="red"] { color: #be647f; }
@@ -35,22 +35,38 @@
 .state h2,.state p { margin: 0; }
 .pager { display: flex; justify-content: center; gap: 12px; }
 .pager a { min-height: 44px; display: inline-flex; align-items: center; padding: 11px 17px; border: 1px solid var(--border); border-radius: 14px; background: #fff; text-decoration: none; font-weight: 850; }
-.detailHero { display: grid; grid-template-columns: 1fr auto; gap: 20px; padding: 30px; border-radius: 28px; background: linear-gradient(135deg,var(--sky),var(--lilac)); }
+.detailHero { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 20px; padding: 30px; border: 1px solid rgba(118,151,198,.2); border-radius: 28px; background: linear-gradient(135deg,var(--sky),var(--lilac)); box-shadow: 0 14px 36px rgba(76,105,155,.08); }
+.detailHero::after { position: absolute; right: -35px; bottom: -75px; width: 180px; aspect-ratio: 1; border: 30px solid rgba(255,255,255,.3); border-radius: 50%; content: ""; pointer-events: none; }
+.detailHero > * { position: relative; z-index: 1; }
+.detailHero[data-winner="blue"] { box-shadow: inset 5px 0 #629fda,0 14px 36px rgba(76,105,155,.08); }
+.detailHero[data-winner="red"] { box-shadow: inset -5px 0 #df82a1,0 14px 36px rgba(76,105,155,.08); }
 .detailHero h1 { margin: 8px 0; font-family: var(--font-heading); font-size: clamp(30px,5vw,48px); }
 .seriesScore { display: flex; align-items: center; gap: 13px; font-size: 28px; font-weight: 950; }
+.seriesScore span:first-child,.seriesScore strong:first-of-type { color: #467fbe; }
+.seriesScore span:last-child,.seriesScore strong:last-of-type { color: #bd607e; }
+.seriesScore strong { display: grid; min-width: 44px; min-height: 44px; place-items: center; border-radius: 15px; background: rgba(255,255,255,.76); box-shadow: 0 8px 20px rgba(76,105,155,.08); }
 .gameList { display: grid; gap: 20px; }
-.game { overflow: hidden; border: 1px solid var(--border); border-radius: 26px; background: rgba(255,255,255,.9); }
+.game { position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 26px; background: rgba(255,255,255,.9); box-shadow: 0 10px 30px rgba(76,105,155,.065); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.game::before { position: absolute; inset: 0 auto 0 0; z-index: 2; width: 4px; background: #659fd9; content: ""; }
+.game[data-winner="red"]::before { inset: 0 0 0 auto; background: #df82a1; }
 .gameHeader { display: flex; justify-content: space-between; gap: 12px; padding: 18px 22px; background: var(--muted); }
+.gameHeader span { padding: 5px 9px; border-radius: 999px; color: #3d699b; background: #e6f4ff; font-size: 12px; font-weight: 900; }
+.gameHeader span[data-team="red"] { color: #94536c; background: #ffeaf2; }
 .teams { display: grid; grid-template-columns: 1fr 1fr; }
-.team { display: grid; gap: 8px; padding: 18px; }
+.team { display: grid; gap: 8px; padding: 18px; transition: background-color .18s ease, box-shadow .18s ease; }
+.team[data-team="blue"][data-winner="true"] { background: linear-gradient(145deg,rgba(234,246,255,.8),rgba(255,255,255,.4)); box-shadow: inset 0 3px rgba(87,150,216,.3); }
+.team[data-team="red"][data-winner="true"] { background: linear-gradient(145deg,rgba(255,255,255,.4),rgba(255,237,244,.78)); box-shadow: inset 0 3px rgba(226,126,158,.3); }
 .team + .team { border-left: 1px solid var(--border); }
-.team h3 { margin: 0 0 6px; }
-.player { display: grid; grid-template-columns: auto minmax(0,1fr) auto; min-height: 44px; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 14px; background: rgba(237,244,251,.72); }
+.team h3 { width: fit-content; margin: 0 0 6px; padding-bottom: 5px; border-bottom: 2px solid rgba(87,150,216,.35); }
+.team[data-team="red"] h3 { border-bottom-color: rgba(226,126,158,.38); }
+.player { position: relative; display: grid; grid-template-columns: auto minmax(0,1fr) auto; min-height: 44px; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid transparent; border-radius: 14px; background: rgba(237,244,251,.72); transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+.player[data-mvp="true"] { border-color: rgba(214,169,74,.4); background: linear-gradient(135deg,#fff9e7,#fffdf7); box-shadow: inset 3px 0 #d7a743; }
 .player a,.player > div { display: grid; min-width: 0; min-height: 44px; align-content: center; overflow-wrap: anywhere; font-weight: 850; text-decoration: none; }
 .player small { display: block; color: var(--text-muted); font-size: 12px; font-weight: 650; overflow-wrap: anywhere; }
-.mvp { display: inline-flex; align-items: center; gap: 4px; color: #8a5d14; }
+.mvp { display: inline-flex; align-items: center; gap: 4px; margin-left: 7px; padding: 3px 6px; border-radius: 999px; color: #805510; background: #ffefbe; font-size: 10px; }
 .privacy { padding: 16px 18px; border-radius: 18px; color: var(--text-muted); background: var(--cream); font-size: 13px; line-height: 1.65; }
-@media (hover:hover) and (pointer:fine) { .card:hover { border-color: rgba(137,177,219,.62); transform: translateY(-3px); box-shadow: var(--shadow-soft); } .heroActions a:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(78,104,149,.15); } }
-@media (prefers-reduced-motion:reduce) { .card,.heroActions a { transition: none; } }
+@media (hover:hover) and (pointer:fine) { .card:hover { border-color: rgba(137,177,219,.62); transform: translateY(-3px); box-shadow: var(--shadow-soft); } .heroActions a:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(78,104,149,.15); } .game:hover { border-color: rgba(137,177,219,.54); box-shadow: 0 15px 34px rgba(76,105,155,.1); transform: translateY(-2px); } .player:hover { border-color: rgba(118,151,198,.3); background: #f7fbff; transform: translateX(2px); } .player[data-mvp="true"]:hover { border-color: rgba(201,145,39,.55); background: #fffaf0; } }
+@media (prefers-reduced-motion:reduce) { .card,.heroActions a,.filters input,.filters select,.score strong,.game,.team,.player { transition: none; transform: none; } }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .filters { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 640px) { .hero { min-height: 0; border-radius: 24px; } .hero > svg { display: none; } .filters,.grid,.teams { grid-template-columns: 1fr; } .filterWide { grid-column: auto; } .card { min-height: 0; } .detailHero { grid-template-columns: 1fr; } .team + .team { border-left: 0; border-top: 1px solid var(--border); } .heading { align-items: start; flex-direction: column; } }
+@media (forced-colors:active) { .card,.detailHero,.game,.player { border-color: CanvasText; } .card[data-winner="blue"],.card[data-winner="red"],.team[data-winner="true"],.player[data-mvp="true"] { border-color: Highlight; } .game::before { background: Highlight; } }

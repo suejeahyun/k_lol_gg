@@ -44,20 +44,20 @@ export default async function MatchDetailPage({
         <section className={styles.state} role="alert"><ShieldCheck /><h1>경기 상세를 불러오지 못했어요.</h1></section>
       ) : result.data ? (
         <>
-          <section className={styles.detailHero} aria-labelledby="match-title">
+          <section className={styles.detailHero} data-winner={result.data.blueWins === result.data.redWins ? "tie" : result.data.blueWins > result.data.redWins ? "blue" : "red"} aria-labelledby="match-title">
             <div><span>{result.data.season.name}</span><h1 id="match-title">{result.data.title}</h1><p><CalendarDays size={15} aria-hidden="true" /> {result.data.playedOn}</p></div>
             <div className={styles.seriesScore} aria-label={`시리즈 결과 블루 ${result.data.blueWins} 대 레드 ${result.data.redWins}`}><span>BLUE</span><strong>{result.data.blueWins}</strong><b>:</b><strong>{result.data.redWins}</strong><span>RED</span></div>
           </section>
           <section className={styles.gameList} aria-label="게임별 스코어보드">
             {result.data.games.map((game) => (
-              <article className={styles.game} key={game.gameNumber}>
-                <header className={styles.gameHeader}><strong>GAME {game.gameNumber}</strong><span>{teamLabel(game.winnerTeam)} 승리</span></header>
+              <article className={styles.game} data-winner={game.winnerTeam.toLowerCase()} key={game.gameNumber}>
+                <header className={styles.gameHeader}><strong>GAME {game.gameNumber}</strong><span data-team={game.winnerTeam.toLowerCase()}>{teamLabel(game.winnerTeam)} 승리</span></header>
                 <div className={styles.teams}>
                   {(["BLUE", "RED"] as const).map((team) => (
-                    <section className={styles.team} key={team} aria-label={teamLabel(team)}>
+                    <section className={styles.team} data-team={team.toLowerCase()} data-winner={game.winnerTeam === team ? "true" : undefined} key={team} aria-label={teamLabel(team)}>
                       <h3>{teamLabel(team)}</h3>
                       {game.participants.filter((player) => player.team === team).map((player) => (
-                        <div className={styles.player} key={`${player.team}-${player.position}`}>
+                        <div className={styles.player} data-mvp={player.playerId === game.mvpPlayerId ? "true" : undefined} key={`${player.team}-${player.position}`}>
                           <ChampionPortrait displayName={player.championName || player.championKey} imageUrl={player.championImageUrl} championKey={player.championKey} />
                           {player.profileAvailable ? <Link href={`/players/${player.playerId}`}><strong>{player.nickname}</strong><small>{player.tagLine} · {player.position} · {player.championName || player.championKey}</small></Link> : <div><strong>{player.nickname}</strong><small>{player.tagLine} · {player.position} · {player.championName || player.championKey} · 비활성 프로필</small></div>}
                           <span>{player.kills}/{player.deaths}/{player.assists}{player.playerId === game.mvpPlayerId ? <b className={styles.mvp} aria-label="이 게임 MVP"><Crown size={14} aria-hidden="true" /> MVP</b> : null}</span>

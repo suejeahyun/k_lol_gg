@@ -25,3 +25,14 @@
 .error { border-radius: .75rem; background: #fff1f1; color: #9d3434; padding: .75rem; }
 @media (max-width: 800px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .header { align-items: start; flex-direction: column; } }
 @media (max-width: 520px) { .grid, .checks { grid-template-columns: 1fr; } }
+
+.field:focus-within span { color: #315eaa; }
+.check:has(input:checked) { border-color: #9ab7da; color: #244f90; background: #eef5ff; box-shadow: inset 3px 0 #4e85cd; }
+.table tbody tr:focus-within { background: #eef5ff; box-shadow: inset 3px 0 #4e85cd; }
+.notice, .error { border: 1px solid currentColor; border-left-width: 4px; }
+.actions button:active:not(:disabled), .link:active { transform: translateY(1px); }
+@media (hover: hover) and (pointer: fine) { .card:hover { border-color: #bdcde1; background: #fbfdff; } }
+@media (prefers-reduced-motion: no-preference) { .field span, .check, .card, .table tbody tr, .actions button, .link { transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 100ms ease; } .notice, .error { animation: operations-status-in 180ms ease-out both; } }
+@keyframes operations-status-in { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .actions button:active:not(:disabled), .link:active { transform: none; } }
+@media (forced-colors: active) { .card, .state, .check, .tableWrap, .notice, .error { border-color: CanvasText; box-shadow: none; } .check:has(input:checked), .table tbody tr:focus-within { outline: 2px solid Highlight; box-shadow: none; } }

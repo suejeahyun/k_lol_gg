@@ -131,3 +131,16 @@
 @media (max-width: 900px) { .gameEditor { overflow-x: auto; } }
 @media (max-width: 900px) { .filters { grid-template-columns: 1fr 1fr; } .filters label:first-of-type { grid-column: 1/-1; } }
 @media (max-width: 700px) { .page { padding-inline: 14px; } .hero,.reviewHeader { flex-direction: column; } .hero a { align-self: start; } .filters,.form,.images { grid-template-columns: 1fr; } .filters label:first-of-type { grid-column: auto; } .wide { grid-column: auto; } .inlineFields { grid-template-columns: 1fr; } .gameEditorHeader { align-items: start; flex-direction: column; } .compactControls { width: 100%; flex-wrap: wrap; } .reviewSummary form,.reviewSummary button { width: 100%; margin-left: 0; } .reviewFindings article { grid-template-columns: auto minmax(0,1fr); } .reviewFindings article > span { grid-column: 2; } }
+
+.filters:focus-within, .panel:focus-within, .gameEditor:focus-within, .dialog:focus-within { border-color: #98b4d6; box-shadow: 0 0 0 3px rgb(49 94 170 / 9%); }
+.table tbody tr:focus-within, .rosterRow:focus-within { background: #eef5ff; box-shadow: inset 3px 0 #4e85cd; }
+.status::before { display: inline-block; width: .4rem; height: .4rem; margin-right: .35rem; border-radius: 50%; background: currentColor; content: ""; }
+.message, .validation, .valid { border-left: 4px solid currentColor; }
+.actions button:active:not(:disabled), .addGame:active:not(:disabled), .confirmRow:active:not(:disabled) { transform: translateY(1px); }
+@media (hover: hover) and (pointer: fine) { .pickerList button:hover:not(:disabled), .reviewFindings article:hover { background: #f5f9ff; } .image:hover { border-color: #a8bfd9; } }
+@media (prefers-reduced-motion: no-preference) { .filters, .panel, .gameEditor, .dialog, .table tbody tr, .rosterRow, .pickerList button, .reviewFindings article, .image, .actions button, .addGame, .confirmRow { transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 100ms ease; } .message, .validation, .valid { animation: match-admin-status-in 180ms ease-out both; } .dialogBackdrop { animation: match-admin-backdrop-in 150ms ease-out both; } .dialog { animation: match-admin-dialog-in 180ms ease-out both; } }
+@keyframes match-admin-status-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes match-admin-backdrop-in { from { opacity: 0; } }
+@keyframes match-admin-dialog-in { from { opacity: 0; transform: translateY(6px) scale(.99); } }
+@media (prefers-reduced-motion: reduce) { .actions button:active:not(:disabled), .addGame:active:not(:disabled), .confirmRow:active:not(:disabled) { transform: none; } .dialogBackdrop, .dialog, .message, .validation, .valid { animation: none; } }
+@media (forced-colors: active) { .hero, .filters, .tableWrap, .panel, .gameEditor, .pickerList, .reviewPanel, .reviewFindings article, .image, .paste, .dialog, .message, .validation, .valid { border-color: CanvasText; box-shadow: none; } .filters:focus-within, .panel:focus-within, .gameEditor:focus-within, .dialog:focus-within, .table tbody tr:focus-within, .rosterRow:focus-within { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; } }

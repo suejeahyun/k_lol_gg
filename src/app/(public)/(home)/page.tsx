@@ -29,6 +29,8 @@ import {
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
 import { buildHomePublicRankingSummaries } from "@/modules/statistics/domain/public-ranking-view";
 
+import effects from "./home-effects.module.css";
+
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -156,7 +158,7 @@ export default async function HomePage() {
     : [];
 
   return (
-    <div className="page-wrap home-page">
+    <div className={`page-wrap home-page ${effects.effectsRoot}`}>
       <section className="hero-panel" aria-labelledby="home-title">
         <div className="hero-copy">
           <Badge className="foundation-badge" variant="secondary">
@@ -258,12 +260,12 @@ export default async function HomePage() {
         {currentRankings.some((ranking) => ranking.rows.length) ? (
           <div className="home-ranking-summary-grid" aria-label="현재 시즌 지표별 상위 랭킹">
             {currentRankings.map((ranking) => (
-              <article className="home-ranking-summary" key={ranking.id}>
+              <article className="home-ranking-summary" data-ranking-kind={ranking.id} key={ranking.id}>
                 <header>
                   <Link href={`/rankings?view=${ranking.id}`}><span>{ranking.label}</span><ArrowRight size={14} aria-hidden="true" /></Link>
                   <small>{ranking.description}</small>
                 </header>
-                <ol>{ranking.rows.map((row, index) => <li key={row.playerId}><b>{index + 1}</b><Link href={`/players/${row.playerId}`}><strong>{row.displayName}</strong><small>{row.riotId}</small></Link><em>{ranking.metric(row)}</em></li>)}</ol>
+                <ol>{ranking.rows.map((row, index) => <li data-rank={index + 1} key={row.playerId}><b>{index + 1}</b><Link href={`/players/${row.playerId}`}><strong>{row.displayName}</strong><small>{row.riotId}</small></Link><em>{ranking.metric(row)}</em></li>)}</ol>
               </article>
             ))}
           </div>
@@ -285,19 +287,19 @@ export default async function HomePage() {
         </div>
         {homeResult.state === "ready" ? (
           <div className="home-overview-grid">
-            <article className="home-feed-panel">
+            <article className="home-feed-panel" data-feed-kind="matches">
               <header><Swords aria-hidden="true" /><div><span>최근 경기</span><strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></div><Link href="/matches">전체 보기</Link></header>
               {homeResult.snapshot.feeds.recentMatches.length ? <ul>{homeResult.snapshot.feeds.recentMatches.map((match) => <li key={match.id}><Link href={`/matches/${match.id}`}><span><strong>{match.title}</strong><small>{dateLabel(match.occurredAt)} · BLUE {match.blueWins}:{match.redWins} RED</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>아직 공개 확정 경기가 없어요.</FeedEmpty>}
             </article>
-            <article className="home-feed-panel">
+            <article className="home-feed-panel" data-feed-kind="recruits">
               <header><UsersRound aria-hidden="true" /><div><span>진행 중 구인</span><strong>{homeResult.snapshot.feeds.recruits.length}건</strong></div><Link href="/recruits">전체 보기</Link></header>
               {homeResult.snapshot.feeds.recruits.length ? <ul>{homeResult.snapshot.feeds.recruits.map((recruit) => <li key={`${recruit.kind}-${recruit.id}`}><Link href="/recruits"><span><strong>{recruit.title}</strong><small>{recruit.kind === "PARTY" ? "파티" : "스크림"} · {recruit.summary}</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>현재 진행 중인 파티·스크림 구인이 없어요.</FeedEmpty>}
             </article>
-            <article className="home-feed-panel">
+            <article className="home-feed-panel" data-feed-kind="competitions">
               <header><Trophy aria-hidden="true" /><div><span>대회 현황</span><strong>{homeResult.snapshot.feeds.competitions.length}건</strong></div><Link href="/competitions">전체 보기</Link></header>
               {homeResult.snapshot.feeds.competitions.length ? <ul>{homeResult.snapshot.feeds.competitions.map((competition) => <li key={`${competition.kind}-${competition.id}`}><Link href={competition.kind === "EVENT" ? `/competitions/events/${competition.id}` : `/competitions/destruction/${competition.id}`}><span><strong>{competition.title}</strong><small>{competition.kind === "EVENT" ? "이벤트전" : "멸망전"} · {competition.status} · {competition.participantCount}명</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>공개된 이벤트전·멸망전이 아직 없어요.</FeedEmpty>}
             </article>
-            <article className="home-feed-panel">
+            <article className="home-feed-panel" data-feed-kind="champions">
               <header><Images aria-hidden="true" /><div><span>멸망전 우승 사진</span><strong>{destructionWinnerSlides.length}장</strong></div><Link href="/images">전체 보기</Link></header>
               {destructionWinnerSlides.length ? <MediaCarousel label="멸망전 우승 사진" slides={destructionWinnerSlides} sizes="(max-width: 820px) 100vw, 50vw" variant="compact" /> : <FeedEmpty>게시 완료된 멸망전 우승 사진이 아직 없어요.</FeedEmpty>}
             </article>
@@ -315,7 +317,7 @@ export default async function HomePage() {
           <h2 id="home-personal-title">내 활동 이어보기</h2>
           {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link></div></> : session ? <><p>계정 정보를 불러오지 못했어요. 내 계정에서 다시 확인해 주세요.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
         </div>
-        <div className="home-season-card">
+        <div className="home-season-card" data-season-state={homeResult.state === "ready" && homeResult.snapshot.activeSeason ? "active" : "inactive"}>
           <CalendarDays aria-hidden="true" />
           <span>현재 시즌</span>
           {homeResult.state === "ready" && homeResult.snapshot.activeSeason ? <><strong>{homeResult.snapshot.activeSeason.name}</strong><small>{homeResult.snapshot.activeSeason.endsAt ? `${dateLabel(homeResult.snapshot.activeSeason.endsAt)} 종료 예정` : "종료 일정 미정"}</small><Link href="/applications">참가 현황 보기 <ArrowRight aria-hidden="true" /></Link></> : <><strong>{homeResult.state === "ready" ? "활성 시즌 없음" : "확인할 수 없음"}</strong><small>{homeResult.state === "ready" ? "새 시즌이 시작되면 알려 드릴게요." : "잠시 후 다시 확인해 주세요."}</small></>}

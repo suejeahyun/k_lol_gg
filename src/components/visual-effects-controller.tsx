@@ -24,7 +24,11 @@ function pageRoots() {
   ));
 }
 
-function decorateElement(element: HTMLElement, index: number) {
+function decorateElement(
+  element: HTMLElement,
+  index: number,
+  revealObserver: IntersectionObserver | null,
+) {
   if (element.closest("[role='dialog']") || element.getAttribute("aria-hidden") === "true") return;
 
   element.dataset.uiReveal = "true";
@@ -35,9 +39,13 @@ function decorateElement(element: HTMLElement, index: number) {
     element.dataset.uiSurface = element.closest("[data-ui-scope='admin']") ? "operational" : "feature";
   }
 
-  requestAnimationFrame(() => {
-    element.dataset.uiVisible = "true";
-  });
+  if (revealObserver) {
+    revealObserver.observe(element);
+  } else {
+    requestAnimationFrame(() => {
+      element.dataset.uiVisible = "true";
+    });
+  }
 }
 
 export function VisualEffectsController() {
@@ -47,6 +55,37 @@ export function VisualEffectsController() {
     const root = document.documentElement;
     const decorated = new Set<HTMLElement>();
     let scrollFrame = 0;
+    const canAnimate = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const revealObserver = typeof IntersectionObserver === "undefined" || !canAnimate
+      ? null
+      : new IntersectionObserver((entries, observer) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            (entry.target as HTMLElement).dataset.uiVisible = "true";
+            observer.unobserve(entry.target);
+          }
+        }, { rootMargin: "0px 0px -4%", threshold: 0.06 });
+
+    const heroArt = document.querySelector<HTMLElement>(".hero-art");
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    function updateHeroLight(event: PointerEvent) {
+      if (!heroArt) return;
+      const bounds = heroArt.getBoundingClientRect();
+      const x = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
+      const y = Math.min(1, Math.max(0, (event.clientY - bounds.top) / bounds.height));
+      heroArt.style.setProperty("--hero-light-x", `${(x * 100).toFixed(1)}%`);
+      heroArt.style.setProperty("--hero-light-y", `${(y * 100).toFixed(1)}%`);
+      heroArt.style.setProperty("--hero-shift-x", `${((x - 0.5) * 8).toFixed(2)}px`);
+      heroArt.style.setProperty("--hero-shift-y", `${((y - 0.5) * 6).toFixed(2)}px`);
+    }
+
+    function resetHeroLight() {
+      heroArt?.style.removeProperty("--hero-light-x");
+      heroArt?.style.removeProperty("--hero-light-y");
+      heroArt?.style.removeProperty("--hero-shift-x");
+      heroArt?.style.removeProperty("--hero-shift-y");
+    }
 
     function decoratePage() {
       let effectIndex = 0;
@@ -56,7 +95,7 @@ export function VisualEffectsController() {
         for (const candidate of pageRoot.querySelectorAll<HTMLElement>(REVEAL_CANDIDATES)) {
           if (decorated.has(candidate)) continue;
           decorated.add(candidate);
-          decorateElement(candidate, effectIndex);
+          decorateElement(candidate, effectIndex, revealObserver);
           effectIndex += 1;
         }
       }
@@ -68,6 +107,7 @@ export function VisualEffectsController() {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = scrollHeight > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollHeight)) : 0;
       root.style.setProperty("--page-scroll-progress", progress.toFixed(4));
+      root.dataset.uiScrolled = window.scrollY > 20 ? "true" : "false";
     }
 
     function requestProgressUpdate() {
@@ -82,11 +122,19 @@ export function VisualEffectsController() {
     mutationObserver.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("scroll", requestProgressUpdate, { passive: true });
     window.addEventListener("resize", requestProgressUpdate, { passive: true });
+    if (heroArt && finePointer && canAnimate) {
+      heroArt.addEventListener("pointermove", updateHeroLight, { passive: true });
+      heroArt.addEventListener("pointerleave", resetHeroLight, { passive: true });
+    }
 
     return () => {
       mutationObserver.disconnect();
+      revealObserver?.disconnect();
       window.removeEventListener("scroll", requestProgressUpdate);
       window.removeEventListener("resize", requestProgressUpdate);
+      heroArt?.removeEventListener("pointermove", updateHeroLight);
+      heroArt?.removeEventListener("pointerleave", resetHeroLight);
+      resetHeroLight();
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
       for (const element of decorated) {
         delete element.dataset.uiPage;
@@ -96,6 +144,7 @@ export function VisualEffectsController() {
         delete element.dataset.uiSurface;
       }
       delete root.dataset.uiEffects;
+      delete root.dataset.uiScrolled;
       root.style.removeProperty("--page-scroll-progress");
     };
   }, [pathname]);

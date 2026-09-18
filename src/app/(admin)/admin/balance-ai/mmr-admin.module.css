@@ -46,3 +46,10 @@
 .confirmDialog .cancelButton { color: #34445d; background: #edf2f8; }
 @media(max-width:800px) { .summary { grid-template-columns: 1fr 1fr; } .list article,.actions form { grid-template-columns: 1fr; } .actions .note { grid-column: auto; } .reviewDrawer dl { grid-template-columns: 1fr 1fr; } }
 @media(max-width:560px) { .page { padding: 1rem 1rem 6.5rem; } .hero > svg { display: none; } .summary { grid-template-columns: 1fr; } }
+
+.actions:focus-within,.reviewDrawer:focus-within{border-color:#98b4d6;box-shadow:0 0 0 3px rgb(49 94 170 / 9%),0 18px 45px rgba(40,58,91,.12)}.list article:focus-within{background:#eef5ff;box-shadow:inset 3px 0 #315eaa}.actions button:active:not(:disabled){transform:translateY(1px)}
+@media(hover:hover) and (pointer:fine){.summary article:hover,.list article:hover{border-color:#bccde2;background:#fbfdff}.overview a:hover{background:#e2edff}}
+@media(prefers-reduced-motion:no-preference){.actions,.reviewDrawer,.summary article,.list article,.overview a,.actions button{transition:border-color 150ms ease,background-color 150ms ease,box-shadow 150ms ease,transform 100ms ease}.dialogBackdrop{animation:mmr-backdrop-in 150ms ease-out both}.confirmDialog{animation:mmr-dialog-in 180ms ease-out both}}
+@keyframes mmr-backdrop-in{from{opacity:0}}@keyframes mmr-dialog-in{from{opacity:0;transform:translateY(6px) scale(.99)}}
+@media(prefers-reduced-motion:reduce){.actions button:active:not(:disabled){transform:none}.dialogBackdrop,.confirmDialog{animation:none}}
+@media(forced-colors:active){.hero,.tabs a,.summary article,.list,.actions,.overview,.reviewDrawer,.confirmDialog{border-color:CanvasText;box-shadow:none}.actions:focus-within,.reviewDrawer:focus-within,.list article:focus-within{outline:2px solid Highlight;outline-offset:2px;box-shadow:none}}

@@ -1183,3 +1183,146 @@
   .balanceStepToggle[aria-expanded="true"],
   .teamSwitch a[aria-current="page"] { color: HighlightText; background: Highlight; }
 }
+
+/* Operational feedback and state emphasis */
+.toolNav a,
+.primaryLink,
+.backLink,
+.primaryButton,
+.secondaryButton,
+.modeTabs button,
+.candidateFilters button,
+.playerSearchResults button,
+.mainPositionButtons button,
+.choiceButtons button,
+.candidateGrid article,
+.candidateGrid article > button,
+.teamSwitch a,
+.pickCard,
+.banGrid li {
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.toolNav a { position: relative; overflow: hidden; }
+.toolNav a[data-active="true"] { border-color: rgba(100,111,190,.38); box-shadow: inset 0 -3px #7667bf,0 8px 20px rgba(76,105,155,.08); }
+.toolNav a:focus-visible,
+.primaryLink:focus-visible,
+.backLink:focus-visible,
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.modeTabs button:focus-visible,
+.candidateFilters button:focus-visible,
+.playerSearchResults button:focus-visible,
+.choiceButtons button:focus-visible,
+.candidateGrid article > button:focus-visible,
+.teamSwitch a:focus-visible,
+.recommendationSelector button:focus-visible,
+.recommendationSelector select:focus-visible,
+.fieldLabel textarea:focus-visible,
+.tierGrid select:focus-visible,
+.fieldLabel input:focus-visible,
+.balanceRows select:focus-visible,
+.candidateFilters select:focus-visible,
+.manualGrid select:focus-visible {
+  outline: 3px solid rgba(96,130,199,.34);
+  outline-offset: 2px;
+}
+
+.fieldLabel textarea,
+.tierGrid select,
+.fieldLabel input,
+.balanceRows select,
+.candidateFilters select,
+.manualGrid select,
+.recommendationSelector select {
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.fieldLabel textarea:focus-visible,
+.tierGrid select:focus-visible,
+.fieldLabel input:focus-visible,
+.balanceRows select:focus-visible,
+.candidateFilters select:focus-visible,
+.manualGrid select:focus-visible,
+.recommendationSelector select:focus-visible {
+  border-color: #7197ce;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(95,139,198,.12);
+}
+
+.balanceForm[data-complete="true"] { border-color: rgba(86,165,131,.38); box-shadow: inset 0 4px #5eb18d,0 15px 40px rgba(76,105,155,.09); }
+.balanceForm[data-complete="true"] .count { color: #34715a; background: #e4f8ee; }
+.balanceForm[aria-busy="true"] { border-color: rgba(103,104,190,.46); box-shadow: inset 0 4px #7769bf,0 15px 40px rgba(76,105,155,.12); }
+
+.selectedRoster > span[data-filled="true"] { border: 1px solid rgba(92,154,205,.2); animation: rosterSlotReveal 190ms ease-out both; }
+.balancePositionRow[data-all-positions="true"] { border-color: rgba(117,104,188,.3); background: linear-gradient(135deg,#fbfdff,#f5f1ff); box-shadow: inset 3px 0 #8070c6; }
+.balancePositionRow:has(.balanceRowDetails[open]) { border-color: rgba(100,126,191,.34); box-shadow: 0 9px 22px rgba(76,105,155,.08); }
+.balanceRowDetails[open] summary { color: #4c5f8f; background: #f1f6ff; }
+
+.teamCard[data-team="blue"] { border-color: rgba(85,150,210,.27); box-shadow: inset 0 4px #639fd8,0 10px 28px rgba(54,111,169,.1); }
+.teamCard[data-team="red"] { border-color: rgba(215,111,153,.27); box-shadow: inset 0 4px #df83a3,0 10px 28px rgba(171,75,117,.09); }
+.teams[data-result-kind="tier"] .teamCard li { border: 1px solid rgba(118,151,198,.14); }
+.resultSummary { border: 1px solid transparent; border-radius: 16px; padding: 10px; transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
+.resultSummary[data-balance="perfect"] { border-color: rgba(66,164,122,.3); background: #f1fcf6; box-shadow: inset 4px 0 #4eaa7f; }
+.resultSummary[data-balance="close"] { border-color: rgba(91,149,203,.28); background: #f3f9ff; box-shadow: inset 4px 0 #6aa6d8; }
+.resultSummary[data-balance="open"] { border-color: rgba(206,145,67,.26); background: #fffaf0; box-shadow: inset 4px 0 #d2a252; }
+
+.draftHeader[data-status="SAVED"] { border-color: rgba(73,164,124,.34); box-shadow: inset 5px 0 #55a982,0 15px 40px rgba(76,105,155,.09); }
+.draftHeader[data-status="ARCHIVED"] { border-color: rgba(130,139,154,.32); background: linear-gradient(135deg,#f3f6f9,#f7f5fa); box-shadow: inset 5px 0 #8993a3,0 15px 40px rgba(76,105,155,.07); }
+.draftHeader > strong[data-status="SAVED"] { color: #34715a; background: #e4f8ee; }
+.draftHeader > strong[data-status="ARCHIVED"] { color: #69717e; background: #e8ebef; }
+
+.evaluationOverview[data-balance="even"] { border-color: rgba(65,165,121,.34); box-shadow: inset 4px 0 #4faa7f; }
+.evaluationOverview[data-balance="close"] { border-color: rgba(83,147,205,.34); box-shadow: inset 4px 0 #639fd7; }
+.evaluationOverview[data-balance="open"] { border-color: rgba(207,144,65,.34); box-shadow: inset 4px 0 #d2a051; }
+.candidateGrid article { position: relative; overflow: hidden; }
+.candidateGrid article::before { position: absolute; inset: 0 0 auto; height: 3px; background: #8da3bf; content: ""; }
+.candidateGrid article[data-balance="even"]::before { background: #50aa80; }
+.candidateGrid article[data-balance="close"]::before { background: #64a0d9; }
+.candidateGrid article[data-balance="open"]::before { background: #d0a04e; }
+.candidateGrid article[data-selected="true"] { background: linear-gradient(145deg,#fbfdff,#f4f1ff); animation: candidateSelected 220ms ease-out both; }
+
+.lineComparison > span { border: 1px solid transparent; transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease; }
+.lineComparison > span[data-difference="even"] { border-color: rgba(64,163,119,.2); background: #f1fbf6; }
+.lineComparison > span[data-difference="close"] { border-color: rgba(87,149,205,.18); background: #f2f8fe; }
+.lineComparison > span[data-difference="open"] { border-color: rgba(208,142,62,.2); background: #fff8ec; }
+.lineComparison > span[data-difference="open"] strong { color: #9b641e; }
+
+.draftActions[data-pending] { border-color: rgba(101,105,190,.42); box-shadow: inset 4px 0 #786ac0,0 15px 40px rgba(76,105,155,.11); }
+.draftActions[data-pending] p { color: #5d5592; }
+.manualTeams article[data-drop-target="true"] { background: #f6f3ff; transform: translateY(-2px) scale(1.01); }
+.manualTeams article[data-keyboard-selected="true"] { background: #f6f3ff; }
+.pickCard { border-top: 3px solid rgba(98,158,210,.5); }
+.banGrid li { border: 1px solid rgba(205,99,140,.16); box-shadow: inset 3px 0 rgba(205,99,140,.45); }
+
+@keyframes rosterSlotReveal {
+  from { opacity: .55; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes candidateSelected {
+  from { box-shadow: inset 0 0 0 2px rgba(125,117,200,.04); }
+  to { box-shadow: inset 0 0 0 2px rgba(125,117,200,.14); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toolNav a:hover,.primaryLink:hover,.backLink:hover,.primaryButton:hover:not(:disabled),.secondaryButton:hover:not(:disabled),.teamSwitch a:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(76,105,155,.12); }
+  .modeTabs button:hover,.mainPositionButtons button:hover,.choiceButtons button:hover,.candidateGrid article > button:hover:not(:disabled) { filter: brightness(1.02); transform: translateY(-1px); }
+  .playerSearchResults button:hover:not(:disabled),.teamCard li:hover,.lineComparison > span:hover,.pickCard:hover,.banGrid li:hover { border-color: rgba(99,134,192,.34); background-color: #fff; transform: translateY(-1px); }
+  .candidateGrid article:hover { border-color: rgba(104,114,191,.36); box-shadow: 0 11px 26px rgba(76,105,155,.09); transform: translateY(-1px); }
+}
+
+@media (max-width: 620px) {
+  .toolNav a:hover,.primaryLink:hover,.backLink:hover,.primaryButton:hover,.secondaryButton:hover,.candidateGrid article:hover,.lineComparison > span:hover,.pickCard:hover,.banGrid li:hover { transform: none; }
+  .resultSummary { align-items: stretch; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolNav a,.primaryLink,.backLink,.primaryButton,.secondaryButton,.modeTabs button,.candidateFilters button,.playerSearchResults button,.mainPositionButtons button,.choiceButtons button,.candidateGrid article,.candidateGrid article > button,.teamSwitch a,.pickCard,.banGrid li,.fieldLabel textarea,.tierGrid select,.fieldLabel input,.balanceRows select,.candidateFilters select,.manualGrid select,.recommendationSelector select,.resultSummary,.lineComparison > span,.selectedRoster > span[data-filled="true"] { animation: none; transition: none; transform: none; }
+}
+
+@media (forced-colors: active) {
+  .toolNav a[data-active="true"],.balanceForm[data-complete="true"],.selectedRoster > span[data-filled="true"],.balancePositionRow[data-all-positions="true"],.teamCard,.resultSummary,.draftHeader,.evaluationOverview,.candidateGrid article,.lineComparison > span,.draftActions,.pickCard,.banGrid li { border-color: CanvasText; box-shadow: none; }
+  .toolNav a[data-active="true"],.candidateGrid article[data-selected="true"],.lineComparison > span[data-difference="open"] { border-color: Highlight; }
+  .candidateGrid article::before { background: Highlight; }
+}

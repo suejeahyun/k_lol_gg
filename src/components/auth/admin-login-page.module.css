@@ -66,6 +66,22 @@
   line-height: 1.65;
 }
 
+.card:focus-within { border-color: rgb(74 119 183 / 58%); box-shadow: 0 1.5rem 4rem rgb(79 103 154 / 14%), 0 0 0 3px rgb(49 94 170 / 10%); }
+.brand:focus-visible { border-radius: .55rem; outline: 3px solid rgb(49 94 170 / 28%); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .card { transition: border-color 180ms ease, box-shadow 180ms ease; }
+  .brandMark { transition: transform 150ms ease; }
+  .brand:hover .brandMark { transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: reduce) { .brand:hover .brandMark { transform: none; } }
+
+@media (forced-colors: active) {
+  .card { border-color: CanvasText; box-shadow: none; }
+  .card:focus-within { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; }
+}
+
 .notice {
   margin-top: 1.25rem;
   border-top: 1px solid var(--border);

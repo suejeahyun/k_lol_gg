@@ -38,3 +38,9 @@
 .state p { color: #66758b; }
 @media(max-width:900px) { .list article { grid-template-columns: 1fr; } .action { justify-items: start; } }
 @media(max-width:680px) { .page { padding: 1rem 1rem 6.25rem; } .header,.list > header { align-items: start; flex-direction: column; } .summary { grid-template-columns: 1fr; } .list dl { grid-template-columns: 1fr 1fr; } }
+
+.list article:focus-within{background:#eef5ff;box-shadow:inset 3px 0 #4e85cd}.action button:active:not(:disabled){transform:translateY(1px)}
+@media(hover:hover) and (pointer:fine){.summary article:hover,.list article:hover{border-color:#bccde2;background:#fbfdff}}
+@media(prefers-reduced-motion:no-preference){.summary article,.list article,.action button{transition:border-color 150ms ease,background-color 150ms ease,box-shadow 150ms ease,transform 100ms ease}}
+@media(prefers-reduced-motion:reduce){.action button:active:not(:disabled){transform:none}}
+@media(forced-colors:active){.header>strong,.summary article,.list,.state{border-color:CanvasText;box-shadow:none}.list article:focus-within{outline:2px solid Highlight;outline-offset:2px;box-shadow:none}}

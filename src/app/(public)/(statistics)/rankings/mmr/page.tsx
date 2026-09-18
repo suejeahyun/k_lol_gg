@@ -60,7 +60,7 @@ export default async function MmrRankingPage({ searchParams }: {
           ) : (
             <section className={styles.board} aria-labelledby="mmr-board-title">
               <header><h2 id="mmr-board-title">플레이어 MMR</h2><p>{result.data.players.total}명 · 신뢰도와 표본 포함</p></header>
-              <ol>{result.data.players.items.map((player, index) => <li key={player.playerId}><b>{(result.data.players.page - 1) * result.data.players.pageSize + index + 1}</b><Link href={`/players/${player.playerId}`}><strong>{player.displayName}</strong><small>{player.riotId}</small></Link><span><small>MMR</small>{player.overallScore.toFixed(2)}</span><span><small>신뢰도</small>{Math.round(player.confidence * 100)}%</span><span><small>표본</small>{player.sampleSize}</span></li>)}</ol>
+              <ol>{result.data.players.items.map((player, index) => { const rank = (result.data.players.page - 1) * result.data.players.pageSize + index + 1; const confidence = player.confidence >= .8 ? "high" : player.confidence >= .5 ? "medium" : "low"; return <li key={player.playerId} data-rank={rank} data-confidence={confidence}><b>{rank}</b><Link href={`/players/${player.playerId}`}><strong>{player.displayName}</strong><small>{player.riotId}</small></Link><span><small>MMR</small>{player.overallScore.toFixed(2)}</span><span><small>신뢰도</small>{Math.round(player.confidence * 100)}%</span><span><small>표본</small>{player.sampleSize}</span></li>; })}</ol>
             </section>
           )}
         </>

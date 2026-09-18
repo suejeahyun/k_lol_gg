@@ -62,3 +62,70 @@
 @media (prefers-reduced-motion:reduce) { .assetCard { transition:none; } .assetCard:hover { transform:none; } }
 .code { color: #6a7890; font-family: ui-monospace,SFMono-Regular,Consolas,monospace; font-size: .78rem; overflow-wrap: anywhere; }
 @media (max-width: 680px) { .page { width: min(100% - 1rem,1120px); padding-top: 1rem; } .header { align-items: start; flex-direction: column; } .item { grid-template-columns: 1fr auto; } .item > span:last-child { display: none; } .split,.detailCard dl { grid-template-columns: 1fr; } .filePicker { grid-template-columns: 1fr; } .assetItem,.assetSelector button,.selectedFiles li { align-items: stretch; flex-direction: column; } .selectedFiles button { width: 100%; } .filters { align-items: stretch; flex-direction: column; } .filters input,.filters select,.filters button { width: 100%; } .actions { align-items: stretch; flex-direction: column; } }
+
+.filters:focus-within,
+.form:focus-within,
+.assetPanel:focus-within { border-color: #9eb9da; box-shadow: 0 0 0 3px rgb(49 94 170 / 9%); }
+.form label:focus-within,
+.filters label:focus-within { color: #315a96; }
+.filePicker:focus-within { border-style: solid; border-color: #7199c8; background: #f5f9ff; }
+.selectedFiles li:focus-within,
+.assetItem:focus-within,
+.assetSelector button:focus-visible { border-color: #91b0d5; background: #f5f9ff; }
+.error { border-left: 4px solid #ad4560; box-shadow: 0 .55rem 1.4rem rgb(111 43 62 / 7%); }
+.notice { border-left: 4px solid #4f7db8; }
+.badge::before { display: inline-block; width: .4rem; height: .4rem; margin-right: .3rem; border-radius: 50%; background: currentColor; content: ""; vertical-align: .05rem; }
+.submit:active:not(:disabled),
+.actions button:active:not(:disabled),
+.dangerButton:active:not(:disabled) { transform: translateY(1px); }
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover { border-color: #a8bfd9; background: #fbfdff; box-shadow: 0 .55rem 1.5rem rgb(46 77 119 / 7%); }
+  .selectedFiles li:hover,
+  .assetItem:hover { border-color: #b9cade; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .filters,
+  .form,
+  .assetPanel,
+  .filePicker,
+  .item,
+  .selectedFiles li,
+  .assetItem,
+  .assetSelector button,
+  .submit,
+  .actions button,
+  .dangerButton { transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 100ms ease; }
+  .error,
+  .notice { animation: media-status-in 180ms ease-out both; }
+}
+
+@keyframes media-status-in { from { opacity: 0; transform: translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .submit:active:not(:disabled),
+  .actions button:active:not(:disabled),
+  .dangerButton:active:not(:disabled) { transform: none; }
+}
+
+@media (forced-colors: active) {
+  .header,
+  .filters,
+  .form,
+  .assetPanel,
+  .filePicker,
+  .item,
+  .selectedFiles li,
+  .assetItem,
+  .assetSelector button,
+  .assetCard,
+  .detailCard,
+  .error,
+  .notice,
+  .badge { border: 1px solid CanvasText; box-shadow: none; }
+  .filters:focus-within,
+  .form:focus-within,
+  .assetPanel:focus-within,
+  .filePicker:focus-within { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; }
+}

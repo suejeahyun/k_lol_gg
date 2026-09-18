@@ -115,3 +115,10 @@
   .reviewForm { grid-template-columns: minmax(0, 1fr); min-width: 0; width: 100%; }
   .reviewForm small { grid-column: auto; }
 }
+
+.createForm:focus-within,.filters:focus-within,.reviewForm:focus-within{border-color:#98b4d6;box-shadow:0 0 0 3px rgb(49 94 170 / 9%)}.seasonList article:focus-within,.applicationTable tr:focus-within{background:#eef5ff;box-shadow:inset 3px 0 #4e85cd}.filterError{border-left:4px solid #9d4358}.applicationTable b::before{display:inline-block;width:.4rem;height:.4rem;margin-right:.3rem;border-radius:50%;background:currentColor;content:""}.rowActions button:active:not(:disabled),.reviewForm button:active:not(:disabled){transform:translateY(1px)}
+@media(hover:hover) and (pointer:fine){.seasonList article:hover{border-color:#b8cbe0;background:#fbfdff}}
+@media(prefers-reduced-motion:no-preference){.createForm,.filters,.reviewForm,.seasonList article,.applicationTable tr,.rowActions button,.reviewForm button{transition:border-color 150ms ease,background-color 150ms ease,box-shadow 150ms ease,transform 100ms ease}.filterError{animation:season-error-in 180ms ease-out both}}
+@keyframes season-error-in{from{opacity:0;transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){.rowActions button:active:not(:disabled),.reviewForm button:active:not(:disabled){transform:none}}
+@media(forced-colors:active){.viewTabs a,.panel,.seasonList article,.rowActions details,.applicationTable,.filterError{border-color:CanvasText;box-shadow:none}.createForm:focus-within,.filters:focus-within,.reviewForm:focus-within,.seasonList article:focus-within,.applicationTable tr:focus-within{outline:2px solid Highlight;outline-offset:2px;box-shadow:none}}

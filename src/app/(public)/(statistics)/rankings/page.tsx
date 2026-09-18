@@ -104,7 +104,7 @@ export default async function RankingsPage({
                 <header><div><span>LEADERBOARD</span><h2 id="ranking-board-title">{selectedView.label} 전체 순위</h2></div><p>{selectedView.tieBreakDescription}</p></header>
                 <ol>
                   {rankedRows.map((row, index) => (
-                    <li key={row.playerId} data-own={row.playerId === result.data.ownPlayerId ? "true" : "false"}>
+                    <li key={row.playerId} data-rank={index + 1} data-own={row.playerId === result.data.ownPlayerId ? "true" : "false"}>
                       <b>{index + 1}</b>
                       <Link href={`/players/${row.playerId}`}><strong>{row.displayName}</strong><small>{row.riotId}</small></Link>
                       <span><small>{selectedView.metricLabel}</small><strong>{selectedView.metric(row)}</strong></span>

@@ -16,6 +16,7 @@ export function ResilientMediaImage({
   sizes: string;
 }>) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   if (failed) {
     return (
@@ -29,12 +30,15 @@ export function ResilientMediaImage({
 
   return (
     <Image
+      className={styles.mediaImage}
+      data-ready={loaded ? "true" : "false"}
       unoptimized
       fill
       sizes={sizes}
       src={src}
       alt={alt}
       onError={() => setFailed(true)}
+      onLoad={() => setLoaded(true)}
     />
   );
 }

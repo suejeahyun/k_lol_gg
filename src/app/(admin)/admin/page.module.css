@@ -124,3 +124,12 @@
   .sectionHeading { align-items: flex-start; flex-direction: column; }
   .grid { grid-template-columns: 1fr; }
 }
+
+.areaCard:focus-visible { border-color: #92afd2; outline: 3px solid rgb(49 94 170 / 20%); outline-offset: 2px; box-shadow: 0 1rem 2.5rem rgb(49 94 170 / 10%); }
+.areaCard:focus-visible .icon { background: #e5efff; color: #244f90; }
+.notice { border-left: 4px solid #567fb8; }
+.pending::before { width: .4rem; height: .4rem; margin-right: .35rem; border-radius: 50%; background: currentColor; content: ""; }
+@media (hover: hover) and (pointer: fine) { .areaCard:hover { border-color: #a9bfd9; transform: translateY(-2px); box-shadow: 0 .8rem 2.2rem rgb(45 75 112 / 9%); } }
+@media (prefers-reduced-motion: no-preference) { .areaCard, .icon { transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease; } }
+@media (prefers-reduced-motion: reduce) { .areaCard:hover { transform: none; } }
+@media (forced-colors: active) { .sessionCard, .notice, .areaCard { border-color: CanvasText; box-shadow: none; } .areaCard:focus-visible { outline-color: Highlight; box-shadow: none; } }

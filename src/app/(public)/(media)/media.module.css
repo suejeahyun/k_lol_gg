@@ -17,6 +17,14 @@
 .visual::after { position: absolute; z-index: 1; inset: auto 0 0; height: 44%; background: linear-gradient(180deg, transparent, rgba(27,42,76,.22)); pointer-events: none; content: ""; }
 .grid > .card:first-child .visual::after { height: 58%; background: linear-gradient(180deg, transparent, rgba(53,50,104,.32)); }
 .visual img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 220ms ease; }
+.mediaImage { opacity: 0; filter: blur(14px) saturate(.82); transform: scale(1.025); transition: opacity 240ms ease, filter 340ms ease, transform 340ms ease; }
+.mediaImage[data-ready="true"] { opacity: 1; filter: none; transform: none; }
+.imageCount { position: absolute; z-index: 2; right: 12px; bottom: 11px; padding: 5px 9px; border: 1px solid rgba(255,255,255,.48); border-radius: 999px; color: #fff; background: rgba(29,42,74,.68); font-size: 10px; font-weight: 900; backdrop-filter: blur(5px); }
+.playCue { position: absolute; z-index: 2; inset: 50% auto auto 50%; display: grid; width: 50px; height: 50px; place-items: center; border: 1px solid rgba(255,255,255,.7); border-radius: 999px; color: #536eb2; background: rgba(255,255,255,.9); box-shadow: 0 12px 28px rgba(25,42,79,.2); transform: translate(-50%,-50%); transition: color 180ms ease, background-color 180ms ease, transform 180ms ease; }
+.playCue svg { width: 20px; height: 20px; fill: currentColor; }
+.card[data-featured="true"] { border-color: rgba(221,177,76,.48); background: linear-gradient(145deg,#fffef9,#fff7dd 62%,#f6eeff); box-shadow: 0 16px 38px rgba(169,126,42,.13); }
+.card[data-featured="true"]::before { position: absolute; z-index: 3; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg,#d8a53b,#f1d67f,#ac83d7); content: ""; }
+.card[data-media-kind="highlight"] .visual::before { position: absolute; z-index: 1; inset: 0; background: radial-gradient(circle at 50% 50%,transparent 12%,rgba(26,36,67,.1) 70%); pointer-events: none; content: ""; }
 @keyframes mediaFeaturedReveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .mediaFallback { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 7px; padding: 18px; color: #60739c; background: linear-gradient(145deg, rgba(226,244,255,.96), rgba(241,232,255,.96), rgba(255,239,247,.94)); text-align: center; }
 .mediaFallback svg { width: 34px; height: 34px; color: #849ee0; }
@@ -53,6 +61,7 @@
 @keyframes carouselStepReveal { from { opacity: .55; transform: translateX(8px); } to { opacity: 1; transform: none; } }
 .carouselViewport { position: relative; overflow: hidden; width: 100%; min-width: 0; aspect-ratio: 16 / 9; border: 1px solid var(--border); border-radius: 26px; background: linear-gradient(145deg, rgba(226,244,255,.78), rgba(241,232,255,.82)); box-shadow: var(--shadow-soft); contain: layout paint; }
 .carouselViewport img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.carouselViewport::after { position: absolute; z-index: 2; inset: 0; border: 1px solid rgba(255,255,255,.52); border-radius: inherit; box-shadow: inset 0 0 44px rgba(125,108,199,.08); pointer-events: none; content: ""; }
 .carouselImageLink { position: absolute; inset: 0; border-radius: inherit; }
 .carouselImageLink:focus-visible { outline: 3px solid rgba(91,131,210,.48); outline-offset: -4px; }
 .carouselCaption { display: grid; min-width: 0; gap: 3px; padding-inline: 4px; }
@@ -76,6 +85,6 @@
 .mediaCarousel[data-variant="compact"] .carouselFooter { gap: 6px; }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 640px) { .hero { min-height: 0; border-radius: 24px; } .hero > svg { display: none; } .grid { grid-template-columns: 1fr; } .heading { align-items: start; flex-direction: column; } .carouselViewport { aspect-ratio: 4 / 3; border-radius: 20px; } .carouselDots { max-width: 176px; } }
-@media (hover: hover) and (pointer: fine) { .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-soft); } .card:hover .visual img { transform: scale(1.025); } .carouselControls > button:hover,.carouselDots button:hover { color: #3e5995; background: #edf6ff; } .mediaCarousel:hover .carouselWheelHint,.mediaCarousel:focus-within .carouselWheelHint { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .card,.visual img,.carouselWheelHint { transition: none; } .grid > .card:first-child,.carouselSlide { animation: none; } .carouselDots { scroll-behavior: auto; } }
-@media (forced-colors: active) { .card,.grid > .card:first-child,.player,.carouselViewport,.carouselWheelHint { border-color: CanvasText; box-shadow: none; } .visual::after { display: none; } .card:focus-visible,.playerPreview:focus-visible,.carouselImageLink:focus-visible,.carouselControls > button:focus-visible,.carouselDots button:focus-visible { outline-color: Highlight; } .carouselDots button[data-active="true"]::after { background: Highlight; } }
+@media (hover: hover) and (pointer: fine) { .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-soft); } .card:hover .visual img { transform: scale(1.025); } .card:hover .playCue { color: #fff; background: #647bc5; transform: translate(-50%,-50%) scale(1.06); } .carouselControls > button:hover,.carouselDots button:hover { color: #3e5995; background: #edf6ff; } .mediaCarousel:hover .carouselWheelHint,.mediaCarousel:focus-within .carouselWheelHint { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card,.visual img,.mediaImage,.playCue,.carouselWheelHint { transition: none; } .grid > .card:first-child,.carouselSlide { animation: none; } .mediaImage { filter: none; transform: none; } .carouselDots { scroll-behavior: auto; } }
+@media (forced-colors: active) { .card,.grid > .card:first-child,.player,.carouselViewport,.carouselWheelHint,.imageCount,.playCue { border-color: CanvasText; box-shadow: none; } .visual::after,.visual::before,.card[data-featured="true"]::before,.carouselViewport::after { display: none; } .mediaImage { filter: none; } .card:focus-visible,.playerPreview:focus-visible,.carouselImageLink:focus-visible,.carouselControls > button:focus-visible,.carouselDots button:focus-visible { outline-color: Highlight; } .carouselDots button[data-active="true"]::after { background: Highlight; } }

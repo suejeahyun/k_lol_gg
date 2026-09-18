@@ -31,6 +31,12 @@ function candidateCriterion(candidate: Pick<TeamBalanceDraftCandidate, "criterio
   return candidateCriteria[candidate.criterion ?? "LEGACY"];
 }
 
+function differenceTone(value: number) {
+  if (value === 0) return "even";
+  if (value <= 5) return "close";
+  return "open";
+}
+
 export function TeamBalanceDraftWorkspace({
   draft,
   endpointBase = `/api/team-tools/drafts/${draft.id}`,
@@ -131,24 +137,24 @@ export function TeamBalanceDraftWorkspace({
 
   return (
     <>
-      <section className={styles.draftHeader}>
+      <section className={styles.draftHeader} data-status={draft.status}>
         <div><span>{mode === "ADMIN" ? "ADMIN REVIEW · " : ""}ROUND {draft.evaluationRound}</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>
         <strong data-status={draft.status}>{draft.status === "ARCHIVED" ? "보관됨" : draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
       </section>
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
         <div className={styles.heading}><div><span>V1 ENGINE · ONE RESULT</span><h2 id="candidate-title">AI 최적 팀 추천</h2><p className={styles.stageHint}>전체 조합을 V1 기준으로 평가해 가장 높은 한 가지 결과를 바로 적용합니다.</p></div></div>
-        {selectedCandidate ? <div className={styles.evaluationOverview} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}
+        {selectedCandidate ? <div className={styles.evaluationOverview} data-balance={differenceTone(selectedCandidate.score.teamStrength.difference)} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}
         <div className={styles.candidateGrid}>
           {autoCandidates.slice(0, 1).map((candidate) => {
             const criterion = candidateCriterion(candidate);
             const selected = draft.selectedCandidateSignature === candidate.signature;
-            return <article key={candidate.id} data-selected={selected}>
+            return <article key={candidate.id} data-selected={selected} data-balance={differenceTone(candidate.score.teamStrength.difference)}>
               <header><strong>{criterion.label}</strong><span>{selected ? "적용 중" : "추천 결과"}</span></header>
               <p>{criterion.description}</p>
               {candidate.score.v1?.missingSources.length ? <p role="note">V2에 원본 이관되지 않은 최근 솔랭 상세·관리자 보정은 V1의 데이터 없음(0) 경로로 계산했습니다.</p> : null}
               <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>
-              <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
+              <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
               <button type="button" aria-pressed={selected} disabled={Boolean(pending) || selected || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
             </article>;
           })}
@@ -193,7 +199,7 @@ export function TeamBalanceDraftWorkspace({
         <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 V1 계산 기준으로 다시 평가합니다.</strong><small>브라우저 임시 점수를 저장하지 않고 서버가 참가자·포지션·점수를 검증한 결과만 선택합니다.</small></div><button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
       </section>
 
-      <section className={styles.draftActions} aria-label="초안 작업">
+      <section className={styles.draftActions} data-pending={pending || undefined} aria-busy={Boolean(pending)} aria-label="초안 작업">
         <button className={styles.primaryButton} type="button" disabled={Boolean(pending) || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
         <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
         <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "V1 기준으로 재평가" : "최신 통계로 재평가"}</button>

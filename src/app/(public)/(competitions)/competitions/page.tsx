@@ -17,8 +17,8 @@ export default async function CompetitionsEntryPage({ searchParams }: { searchPa
     return <div className={styles.page}>
       <header className={styles.hero}><div><span><PartyPopper aria-hidden="true" /> COMPETITIONS</span><h1>대회 종류를 선택해 주세요.</h1><p>친선 이벤트 대회와 경매·예선·본선으로 이어지는 멸망전은 서로 다른 운영 흐름으로 진행합니다.</p></div><Gavel aria-hidden="true" /></header>
       <section className={styles.grid} aria-label="대회 종류">
-        <Link className={styles.card} href="/competitions/events"><header><span>친선 대회</span><b>EVENT</b></header><h2>이벤트 대회</h2><p>이벤트 모집, 팀 편성, 대진과 결과를 확인합니다.</p><span className={styles.more}>이벤트 대회 보기</span></Link>
-        <Link className={styles.card} href="/competitions/destruction"><header><span>독립 운영</span><b>DESTRUCTION</b></header><h2>멸망전</h2><p>주장 선정, 경매, 예선과 본선 결과를 확인합니다.</p><span className={styles.more}>멸망전 보기</span></Link>
+        <Link className={styles.card} data-kind="event" href="/competitions/events"><header><span>친선 대회</span><b>EVENT</b></header><h2>이벤트 대회</h2><p>이벤트 모집, 팀 편성, 대진과 결과를 확인합니다.</p><span className={styles.more}>이벤트 대회 보기</span></Link>
+        <Link className={styles.card} data-kind="destruction" href="/competitions/destruction"><header><span>독립 운영</span><b>DESTRUCTION</b></header><h2>멸망전</h2><p>주장 선정, 경매, 예선과 본선 결과를 확인합니다.</p><span className={styles.more}>멸망전 보기</span></Link>
       </section>
     </div>;
   }
