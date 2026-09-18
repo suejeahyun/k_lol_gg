@@ -1,5 +1,21 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-18 사이트 시각 효과·전체 화면 검수
+
+- 기능 커밋: `9235bbbfd767b2775311c7b9a1dd77ac3584d97d`
+- 릴리스 tag: `site-visual-effects-v1.0.0`
+- 상태: 소스·전체 테스트·격리 PostgreSQL·전체 화면 캡처·브라우저 품질·육안 검수·Git·Vercel 운영 배포 완료
+- Vercel Production: `dpl_5zKtasDGL6ZUVeauVA8PL3CJTPK9` (`https://k-lol-303oj671s-tjdmswo11-3715s-projects.vercel.app`), Ready·Production
+- 운영 별칭: `https://k-lol-gg.vercel.app/api/health` HTTP 200 · `status: ready`
+- 주요 범위: 홈, 구인, 경기, 랭킹·MMR, 팀 밸런스, 이벤트 대회·멸망전, 미디어, 계정, 관리자 화면의 절제된 효과와 상태 가독성
+- 전체 화면: 105/105 pages · 339/339 captures · HTTP 200 339 · 자동 감지 issue 0
+- 브라우저 품질: 공개 핵심 9경로 × desktop/mobile/320px, 27/27 PASS, issue 0, 최대 LCP 344ms, CLS 0
+- 테스트·빌드: 783개 중 782 PASS·DB 전용 1 intentional skip, production build 93 pages
+- 접근성: 모션 감소·키보드 focus·forced-colors 경계 유지, 영상·파티클·새 애니메이션 의존성 없음
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/site-visual-effects-2026-09-18/README.md`](./qa-evidence/site-visual-effects-2026-09-18/README.md)에 있다.
+
 ## 2026-09-18 카카오 R22 간결 응답·미등록 회원가입 안내
 
 - 기능 커밋: `4482bc071d4806946f1f78f23b763122b988a5a8`

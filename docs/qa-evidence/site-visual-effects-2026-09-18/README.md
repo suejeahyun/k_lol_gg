@@ -1,9 +1,19 @@
 # 사이트 시각 효과·전체 화면 검수
 
 - 검증일: 2026-09-18 KST
-- 기준 커밋: `f7e10c45beb39f80b6ed9d22ece78036c4434aaf`
+- 기능 커밋: `9235bbbfd767b2775311c7b9a1dd77ac3584d97d`
 - 범위: 홈, 구인, 경기, 랭킹·MMR, 팀 밸런스, 대회, 미디어, 계정, 관리자 공통 화면
-- 현재 판정: 소스 반영·로컬 통합 검증 완료, 운영 배포 근거는 배포 후 갱신
+- 현재 판정: 소스 반영·로컬 통합 검증·Vercel 운영 배포·운영 별칭 health 확인 완료
+
+## 운영 배포
+
+- Vercel Production: `dpl_5zKtasDGL6ZUVeauVA8PL3CJTPK9`
+- 불변 URL: `https://k-lol-303oj671s-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app`
+- Vercel 판정: `Ready` · `Production`
+- 운영 별칭 확인: 2026-09-18 18:53:34 KST
+- `/api/health`: HTTP 200 · `{"status":"ready"}`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
 
 ## 적용 원칙
 

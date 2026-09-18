@@ -2,6 +2,26 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "site-visual-effects",
+      "version": "1.0.0",
+      "gitTag": "site-visual-effects-v1.0.0",
+      "commit": "9235bbbfd767b2775311c7b9a1dd77ac3584d97d",
+      "releasedAt": "2026-09-18T18:53:34+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/site-visual-effects-2026-09-18/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-18-site-visual-effects.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_5zKtasDGL6ZUVeauVA8PL3CJTPK9",
+        "url": "https://k-lol-303oj671s-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-18T09:53:34.553Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
+    },
+    {
       "featureId": "kakao-r22-compact-roster-signup",
       "version": "1.0.0",
       "gitTag": "kakao-r22-compact-roster-signup-v1.0.0",
