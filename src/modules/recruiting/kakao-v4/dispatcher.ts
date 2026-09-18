@@ -186,7 +186,6 @@ function partyLines(party: KakaoOpenChatStatusDto["parties"][number]) {
     lines.push(`${member.substitute ? "예비 " : ""}${member.slotNo}. ${member.name || "이름 미정"}${member.position ? ` · ${positionLabels[member.position]}` : ""}`);
   }
   if (party.members.length === 0) lines.push("아직 참가자가 없습니다.");
-  lines.push("", `빠른 추가: 상세 ${party.recruitNumber} 추가 이름`, `빠른 삭제: 상세 ${party.recruitNumber} 삭제 이름`);
   return lines.join("\n");
 }
 
@@ -327,10 +326,6 @@ function partyTemplate(input: Readonly<{
     "》게임정보 :",
     "》주최자 :",
     "",
-    "위 항목을 작성해 전체 전송해주세요.",
-    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
-    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
-    "",
     "참여해주실 분은 태그해주세요.",
     "*상호배려와 존중 부탁드립니다.",
   ];
@@ -439,11 +434,7 @@ function scrimFormLines(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Stric
 
 function scrimDetailReply(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Strict = false) {
   return [
-    "[K-LOL.GG 멸망전 스크림 상세]", "", scrimLines(scrim, v1Strict), "", ...scrimFormLines(scrim, v1Strict), "",
-    "수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송",
-    `빠른 추가: 스크림상세 ${scrim.scrimNumber} 추가 이름`,
-    `빠른 삭제: 스크림상세 ${scrim.scrimNumber} 삭제 이름`,
-    `마감: 스크림 ${scrim.scrimNumber}ㅉ`,
+    "[K-LOL.GG 멸망전 스크림 상세]", "", scrimLines(scrim, v1Strict), "", ...scrimFormLines(scrim, v1Strict),
   ].join("\n");
 }
 
@@ -451,10 +442,7 @@ function scrimTemplate(recruitDate: string, scrimNumber: number | null = null) {
   return [
     "[K-LOL.GG 스크림 구인 양식]", "", `운영일: ${recruitDate}`, `번호: #${scrimNumber ?? "자동배정"}`, "",
     "일시: ", "방식: 3판2선", "주최자: ", "", "우리팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ", "",
-    "상대팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ", "",
-    "주최자를 입력해 전체 전송하면 모집이 시작됩니다.",
-    `활성화 후 스크림상세 ${scrimNumber ?? "번호"} 추가 이름으로 참가할 수 있습니다.`,
-    `마감: 스크림 ${scrimNumber ?? "번호"}ㅉ`,
+    "상대팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ",
   ].join("\n");
 }
 
@@ -462,18 +450,11 @@ function inhouseModeSelection(unsupportedMode: string | null) {
   return [
     "[K-LOL.GG 내전 종목 선택]",
     ...(unsupportedMode ? [`지원하지 않는 종목입니다: ${unsupportedMode}`] : []),
-    "✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️",
     "",
-    "아래 명령어 중 하나를 입력해주세요.",
+    "원하는 종목을 선택해주세요.",
     "- /내전구인 협곡",
     "- /내전구인 칼바람",
     "- /내전구인 증바람",
-    "",
-    "날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00",
-    "모집번호·정원 지정: /내전구인 칼바람 #2 10명",
-    "",
-    "협곡은 티어·라인 10칸, 칼바람·증바람은 이름 10칸 양식이 생성됩니다.",
-    "양식을 전송해 활성화한 뒤 전체 양식 또는 내전상세 번호 추가/삭제로 명단을 관리합니다.",
   ].join("\n");
 }
 
@@ -500,15 +481,6 @@ function inhouseTemplate(command: Readonly<{
     : ["이름", "EX) 1.지후"]), "");
   for (let slot = 1; slot <= command.capacity; slot += 1) lines.push(`${slot}.`);
   lines.push("", "예비 1.");
-  const memberShape = command.mode === "RIFT" ? "이름/주라인/부라인" : "이름";
-  lines.push(
-    "",
-    `빠른 추가: 내전상세 ${command.recruitNumber} 추가 ${memberShape}`,
-    `빠른 삭제: 내전상세 ${command.recruitNumber} 삭제 이름`,
-    `빠른 예비 추가: 내전상세 ${command.recruitNumber} 예비추가 ${memberShape}`,
-    `빠른 예비 삭제: 내전상세 ${command.recruitNumber} 예비삭제 이름`,
-    `마감: 내전 ${command.recruitNumber}ㅉ`,
-  );
   return lines.join("\n");
 }
 
@@ -641,7 +613,21 @@ function seasonReply(body: KakaoSeasonSnapshotDto, allowLegacyReply = true) {
   ].join("\n");
 }
 
-function inhouseMemberReply(
+function compactInhouseNickname(value: string) {
+  const normalized = value.normalize("NFKC").replace(/[\r\n]+/gu, " ").replace(/\s+/gu, " ").trim();
+  const characters = Array.from(normalized);
+  return characters.length > 9 ? `${characters.slice(0, 9).join("")}...` : normalized;
+}
+
+function inhouseMemberRosterLabel(entry: KakaoSeasonSnapshotDto["entries"][number]) {
+  const memberName = (entry.player?.memberName || entry.suppliedName).normalize("NFKC").replace(/[\r\n/]+/gu, " ").replace(/\s+/gu, " ").trim();
+  const nickname = compactInhouseNickname(entry.player?.displayName || "");
+  return nickname && nickname.normalize("NFKC") !== memberName.normalize("NFKC")
+    ? `${memberName} / ${nickname}`
+    : memberName;
+}
+
+export function formatInhouseMemberReply(
   body: KakaoSeasonSnapshotDto,
   input: Readonly<{ action: "ADD" | "REMOVE"; recruitNumber: number; name: string; reserve?: boolean; positionsSpecified?: boolean }>,
 ) {
@@ -659,19 +645,24 @@ function inhouseMemberReply(
   const entries = body.entries
     .filter((entry) => entry.status !== "CANCELLED")
     .sort((left, right) => left.slotNo - right.slotNo);
-  const reserveEntries = entries.filter((entry) => entry.reserve || entry.status === "RESERVE" || entry.status === "MATCHED_RESERVE");
-  const mainEntries = entries.filter((entry) => !reserveEntries.includes(entry));
-  const memberShape = body.roundMetadata?.mode === "RIFT" ? "이름/주라인/부라인" : "이름";
+  const isReserve = (entry: KakaoSeasonSnapshotDto["entries"][number]) =>
+    Boolean(entry.reserve || entry.status === "RESERVE" || entry.status === "MATCHED_RESERVE");
+  const reserveEntries = entries.filter(isReserve);
+  const mainEntries = entries.filter((entry) => !isReserve(entry));
+  const inputIdentity = input.name.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ko-KR");
+  const unmatched = input.action === "ADD" && entries.find((entry) =>
+    entry.status === "UNMATCHED" && entry.suppliedName.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ko-KR") === inputIdentity);
+  if (unmatched) return [
+    `[K-LOL.GG 내전 #${input.recruitNumber} 회원 등록 필요]`,
+    `${input.name}님은 등록된 회원 정보에서 찾지 못했습니다.`,
+    "https://k-lol-gg.vercel.app/signup",
+    "회원가입을 완료한 뒤 다시 추가해주세요.",
+  ].join("\n");
   return [
-    `[K-LOL.GG 내전 #${input.recruitNumber} 명단]`, outcome,
-    `현재 ${mainEntries.length}/${capacity}명 · 예비 ${reserveEntries.length}명`, "",
-    ...mainEntries.map((entry) => `${entry.slotNo}. ${entry.suppliedName}`),
-    ...reserveEntries.map((entry, index) => `예비 ${index + 1}. ${entry.suppliedName}`),
-    ...(entries.length === 0 ? ["아직 참가자가 없습니다."] : []), "",
-    `빠른 추가: 내전상세 ${input.recruitNumber} 추가 ${memberShape}`,
-    `빠른 삭제: 내전상세 ${input.recruitNumber} 삭제 이름`,
-    `빠른 예비 추가: 내전상세 ${input.recruitNumber} 예비추가 ${memberShape}`,
-    `빠른 예비 삭제: 내전상세 ${input.recruitNumber} 예비삭제 이름`,
+    `[K-LOL.GG 내전 #${input.recruitNumber} 명단] ${outcome} 현재 ${mainEntries.length}/${capacity}명 · 예비 ${reserveEntries.length}명`, "",
+    ...mainEntries.map((entry) => `${entry.slotNo}. ${inhouseMemberRosterLabel(entry)}`),
+    ...reserveEntries.map((entry, index) => `예비 ${index + 1}. ${inhouseMemberRosterLabel(entry)}`),
+    ...(entries.length === 0 ? ["아직 참가자가 없습니다."] : []),
   ].join("\n");
 }
 
@@ -1068,7 +1059,6 @@ export class KakaoV4CommandDispatcher {
             `${String(primaryCount)}/${String(data.maximumMembers)} · 예비 ${String(reserveCount)}명`,
             `시작시간: ${String(data.startTimeText)} · 게임정보: ${String(data.gameInfo)}`,
             `주최자: ${String(data.organizerText ?? "미입력")}`,
-            `마감: ${String(recruitNumber)}ㅉ`,
           ].join("\n");
     const legacyReply = await this.appendLatestPartyStatus(context, mutationReply, v1Strict);
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
@@ -1484,7 +1474,7 @@ export class KakaoV4CommandDispatcher {
       }
       return Object.freeze({
         kind: "SEASON", action: command.action, aggregate: result.body,
-        legacyReply: inhouseMemberReply(result.body, {
+        legacyReply: formatInhouseMemberReply(result.body, {
           action: command.action === "ADD_MEMBER" ? "ADD" : "REMOVE",
           recruitNumber: command.recruitNumber,
           name: command.name,

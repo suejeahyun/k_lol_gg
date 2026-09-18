@@ -257,15 +257,6 @@ function legacyInhouseDetail(
     reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${index + 1}`, entry, namesOnly)));
     lines.push(`예비 ${reserveEntries.length + 1}.`);
   } else lines.push("", "예비 1.");
-  const memberShape = namesOnly ? "이름" : "이름/주라인/부라인";
-  lines.push(
-    "",
-    `빠른 추가: 내전상세 ${recruitNo} 추가 ${memberShape}`,
-    `빠른 삭제: 내전상세 ${recruitNo} 삭제 이름`,
-    `빠른 예비 추가: 내전상세 ${recruitNo} 예비추가 ${memberShape}`,
-    `빠른 예비 삭제: 내전상세 ${recruitNo} 예비삭제 이름`,
-    `마감: 내전 ${recruitNo}ㅉ`,
-  );
   return lines.join("\n");
 }
 
@@ -1693,7 +1684,7 @@ export class PostgresKakaoAssistant {
           mainPosition: application.mainPosition,
           subPositions: application.subPositions,
           reserve: application.status === "RESERVE",
-          player: { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` },
+          player: { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}`, memberName: player.memberName },
         })),
         ...pending.map(({ pending: item, player }) => ({
           slotNo: item.slotNo,
@@ -1704,7 +1695,7 @@ export class PostgresKakaoAssistant {
           mainPosition: item.mainPosition,
           subPositions: item.subPositions,
           reserve: item.reserve,
-          player: player ? { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` } : null,
+          player: player ? { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}`, memberName: player.memberName } : null,
         })),
       ];
       entries.sort((left, right) => left.slotNo - right.slotNo || left.suppliedName.localeCompare(right.suppliedName, "ko"));

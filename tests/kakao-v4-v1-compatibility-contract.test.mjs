@@ -45,8 +45,8 @@ function canMutateRecruit({ targetScopeId, actorScopeId, actorVerified }) {
 }
 
 test("contract fixture has traceable V1 evidence and all required domains", () => {
-  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_R21_2026_09_17");
-  assert.equal(contract.contractVersion, "KLOL_KAKAO_V4_V1_COMPAT_2026_09_17_R9");
+  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_R22_2026_09_18");
+  assert.equal(contract.contractVersion, "KLOL_KAKAO_V4_V1_COMPAT_2026_09_18_R10");
   assert.match(contract.source.v1Sha256, /^[a-f0-9]{64}$/u);
   assert.ok(contract.source.currentGoldenTests.length >= 7);
   for (const domain of ["HELP", "PARTY", "INHOUSE", "SCRIM", "PLAYER", "REGISTRATION"]) {
@@ -159,10 +159,7 @@ test("party member shortcuts retain the full-form workflow and current-scope mut
     "RECRUIT_MEMBER_LIMIT_EXCEEDED",
     "TARGET_NOT_FOUND",
   ]);
-  assert.equal(
-    contract.party.detailShortcutGuidance,
-    "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송\n빠른 추가: 상세 12 추가 이름\n빠른 삭제: 상세 12 삭제 이름\n마감: 12ㅉ",
-  );
+  assert.equal(contract.party.detailShortcutGuidance, "");
 });
 
 test("Rift, ARAM, and Augment ARAM preserve their V1 field policies", () => {
@@ -174,15 +171,16 @@ test("Rift, ARAM, and Augment ARAM preserve their V1 field policies", () => {
     assert.equal(mode.seasonRoster, false);
   }
   assert.match(contract.inhouse.zeroParticipants, /withdraws\/cancels/u);
-  assert.match(contract.inhouse.riftActivationTemplate, /\[K-LOL\.GG 내전 구인 양식\][\s\S]*》주최자 :/u);
-  assert.match(contract.inhouse.aramActivationTemplate, /주최자는 활성화와 동시에 참가자 1번으로 등록됩니다\./u);
+  assert.match(contract.inhouse.riftActivationTemplate, /^📢 내전하실분 #2[\s\S]*》주최자 :/u);
+  assert.doesNotMatch(contract.inhouse.aramActivationTemplate, /빠른 추가:|마감:/u);
   assert.match(contract.inhouse.riftTemplate, /이름\/현티어\/최고티어\/주라인\/부라인/u);
   assert.match(contract.inhouse.aramTemplate, /\*참가 신청 양식\*\n이름\nEX\) 1\.지후/u);
 });
 
 test("scrim keeps full-form editing and V1 disabled manual lifecycle replies", () => {
   assert.match(contract.scrim.initialTemplate, /번호: #\d{1,3}/u);
-  assert.match(contract.scrim.initialTemplate, /스크림상세 \d{1,3} 추가 이름/u);
+  assert.doesNotMatch(contract.scrim.initialTemplate, /스크림상세 \d{1,3} 추가 이름|마감:/u);
+  assert.doesNotMatch(contract.scrim.detailReply, /빠른 추가:|빠른 삭제:|수정: 이 메시지|마감:/u);
   assert.match(contract.scrim.editPolicy, /replaces editable fields immediately/u);
   assert.match(contract.scrim.closePolicy, /06:00 KST/u);
   assert.deepEqual(contract.scrim.deprecatedReplies, {

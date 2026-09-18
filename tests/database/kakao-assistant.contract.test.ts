@@ -749,7 +749,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       mainPosition: "MID",
       subPositions: ["SUP"],
       reserve: false,
-      player: { playerId: exactPlayerId, displayName: `Exact${suffix}`, riotId: `Exact${suffix}#KR1` },
+      player: { playerId: exactPlayerId, displayName: `Exact${suffix}`, riotId: `Exact${suffix}#KR1`, memberName: `정확-${suffix}` },
     });
     assert.equal((await assistant.syncSeasonSnapshot(firstInput)).replayed, true);
     const stored = (await database.select().from(seasonApplications).where(and(
@@ -810,8 +810,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       "📢 내전하실분 #8", " 》협곡", ` 》${today} 21:00 시작`, " 》게임정보 : 미입력", " 》주최자 : 미입력", "👥 1/10명", "",
       "*참가 신청 양식*", "이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD", "",
       `1. 사이트-${suffix}/D/M/TOP/AD`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
-      "", "예비 1.", "", "빠른 추가: 내전상세 8 추가 이름/주라인/부라인", "빠른 삭제: 내전상세 8 삭제 이름",
-      "빠른 예비 추가: 내전상세 8 예비추가 이름/주라인/부라인", "빠른 예비 삭제: 내전상세 8 예비삭제 이름", "마감: 내전 8ㅉ",
+      "", "예비 1.",
     ].join("\n"));
 
     await database.update(seasonApplications).set({

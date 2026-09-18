@@ -1,8 +1,8 @@
 # 카카오봇 V4 재설계 — V1 호환 계약
 
-계약 버전: `KLOL_KAKAO_V4_V1_COMPAT_2026_09_17_R9`
+계약 버전: `KLOL_KAKAO_V4_V1_COMPAT_2026_09_18_R10`
 
-V1 strict 설치본 식별 버전은 `KLOL_KAKAO_BOT_V40_R21_2026_09_17`이다. 휴대폰에서 `/봇버전`으로 R21 설치 여부를 구분한다.
+V1 strict 설치본 식별 버전은 `KLOL_KAKAO_BOT_V40_R22_2026_09_18`이다. 휴대폰에서 `/봇버전`으로 R22 설치 여부를 구분한다.
 
 이 문서는 V4 구현이 지켜야 할 사용자 관찰 가능 동작을 고정한다. 이 문서의 파생 계약 원본은 `tests/fixtures/kakao-v4-v1-compatibility-contract.json`이다. 실제 V1에 있었던 동작인지 판정할 때는 변경 불가 원본과 확장 경계를 정한 `docs/contracts/KAKAO_V1_STRICT_BOUNDARY.md`를 우선한다.
 

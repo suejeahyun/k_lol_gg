@@ -99,7 +99,7 @@ export function canonicalKakaoV4CommandText(value: string) {
   )).join("").trim();
   if (!text || text === "/" || text.startsWith("//")) return null;
   if (/^[a-z][a-z0-9+.-]*:\/\//iu.test(text)) return null;
-  const structuredMatch = /^\/?내전\s*(?:상세|명단)\s*(?:\\?#\s*)?\d{1,2}\s+(?:(?:예비|대기)\s*)?(?:추가(?:해|하기)?|추기|등록|참가)\s+(.+)$/u.exec(text);
+  const structuredMatch = /^\/?내전\s*(?:상세|명단)\s*(?:\\?#\s*)?\d{1,2}\s+(?:(?:예비|대기)\s*)?(?:추가(?:해|하기)?|추기|등록|참가|수정(?:해|하기)?)\s+(.+)$/u.exec(text);
   const structuredInhouseAdd = Boolean(structuredMatch && isKakaoV4InhouseStructuredAddName(structuredMatch[1]!));
   if (!text.includes("\n") && text.indexOf("/") > 0 && !structuredInhouseAdd) return null;
   if (!text.startsWith("/")) return text;

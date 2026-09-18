@@ -169,10 +169,6 @@ export function v1StrictPartyTemplate(input: Readonly<{
     "아래 양식의 모집번호는 유지해서 작성해주세요.", "",
     `📢 ${input.title}`, `모집번호: #${input.recruitNumber}`, `운영일: ${input.recruitDate}`, "",
     "》시작시간 :", "》게임정보 :", "》주최자 :", "",
-    "위 항목을 작성해 전체 전송해주세요.",
-    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
-    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
-    "",
     "참여해주실 분은 태그해주세요.",
     "*상호배려와 존중 부탁드립니다.",
   ];
@@ -185,7 +181,6 @@ export function v1StrictPartySyncReply(recruitNumber: number, maximumMembers: nu
   return [
     `[파티 #${recruitNumber} 반영]`,
     `${Math.min(activeCount, maximumMembers)}/${maximumMembers} · 예비 ${reserveCount}명`,
-    `마감: ${recruitNumber}ㅉ`,
   ].join("\n");
 }
 
@@ -205,11 +200,5 @@ export function v1StrictPartyStatusReply(parties: readonly Party[], now = new Da
 
 export function v1StrictPartyDetailReply(party: Party | null, recruitNumber: number) {
   if (!party) return `[K-LOL.GG 구인상세]\n\n모집번호 #${recruitNumber} 구인글을 찾지 못했습니다.`;
-  return [
-    `[K-LOL.GG 구인상세 #${party.recruitNumber}]`, "", detailBlock(party), "",
-    "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송",
-    `빠른 추가: 상세 ${party.recruitNumber} 추가 이름`,
-    `빠른 삭제: 상세 ${party.recruitNumber} 삭제 이름`,
-    `마감: ${party.recruitNumber}ㅉ`,
-  ].join("\n");
+  return [`[K-LOL.GG 구인상세 #${party.recruitNumber}]`, "", detailBlock(party)].join("\n");
 }

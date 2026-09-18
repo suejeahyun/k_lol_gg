@@ -218,7 +218,7 @@ test("Phase 3-A: 기존 번호 전체 양식은 대회 바인딩을 보존하고
   const state = harness(openStatus([scrimFixture], 8));
   const changed = contract.scrim.detailReply
     .split("\n")
-    .slice(4, -3)
+    .slice(4)
     .join("\n")
     .replace("SUP: 꽃잎서폿", "SUP: 새꽃잎서폿");
   const result = await reply(state.service, envelope("RECRUIT", `[K-LOL.GG 스크림 구인 양식]\n\n${changed}`, 15));

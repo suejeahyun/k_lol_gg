@@ -209,7 +209,7 @@ export type KakaoSeasonSnapshotEntryDto = Readonly<{
   suppliedRiotId: string | null;
   mainPosition: SeasonApplicationPosition;
   subPositions: readonly SeasonApplicationPosition[];
-  player: Readonly<{ playerId: string; displayName: string; riotId: string }> | null;
+  player: Readonly<{ playerId: string; displayName: string; riotId: string; memberName?: string }> | null;
   reserve?: boolean;
 }>;
 

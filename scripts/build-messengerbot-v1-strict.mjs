@@ -267,7 +267,6 @@ const entry = [
   "    KLOL_V1_OPERATION_RAW_TEXT = \"\";",
   "  }",
   "}",
-  "response.__kakaoBotEntryPoint = true;"
 ].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
 const operationCandidateBinding = [
   "var isOperationFormCompleteMessage = isOperationFormMessage;",
@@ -296,7 +295,10 @@ const recruitHelpBinding = [
   "getPartyRecruitHelpNotice = function () {",
   "  return v1PartyHelp().replace(",
   "    \"현황: 구인현황\\n종료: 번호ㅉ\",",
-  "    \"활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\\n현황: 구인현황\\n추가: 상세 번호 추가 이름\\n삭제: 상세 번호 삭제 이름\\n종료: 번호ㅉ\"",
+  "    \"주최자 입력 후 전송\\n현황: 구인현황\\n상세 번호 추가/삭제 이름\\n종료: 번호ㅉ\"",
+  "  ).replace(",
+  "    \"현황: 내전현황\\n매일 오전 6시 자동 종료\",",
+  "    \"현황: 내전현황\\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\\n매일 오전 6시 자동 종료\"",
   "  );",
   "};",
 ].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
@@ -364,8 +366,9 @@ if (!output.includes("if (KLOL_V1_GATEWAY.shouldSuppressReply()) return;") ||
     !output.includes("KLOL_V1_GATEWAY.markReplySent();")) {
   throw new Error("V1-strict output must suppress only callbacks whose visible reply was already sent");
 }
-if (!output.includes("추가: 상세 번호 추가 이름") || !output.includes("삭제: 상세 번호 삭제 이름")) {
-  throw new Error("V1-strict output must document the approved party member mutation commands");
+if (!output.includes("상세 번호 추가/삭제 이름") ||
+    !output.includes("내전상세 번호 수정/예비추가/예비삭제 이름/라인")) {
+  throw new Error("V1-strict output must keep mutation guidance inside recruit help");
 }
 if (output.length >= 65_535) throw new Error("V1-strict LF output exceeds MessengerBot R's 65,535-character limit");
 const crlfLength = output.replace(/\n/gu, "\r\n").length;

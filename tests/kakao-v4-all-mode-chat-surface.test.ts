@@ -26,6 +26,7 @@ test("내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백�
     ["FEATURES", "/내전 상세 #3 삭제 김 별", "INHOUSE_MEMBER_REMOVE", "REMOVE_MEMBER"],
     ["FEATURES", "／내전명단　＃３　추기　재현", "INHOUSE_MEMBER_ADD", "ADD_MEMBER"],
     ["FEATURES", "내전상세 3 예비추가 정민/all", "INHOUSE_MEMBER_ADD", "ADD_MEMBER"],
+    ["FEATURES", "내전상세 3 수정 02정민/mid/ad", "INHOUSE_MEMBER_ADD", "ADD_MEMBER"],
     ["FEATURES", "/내전 상세 #3 예비 삭제 정민", "INHOUSE_MEMBER_REMOVE", "REMOVE_MEMBER"],
     ["RECRUIT", "스크림상세 4 참가 재현", "SCRIM_MEMBER_ADD", "ADD_MEMBER"],
     ["RECRUIT", "/스크림 명단 #4 제외 김 별", "SCRIM_MEMBER_REMOVE", "REMOVE_MEMBER"],
@@ -38,7 +39,7 @@ test("내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백�
     assert.equal(classified.kind, "COMMAND", text);
     if (classified.kind !== "COMMAND") continue;
     assert.equal(classified.command, commandId, text);
-    assert.equal(classified.parameters.name, text.includes("김 별") ? "김 별" : text.includes("정민") ? (text.includes("all") ? "정민/all" : "정민") : "재현", text);
+    assert.equal(classified.parameters.name, text.includes("02정민") ? "02정민/mid/ad" : text.includes("김 별") ? "김 별" : text.includes("정민") ? (text.includes("all") ? "정민/all" : "정민") : "재현", text);
     const canonical = canonicalizeKakaoV4Command(classified, input);
     assert.equal(canonical?.action, action, text);
     if (canonical?.domain === "SEASON" && text.includes("예비")) assert.equal(canonical.reserve, true, text);
@@ -54,6 +55,7 @@ test("협곡 내전 빠른 추가는 이름만 또는 티어·라인 전체 입�
     ["내전상세 6 추가 민혁/mid,AD,ad,mid,SUP", "MID", ["ADC", "SUP"]],
     ["내전상세 6 추가 민혁/mid,all", "MID", ["TOP", "JGL", "ADC", "SUP"]],
     ["내전상세 6 추가 민혁/mid/all", "MID", ["TOP", "JGL", "ADC", "SUP"]],
+    ["내전상세 6 수정 02정민/mid/ad", "MID", ["ADC"]],
     ["/내전상세 #6 추가 재현/m/m/ALL", "ALL", []],
     ["내전 상세 6 추가 재현/M/M/Mid/Top", "MID", ["TOP"]],
     ["내전명단 6 추가 재현/M/M/MID/TOP,SUP", "MID", ["TOP", "SUP"]],
@@ -63,7 +65,7 @@ test("협곡 내전 빠른 추가는 이름만 또는 티어·라인 전체 입�
     assert.equal(classified.kind, "COMMAND", text);
     const canonical = canonicalizeKakaoV4Command(classified, input);
     if (!canonical || canonical.domain !== "SEASON" || canonical.action !== "ADD_MEMBER") assert.fail(text);
-    assert.equal(canonical.name, text.includes("민혁") ? "민혁" : "재현", text);
+    assert.equal(canonical.name, text.includes("02정민") ? "02정민" : text.includes("민혁") ? "민혁" : "재현", text);
     assert.equal(canonical.mainPosition ?? "ALL", mainPosition, text);
     assert.deepEqual(canonical.subPositions ?? [], subPositions, text);
   }
@@ -173,8 +175,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
   assert.equal(seasonCalls[0]?.action, "RESERVE");
   assert.match(inhouse.legacyReply, /내전하실분 #7/u);
   assert.match(inhouse.legacyReply, /》주최자\s*:/u);
-  assert.match(inhouse.legacyReply, /내전상세 7 추가 이름/u);
-  assert.match(inhouse.legacyReply, /마감: 내전 7ㅉ/u);
+  assert.doesNotMatch(inhouse.legacyReply, /빠른 추가:|마감:/u);
 
   const scrimContext = dispatchContext("RECRUIT", "스크림구인", "event-scrim-reserve-0000001");
   const scrimClassified = classifyKakaoV4Command(scrimContext.envelope);
@@ -185,8 +186,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
   if (recruitingCalls[0]?.type === "CREATE_SCRIM") assert.equal(recruitingCalls[0].payload.initialStatus, "DRAFT");
   assert.match(scrim.legacyReply, /번호: #6/u);
   assert.match(scrim.legacyReply, /주최자:/u);
-  assert.match(scrim.legacyReply, /스크림상세 6 추가 이름/u);
-  assert.match(scrim.legacyReply, /마감: 스크림 6ㅉ/u);
+  assert.doesNotMatch(scrim.legacyReply, /빠른 추가:|마감:/u);
 });
 
 test("내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은 활성화 명령이 되지 않는다", async () => {
@@ -272,9 +272,9 @@ test("내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고
           body: {
             kind: "SEASON_APPLICATION_SNAPSHOT" as const, seasonId: "season-1", applyDate: input.command.applyDate,
             recruitNo: input.command.recruitNo, entries: [{
-              slotNo: 1, status: "UNMATCHED" as const, source: "KAKAO" as const, suppliedName: "재현", suppliedRiotId: null,
-              mainPosition: "ALL" as const, subPositions: [], player: null,
-            }], appliedCount: 0, reserveCount: 0, confirmedCount: 0, pendingCount: 1, cancelledCount: 0, createdCount: 1,
+              slotNo: 1, status: "APPLIED" as const, source: "KAKAO" as const, suppliedName: input.command.action === "ADD_PARTICIPANT" ? input.command.name : "재현", suppliedRiotId: null,
+              mainPosition: "ALL" as const, subPositions: [], player: { playerId: "player-1", memberName: input.command.action === "ADD_PARTICIPANT" ? input.command.name : "재현", displayName: "재현닉", riotId: "재현닉#KR1" },
+            }], appliedCount: 1, reserveCount: 0, confirmedCount: 0, pendingCount: 0, cancelledCount: 0, createdCount: 1,
             roundMetadata: { recruitNo: 3, mode: "RIFT" as const, capacity: 10, startTimeText: "21:00", scheduledStartAt: null, gameInfo: "협곡", organizerText: "재현", noticeText: null, revision: 1 },
           },
           replayed: false,

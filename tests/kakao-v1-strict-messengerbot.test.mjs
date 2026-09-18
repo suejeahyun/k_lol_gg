@@ -438,7 +438,10 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
     const expected = replyFor(canonical, item.message, { sender: item.sender }).map((reply) => item.message === "구인도움말"
       ? reply.replace(
         "현황: 구인현황\n종료: 번호ㅉ",
-        "활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ",
+        "주최자 입력 후 전송\n현황: 구인현황\n상세 번호 추가/삭제 이름\n종료: 번호ㅉ",
+      ).replace(
+        "현황: 내전현황\n매일 오전 6시 자동 종료",
+        "현황: 내전현황\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\n매일 오전 6시 자동 종료",
       )
       : reply);
     const actual = replyFor(strict, item.message, { sender: item.sender });
@@ -446,7 +449,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R21_2026_09_17"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R22_2026_09_18"],
   );
 });
 
@@ -522,6 +525,7 @@ test("inhouse and scrim member shortcuts reach the matching profile gateway", as
     ["내전상세 3 추가 민혁/mid,ad", "INHOUSE", "ADD", "FEATURES"],
     ["내전상세 3 추가 민혁/mid,all", "INHOUSE", "ADD", "FEATURES"],
     ["내전상세 3 예비추가 정민/mid,ad", "INHOUSE", "ADD", "FEATURES"],
+    ["내전상세 3 수정 02정민/mid/ad", "INHOUSE", "ADD", "FEATURES"],
     ["내전 상세 3 예비 삭제 정민", "INHOUSE", "REMOVE", "FEATURES"],
     ["/내전상세 #3 추가 재현/M/M/ALL", "INHOUSE", "ADD", "FEATURES"],
     ["내전상세 3 추가 재현/M/M/MID/TOP,SUP", "INHOUSE", "ADD", "FEATURES"],
@@ -598,8 +602,8 @@ test("ambiguous party member text never reaches the mutation gateway", async () 
 test("local recruit help documents member commands and keeps full-form guidance", async () => {
   const strict = evaluate(await readFile(artifactPath, "utf8"));
   const [reply] = replyFor(strict, "구인도움말");
-  assert.match(reply, /추가: 상세 번호 추가 이름/u);
-  assert.match(reply, /삭제: 상세 번호 삭제 이름/u);
+  assert.match(reply, /상세 번호 추가\/삭제 이름/u);
+  assert.match(reply, /내전상세 번호 수정\/예비추가\/예비삭제 이름\/라인/u);
   assert.match(reply, /공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송/u);
 });
 

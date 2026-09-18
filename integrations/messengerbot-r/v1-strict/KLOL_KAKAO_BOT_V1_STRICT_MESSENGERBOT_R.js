@@ -194,7 +194,7 @@ shouldSuppressReply: shouldSuppressReply,
 markReplySent: markReplySent
 };
 }());
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R21_2026_09_17";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R22_2026_09_18";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -285,19 +285,19 @@ var action = "";
 if (/[\r\n\u2028\u2029]/.test(text)) return null;
 if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return null;
 if (text.charAt(0) === "/") text = text.substring(1);
-match = /^(구인상세|상세|내전\s*(?:상세|명단)|스크림\s*(?:상세|명단))\s+(?:\\?#\s*)?(\d{1,2})\s+((?:(?:예비|대기)\s*)?(?:추가|추가해|추가하기|추기|등록|참가|삭제|삭제해|삭제하기|삭재|제외|탈퇴))\s+(.+)$/.exec(text);
+match = /^(구인상세|상세|내전\s*(?:상세|명단)|스크림\s*(?:상세|명단))\s+(?:\\?#\s*)?(\d{1,2})\s+((?:(?:예비|대기)\s*)?(?:추가(?:해|하기)?|추기|등록|참가|수정(?:해|하기)?|삭제(?:해|하기)?|삭재|제외|탈퇴))\s+(.+)$/.exec(text);
 if (!match) return null;
 prefix = String(match[1] || "").replace(/\s/g, "");
 recruitNumber = Number(match[2]);
 action = String(match[3] || "");
 name = String(match[4] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
 if (recruitNumber < 1 || recruitNumber > 99 || partyMemberMutationNameLength(name) < 1 || partyMemberMutationNameLength(name) > 80) return null;
-if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /추가|추기|등록|참가/.test(action) && (/^[^/]+(\/[^/]*){3,}$/.test(name) || /^[^/]+\/[a-z,\/ ]+$/i.test(name)))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
+if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /추가|추기|등록|참가|수정/.test(action) && (/^[^/]+(\/[^/]*){3,}$/.test(name) || /^[^/]+\/[a-z,\/ ]+$/i.test(name)))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|수정|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
 if (/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
 return {
 surface: prefix.indexOf("내전") === 0 ? "INHOUSE" : prefix.indexOf("스크림") === 0 ? "SCRIM" : "PARTY",
 profileId: prefix.indexOf("내전") === 0 ? "FEATURES" : "RECRUIT",
-command: (/추가|추기|등록|참가/.test(action) ? "ADD" : "REMOVE"),
+command: (/추가|추기|등록|참가|수정/.test(action) ? "ADD" : "REMOVE"),
 recruitNumber: recruitNumber,
 name: name
 };
@@ -1770,7 +1770,10 @@ var v1PartyHelp = getPartyRecruitHelpNotice;
 getPartyRecruitHelpNotice = function () {
 return v1PartyHelp().replace(
   "현황: 구인현황\n종료: 번호ㅉ",
-  "활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ"
+  "주최자 입력 후 전송\n현황: 구인현황\n상세 번호 추가/삭제 이름\n종료: 번호ㅉ"
+).replace(
+  "현황: 내전현황\n매일 오전 6시 자동 종료",
+  "현황: 내전현황\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\n매일 오전 6시 자동 종료"
 );
 };
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
@@ -1803,4 +1806,3 @@ try {
   KLOL_V1_OPERATION_RAW_TEXT = "";
 }
 }
-response.__kakaoBotEntryPoint = true;

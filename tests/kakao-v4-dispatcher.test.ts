@@ -15,10 +15,85 @@ import { KAKAO_V1_STRICT_PROTOCOL, KAKAO_V1_STRICT_RESPONSE_FORMAT } from "../sr
 import {
   KakaoV4CommandDispatcher,
   KakaoV4DispatcherError,
+  formatInhouseMemberReply,
   type KakaoV4AssistantPort,
   type KakaoV4DispatchContext,
   type KakaoV4RecruitingPort,
 } from "../src/modules/recruiting/kakao-v4/dispatcher";
+
+test("내전 빠른 명단 응답은 결과를 한 줄로 요약하고 본명과 닉네임을 표시한다", () => {
+  const baseEntry = {
+    status: "APPLIED" as const,
+    source: "KAKAO" as const,
+    suppliedRiotId: null,
+    mainPosition: "ALL" as const,
+    subPositions: [],
+    reserve: false,
+  };
+  const reply = formatInhouseMemberReply({
+    kind: "SEASON_APPLICATION_SNAPSHOT",
+    seasonId: "season-1",
+    applyDate: "2026-09-18",
+    recruitNo: 1,
+    entries: [
+      { ...baseEntry, slotNo: 1, suppliedName: "크리티컬히트", player: { playerId: "player-1", memberName: "민서", displayName: "크리티컬히트", riotId: "크리티컬히트#KR1" } },
+      { ...baseEntry, slotNo: 2, suppliedName: "원딜은죄인이다", player: { playerId: "player-2", memberName: "정민", displayName: "원딜은죄인이다", riotId: "원딜은죄인이다#KR1" } },
+      { ...baseEntry, slotNo: 3, suppliedName: "계란 안에 쌀 넣으면 쌀문계란", player: { playerId: "player-3", memberName: "명환", displayName: "계란 안에 쌀 넣으면 쌀문계란", riotId: "계란 안에 쌀 넣으면 쌀문계란#KR1" } },
+    ],
+    appliedCount: 3,
+    reserveCount: 0,
+    confirmedCount: 0,
+    pendingCount: 0,
+    cancelledCount: 0,
+    createdCount: 1,
+    updatedCount: 0,
+    roundMetadata: { recruitNo: 1, mode: "RIFT", capacity: 10, startTimeText: "21:00", scheduledStartAt: null, gameInfo: null, organizerText: "민서", noticeText: null, revision: 1 },
+  }, { action: "ADD", recruitNumber: 1, name: "명환" });
+
+  assert.equal(reply, [
+    "[K-LOL.GG 내전 #1 명단] 추가 완료: 명환 현재 3/10명 · 예비 0명",
+    "",
+    "1. 민서 / 크리티컬히트",
+    "2. 정민 / 원딜은죄인이다",
+    "3. 명환 / 계란 안에 쌀 넣...",
+  ].join("\n"));
+});
+
+test("내전 빠른 추가 대상이 미등록이면 회원가입 주소만 안내한다", () => {
+  const reply = formatInhouseMemberReply({
+    kind: "SEASON_APPLICATION_SNAPSHOT",
+    seasonId: "season-1",
+    applyDate: "2026-09-18",
+    recruitNo: 1,
+    entries: [{
+      slotNo: 4,
+      suppliedName: "신규회원",
+      suppliedRiotId: null,
+      status: "UNMATCHED",
+      source: "KAKAO",
+      mainPosition: "MID",
+      subPositions: ["ADC"],
+      reserve: false,
+      player: null,
+    }],
+    appliedCount: 0,
+    reserveCount: 0,
+    confirmedCount: 0,
+    pendingCount: 1,
+    cancelledCount: 0,
+    createdCount: 1,
+    updatedCount: 0,
+    roundMetadata: { recruitNo: 1, mode: "RIFT", capacity: 10, startTimeText: "21:00", scheduledStartAt: null, gameInfo: null, organizerText: "민서", noticeText: null, revision: 1 },
+  }, { action: "ADD", recruitNumber: 1, name: "신규회원" });
+
+  assert.equal(reply, [
+    "[K-LOL.GG 내전 #1 회원 등록 필요]",
+    "신규회원님은 등록된 회원 정보에서 찾지 못했습니다.",
+    "https://k-lol-gg.vercel.app/signup",
+    "회원가입을 완료한 뒤 다시 추가해주세요.",
+  ].join("\n"));
+  assert.doesNotMatch(reply, /빠른 추가|빠른 삭제|마감:/u);
+});
 
 const context: KakaoV4DispatchContext = Object.freeze({
   envelope: Object.freeze({
@@ -280,7 +355,7 @@ test("party create command reserves an invisible draft number and returns the ex
   assert.deepEqual(state.handled.map((handled) => handled.type), ["CREATE_PARTY"]);
   assert.equal(state.handled[0]?.type === "CREATE_PARTY" ? state.handled[0].payload.initialStatus : null, "DRAFT");
   assert.notEqual(result.aggregate, null);
-  assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n운영일: 2026-09-10\n\n》시작시간 :\n》게임정보 :\n》주최자 :\n\n위 항목을 작성해 전체 전송해주세요.\n비워 둔 시간과 게임 정보는 자동으로 채워집니다.\n활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
+  assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n운영일: 2026-09-10\n\n》시작시간 :\n》게임정보 :\n》주최자 :\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
   assert.doesNotMatch(result.legacyReply, /^1\.|^예비 1\./mu);
 });
 
@@ -389,7 +464,7 @@ test("first completed automatic party form creates the party once", async () => 
   assert.deepEqual(state.handled.map((command) => command.type), ["CREATE_PARTY"]);
   assert.equal(state.handled[0]?.metadata.actor.kind, "BOT");
   assert.equal(state.handled[0]?.metadata.idempotency.scope, KAKAO_V4_EVENT_SCOPE);
-  assert.equal(result.legacyReply, "[파티 #8 반영]\n1/5 · 예비 0명\n시작시간: 09:26 · 게임정보: 미입력\n주최자: 재현\n마감: 8ㅉ\n\n[K-LOL.GG 구인구직 현황]\n🔎 전체 명단: 상세 번호\n\n[구인중]\n#7 · 5인 파티 · 1/5 · 21:00 · 미입력\n주최자: 주최자\n참여: A\n└ 상세 7");
+  assert.equal(result.legacyReply, "[파티 #8 반영]\n1/5 · 예비 0명\n시작시간: 09:26 · 게임정보: 미입력\n주최자: 재현\n\n[K-LOL.GG 구인구직 현황]\n🔎 전체 명단: 상세 번호\n\n[구인중]\n#7 · 5인 파티 · 1/5 · 21:00 · 미입력\n주최자: 주최자\n참여: A\n└ 상세 7");
 });
 
 test("explicit missing party number never falls back to creating a new party", async () => {

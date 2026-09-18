@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R21_2026_09_17";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R22_2026_09_18";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -102,19 +102,19 @@ function parseMemberMutationCommand(value) {
   if (/[\r\n\u2028\u2029]/.test(text)) return null;
   if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return null;
   if (text.charAt(0) === "/") text = text.substring(1);
-  match = /^(구인상세|상세|내전\s*(?:상세|명단)|스크림\s*(?:상세|명단))\s+(?:\\?#\s*)?(\d{1,2})\s+((?:(?:예비|대기)\s*)?(?:추가|추가해|추가하기|추기|등록|참가|삭제|삭제해|삭제하기|삭재|제외|탈퇴))\s+(.+)$/.exec(text);
+  match = /^(구인상세|상세|내전\s*(?:상세|명단)|스크림\s*(?:상세|명단))\s+(?:\\?#\s*)?(\d{1,2})\s+((?:(?:예비|대기)\s*)?(?:추가(?:해|하기)?|추기|등록|참가|수정(?:해|하기)?|삭제(?:해|하기)?|삭재|제외|탈퇴))\s+(.+)$/.exec(text);
   if (!match) return null;
   prefix = String(match[1] || "").replace(/\s/g, "");
   recruitNumber = Number(match[2]);
   action = String(match[3] || "");
   name = String(match[4] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
   if (recruitNumber < 1 || recruitNumber > 99 || partyMemberMutationNameLength(name) < 1 || partyMemberMutationNameLength(name) > 80) return null;
-  if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /추가|추기|등록|참가/.test(action) && (/^[^/]+(\/[^/]*){3,}$/.test(name) || /^[^/]+\/[a-z,\/ ]+$/i.test(name)))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
+  if ((/[\/,，、]/.test(name) && !(prefix.indexOf("내전") === 0 && /추가|추기|등록|참가|수정/.test(action) && (/^[^/]+(\/[^/]*){3,}$/.test(name) || /^[^/]+\/[a-z,\/ ]+$/i.test(name)))) || /[;；]/.test(name) || /^(?:추가|추기|등록|참가|수정|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
   if (/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
   return {
     surface: prefix.indexOf("내전") === 0 ? "INHOUSE" : prefix.indexOf("스크림") === 0 ? "SCRIM" : "PARTY",
     profileId: prefix.indexOf("내전") === 0 ? "FEATURES" : "RECRUIT",
-    command: (/추가|추기|등록|참가/.test(action) ? "ADD" : "REMOVE"),
+    command: (/추가|추기|등록|참가|수정/.test(action) ? "ADD" : "REMOVE"),
     recruitNumber: recruitNumber,
     name: name
   };

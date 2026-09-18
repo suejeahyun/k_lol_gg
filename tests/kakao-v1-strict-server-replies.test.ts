@@ -158,10 +158,7 @@ test("strict V1 and ordinary V4 create reserve metadata-only drafts", async () =
     "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.", "", "📢 5인 파티 구인",
     "모집번호: #8", "운영일: 2026-09-11", "", "》시작시간 :", "》게임정보 :", "》주최자 :", "",
-    "위 항목을 작성해 전체 전송해주세요.",
-    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
-    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
-    "", "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.",
+    "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.",
   ].join("\n"));
 
   const normalState = harness();
@@ -184,12 +181,12 @@ test("strict V1 and ordinary V4 create reserve metadata-only drafts", async () =
     },
   };
   const strictSync = await strictState.dispatcher.dispatch(context(true, "전체 양식", 3), syncCommand);
-  assert.equal(strictSync.legacyReply, "[파티 #12 반영]\n1/5 · 예비 1명\n마감: 12ㅉ\n\n[K-LOL.GG 구인구직 현황]\n\n현재 진행 중인 구인글이 없습니다.");
+  assert.equal(strictSync.legacyReply, "[파티 #12 반영]\n1/5 · 예비 1명\n\n[K-LOL.GG 구인구직 현황]\n\n현재 진행 중인 구인글이 없습니다.");
   const normalSync = await normalState.dispatcher.dispatch(context(false, "전체 양식", 4), syncCommand);
   assert.match(normalSync.legacyReply, /시작시간: 09:26 · 게임정보: 미입력/u);
 });
 
-test("strict V1 detail is the full copyable form with edit and finish guidance", async () => {
+test("strict V1 detail is the full copyable form without repeated command guidance", async () => {
   const target = party({
     recruitNumber: 12,
     maximumMembers: 5,
@@ -208,9 +205,7 @@ test("strict V1 detail is the full copyable form with edit and finish guidance",
   assert.equal(result.legacyReply, [
     "[K-LOL.GG 구인상세 #12]", "", "#12 · 5인 파티 · 2/5",
     "시작시간: 9:30", "》게임정보 : 자랭 예상 골드", "》주최자 : 미입력", "예비: 1명", "",
-    "1. 재현", "2.", "3. 민서", "4.", "5.", "예비 1. 기용", "예비 2.", "",
-    "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송",
-    "빠른 추가: 상세 12 추가 이름", "빠른 삭제: 상세 12 삭제 이름", "마감: 12ㅉ",
+    "1. 재현", "2.", "3. 민서", "4.", "5.", "예비 1. 기용", "예비 2.",
   ].join("\n"));
 });
 

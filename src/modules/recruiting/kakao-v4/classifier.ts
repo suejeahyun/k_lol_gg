@@ -343,13 +343,13 @@ function detailMemberMutation(text: string, prefixes: readonly string[], allowSt
     .map((prefix) => prefix.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&").replace(/\s+/gu, "\\s*"))
     .join("|");
   const match = new RegExp(
-    `^(?:${prefixPattern})\\s*(?:\\\\?#\\s*)?(\\d{1,2})\\s+((?:(?:예비|대기)\\s*)?(?:추가(?:해|하기)?|추기|등록|참가|삭제(?:해|하기)?|삭재|제외|탈퇴))\\s+(.+)$`,
+    `^(?:${prefixPattern})\\s*(?:\\\\?#\\s*)?(\\d{1,2})\\s+((?:(?:예비|대기)\\s*)?(?:추가(?:해|하기)?|추기|등록|참가|수정(?:해|하기)?|삭제(?:해|하기)?|삭재|제외|탈퇴))\\s+(.+)$`,
     "u",
   ).exec(text.normalize("NFKC"));
   if (!match) return null;
   const recruitNumber = Number(match[1]);
   const name = match[3]!.trim().replace(/\s+/gu, " ");
-  const action = /(?:추가|추기|등록|참가)/u.test(match[2]!) ? "ADD" as const : "REMOVE" as const;
+  const action = /(?:추가|추기|등록|참가|수정)/u.test(match[2]!) ? "ADD" as const : "REMOVE" as const;
   const reserve = /^(?:예비|대기)/u.test(match[2]!);
   const nameLength = Array.from(name).length;
   const structuredIntent = allowStructuredAdd && action === "ADD" && name.includes("/");

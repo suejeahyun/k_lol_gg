@@ -46,11 +46,11 @@ function canonical(text: string) {
   return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope(text));
 }
 
-test("the unchanged V1 detail reply can be copied, edited, and synchronized", () => {
+test("the compact V1 detail reply can be copied, edited, and synchronized", () => {
   const detail = v1StrictPartyDetailReply(party, 12);
   assert.match(detail, /^\[K-LOL\.GG 구인상세 #12\]$/mu);
   assert.match(detail, /^#12 · 5인 파티 · 1\/5$/mu);
-  assert.match(detail, /^수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송$/mu);
+  assert.doesNotMatch(detail, /빠른 추가:|수정: 이 메시지|마감:/u);
 
   const edited = detail.replace("1. 기존", "1. 새이름 @태그 🎮");
   const parsed = parsePartyForm(edited);
