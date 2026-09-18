@@ -47,7 +47,13 @@ export default async function RecruitsPage() {
             <header className={styles.heading}><div><span>PARTY</span><h2 id="party-recruits-title">파티 모집</h2></div><p>{result.data.parties.length}개 진행 중</p></header>
             {result.data.parties.length === 0 ? <div className={styles.inlineEmpty}>진행 중인 파티 모집이 없어요.</div> : (
               <div className={styles.cards}>
-                {result.data.parties.map((party) => <article className={styles.card} key={party.id}>
+                {result.data.parties.map((party) => <article
+                  className={styles.card}
+                  data-kind="party"
+                  data-capacity={party.memberCount >= party.maximumMembers ? "full" : party.memberCount === 0 ? "empty" : "open"}
+                  data-has-organizer={party.organizerText ? "true" : "false"}
+                  key={party.id}
+                >
                   <div className={styles.cardTop}><span>{partyTypeLabel[party.type]}</span><b>#{party.recruitNumber}</b></div>
                   <h3>{party.title}</h3>
                   <dl><div><dt>주최자</dt><dd>{party.organizerText ?? "미입력"}</dd></div><div><dt>참여</dt><dd>{party.memberCount} / {party.maximumMembers}명</dd></div><div><dt>예정</dt><dd>{timeLabel(party.scheduledStartAt)}</dd></div></dl>
@@ -67,7 +73,7 @@ export default async function RecruitsPage() {
             <header className={styles.heading}><div><span>SCRIM</span><h2 id="scrim-recruits-title">스크림 모집</h2></div><p>{result.data.scrims.length}개 진행 중</p></header>
             {result.data.scrims.length === 0 ? <div className={styles.inlineEmpty}>진행 중인 스크림 모집이 없어요.</div> : (
               <div className={styles.cards}>
-                {result.data.scrims.map((scrim) => <article className={styles.card} key={scrim.id}>
+                {result.data.scrims.map((scrim) => <article className={styles.card} data-kind="scrim" data-status={scrim.status.toLowerCase()} key={scrim.id}>
                   <div className={styles.cardTop}><span>{scrim.status === "RECRUITING" ? "상대 모집 중" : scrim.status === "MATCHED" ? "매칭됨" : "확정"}</span><b>#{scrim.scrimNumber}</b></div>
                   <h3>{scrim.title ?? (scrim.bestOf ? `BO${scrim.bestOf} 스크림` : "스크림 기록")}</h3>
                   <dl><div><dt>요청 팀</dt><dd>{scrim.requesterTeamName ?? scrim.requesterTeamId?.slice(0, 8) ?? "기록 없음"}</dd></div><div><dt>예정</dt><dd>{timeLabel(scrim.scheduledAt)}</dd></div></dl>

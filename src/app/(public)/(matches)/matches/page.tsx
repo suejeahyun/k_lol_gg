@@ -38,6 +38,16 @@ function nextHref(query: NonNullable<ReturnType<typeof parsePublicMatchQuery>>, 
   return `/matches?${params}`;
 }
 
+function winnerLabel(blueWins: number, redWins: number) {
+  if (blueWins === redWins) return "무승부";
+  return blueWins > redWins ? "블루 승리" : "레드 승리";
+}
+
+function winnerTone(blueWins: number, redWins: number) {
+  if (blueWins === redWins) return "tie";
+  return blueWins > redWins ? "blue" : "red";
+}
+
 export default async function MatchesPage({
   searchParams,
 }: {
@@ -96,10 +106,10 @@ export default async function MatchesPage({
         <>
           <div className={styles.grid}>
             {result.data.items.map((match) => (
-              <Link className={styles.card} href={`/matches/${match.id}`} key={match.id}>
-                <div className={styles.cardTop}><span>{match.season.name}</span><ChevronRight size={18} aria-hidden="true" /></div>
+              <Link className={styles.card} data-winner={winnerTone(match.blueWins, match.redWins)} href={`/matches/${match.id}`} key={match.id}>
+                <div className={styles.cardTop}><span>{match.season.name} · {winnerLabel(match.blueWins, match.redWins)}</span><ChevronRight size={18} aria-hidden="true" /></div>
                 <h3>{match.title}</h3>
-                <div className={styles.score}><span>BLUE</span><strong>{match.blueWins}</strong><b>:</b><strong>{match.redWins}</strong><span>RED</span></div>
+                <div className={styles.score}><span data-team="blue">BLUE</span><strong data-team="blue">{match.blueWins}</strong><b>:</b><strong data-team="red">{match.redWins}</strong><span data-team="red">RED</span></div>
                 <div className={styles.meta}><span><CalendarDays size={14} aria-hidden="true" /> {match.playedOn}</span><span>{match.gameCount}게임</span></div>
               </Link>
             ))}

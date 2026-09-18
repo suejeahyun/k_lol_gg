@@ -4,7 +4,7 @@ V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 
 
 ## 현재 범위
 
-- 공개·계정·관리자 영역의 App Router 화면 103개와 API route 197개
+- 공개·계정·관리자 영역의 App Router 화면 105개와 API route 198개
 - 가입·로그인·TOTP, 플레이어·시즌·경기·통계·MMR·팀 도구·대회·징계·미디어·운영 기능
 - PostgreSQL 18과 Drizzle 기준 101개 테이블, 전진 migration 35개(head `0034_kakao_room_capability_profiles`)
 - Riot·Kakao·Blob 경계를 운영 자격증명과 분리해 검증할 수 있는 adapter·보안 계약
