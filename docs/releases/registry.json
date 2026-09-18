@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "kakao-r22-compact-roster-signup",
+      "version": "1.0.0",
+      "gitTag": "kakao-r22-compact-roster-signup-v1.0.0",
+      "commit": "4482bc071d4806946f1f78f23b763122b988a5a8",
+      "releasedAt": "2026-09-18T15:18:25+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-r22-compact-roster-signup-2026-09-18/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-18-kakao-r22-compact-roster-signup.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_3GkXwSrViAMGtQUTQcHtLuSdFbBA",
+        "url": "https://k-lol-6il0rhr1d-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-18T06:19:19.615Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_R22_2026_09_18",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
       "featureId": "kakao-r21-inhouse-reserve-dual-input",
       "version": "1.0.0",
       "gitTag": "kakao-r21-inhouse-reserve-dual-input-v1.0.0",

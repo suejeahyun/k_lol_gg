@@ -1,5 +1,20 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-18 카카오 R22 간결 응답·미등록 회원가입 안내
+
+- 기능 커밋: `4482bc071d4806946f1f78f23b763122b988a5a8`
+- 상태: 소스·집중 회귀·격리 PostgreSQL·전체 앱 검사·Rhino 정적 검사·Git·Vercel 운영 배포 완료, 휴대폰 MessengerBot R 설치 대기
+- 릴리스 tag: `kakao-r22-compact-roster-signup-v1.0.0`
+- Vercel Production: `dpl_3GkXwSrViAMGtQUTQcHtLuSdFbBA` (`https://k-lol-6il0rhr1d-tjdmswo11-3715s-projects.vercel.app`), Ready·Production, 운영 alias `/api/health` HTTP 200 `ready`
+- 휴대폰 버전: `KLOL_KAKAO_BOT_V40_R22_2026_09_18`
+- 주요 범위: `수정` 별칭 지원, 내전 명단 `본명 / 닉네임` 간결 표시, 긴 닉네임 9자 말줄임, 미등록 참가자 회원가입 안내, 일반 응답의 반복 사용법 제거, `/구인도움말`로 도움말 집중
+- 테스트: focused 44/44, MessengerBot·호환성 41/41, 스크림 회귀 7/7, 전체 DB 계약 PASS, 일반 782 PASS·1 intentional skip, 계약 401/401, 홈 여성 챔피언 가이드 68/68, 프로덕션 빌드 93 pages, 공개·비공개 ES5/Rhino 경고 후보 0건
+- public 검토본: LF 63,720 / CRLF 65,528, SHA-256 `283c758142df12ba015cd6eed2ba33f08310997834a2364888ed76f3919d3465`
+- private 설치본: LF 62,009 / CRLF 63,818, SHA-256 `7725ab9aa7ce9d8f97b0e1e0120c895e3743d3bdfa154ce6911fc2833cffe90d`
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-r22-compact-roster-signup-2026-09-18/README.md`](./qa-evidence/kakao-r22-compact-roster-signup-2026-09-18/README.md)에 있다.
+
 ## 2026-09-17 카카오 R21 내전 일반·예비 이중 입력
 
 - 기능 커밋: `b6ead14aef8a8991bb519805ffdcd2f6c72ac699`
