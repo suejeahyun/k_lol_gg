@@ -61,14 +61,14 @@ long task 180ms였고 27개 대상 모두 예산 안에서 통과했다. 최초 
 - 자동 감지 issue: 0
 - session: anonymous 109, account 39, admin 188, setup 3
 - 운영 데이터·운영 credential 사용: 없음
-- 임시 결과: `.tmp/site-wide-effects-1.2.0-20260918`
+- 최종 임시 결과: `.tmp/site-wide-effects-1.2.0-20260918-final`
 
 ### 증거 SHA-256
 
 | 파일 | SHA-256 |
 | --- | --- |
-| `summary.json` | `95C8BED4CFD70E6CF3919E6DE2F2C5461C14A9339BD9475D995306FF9D0315F0` |
-| `screenshots/index.json` | `B2F59701EEAC9079D9847203CBCE0E003109CC6CF33AF4C3279C72CEC9D81695` |
+| `summary.json` | `0E4C85A293C6597DE5AD5587D8F1A2130E462BFF07BB3F18DFB257DE6AA220FE` |
+| `screenshots/index.json` | `9F727CFB537ABB53E383DBFD54A1FA735DCEB336F1DC393DEBFD958B4B35563B` |
 | `browser-quality-local.json` | `2DE95EFED7B9C7CF7DC32ED1F6A16C3F15964A74DA3FC64ADE65BA0CE4295E48` |
 | `browser-quality-production.json` | `D4FC44275C2E56D3F3FBC283C540AC6F3796A6429C1328752541D03CFE23E7B4` |
 
