@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useId, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import styles from "./media.module.css";
 import { ResilientMediaImage } from "./resilient-media-image";
-import { stepMediaCarouselIndex } from "./media-carousel-state";
+import { stepMediaCarouselIndex, stepMediaCarouselWheelIndex } from "./media-carousel-state";
 
 export type MediaCarouselSlide = Readonly<{
   id: string;
@@ -31,13 +31,44 @@ export function MediaCarousel({
 }>) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselId = useId();
+  const carouselRef = useRef<HTMLElement>(null);
+  const currentIndexRef = useRef(0);
+  const wheelLockRef = useRef(0);
   const activeIndex = slides.length > 0 ? currentIndex % slides.length : 0;
   const activeSlide = slides[activeIndex];
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel || slides.length <= 1) return;
+
+    function handleWheel(event: WheelEvent) {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (Math.abs(event.deltaY) < 18 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+
+      const direction: -1 | 1 = event.deltaY < 0 ? -1 : 1;
+      const now = performance.now();
+      const nextIndex = stepMediaCarouselWheelIndex(currentIndexRef.current, direction, slides.length);
+      if (nextIndex === currentIndexRef.current) return;
+
+      event.preventDefault();
+      if (now - wheelLockRef.current < 220) return;
+      wheelLockRef.current = now;
+      currentIndexRef.current = nextIndex;
+      setCurrentIndex(nextIndex);
+    }
+
+    carousel.addEventListener("wheel", handleWheel, { passive: false });
+    return () => carousel.removeEventListener("wheel", handleWheel);
+  }, [slides.length]);
 
   if (!activeSlide) return null;
 
   function move(direction: -1 | 1) {
-    setCurrentIndex((index) => stepMediaCarouselIndex(index, direction, slides.length));
+    setCurrentIndex((index) => {
+      const nextIndex = stepMediaCarouselIndex(index, direction, slides.length);
+      currentIndexRef.current = nextIndex;
+      return nextIndex;
+    });
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
@@ -62,15 +93,18 @@ export function MediaCarousel({
 
   return (
     <section
+      ref={carouselRef}
       className={styles.mediaCarousel}
       data-variant={variant}
       role="region"
       aria-roledescription="carousel"
       aria-label={label}
-      aria-describedby={`${carouselId}-status`}
+      aria-describedby={`${carouselId}-status ${carouselId}-wheel-hint`}
       onKeyDown={handleKeyDown}
     >
+      {slides.length > 1 ? <span className={styles.carouselWheelHint} aria-hidden="true">휠로 넘기기</span> : null}
       <figure
+        key={activeSlide.id}
         className={styles.carouselSlide}
         role="group"
         aria-roledescription="slide"
@@ -92,6 +126,8 @@ export function MediaCarousel({
         ) : null}
       </figure>
 
+      {slides.length > 1 ? <span id={`${carouselId}-wheel-hint`} className="sr-only">마우스 휠, 좌우 화살표 키 또는 이동 버튼으로 사진을 넘길 수 있습니다.</span> : null}
+
       <div className={styles.carouselFooter}>
         <p id={`${carouselId}-status`} className={styles.carouselStatus} aria-live="polite" aria-atomic="true">
           <span aria-hidden="true">{activeIndex + 1} / {slides.length}</span>
@@ -110,7 +146,10 @@ export function MediaCarousel({
                   aria-label={`${index + 1}번째 사진 보기`}
                   aria-current={index === activeIndex ? "true" : undefined}
                   data-active={index === activeIndex}
-                  onClick={() => setCurrentIndex(index)}
+                  onClick={() => {
+                    currentIndexRef.current = index;
+                    setCurrentIndex(index);
+                  }}
                 />
               ))}
             </div>

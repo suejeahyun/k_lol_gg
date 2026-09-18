@@ -5,6 +5,12 @@
 .eyebrow { color: var(--text-accent-purple); font-size: .75rem; font-weight: 900; letter-spacing: .12em; }
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
 .card, .panel, .state { border: 1px solid var(--border); border-radius: 1.25rem; background: rgba(255,255,255,.9); padding: 1.1rem; box-shadow: 0 12px 34px rgba(76,94,130,.07); }
+.card { position:relative; overflow:hidden; transition:transform var(--motion-base) var(--ease-out),border-color var(--motion-fast) ease; }
+.card::before { position:absolute; inset:0 0 auto; height:4px; background:#8ba5c8; content:""; }
+.card[data-severity="caution"]::before { background:#d3aa55; }
+.card[data-severity="warning"]::before { background:#e07d52; }
+.card[data-severity="ban"]::before { background:#cf5f78; }
+.card[data-severity="resolved"]::before { background:#49a883; }
 .card span { color: var(--text-muted); font-size: .8rem; }
 .card strong { display: block; margin-top: .35rem; color: var(--ink-strong); font-size: 1.8rem; }
 .rules, .tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
@@ -46,3 +52,6 @@
 .recordLink { min-height: 2.6rem; display: inline-flex; align-items: center; color: #315eaa; font-size: .78rem; font-weight: 900; }
 @media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } .rules, .tasks, .detailGrid, .recordGrid { grid-template-columns: 1fr; } .header { align-items: start; flex-direction: column; } .evidence { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px) { .page { padding: .8rem; } .hero { min-height: 0; border-radius: 1.4rem; } .stats, .facts { grid-template-columns: 1fr; } .evidence { grid-template-columns: repeat(2, 1fr); } .button, .link { width: 100%; } }
+@media (hover:hover) and (pointer:fine) { .card:hover,.panel:hover { transform:translateY(-2px); border-color:rgba(91,126,184,.34); } }
+@media (prefers-reduced-motion:reduce) { .card,.panel { transition:none; } .card:hover,.panel:hover { transform:none; } }
+@media (forced-colors:active) { .hero,.card,.panel,.state { border-color:CanvasText; box-shadow:none; } .card::before { background:Highlight; } }

@@ -55,6 +55,7 @@
 .card p { margin: 0; color: var(--text-muted); font-size: 11px; line-height: 1.6; }
 .card small { margin-top: auto; color: #66589a; font-size: 10px; font-weight: 850; }
 .card[aria-disabled="true"] { opacity: .7; }
+.card:focus-visible { border-color:var(--ring); outline:3px solid color-mix(in srgb,var(--ring) 28%,transparent); outline-offset:3px; }
 
 .steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
 .steps li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 13px; align-items: start; border-radius: 16px; padding: 14px; background: #f7faff; counter-increment: step; }
@@ -91,3 +92,6 @@
   .sectionHeading { align-items: flex-start; flex-direction: column; }
   .actions > * { flex: 1 1 145px; }
 }
+@media (hover:hover) and (pointer:fine) { .card:not([aria-disabled="true"]):hover { transform:translateY(-3px); border-color:rgba(91,126,184,.36); box-shadow:var(--shadow-2); } .primary:hover,.secondary:hover,.installButton:hover { transform:translateY(-1px); } }
+@media (prefers-reduced-motion:reduce) { .card,.primary,.secondary,.installButton { transition:none; } .card:hover,.primary:hover,.secondary:hover,.installButton:hover { transform:none; } }
+@media (forced-colors:active) { .hero,.section,.card,.notice { border-color:CanvasText; box-shadow:none; } .card:focus-visible { outline-color:Highlight; } }

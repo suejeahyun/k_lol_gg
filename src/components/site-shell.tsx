@@ -14,7 +14,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
   const session = await getCurrentSession("ACCOUNT");
   const accountSignedIn = session?.purpose === "ACCOUNT";
   return (
-    <div className="site-canvas">
+    <div className="site-canvas" data-ui-scope="public">
       <a className="skip-link" href="#main-content">
         본문 바로가기
       </a>

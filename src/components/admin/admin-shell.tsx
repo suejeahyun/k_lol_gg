@@ -19,7 +19,7 @@ function environmentLabel() {
 
 export function AdminShell({ session, children }: { session: AuthSession; children: React.ReactNode }) {
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-ui-scope="admin">
       <aside className={styles.sidebar} id="admin-workspaces">
         <Link className={styles.brand} href="/admin">
           <span><CloudSun aria-hidden="true" /></span>

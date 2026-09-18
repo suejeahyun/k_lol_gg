@@ -118,7 +118,10 @@
   border-radius: 20px;
   padding: 16px;
   background: linear-gradient(145deg, #f4f9ff, #f7f1ff);
+  transition: transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease;
 }
+.stats article:nth-child(2) { background: linear-gradient(145deg, #fffaf0, #fff2d8); }
+.stats article:nth-child(3) { background: linear-gradient(145deg, #f0fff8, #e4f8ef); }
 .stats span { color: var(--text-muted); font-size: 11px; font-weight: 800; }
 .stats strong { color: var(--ink-strong); font-size: 26px; }
 
@@ -212,6 +215,7 @@
   font-size: 12px;
   font-weight: 900;
   cursor: pointer;
+  transition: transform var(--motion-fast) var(--ease-out), border-color var(--motion-fast) ease, background-color var(--motion-fast) ease;
 }
 .positionGrid label[data-selected="true"] { border-color: #8fa9e5; color: #4d4f98; background: #ebeefe; }
 .positionGrid input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
@@ -246,6 +250,7 @@
   border-radius: 17px;
   padding: 10px 14px;
   background: #fbfdff;
+  transition: border-color var(--motion-fast) ease, background-color var(--motion-fast) ease;
 }
 .participantList li > span {
   display: grid;
@@ -300,4 +305,27 @@
 @media (prefers-reduced-motion: reduce) {
   .loadingHero,
   .loadingGrid span { animation: none; }
+  .typeTabs a:hover,
+  .roundTabs a:hover,
+  .focusLink:hover,
+  .loginCard a:hover,
+  .actionButtons button:hover,
+  .stats article:hover,
+  .positionGrid label:hover { transform: none; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .typeTabs a:hover,
+  .roundTabs a:hover,
+  .focusLink:hover,
+  .loginCard a:hover,
+  .actionButtons button:hover { transform: translateY(-1px); }
+  .stats article:hover { transform: translateY(-2px); border-color: rgba(99, 135, 197, .34); }
+  .positionGrid label:hover { transform: translateY(-1px); border-color: rgba(91, 126, 184, .42); }
+  .participantList li:hover { border-color: rgba(91, 126, 184, .34); background: #f7fbff; }
+}
+
+@media (forced-colors: active) {
+  .hero,.overview,.actionCard,.participants,.stateCard,.loginCard,.myStatus,.stats article,.participantList li { border-color: CanvasText; box-shadow: none; }
+  .typeTabs a[aria-current="page"],.roundTabs a[aria-current="page"],.positionGrid label[data-selected="true"] { border: 2px solid Highlight; }
 }

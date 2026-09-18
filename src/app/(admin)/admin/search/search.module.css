@@ -5,6 +5,7 @@
 .search { margin: 2rem 0; }
 .search label { display: block; margin-bottom: .45rem; font-size: .76rem; font-weight: 800; }
 .search > div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .6rem; border: 1px solid #d7e2f1; border-radius: 1rem; background: white; padding: .45rem; box-shadow: 0 1rem 2.5rem rgb(49 94 170 / 7%); }
+.search > div:focus-within { border-color: #5c87c5; box-shadow: 0 0 0 3px rgb(49 94 170 / 14%); }
 .search svg { width: 1.1rem; height: 1.1rem; margin-left: .45rem; color: #66758b; }
 .search input { min-width: 0; height: 2.75rem; border: 0; outline: 0; background: transparent; font: inherit; }
 .search button { min-height: 2.65rem; border: 0; border-radius: .75rem; background: #315eaa; color: white; padding: 0 1rem; font-weight: 800; cursor: pointer; }

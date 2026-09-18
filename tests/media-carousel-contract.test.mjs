@@ -20,6 +20,9 @@ test("홈과 이미지 상세은 같은 접근 가능한 수동 캐러셀을 사
     'aria-label="다음 사진"',
     'event.key === "ArrowLeft"',
     'event.key === "ArrowRight"',
+    'addEventListener("wheel", handleWheel, { passive: false })',
+    "stepMediaCarouselWheelIndex",
+    "마우스 휠, 좌우 화살표 키 또는 이동 버튼",
     "ResilientMediaImage",
     "key={activeSlide.id}",
   ]) assert.equal(carousel.includes(contract), true, contract);

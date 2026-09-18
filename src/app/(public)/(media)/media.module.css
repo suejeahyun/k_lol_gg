@@ -47,8 +47,10 @@
 .playerPreview strong { font-family: var(--font-heading); font-size: clamp(30px,5vw,54px); }
 .playerPreview em { display: inline-flex; align-items: center; gap: 8px; padding: 11px 17px; border-radius: 999px; color: #344d88; background: #fff; font-style: normal; font-weight: 900; box-shadow: 0 12px 28px rgba(15,25,55,.18); }
 .playerPreview em svg { width: 18px; height: 18px; fill: currentColor; }
-.mediaCarousel { display: grid; min-width: 0; gap: 12px; }
-.carouselSlide { display: grid; min-width: 0; gap: 10px; margin: 0; }
+.mediaCarousel { position: relative; display: grid; min-width: 0; gap: 12px; }
+.carouselSlide { display: grid; min-width: 0; gap: 10px; margin: 0; animation: carouselStepReveal 180ms var(--ease-out) both; }
+.carouselWheelHint { position: absolute; top: 12px; right: 12px; z-index: 3; opacity: 0; padding: 6px 9px; border: 1px solid rgba(255,255,255,.56); border-radius: 999px; color: white; background: rgba(35,49,86,.7); font-size: 10px; font-weight: 900; pointer-events: none; transform: translateY(-3px); transition: opacity 160ms ease, transform 160ms ease; backdrop-filter: blur(6px); }
+@keyframes carouselStepReveal { from { opacity: .55; transform: translateX(8px); } to { opacity: 1; transform: none; } }
 .carouselViewport { position: relative; overflow: hidden; width: 100%; min-width: 0; aspect-ratio: 16 / 9; border: 1px solid var(--border); border-radius: 26px; background: linear-gradient(145deg, rgba(226,244,255,.78), rgba(241,232,255,.82)); box-shadow: var(--shadow-soft); contain: layout paint; }
 .carouselViewport img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .carouselImageLink { position: absolute; inset: 0; border-radius: inherit; }
@@ -74,6 +76,6 @@
 .mediaCarousel[data-variant="compact"] .carouselFooter { gap: 6px; }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 640px) { .hero { min-height: 0; border-radius: 24px; } .hero > svg { display: none; } .grid { grid-template-columns: 1fr; } .heading { align-items: start; flex-direction: column; } .carouselViewport { aspect-ratio: 4 / 3; border-radius: 20px; } .carouselDots { max-width: 176px; } }
-@media (hover: hover) and (pointer: fine) { .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-soft); } .card:hover .visual img { transform: scale(1.025); } .carouselControls > button:hover,.carouselDots button:hover { color: #3e5995; background: #edf6ff; } }
-@media (prefers-reduced-motion: reduce) { .card,.visual img { transition: none; } .grid > .card:first-child { animation: none; } .carouselDots { scroll-behavior: auto; } }
-@media (forced-colors: active) { .card,.grid > .card:first-child,.player,.carouselViewport { border-color: CanvasText; box-shadow: none; } .visual::after { display: none; } .card:focus-visible,.playerPreview:focus-visible,.carouselImageLink:focus-visible,.carouselControls > button:focus-visible,.carouselDots button:focus-visible { outline-color: Highlight; } .carouselDots button[data-active="true"]::after { background: Highlight; } }
+@media (hover: hover) and (pointer: fine) { .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-soft); } .card:hover .visual img { transform: scale(1.025); } .carouselControls > button:hover,.carouselDots button:hover { color: #3e5995; background: #edf6ff; } .mediaCarousel:hover .carouselWheelHint,.mediaCarousel:focus-within .carouselWheelHint { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card,.visual img,.carouselWheelHint { transition: none; } .grid > .card:first-child,.carouselSlide { animation: none; } .carouselDots { scroll-behavior: auto; } }
+@media (forced-colors: active) { .card,.grid > .card:first-child,.player,.carouselViewport,.carouselWheelHint { border-color: CanvasText; box-shadow: none; } .visual::after { display: none; } .card:focus-visible,.playerPreview:focus-visible,.carouselImageLink:focus-visible,.carouselControls > button:focus-visible,.carouselDots button:focus-visible { outline-color: Highlight; } .carouselDots button[data-active="true"]::after { background: Highlight; } }
