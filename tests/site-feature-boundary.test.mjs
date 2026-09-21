@@ -48,22 +48,35 @@ test("Kakao help feature controls its public guide without exposing configuratio
   assert.match(page, /입력 후 종목을 선택하거나/);
   assert.match(page, /내전구인 협곡/);
   assert.match(page, /첫 전송 전에 시간·게임을 정하고/);
-  assert.match(page, /참가가 시작된 파티의 시간·게임은 복사한 명단에서 수정할 수 없어요/);
+  assert.match(page, /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
+  assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
+  assert.match(page, /신규·교체 참가자는 라인이 필요/);
+  assert.match(page, /이름\/all/);
+  assert.match(page, /같아도 자동으로 계정을 연결하지 않아요/);
+  assert.match(page, /사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정/);
+  assert.match(page, /번호 행을 남기고 이름만 비운/);
+  assert.doesNotMatch(page, /시간·게임은 복사한 명단에서 수정할 수 없어요|전체 전송은 이름 추가용/);
   assert.doesNotMatch(page, /티어·포지션 등 참가 정보도 함께 작성/);
   assert.match(page, /스크림은 카카오 모집 기능에서 제외/);
   assert.match(page, /기존 저장 기록은 유지/);
 });
 
-test("recruit guide teaches adding a name before optional creation and explicit cancellation", () => {
+test("recruit guide teaches participation and guarded edits before optional creation", () => {
   const page = source("../src/app/(public)/(recruiting)/help/recruits/page.tsx");
   assert.match(page, /최근 봇 명단 전체를 복사/);
   assert.match(page, /사이트에 등록한 이름/);
   assert.match(page, /사이트 회원 연결 전에도 명단과 인원수에 포함/);
   assert.ok(page.indexOf("복사·붙여넣기로 참가하기") < page.indexOf("새 모집 만들기"));
   assert.match(page, /내전상세 12 삭제 내이름/);
-  assert.match(page, /복사한 명단에서 이름을 지워 전송하지 마세요/);
+  assert.match(page, /번호 행을 남기고 이름만 비운/);
   assert.match(page, /입력 후 종목을 선택하세요/);
   assert.match(page, /내전구인 협곡/);
   assert.match(page, /첫 전송 전에 시간·게임을 정하고/);
-  assert.match(page, /참가가 시작된 파티의 시간·게임은 복사한 명단에서 수정할 수 없어요/);
+  assert.match(page, /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
+  assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
+  assert.match(page, /신규·교체 참가자는 라인이 필요/);
+  assert.match(page, /이름\/all/);
+  assert.match(page, /같아도 자동으로 계정을 연결하지 않아요/);
+  assert.match(page, /사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정/);
+  assert.doesNotMatch(page, /시간·게임은 복사한 명단에서 수정할 수 없어요|이름을 지워 전송하지 마세요/);
 });
