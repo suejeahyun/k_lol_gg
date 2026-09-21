@@ -1,7 +1,7 @@
 # 내전 복사 양식 패치 1.0.0
 
 - 기능 버전: `kakao-inhouse-copy@1.0.0`
-- Git tag: `kakao-inhouse-copy-v1.0.0` (정확한 commit은 릴리스 registry에서 연결)
+- Git tag: `kakao-inhouse-copy-v1.0.0`, 소스 commit `5ba248be21d831b395823c1d84c4f705409178be`
 - 기준 소스: `413825f05a262a7d6161e6ae3a32096462622a41`
 - 상태: **소스 수정·로컬 검증 완료, NOT_DEPLOYED. 운영 DB migration·Vercel 배포·휴대폰 설치를 수행하지 않았다.**
 - migration: `0041_clever_skullbuster`. 이전 운영 head는 `0040_kakao_form_snapshot_codes`.
@@ -36,6 +36,7 @@
 | R24 실제 산출물 VM 전달 | 서버 생성 새 양식 3종이 기존 파일을 통해 전달됨 | `tests/kakao-v1-strict-messengerbot.test.mjs`, `check.log` |
 | 공개·private 봇 파일 | 이전 SHA-256과 동일 | `installer-unchanged.json` |
 | 비밀정보 검사 `node scripts/check-secrets.mjs --tree-only` | 추적·미추적 현재 파일 PASS | `secret-scan.log` |
+| 릴리스 근거 검사 | tag·commit·migration·NOT_DEPLOYED 연결 PASS | `release-check.log` |
 
 DB 검사는 loopback의 일회성 PostgreSQL 18과 합성 데이터만 사용했다. 새 저장 경로의 회원 확인 구분, 9→10 동시 신청, SITE 보호, 이름 정정과 충돌, 예비 공석 재사용, 마감 후 명단 보존, 사이트 라인 필수/예비/마감 차단을 확인했다. 새 migration은 취소된 접수 이력을 유지하면서 빈 슬롯을 다시 사용할 수 있도록 ACTIVE 행에만 유일 제약을 적용한다.
 

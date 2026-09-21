@@ -862,6 +862,19 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "kakao-inhouse-copy",
+      "version": "1.0.0",
+      "gitTag": "kakao-inhouse-copy-v1.0.0",
+      "commit": "5ba248be21d831b395823c1d84c4f705409178be",
+      "releasedAt": "2026-09-21T09:44:07.362Z",
+      "migrationHead": "0041_clever_skullbuster",
+      "qaEvidence": "docs/qa-evidence/kakao-inhouse-copy-v1.0.0-2026-09-21/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-21-kakao-inhouse-copy.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      }
     }
   ]
 }
