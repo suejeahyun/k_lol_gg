@@ -1,21 +1,14 @@
 # K-LOL.GG V2 상태
 
-## 2026-09-22 운영 준비 후속 소스 — 통합 검증·새 운영 반영 확인 전
+## 2026-09-22 운영 준비 보완 1.0.0 — 운영 적용
 
-이 절은 현재 후속 소스의 상태다. 아래 날짜별 릴리스 기록은 해당 시점의 사실로 보존하며, 과거의 `현재`·`최신`·`미배포` 문구를 이번 소스의 상태로 읽지 않는다. 새 배포 ID·소스 SHA·health 근거를 확보하기 전 기존 운영 기준은 바로 다음 절의 `kakao-copy-reliability@1.0.1` / source `b7798363` / DB0041이다. 저장소 migration head는 [journal](../drizzle/meta/_journal.json)로 확인하며 운영 DB head와 혼동하지 않는다.
-
-| 범위 | 현재 소스에서 확인한 변경 | 남은 확인 |
-|---|---|---|
-| 파티 목록·상세·초안 | 20건 목록 의존 제거, scope·운영일·번호 직접 상세, 초안 재조회·취소, 저장 뒤 목록, 새 번호형 빈 양식 | 격리 DB·통합 검사와 새 배포, 실제 폰 복붙 왕복 |
-| 경기 변경 후 통계 | 인증된 통계 projection cron·5분 예약 설정, 소비·실패 상태 처리 보완 | 운영 scheduler 실제 실행과 재처리 결과 |
-| 사이트 충원 안내 | 9→10 transaction outbox, 서명 poll/ack, scope·target 분리, 재시도·중복 억제, daily-close 보관정리 | **기본 OFF**. migration·새 배포 및 정확 대상 세션 등록·실수신 |
-| 회원 연결 | 후보 1명 미확인을 일반 미일치와 구분하는 `UNVERIFIED` 표시·필터 | 통합 DB·화면 회귀 |
-| 팀 밸런스 입력 | 최근 솔로 경기 요약·갱신시각, 관리자 보정값을 provider에 연결 | migration, 실제 Riot 데이터·권한 경계와 통합 회귀 |
-
-- 앱 버전 **MessengerBot R 0.7.29a**는 사용자 확인이다. 실제 설치된 일반 봇 JS 버전·해시와 `/봇버전` 응답, 물리 카카오방 송수신은 아직 확인하지 않았다. R24/R25 서버 호환을 실제 휴대폰 설치 확인으로 대신하지 않는다.
-- 사이트 알림 companion은 최신 channelId API를 사용하지 않는다. 일회용 등록 메시지의 replier 세션만 쓰며 재시작 후 재등록한다. SDK 호출 수락·실수신은 별개이고, 불명확한 전송은 자동 재발송하지 않는다.
-- 이번 소스 범위의 전체 QA·백업·운영 배포 결과는 총괄 통합 증거에 연결한다. [파티 focused QA](./qa-evidence/kakao-party-overview-v1.0.0-2026-09-22/README.md), [사이트 알림 focused QA](./qa-evidence/site-notices-v1.0.0-2026-09-22/README.md), [companion 설치·복구](../integrations/messengerbot-r/site-notices/README.md).
-- 실제 Riot 계정 연동, Blob 업로드·읽기·삭제, 외부 예약 실행, 휴대폰·모바일 사용성은 합성 검사와 별도로 판정한다. 기존 전체 화면 QA를 이번 모든 변경의 재검증으로 확대 해석하지 않는다.
+- source `c5cbbcd8a700a84c33283ab922bc1b5631e3123f`, Vercel `dpl_7FHerKERF1CKe4kFvN5DQkvUHX8k` READY·production. 운영 alias와 main의 서버 소스 일치, DB `0044_vengeful_trauma`. 기능별 tag·배포 ID는 [release registry](./releases/registry.json)에 연결했다.
+- 파티 전체 목록·번호 직접 상세·초안 취소·저장 후 목록, 오전 6시 명단 보존 마감, 미확인 회원 연결 표시, 팀 전용 보정·확정 경기만 경력 집계, 통계 자동 갱신·실패 재시도와 운영 진단을 반영했다.
+- 전체 계약 418 PASS·단위 934 PASS(+DB 전용 1 skip), 격리 DB 139 PASS, 인증 HTTP PASS, 105페이지·339화면 issue 0, 타입·ERD·빌드·비밀 검사 PASS. lint 오류 0·경고 55.
+- 운영 DB 백업의 실제 복원·논리 스키마/행 수 일치, 신규 migration 재실행 no-op, 후보·운영 실제 Blob 업로드/내용검사/삭제/삭제확인 PASS. 통계 대기 4건은 예약 작업으로 처리된 것을 DB 기록으로 확인했다.
+- 후보·운영 읽기 검사 PASS. 06시 마감 뒤 현재 모집 0건이어서 상세 조회 2종은 대상 없음으로 생략; 상세·저장·충돌 검증은 합성 DB 근거다. 운영 명단에 테스트 인원을 넣거나 실제 메시지를 발송하지 않았다.
+- **휴대폰·Riot는 별도**: MessengerBot 앱 0.7.29a는 사용자 확인. 실제 JS 버전, companion 설치/등록·실카카오 수신은 미확인이고 알림은 OFF. 기존 R24/R25 일반 봇 교체는 필수가 아니다. Riot 자격·실계정 동의가 없어 연동은 OFF이며 최근 솔로 요약은 합성 gateway/DB까지 검증했다.
+- [통합 QA·남은 위험·다음 권고 5개](./qa-evidence/operational-readiness-v1.0.0-2026-09-22/README.md), [한국어 패치 공지](./patch-notes/2026-09-22-operational-readiness.md), [운영·복구 절차](./operations/OPERATIONAL_READINESS_RUNBOOK.md), [휴대폰 알림 설치 안내](../integrations/messengerbot-r/site-notices/README.md).
 
 ## 2026-09-22 복사 양식 안정화 1.0.1 — 운영 적용
 

@@ -3,7 +3,7 @@
 - 일자: 2026-09-22
 - 기준: `feat/kakao-v4-gateway-20260910`, 시작 HEAD `04fee42` 이후 작업 트리
 - 기능 후보: `kakao-party-overview@1.0.0` (통합 담당의 릴리스·tag 등록 전)
-- 상태: **소스 반영·집중 로컬 검사 통과. 이 문서는 새 버전의 운영 반영 증거가 아니다.**
+- 최종 통합: source `c5cbbcd8`로 운영 반영. 전체 DB139·105페이지/339화면·운영 읽기 PASS. 아래 담당별 기록은 당시 집중 검사이며, 최종 배포 ID·범위·생략 항목은 [통합 QA](../operational-readiness-v1.0.0-2026-09-22/README.md)를 따른다.
 - 결정: [ADR 0011](../../architecture/0011-kakao-party-editable-copy-flow.md)
 
 ## 변경

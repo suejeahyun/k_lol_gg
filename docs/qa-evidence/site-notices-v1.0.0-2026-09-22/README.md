@@ -2,7 +2,7 @@
 
 - 작성일: 2026-09-22 KST
 - 기능 후보: `kakao-site-notices@1.0.0` (최종 release registry/tag는 총괄 릴리스에 연결)
-- 상태: 소스 패치·focused 합성 검사. 운영 반영·휴대폰 설치·실카카오 수신은 이 문서 시점에 확인하지 않음.
+- 최종 통합: source `c5cbbcd8`, DB0044로 서버 운영 반영. 알림 전용 DB9·전체 DB139·339화면 PASS. 아래 담당별 기록은 당시 집중 검사이며, [통합 QA](../operational-readiness-v1.0.0-2026-09-22/README.md)를 따른다. **알림 OFF·휴대폰 미설치·실카카오 수신 미확인**.
 - migration: outbox Drizzle 원본 `src/platform/db/schema/kakao-site-notices.ts`; migration 생성·fresh/upgrade 검증 및 배포는 총괄 통합 절차에서 관리.
 
 ## 변경

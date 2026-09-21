@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-09-21T21:50:17.955Z",
+  "targetFingerprint": "c5918218dd171001",
+  "status": "PASS",
+  "before": {
+    "journalCount": 42,
+    "head": {
+      "hash": "07f5b26458e2c792152826d9defd8839660c338b745c5795d9113e1f83219ebd",
+      "created_at": "1789982580113"
+    },
+    "newTables": [],
+    "riotColumns": [],
+    "invalidConstraints": 0
+  },
+  "after": {
+    "journalCount": 45,
+    "head": {
+      "hash": "efb9fdaf4f880dac07656b051ccef20abb6c0fbf49c0ec9c5671747979b9c64d",
+      "created_at": "1790025671009"
+    },
+    "newTables": [
+      {
+        "table_schema": "recruiting",
+        "table_name": "kakao_site_notices"
+      },
+      {
+        "table_schema": "team_tools",
+        "table_name": "team_balance_player_overrides"
+      }
+    ],
+    "riotColumns": [
+      {
+        "column_name": "recent_solo_json",
+        "is_nullable": "YES"
+      },
+      {
+        "column_name": "recent_solo_synced_at",
+        "is_nullable": "YES"
+      }
+    ],
+    "invalidConstraints": 0
+  },
+  "reviewed": {
+    "0042_gigantic_marauders": "b0cf0714b7b7bfeb9b5edda0ea2478276b42894fcd901776b9435db90c6e7bc3",
+    "0043_cheerful_sugar_man": "2895929fe08515f16f407d33667182010b5c20043100dd2ebf435d93943442e3",
+    "0044_vengeful_trauma": "efb9fdaf4f880dac07656b051ccef20abb6c0fbf49c0ec9c5671747979b9c64d"
+  },
+  "backupSha256": "2c7922cdd88097f7302f778815f8af9bce622c6c6876b2339ac6f3c0dedd6e64",
+  "replayNoOp": true,
+  "businessDataUpdateIssued": false,
+  "backwardCompatibleAdditions": true
+}

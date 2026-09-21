@@ -1,0 +1,97 @@
+{
+  "checkedAt": "2026-09-21T21:51:35.751Z",
+  "baseUrl": "https://k-lol-q2pn4ohhr-tjdmswo11-3715s-projects.vercel.app",
+  "stage": "candidate",
+  "status": "PASS",
+  "rosterMutationsSent": false,
+  "externalMessagesSent": false,
+  "rawMemberNamesRecorded": false,
+  "responseBodiesRecorded": false,
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "passed": true,
+      "ready": true,
+      "traceId": null
+    },
+    {
+      "check": "current copy-edit help",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 4888,
+      "replyCharacters": 683,
+      "traceId": null
+    },
+    {
+      "check": "current inhouse participation guide",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 5510,
+      "replyCharacters": 324,
+      "traceId": null
+    },
+    {
+      "check": "missing inhouse number guidance",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 5634,
+      "replyCharacters": 52,
+      "traceId": null
+    },
+    {
+      "check": "party status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 4754,
+      "replyCharacters": 28,
+      "traceId": null
+    },
+    {
+      "check": "inhouse status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 4758,
+      "replyCharacters": 28,
+      "traceId": null
+    },
+    {
+      "check": "party detail selection",
+      "selectedCount": 0,
+      "inspectedCount": 0,
+      "skipped": true,
+      "readLimitApplied": false
+    },
+    {
+      "check": "inhouse detail selection",
+      "selectedCount": 0,
+      "inspectedCount": 0,
+      "skipped": true,
+      "readLimitApplied": false
+    },
+    {
+      "check": "/help/kakao",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "responseCharacters": 58101,
+      "traceId": null
+    },
+    {
+      "check": "/help/recruits",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "responseCharacters": 58765,
+      "traceId": null
+    },
+    {
+      "check": "/recruits",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "responseCharacters": 63121,
+      "traceId": null
+    }
+  ]
+}

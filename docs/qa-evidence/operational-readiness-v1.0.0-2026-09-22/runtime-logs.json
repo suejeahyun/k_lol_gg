@@ -1,0 +1,97 @@
+{
+  "rawMessagesPublished": false,
+  "deploymentId": "dpl_7FHerKERF1CKe4kFvN5DQkvUHX8k",
+  "totalRows": 11,
+  "requests": [
+    {
+      "level": "info",
+      "timestamp": 1790027780598,
+      "traceId": "",
+      "path": "/api/internal/jobs/storage-probe",
+      "structuredKakaoLogPresent": false,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027715106,
+      "traceId": "",
+      "path": "/api/cron/statistics-projection",
+      "structuredKakaoLogPresent": false,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027673075,
+      "traceId": "",
+      "path": "/recruits",
+      "structuredKakaoLogPresent": false,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027672226,
+      "traceId": "",
+      "path": "/help/recruits",
+      "structuredKakaoLogPresent": false,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027671291,
+      "traceId": "",
+      "path": "/help/kakao",
+      "structuredKakaoLogPresent": false,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027671031,
+      "traceId": "",
+      "path": "/api/integrations/kakao/v4/commands",
+      "structuredKakaoLogPresent": true,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027670763,
+      "traceId": "",
+      "path": "/api/integrations/kakao/v4/commands",
+      "structuredKakaoLogPresent": true,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027670326,
+      "traceId": "",
+      "path": "/api/integrations/kakao/v4/commands",
+      "structuredKakaoLogPresent": true,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027670099,
+      "traceId": "",
+      "path": "/api/integrations/kakao/v4/commands",
+      "structuredKakaoLogPresent": true,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027669588,
+      "traceId": "",
+      "path": "/api/integrations/kakao/v4/commands",
+      "structuredKakaoLogPresent": true,
+      "status": 200
+    },
+    {
+      "level": "info",
+      "timestamp": 1790027668448,
+      "traceId": "",
+      "path": "/api/health",
+      "structuredKakaoLogPresent": false,
+      "status": 200
+    }
+  ],
+  "checkedAt": "2026-09-21T21:57:40.4460086Z",
+  "errorFatalCount": 0
+}

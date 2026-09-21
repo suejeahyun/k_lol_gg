@@ -1,0 +1,25 @@
+{
+  "alias": [
+    "k-lol-gg.vercel.app",
+    "k-lol-gg-tjdmswo11-3715s-projects.vercel.app",
+    "k-lol-gg-git-main-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "checkedAt": "2026-09-21T21:54:20.5980611Z",
+  "sourceSha": "c5cbbcd8a700a84c33283ab922bc1b5631e3123f",
+  "crons": [
+    {
+      "path": "/api/cron/statistics-projection",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/kakao-daily-close",
+      "schedule": "0 21 * * *"
+    }
+  ],
+  "target": "production",
+  "readyState": "READY",
+  "sourceBranch": "main",
+  "url": "k-lol-7478lztt6-tjdmswo11-3715s-projects.vercel.app",
+  "aliasAssigned": true,
+  "id": "dpl_7FHerKERF1CKe4kFvN5DQkvUHX8k"
+}

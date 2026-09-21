@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-09-21T21:56:18.534Z",
+  "readOnly": true,
+  "status": "PASS",
+  "groups": [
+    {
+      "action": "AMENDED",
+      "status": "DELIVERED",
+      "has_old_season": false,
+      "has_new_season": false,
+      "events": 1,
+      "receipts": 1,
+      "matching_receipts": 1,
+      "latest_delivered": "2026-09-21T21:55:16.284Z"
+    },
+    {
+      "action": "CREATED",
+      "status": "DELIVERED",
+      "has_old_season": false,
+      "has_new_season": false,
+      "events": 3,
+      "receipts": 3,
+      "matching_receipts": 3,
+      "latest_delivered": "2026-09-21T21:55:16.330Z"
+    }
+  ],
+  "noAffectedSeasons": true,
+  "expectedProjectionRebuild": false,
+  "note": "These events affect no published season; receipt and delivery without rebuilding public season statistics are expected."
+}

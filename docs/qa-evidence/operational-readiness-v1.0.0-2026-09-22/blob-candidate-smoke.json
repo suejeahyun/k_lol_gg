@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-09-21T21:50:57.578Z",
+  "origin": "https://k-lol-q2pn4ohhr-tjdmswo11-3715s-projects.vercel.app",
+  "httpStatus": 200,
+  "job": "storage-probe",
+  "runId": "f91ac2e7-e0f5-497b-85c3-5126bccb1ee6",
+  "storageProvider": "VERCEL_BLOB_PRIVATE",
+  "ok": true,
+  "counts": {
+    "uploaded": 1,
+    "verified": 1,
+    "deleted": 1,
+    "deletionVerified": 1
+  },
+  "failureCode": null,
+  "status": "PASS"
+}

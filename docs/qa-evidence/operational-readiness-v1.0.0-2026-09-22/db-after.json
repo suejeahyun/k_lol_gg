@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-09-21T21:55:40.421Z",
+  "targetFingerprint": "c5918218dd171001",
+  "readOnly": true,
+  "migrations": [
+    {
+      "count": 45,
+      "latest_at": "1790025671009"
+    }
+  ],
+  "head": [
+    {
+      "hash": "efb9fdaf4f880dac07656b051ccef20abb6c0fbf49c0ec9c5671747979b9c64d",
+      "created_at": "1790025671009"
+    }
+  ],
+  "statisticsQueue": [
+    {
+      "status": "DELIVERED",
+      "count": 4,
+      "oldest": "2026-09-18T09:51:26.566Z",
+      "maximum_attempts": 1
+    }
+  ],
+  "projections": [
+    {
+      "status": "READY",
+      "count": 1,
+      "oldest_calculated": "2026-09-07T15:34:17.448Z",
+      "latest_calculated": "2026-09-07T15:34:17.448Z"
+    }
+  ],
+  "statisticsRuns": [],
+  "riotLinks": [
+    {
+      "status": "DISCONNECTED",
+      "count": 92
+    }
+  ],
+  "riotJobs": [],
+  "maintenance": [
+    {
+      "job_name": "kakao-daily-close",
+      "status": "SUCCEEDED",
+      "count": 9,
+      "latest_completed": "2026-09-21T21:00:18.368Z"
+    },
+    {
+      "job_name": "storage-probe",
+      "status": "SUCCEEDED",
+      "count": 1,
+      "latest_completed": "2026-09-21T21:50:57.791Z"
+    }
+  ],
+  "tableCount": [
+    {
+      "count": 186
+    }
+  ]
+}

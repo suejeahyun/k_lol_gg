@@ -3,7 +3,8 @@
 - 작업일: 2026-09-22 KST. K-LOL.GG 웹사이트·서버·카카오 연동 범위.
 - 시작 source: `04fee42ab54a527a42554340b579d5e402af597b`.
 - 시작 production: `b7798363f9b0caee847a654afe2dde07afbcb2f9`, `dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ`, DB `0041_clever_skullbuster`.
-- 현재 판정: 소스 통합·focused 검사 및 전체 check 통과. 전체 DB/브라우저 검사 진행 중. **이 문서 작성 시점에는 신규 배포·DB migration을 아직 실행하지 않았다.** 최종 배포 근거는 아래 결과 파일과 release registry로 연결한다.
+- 릴리스 소스: `c5cbbcd8a700a84c33283ab922bc1b5631e3123f`.
+- 운영 적용: `dpl_7FHerKERF1CKe4kFvN5DQkvUHX8k` READY·production, [운영 주소](https://k-lol-gg.vercel.app), 확인 2026-09-21T21:54:32.954Z. DB0044·통계 예약 처리·후보/운영 실제 Blob·운영 읽기 PASS. 전체 검사 결과와 실기기 미확인 범위는 아래에 구분한다.
 
 ## 변경 범위
 
@@ -29,6 +30,12 @@
 - `blob-provider-smoke.json`: 로컬 개발 OIDC 권한으로 운영 Blob에 접근할 수 없어 실패한 초기 기록. 앱의 운영 Blob 장애로 단정하지 않는다. 배포 후보 runtime의 별도 결과로 검증한다.
 - 초기 `check.log`, `check-verified.log`, `full-qa.log`, `full-qa-final.log`, `full-qa-verified.log`에는 수정 전 실패 근거를 남긴다. 전체 DB에서 새 fixture와 충돌한 전역 개수 가정은 해당 테스트 주체로 범위를 제한했고, 같은 번호의 진행 중 파티와 초안이 공존할 때 종료 대상 선택은 실제 코드를 수정했다.
 - `secrets.log`: 기존 전체 Git 이력 검사 PASS. `secrets-final-tree.log`: 신규 파일을 포함한 최종 작업 트리 검사 PASS. `deployment-inputs-final.json`: 제공자 CLI의 배포 입력에서 `.private`·`.tmp`·실제 환경 파일 제외 확인.
+- `full-qa-complete.log`: 격리 PostgreSQL fresh·upgrade·재실행과 전체 DB 계약 139 PASS/0 fail/0 skip, 이어 105페이지·339개 desktop/tablet/mobile 캡처 PASS/issue 0. 운영 데이터·자격증명은 사용하거나 저장하지 않음. 전체 화면 결과·339개 SHA-256은 `browser/`, 대표 변경 화면 8개도 같은 폴더에 보관. 전체 PNG 원본은 `.tmp/readiness-qa-complete/screenshots/`에 유지한다.
+- `auth-http.log`: 로그인·TOTP·세션·역할·로그아웃·production fixture 차단 HTTP 검사 PASS.
+- `github-ci.json`: 동일 source의 main push에 대한 GitHub `V2 CI` success. 로컬 검사와 별도로 확인했다.
+- `runtime-logs.json`: 운영 전환 뒤 검사 요청·통계 예약·저장소 진단 11건 모두 HTTP200, error/fatal 0. 카카오 고정 구조 로그 존재 확인. 이는 이 조회 시간 범위의 근거이며 장기 무오류를 보장하지 않는다.
+- `db-migration.json`: 0041→0044, journal 42→45, 신규 테이블 2개/nullable 컬럼 2개, invalid constraint 0, 재실행 no-op. 업무 데이터 일괄 수정 없음.
+- `blob-candidate-smoke.json`: 후보 runtime에서 `VERCEL_BLOB_PRIVATE` HTTP200, 업로드·내용검사·삭제·삭제확인 각각 1. 진단용 새 이미지 한 개만 사용했다.
 
 ## 미확인 외부 범위
 
@@ -47,3 +54,9 @@
 3. 통계 지연·FAILED·저장소 probe 실패의 제공자 경보를 연결하고 실제 수신을 시험한다.
 4. 실제 Android/TalkBack 및 운영자 작업 흐름을 점검한다.
 5. 논리 복원 근거를 바탕으로 제공자 PITR·장애 전환 훈련 범위를 확정한다.
+
+## 최종 운영 근거
+
+- `deployment-production.json`: main Git source·운영 alias·READY·두 cron 설정. `live-production.json`: health와 허용된 읽기만 확인. 현재 목록 0건이므로 파티/내전 상세 실조회는 2종 모두 생략했다.
+- `db-after.json`·`statistics-cron-audit.json`: 06:55 예약 작업 HTTP200, 기존 PENDING 4건→DELIVERED·receipt 4건의 원본 일치. CREATED 3건·AMENDED 1건 모두 old/new season이 없어 공개 시즌 재계산은 불필요했다. 따라서 READY 계산 시각과 projection run 수가 유지되는 것은 정상이다. 실제 공개 경기의 재계산·무효화·복구는 격리 DB에서 확인했다.
+- `blob-production-smoke.json`: 실제 운영 주소에서도 저장소 네 단계 PASS. 서버 알림 feature flag는 OFF, companion 미설치. 실계정 Riot·실카카오 송수신·제공자 경보 수신/PITR은 완료로 보고하지 않는다.

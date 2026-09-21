@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-09-21T21:56:24.031Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "httpStatus": 200,
+  "traceId": "4dd00b7bd85d4cf7af0aaf182b94c2e2",
+  "job": "storage-probe",
+  "runId": "941b49aa-8599-44ae-88c9-ac0f5666541d",
+  "storageProvider": "VERCEL_BLOB_PRIVATE",
+  "ok": true,
+  "counts": {
+    "uploaded": 1,
+    "verified": 1,
+    "deleted": 1,
+    "deletionVerified": 1
+  },
+  "failureCode": null,
+  "status": "PASS"
+}

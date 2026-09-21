@@ -1,0 +1,1702 @@
+{
+  "generatedAt": "2026-09-21T21:51:04.5521571Z",
+  "fullCapturePath": ".tmp/readiness-qa-complete/screenshots",
+  "captures": [
+    {
+      "file": "001-desktop.png",
+      "sha256": "70ef4cd42e20c1ed3ac4af0275a38ebbef593194c07f3e5b023c941fe80966e5",
+      "bytes": 1802293
+    },
+    {
+      "file": "002-desktop-account.png",
+      "sha256": "4b55cbdbb906496c32eb4c4255fe8fbaf730b601e05386a7170498756b53f8d8",
+      "bytes": 476854
+    },
+    {
+      "file": "003-desktop-account-discipline.png",
+      "sha256": "f9a82c17cf22efaf8345aa1e3f1d13600fe83020ca06d0a9460742b4f5676285",
+      "bytes": 173379
+    },
+    {
+      "file": "004-desktop-account-password.png",
+      "sha256": "9652deeff4fbeee849ce7113e3691e99a7c22fbae46abeead7a0f68803b245b2",
+      "bytes": 362518
+    },
+    {
+      "file": "005-desktop-account-riot.png",
+      "sha256": "24e4916f87cea0d38225197d352bc6a846b09014064bf5975541a4da99f5b144",
+      "bytes": 235908
+    },
+    {
+      "file": "006-desktop-admin.png",
+      "sha256": "7e4a411b8df2f97fe7d639144355a485e4d8afacbfaf44ee5c7aad760f220130",
+      "bytes": 170033
+    },
+    {
+      "file": "007-desktop-admin-balance.png",
+      "sha256": "d3018e8b85d408d87c56b400e64ad37335967b1ec5d308ce842dfac224f59360",
+      "bytes": 220500
+    },
+    {
+      "file": "008-desktop-admin-balance-ai.png",
+      "sha256": "066c063a8a65555f0a4d2c4b17d9b781b2f948e3f4b1b51feed722dbafb158e6",
+      "bytes": 115751
+    },
+    {
+      "file": "009-desktop-admin-balance-drafts.png",
+      "sha256": "4c46b5fbaa09a47fc759d2e4e6e71bb96d278b27388403bc7db8fc3809891b80",
+      "bytes": 154074
+    },
+    {
+      "file": "010-desktop-admin-balance-drafts-draftId.png",
+      "sha256": "11d4b08c718de3be26997f434ebcc90102b4fcd95ad9a3cfc7936d7a2d60cd68",
+      "bytes": 286594
+    },
+    {
+      "file": "011-desktop-admin-champions.png",
+      "sha256": "9e2a8751f75841100b02827a87bb61fe3fe60ccac33baca500c9b09b2b3c33ab",
+      "bytes": 374976
+    },
+    {
+      "file": "012-desktop-admin-champions-championId-edit.png",
+      "sha256": "e06cca139ce9092009c00808683d36db222901c9871ef87ee2bbbb124314ec87",
+      "bytes": 99554
+    },
+    {
+      "file": "013-desktop-admin-champions-new.png",
+      "sha256": "effe10587e3698a2bf7305f847d2fa2f8401c86577ec2259c9e4aa0960b3bca6",
+      "bytes": 97399
+    },
+    {
+      "file": "014-desktop-admin-discipline.png",
+      "sha256": "60bcc2c501eac25d2a1d01226c5a74219c9ed21bef4e71022944bb2319ac35e7",
+      "bytes": 69204
+    },
+    {
+      "file": "015-desktop-admin-discipline-recordId.png",
+      "sha256": "6c86f75a84cf64e8f9fa6ef7dbfaa4c5693c8a1034f08a8c4bc1a6b8e915cd8d",
+      "bytes": 91726
+    },
+    {
+      "file": "016-desktop-admin-discipline-new.png",
+      "sha256": "daaf81a2bff004dd1d8eeac798f761645bb96d3f87546eac6e92ec12abf86702",
+      "bytes": 88558
+    },
+    {
+      "file": "017-desktop-admin-highlights.png",
+      "sha256": "7201f4e5016294fd7ddb3d6515654b5f1a3f4a4678fc03007a4422e39c1c6fd8",
+      "bytes": 99351
+    },
+    {
+      "file": "018-desktop-admin-highlights-highlightId-edit.png",
+      "sha256": "5fa16d781e09a68ad4a0c4eae16b783e87227d84fa472e65f76178e400885106",
+      "bytes": 122046
+    },
+    {
+      "file": "019-desktop-admin-highlights-new.png",
+      "sha256": "bc78fa7220bb2a9af7dc7120d24c336cf7ff21ca22a857be04b24a4ba5745f48",
+      "bytes": 98542
+    },
+    {
+      "file": "020-desktop-admin-images.png",
+      "sha256": "1806448be97d6f31173cd16df4e30f0a064ec9f2d522f08dd5d6cec2158b5cb1",
+      "bytes": 108845
+    },
+    {
+      "file": "021-desktop-admin-images-imageId-edit.png",
+      "sha256": "d6e2e10ce25907a6c8b982ae894ac91ccf47daa3af4aea3c10d26c6ad4ae6a83",
+      "bytes": 125815
+    },
+    {
+      "file": "022-desktop-admin-images-new.png",
+      "sha256": "e154d10f234032eb620c4286b331232bce3a6adf557872262e664331d9b95577",
+      "bytes": 132301
+    },
+    {
+      "file": "023-desktop-admin-kakao.png",
+      "sha256": "24aec4c86c5b1f129d4cc26688a0ca2457902ae59127aa9bf35d4e4603d4134e",
+      "bytes": 114326
+    },
+    {
+      "file": "024-desktop-admin-kakao-rooms.png",
+      "sha256": "cb6a5957f9d1671e46455a0276789d359205ba46359084fa47df8dc0f32df557",
+      "bytes": 136878
+    },
+    {
+      "file": "025-desktop-admin-login.png",
+      "sha256": "ad3bf821594ee5f63425b9f89f2dde90a4a328e580794f95d24a14183207bc17",
+      "bytes": 371544
+    },
+    {
+      "file": "026-desktop-admin-logs.png",
+      "sha256": "9ed4007dfdc03b15c6428d3a66953ee409a22517e717a5503a9f06f56dffa0f4",
+      "bytes": 186189
+    },
+    {
+      "file": "027-desktop-admin-matches.png",
+      "sha256": "7cac7019c9da0b8669032c325beaf0938c0ba997361e7affcf46707cf790aa18",
+      "bytes": 76629
+    },
+    {
+      "file": "028-desktop-admin-matches-matchId.png",
+      "sha256": "ab31e4e7b46048212c5f4c815886db27cd734a696cbeae4260a53c18c89c9e80",
+      "bytes": 90295
+    },
+    {
+      "file": "029-desktop-admin-matches-matchId-edit.png",
+      "sha256": "51da5def8b71cae0f673b57db6804433acc408b3b952336995e4dadad8206696",
+      "bytes": 163206
+    },
+    {
+      "file": "030-desktop-admin-matches-new.png",
+      "sha256": "21f2286a7c44d30cbaab1da231d7e8c17d51ea069e2bd8768adf4dd4b8036f0b",
+      "bytes": 167046
+    },
+    {
+      "file": "031-desktop-admin-matches-submissions-submissionId.png",
+      "sha256": "317f9f8bcc2fdf2ec8a61db8bf23659795416de9530699098c9d1461111674c4",
+      "bytes": 125991
+    },
+    {
+      "file": "032-desktop-admin-operation-forms.png",
+      "sha256": "a8875c18990b77beadd4646d08e755b20cb743546c74347f03c5b446aefc6849",
+      "bytes": 117240
+    },
+    {
+      "file": "033-desktop-admin-operation-forms-formType.png",
+      "sha256": "cb6be5ceca4864bfea2deb5c1a5764c4c5c2c29551b22517c5e796f2425bdabd",
+      "bytes": 116860
+    },
+    {
+      "file": "034-desktop-admin-operation-forms-formType-id.png",
+      "sha256": "ca0037f47f40b66fbb49d52db6988bebc90ca9d4f529f054c5690d9f7047df64",
+      "bytes": 115770
+    },
+    {
+      "file": "035-desktop-admin-players.png",
+      "sha256": "48d59b669c9e034e566aacc2e7b52a558f423a939330d0ecb52339e47c43bbd0",
+      "bytes": 200525
+    },
+    {
+      "file": "036-desktop-admin-players-playerId.png",
+      "sha256": "e2a9721d0fe17cad9aaf8c3ac7f40c7d49a37823b2a0b4a8abd0a0a4a9a662d1",
+      "bytes": 153796
+    },
+    {
+      "file": "037-desktop-admin-players-new.png",
+      "sha256": "08f03fc9e088f10ed348b920ac2b7d3baf58c7ec1ae8b2bf8b0ede88303b8446",
+      "bytes": 83431
+    },
+    {
+      "file": "038-desktop-admin-private-assets.png",
+      "sha256": "d7ccfb48debcd68085ad7c6850f863e1d80bfdcba99b9c09e72053707837f1fe",
+      "bytes": 127218
+    },
+    {
+      "file": "039-desktop-admin-private-assets-assetId.png",
+      "sha256": "f4e98239349780092188d2399439c755468cdb19348ba6f5f69541950cf0383a",
+      "bytes": 102618
+    },
+    {
+      "file": "040-desktop-admin-progress-destruction.png",
+      "sha256": "c3ef9ecd0de7526076be17b022d105c9889c9e4fcbaab6c97c4319ed3ad75911",
+      "bytes": 109606
+    },
+    {
+      "file": "041-desktop-admin-progress-destruction-tournamentId.png",
+      "sha256": "3ef7be86c4ae470f2474be227374165bfe83d6ade187d7a5b7804cfa6ca2d8e4",
+      "bytes": 115448
+    },
+    {
+      "file": "042-desktop-admin-progress-destruction-new.png",
+      "sha256": "7c9bbf3433e8a599c1ed37f87a10d7af153a5ea4e42f28e71cf6d89c981c3a0a",
+      "bytes": 78988
+    },
+    {
+      "file": "043-desktop-admin-progress-event.png",
+      "sha256": "e826ccaa20724c0684152dc5c5ebe33268c7677a5923e1e486fc4cd033ad3235",
+      "bytes": 109103
+    },
+    {
+      "file": "044-desktop-admin-progress-event-eventId.png",
+      "sha256": "0618201a82158655e89a2747f2ac0e70743aa885938df3b3a74a76875122bf88",
+      "bytes": 134028
+    },
+    {
+      "file": "045-desktop-admin-progress-event-new.png",
+      "sha256": "4a1dc30f4b469359dd88e157324493205b2daf79dd0c1973e03800fc09f48c7e",
+      "bytes": 78423
+    },
+    {
+      "file": "046-desktop-admin-riot.png",
+      "sha256": "761d1364c427801fcae5bdfe8567908d055f3d323b40b4905e7cabea35f5c6f4",
+      "bytes": 163162
+    },
+    {
+      "file": "047-desktop-admin-search.png",
+      "sha256": "7fb6916a554238760cdeba58d48a8139a9d0f465f61d646d978fd31580e5f7b4",
+      "bytes": 86955
+    },
+    {
+      "file": "048-desktop-admin-seasons.png",
+      "sha256": "744e219117fac57cc9a139cd4620c8fb86e9fdf237c455da0dd63f40f8efcada",
+      "bytes": 463578
+    },
+    {
+      "file": "049-desktop-admin-seasons-kakao-pending.png",
+      "sha256": "8ab6b3b9a3e343c0af651fa19a02833b96968e835de566377468a3d3193e569a",
+      "bytes": 214128
+    },
+    {
+      "file": "050-desktop-admin-seasons-kakao-pending-pendingId.png",
+      "sha256": "6831d02d345d9e1845d66b0c10b6e608983d8b1e99abab7d3bc4fc7dbee375b9",
+      "bytes": 93002
+    },
+    {
+      "file": "051-desktop-admin-security.png",
+      "sha256": "2bf5edcefa135f3dc429dd3832a6bc5080d74bef8ac57bd82cf978883d4042b1",
+      "bytes": 178609
+    },
+    {
+      "file": "052-desktop-admin-site-settings.png",
+      "sha256": "35785223d5536df364b68fefe51f68d89db463ecbe00dcfc16a1244ec4af1004",
+      "bytes": 95686
+    },
+    {
+      "file": "053-desktop-admin-users.png",
+      "sha256": "db12db5b88da0bd161784dfa6b24ffecde1758ff46736312d9d61283c4e5b2c6",
+      "bytes": 207004
+    },
+    {
+      "file": "054-desktop-admin-users-userAccountId.png",
+      "sha256": "9d67661548966a1cef7f6814a239d237ffccea4ad7f3c5fccf56229b128dea34",
+      "bytes": 204075
+    },
+    {
+      "file": "055-desktop-applications.png",
+      "sha256": "9efb436849b3006e295869fe11fc0309e8290284fb5273865b0ce8153e824bff",
+      "bytes": 542250
+    },
+    {
+      "file": "056-desktop-competitions.png",
+      "sha256": "cfd0e97708b6fc06704db74ca4ada607918e5a46399e649d788c68dc8e716048",
+      "bytes": 226880
+    },
+    {
+      "file": "057-desktop-competitions-destruction.png",
+      "sha256": "3577f583118a931de5688317d78910faa0732bcfbbe51abee46731832f9d5a5f",
+      "bytes": 276657
+    },
+    {
+      "file": "058-desktop-competitions-destruction-tournamentId.png",
+      "sha256": "61db48c1031b0abb1211ce7917e5ffcb74795394bfea5653e2e75b4d34643b50",
+      "bytes": 730609
+    },
+    {
+      "file": "059-desktop-competitions-events.png",
+      "sha256": "f66f0d9ccb0e554c4ca05ab7ebdacd1da0b47e03ebf7d27e37effe58d8a4bed3",
+      "bytes": 291728
+    },
+    {
+      "file": "060-desktop-competitions-events-eventId.png",
+      "sha256": "b21b012a6d2ff798de2f6eb7551244384afda2dc821df83b34de3fb4f5e85cd9",
+      "bytes": 345993
+    },
+    {
+      "file": "061-desktop-discipline.png",
+      "sha256": "67b26fc43548e7c95325684632a070b6aaab667b15f2bf45904bc6e6b254364b",
+      "bytes": 219721
+    },
+    {
+      "file": "062-desktop-forbidden.png",
+      "sha256": "3677d1510df24e555295b8c955becdb92fbb8ce714c459486dc87f9299319ada",
+      "bytes": 91626
+    },
+    {
+      "file": "063-desktop-forgot-password.png",
+      "sha256": "2ece187bed7d3bfc6b4933bf724361ae06c1935cba0d5d064ec44e41bfbe65e6",
+      "bytes": 296270
+    },
+    {
+      "file": "064-desktop-help-kakao.png",
+      "sha256": "9252310ec9b009a84fa402a03f5b8dad2e891ccf7d459b98b8aab09f04d22e04",
+      "bytes": 540640
+    },
+    {
+      "file": "065-desktop-help-recruits.png",
+      "sha256": "333002f82821ac81df03d9a69b01731251bfc4f56a559065dcaad7a0cb99c18e",
+      "bytes": 690103
+    },
+    {
+      "file": "066-desktop-help-riot.png",
+      "sha256": "a814e75a92d27792de340fb7b1b15259a086847db02b336791da47ebbcc2093a",
+      "bytes": 663099
+    },
+    {
+      "file": "067-desktop-highlights.png",
+      "sha256": "babfec24f72a64f9b2a3cb4283de9f764475697eea8be0cb8dd63e492b554dca",
+      "bytes": 338968
+    },
+    {
+      "file": "068-desktop-highlights-highlightId.png",
+      "sha256": "ff1a4de36680da87ebd01a1dd2037de257bc5da875d96467d690e8b4c48984f5",
+      "bytes": 771505
+    },
+    {
+      "file": "069-desktop-images.png",
+      "sha256": "43be5c429881e711782a460cabf603de1a5baa5af722894853c81564a0ba1a88",
+      "bytes": 351113
+    },
+    {
+      "file": "070-desktop-images-imageId.png",
+      "sha256": "79f02d509595c5b825ac6097593a769d1f29967508d8ddc292d1df1b7453eba6",
+      "bytes": 593525
+    },
+    {
+      "file": "071-desktop-install.png",
+      "sha256": "976e461e8c495ec8efdfa16c585a7325b561c1eb38b9c03b56e88dae5cba1092",
+      "bytes": 695196
+    },
+    {
+      "file": "072-desktop-login.png",
+      "sha256": "6e132026289d18ff3b71f4cdaabfd0779a3111642eb3617c890dc9c2b956d346",
+      "bytes": 464699
+    },
+    {
+      "file": "073-desktop-matches.png",
+      "sha256": "70ecdd54017e0680ad17745272f1d64fa5f25b27873a5c5cbfc56d57535792ed",
+      "bytes": 480961
+    },
+    {
+      "file": "074-desktop-matches-matchId.png",
+      "sha256": "bd531170f264d304510d47800aca9958daa46c1b59a7460652dff417a074c32e",
+      "bytes": 406261
+    },
+    {
+      "file": "075-desktop-matches-submissions.png",
+      "sha256": "7aac75d38de3169ed7b3e531a8a643145528aad88a474176a079a94d2ce51448",
+      "bytes": 190185
+    },
+    {
+      "file": "076-desktop-matches-submit.png",
+      "sha256": "8db937ac26dca1588cbdce49a0047a7ff8a8d28379951ce443f61eca70dbb1ca",
+      "bytes": 387499
+    },
+    {
+      "file": "077-desktop-players.png",
+      "sha256": "a7f1c017e0ad48ec7714f8b70154e970f0e43ed43f8a31b6cd0d69d6c4c906b8",
+      "bytes": 805755
+    },
+    {
+      "file": "078-desktop-players-playerId.png",
+      "sha256": "4c9ab25a1f59b65ed152b8aa519dc4ff4df73b57e3e52c0ea4bc47d0ad6257a9",
+      "bytes": 462061
+    },
+    {
+      "file": "079-desktop-privacy.png",
+      "sha256": "b885b6ead56d5f9907cfe2033303de5933d25da7526270466f26a01d42b58501",
+      "bytes": 440129
+    },
+    {
+      "file": "080-desktop-rankings.png",
+      "sha256": "1b6cca95b153b200b624533bee399d9d1d831a3cf3320cd52b043255e8280328",
+      "bytes": 370556
+    },
+    {
+      "file": "081-desktop-rankings-mmr.png",
+      "sha256": "05550d56b29ab82c4a611c2d39ef482be4c41675533897193e1148799409a958",
+      "bytes": 440432
+    },
+    {
+      "file": "082-desktop-recruits.png",
+      "sha256": "7c09dc9884e215bbeea50e55728065f7c7dc8bea75ec2429f5aaa3018d5e3161",
+      "bytes": 1887825
+    },
+    {
+      "file": "083-desktop-signup.png",
+      "sha256": "8dabb82849b8dfd1b5a1a9fe09c4ca76ed1516bdd19e39275a824ffb6c0780c3",
+      "bytes": 571252
+    },
+    {
+      "file": "084-desktop-start.png",
+      "sha256": "62b3b1972c58250af66004c2821aa030fe6efd49059ec3292670f31365239d02",
+      "bytes": 537337
+    },
+    {
+      "file": "085-desktop-terms.png",
+      "sha256": "de428918fbcca1b42eac09b6f3229ab0709b54401d01f9be91f16e675dc4c29f",
+      "bytes": 426809
+    },
+    {
+      "file": "086-desktop-tools-coin-toss.png",
+      "sha256": "9cb71dc48c1060326914856c3c72438fb716a3ae02843784f6c24db08b052e40",
+      "bytes": 595365
+    },
+    {
+      "file": "087-desktop-tools-random-team.png",
+      "sha256": "ebe38dde40c7dad6e314954d639c139c1bddc8979421e2b96b75240c4cb65dbe",
+      "bytes": 490090
+    },
+    {
+      "file": "088-desktop-tools-team-balance.png",
+      "sha256": "3bc64ba395a60f84dbe93369a1d8c5d35ae19971bcbeb318e7fd8bd986251d3e",
+      "bytes": 465097
+    },
+    {
+      "file": "089-desktop-tools-team-balance-drafts.png",
+      "sha256": "e67d65e531500c3cb5c9296e10bc5a23886a8212f362ea7ba78c8dfc3ed8723a",
+      "bytes": 205194
+    },
+    {
+      "file": "090-desktop-tools-team-balance-drafts-draftId.png",
+      "sha256": "3ca9a38e8d8b0238b3a53d0cdf95dc65dad85dd8718e3277e1750d252bbaae66",
+      "bytes": 584800
+    },
+    {
+      "file": "091-desktop-account-player.png",
+      "sha256": "b151f29aaa51cbd5887fa29b8d86d08887f7374f3f01fe83f06a5fe72c9d5032",
+      "bytes": 488730
+    },
+    {
+      "file": "092-desktop-admin-balance-ai-players.png",
+      "sha256": "7d05c92fb7b697b1067cc8531eb1cfb31424710a05d1bfa26c20b8d3ab9e0b25",
+      "bytes": 132521
+    },
+    {
+      "file": "093-desktop-admin-balance-ai-reviews.png",
+      "sha256": "756283d66caa47d56d5b986a07fd7a21e13c13bb73911c9331bbd8dbeec27393",
+      "bytes": 113504
+    },
+    {
+      "file": "094-desktop-admin-balance-ai-review-detail.png",
+      "sha256": "5890a3b2315005f83af5d2931eba8671c5d96bd26c323dbad12157876e2c9192",
+      "bytes": 140057
+    },
+    {
+      "file": "095-desktop-admin-balance-ai-recalculate-confirmation.png",
+      "sha256": "191edfc3da7f1bbfe524c525852f68b697e55dedd973e725608779f480c3cf7f",
+      "bytes": 201739
+    },
+    {
+      "file": "096-desktop-admin-balance-drafts-recommendations-red.png",
+      "sha256": "d2f8d86be857955279d2a00b0a28497f14e1529882b2d1cbf1698a2e8e0370ef",
+      "bytes": 144187
+    },
+    {
+      "file": "097-desktop-admin-balance-drafts-recommendations-blue.png",
+      "sha256": "543e87e4d55260a640aaff510a1f8e9153e68fc15f7783cda84f4fe05d27d017",
+      "bytes": 143799
+    },
+    {
+      "file": "098-desktop-admin-balance-drafts-draftId-recommendations-red.png",
+      "sha256": "36d6fb2da6fde5c72e77785e7372f2d620b4337a0b82dd1505f20eaea7cbad5f",
+      "bytes": 123464
+    },
+    {
+      "file": "099-desktop-admin-balance-drafts-draftId-recommendations-blue.png",
+      "sha256": "e130d9d43e90ae84096aa1d9ef732347979d9178ec63e45c94b202495ad4ef72",
+      "bytes": 123088
+    },
+    {
+      "file": "100-desktop-admin-discipline-tasks.png",
+      "sha256": "f61999e03a6f7bb00cfc53f59c3457086f47fd80dc740e8666097881a0bdbde7",
+      "bytes": 68800
+    },
+    {
+      "file": "101-desktop-admin-discipline-reviews.png",
+      "sha256": "498a674daa9230e3eff928d1ef798f843e99dd03699672be4cce20e8aa0b8b4e",
+      "bytes": 74591
+    },
+    {
+      "file": "102-desktop-admin-kakao-recruits.png",
+      "sha256": "e6a45c0027db5b4b0e36182bff8b6775b6d2bc93ff1cb320d7c30e96ffd5c13e",
+      "bytes": 109080
+    },
+    {
+      "file": "103-desktop-admin-kakao-scrims.png",
+      "sha256": "d914509e317280e349b7259bbd8ce5f2dd25bcf41d32e5b17fe0d2aa6f312f88",
+      "bytes": 83053
+    },
+    {
+      "file": "104-desktop-admin-kakao-stats.png",
+      "sha256": "fd5ca37f40f6622b9ae7cf76270e7e20eee829bf90ea46d89f625a785c2f5869",
+      "bytes": 85439
+    },
+    {
+      "file": "105-desktop-admin-kakao-settings.png",
+      "sha256": "5da9610d5ffbcfa8a9170a1a8e94a83a4fd4eb7d49181f91579040af4380c3ae",
+      "bytes": 85330
+    },
+    {
+      "file": "106-desktop-admin-kakao-logs.png",
+      "sha256": "5a26254fa876fbbc2334f49b7ad4d23257cf5b52c67be506d96cab5e328b2e19",
+      "bytes": 114529
+    },
+    {
+      "file": "107-desktop-admin-kakao-health.png",
+      "sha256": "79dadfc3978781f835886483450d218ef31aee63c584a127e0b141990a20dbc7",
+      "bytes": 82305
+    },
+    {
+      "file": "108-desktop-admin-logs-stats.png",
+      "sha256": "b7a4d1ddaa02e3ae02063ca35e20d3f83dd17a7467a40a113a808bcc9c75ef05",
+      "bytes": 71894
+    },
+    {
+      "file": "109-desktop-admin-logs-ai-requests.png",
+      "sha256": "a26fcf94eef1fd75c0b99c787abee81615fccc17645018e9375a9b7ca5563d6f",
+      "bytes": 71154
+    },
+    {
+      "file": "110-desktop-admin-matches-submissions.png",
+      "sha256": "a7f8073a9c0403b039158ba418177f76fc3863153e6adb06d62dfd3029f14050",
+      "bytes": 106251
+    },
+    {
+      "file": "111-desktop-admin-matches-matchId-ai-review.png",
+      "sha256": "8c1170a178789440ae5951071525ad29a665730da66bf20930c35969e80f634f",
+      "bytes": 71963
+    },
+    {
+      "file": "112-desktop-admin-operation-forms-friends.png",
+      "sha256": "dc8e5a2f3f73f94593325e75afe1e4a95ec022f0958dcfdd38f046c51f23e1e3",
+      "bytes": 117802
+    },
+    {
+      "file": "113-desktop-admin-operation-forms-leaves.png",
+      "sha256": "1eef25db6f71ceb23ef7e660496f7087031969cd50a649f251e5c09614619847",
+      "bytes": 117616
+    },
+    {
+      "file": "114-desktop-admin-operation-forms-meetups.png",
+      "sha256": "be15f530715b554c12c1e169897585a05150d4b3037c1b67c2676000270d5afb",
+      "bytes": 117686
+    },
+    {
+      "file": "115-desktop-admin-operation-forms-suggestions.png",
+      "sha256": "cb6be5ceca4864bfea2deb5c1a5764c4c5c2c29551b22517c5e796f2425bdabd",
+      "bytes": 116860
+    },
+    {
+      "file": "116-desktop-admin-players-playerId-edit.png",
+      "sha256": "2397623ed421aeff705ca1ab71f9e0e153b2c285a4fe05616c61d9f8229886e9",
+      "bytes": 138817
+    },
+    {
+      "file": "117-desktop-admin-players-playerId-balance.png",
+      "sha256": "a9760791e1080e538abf4623bee2dcaa3223846e9eed387ce36fd06fc2201c59",
+      "bytes": 131739
+    },
+    {
+      "file": "118-desktop-admin-players-playerId-riot.png",
+      "sha256": "5c8a88093d907aaa59bcc8a5167ce0da1f13b909ac6daef3001963a2c1f29095",
+      "bytes": 132024
+    },
+    {
+      "file": "119-desktop-admin-private-assets-ready.png",
+      "sha256": "f091ab03492a4cdd554772213f436387be12328ee34e74e301f838a71aea76e0",
+      "bytes": 125907
+    },
+    {
+      "file": "120-desktop-admin-private-assets-cleanup.png",
+      "sha256": "551ba3ed9beba05f6c445c44207fa997178ba2ddbdb84c4d0c03c0befc1c2f6a",
+      "bytes": 102300
+    },
+    {
+      "file": "121-desktop-admin-progress-destruction-tournamentId-live-auction.png",
+      "sha256": "361ab9bdb1933f3a6e987cacf388137810e0b0c940c162b8c01990313bd1d027",
+      "bytes": 125085
+    },
+    {
+      "file": "122-desktop-admin-riot-sync.png",
+      "sha256": "77090603185fa90e9a322b2bf7bbd5db7186e4f33ec3deca8f5ab8cd2783ef59",
+      "bytes": 136682
+    },
+    {
+      "file": "123-desktop-admin-riot-logs.png",
+      "sha256": "bc842b69e4c2d6f32d023cabd91923b16f17ced28768a77c55236fc99a7582a1",
+      "bytes": 136957
+    },
+    {
+      "file": "124-desktop-admin-riot-bulk-link.png",
+      "sha256": "59a9f7dd9f72c163e82a1f10f8ad2611440891bf066f05f6974bb49d585793bd",
+      "bytes": 145324
+    },
+    {
+      "file": "125-desktop-admin-seasons-applications.png",
+      "sha256": "115f45a798252de84fdba47d350ee8714bf376ff9204f6ba8fdd1c38c4928375",
+      "bytes": 460507
+    },
+    {
+      "file": "126-desktop-applications-season.png",
+      "sha256": "9efb436849b3006e295869fe11fc0309e8290284fb5273865b0ce8153e824bff",
+      "bytes": 542250
+    },
+    {
+      "file": "127-desktop-applications-season-pwa-entry.png",
+      "sha256": "67db9c403e4fd7f4dff697d2aa4162961f8be348e22d07133d5568a1dfba0db7",
+      "bytes": 542199
+    },
+    {
+      "file": "128-desktop-applications-event.png",
+      "sha256": "ca28685057cef7ec3478d597e5ffdb88aa8fa73ed2d8ad514ee7a8a874fe8fb9",
+      "bytes": 263776
+    },
+    {
+      "file": "129-desktop-applications-destruction.png",
+      "sha256": "f057eea3f420c198e132503ef43f635d51dbd170ad3d847dad3b6fafa814b5e7",
+      "bytes": 263704
+    },
+    {
+      "file": "130-desktop-competitions-destruction-tournamentId-apply.png",
+      "sha256": "61db48c1031b0abb1211ce7917e5ffcb74795394bfea5653e2e75b4d34643b50",
+      "bytes": 730609
+    },
+    {
+      "file": "131-desktop-competitions-destruction-tournamentId-captain-points.png",
+      "sha256": "dd3710bd51394ecaea351aa6f5015093edded3ce7162b63943c35bff87ee3923",
+      "bytes": 427498
+    },
+    {
+      "file": "132-desktop-competitions-destruction-tournamentId-participants.png",
+      "sha256": "853d0cdd001d790a242e73e987854b3ee9f005dc77e9e2ba91a1f2d236d4201a",
+      "bytes": 493762
+    },
+    {
+      "file": "133-desktop-competitions-destruction-tournamentId-participant-detail.png",
+      "sha256": "2094961d3164b9bae0f38b2cfd5a178ed26e787a6b0fdfc554a9dbca7c98f7fc",
+      "bytes": 476710
+    },
+    {
+      "file": "134-desktop-competitions-destruction-tournamentId-gallery.png",
+      "sha256": "469dd00257f9c5e7bc0cc8f2bf66fb68f591064c188d97ade32c3615c30b97e1",
+      "bytes": 457751
+    },
+    {
+      "file": "135-desktop-competitions-destruction-tournamentId-gallery-lightbox.png",
+      "sha256": "0bde7496c663d870d39e3b255a216c272ff9f6528005d7b1938bcf7050e15dba",
+      "bytes": 308252
+    },
+    {
+      "file": "136-desktop-competitions-destruction-tournamentId-mvp.png",
+      "sha256": "cefff252ede9a4e4aab5222598a1f9d361f7d45dd6c1fbcdb913b74bfb00ad10",
+      "bytes": 464646
+    },
+    {
+      "file": "137-desktop-competitions-events-eventId-apply.png",
+      "sha256": "79cb84f7111833cb5de41dabbb8be4778999020e6aff1c24fe412fa01b987dfe",
+      "bytes": 335248
+    },
+    {
+      "file": "138-desktop-players-playerId-riot.png",
+      "sha256": "5ba88da1e43f518d613132629378824ace0a1f1ce9a041a45b32357be94f9e99",
+      "bytes": 270896
+    },
+    {
+      "file": "139-desktop-rankings-mmr-players.png",
+      "sha256": "cd9c6b73ab51da7d153806f830db64f067cefd6ca1ab1257691cdd3f803c074c",
+      "bytes": 437796
+    },
+    {
+      "file": "140-desktop-tools-random-team-tier.png",
+      "sha256": "0bfc8b341101784d89c871dc187e6b17045950e5926436175b8417253b77e296",
+      "bytes": 491260
+    },
+    {
+      "file": "141-desktop-tools-team-balance-drafts-recommendations-red.png",
+      "sha256": "e460842e34f34d2502ade3dc8cb14c7855be82c4e1e802ece5b39122763e9a4a",
+      "bytes": 335859
+    },
+    {
+      "file": "142-desktop-tools-team-balance-drafts-recommendations-blue.png",
+      "sha256": "4ca61469d46bfdacce11d2fc7e964710ea144ab17ec8fa82393a6e60a6e464d4",
+      "bytes": 335024
+    },
+    {
+      "file": "143-desktop-tools-team-balance-drafts-draftId-recommendations-red.png",
+      "sha256": "20bb60e6cf67b97c9f4517029822cdda72d380ca47285a029d198c63c916c97e",
+      "bytes": 289354
+    },
+    {
+      "file": "144-desktop-tools-team-balance-drafts-draftId-recommendations-blue.png",
+      "sha256": "0ea5861f183185997806685b4461ec153cfb353e1f66c5377f91536c75ecd821",
+      "bytes": 296071
+    },
+    {
+      "file": "145-desktop-admin-ai-requests-redirect-contract.png",
+      "sha256": "a26fcf94eef1fd75c0b99c787abee81615fccc17645018e9375a9b7ca5563d6f",
+      "bytes": 71154
+    },
+    {
+      "file": "146-desktop-admin-kakao-operation-forms-redirect-contract.png",
+      "sha256": "a8875c18990b77beadd4646d08e755b20cb743546c74347f03c5b446aefc6849",
+      "bytes": 117240
+    },
+    {
+      "file": "147-desktop-admin-kakao-operation-forms-formType-redirect-contract.png",
+      "sha256": "cb6be5ceca4864bfea2deb5c1a5764c4c5c2c29551b22517c5e796f2425bdabd",
+      "bytes": 116860
+    },
+    {
+      "file": "148-desktop-admin-kakao-recruits-redirect-contract.png",
+      "sha256": "24aec4c86c5b1f129d4cc26688a0ca2457902ae59127aa9bf35d4e4603d4134e",
+      "bytes": 114326
+    },
+    {
+      "file": "149-desktop-admin-kakao-recruits-logs-redirect-contract.png",
+      "sha256": "a9d8d33c8cbcef4fb638eca4433085d9299703848562f358bf9ccd57d974e854",
+      "bytes": 109574
+    },
+    {
+      "file": "150-desktop-admin-kakao-recruits-settings-redirect-contract.png",
+      "sha256": "79dadfc3978781f835886483450d218ef31aee63c584a127e0b141990a20dbc7",
+      "bytes": 82305
+    },
+    {
+      "file": "151-desktop-admin-kakao-scrims-redirect-contract.png",
+      "sha256": "4abd84dc1a3da387de79f8018b4fdece97325d47e8f617a87d951b896d4fd17c",
+      "bytes": 92559
+    },
+    {
+      "file": "152-desktop-admin-kakao-season-apply-redirect-contract.png",
+      "sha256": "8ab6b3b9a3e343c0af651fa19a02833b96968e835de566377468a3d3193e569a",
+      "bytes": 214128
+    },
+    {
+      "file": "153-desktop-admin-kakao-settings-redirect-contract.png",
+      "sha256": "5da9610d5ffbcfa8a9170a1a8e94a83a4fd4eb7d49181f91579040af4380c3ae",
+      "bytes": 85330
+    },
+    {
+      "file": "154-desktop-admin-kakao-stats-redirect-contract.png",
+      "sha256": "fd5ca37f40f6622b9ae7cf76270e7e20eee829bf90ea46d89f625a785c2f5869",
+      "bytes": 85439
+    },
+    {
+      "file": "155-desktop-admin-logs-kakao-redirect-contract.png",
+      "sha256": "5a26254fa876fbbc2334f49b7ad4d23257cf5b52c67be506d96cab5e328b2e19",
+      "bytes": 114529
+    },
+    {
+      "file": "156-desktop-admin-operation-forms-warnings-redirect-contract.png",
+      "sha256": "60bcc2c501eac25d2a1d01226c5a74219c9ed21bef4e71022944bb2319ac35e7",
+      "bytes": 69204
+    },
+    {
+      "file": "157-desktop-admin-recruits-redirect-contract.png",
+      "sha256": "24aec4c86c5b1f129d4cc26688a0ca2457902ae59127aa9bf35d4e4603d4134e",
+      "bytes": 114326
+    },
+    {
+      "file": "158-desktop-app-redirect-contract.png",
+      "sha256": "70ef4cd42e20c1ed3ac4af0275a38ebbef593194c07f3e5b023c941fe80966e5",
+      "bytes": 1802293
+    },
+    {
+      "file": "159-desktop-app-players-redirect-contract.png",
+      "sha256": "a7f1c017e0ad48ec7714f8b70154e970f0e43ed43f8a31b6cd0d69d6c4c906b8",
+      "bytes": 805755
+    },
+    {
+      "file": "160-tablet.png",
+      "sha256": "5dafe8bcb9f50e345c9d571db57fc1f55da9c1e8326ef933d84a36149fd6536b",
+      "bytes": 1457074
+    },
+    {
+      "file": "161-tablet-account.png",
+      "sha256": "fd2cdba8f16daf4ad826864d28f30c55ca0d689abb70dbcf6034a893e709b1cc",
+      "bytes": 322916
+    },
+    {
+      "file": "162-tablet-account-discipline.png",
+      "sha256": "98cc5a80e4da5b2b58e645e5426b23a87ddc6ab2b5d4c45933abe28268a69d4c",
+      "bytes": 239738
+    },
+    {
+      "file": "163-tablet-account-password.png",
+      "sha256": "67fb21cd5830df04c6ec97dcbcf821c07eca8e31b97fe51bc633fee6e062d5ee",
+      "bytes": 337105
+    },
+    {
+      "file": "164-tablet-account-riot.png",
+      "sha256": "95f2c4d0a5c6394f63687d7e0274dca49c0578619614c6830dfd488912ea392e",
+      "bytes": 240457
+    },
+    {
+      "file": "165-tablet-admin.png",
+      "sha256": "ebfe521c76d66b2f10ab6995d5cf582c161f2b4b6e6e63c81ab50e33b3a87e5b",
+      "bytes": 145598
+    },
+    {
+      "file": "166-tablet-admin-balance.png",
+      "sha256": "8ae9b77e7d4e5e0286c09f3308c6580e2760614750db9107fb9a1c362698eba6",
+      "bytes": 208064
+    },
+    {
+      "file": "167-tablet-admin-balance-ai.png",
+      "sha256": "f44bd68dddf1d6c146addf0ba922d463e992fc46f2bade056326f8537493cfcc",
+      "bytes": 125114
+    },
+    {
+      "file": "168-tablet-admin-balance-drafts.png",
+      "sha256": "31d0e7aae089387dd30a0bfe66aa26e3670214aa0bdd9b74de34c0c2d72da633",
+      "bytes": 151717
+    },
+    {
+      "file": "169-tablet-admin-balance-drafts-draftId.png",
+      "sha256": "155792448832fd2b078da669b0e6e6fdacf6b8d34f450ad1fe29a2c71364da73",
+      "bytes": 217287
+    },
+    {
+      "file": "170-tablet-admin-champions.png",
+      "sha256": "696c3c60dcbb8fc9766807a63a46cac1e9071f4617d6fc5d116ef17d9eecdb3a",
+      "bytes": 331083
+    },
+    {
+      "file": "171-tablet-admin-champions-championId-edit.png",
+      "sha256": "717ada49ae8dbb13936e845de8fe8ef6d45416d9fe706dc1ed7bccc1d07678f4",
+      "bytes": 118081
+    },
+    {
+      "file": "172-tablet-admin-champions-new.png",
+      "sha256": "f6313924ccb8ab373f407bc79b642be018d80978f41844f708a2d692701a725e",
+      "bytes": 115753
+    },
+    {
+      "file": "173-tablet-admin-discipline.png",
+      "sha256": "3e4dd36703b34dd576d6bea90b7ce6a028c67e0ca4398e33169c44d4dcfad151",
+      "bytes": 88885
+    },
+    {
+      "file": "174-tablet-admin-discipline-recordId.png",
+      "sha256": "6856ec38dd775127b374f12553ea6585b911e000bbfdd5687fe0551caa1ecade",
+      "bytes": 115739
+    },
+    {
+      "file": "175-tablet-admin-discipline-new.png",
+      "sha256": "14ef80862b79e7e019c6e79489a5795e181a77e62fe8493553330269f73ec429",
+      "bytes": 101352
+    },
+    {
+      "file": "176-tablet-admin-highlights.png",
+      "sha256": "19fa5ae4e43c51e3e514a5a5b63e5b32a43398eec3482d2c8198d5945b87ebab",
+      "bytes": 115396
+    },
+    {
+      "file": "177-tablet-admin-highlights-highlightId-edit.png",
+      "sha256": "726164e7c925fb2691ccfc490063a07ce8b4de8874444bc6963c8776f780fe27",
+      "bytes": 134612
+    },
+    {
+      "file": "178-tablet-admin-highlights-new.png",
+      "sha256": "d90fb59b969460909de369c46e58321ff304c3a778a19f656c40859a38336189",
+      "bytes": 117570
+    },
+    {
+      "file": "179-tablet-admin-images.png",
+      "sha256": "4c59e3548e06f1ab87ad09f37a05f258ccb7cef89f4517eb0f9ab41a38588b2d",
+      "bytes": 123467
+    },
+    {
+      "file": "180-tablet-admin-images-imageId-edit.png",
+      "sha256": "1383395918c48258063fa0bb9174d43e7da75ab790596289e438d5d32f4f99f0",
+      "bytes": 138955
+    },
+    {
+      "file": "181-tablet-admin-images-new.png",
+      "sha256": "40b31945f8e3e6f1ba8436b422e1d78bca9f56725523aef1c9c31e459412fac8",
+      "bytes": 142664
+    },
+    {
+      "file": "182-tablet-admin-kakao.png",
+      "sha256": "fbc839e7cf4e021c36df3bf787a25227485c635ca86122cd711ff7bcb13183be",
+      "bytes": 75483
+    },
+    {
+      "file": "183-tablet-admin-kakao-rooms.png",
+      "sha256": "106bb949d355b70615322465e6bc8ff3c40e382239a43f2c09840da1da51727b",
+      "bytes": 142612
+    },
+    {
+      "file": "184-tablet-admin-login.png",
+      "sha256": "2a7964a5b281d116af1e31306a80ee3d913a15eaa761ca7d95211a5541254713",
+      "bytes": 282005
+    },
+    {
+      "file": "185-tablet-admin-logs.png",
+      "sha256": "2934f9add6b582e20ca7003fa384d6eca94c301cf91d91684774c2a8f0365fe4",
+      "bytes": 156543
+    },
+    {
+      "file": "186-tablet-admin-matches.png",
+      "sha256": "989a2ff0da359282a37c96159877c34edb5cae36b2b5aec7ab70d745ee0630bc",
+      "bytes": 121863
+    },
+    {
+      "file": "187-tablet-admin-matches-matchId.png",
+      "sha256": "fe963e271f29dbc36dd274cf4d699c10d05e418e4415eacffd2cc6549c928c31",
+      "bytes": 126073
+    },
+    {
+      "file": "188-tablet-admin-matches-matchId-edit.png",
+      "sha256": "fe963e271f29dbc36dd274cf4d699c10d05e418e4415eacffd2cc6549c928c31",
+      "bytes": 126073
+    },
+    {
+      "file": "189-tablet-admin-matches-new.png",
+      "sha256": "88ba57902a5b8b385680b8cd9226b909cb968991ef2044b4380fd35028034298",
+      "bytes": 127698
+    },
+    {
+      "file": "190-tablet-admin-matches-submissions-submissionId.png",
+      "sha256": "aeaeb69780c2b4d48b741a80dcb104d697bf7e0a31e85ceba022b47f0507be99",
+      "bytes": 64384
+    },
+    {
+      "file": "191-tablet-admin-operation-forms.png",
+      "sha256": "ae9812d8fbbeeeb1081f4fe8223aed04c1ab0aaea5a3cdee7a15e50bef4cc3f2",
+      "bytes": 129247
+    },
+    {
+      "file": "192-tablet-admin-operation-forms-formType.png",
+      "sha256": "f46ed02d899741e90720f1ef1da0488887d61a2b3b555c1ffd3e02513af62df5",
+      "bytes": 129006
+    },
+    {
+      "file": "193-tablet-admin-operation-forms-formType-id.png",
+      "sha256": "8e71f7c05009c5edb38c637b393022b2587fdcdf0d0873bdf1051c0348e8de1d",
+      "bytes": 127269
+    },
+    {
+      "file": "194-tablet-admin-players.png",
+      "sha256": "0efa9955b3fed4d34a52865f5849a1c97a2617c8419ec07f24d175cec9f29c73",
+      "bytes": 184106
+    },
+    {
+      "file": "195-tablet-admin-players-playerId.png",
+      "sha256": "b30fc37289a05c9309ba7559125ab9104ec9ac18f51e9a90f5f40b477543cd0c",
+      "bytes": 149228
+    },
+    {
+      "file": "196-tablet-admin-players-new.png",
+      "sha256": "a143c86c59fe76962152e9ad998fa29165af5c83c3453e70c4d67458d415f0a5",
+      "bytes": 103774
+    },
+    {
+      "file": "197-tablet-admin-private-assets.png",
+      "sha256": "0602ed0c252b3090df511abc186765d09b588d212ee7451673eb38ea5d816828",
+      "bytes": 131657
+    },
+    {
+      "file": "198-tablet-admin-private-assets-assetId.png",
+      "sha256": "78442adb946d888c022c967838a66dcc37cf7024dd6b5e0d91de915f806a9858",
+      "bytes": 121120
+    },
+    {
+      "file": "199-tablet-admin-progress-destruction.png",
+      "sha256": "11c193fc817e3206b0799252fdaa0f3bb707d912fe78f80a18723c5ca84b1e94",
+      "bytes": 123051
+    },
+    {
+      "file": "200-tablet-admin-progress-destruction-tournamentId.png",
+      "sha256": "a3e70625238d1c9f1c5297ea53783c2c552577f802528ec518cb7fe72d07a1c9",
+      "bytes": 130166
+    },
+    {
+      "file": "201-tablet-admin-progress-destruction-new.png",
+      "sha256": "892439fe06e59af607048cc50521a9ccdc875bf4abe12360a84a01043bf1e039",
+      "bytes": 98561
+    },
+    {
+      "file": "202-tablet-admin-progress-event.png",
+      "sha256": "3e63639f120723f6b66a3be0282dc8716285ff12a3397ec90304cb3120f8b044",
+      "bytes": 122744
+    },
+    {
+      "file": "203-tablet-admin-progress-event-eventId.png",
+      "sha256": "272c504bb0c9441058006b83e8ad02b1bb001ddf4a9d3c2d7d8c8e419001776e",
+      "bytes": 137455
+    },
+    {
+      "file": "204-tablet-admin-progress-event-new.png",
+      "sha256": "c252e23d599fec0cdee7276393b7a496eae9a505767641135430cb8919db282b",
+      "bytes": 98195
+    },
+    {
+      "file": "205-tablet-admin-riot.png",
+      "sha256": "03f38cd1e8a153c4ece4dca28a5afc3c7d0961a02f6ba6adf62b395f07ad18dc",
+      "bytes": 148113
+    },
+    {
+      "file": "206-tablet-admin-search.png",
+      "sha256": "a7a8f665256bcec0510d83458ba92e93850e44919155aab9f95f3d75e7e8759e",
+      "bytes": 108906
+    },
+    {
+      "file": "207-tablet-admin-seasons.png",
+      "sha256": "ea439930b093c4b75e86b97e1db457aa949343b0dc2f2a2ba22b3a082127eb3e",
+      "bytes": 435992
+    },
+    {
+      "file": "208-tablet-admin-seasons-kakao-pending.png",
+      "sha256": "2d8249781093c17c81b932d819c2f14e86af092428585efd9905d2c8a691158c",
+      "bytes": 233821
+    },
+    {
+      "file": "209-tablet-admin-seasons-kakao-pending-pendingId.png",
+      "sha256": "1312a6b497256beb427f340f713857bc3ea968b6971405dea9146b8166df02c3",
+      "bytes": 114186
+    },
+    {
+      "file": "210-tablet-admin-security.png",
+      "sha256": "7c7357fc4de89be93a2e759c7335f200ad86ba262802443049b9294364f31e5e",
+      "bytes": 163858
+    },
+    {
+      "file": "211-tablet-admin-site-settings.png",
+      "sha256": "81acde4b34d374a60eb9c2e132eb989b04c39c1597d2e4a30e04da3b9bacda77",
+      "bytes": 107157
+    },
+    {
+      "file": "212-tablet-admin-users.png",
+      "sha256": "b55f5e82c12d2419899dd7ff2873a09c21746b8e4206106d58d0b42b8e39bfb8",
+      "bytes": 189557
+    },
+    {
+      "file": "213-tablet-admin-users-userAccountId.png",
+      "sha256": "5c339b8ea698c61c2c3adbfdba4b662b4d5f39313b46e00dd827846d8b9ff75b",
+      "bytes": 188261
+    },
+    {
+      "file": "214-tablet-applications.png",
+      "sha256": "0664153905cfac4fed465ea8e77e8ad2c9da193a1435e38540b9fa841f248cf4",
+      "bytes": 366261
+    },
+    {
+      "file": "215-tablet-competitions.png",
+      "sha256": "a3da3ea481553466e042696f16f161cb68449bfdc4c33eec6b8fb565e5128b47",
+      "bytes": 222447
+    },
+    {
+      "file": "216-tablet-competitions-destruction.png",
+      "sha256": "269b1ae2c3ef6d03cfa41100603508bacdf425c334ccbb82d670869681f0c499",
+      "bytes": 221298
+    },
+    {
+      "file": "217-tablet-competitions-destruction-tournamentId.png",
+      "sha256": "dcf7078eadaedf8e0bc807f593db3f37d9a25271ec58870f4dfce6e78e571d08",
+      "bytes": 533265
+    },
+    {
+      "file": "218-tablet-competitions-events.png",
+      "sha256": "b26760a9b38d947a70b9aae50afaeb9a96edfe4f652646a04e3bcc7183a201c8",
+      "bytes": 214978
+    },
+    {
+      "file": "219-tablet-competitions-events-eventId.png",
+      "sha256": "f8c0837fd0b69ade87cd4a3c98d1bece061fa2fd598de1d6f836b0fdb1af7e36",
+      "bytes": 254247
+    },
+    {
+      "file": "220-tablet-discipline.png",
+      "sha256": "5ec00e89a98f0485009f902e05fb944619ea1d16db5a409737ece07f7e40fc5b",
+      "bytes": 222610
+    },
+    {
+      "file": "221-tablet-forbidden.png",
+      "sha256": "2771311a1c1ddca797a3a70211aae4141f3e0a618f9e5bbfdba348af8739d4f0",
+      "bytes": 169885
+    },
+    {
+      "file": "222-tablet-forgot-password.png",
+      "sha256": "00dd55bd143e75afc7fcecee31ccf45b67dda6bfa1f5c3264c52b7db1dfbbd5d",
+      "bytes": 334036
+    },
+    {
+      "file": "223-tablet-help-kakao.png",
+      "sha256": "4dcb701d2a33f8d386c903812d4886faff2c40248fc75223758c878b87646b1a",
+      "bytes": 268465
+    },
+    {
+      "file": "224-tablet-help-recruits.png",
+      "sha256": "0de6f78b01d8418951878bfd47668a1609a9578e7e6969db81c39e6935fc0941",
+      "bytes": 340270
+    },
+    {
+      "file": "225-tablet-help-riot.png",
+      "sha256": "127743a68eeb7de0229f2f323b7ebf8005f875606a0c3d78efefd11ab17b34d5",
+      "bytes": 522718
+    },
+    {
+      "file": "226-tablet-highlights.png",
+      "sha256": "671721a86fb6d5df53acd2fad5482d7d25c3372c4ea9e7185495ce892e6373cf",
+      "bytes": 350089
+    },
+    {
+      "file": "227-tablet-highlights-highlightId.png",
+      "sha256": "56a4f3eb42fd64cfdbead87ab6d25ad55527f07031eaf93dda32c2e8b14b6565",
+      "bytes": 375903
+    },
+    {
+      "file": "228-tablet-images.png",
+      "sha256": "7e4e0877d76b9bf12b175f99994d21cd44f3045c44f19da2422abe9b832e5fae",
+      "bytes": 337409
+    },
+    {
+      "file": "229-tablet-images-imageId.png",
+      "sha256": "eacc433e4c7797912004295edb103ce1b3799a94b9d884e2900fd2d8afe3d77f",
+      "bytes": 282764
+    },
+    {
+      "file": "230-tablet-install.png",
+      "sha256": "883f77c65886199f3168674c88a6a59816271b638c574d66b7f6eaf9a8fb3f73",
+      "bytes": 541112
+    },
+    {
+      "file": "231-tablet-login.png",
+      "sha256": "078bc06b72034402687c03f647c8795d88a771c8bf5bdd03a6d8aaaaf0629d6e",
+      "bytes": 341010
+    },
+    {
+      "file": "232-tablet-matches.png",
+      "sha256": "038b65f63e1ea073fffe9461d356c2603038eb813bcba445785edaccb72981a4",
+      "bytes": 363208
+    },
+    {
+      "file": "233-tablet-matches-matchId.png",
+      "sha256": "39d3ec36ca208a30d317d528b7b7256f59930bffdbd08ad3189a790a75826dde",
+      "bytes": 289360
+    },
+    {
+      "file": "234-tablet-matches-submissions.png",
+      "sha256": "673f82220e12715266de8da53e66df555fcd402c7ecd60a81f980e30c123dc1f",
+      "bytes": 207504
+    },
+    {
+      "file": "235-tablet-matches-submit.png",
+      "sha256": "3be939a578721377039819fcfd06eb52c9f2e6dde8b1a3caf2c7034d334e2169",
+      "bytes": 315228
+    },
+    {
+      "file": "236-tablet-players.png",
+      "sha256": "e86cbf5a90d2b004587c35fb2f259ff92e41956fef5f866c9855a8c9bbe231d6",
+      "bytes": 671180
+    },
+    {
+      "file": "237-tablet-players-playerId.png",
+      "sha256": "15d2ff854cd292e1c7474bf450af316f99074ca53a7e0d1cccd464c7407acbe6",
+      "bytes": 476536
+    },
+    {
+      "file": "238-tablet-privacy.png",
+      "sha256": "d9f20b0f69b232dc00808b63193581035a2c00b5763f03be49d04273cd401c82",
+      "bytes": 283829
+    },
+    {
+      "file": "239-tablet-rankings.png",
+      "sha256": "3070f66d11cc760689614d568496d783e9de5df67f5dde289c025635d9ef28b2",
+      "bytes": 312238
+    },
+    {
+      "file": "240-tablet-rankings-mmr.png",
+      "sha256": "4d1d52bc478dba32c2459d7781af9bba22adafd0c5a90384c5eeef1604fff217",
+      "bytes": 301258
+    },
+    {
+      "file": "241-tablet-recruits.png",
+      "sha256": "913609d7ecb0ed0b2944ed6ed6cf07740f4b389aaa7186f645338b3bc35cb024",
+      "bytes": 1764105
+    },
+    {
+      "file": "242-tablet-signup.png",
+      "sha256": "a2a3d956b333c6dec35be9b18f2b34860f947581e2a9dcfaba9c8877c243639d",
+      "bytes": 476480
+    },
+    {
+      "file": "243-tablet-start.png",
+      "sha256": "753449baaeb8e7718a5f247104d5c615c63a996c9389cd7af237820a83f3f8f7",
+      "bytes": 625266
+    },
+    {
+      "file": "244-tablet-terms.png",
+      "sha256": "1b029a1889b0475e3436e567c0504109e371c64b828375c0f7f47e1dde6201b8",
+      "bytes": 246863
+    },
+    {
+      "file": "245-tablet-tools-coin-toss.png",
+      "sha256": "580231ff3464b79d3a4c074429a93212d8712294d5a58d70c1128208da029ece",
+      "bytes": 485698
+    },
+    {
+      "file": "246-tablet-tools-random-team.png",
+      "sha256": "757e05a65c27999a4ba6359b21f4409777e9eaa1e3426bebff6435bdd24353e8",
+      "bytes": 328535
+    },
+    {
+      "file": "247-tablet-tools-team-balance.png",
+      "sha256": "07206f1d6c92171d7365cdb70b24913a95308b76ce12691ca6346582f734ac56",
+      "bytes": 350271
+    },
+    {
+      "file": "248-tablet-tools-team-balance-drafts.png",
+      "sha256": "17c2166400c5ab8d1577890c7c955ab4a1aef3cb911559905eb5ae46fedc2184",
+      "bytes": 231963
+    },
+    {
+      "file": "249-tablet-tools-team-balance-drafts-draftId.png",
+      "sha256": "de780aea548cf98c69188d4a1641d7849a0ad77767165c41be972aee34592af4",
+      "bytes": 341986
+    },
+    {
+      "file": "250-mobile.png",
+      "sha256": "57a4c421aea22dbdbd861c26c4d477c9b32be68909315351dfaa7db31e31f2cd",
+      "bytes": 942174
+    },
+    {
+      "file": "251-mobile-account.png",
+      "sha256": "78004988c3bb78590c24a9b1e3cc7a0fec84f7bd235a4848dcfae46a996adc59",
+      "bytes": 267161
+    },
+    {
+      "file": "252-mobile-account-discipline.png",
+      "sha256": "3fab1b4c2129ab1f2a9be5a7b9f7064b0f78f65da5c2dc5577a32e2979ee761e",
+      "bytes": 216804
+    },
+    {
+      "file": "253-mobile-account-password.png",
+      "sha256": "7b2f80837843334f70d3f8b86fd52bd2a46e7d0817fc44a9a8575ac3aef08c5d",
+      "bytes": 225736
+    },
+    {
+      "file": "254-mobile-account-riot.png",
+      "sha256": "16009ac7957f61f452247ee464268fd20becbbe57f06b3e3cc53915c608ff80e",
+      "bytes": 163159
+    },
+    {
+      "file": "255-mobile-admin.png",
+      "sha256": "98907e5072b15873758ab0814c3f239900020e9c2eeca09f140cdef73ffad9ae",
+      "bytes": 156126
+    },
+    {
+      "file": "256-mobile-admin-balance.png",
+      "sha256": "530544fba7f298d92fc7d1ab67bcdc007933831585f066a3135872ee760ac132",
+      "bytes": 208846
+    },
+    {
+      "file": "257-mobile-admin-balance-ai.png",
+      "sha256": "4824797699a45582dc85e60b348a6168ba6b16509182ddd6d7f044a984a4f044",
+      "bytes": 93394
+    },
+    {
+      "file": "258-mobile-admin-balance-drafts.png",
+      "sha256": "c2049e2a081bd061eeef7d127bf9e2ef87f514005e5337bf8fda10f2a39dd9b2",
+      "bytes": 113350
+    },
+    {
+      "file": "259-mobile-admin-balance-drafts-draftId.png",
+      "sha256": "94fc549b6e699d8e8415e7503b420a42ab82e0d28a4b57921c3222f3823188db",
+      "bytes": 209292
+    },
+    {
+      "file": "260-mobile-admin-champions.png",
+      "sha256": "0b60bde99b147b5c8b2165f4d91692b73b5fb397c92af43519d8aaa3006901a7",
+      "bytes": 351565
+    },
+    {
+      "file": "261-mobile-admin-champions-championId-edit.png",
+      "sha256": "df884911972d04611fc96e306c457cb8500f3d5af50c3dcff5ca376b0383ac6d",
+      "bytes": 80482
+    },
+    {
+      "file": "262-mobile-admin-champions-new.png",
+      "sha256": "5359ba2495d69bebecfcf565456cf3d20e5f4428d758d3f51558ee170bae7585",
+      "bytes": 75938
+    },
+    {
+      "file": "263-mobile-admin-discipline.png",
+      "sha256": "d94d8d02c764fb09f76ba7ee19a9a0f710ee4634e6350f3caea433a6ab05b83e",
+      "bytes": 58785
+    },
+    {
+      "file": "264-mobile-admin-discipline-recordId.png",
+      "sha256": "c723f08a0858bc324e29014f655e90f6465a952b1e5c27c790a72848f476a406",
+      "bytes": 89635
+    },
+    {
+      "file": "265-mobile-admin-discipline-new.png",
+      "sha256": "3b21937cf6e48d65e16ee4c6a96a71a217ded7e74738b59d711711e99a4e6b1e",
+      "bytes": 51221
+    },
+    {
+      "file": "266-mobile-admin-highlights.png",
+      "sha256": "06acd4a90c152915d7de5545976c864b35d89e6f099cfc3ee6ae6b7b634e45c1",
+      "bytes": 81089
+    },
+    {
+      "file": "267-mobile-admin-highlights-highlightId-edit.png",
+      "sha256": "f931298e657559d3ab40b630499fca6d3cdcc4ac46521bd54e7e6ef3387b27ee",
+      "bytes": 70466
+    },
+    {
+      "file": "268-mobile-admin-highlights-new.png",
+      "sha256": "fa3fc6f19062bb9c0858b47d1b4714a13f4c28f8bb02e1b1e3bf2da5f2df316d",
+      "bytes": 74725
+    },
+    {
+      "file": "269-mobile-admin-images.png",
+      "sha256": "82b3a5c4146cc39e716f07cddb1a6da168c5788f5a63d52bd5afbccd7329347c",
+      "bytes": 73822
+    },
+    {
+      "file": "270-mobile-admin-images-imageId-edit.png",
+      "sha256": "d095e6a5fad9a9f2eaabf7af45f40249462bc917eae8c8db2161ca214b0f2923",
+      "bytes": 76040
+    },
+    {
+      "file": "271-mobile-admin-images-new.png",
+      "sha256": "6dc3e318dd5a0d883a04c0a4258f393a188622c3c3b55324abced6f855c41888",
+      "bytes": 86236
+    },
+    {
+      "file": "272-mobile-admin-kakao.png",
+      "sha256": "39f9712d27469d9a28568d31568f7980c1906bc102f2489f7baa89cd1201372c",
+      "bytes": 85223
+    },
+    {
+      "file": "273-mobile-admin-kakao-rooms.png",
+      "sha256": "675ad7c0b07d32c7d693493a863e6bbad38e484a6ae9ff2b0a11e4534804f925",
+      "bytes": 105377
+    },
+    {
+      "file": "274-mobile-admin-login.png",
+      "sha256": "6a8c440c3b28a8c50c7c7afcc075b128272d5d8d448b6252db5398c739976ec9",
+      "bytes": 109769
+    },
+    {
+      "file": "275-mobile-admin-logs.png",
+      "sha256": "3e940a35e537cd8aec92ce75906b00e15c165d7698a6e33a84cbe7c77899a9f2",
+      "bytes": 106919
+    },
+    {
+      "file": "276-mobile-admin-matches.png",
+      "sha256": "c4ca32f62cc1f2aa789aa71d68e34be8672b7d69df0236ae4a131d05d59cce5d",
+      "bytes": 105901
+    },
+    {
+      "file": "277-mobile-admin-matches-matchId.png",
+      "sha256": "81168323753056e43e19970caec0d9cf313b7e5f47fdf664746fba3e1275684d",
+      "bytes": 117403
+    },
+    {
+      "file": "278-mobile-admin-matches-matchId-edit.png",
+      "sha256": "81168323753056e43e19970caec0d9cf313b7e5f47fdf664746fba3e1275684d",
+      "bytes": 117403
+    },
+    {
+      "file": "279-mobile-admin-matches-new.png",
+      "sha256": "99a22fb41eee8f3e917dc9a9356361a10601ce63bb3709bb91625dba4276a7fd",
+      "bytes": 104935
+    },
+    {
+      "file": "280-mobile-admin-matches-submissions-submissionId.png",
+      "sha256": "b19f9f47a74ab58cc2632f0a7ba4a74636aa51a1499146601030030ebd86cd54",
+      "bytes": 185781
+    },
+    {
+      "file": "281-mobile-admin-operation-forms.png",
+      "sha256": "a3f6062fc2cdf921ac549d0ffd5b5dcbfa2059b2b26d299d26c3be7d8074ddd8",
+      "bytes": 94472
+    },
+    {
+      "file": "282-mobile-admin-operation-forms-formType.png",
+      "sha256": "50fae428f28b449458d48d3a122f4ae673250ae7293d3a2ffefd9c67041bb3ef",
+      "bytes": 91464
+    },
+    {
+      "file": "283-mobile-admin-operation-forms-formType-id.png",
+      "sha256": "09553e95b40a3eac313f012020ac868d3c2315407e5bc41950c004be8262a99d",
+      "bytes": 84851
+    },
+    {
+      "file": "284-mobile-admin-players.png",
+      "sha256": "6f5392dd92b6b4fee805943033920bd0ff80b70179faa560549d3e10b9bbac73",
+      "bytes": 255825
+    },
+    {
+      "file": "285-mobile-admin-players-playerId.png",
+      "sha256": "d27ad7a6ae700454b71c4696e3a33e39e4cbf02483ec91db351748bc164de95c",
+      "bytes": 116737
+    },
+    {
+      "file": "286-mobile-admin-players-new.png",
+      "sha256": "fc8e54de4d2df024bca3d91e0133384a4cf76299416f2b18591761dcc199c0cf",
+      "bytes": 59202
+    },
+    {
+      "file": "287-mobile-admin-private-assets.png",
+      "sha256": "b25000c6523fe4b9f3943f9f81fa8f9983db7171c3bbb7402df863496d43c574",
+      "bytes": 125991
+    },
+    {
+      "file": "288-mobile-admin-private-assets-assetId.png",
+      "sha256": "266697c73fd9a2d2bd3c9f5e694e0f75ce4f2abf306d8a70020ffa55091ca5f0",
+      "bytes": 64860
+    },
+    {
+      "file": "289-mobile-admin-progress-destruction.png",
+      "sha256": "8d8b844519515598a2cd55fb55e06ee1918e5edccbbde074d1b15dc7438adf7f",
+      "bytes": 86108
+    },
+    {
+      "file": "290-mobile-admin-progress-destruction-tournamentId.png",
+      "sha256": "6553a7f6256a0b78f6421ad8343206da82718127b4ab2e8ee2c42c01c011a1cb",
+      "bytes": 98539
+    },
+    {
+      "file": "291-mobile-admin-progress-destruction-new.png",
+      "sha256": "a6011e1a2de74002423111f0ebad6e7866852c51d0b826f2012b55af1be73223",
+      "bytes": 68523
+    },
+    {
+      "file": "292-mobile-admin-progress-event.png",
+      "sha256": "3dbef518041a6cadb03ab04bf59a72d1005dc22fd3e8d06b2ae55d5c07f40371",
+      "bytes": 83264
+    },
+    {
+      "file": "293-mobile-admin-progress-event-eventId.png",
+      "sha256": "847432c50d9617d6f54733f7749973242fcbc8cd4a11e8079f5e00bb98ea6c09",
+      "bytes": 83214
+    },
+    {
+      "file": "294-mobile-admin-progress-event-new.png",
+      "sha256": "9c1da1b19d921d969b676669271db4c78e3ac2cc1268115ee661de8a06e7c5b0",
+      "bytes": 66166
+    },
+    {
+      "file": "295-mobile-admin-riot.png",
+      "sha256": "2a8f2f098734536d925e2fbd9600c81bae8217c4a8fef93c0c4c1ca306441c17",
+      "bytes": 85212
+    },
+    {
+      "file": "296-mobile-admin-search.png",
+      "sha256": "883b8fb1011f2497d58d27df9d07a2924a44474eeb2fa6fcdfb96fdb6a0c53c0",
+      "bytes": 86622
+    },
+    {
+      "file": "297-mobile-admin-seasons.png",
+      "sha256": "463beb003074d1c68113135d8f47a92c69575650fa13100416cd645afe8b6caf",
+      "bytes": 523016
+    },
+    {
+      "file": "298-mobile-admin-seasons-kakao-pending.png",
+      "sha256": "6f5d2590140cc5acef8208b88278f47d97ba26f57c15525054aac9f9bfb21c2a",
+      "bytes": 207800
+    },
+    {
+      "file": "299-mobile-admin-seasons-kakao-pending-pendingId.png",
+      "sha256": "0fbffc15df448e620c7b30264f506fd746d56f48a5f8075b205812461fa0415f",
+      "bytes": 52913
+    },
+    {
+      "file": "300-mobile-admin-security.png",
+      "sha256": "7f37c467169e82c6a32dcda8597844db5142a13f1cdf44162c8e5e7b8ca27b67",
+      "bytes": 77310
+    },
+    {
+      "file": "301-mobile-admin-site-settings.png",
+      "sha256": "3da6f1a4a96c8c1469efba6b8a2bf87c77207697fa8804950bb0c6640bcebdd8",
+      "bytes": 54868
+    },
+    {
+      "file": "302-mobile-admin-users.png",
+      "sha256": "029d54c3c1fa6717d2e8036c105357e1ecae34600f0d535b6a31225541a649a0",
+      "bytes": 284514
+    },
+    {
+      "file": "303-mobile-admin-users-userAccountId.png",
+      "sha256": "64981fcf6847dfc7b4012656b447510ddb74268e7e3b5c2057c31251e192ed9c",
+      "bytes": 163603
+    },
+    {
+      "file": "304-mobile-applications.png",
+      "sha256": "7a3b3c82f77602019f591a3f13c05b6c3c85e01a7947c6d04db16459c7726819",
+      "bytes": 398203
+    },
+    {
+      "file": "305-mobile-competitions.png",
+      "sha256": "999996038825d538be3e9dac066ad4697686b102e410315b85139245eeca3069",
+      "bytes": 189731
+    },
+    {
+      "file": "306-mobile-competitions-destruction.png",
+      "sha256": "2649f524314f93934e9963e5c53c5399c16a3edb7c5629081edd4da807d2c620",
+      "bytes": 213259
+    },
+    {
+      "file": "307-mobile-competitions-destruction-tournamentId.png",
+      "sha256": "be9adfda0628f50097b07a53c5c7f6ef422be4f3ddea42eab5c495fc51471285",
+      "bytes": 443422
+    },
+    {
+      "file": "308-mobile-competitions-events.png",
+      "sha256": "9b6c4a65b284f432e7ff841c9e831183fb5aea972a36358628bdd3cab1f43c86",
+      "bytes": 173755
+    },
+    {
+      "file": "309-mobile-competitions-events-eventId.png",
+      "sha256": "596df19bf8d7728fa2d887d92970226b17c679110c52e09d85a8e6497f141032",
+      "bytes": 190895
+    },
+    {
+      "file": "310-mobile-discipline.png",
+      "sha256": "f622537937ab320773883bed7049c10f4244cd8625f22b7e3b37226b44a5e59d",
+      "bytes": 200805
+    },
+    {
+      "file": "311-mobile-forbidden.png",
+      "sha256": "f4aea6b3dc173c545522d1a969eef085e8a9afd484dbd4223eb6191fd8d2dc1c",
+      "bytes": 107608
+    },
+    {
+      "file": "312-mobile-forgot-password.png",
+      "sha256": "1f34c94b2ea55c7e4dfe7f4a42a2c62a6744baf3d2e49d992bf8945bdf96f827",
+      "bytes": 235223
+    },
+    {
+      "file": "313-mobile-help-kakao.png",
+      "sha256": "5580e23fa643e5c489fe28e69870fd115269ee4aeb87dbf70ef9dc14fc23fe7e",
+      "bytes": 367581
+    },
+    {
+      "file": "314-mobile-help-recruits.png",
+      "sha256": "932225d6302b4183f0e5fc3d9c86a6ec53b5a139691cb14a1eb62fd03951b43d",
+      "bytes": 340307
+    },
+    {
+      "file": "315-mobile-help-riot.png",
+      "sha256": "22b0b91b431683a1123ed30c5fe6d2ef7e34530c4764cc829c71b51cb6b5a94e",
+      "bytes": 400533
+    },
+    {
+      "file": "316-mobile-highlights.png",
+      "sha256": "fc0115f12085c1737c27706bf32f060eb95edfe75c3b118dd07638e26e246c29",
+      "bytes": 248084
+    },
+    {
+      "file": "317-mobile-highlights-highlightId.png",
+      "sha256": "226943f2abd26b423d04719d1a3ec350ef69c4cb62a6f3e833d974060e11ab51",
+      "bytes": 152883
+    },
+    {
+      "file": "318-mobile-images.png",
+      "sha256": "8d3b4db3e418e4cdf0d33146598d6a7ef68e89b818f86f55bb1d07a70b1a5415",
+      "bytes": 275227
+    },
+    {
+      "file": "319-mobile-images-imageId.png",
+      "sha256": "2b440070468b87d6328201efad3b8bfec59cade7cdbd339a5f2d8dc187c1386f",
+      "bytes": 158478
+    },
+    {
+      "file": "320-mobile-install.png",
+      "sha256": "6d239860a5b936a79b6ca80146d0502f786af4f463e1f6075c356a94a806f502",
+      "bytes": 414662
+    },
+    {
+      "file": "321-mobile-login.png",
+      "sha256": "eb696702c5d8ad4766a13164f789fbfa30d67d6e4cd2ef70d56719f8b7623feb",
+      "bytes": 212823
+    },
+    {
+      "file": "322-mobile-matches.png",
+      "sha256": "151cfc27010e198d14478f7543e42caf7a4dc63bd434ed705301ebe23528d0bf",
+      "bytes": 355406
+    },
+    {
+      "file": "323-mobile-matches-matchId.png",
+      "sha256": "8a86b8f41ded9cd80a1c5f451c5e2926e23344fc2d4776c8c9c492d672bc397c",
+      "bytes": 261232
+    },
+    {
+      "file": "324-mobile-matches-submissions.png",
+      "sha256": "f9959947342b49cfe358241713a1a7332c9c1c9c40f1c7869aa67b6aa5a41495",
+      "bytes": 141804
+    },
+    {
+      "file": "325-mobile-matches-submit.png",
+      "sha256": "976f1ab7db1582d3a1c6214d8fba7e61eac0ff665c1dac1220107150ba511664",
+      "bytes": 210825
+    },
+    {
+      "file": "326-mobile-players.png",
+      "sha256": "bf9391998d76e1212305a5cf6a32f25f3097980f0c1ec460fd1c5b8373d6519f",
+      "bytes": 736659
+    },
+    {
+      "file": "327-mobile-players-playerId.png",
+      "sha256": "03f5a73837f3ae241d93c00b963cf5b9383d5fa1e18bf4bfdfc6a2ffdd05d5d7",
+      "bytes": 261337
+    },
+    {
+      "file": "328-mobile-privacy.png",
+      "sha256": "de05234544e2aff5ffb3ea153d8ed101e9a015b676c6694d3c74c85864a0d9a5",
+      "bytes": 231545
+    },
+    {
+      "file": "329-mobile-rankings.png",
+      "sha256": "ca15c78b666032e7335c02331f6b067475af0bafed5d5af73f5606ba7f993483",
+      "bytes": 221212
+    },
+    {
+      "file": "330-mobile-rankings-mmr.png",
+      "sha256": "8c91ccb6c7cd708c3fc8d7a642a6ea11599ef471692d97ec9187d30bce53e48a",
+      "bytes": 259123
+    },
+    {
+      "file": "331-mobile-recruits.png",
+      "sha256": "ec6055e884fc8c6e05077633b9578a19ca26559ccf4848a1c3bf740d878cad48",
+      "bytes": 2585295
+    },
+    {
+      "file": "332-mobile-signup.png",
+      "sha256": "636a06088d2dff1a9eca3085f3e4ba512eda567b1a755ded8e5fb8a6cdd65a7b",
+      "bytes": 282773
+    },
+    {
+      "file": "333-mobile-start.png",
+      "sha256": "206ede96a2e8afe4aca6822a2a492b824521720ee50a51a0b4976aaf089dd4fc",
+      "bytes": 327737
+    },
+    {
+      "file": "334-mobile-terms.png",
+      "sha256": "c375ef98db4203c21c928104a19afccc807b9fed429358d5060c7556ba88ca69",
+      "bytes": 170364
+    },
+    {
+      "file": "335-mobile-tools-coin-toss.png",
+      "sha256": "5a9b102e6656945c048e069133f57a1f9285da8d8325706803e492134e11fb98",
+      "bytes": 273116
+    },
+    {
+      "file": "336-mobile-tools-random-team.png",
+      "sha256": "da527792f384df99e8f1e5f1ef137b1d011d1f4b9e0129422cd6d28249d3c81f",
+      "bytes": 256096
+    },
+    {
+      "file": "337-mobile-tools-team-balance.png",
+      "sha256": "3b725f05459895abfba7f235004ba4b402445eadc1886674b691f59a3b8247d3",
+      "bytes": 260484
+    },
+    {
+      "file": "338-mobile-tools-team-balance-drafts.png",
+      "sha256": "42e1705c4e132cb652e9a71f1621f52a7eb13c5d140a2d6334802902378e4761",
+      "bytes": 167893
+    },
+    {
+      "file": "339-mobile-tools-team-balance-drafts-draftId.png",
+      "sha256": "577318833d77e4822db4227c5e70e36c2fde34ee75f8109bc2a4edd3d63fbf88",
+      "bytes": 360228
+    }
+  ],
+  "count": 339
+}
