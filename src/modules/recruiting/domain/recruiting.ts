@@ -140,7 +140,7 @@ function identifier(value: string, code: string): string {
 }
 
 function cleanText(value: string, code: string, maximum: number): string {
-  const normalized = value.normalize("NFKC").trim().replace(/\s+/g, " ");
+  const normalized = value.trim().replace(/\s+/g, " ");
   if (!normalized || normalized.length > maximum || /[\u0000-\u001f\u007f]/.test(normalized)) {
     throw new Error(code);
   }
@@ -180,7 +180,7 @@ export function canonicalRecruitRequestFingerprint(input: Readonly<{
   requestKey: string;
   payloadDigestHex: string;
 }>): string {
-  const action = cleanText(input.action, "INVALID_RECRUIT_ACTION", 60).toUpperCase();
+  const action = cleanText(input.action.normalize("NFKC"), "INVALID_RECRUIT_ACTION", 60).toUpperCase();
   const requestKey = identifier(input.requestKey, "INVALID_RECRUIT_REQUEST_KEY");
   if (!/^[a-f0-9]{64}$/.test(input.payloadDigestHex)) throw new Error("INVALID_RECRUIT_PAYLOAD_DIGEST");
   return `${input.actor}:${action}:${requestKey}:${input.payloadDigestHex}`;
@@ -225,7 +225,7 @@ const LINE_PARTY_TYPES: ReadonlySet<RecruitPartyType> = new Set(["FLEX_RANK", "N
 const LINE_POSITIONS: readonly RecruitPosition[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
 function normalizedMemberIdentity(name: string): string {
-  return cleanText(name, "INVALID_RECRUIT_MEMBER", 80).toLocaleLowerCase("ko-KR");
+  return cleanText(name, "INVALID_RECRUIT_MEMBER", 80).normalize("NFKC").toLocaleLowerCase("ko-KR");
 }
 
 /** Applies one name command to the locked aggregate without rebuilding its other slots. */

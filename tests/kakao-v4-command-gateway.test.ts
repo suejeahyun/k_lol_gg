@@ -168,7 +168,7 @@ test("R23 retires every old-phone scrim command and form without dispatching or 
   assert.equal(dispatches, 0);
 });
 
-test("R24 server help separates adding a name from initial party settings and inhouse mode choice", async () => {
+test("server help explains editable numbered copies and inhouse mode requirements", async () => {
   const service = new KakaoV4CommandService({
     async authorizeProfile(input) {
       return { roomId: "00000000-0000-4000-8000-000000000001", roomStatus: "ACTIVE", capabilityProfile: input.requiredCapabilityProfile, installationId: "00000000-0000-4000-8000-000000000002" };
@@ -182,11 +182,12 @@ test("R24 server help separates adding a name from initial party settings and in
     assert.match(result.reply, /협곡은 이름과 라인 필수/u);
     assert.match(result.reply, /사이트 회원 연결은 나중에/u);
     assert.match(result.reply, /내전구인 협곡/u);
-    assert.match(result.reply, /처음 파티를 만들 때만 첫 전송 전에 시간·게임/u);
+    assert.match(result.reply, /번호형 파티는 최신 양식에서 이름·시작·게임을 수정/u);
     assert.ok(result.reply.indexOf("최근 봇 명단 전체 복사") < result.reply.indexOf("새 모집 만들기"));
     assert.doesNotMatch(result.reply, /1\. 5인파티|저장기준/u);
     assert.doesNotMatch(result.reply, /스크림/u);
-    if (text === "구인도움말") assert.match(result.reply, /참가가 시작된 파티는 복붙으로 시간·게임을 바꿀 수 없어요/u);
+    assert.doesNotMatch(result.reply, /시간·게임을 바꿀 수 없어요/u);
+    if (text === "구인도움말") assert.match(result.reply, /이름만 지우고 번호 행과 양식코드를 남긴/u);
   }
   const retired = await service.execute({ ...envelope, profileId: "FEATURES", text: "내전확인 ABCDEF", eventId: "event-r24-retired-confirm-guide" }, "current");
   assert.match(retired.reply, /빈칸에 이름 추가/u);

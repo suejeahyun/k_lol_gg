@@ -516,15 +516,14 @@ test(
         { name: "다른 사용자 참가", position: "JGL", slotNo: 2, substitute: false },
       ]);
 
-      await assert.rejects(
-        execute(roomBService, {
+      const foreignAttempt = await execute(roomBService, {
           installationId: roomBInstallation,
           senderId: "sender-user-dddddddddddddddddddddddddddddddd",
           eventId: "event-p0-multiuser-db-other-room-0001",
           text: currentForm.replace("TOP. 작성자", "TOP. 다른 방 침범"),
-        }),
-        (error: unknown) => error instanceof KakaoV4DispatcherError && error.code === "NOT_FOUND",
-      );
+        });
+      assert.match(foreignAttempt.reply, /이 모집을 찾지 못했습니다/u);
+      assert.doesNotMatch(foreignAttempt.reply, /작성자|다른 사용자 참가|이미 마감/u);
       const afterForeignAttempt = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
       assert.equal(afterForeignAttempt?.revision, 1);
       assert.equal(afterForeignAttempt?.status, "IN_PROGRESS");

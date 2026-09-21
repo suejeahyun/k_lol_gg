@@ -138,6 +138,7 @@ function reviewParticipant(
 export function parseKakaoV4InhouseParticipantRow(
   rawLine: string,
   mode: "RIFT" | "ARAM" | "AUGMENT_ARAM",
+  options: Readonly<{ allowNameOnly?: boolean }> = {},
 ): KakaoV4InhouseParticipantRowResult {
   const line = rawLine.normalize("NFKC");
   const row = /^\s*((?:예비|대기)\s*)?(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*?)\s*$/u.exec(line);
@@ -160,6 +161,15 @@ export function parseKakaoV4InhouseParticipantRow(
     });
   }
   if (fields.length === 1) {
+    // A guarded old copy can repeat existing names without displaying lanes.
+    // Storage must prove the row against its issued snapshot before accepting it.
+    if (options.allowNameOnly) return Object.freeze({
+      matched: true,
+      valid: true,
+      slotNo,
+      participant: Object.freeze({ slotNo, name, riotId: null, mainPosition: "ALL", subPositions: Object.freeze([]), reserve, nameOnly: true }),
+      diagnostics: Object.freeze([]),
+    });
     return invalid(slotNo, "mainPosition", null);
   }
   if (!looksLikeLegacyFullParticipant(value)) {
@@ -235,6 +245,8 @@ export function getKakaoV4InhouseInputErrors(
   const resolvedMode = mode ?? (modeLabel === "협곡" ? "RIFT" : modeLabel === "칼바람" ? "ARAM" : modeLabel ? "AUGMENT_ARAM" : null);
   const capacity = Number(modernHeader?.[2] ?? /^\s*👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명\s*$/mu.exec(normalized)?.[1] ?? 0);
   if (!resolvedMode || capacity < 2 || capacity > 20) return Object.freeze([]);
+  const allowNameOnly = Boolean(modernHeader && !modernHeader[1] &&
+    /^\s*양식코드\s*[:：]\s*[A-Z0-9]{5}-[A-Z0-9]{5}\s*$/mu.test(normalized));
 
   const errors: string[] = [];
   const mainSlots = new Set<number>();
@@ -246,7 +258,7 @@ export function getKakaoV4InhouseInputErrors(
       pendingRows.push(line.replace(/^\s*확인\s+/u, ""));
       continue;
     }
-    const row = parseKakaoV4InhouseParticipantRow(line, resolvedMode);
+    const row = parseKakaoV4InhouseParticipantRow(line, resolvedMode, { allowNameOnly });
     if (!row.matched) continue;
     const reserve = /^\s*(?:예비|대기)\s*\d/u.test(line);
     const slotNo = reserve ? capacity + row.slotNo : row.slotNo;

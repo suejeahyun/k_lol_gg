@@ -1406,6 +1406,16 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
     copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
   });
   const roster = (body: KakaoSeasonSnapshotDto) => body.entries.map((entry) => ({ ...row(entry.slotNo, entry.suppliedName), mainPosition: entry.mainPosition, subPositions: entry.subPositions, reserve: entry.reserve ?? false }));
+  const legacyRoster = (body: KakaoSeasonSnapshotDto) => {
+    const text = body.v1StrictLegacyReply!;
+    const parsed = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), {
+      profileId: "FEATURES", installationId: "install-legacy-inhouse", senderId: "sender-legacy-inhouse", eventId: "legacy-inhouse-copy",
+      timestamp: Math.floor(now.getTime() / 1_000), nonce: "f".repeat(32), text,
+    });
+    if (parsed?.domain !== "SEASON" || parsed.action !== "SYNC") assert.fail("issued legacy copy must parse for guarded storage validation");
+    assert.equal(parsed.participants.every((entry) => entry.nameOnly), true);
+    return parsed.participants;
+  };
   const knownName = `회원-${suffix}`;
   const duplicateName = `동명-${suffix}`;
   const playerIds = Array.from({ length: 3 }, () => randomUUID());
@@ -1416,8 +1426,13 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
       nickname: `Editable${i}${suffix}`, nicknameNormalized: `editable${i}${suffix}`, tagLine: "QA", tagLineNormalized: "qa" })));
     const draft = await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants: [] });
     const nine = [row(1, knownName), row(2, duplicateName), ...Array.from({ length: 7 }, (_, i) => row(i + 3, `손님${i}-${suffix}`))];
-    const first = await sync(draft.body, nine);
-    assert.equal(first.body.registrationCreated, true);
+    const initial = await sync(draft.body, nine.slice(0, 8));
+    assert.equal(initial.body.registrationCreated, true);
+    const first = await sync(initial.body, [...legacyRoster(initial.body), nine[8]!]);
+    assert.equal(first.body.createdCount, 1, "guarded name-only originals can accompany a new participant with explicit lanes");
+    assert.equal(first.body.updatedCount, 0);
+    assert.deepEqual(first.body.entries[0]?.subPositions, ["TOP"]);
+    assert.equal(first.body.entries[0]?.mainPosition, "MID", "legacy omission must not replace saved lanes with ALL");
     assert.equal(first.body.pendingCount, 9);
     assert.equal(first.body.appliedCount, 0);
     assert.equal(first.body.entries[0]?.memberLinkStatus, "UNVERIFIED");
@@ -1426,6 +1441,13 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
     assert.equal(first.body.rosterFilled, false);
     assert.match(inhouseSaveReply(first.body), /가입했다면 사이트 등록 이름/u);
     assert.match(inhouseSaveReply(first.body), /이름\(닉네임\)/u);
+    await assert.rejects(sync(first.body, [...legacyRoster(first.body), { ...row(10, `라인누락-${suffix}`), nameOnly: true }],
+      { ...metadata, startTimeText: "22:00", scheduledStartAt: new Date(`${today}T22:00:00+09:00`).toISOString() }),
+    (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED" && /10번.*협곡 라인/u.test(error.publicMessage ?? ""));
+    const afterMissingLane = await detail();
+    assert.equal(afterMissingLane.body.saveReference, first.body.saveReference, "rejection rolls back metadata and all roster rows");
+    assert.deepEqual(afterMissingLane.body.entries, first.body.entries);
+    assert.equal(afterMissingLane.body.roundMetadata?.startTimeText, "21:00");
     const attempts = await Promise.allSettled([
       sync(first.body, [...nine, row(10, `마지막갑-${suffix}`)]),
       sync(first.body, [...nine, row(10, `마지막을-${suffix}`)]),
@@ -1449,8 +1471,17 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
       (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
     const removed = await sync(renamed.body, roster(renamed.body).filter((entry) => entry.slotNo !== 9));
     assert.equal(removed.body.entries.length, 9);
-    const stale = await sync(renamed.body, roster(renamed.body));
+    const updatedLane = await sync(removed.body, roster(removed.body).map((entry) => entry.slotNo === 1
+      ? { ...entry, mainPosition: "JGL" as const, subPositions: ["SUP" as const] } : entry));
+    assert.equal(updatedLane.body.entries.find((entry) => entry.slotNo === 1)?.mainPosition, "JGL");
+    const stale = await sync(renamed.body, legacyRoster(renamed.body));
     assert.equal(stale.body.entries.length, 9, "an unchanged stale name does not revive a deletion");
+    assert.equal(stale.body.entries.some((entry) => entry.slotNo === 9), false);
+    assert.equal(stale.body.entries.find((entry) => entry.slotNo === 1)?.mainPosition, "JGL", "legacy omitted lanes preserve newer explicit lane edits");
+    assert.deepEqual(stale.body.entries.find((entry) => entry.slotNo === 1)?.subPositions, ["SUP"]);
+    assert.equal(stale.body.createdCount, 0);
+    assert.equal(stale.body.updatedCount, 0);
+    assert.match(inhouseSaveReply(stale.body), /이번 요청으로 변경된 내용은 없어요/u);
     await database.insert(seasonApplications).values({ id: randomUUID(), seasonId, playerId: playerIds[0]!, applyDate: today, recruitNo: 1,
       source: "SITE", sourceSlotNo: null, mainPosition: "TOP", subPositions: [], status: "APPLIED" });
     const mixed = await detail();
@@ -1601,6 +1632,9 @@ test("in-house copy forms reopen a vacated reserve slot and preserve the remaini
     const removed = await send({ action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 1, name: members[1]!.name, participants: [] });
     assert.equal(removed.body.reserveCount, 9);
     assert.match(inhouseCopyFormReply(removed.body), /^예비 1\.$/mu);
+    assert.deepEqual(inhouseCopyFormReply(removed.body).split("\n").filter((line) => /^예비 \d+\./u.test(line))
+      .map((line) => Number(/^예비 (\d+)\./u.exec(line)![1])), Array.from({ length: 10 }, (_, index) => index + 1),
+    "actual detail emits the vacant first reserve before later occupied slots without duplicates");
     for (let index = 2; index <= 10; index += 1) {
       assert.ok(inhouseCopyFormReply(removed.body).includes(`예비 ${index}. ${members[index]!.name}`));
     }

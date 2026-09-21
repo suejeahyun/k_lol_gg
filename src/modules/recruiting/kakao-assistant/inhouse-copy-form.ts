@@ -20,7 +20,17 @@ export function planInhouseCopyEdits(input: Readonly<{
   observedSlotNos: readonly number[];
   capacity: number;
 }>): Readonly<{ rows: readonly InhouseCopyRow[]; error?: never } | { error: string; rows?: never }> {
-  const submitted = new Map(input.submitted.map((row) => [row.slotNo, row]));
+  const participants: KakaoSeasonSnapshotParticipant[] = [];
+  for (const row of input.submitted) {
+    if (!row.nameOnly) { participants.push(row); continue; }
+    const original = input.original.find((candidate) => candidate.slotNo === row.slotNo &&
+      candidate.reserve === row.reserve && identity(candidate.name) === identity(row.name));
+    if (!original) return { error: `${row.reserve ? `예비 ${row.slotNo - input.capacity}` : row.slotNo}번은 새로 추가하거나 바꾸는 이름이라 협곡 라인이 필요해요. 이름/top,mid 또는 이름/all로 적어 주세요. 기존 이름은 그대로 두셔도 돼요.` };
+    // The old form omitted these fields. Hydrate from the issued snapshot, not
+    // today's roster, so the normal merge preserves concurrent edits/removals.
+    participants.push({ ...row, nameOnly: undefined, mainPosition: original.mainPosition, subPositions: original.subPositions });
+  }
+  const submitted = new Map(participants.map((row) => [row.slotNo, row]));
   const observed = new Set(input.observedSlotNos);
   const result = input.current.map((row) => ({ ...row }));
   const handled = new Set<number>();
@@ -39,7 +49,7 @@ export function planInhouseCopyEdits(input: Readonly<{
     let destination = original.slotNo;
     // Explicit deletion plus a matching name in another slot is a move of the same entry.
     if (!next) {
-      const moved = input.submitted.find((candidate) => !input.original.some((row) => row.slotNo === candidate.slotNo) &&
+      const moved = participants.find((candidate) => !input.original.some((row) => row.slotNo === candidate.slotNo) &&
         identity(candidate.name) === identity(original.name));
       if (moved) { next = moved; destination = moved.slotNo; }
     }
@@ -73,7 +83,7 @@ export function planInhouseCopyEdits(input: Readonly<{
     }
     result[index] = merged;
   }
-  for (const next of input.submitted) {
+  for (const next of participants) {
     if (handled.has(next.slotNo) || input.original.some((row) => row.slotNo === next.slotNo)) continue;
     const saved = result.find((row) => identity(row.name) === identity(next.name));
     if (saved) {

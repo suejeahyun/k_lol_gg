@@ -14,6 +14,7 @@ const DETAIL_HEADER = /^\s*\[\s*K-LOL\.GG\s+구인\s*상세\s*#\s*(\d+)\s*\]\s*$
 const DETAIL_SUMMARY = /^\s*#\s*(\d+)\s*[·ㆍ|]\s*(.*?)\s*[·ㆍ|]\s*(\d+)\s*\/\s*(\d+)(?:\s|$)/u;
 const RESERVE_COUNT_SUMMARY = /^\s*예비\s*[:：]\s*\d+\s*명(?:\s|$)/u;
 const MERGED_ROW = /\s+(?:(?:예비|후보|대기)\s*[0-9]{0,2}\s*[.):：.]|[0-9]{1,2}\s*[.)]|(?:TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：])/iu;
+const DISPLAY_SEPARATOR = /^\s*[-─━═_=]{3,}\s*$/u;
 
 export const PARTY_FORM_DECISIONS = ["EXACT", "RECOVERABLE", "AMBIGUOUS", "REJECT", "IGNORE"] as const;
 export type PartyFormDecision = (typeof PARTY_FORM_DECISIONS)[number];
@@ -104,10 +105,16 @@ const POSITION_DEFINITIONS = Object.freeze(new Map<string, Readonly<{
 function normalizePartyText(value: string) {
   return value
     .replace(/\r\n?/gu, "\n")
-    .normalize("NFKC")
     .replace(/[\u00A0\u3000]/gu, " ")
     .replace(/\\(?=[.):：#*\-])/gu, "")
-    .replace(/^\/(?!\/)(?=\S)/u, "")
+    .replace(/^[/／](?![/／])(?=\S)/u, "")
+    .split("\n").map((line) => {
+      // Only structural headers need compatibility normalization. Applying it
+      // to the body changes displayed Korean shorthand such as `ㅁㅂㅅ`.
+      const structural = line.normalize("NFKC");
+      return DETAIL_HEADER.test(structural) || DETAIL_SUMMARY.test(structural) || RESERVE_COUNT_SUMMARY.test(structural) || /^\s*\[파티\s*#\d+\]/u.test(structural)
+        ? structural : line;
+    }).join("\n")
     .replace(/^\s*\[파티\s*#(\d+)\]\s*(.+?)\s*·\s*(\d+)\/(\d+)명\s*$/gmu, "[K-LOL.GG 구인상세 #$1]\n#$1 · $2 · $3/$4")
     .trim();
 }
@@ -133,7 +140,7 @@ export function parsePartyNumberedRow(line: string) {
 }
 
 export function parsePartyPositionRow(line: string) {
-  const match = POSITION_ROW.exec(normalizePartyText(line));
+  const match = POSITION_ROW.exec(normalizePartyText(line).replace(/^\s*[A-Za-zＡ-Ｚａ-ｚ]+/u, (label) => label.normalize("NFKC")));
   if (!match) return null;
   return Object.freeze({ label: match[1]!, value: normalizedValue(match[2]!) });
 }
@@ -146,6 +153,7 @@ export function parsePartyReserveRow(line: string) {
 
 function submittedTitle(line: string, lineNumber: number, allowCompact = false): ParsedPartyTitle | null {
   const raw = line.trim().replace(/^📢\s*/u, "").replace(/^[-*#]\s*/u, "").trim();
+  const structural = raw.normalize("NFKC");
   const definitions = [
     [/롤체\s*일반/u, "TFT_NORMAL", "롤체 일반 하실분!", 8, false],
     [/롤체\s*랭크/u, "TFT_RANK", "롤체 랭크 하실분!", 3, false],
@@ -159,11 +167,11 @@ function submittedTitle(line: string, lineNumber: number, allowCompact = false):
     [/협곡/u, "PARTY_RIFT", "5인 협곡 파티 구인", 5, true],
   ] as const;
   for (const [pattern, partyType, canonicalTitle, maximumMembers, positionSlots] of definitions) {
-    if (pattern.test(raw) && (allowCompact || /(?:구인|하실분|파티)/u.test(raw))) {
+    if (pattern.test(structural) && (allowCompact || /(?:구인|하실분|파티)/u.test(structural))) {
       return Object.freeze({ raw, partyType, canonicalTitle, maximumMembers, positionSlots, line: lineNumber });
     }
   }
-  const numbered = /(\d{1,3})\s*인\s*(?:협곡\s*)?(?:(?:파티)(?:\s*구인)?|구인)/u.exec(raw);
+  const numbered = /(\d{1,3})\s*인\s*(?:협곡\s*)?(?:(?:파티)(?:\s*구인)?|구인)/u.exec(structural);
   const maximumMembers = Number(numbered?.[1] ?? 0);
   if (maximumMembers < 1 || maximumMembers > 99) return null;
   return Object.freeze({ raw, partyType: "PARTY_NUMBER" as const, canonicalTitle: `${maximumMembers}인 파티 구인`, maximumMembers, positionSlots: false, line: lineNumber });
@@ -181,9 +189,9 @@ function partySlotContinuation(lines: readonly string[], index: number) {
   const value = normalizedValue(lines[index + 1] ?? "");
   if (!value) return null;
   if (
-    FORM_CODE_LABEL.test(value) || /^전체 복사/u.test(value) || SAVE_REFERENCE_LABEL.test(value) || /^복사 안내:/u.test(value) || RECRUIT_LABEL.test(value) || OPERATING_DATE_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
+    DISPLAY_SEPARATOR.test(value) || FORM_CODE_LABEL.test(value) || /^전체 복사/u.test(value) || SAVE_REFERENCE_LABEL.test(value) || /^복사 안내:/u.test(value) || RECRUIT_LABEL.test(value) || OPERATING_DATE_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
     DETAIL_HEADER.test(value) || DETAIL_SUMMARY.test(value) || RESERVE_COUNT_SUMMARY.test(value) ||
-    parsePartyReserveRow(value) || parsePartyNumberedRow(value) || parsePartyPositionRow(value) || /^\d{3,}\s*[.)]/u.test(value) ||
+    parsePartyReserveRow(value) || parsePartyNumberedRow(value) || parsePartyPositionRow(value) || /^\d{3,}\s*[.)]/u.test(value.normalize("NFKC")) ||
     submittedTitle(value, index + 2) || /^\s*(?:\[?K-LOL|📢|참여해|\*?상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(value)
   ) return null;
   return value;
@@ -200,6 +208,7 @@ function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: 
   const values = selected.firstValue ? [selected.firstValue] : [];
   for (let index = selected.lineIndex + 1; index < lines.length; index += 1) {
     const line = lines[index]!;
+    if (DISPLAY_SEPARATOR.test(line)) break;
     if (
       FORM_CODE_LABEL.test(line) || /^전체 복사/u.test(line) || SAVE_REFERENCE_LABEL.test(line) || /^복사 안내:/u.test(line) || RECRUIT_LABEL.test(line) || OPERATING_DATE_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) || ORGANIZER_LABEL.test(line) ||
       DETAIL_HEADER.test(line) || DETAIL_SUMMARY.test(line) || RESERVE_COUNT_SUMMARY.test(line) ||
@@ -275,7 +284,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
     const recruit = RECRUIT_LABEL.exec(line);
     if (recruit) {
       recruitLabelSignals += 1;
-      const value = normalizedValue(recruit[1] ?? "").replace(/^#\s*/u, "");
+      const value = normalizedValue(recruit[1] ?? "").normalize("NFKC").replace(/^#\s*/u, "");
       if (/^자동\s*배정$/u.test(value)) recruitNumbers.push("AUTO");
       else if (/^\d{1,3}$/u.test(value) && Number(value) > 0) recruitNumbers.push(Number(value));
       else {
@@ -292,7 +301,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
       titles.push(title);
       continue;
     }
-    if (/^\s*\d{3,}\s*[.)]/u.test(line)) {
+    if (/^\s*\d{3,}\s*[.)]/u.test(line.normalize("NFKC"))) {
       invalidStructuralSignal = true;
       diagnostics.push(diagnostic("INVALID_SLOT", lineNumber, null));
       continue;
@@ -304,7 +313,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
     slotSignals += 1;
     const parsed = reserve ?? position ?? numbered!;
     const continuation = parsed.value ? null : partySlotContinuation(lines, index);
-    if (MERGED_ROW.test(parsed.value)) diagnostics.push(diagnostic("MERGED_SLOT_ROWS", lineNumber, null));
+    if (MERGED_ROW.test(parsed.value.normalize("NFKC"))) diagnostics.push(diagnostic("MERGED_SLOT_ROWS", lineNumber, null));
     const value = normalizedValue(continuation ?? parsed.value);
     if (continuation) index += 1;
     if (value.length > 80) diagnostics.push(diagnostic("VALUE_TOO_LONG", lineNumber, null));
@@ -339,6 +348,9 @@ export function parsePartyForm(input: string): ParsedPartyForm {
   const seen = new Set<string>();
   for (const slot of slots) {
     const key = slot.kind === "RESERVE" ? `reserve:${slot.slotNo}` : `primary:${slot.slotNo}`;
+    if (slot.kind === "NUMBERED" && selectedTitle && (slot.slotNo < 1 || slot.slotNo > selectedTitle.maximumMembers)) {
+      diagnostics.push(diagnostic("INVALID_SLOT", slot.line, key));
+    }
     if (seen.has(key)) diagnostics.push(diagnostic("DUPLICATE_SLOT", slot.line, key));
     seen.add(key);
   }
@@ -366,9 +378,13 @@ export function parsePartyForm(input: string): ParsedPartyForm {
   const operatingDate = metadata(lines, OPERATING_DATE_LABEL);
   const references = lines.flatMap((line) => {
     const match = SAVE_REFERENCE_LABEL.exec(line) ?? FORM_CODE_LABEL.exec(line);
-    return match ? [normalizedValue(match[1] ?? "").replace(/\s*\(그대로 두세요\)\s*$/u, "")] : [];
+    return match ? [normalizedValue(match[1] ?? "").normalize("NFKC").replace(/\s*\(그대로 두세요\)\s*$/u, "")] : [];
   });
   const saveReference = references[0] ?? null;
+  const onlyRecruitNumber = uniqueRecruitNumbers.size === 1 ? [...uniqueRecruitNumbers][0] : null;
+  if (saveReference !== null && (uniqueRecruitNumbers.size === 0 || uniqueRecruitNumbers.has("AUTO"))) {
+    diagnostics.push(diagnostic("INVALID_RECRUIT_NUMBER", null, "recruitNumber"));
+  }
   const compactHeader = /^\s*\/?\[파티\s*#\d+\]/mu.test(input.normalize("NFKC"));
   if ((compactHeader && (saveReference === null || !/^[A-Z2-9]{5}-[A-Z2-9]{5}$/u.test(saveReference))) ||
       references.length > 1 || (saveReference !== null && !/^(?:\d{4}-\d{2}-\d{2} \/ P[a-f0-9]{32}-R\d+|[A-Z2-9]{5}-[A-Z2-9]{5})$/u.test(saveReference))) {
@@ -385,7 +401,6 @@ export function parsePartyForm(input: string): ParsedPartyForm {
   const candidate = (slotSignals >= 2 || metadataOnlyForm) &&
     (recruitLabelSignals > 0 || detailSignals > 0 || titles.length > 0 || invalidStructuralSignal);
   const decision = decisionFor(diagnostics, candidate);
-  const onlyRecruitNumber = uniqueRecruitNumbers.size === 1 ? [...uniqueRecruitNumbers][0] : null;
   return Object.freeze({
     decision,
     rawText: input,

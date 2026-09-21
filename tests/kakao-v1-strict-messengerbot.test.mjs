@@ -323,14 +323,21 @@ test("R23 retired scrim commands and forms reply locally without an HTTP request
   assert.equal(runtime.http.calls, 0);
 });
 
-test("R24 local help separates joining from new recruitment and uses site names for inhouse", async () => {
+test("R25 local help matches optional member linking, Rift lanes, protected editing and detail rereads", async () => {
   const runtime = evaluate(await readFile(artifactPath, "utf8"));
   for (const command of ["도움말", "/도움말", "명령어", "구인도움말", "내전참가", "/참가신청"]) {
     const [reply] = replyFor(runtime, command);
     assert.match(reply, /최근 봇 명단 전체 복사/u, command);
     assert.match(reply, /빈칸에 내 이름 입력/u, command);
     assert.match(reply, /메시지 전체 전송 = 저장/u, command);
-    assert.match(reply, /사이트에 등록한 이름/u, command);
+    assert.match(reply, /이름\/top,mid 또는 이름\/all/u, command);
+    assert.match(reply, /칼바람·증바람: 이름만 입력/u, command);
+    assert.match(reply, /회원 연결은 접수 후/u, command);
+    assert.match(reply, /이름·라인·시간/u, command);
+    assert.match(reply, /사이트 신청·운영진 확정 항목은 보호됩니다/u, command);
+    assert.match(reply, /내전상세 번호로 다시 조회|상세 번호 \/ 내전상세 번호로 다시 조회/u, command);
+    assert.doesNotMatch(reply, /티어·라인 정보는 사이트 연동 정보를 사용하며 양식에 추가 작성/u, command);
+    assert.doesNotMatch(reply, /사이트에 등록한 이름|주라인·부라인을 모두|기존 이름은 그대로/u, command);
     assert.ok(reply.indexOf("최근 봇 명단 전체 복사") < reply.indexOf("새 모집 만들기"), command);
     assert.doesNotMatch(reply, /스크림/u, command);
   }
@@ -578,7 +585,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R24_2026_09_20"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R25_2026_09_22"],
   );
 });
 
@@ -733,6 +740,10 @@ test("local recruit help documents member commands and keeps full-form guidance"
   assert.match(reply, /내전상세 번호 수정\/예비추가\/예비삭제 이름\/라인/u);
   assert.match(reply, /메시지 전체 전송 = 저장/u);
   assert.match(reply, /빈칸에 내 이름 입력/u);
+  assert.match(reply, /N인파티: 양식에서 이름 추가·삭제·교체, 시작·게임 수정/u);
+  assert.match(reply, /번호 행을 남기고 이름만 비우기/u);
+  assert.match(reply, /양식코드와 번호는 그대로/u);
+  assert.match(reply, /내전: 최신 양식에서 이름·라인·시간 수정/u);
   assert.doesNotMatch(reply, /스크림/u);
 });
 

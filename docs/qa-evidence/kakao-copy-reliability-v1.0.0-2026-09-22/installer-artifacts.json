@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-09-21T15:44:25.537Z",
+  "status": "PENDING_USER_INSTALL",
+  "artifacts": [
+    {
+      "kind": "public",
+      "path": "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js",
+      "version": "KLOL_KAKAO_BOT_V40_R25_2026_09_22",
+      "sha256": "e18ea983d2125ffb2c187d1e330f4e1671f56f1878c7ce9b99e9a272b03b2886",
+      "lfCharacters": 63304,
+      "crlfCharacters": 65145
+    },
+    {
+      "kind": "private",
+      "path": ".private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js",
+      "version": "KLOL_KAKAO_BOT_V40_R25_2026_09_22",
+      "sha256": "145f46e6de4e17c6b6608fb6175962f0d19869596c34276024ba6a1131a56b3e",
+      "lfCharacters": 61593,
+      "crlfCharacters": 63435
+    }
+  ]
+}

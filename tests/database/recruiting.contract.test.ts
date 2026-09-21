@@ -16,6 +16,7 @@ import {
 } from "../../src/modules/recruiting";
 import { PostgresRecruitingAdapter } from "../../src/modules/recruiting/infrastructure/postgres-recruiting-adapter";
 import { partyCopyReference } from "../../src/modules/recruiting/application/party-copy-reference";
+import type { RecruitMember } from "../../src/modules/recruiting/domain/recruiting";
 import { recruitingOperatingDateKey } from "../../src/modules/recruiting/domain/operating-day";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
@@ -633,29 +634,66 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     }, `sender-${suffix}-copy-create`));
     const draftCode = String(draft.body.data.formCode);
     assert.match(draftCode, /^[A-Z2-9]{5}-[A-Z2-9]{5}$/u);
+    const copied = (code: string, members: readonly RecruitMember[], startTimeText = "지금", gameInfo = "배그") => ({
+      members, startTimeText, startTimeState: "PRESENT_VALUE" as const, gameInfo, gameInfoState: "PRESENT_VALUE" as const,
+      copyGuard: { operatingDate, saveReference: code },
+      slotPatches: [false, true].flatMap((substitute) => [1, 2, 3].map((slotNo) => {
+        const member = members.find((row) => row.slotNo === slotNo && row.substitute === substitute);
+        return { slotNo, substitute, state: member ? "PRESENT_VALUE" as const : "PRESENT_EMPTY" as const, value: member?.name ?? null };
+      })),
+    });
     const concurrentCopies = await Promise.all(["한명", "두명"].map((name, index) => handler.handle(v4Command("SYNC_PARTY", {
-      members: [{ name, slotNo: 1, position: null, substitute: false }],
-      startTimeText: "미정", startTimeState: "PRESENT_VALUE", gameInfo: "미정", gameInfoState: "PRESENT_VALUE",
-      copyGuard: { operatingDate, saveReference: draftCode },
+      ...copied(draftCode, [{ name, slotNo: 1, position: null, substitute: false }]),
     }, `sender-${suffix}-copy-${index}`))));
     assert.deepEqual(concurrentCopies.map((entry) => entry.revision).sort(), [1, 2]);
     const twoMembers = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
     const baseline = twoMembers.membersJson as { name: string; slotNo: number; position: null; substitute: boolean }[];
     assert.deepEqual(baseline.map((member) => member.slotNo).sort(), [1, 2]);
     assert.deepEqual(baseline.map((member) => member.name).sort(), ["두명", "한명"]);
+    assert.equal(twoMembers.startTimeText, "지금");
+    assert.equal(twoMembers.gameInfo, "배그", "the second old draft accepts the already-saved metadata change");
     const baselineCode = String(concurrentCopies.find((entry) => entry.revision === 2)!.body.data.formCode);
     await handler.handle(v4Command("PARTY_MEMBER_REMOVE", { name: baseline[0]!.name }, `sender-${suffix}-withdraw`));
     const third = await handler.handle(v4Command("SYNC_PARTY", {
-      members: [...baseline, { name: "세명", slotNo: 3, position: null, substitute: false }],
-      copyGuard: { operatingDate, saveReference: baselineCode },
+      ...copied(baselineCode, [...baseline, { name: "세명", slotNo: 3, position: null, substitute: false }]),
     }, `sender-${suffix}-third`));
     assert.equal(third.body.data.memberCount, 2);
     const afterThird = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
     assert.equal((afterThird.membersJson as { name: string }[]).some((member) => member.name === baseline[0]!.name), false, "an unchanged withdrawn name is not resurrected");
     await assert.rejects(handler.handle(v4Command("SYNC_PARTY", {
       members: [], copyGuard: { operatingDate, saveReference: String(third.body.data.formCode) },
-    }, `sender-${suffix}-erase`)), { message: "PARTY_COPY_REMOVAL" });
+    }, `sender-${suffix}-erase`)), { message: "PARTY_COPY_INCOMPLETE" });
     assert.deepEqual((await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0], afterThird);
+
+    const cleared = await handler.handle(v4Command("SYNC_PARTY", copied(String(third.body.data.formCode), []), `sender-${suffix}-clear`));
+    assert.equal(cleared.body.status, "IN_PROGRESS");
+    assert.equal(cleared.body.data.memberCount, 0, "explicit blank numbered rows remove participants without closing the party");
+    const newMembers: RecruitMember[] = [{ name: "참가가", slotNo: 1, position: null, substitute: false },
+      { name: "예비나", slotNo: 1, position: null, substitute: true }];
+    const seeded = await handler.handle(v4Command("SYNC_PARTY", copied(String(cleared.body.data.formCode), newMembers), `sender-${suffix}-seed`));
+    const movedMembers: RecruitMember[] = [{ ...newMembers[1]!, substitute: false }];
+    const moveCommand = v4Command("SYNC_PARTY", copied(String(seeded.body.data.formCode), movedMembers), `sender-${suffix}-move`);
+    const moved = await handler.handle(moveCommand);
+    assert.equal(moved.body.data.memberCount, 1);
+    assert.equal(moved.body.data.reserveCount, 0);
+    assert.equal((await handler.handle(moveCommand)).replayed, true, "delivery retries cannot apply the edit twice");
+
+    const edits = await Promise.all([
+      handler.handle(v4Command("SYNC_PARTY", copied(String(moved.body.data.formCode), movedMembers, "ㅁㅂㅅ"), `sender-${suffix}-time`)),
+      handler.handle(v4Command("SYNC_PARTY", copied(String(moved.body.data.formCode), movedMembers, "지금", "증바람"), `sender-${suffix}-game`)),
+    ]);
+    const edited = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
+    assert.equal(edited.startTimeText, "ㅁㅂㅅ", "display jamo is preserved in the stored domain value");
+    assert.equal(edited.gameInfo, "증바람", "disjoint metadata edits compose under the row lock");
+    const editCode = String(edits.find((entry) => entry.revision === edited.revision)!.body.data.formCode);
+    const collisions = await Promise.allSettled(["교체다", "교체라"].map((name, index) => handler.handle(v4Command("SYNC_PARTY",
+      copied(editCode, [{ ...movedMembers[0]!, name }], "ㅁㅂㅅ", "증바람"), `sender-${suffix}-conflict-${index}`))));
+    assert.equal(collisions.filter((entry) => entry.status === "fulfilled").length, 1);
+    const conflict = collisions.find((entry) => entry.status === "rejected");
+    assert.ok(conflict?.status === "rejected" && conflict.reason.message === "PARTY_COPY_EDIT_CONFLICT");
+    const afterConflict = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
+    assert.equal(afterConflict.revision, edited.revision + 1, "conflicting edit rolls back its roster and audit revision");
+    assert.equal((afterConflict.membersJson as unknown[]).length, 1);
   } finally {
     await pool.end();
   }

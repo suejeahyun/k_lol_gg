@@ -355,7 +355,9 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       continue;
     }
     const reserveRow = /^\s*(?:예비|대기)\s*\d{1,2}(?:(?:\s*\\?\s*[.)])|\s+)/u.test(participantLine.normalize("NFKC"));
-    const row = parseKakaoV4InhouseParticipantRow(participantLine, mode);
+    const row = parseKakaoV4InhouseParticipantRow(participantLine, mode, {
+      allowNameOnly: Boolean(modernHeader && !modernHeader[2] && codeMatch && !pendingRow),
+    });
     if (!row.matched) continue;
     if (reserveRow) reserveSectionObserved = true;
     const slotNo = reserveRow ? capacity + row.slotNo : row.slotNo;

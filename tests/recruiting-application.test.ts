@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { partyCopyReference } from "../src/modules/recruiting/application/party-copy-reference";
+import { partyCopySnapshot } from "../src/modules/recruiting/application/party-copy-snapshot";
 
 import {
   hashRecruitingRequestKey,
@@ -121,6 +122,7 @@ class Harness {
   failOutbox = false;
   activeDestructionTournamentIds: string[] = ["destruction-active-1"];
   transaction = {} as RecruitingTransactionContext;
+  partyCopySnapshots = new Map<string, ReturnType<typeof partyCopySnapshot>>();
 
   dependencies(): RecruitingCommandHandlerDependencies {
     return {
@@ -186,6 +188,7 @@ class Harness {
           this.operations.push("load");
           return this.snapshot.parties.get(id) ?? null;
         },
+        loadPartyCopySnapshot: async (_transaction, _party, code) => this.partyCopySnapshots.get(code) ?? null,
         loadScrimForUpdate: async (_transaction, id) => {
           this.operations.push("load");
           return this.snapshot.scrims.get(id) ?? null;
@@ -320,6 +323,151 @@ test("R23 blank draft activates with participant name only and no organizer", as
   assert.equal(result.body.status, "IN_PROGRESS");
   assert.equal(harness.snapshot.parties.get(party.id)?.members[0]?.name, "서지오");
   assert.equal(harness.snapshot.parties.get(party.id)?.organizerText, null);
+});
+
+function editablePartyPayload(base: RecruitParty, members: RecruitParty["members"] = base.members) {
+  const reserveCount = Math.max(0, ...base.members.filter((row) => row.substitute).map((row) => row.slotNo),
+    ...members.filter((row) => row.substitute).map((row) => row.slotNo)) + 1;
+  const slotPatches = [false, true].flatMap((substitute) => Array.from({ length: substitute ? reserveCount : base.maximumMembers }, (_, index) => {
+    const slotNo = index + 1;
+    const row = members.find((member) => member.substitute === substitute && member.slotNo === slotNo);
+    return { slotNo, substitute, state: row ? "PRESENT_VALUE" as const : "PRESENT_EMPTY" as const, value: row?.name ?? null };
+  }));
+  return {
+    members, slotPatches, startTimeText: base.startTimeText, startTimeState: "PRESENT_VALUE" as const,
+    gameInfo: base.gameInfo, gameInfoState: "PRESENT_VALUE" as const,
+    organizerText: base.organizerText, organizerState: base.organizerText ? "PRESENT_VALUE" as const : "PRESENT_EMPTY" as const,
+    copyGuard: { operatingDate: base.recruitDate, saveReference: "ABCDE-FGHJK",
+      submittedPartyType: base.type, submittedMaximumMembers: base.maximumMembers },
+  };
+}
+
+async function numberedPartyHarness() {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const create = createParty();
+  await handler.handle(command("CREATE_PARTY", "party-editable", 0, {
+    ...create.payload, partyType: "PARTY_NUMBER", members: [
+      { name: "합성첫째", position: null, slotNo: 1, substitute: false },
+      { name: "합성둘째", position: null, slotNo: 3, substitute: false },
+      { name: "합성예비", position: null, slotNo: 2, substitute: true },
+    ], startTimeText: "20:00", gameInfo: "합성게임", organizerText: null,
+  }));
+  const base = harness.snapshot.parties.get("party-editable")!;
+  harness.partyCopySnapshots.set("ABCDE-FGHJK", partyCopySnapshot(base));
+  return { harness, handler, base };
+}
+
+test("stored numbered copies allow deletions, replacements and reserve moves in one atomic save", async () => {
+  const { harness, handler, base } = await numberedPartyHarness();
+  const payload = editablePartyPayload(base, [
+    { name: "합성예비", position: null, slotNo: 2, substitute: false },
+    { name: "합성교체", position: null, slotNo: 3, substitute: false },
+  ]);
+  const result = await handler.handle(command("SYNC_PARTY", base.id, base.revision, payload));
+  const saved = harness.snapshot.parties.get(base.id)!;
+  assert.deepEqual(saved.members, payload.members);
+  assert.equal(saved.status, "IN_PROGRESS");
+  assert.equal(result.body.data.copyChanged, true);
+  const audits = harness.snapshot.audits.length;
+  const same = await handler.handle(command("SYNC_PARTY", base.id, base.revision, payload));
+  assert.equal(same.body.revision, saved.revision);
+  assert.equal(same.body.data.copyChanged, false);
+  assert.equal(harness.snapshot.audits.length, audits);
+});
+
+test("stored numbered copies merge independent edits and preserve the latest scheduled time", async () => {
+  const { harness, handler, base } = await numberedPartyHarness();
+  const scheduled = "2026-09-07T12:00:00.000Z";
+  await handler.handle(command("SYNC_PARTY", base.id, 0, {
+    ...editablePartyPayload(base), startTimeText: "21:00", scheduledStartAt: scheduled,
+  }));
+  await handler.handle(command("SYNC_PARTY", base.id, 0, {
+    ...editablePartyPayload(base), gameInfo: "합성바뀐게임", scheduledStartAt: base.scheduledStartAt?.toISOString() ?? null,
+  }));
+  const saved = harness.snapshot.parties.get(base.id)!;
+  assert.equal(saved.startTimeText, "21:00");
+  assert.equal(saved.gameInfo, "합성바뀐게임");
+  assert.equal(saved.scheduledStartAt?.toISOString(), scheduled);
+  const before = structuredClone(harness.snapshot);
+  await assert.rejects(handler.handle(command("SYNC_PARTY", base.id, 0, {
+    ...editablePartyPayload(base, []), startTimeText: "22:00",
+  })), /PARTY_COPY_EDIT_CONFLICT/);
+  assert.deepEqual(harness.snapshot, before);
+});
+
+test("stored draft copies accept the same activated metadata and add the next participant", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const delivery = { eventId: "event-editable-draft-create", senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", nonce: "editable_draft_nonce_12345678" };
+  await handler.handle(v4Command("CREATE_PARTY", "party-editable-draft", 0, {
+    ...createParty().payload, partyType: "PARTY_NUMBER", members: [], initialStatus: "DRAFT", startTimeText: "미정", gameInfo: "미정",
+  }, delivery));
+  const base = harness.snapshot.parties.get("party-editable-draft")!;
+  harness.partyCopySnapshots.set("ABCDE-FGHJK", partyCopySnapshot(base));
+  const first = { name: "합성주최", position: null, slotNo: 1, substitute: false };
+  const second = { name: "합성참가", position: null, slotNo: 2, substitute: false };
+  const activated = { ...editablePartyPayload(base, [first]), startTimeText: "지금", gameInfo: "합성게임" };
+  await handler.handle(command("SYNC_PARTY", base.id, 0, activated));
+  await handler.handle(command("SYNC_PARTY", base.id, 0, { ...editablePartyPayload(base, [first, second]), startTimeText: "지금", gameInfo: "합성게임" }));
+  assert.deepEqual(harness.snapshot.parties.get(base.id)?.members, [first, second]);
+});
+
+test("stored numbered copies reject missing main, reserve and metadata fields without deleting members", async () => {
+  const { harness, handler, base } = await numberedPartyHarness();
+  const complete = editablePartyPayload(base);
+  for (const payload of [
+    { ...complete, slotPatches: complete.slotPatches.filter((row) => row.substitute || row.slotNo !== 1) },
+    { ...complete, slotPatches: complete.slotPatches.map((row) => !row.substitute && row.slotNo === 1 ? { ...row, state: "ABSENT" as const, value: null } : row) },
+    { ...complete, slotPatches: complete.slotPatches.filter((row) => !row.substitute || row.slotNo !== 2) },
+    { ...complete, slotPatches: complete.slotPatches.filter((row) => !row.substitute) },
+    { ...complete, startTimeState: "ABSENT" as const },
+    { ...complete, gameInfoState: "ABSENT" as const },
+    { ...complete, slotPatches: undefined },
+  ]) {
+    const before = structuredClone(harness.snapshot);
+    await assert.rejects(handler.handle(command("SYNC_PARTY", base.id, 0, payload)), /PARTY_COPY_INCOMPLETE/);
+    assert.deepEqual(harness.snapshot, before);
+  }
+});
+
+test("copy headers cannot change the locked party type or capacity even when every original row remains", async () => {
+  const { harness, handler, base } = await numberedPartyHarness();
+  const complete = editablePartyPayload(base);
+  for (const saveReference of [complete.copyGuard.saveReference, partyCopyReference(base), null]) {
+    for (const tampering of [
+      { submittedMaximumMembers: base.maximumMembers - 1 },
+      { submittedMaximumMembers: base.maximumMembers + 1 },
+      { submittedPartyType: "FLEX_RANK" as const },
+    ]) {
+      const before = structuredClone(harness.snapshot);
+      await assert.rejects(handler.handle(command("SYNC_PARTY", base.id, base.revision, {
+        ...complete, copyGuard: { ...complete.copyGuard, saveReference, ...tampering },
+      })), /PARTY_COPY_CONFLICT/);
+      assert.deepEqual(harness.snapshot, before);
+    }
+  }
+  const saved = await handler.handle(command("SYNC_PARTY", base.id, base.revision, complete));
+  assert.equal(saved.body.data.copyChanged, false);
+});
+
+test("stored numbered explicit blanks clear metadata and roster while legacy copies remain append-only", async () => {
+  const { harness, handler, base } = await numberedPartyHarness();
+  const blank = { ...editablePartyPayload(base, []), startTimeState: "PRESENT_EMPTY" as const, startTimeText: null,
+    gameInfoState: "PRESENT_EMPTY" as const, gameInfo: null, scheduledStartAt: null };
+  await handler.handle(command("SYNC_PARTY", base.id, 0, blank));
+  const empty = harness.snapshot.parties.get(base.id)!;
+  assert.equal(empty.status, "IN_PROGRESS");
+  assert.deepEqual(empty.members, []);
+  assert.equal(empty.startTimeText, "미정");
+  assert.equal(empty.gameInfo, "미입력");
+  assert.equal(empty.scheduledStartAt, null);
+  const before = structuredClone(harness.snapshot);
+  await assert.rejects(handler.handle(command("SYNC_PARTY", base.id, empty.revision, {
+    ...editablePartyPayload(empty), startTimeText: "22:00",
+    copyGuard: { operatingDate: empty.recruitDate, saveReference: null },
+  })), /PARTY_COPY_METADATA/);
+  assert.deepEqual(harness.snapshot, before);
 });
 
 function createScrim(scrimId = "scrim-1") {

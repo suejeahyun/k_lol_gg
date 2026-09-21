@@ -173,6 +173,10 @@ function mutationResult(
 
 function harness(options: Readonly<{
   missingPartyTarget?: boolean;
+  closedPartyTarget?: boolean;
+  partySyncError?: string;
+  partyFinishError?: string;
+  closedAfterHandle?: boolean;
   emptyPartyStatus?: boolean;
   missingPlayer?: boolean;
   emptyRanking?: boolean;
@@ -195,6 +199,8 @@ function harness(options: Readonly<{
   const recruiting: KakaoV4RecruitingPort = {
     async handle(command) {
       handled.push(command);
+      if (options.partySyncError && command.type === "SYNC_PARTY") throw new Error(options.partySyncError);
+      if (options.partyFinishError && command.type === "FINISH_PARTY") throw Object.assign(new Error(options.partyFinishError), { code: options.partyFinishError });
       if (options.memberError && (command.type === "PARTY_MEMBER_ADD" || command.type === "PARTY_MEMBER_REMOVE")) {
         throw Object.assign(new Error(options.memberError), { code: options.memberError });
       }
@@ -208,7 +214,11 @@ function harness(options: Readonly<{
     },
     async resolveCompatTarget(input) {
       resolved.push(input);
+      if (input.kind === "PARTY" && (options.closedPartyTarget || options.closedAfterHandle && handled.length > 0)) {
+        return input.allowedPartyStatuses?.includes("FINISHED") ? { id: "party-closed", revision: 4 } : null;
+      }
       if (input.kind === "PARTY" && options.missingPartyTarget) return null;
+      if (input.kind === "PARTY" && input.allowedPartyStatuses?.includes("FINISHED")) return null;
       return { id: input.kind === "PARTY" ? "party-7" : "scrim-3", revision: 2 };
     },
     async resolveScrimUpsert(input) {
@@ -423,7 +433,7 @@ test("R24 party creation shows all empty slots with unknown time and a short foo
     });
     assert.equal(result.legacyReply, [
       "[파티 #8] 5인 파티 · 0/5명", "시작: 미정", "게임: 미정", "",
-      "", "", "1.", "2.", "3.", "4.", "5.", "", "예비 1.", "",
+      "1.", "2.", "3.", "4.", "5.", "", "예비 1.", "",
       "양식코드: ABCDE-23456",
     ].join("\n"));
     const created = state.handled[0];
@@ -541,7 +551,7 @@ test("first completed automatic party form creates the party once", async () => 
 
 test("explicit missing party number never falls back to creating a new party", async () => {
   const state = harness({ missingPartyTarget: true });
-  await assert.rejects(state.dispatcher.dispatch(context, {
+  const result = await state.dispatcher.dispatch(context, {
     domain: "PARTY", action: "SYNC", target: { recruitDate: "2026-09-10", recruitNumber: 999 },
     payload: {
       recruitDate: "2026-09-10", preferredRecruitNumber: 999, partyType: "PARTY_NUMBER",
@@ -549,8 +559,83 @@ test("explicit missing party number never falls back to creating a new party", a
       members: [{ slotNo: 1, name: "재현", position: null, substitute: false }],
       scheduledStartAt: null, protectedUntil: null,
     },
-  }), (error: unknown) => error instanceof KakaoV4DispatcherError && error.code === "NOT_FOUND");
+  });
+  assert.match(result.legacyReply, /저장하지 않았어요.*모집을 찾지 못했습니다/u);
+  assert.doesNotMatch(result.legacyReply, /입력 형식|이미 마감/u);
   assert.equal(state.handled.length, 0);
+});
+
+test("closed party copies and repeated finish receive a scoped closed reply without mutation", async () => {
+  for (const action of ["SYNC", "FINISH"] as const) {
+    const state = harness({ closedPartyTarget: true });
+    const target = { recruitDate: "2026-09-10", recruitNumber: 7 };
+    const command: CanonicalKakaoV4Command = action === "FINISH" ? { domain: "PARTY", action, target }
+      : { domain: "PARTY", action, target, payload: {
+        recruitDate: target.recruitDate, preferredRecruitNumber: 7, partyType: "PARTY_NUMBER",
+        title: "5인 파티", maximumMembers: 5, members: [], scheduledStartAt: null, protectedUntil: null,
+      } };
+    const result = await state.dispatcher.dispatch(context, command);
+    assert.match(result.legacyReply, /이미 마감되거나 종료된 파티/u);
+    assert.doesNotMatch(result.legacyReply, /입력 형식|저장했습니다/u);
+    assert.equal(state.handled.length, 0);
+    assert.deepEqual(state.resolved[1], { kind: "PARTY", sourceRoomId: context.authorization.roomId,
+      ...target, allowedPartyStatuses: ["FINISHED", "CANCELED", "RESET"] });
+  }
+});
+
+test("copy edit conflicts and incomplete rows explain recovery and never report a save", async () => {
+  for (const [partySyncError, expected] of [
+    ["PARTY_COPY_EDIT_CONFLICT", /같은 항목을 다른 사람이 먼저 수정/u],
+    ["PARTY_COPY_INCOMPLETE", /번호 행이나 예비 행이 빠졌어요/u],
+    ["EMPTY_DRAFT_ACTIVATION", /첫 참가자 이름/u],
+    ["RECRUIT_NOT_MUTABLE", /이미 마감되거나 종료된 파티/u],
+  ] as const) {
+    const state = harness({ partySyncError, closedAfterHandle: partySyncError === "RECRUIT_NOT_MUTABLE" });
+    const result = await state.dispatcher.dispatch(context, {
+      domain: "PARTY", action: "SYNC", target: { recruitDate: "2026-09-10", recruitNumber: 7 },
+      payload: { recruitDate: "2026-09-10", preferredRecruitNumber: 7, partyType: "PARTY_NUMBER",
+        title: "5인 파티", maximumMembers: 5, members: [], scheduledStartAt: null, protectedUntil: null },
+    });
+    assert.match(result.legacyReply, expected);
+    assert.equal(result.aggregate, null);
+    assert.doesNotMatch(result.legacyReply, /신청 저장:|저장했어요|입력 형식/u);
+  }
+});
+
+test("a concurrent finish gets a closed reply while an active revision race asks for a retry", async () => {
+  for (const closedAfterHandle of [true, false]) {
+    const state = harness({ partyFinishError: "REVISION_CONFLICT", closedAfterHandle });
+    const result = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "FINISH", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
+    assert.match(result.legacyReply, closedAfterHandle ? /이미 마감되거나 종료된/u : /모집 상태가 바뀌어 이번 요청으로는 마감하지 않았어요/u);
+    assert.equal(state.handled.length, 1);
+    assert.doesNotMatch(result.legacyReply, /모집을 마감했습니다|입력 형식/u);
+  }
+});
+
+test("a copied form reference cannot be reused to create an automatic-number party", async () => {
+  const state = harness({ partyFormCode: "ABCDE-23456" });
+  const detail = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
+  const text = detail.legacyReply;
+  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), { ...context.envelope, text });
+  if (command?.domain !== "PARTY" || command.action !== "SYNC") assert.fail("expected a copied party");
+  const result = await state.dispatcher.dispatch(context, { ...command, target: { ...command.target, recruitNumber: null } });
+  assert.match(result.legacyReply, /모집번호를 바꿀 수 없어요/u);
+  assert.equal(state.handled.length, 0);
+});
+
+test("incomplete copied party forms and numberless inhouse detail return actionable guidance", async () => {
+  const state = harness();
+  const service = new KakaoV4CommandService({ async authorizeProfile(input) {
+    return { ...context.authorization, capabilityProfile: input.requiredCapabilityProfile };
+  } }, state.dispatcher);
+  const text = "[파티 #7] 5인 파티 · 1/5명\n시작: 지금\n게임: 배그\n\n1. 참가자A\n2.\n3.\n5.\n예비 1.\n양식코드: ABCDE-FGHJK";
+  const result = await service.execute({ ...context.envelope, text }, context.keyId);
+  assert.match(result.reply, /번호 행이 빠졌어요/u);
+  assert.match(result.reply, /상세 번호/u);
+  const detail = await service.execute({ ...context.envelope, profileId: "FEATURES", text: "내전상세", eventId: "missing-inhouse-number" }, context.keyId);
+  assert.match(detail.reply, /내전상세 2/u);
+  assert.equal(state.handled.length, 0);
+  assert.equal(state.seasonCalls.length, 0);
 });
 
 test("existing party snapshots forward slot states without forwarding submitted type or capacity", async () => {

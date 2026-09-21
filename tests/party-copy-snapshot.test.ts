@@ -4,6 +4,7 @@ import test from "node:test";
 import type { JsonObject } from "../src/modules/competitions/core";
 import {
   mergePartyCopyAdditions,
+  mergePartyCopyEdits,
   partyCopySnapshot,
   readPartyCopySnapshot,
 } from "../src/modules/recruiting/application/party-copy-snapshot";
@@ -126,6 +127,77 @@ test("the total 99-member bound applies even when a reserve slot appears availab
   const current = party({ members: Array.from({ length: 99 }, (_, index) => member(`예비${index + 1}`, index + 1, true)) });
   assert.throws(() => mergePartyCopyAdditions(base, current, [member("추가예비", 1, true)]), /PARTY_COPY_FULL/);
   assert.throws(() => mergePartyCopyAdditions(base, base, [member("잘못된예비번호", 100, true)]), /PARTY_COPY_FULL/);
+});
+
+test("editable copies accept already-applied draft metadata and merge a later signup", () => {
+  const base = party({ revision: 0, status: "DRAFT", members: [], startTimeText: "미정", gameInfo: "미정" });
+  const current = party({ revision: 1, members: [member("합성주최", 1)], startTimeText: "지금", gameInfo: "합성게임" });
+  const result = mergePartyCopyEdits(base, current, { ...current, members: [...current.members, member("합성참가", 2)] });
+  assert.deepEqual(result, { members: [...current.members, member("합성참가", 2)], startTimeText: "지금", gameInfo: "합성게임", organizerText: null });
+});
+
+test("editable copies delete and replace explicit original slots without collapsing gaps", () => {
+  const base = party({ members: [member("합성첫째", 1), member("합성둘째", 3), member("합성예비", 2, true)] });
+  const result = mergePartyCopyEdits(base, base, { ...base, members: [member("합성교체", 3)] });
+  assert.deepEqual(result.members, [member("합성교체", 3)]);
+  assert.deepEqual(mergePartyCopyEdits(base, base, { ...base, members: [] }).members, []);
+});
+
+test("editable metadata merges different fields but rejects competing changes atomically", () => {
+  const base = party({ startTimeText: "20:00", gameInfo: "합성원본" });
+  const current = party({ ...base, revision: 3, startTimeText: "21:00", members: [...base.members, member("합성선착순", 3)] });
+  const before = structuredClone(current);
+  const merged = mergePartyCopyEdits(base, current, { ...base, gameInfo: "합성변경" });
+  assert.equal(merged.startTimeText, "21:00");
+  assert.equal(merged.gameInfo, "합성변경");
+  assert.deepEqual(merged.members, current.members);
+  assert.throws(() => mergePartyCopyEdits(base, current, { ...base, startTimeText: "22:00", members: [] }), /PARTY_COPY_EDIT_CONFLICT/);
+  assert.deepEqual(current, before);
+});
+
+test("editable copies preserve concurrent members, move reserves and replay the same move", () => {
+  const base = party({ members: [member("합성첫째", 1), member("합성예비", 1, true)] });
+  const current = party({ ...base, revision: 3, members: [...base.members, member("합성선착순", 3)] });
+  const submitted = { ...base, members: [base.members[0]!, member("합성예비", 2)] };
+  const merged = mergePartyCopyEdits(base, current, submitted);
+  assert.deepEqual(merged.members, [base.members[0]!, member("합성선착순", 3), member("합성예비", 2)]);
+  assert.deepEqual(mergePartyCopyEdits(base, { ...current, members: merged.members }, submitted).members, merged.members);
+});
+
+test("an editable stale copy cannot resurrect a removed participant by moving them", () => {
+  const base = party({ members: [member("합성취소", 1), member("합성유지", 2)] });
+  const current = party({ ...base, revision: 3, members: [base.members[1]!] });
+  assert.deepEqual(mergePartyCopyEdits(base, current, base).members, current.members);
+  for (const members of [[member("합성취소", 3), base.members[1]!], [member("합성취소", 2)]]) {
+    assert.throws(() => mergePartyCopyEdits(base, current, { ...base, members }), /PARTY_COPY_EDIT_CONFLICT/);
+  }
+});
+
+test("editable conflicting replacements reject all changes and preserve concurrent cancellation", () => {
+  const base = party({ members: [member("합성원본", 1), member("합성다음", 2)] });
+  const current = party({ ...base, revision: 3, members: [member("합성다른교체", 1), base.members[1]!] });
+  assert.throws(() => mergePartyCopyEdits(base, current, { ...base, members: [member("합성내교체", 1)] }), /PARTY_COPY_EDIT_CONFLICT/);
+  const cancelled = { ...current, members: [base.members[1]!] };
+  assert.deepEqual(mergePartyCopyEdits(base, cancelled, { ...base, members: [base.members[1]!] }).members, cancelled.members);
+});
+
+test("editable simultaneous additions shift to free slots while explicit moves require their destination", () => {
+  const base = party({ members: [member("합성첫째", 1), member("합성예비", 1, true)] });
+  const current = party({ ...base, revision: 3, members: [...base.members, member("합성선착순", 2)] });
+  assert.deepEqual(mergePartyCopyEdits(base, current, { ...base, members: [...base.members, member("합성동시", 2)] }).members,
+    [...current.members, member("합성동시", 3)]);
+  assert.throws(() => mergePartyCopyEdits(base, current, { ...base, members: [base.members[0]!, member("합성예비", 2)] }), /PARTY_COPY_EDIT_CONFLICT/);
+});
+
+test("editable copies reject duplicate results, capacity overflow and full reserve rosters", () => {
+  const base = party({ members: [member("합성첫째", 1)] });
+  const current = party({ ...base, revision: 3, members: [...base.members, member("합성선착순", 2)] });
+  assert.throws(() => mergePartyCopyEdits(base, current, { ...base, members: [member("합성선착순", 1)] }), /PARTY_COPY_DUPLICATE_NAME/);
+  assert.throws(() => mergePartyCopyEdits(base, base, { ...base, members: [...base.members, member("합성첫째", 1, true)] }), /PARTY_COPY_DUPLICATE_NAME/);
+  assert.throws(() => mergePartyCopyEdits(base, { ...current, maximumMembers: 2 }, { ...base, members: [...base.members, member("합성동시", 2)] }), /PARTY_COPY_FULL/);
+  const empty = party({ members: [] });
+  const full = party({ members: Array.from({ length: 99 }, (_, index) => member(`합성예비${index}`, index + 1, true)) });
+  assert.throws(() => mergePartyCopyEdits(empty, full, { ...empty, members: [member("합성추가예비", 1, true)] }), /PARTY_COPY_FULL/);
 });
 
 test("malformed snapshot envelopes cannot become a merge baseline", async (t) => {

@@ -9,6 +9,7 @@ import type { KakaoV4ProfileAuthorizer } from "./installation-scope";
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "./canonical-command";
 import { classifyKakaoV4Command, type KakaoV4CommandClassification } from "./classifier";
 import { getKakaoV4InhouseInputErrors } from "./inhouse-snapshot-parser";
+import { parsePartyForm } from "./party-snapshot-parser";
 import {
   KakaoV4CommandDispatcher,
   type KakaoV4DispatcherResult,
@@ -50,7 +51,7 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   }
   if (classification.command === "LOCAL_USER_HELP") return Object.freeze({
     kind: "REPLY" as const,
-    reply: "[K-LOL.GG 일반 도움말]\n\n파티·내전 참가\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\n협곡은 이름과 라인 필수: 이름/top,mid 또는 이름/all\n칼바람·증바람은 이름만 작성해주세요. 사이트 회원 연결은 나중에 할 수 있어요.\n새 모집 만들기: 5인파티 / 내전구인 협곡\n처음 파티를 만들 때만 첫 전송 전에 시간·게임을 정해 주세요.\n자세한 사용법: 구인도움말\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
+    reply: "[K-LOL.GG 일반 도움말]\n\n파티·내전 참가\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\n협곡은 이름과 라인 필수: 이름/top,mid 또는 이름/all\n칼바람·증바람은 이름만 작성해주세요. 사이트 회원 연결은 나중에 할 수 있어요.\n새 모집 만들기: 5인파티 / 내전구인 협곡\n번호형 파티는 최신 양식에서 이름·시작·게임을 수정할 수 있어요. 취소는 이름만 지우고 번호는 남겨주세요.\n자세한 사용법: 구인도움말\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
   });
   if (classification.command === "LOCAL_RECRUIT_HELP") return Object.freeze({
     kind: "REPLY" as const,
@@ -65,8 +66,10 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
       "사이트 신청·운영진 확정 항목은 해당 경로에서 수정해주세요.", "",
       "연결 오류가 나오면 내전상세 번호로 저장 여부를 먼저 확인해 주세요.", "",
       "새 모집 만들기", "파티: 5인파티", "내전: 내전구인 협곡 / 내전구인 칼바람 / 내전구인 증바람",
-      "처음 파티를 만들 때만 첫 전송 전에 시간·게임을 정하고 내 이름을 넣으세요.",
-      "참가가 시작된 파티는 복붙으로 시간·게임을 바꿀 수 없어요.", "",
+      "번호형 파티는 최신 양식에서 이름·시작·게임을 수정할 수 있어요.",
+      "취소는 이름만 지우고 번호 행과 양식코드를 남긴 뒤 전체 전송해주세요.",
+      "같은 항목을 다른 사람이 먼저 고쳤으면 최신 양식으로 다시 작성해주세요.",
+      "파티 연결 오류는 상세 번호로 저장 여부부터 확인해주세요.", "",
       "파티: 구인현황 / 상세 번호 / 종료: 번호ㅉ", "내전: 내전현황 / 내전상세 번호 / 종료: 내전 번호ㅉ",
       "내전 모집이 마감되어도 경기용 명단은 보관됩니다.", "", "취소·수정이 필요할 때",
       "상세 번호 추가/삭제 이름", "내전상세 번호 추가/삭제 이름", "내전상세 번호 수정/예비추가/예비삭제 이름/라인",
@@ -79,6 +82,10 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   if (classification.command === "OPERATIONS_PHOTO_STATUS") return Object.freeze({
     kind: "REPLY" as const,
     reply: "[K-LOL.GG 사진 제출 안내]\nV4 휴대폰 봇은 사진 세션 업로드를 사용하지 않습니다.\n사이트에 로그인해 사진을 제출해 주세요.\n\n내전 결과 사진:\nhttps://k-lol-gg.vercel.app/matches/submit\n\n경고 차감 사진:\nhttps://k-lol-gg.vercel.app/discipline/evidence",
+  });
+  if (classification.command === "INHOUSE_DETAIL" && classification.parameters.recruitNumber === null) return Object.freeze({
+    kind: "REPLY" as const,
+    reply: "내전상세 뒤에 번호를 적어 주세요. 예: 내전상세 2\n번호를 모르면 내전현황을 입력해 주세요.",
   });
   if (classification.command === "OPERATIONS_INHOUSE_PREVIEW_CANCEL" || classification.command === "OPERATIONS_INHOUSE_CONFIRM") {
     return Object.freeze({
@@ -135,11 +142,17 @@ export class KakaoV4CommandService {
         const dispatched = await this.dispatcher.dispatch({ envelope, keyId, requestDigestHex: metadata?.requestDigestHex ?? digest, requestId: metadata?.requestId ?? envelope.eventId, authorization }, canonical);
         result = Object.freeze({ kind: "REPLY" as const, reply: dispatched.legacyReply });
         replayed = dispatched.replayed;
-      } else if (classification.kind === "SNAPSHOT") {
-        const inputErrors = classification.family === "INHOUSE" ? getKakaoV4InhouseInputErrors(envelope.text) : [];
+      } else if (classification.kind === "SNAPSHOT" || classification.kind === "UNKNOWN" && classification.partyForm) {
+        const partyForm = classification.kind === "UNKNOWN" ? classification.partyForm
+          : classification.family === "PARTY" ? parsePartyForm(envelope.text) : null;
+        const inputErrors = classification.kind === "SNAPSHOT" && classification.family === "INHOUSE" ? getKakaoV4InhouseInputErrors(envelope.text)
+          : partyForm ? [partyForm.diagnostics.some((item) => item.code === "MISSING_SLOT")
+            ? "명단의 번호 행이 빠졌어요. 이름을 지울 때도 번호는 남겨 주세요."
+            : "모집번호·정원·양식코드와 번호 행을 확인해주세요. 양식 전체를 복사해 다시 작성해 주세요."] : [];
         if (inputErrors.length === 0) throw new KakaoV4CommandError("INVALID_FORM");
         result = Object.freeze({ kind: "REPLY" as const,
-          reply: ["✏️ 아직 저장되지 않았어요", "", ...inputErrors, "", "내전상세 번호로 최신 양식을 받아 수정해주세요."].join("\n"),
+          reply: ["✏️ 아직 저장되지 않았어요", "", ...inputErrors, "",
+            partyForm ? "상세 번호로 최신 양식을 받아 수정해주세요." : "내전상세 번호로 최신 양식을 받아 수정해주세요."].join("\n"),
         });
       }
     }

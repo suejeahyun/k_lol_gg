@@ -31,7 +31,7 @@ import type {
 } from "./ports";
 import { toPublicPartyDto, toPublicScrimDto } from "./public-dto";
 import { partyCopyReference } from "./party-copy-reference";
-import { isPartyFormCode, mergePartyCopyAdditions, readPartyCopySnapshot } from "./party-copy-snapshot";
+import { isPartyFormCode, mergePartyCopyAdditions, mergePartyCopyEdits, readPartyCopySnapshot } from "./party-copy-snapshot";
 
 export class RecruitingApplicationError extends Error {
   constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS" | "FORBIDDEN" | "SESSION_STALE" | "ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND" | "ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS" | "AMBIGUOUS_MEMBER" | "RECRUIT_MEMBER_LIMIT_EXCEEDED", message: string) {
@@ -351,8 +351,8 @@ export class RecruitingCommandHandler {
     const create = CREATE_TYPES.has(command.type);
     const current = partyCommand ? party : scrim;
     if (create ? current !== null : current === null) throw new RecruitingApplicationError(create ? "ALREADY_EXISTS" : "NOT_FOUND", create ? "Recruit aggregate already exists." : "Recruit aggregate does not exist.");
-    const copyAddition = command.type === "SYNC_PARTY" && isPartyFormCode(command.payload.copyGuard?.saveReference);
-    const appliesToLatestLockedAggregate = PARTY_MEMBER_TYPES.has(command.type) || SCRIM_PARTICIPANT_TYPES.has(command.type) || copyAddition;
+    const storedCopy = command.type === "SYNC_PARTY" && isPartyFormCode(command.payload.copyGuard?.saveReference);
+    const appliesToLatestLockedAggregate = PARTY_MEMBER_TYPES.has(command.type) || SCRIM_PARTICIPANT_TYPES.has(command.type) || storedCopy;
     if (create ? command.metadata.expectedRevision !== 0 : !appliesToLatestLockedAggregate && current!.revision !== command.metadata.expectedRevision) throw new RecruitingApplicationError("REVISION_CONFLICT", "Recruit aggregate revision changed.");
 
     const now = this.dependencies.clock.now();
@@ -382,7 +382,7 @@ export class RecruitingCommandHandler {
         });
         break;
       case "SYNC_PARTY":
-        nextParty = sync(command, party!, now, copyAddition
+        nextParty = sync(command, party!, now, storedCopy
           ? await this.dependencies.repository.loadPartyCopySnapshot?.(transaction, party!, command.payload.copyGuard!.saveReference!, now) ?? null
           : undefined);
         break;
@@ -512,31 +512,51 @@ export class RecruitingCommandHandler {
 function sync(command: Extract<RecruitingCommand, { type: "SYNC_PARTY" }>, party: RecruitParty, now: Date, storedBase?: JsonObject | null) {
   const guard = command.payload.copyGuard;
   const shortCode = isPartyFormCode(guard?.saveReference);
-  if (guard && (guard.operatingDate !== party.recruitDate || (!shortCode && guard.saveReference !== null && guard.saveReference !== partyCopyReference(party)))) {
+  if (guard && (guard.operatingDate !== party.recruitDate ||
+      guard.submittedPartyType !== undefined && guard.submittedPartyType !== party.type ||
+      guard.submittedMaximumMembers !== undefined && guard.submittedMaximumMembers !== party.maximumMembers ||
+      (!shortCode && guard.saveReference !== null && guard.saveReference !== partyCopyReference(party)))) {
     throw new RecruitingApplicationError("REVISION_CONFLICT", "PARTY_COPY_CONFLICT");
   }
   const base = shortCode ? readPartyCopySnapshot(storedBase ?? null, party) : party;
+  const editableCopy = shortCode && party.type === "PARTY_NUMBER";
+  if (editableCopy) {
+    const patches = command.payload.slotPatches;
+    const observed = new Set(patches?.filter((patch) => patch.state !== "ABSENT")
+      .map((patch) => `${patch.substitute ? "SUB" : "MAIN"}:${patch.slotNo}`));
+    if (!patches || !["PRESENT_VALUE", "PRESENT_EMPTY"].includes(command.payload.startTimeState ?? "ABSENT") ||
+        !["PRESENT_VALUE", "PRESENT_EMPTY"].includes(command.payload.gameInfoState ?? "ABSENT") ||
+        Array.from({ length: base.maximumMembers }, (_, index) => index + 1).some((slot) => !observed.has(`MAIN:${slot}`)) ||
+        !patches.some((patch) => patch.substitute && patch.state !== "ABSENT") ||
+        base.members.some((member) => member.substitute && !observed.has(`SUB:${member.slotNo}`))) {
+      throw new Error("PARTY_COPY_INCOMPLETE");
+    }
+  }
   const submittedMembers = command.payload.slotPatches ? mergeRecruitPartySlotPatches(base, command.payload.slotPatches) : command.payload.members;
-  const metadataValue = (value: string | null | undefined, state: string | undefined, fallback: string | null) => state === "ABSENT" || value === undefined ? fallback : value;
+  const metadataValue = (value: string | null | undefined, state: string | undefined, fallback: string | null) =>
+    state === "PRESENT_EMPTY" ? null : state === "ABSENT" || value === undefined ? fallback : value;
   const submittedTime = metadataValue(command.payload.startTimeText, command.payload.startTimeState, base.startTimeText) || "미정";
   const submittedGame = metadataValue(command.payload.gameInfo, command.payload.gameInfoState, base.gameInfo) || "미입력";
   const submittedOrganizer = metadataValue(command.payload.organizerText, command.payload.organizerState, base.organizerText);
-  if (guard && party.status !== "DRAFT" && (
+  if (guard && !editableCopy && party.status !== "DRAFT" && (
     submittedTime !== base.startTimeText || submittedGame !== base.gameInfo || submittedOrganizer !== base.organizerText ||
     base.startTimeText !== party.startTimeText || base.gameInfo !== party.gameInfo || base.organizerText !== party.organizerText
   )) throw new Error("PARTY_COPY_METADATA");
-  const members = guard ? mergePartyCopyAdditions(base, party, submittedMembers) : submittedMembers;
+  const edits = editableCopy ? mergePartyCopyEdits(base, party, {
+    members: submittedMembers, startTimeText: submittedTime, gameInfo: submittedGame, organizerText: submittedOrganizer,
+  }) : null;
+  const members = edits?.members ?? (guard ? mergePartyCopyAdditions(base, party, submittedMembers) : submittedMembers);
   const updated = syncRecruitParty({
     party,
     expectedRevision: shortCode ? party.revision : command.metadata.expectedRevision,
     members,
-    startTimeText: guard && party.status === "DRAFT" && !command.payload.startTimeText ? "미정" : command.payload.startTimeText,
-    startTimeState: guard && party.status === "DRAFT" && !command.payload.startTimeText ? "PRESENT_VALUE" : command.payload.startTimeState,
-    gameInfo: command.payload.gameInfo,
-    gameInfoState: command.payload.gameInfoState,
-    organizerText: command.payload.organizerText,
-    organizerState: command.payload.organizerState,
-    scheduledStartAt: guard && command.payload.startTimeText === party.startTimeText
+    startTimeText: edits?.startTimeText ?? (guard && party.status === "DRAFT" && !command.payload.startTimeText ? "미정" : command.payload.startTimeText),
+    startTimeState: edits || guard && party.status === "DRAFT" && !command.payload.startTimeText ? "PRESENT_VALUE" : command.payload.startTimeState,
+    gameInfo: edits?.gameInfo ?? command.payload.gameInfo,
+    gameInfoState: edits ? "PRESENT_VALUE" : command.payload.gameInfoState,
+    organizerText: edits ? edits.organizerText : command.payload.organizerText,
+    organizerState: edits ? edits.organizerText === null ? "PRESENT_EMPTY" : "PRESENT_VALUE" : command.payload.organizerState,
+    scheduledStartAt: guard && (edits ? edits.startTimeText === party.startTimeText : command.payload.startTimeText === party.startTimeText)
       ? party.scheduledStartAt
       : command.payload.scheduledStartAt === undefined
       ? undefined

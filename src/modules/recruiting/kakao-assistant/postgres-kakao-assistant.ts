@@ -449,7 +449,7 @@ async function saveEditableInhouseCopy(transaction: V2Transaction, input: Readon
     ...command.participants.map((row) => row.slotNo),
     ...original.filter((row) => !command.preserveSlotNos?.includes(row.slotNo) && (!row.reserve || command.reserveSectionObserved)).map((row) => row.slotNo),
   ];
-  if (command.mode === "RIFT" && command.participants.some((row) => row.nameOnly || row.reviewRequired)) {
+  if (command.mode === "RIFT" && command.participants.some((row) => row.reviewRequired)) {
     throw new KakaoAssistantError("INVALID_INPUT", "협곡은 이름과 라인이 필요해요. 예: 가온/top,mid 또는 가온/all");
   }
   const plan = planInhouseCopyEdits({ original, current: state.rows, submitted: command.participants, observedSlotNos, capacity: round.capacity });

@@ -17,6 +17,14 @@ function reserveMembers(party: Party) {
     .sort((left, right) => left.slotNo - right.slotNo);
 }
 
+function reserveSlotLines(reserves: readonly Pick<Party["members"][number], "slotNo" | "name">[]) {
+  let blank = 1;
+  while (reserves.some((member) => member.slotNo === blank)) blank += 1;
+  const slots = [...reserves, ...(blank <= 99 ? [{ slotNo: blank, name: "" }] : [])];
+  return slots.sort((left, right) => left.slotNo - right.slotNo)
+    .map((member) => `예비 ${member.slotNo}.${member.name ? ` ${member.name}` : ""}`);
+}
+
 function isLineParty(type: Party["type"] | string) {
   return type === "FLEX_RANK" || type === "NORMAL_GAME" || type === "PARTY_RIFT";
 }
@@ -156,10 +164,7 @@ function detailBlock(party: Party) {
       lines.push(`${slotNo}.${member?.name ? ` ${member.name}` : ""}`);
     }
   }
-  reserves.forEach((member) => lines.push(`예비 ${member.slotNo}. ${member.name}`));
-  let blankReserve = 1;
-  while (reserves.some((member) => member.slotNo === blankReserve)) blankReserve += 1;
-  if (blankReserve <= 99) lines.push(`예비 ${blankReserve}.`);
+  lines.push(...reserveSlotLines(reserves));
   lines.push("", "복사 안내: 전체 복사 → 빈칸에 이름 입력 → 전체 전송으로 저장 (저장기준 유지)");
   return lines.join("\n");
 }
@@ -172,7 +177,7 @@ function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" |
     `[파티 #${party.recruitNumber}] ${title} · ${main.length}/${party.maximumMembers}명`,
     `시작: ${party.startTimeText ?? "미정"}`,
     `게임: ${party.gameInfo ?? "미정"}`,
-    "", "", "",
+    "",
   ];
   for (let slot = 1; slot <= party.maximumMembers; slot += 1) {
     const name = main.find((member) => member.slotNo === slot)?.name;
@@ -180,10 +185,7 @@ function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" |
     lines.push(`${label}.${name ? ` ${name}` : ""}`);
   }
   lines.push("");
-  for (const member of reserves) lines.push(`예비 ${member.slotNo}. ${member.name}`);
-  let blank = 1;
-  while (reserves.some((member) => member.slotNo === blank)) blank += 1;
-  if (blank <= 99) lines.push(`예비 ${blank}.`);
+  lines.push(...reserveSlotLines(reserves));
   lines.push("", `양식코드: ${formCode}`);
   return lines.join("\n");
 }

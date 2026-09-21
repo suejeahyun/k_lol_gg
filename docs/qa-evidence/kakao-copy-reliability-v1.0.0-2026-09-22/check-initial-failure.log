@@ -1,0 +1,378 @@
+
+> klol-gg-v2@0.1.0 check
+> npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build
+
+
+> klol-gg-v2@0.1.0 lint
+> eslint
+
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R14_RHINO_CLEAN_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   412:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   431:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   446:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   484:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   510:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   522:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   560:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   564:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   564:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   564:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   564:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   567:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   567:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   567:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   709:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   720:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   724:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   737:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1753:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1755:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R15_ALL_MODE_SNAPSHOT_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   412:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   431:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   446:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   484:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   510:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   522:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   560:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   564:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   564:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   564:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   564:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   567:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   567:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   567:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   709:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   720:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   724:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   737:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1753:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1755:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R16_INHOUSE_PARTY_FLOW_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   426:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   445:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   460:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   498:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   524:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   536:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   574:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   578:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   578:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   578:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   578:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   581:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   581:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   581:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   723:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   734:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   751:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1767:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1769:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R17_MODE_FORMS_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R18_JOIN_GUIDES_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R19_RANDOM_JOIN_TONES_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R20_INHOUSE_QUICK_POSITIONS_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  1780:10  warning  'response' is defined but never used                                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   282:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   292:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   435:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   454:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   469:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   507:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   533:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   545:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   583:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   587:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   587:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   587:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   587:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   590:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   590:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   590:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   732:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   743:10  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   747:10  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   760:10  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1776:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1778:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  1808:10  warning  'response' is defined but never used                                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js
+  2:5  warning  'KLOL_V4_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\backups\KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.pre-r24-20260920-065116-919.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   271:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   281:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   424:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   443:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   458:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   496:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   522:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   534:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   572:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   576:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   576:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   576:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   576:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   579:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   579:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   579:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   721:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   732:10  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   736:10  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   749:10  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1765:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1767:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  1796:10  warning  'response' is defined but never used                                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.tmp\r24-migration-check.ts
+   19:8   warning  'sharp' is defined but never used                             @typescript-eslint/no-unused-vars
+   21:10  warning  'generateTotpCode' is defined but never used                  @typescript-eslint/no-unused-vars
+   22:10  warning  'encryptTotpSecret' is defined but never used                 @typescript-eslint/no-unused-vars
+   23:10  warning  'hashPassword' is defined but never used                      @typescript-eslint/no-unused-vars
+   24:10  warning  'parseTotpEncryptionKeyring' is defined but never used        @typescript-eslint/no-unused-vars
+   26:10  warning  'prepareTeamBalanceCaptureFixture' is defined but never used  @typescript-eslint/no-unused-vars
+  417:10  warning  'childTestEnvironment' is defined but never used              @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js
+   1:838   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+   5:130   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  32:231   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:79    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:196   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  34:274   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  35:200   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  36:66    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  44:347   warning  'n' is defined but never used  @typescript-eslint/no-unused-vars
+  54:409   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  56:71    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  59:168   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  60:318   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  65:1002  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  74:403   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:151   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:216   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:497   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  78:2934  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  79:8     warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  80:116   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  81:378   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V1_COMPAT.js
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
+    2:5  warning  'KLOL_V41_BUNDLE_START_SENTINEL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  369:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\v1-strict\KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_SOURCE_SHA256' is assigned a value but never used           @typescript-eslint/no-unused-vars
+     2:5   warning  'KLOL_V1_EXTRACTED_SHA256' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     3:5   warning  'KLOL_V1_SOURCE_FUNCTIONS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     6:5   warning  'KLOL_V1_TRANSPORT_SEAMS' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    35:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   119:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   208:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   281:10  warning  'ignoredJavaNormalizationError' is defined but never used            @typescript-eslint/no-unused-vars
+   291:10  warning  'parsePartyMemberMutationCommand' is defined but never used          @typescript-eslint/no-unused-vars
+   434:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   453:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   468:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   506:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   532:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   544:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   582:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   586:29  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   586:35  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   586:43  warning  'imageBase64' is defined but never used                              @typescript-eslint/no-unused-vars
+   586:56  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   589:36  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   589:42  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   589:50  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   731:77  warning  'packageName' is defined but never used                              @typescript-eslint/no-unused-vars
+   742:10  warning  'ignoredImageError' is defined but never used                        @typescript-eslint/no-unused-vars
+   746:10  warning  'ignoredImageBase64Error' is defined but never used                  @typescript-eslint/no-unused-vars
+   759:10  warning  'ignoredImageBitmapError' is defined but never used                  @typescript-eslint/no-unused-vars
+  1775:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1777:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1807:10  warning  'response' is defined but never used                                 @typescript-eslint/no-unused-vars
+
+✖ 326 problems (0 errors, 326 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+
+> klol-gg-v2@0.1.0 typecheck
+> tsc --noEmit
+
+tests/kakao-party-detail-snapshot-p1.test.ts(106,39): error TS2345: Argument of type '{ scheduledStartAt: null; now: Date; recruitDate: string; preferredRecruitNumber: number | null; partyType: RecruitPartyType; title: string; ... 15 more ...; reserveCount: number; }' is not assignable to parameter of type 'Readonly<{ id: string; sourceRoomId?: string | null | undefined; sourceSenderId?: string | null | undefined; recruitDate: string; resetSequence: number; recruitNumber: number; type: "FLEX_RANK" | ... 8 more ... | "OTHER_GAME"; ... 9 more ...; now: Date; }>'.
+  Types of property 'protectedUntil' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'Date | null | undefined'.
+      Type 'string' is not assignable to type 'Date'.

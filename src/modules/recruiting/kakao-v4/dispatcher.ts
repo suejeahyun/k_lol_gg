@@ -768,6 +768,31 @@ export class KakaoV4CommandDispatcher {
     }
   }
 
+  private async unavailablePartyReply(
+    context: KakaoV4DispatchContext,
+    target: Readonly<{ recruitDate: string; recruitNumber: number | null }>,
+    action: "SYNC" | "FINISH",
+    v1Strict: boolean,
+    stateChanged = false,
+  ): Promise<KakaoV4DispatcherResult> {
+    const closed = target.recruitNumber === null ? null : await this.dependencies.recruiting.resolveCompatTarget({
+      kind: "PARTY", sourceRoomId: context.authorization.roomId,
+      recruitDate: target.recruitDate, recruitNumber: target.recruitNumber,
+      allowedPartyStatuses: ["FINISHED", "CANCELED", "RESET"],
+    });
+    const reply = closed
+      ? `[K-LOL.GG 파티 #${target.recruitNumber}]\n이미 마감되거나 종료된 파티입니다.\n이 양식으로는 저장할 수 없어요. 구인현황에서 진행 중인 모집을 확인해 주세요.`
+      : stateChanged
+        ? `[K-LOL.GG 파티 #${target.recruitNumber}]\n모집 상태가 바뀌어 이번 요청으로는 마감하지 않았어요.\n구인현황을 확인한 뒤 ${target.recruitNumber}ㅉ로 다시 마감해 주세요.`
+      : action === "FINISH"
+        ? ["[K-LOL.GG 구인구직 마무리]",
+          `현재 운영일의 진행 중인 모집번호 #${target.recruitNumber}를 찾지 못했습니다.`,
+          "최신 구인현황을 확인해 주세요.", `내전 모집을 마치려면: 내전 ${target.recruitNumber}ㅉ`].join("\n")
+        : `[K-LOL.GG 파티 #${target.recruitNumber}]\n저장하지 않았어요. 현재 운영일의 이 모집을 찾지 못했습니다.\n구인현황에서 모집번호를 확인하고 최신 양식을 받아 주세요.`;
+    return Object.freeze({ kind: "PARTY", action, aggregate: null,
+      legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict), replayed: false });
+  }
+
   private async resolve(context: KakaoV4DispatchContext, kind: "PARTY" | "SCRIM", target: KakaoV4RecruitTarget) {
     const resolved = await this.dependencies.recruiting.resolveCompatTarget({
       kind,
@@ -936,19 +961,7 @@ export class KakaoV4CommandDispatcher {
         allowedPartyStatuses: partyCompatTargetStatuses("FINISH_PARTY"),
       });
       if (!target) {
-        const reply = [
-          "[K-LOL.GG 구인구직 마무리]",
-          `현재 운영일의 진행 중인 모집번호 #${String(command.target.recruitNumber)}를 찾지 못했습니다.`,
-          "최신 구인현황을 확인해 주세요.",
-          `내전 모집을 마치려면: 내전 ${String(command.target.recruitNumber)}ㅉ`,
-        ].join("\n");
-        return Object.freeze({
-          kind: "PARTY",
-          action: command.action,
-          aggregate: null,
-          legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict),
-          replayed: false,
-        });
+        return this.unavailablePartyReply(context, command.target, command.action, v1Strict);
       }
       recruitingCommand = sealRecruitingCommand({
         type: "FINISH_PARTY",
@@ -958,6 +971,10 @@ export class KakaoV4CommandDispatcher {
       });
     } else {
       const automaticRecruitNumber = command.target.recruitNumber === null;
+      if (automaticRecruitNumber && command.payload.parsedForm?.saveReference) {
+        return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
+          legacyReply: "저장하지 않았어요. 양식코드가 있는 명단의 모집번호를 바꿀 수 없어요. 상세 번호로 최신 양식을 받아 주세요.", replayed: false });
+      }
       const target = !automaticRecruitNumber
         ? await this.dependencies.recruiting.resolveCompatTarget({
             kind: "PARTY",
@@ -968,7 +985,7 @@ export class KakaoV4CommandDispatcher {
           })
         : null;
       if (!automaticRecruitNumber && !target) {
-        throw new KakaoV4DispatcherError("NOT_FOUND");
+        return this.unavailablePartyReply(context, command.target, command.action, v1Strict);
       }
       if (automaticRecruitNumber && command.payload.members.length === 0) {
         throw new KakaoV4DispatcherError("INVALID_FORM");
@@ -983,6 +1000,8 @@ export class KakaoV4CommandDispatcher {
               copyGuard: command.payload.parsedForm ? {
                 operatingDate: recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000)),
                 saveReference: command.payload.parsedForm.saveReference,
+                submittedPartyType: command.payload.parsedForm.submittedTitle?.partyType,
+                submittedMaximumMembers: command.payload.parsedForm.submittedTitle?.maximumMembers,
               } : undefined,
               slotPatches: command.payload.parsedForm?.slots.map((slot) => ({
                 slotNo: slot.slotNo,
@@ -1026,13 +1045,18 @@ export class KakaoV4CommandDispatcher {
       const code = typeof error === "object" && error !== null && "code" in error ? error.code : null;
       const copyError = error instanceof Error ? error.message : "";
       const copyMessages: Record<string, string> = {
-        PARTY_COPY_CONFLICT: "저장하지 않았어요. 양식코드가 오래되었거나 달라요. 아래 최신 양식에 이름을 추가해 주세요.",
-        PARTY_COPY_REMOVAL: "저장하지 않았어요. 기존 이름은 그대로 두고 빈칸에 참가할 이름만 추가해 주세요.",
-        PARTY_COPY_METADATA: "저장하지 않았어요. 모집 정보가 달라졌어요. 아래 최신 양식에 이름만 추가해 주세요.",
+        PARTY_COPY_CONFLICT: "저장하지 않았어요. 양식코드가 오래되었거나 달라요. 아래 최신 양식을 복사해 다시 작성해 주세요.",
+        PARTY_COPY_REMOVAL: `저장하지 않았어요. 이 구형 양식은 삭제·교체를 지원하지 않아요. 최신 상세 양식을 받아 주세요. 취소: 상세 ${command.target.recruitNumber} 삭제 이름`,
+        PARTY_COPY_METADATA: "저장하지 않았어요. 모집 정보가 달라졌어요. 아래 최신 양식을 복사해 다시 작성해 주세요.",
+        PARTY_COPY_EDIT_CONFLICT: "저장하지 않았어요. 같은 항목을 다른 사람이 먼저 수정했어요. 아래 최신 양식을 복사해 다시 작성해 주세요.",
+        PARTY_COPY_INCOMPLETE: "저장하지 않았어요. 번호 행이나 예비 행이 빠졌어요. 이름만 지우고 번호는 남겨 주세요. 아래 양식 전체를 복사해 다시 작성해 주세요.",
         PARTY_COPY_FULL: "저장하지 않았어요. 참가 정원이 찼어요. 대기를 원하면 아래 예비 칸에 이름을 적어 주세요.",
         PARTY_COPY_POSITION_TAKEN: "저장하지 않았어요. 해당 라인에 먼저 참가한 분이 있어요. 빈 라인이나 예비 칸을 선택해 주세요.",
         PARTY_COPY_DUPLICATE_NAME: "저장하지 않았어요. 같은 이름이 중복되어 있어요. 구분할 수 있는 이름을 적어 주세요.",
       };
+      if (copyError === "RECRUIT_NOT_MUTABLE" || command.action === "FINISH" && code === "REVISION_CONFLICT") {
+        return this.unavailablePartyReply(context, command.target, command.action, v1Strict, code === "REVISION_CONFLICT");
+      }
       if (command.action === "SYNC" && copyMessages[copyError]) {
         return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
           legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, copyMessages[copyError]), replayed: false });
@@ -1045,7 +1069,8 @@ export class KakaoV4CommandDispatcher {
           legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, message), replayed: false });
       }
       if (error instanceof Error && error.message === "EMPTY_DRAFT_ACTIVATION") {
-        throw new KakaoV4DispatcherError("INVALID_FORM");
+        return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
+          legacyReply: "아직 등록하지 않았어요. 빈 양식에 첫 참가자 이름을 입력한 뒤 전체 전송해 주세요.", replayed: false });
       }
       throw error;
     }

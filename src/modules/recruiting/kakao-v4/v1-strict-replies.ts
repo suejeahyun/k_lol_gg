@@ -175,9 +175,9 @@ export function inhouseMemberLinkNotice(body: KakaoSeasonSnapshotDto, publicOrig
 export function inhouseSaveReply(body: KakaoSeasonSnapshotDto, publicOrigin?: string) {
   const changed = Boolean(body.metadataUpdated || body.registrationCreated ||
     (body.createdCount ?? 0) + (body.updatedCount ?? 0) + body.cancelledCount > 0);
-  const lines = [changed
-    ? `✅ 내전${body.registrationCreated ? "등록" : "수정"} 완료 · #${body.recruitNo ?? 1}`
-    : "이미 같은 내용으로 저장되어 있어요."];
+  if (!changed) return ["이번 요청으로 변경된 내용은 없어요.",
+    `내전상세 ${body.recruitNo ?? 1}에서 최신 명단을 확인해 주세요.`].join("\n");
+  const lines = [`✅ 내전${body.registrationCreated ? "등록" : "수정"} 완료 · #${body.recruitNo ?? 1}`];
   if (body.rosterFilled) lines.push("", `🎉 내전 #${body.recruitNo ?? 1} 참가 10명이 모두 모였어요!`, INHOUSE_FILLED_NOTICE);
   const notice = inhouseMemberLinkNotice(body, publicOrigin);
   if (notice) lines.push("", notice);

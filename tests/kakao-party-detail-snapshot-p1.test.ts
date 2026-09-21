@@ -3,7 +3,7 @@ import test from "node:test";
 
 import type { KakaoOpenChatStatusDto } from "../src/modules/recruiting/kakao-assistant/domain";
 import { partyCopyReference } from "../src/modules/recruiting/application/party-copy-reference";
-import { createRecruitParty, mergeRecruitPartySlotPatches, syncRecruitParty } from "../src/modules/recruiting/domain/recruiting";
+import { createRecruitParty, mergeRecruitPartySlotPatches, mutateRecruitPartyMember, syncRecruitParty } from "../src/modules/recruiting/domain/recruiting";
 import { canonicalizeKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
 import type { KakaoV4CommandEnvelope } from "../src/modules/recruiting/kakao-v4/domain";
@@ -89,6 +89,30 @@ test("R24 fresh party templates need only a name and retain unknown time explici
   }
 });
 
+test("compact forms preserve jamo through parsing and storage and sort sparse reserve display slots", () => {
+  const original = {
+    ...party, formCode: "ABCDE-23456", startTimeText: "ㅁㅂㅅ", gameInfo: "합성 Ａ 게임 ①",
+    members: [
+      { name: "합성 Ａ", position: null, slotNo: 1, substitute: false },
+      { name: "합성 예비", position: null, slotNo: 2, substitute: true },
+    ],
+  };
+  const detail = v1StrictPartyDetailReply(original, 12);
+  assert.doesNotMatch(detail, /\n{3,}/u);
+  assert.match(detail, /예비 1\.\n예비 2\. 합성 예비/u);
+  for (const text of [detail, detail.replace("\n\n1.", "\n\n\n\n1.")]) {
+    const command = canonical(text);
+    if (command?.domain !== "PARTY" || command.action !== "SYNC") assert.fail("new and older whitespace layouts must remain copyable");
+    const stored = createRecruitParty({ ...original, ...command.payload, scheduledStartAt: null, protectedUntil: null, now: new Date("2026-09-11T12:00:00.000Z") });
+    assert.equal(stored.startTimeText, "ㅁㅂㅅ");
+    assert.equal(stored.gameInfo, "합성 Ａ 게임 ①");
+    assert.equal(stored.members[0]?.name, "합성 Ａ");
+    const duplicate = mutateRecruitPartyMember({ party: stored, mutation: { action: "ADD", name: "합성 A" }, now: new Date("2026-09-11T12:01:00.000Z") });
+    assert.equal(duplicate.outcome, "ALREADY_PRESENT", "display preservation must not weaken normalized name matching");
+    assert.equal(duplicate.party.members[0]?.name, "합성 Ａ");
+  }
+});
+
 test("R24 compact party forms cannot fall back to unguarded legacy parsing when the code is removed", () => {
   const detail = v1StrictPartyDetailReply({ ...party, formCode: "ABCDE-23456" }, 12);
   for (const edited of [detail.replace(/^양식코드:.*$/mu, ""), detail.replace("ABCDE-23456", ""), detail.replace("ABCDE-23456", "bad-code")]) {
@@ -148,7 +172,7 @@ test("copyable forms retain literal metadata, sparse reserve slots, and reserve 
   assert.match(detail, /^》시작시간 : 모바시$/mu);
   assert.match(detail, /^》게임정보 : 자랭 수준 예상 골드$/mu);
   assert.match(detail, /^》주최자 : $/mu);
-  assert.match(detail, /^예비 1\. 예비요정 @태그\n예비 3\. 세번째\/부캐, 메모\n예비 2\.$/mu);
+  assert.match(detail, /^예비 1\. 예비요정 @태그\n예비 2\.\n예비 3\. 세번째\/부캐, 메모$/mu);
   const command = canonical(detail);
   if (command?.domain !== "PARTY" || command.action !== "SYNC") assert.fail("copyable detail must remain an exact snapshot");
   assert.deepEqual(command.payload.members, original.members);

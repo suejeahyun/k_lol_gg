@@ -67,6 +67,41 @@ test("party parser accepts clipped headers and an adjacent wrapped slot value", 
   );
 });
 
+test("display values keep compatibility jamo while form numbers and codes retain width compatibility", () => {
+  const text = [
+    "[파티 #１２] ２인 파티 · ０/２명", "시작: ㅁㅂㅅ", "게임: 합성 Ａ 게임 ①",
+    "１． 합성 ㅁㅂㅅ", "２．", "예비 １．", "양식코드: ＡＢＣＤＥ-２３４５６",
+  ].join("\r\n");
+  const parsed = parsePartyForm(text);
+  assert.equal(parsed.decision, "EXACT");
+  assert.equal(parsed.recruitNumber, 12);
+  assert.equal(parsed.saveReference, "ABCDE-23456");
+  assert.equal(parsed.startTime.value, "ㅁㅂㅅ");
+  assert.equal(parsed.gameInfo.value, "합성 Ａ 게임 ①");
+  assert.equal(parsed.slots[0]?.value, "합성 ㅁㅂㅅ");
+  const slash = parsePartyForm(`／${text.replace("１． 합성", "예비: ０명\r\n１． 합성")}`);
+  assert.equal(slash.decision, "EXACT");
+  assert.equal(slash.startTime.value, "ㅁㅂㅅ");
+  assert.equal(slash.slots.filter((slot) => slot.kind === "RESERVE").length, 1);
+});
+
+test("display separators never become metadata or a participant and blank rows remain explicit", () => {
+  for (const separator of ["──────────────", "---", "═══"]) {
+    const text = [
+      "[파티 #12] 2인 파티 · 0/2명", "양식코드: ABCDE-23456", separator,
+      "시작:", separator, "게임:", separator, "1.", separator, "2.", "예비 1.", separator,
+    ].join("\n");
+    const parsed = parsePartyForm(text);
+    assert.equal(parsed.decision, "EXACT", separator);
+    assert.equal(parsed.startTime.state, "PRESENT_EMPTY");
+    assert.equal(parsed.gameInfo.state, "PRESENT_EMPTY");
+    assert.ok(parsed.slots.every((slot) => slot.state === "PRESENT_EMPTY" && slot.value === null));
+    const omitted = parsePartyForm(text.replace("\n2.", ""));
+    assert.equal(omitted.decision, "AMBIGUOUS");
+    assert.ok(omitted.slots.some((slot) => slot.slotNo === 2 && slot.kind === "NUMBERED" && slot.state === "ABSENT"));
+  }
+});
+
 test("metadata is order independent, multiline, and keeps absent separate from empty", () => {
   const text = base
     .replace("모집번호: #12", "》게임 정보: 자유랭크\n초대 링크는 추후\n》시작 시간: 21:00\n인원 모이면 바로 시작\n모집번호: #12")
@@ -134,6 +169,33 @@ test("recoverable, rejected, and ordinary text decisions remain distinct", () =>
   assert.equal(parsePartyForm(`${base}\n100. 범위초과`).decision, "REJECT");
   assert.equal(parsePartyForm("오늘 20:00에 2명 모여요.\n1. 가능하면 연락주세요").decision, "IGNORE");
   assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text: "오늘 20:00에 2명 모여요." }).kind, "UNKNOWN");
+});
+
+test("numbered primary rows must stay within the submitted capacity even when empty", () => {
+  const valid = ["[파티 #12] 4인 파티 · 0/4명", "1.", "2.", "3.", "4.", "예비 5.", "양식코드: ABCDE-23456"].join("\n");
+  assert.equal(parsePartyForm(valid).decision, "EXACT", "reserve slot numbers have their own range");
+  for (const row of ["5.", "5. 합성 참가자", "０．", "９９． 합성 참가자"]) {
+    const text = valid.replace("예비 5.", `${row}\n예비 5.`);
+    const parsed = parsePartyForm(text);
+    assert.equal(parsed.decision, "REJECT", row);
+    assert.ok(parsed.diagnostics.some((entry) => entry.code === "INVALID_SLOT" && entry.key?.startsWith("primary:")));
+    const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+    assert.equal(classification.kind, "UNKNOWN", row);
+  }
+});
+
+test("saved form references require one concrete recruit number and cannot request automatic creation", () => {
+  const automatic = base.replace("모집번호: #12", "모집번호: 자동 배정");
+  assert.equal(parsePartyForm(automatic).decision, "EXACT", "legacy code-free creation remains supported");
+  for (const reference of ["양식코드: ABCDE-23456", `저장기준: 2026-09-11 / P${"a".repeat(32)}-R0`]) {
+    for (const body of [automatic, base.replace("모집번호: #12\n", "")]) {
+      const text = `${body}\n${reference}`;
+      const parsed = parsePartyForm(text);
+      assert.equal(parsed.decision, "REJECT");
+      assert.ok(parsed.diagnostics.some((entry) => entry.code === "INVALID_RECRUIT_NUMBER"));
+      assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text }).kind, "UNKNOWN");
+    }
+  }
 });
 
 test("only EXACT party forms become SYNC while parsed title and slot states reach canonical payload", () => {
