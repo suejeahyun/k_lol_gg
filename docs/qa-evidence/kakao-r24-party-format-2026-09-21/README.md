@@ -20,7 +20,13 @@
 
 ## 배포
 
-로컬 검증을 마쳤으며 운영 반영 뒤 배포 ID·commit·tag·health 근거를 갱신한다.
+- 운영 반영: 2026-09-21 11:29 KST 확인. Vercel `dpl_8jtg4dY911S3RAEjvtv9gv7nQa56`, `READY` · `production`.
+- 소스 commit: `33d7bf042ffda9f051588787d0cffb1a1ff7f71a`, tag: `kakao-r24-site-linked-copy-v1.0.1`. 기능 브랜치와 tag를 원격 저장소에 push했다.
+- 운영 URL: https://k-lol-gg.vercel.app · 고정 배포 URL: https://k-lol-h7c7vnyx0-tjdmswo11-3715s-projects.vercel.app.
+- `production-after.json`의 배포 ID·alias와 `deployment-source.json`의 제공자 API 소스 commit·기능 버전이 일치한다. 배포 로그는 `vercel-deploy.log`.
+- 운영 확인: health `ready`, 인증된 카카오 도움말·내전 안내·파티/내전 현황, 웹 도움말·모집 페이지 **8/8 PASS**, HTTP 200 (`live-production.json`).
+- 상세 양식 2건은 현황 응답에서 조회 대상을 선택하지 못해 생략했다. 정확한 양식 출력·파싱은 로컬 검사 근거이며 실제 채팅방 수신이나 운영 명단 저장까지 확인했다는 의미는 아니다. 검증용 운영 모집 생성·명단 변경은 하지 않았다.
+- 이번 배포의 DB migration·휴대폰 산출물 변경은 없다.
 
 복구 기준은 작업 시작 시 실제 운영 alias가 가리킨 `dpl_6ZtchrtMHPisXZWNTeoR7HZ6GQCC`다. 서버만 되돌릴 수 있고 DB 역변경·휴대폰 교체는 필요하지 않다.
 

@@ -1,5 +1,14 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-21 카카오 R24 1.0.1 파티 양식 정리
+
+- 사용자 예시대로 중간 참가 안내와 양식코드 괄호 설명을 제거하고 빈 줄 간격을 맞췄다. 사이트 연동·저장 정책은 유지한다.
+- 서버 운영 반영: commit `33d7bf042ffda9f051588787d0cffb1a1ff7f71a`, tag `kakao-r24-site-linked-copy-v1.0.1`, Vercel `dpl_8jtg4dY911S3RAEjvtv9gv7nQa56` READY · Production. 제공자 소스 메타데이터 및 운영 alias 일치 확인.
+- 집중 검사 46/46, 전체 `npm run check` exit 0 (계약 410/410, 단위 862 PASS·DB 전용 1 skip, 타입·ERD·빌드 PASS, lint 오류 0·경고 326).
+- 운영 health `ready`와 카카오/웹 읽기 검사 8/8 HTTP 200. 운영 상세 양식 2건은 조회 대상 미선택으로 생략했으며 정확한 출력·파싱은 로컬 검사 근거다. 운영 명단 변경 없음.
+- 공개/private 휴대폰 R24 산출물 SHA-256 불변, DB migration 없음. 실제 설치폰 버전·채팅방 송수신은 미확인. 구형 R22는 짧은 복붙 양식 저장에 기존 R24 설치가 필요하다.
+- [QA·배포 근거·남은 확인·다음 추천 3개](./qa-evidence/kakao-r24-party-format-2026-09-21/README.md), [디스코드 공지](./qa-evidence/kakao-r24-party-format-2026-09-21/DISCORD_NOTICE.md), [패치 기록](./patch-notes/2026-09-21-kakao-r24-party-format.md)
+
 ## 2026-09-21 카카오 R24 복사·붙여넣기 복귀 재확인
 
 - 사용자 확인: 파티·내전 **양식 전체 복사 → 빈칸에 이름 추가 → 전체 전송**, 사이트 연동 유지.
