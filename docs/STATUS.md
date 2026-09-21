@@ -6,8 +6,11 @@
 - 기존 R23/R24 미커밋 구현을 보존했다. 이번 보완은 내전 예비 앞번호 취소 후 빈칸이 출력되지 않던 문제로, 첫 빈 예비 번호를 다시 표시한다.
 - 실제 출력 양식 복사·파싱·재신청 및 기존 참가자 보존을 격리 DB 회귀 검사로 추가했다. 수정 전 실패와 수정 후 통과 로그를 모두 보존했다.
 - 검증: `npm run check` exit 0, 계약 410/410, 단위 862 PASS·DB 전용 1 skip, 격리 PostgreSQL 60/60, typecheck·ERD·프로덕션 빌드 PASS, lint 오류 0·기존 경고 319. 공개/private 산출물은 이전 R24 해시와 일치하며 ES5/Rhino 통과.
-- 상태: 소스·로컬 검증 완료. 이번 작업에서 운영 DB migration·서버 배포·휴대폰 설치·Git push/tag는 하지 않았다. 적용 순서는 migration 0040 → 서버 → 휴대폰이다.
-- [QA·산출물 해시·남은 위험·다음 패치 추천 4개](./qa-evidence/kakao-r24-copy-restore-2026-09-21/README.md), [디스코드 공지 초안](./qa-evidence/kakao-r24-copy-restore-2026-09-21/DISCORD_NOTICE.md), [패치 기록](./patch-notes/2026-09-21-kakao-r24-copy-restore.md)
+- 상태: 사용자 “적용해줘” 승인 후 운영 DB backup·migration 0040·서버 배포·alias 전환 완료. 휴대폰 설치는 사용자 교체 대기.
+- 배포 commit `5d0e01c274fcb6d42b2cf574443b93fe4d27d8dd`, tag `kakao-r24-site-linked-copy-v1.0.0`, Vercel `dpl_6ZtchrtMHPisXZWNTeoR7HZ6GQCC` Ready · Production. 기능 브랜치/tag push 완료.
+- 운영 alias health `ready`, 복붙 안내·사이트 연동 안내·두 프로필 인증 HTTP 200. 현재 운영일 모집이 없어 실제 운영 참가 명단 작성은 하지 않았으며 해당 저장 경로는 격리 DB 검증 근거.
+- 추가 migration QA: 0039→0040에서 기존 102개 테이블 데이터·구조 보존, 별도 fresh 및 재실행 no-op. 배포 전 비공개·임시 파일 업로드 제외 확인.
+- [QA·배포·산출물 해시·남은 위험·다음 패치 추천 5개](./qa-evidence/kakao-r24-copy-restore-2026-09-21/README.md), [디스코드 공지](./qa-evidence/kakao-r24-copy-restore-2026-09-21/DISCORD_NOTICE.md), [패치 기록](./patch-notes/2026-09-21-kakao-r24-copy-restore.md)
 
 ## 2026-09-20 카카오 R24 사이트 연동 복사 참가
 

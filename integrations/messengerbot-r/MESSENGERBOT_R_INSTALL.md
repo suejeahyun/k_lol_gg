@@ -2,7 +2,7 @@
 
 ## 현재 설치본
 
-R24 소스와 설치 파일을 로컬에서 준비했다. 운영 배포·운영 DB migration·휴대폰 교체는 하지 않았다. 승인된 배포 때 **migration 0040 → 서버 R24 → 휴대폰 R24** 순서로 적용한다. 아래 **비공개 한 파일만** 전체 복사해 설치한다.
+2026-09-21 운영 DB migration 0040과 서버 R24 적용을 마쳤다. 운영 health 및 RECRUIT·FEATURES 서명 인증은 HTTP 200으로 확인했다. **휴대폰 교체·실제 채팅방 송수신은 아직 미확인**이다. 이제 아래 **비공개 한 파일만** 전체 복사해 휴대폰에 설치한다. [운영 배포 근거](../../docs/qa-evidence/kakao-r24-copy-restore-2026-09-21/README.md).
 
 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
 

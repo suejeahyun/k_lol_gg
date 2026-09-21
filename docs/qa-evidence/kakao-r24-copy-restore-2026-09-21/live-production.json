@@ -1,0 +1,73 @@
+{
+  "checkedAt": "2026-09-21T02:18:07.251Z",
+  "baseUrl": "https://k-lol-gg.vercel.app",
+  "stage": "production",
+  "status": "PASS",
+  "rosterMutationsSent": false,
+  "rawMemberNamesRecorded": false,
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "passed": true,
+      "healthStatus": "ready"
+    },
+    {
+      "check": "copy-paste help",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 216,
+      "replyCharacters": 456,
+      "traceId": null
+    },
+    {
+      "check": "site-linked inhouse guide",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 219,
+      "replyCharacters": 299,
+      "traceId": null
+    },
+    {
+      "check": "party status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 235,
+      "replyCharacters": 39,
+      "traceId": null
+    },
+    {
+      "check": "inhouse status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 289,
+      "replyCharacters": 29,
+      "traceId": null
+    },
+    {
+      "check": "party copy form",
+      "skipped": true,
+      "reason": "No current recruitment in the signed status response; no synthetic live roster created."
+    },
+    {
+      "check": "inhouse copy form",
+      "skipped": true,
+      "reason": "No current recruitment in the signed status response; no synthetic live roster created."
+    },
+    {
+      "check": "/help/kakao",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "check": "/help/recruits",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "check": "/recruits",
+      "status": 200,
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-09-21T02:12:00.870Z",
+  "targetFingerprint": "c5918218dd171001",
+  "status": "PASS",
+  "state": {
+    "count": 41,
+    "head": {
+      "id": 44,
+      "hash": "0552156eb090652242d5124b2b0a8141654b02e70777f4bb5e72f6e7c527ccd2",
+      "created_at": "1789854667439"
+    },
+    "snapshotExists": true
+  },
+  "indexes": [
+    "kakao_form_snapshots_expiry_idx",
+    "kakao_form_snapshots_pkey",
+    "kakao_form_snapshots_state_uidx"
+  ],
+  "checkConstraints": 7
+}

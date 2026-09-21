@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-09-21T02:11:11.526Z",
+  "targetFingerprint": "c5918218dd171001",
+  "status": "PASS",
+  "migrationBefore": {
+    "count": 40,
+    "head": {
+      "id": 43,
+      "hash": "dc1d06a6b835ae7bca24b868ac075df59e4a909b8f5733889fea480efbd18774",
+      "created_at": "1789296503535"
+    },
+    "snapshotExists": false
+  },
+  "archive": ".private/backups/r24-production-20260921/before-0040.dump",
+  "bytes": 5322088,
+  "sha256": "66c6703dce5e063c2c59640ac75b79c9391ca8dbca4c7a5a1239e45dd2cb2acb",
+  "archiveCatalogReadable": true,
+  "note": "Logical archive created and catalog checked; this production archive has not been restored."
+}
