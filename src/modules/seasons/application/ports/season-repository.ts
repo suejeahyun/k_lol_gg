@@ -70,7 +70,7 @@ export type AdminKakaoPendingQuery = Readonly<{
   seasonId?: string;
   applyDate?: string;
   recruitNo?: number;
-  matchState?: "MATCHED_RESERVE" | "UNMATCHED" | "AMBIGUOUS";
+  matchState?: "MATCHED_RESERVE" | "UNMATCHED" | "AMBIGUOUS" | "UNVERIFIED";
   status?: "ACTIVE" | "CANCELLED" | "RESOLVED";
   query?: string;
   page: number;

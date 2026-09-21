@@ -1,0 +1,15 @@
+Captured tool output from the isolated PostgreSQL 18 run on 2026-09-22.
+Command (PowerShell): $env:V2_DB_CONTRACT_SCOPE='statistics'; node node_modules/tsx/dist/cli.mjs scripts/test-db/run-data-contracts.ts
+Exit code: 0
+
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ S05 rebuilds PUBLISHED match statistics atomically and receipts make replay idempotent (1390.908ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2176.791
+[db-contract] cluster stopped and disposable workspace path removed

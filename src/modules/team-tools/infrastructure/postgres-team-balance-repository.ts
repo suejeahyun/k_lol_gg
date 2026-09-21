@@ -16,6 +16,7 @@ import {
   teamBalanceDraftParticipants,
   teamBalanceDrafts,
   teamBalanceOutbox,
+  teamBalancePlayerOverrides,
 } from "@/platform/db/schema/team-tools";
 import type { V2Database } from "@/platform/db/database";
 import type { DatabaseExecutor, V2Transaction } from "@/platform/db/transaction";
@@ -49,6 +50,7 @@ import {
   type TeamBalanceDraftParticipant,
 } from "../domain/team-balance-draft";
 import { PostgresTeamBalanceRatingProvider } from "./postgres-team-balance-rating-provider";
+import { parseTeamBalanceOverride, type TeamBalanceOverrideInput } from "../domain/team-balance-override";
 
 type DraftRow = typeof teamBalanceDrafts.$inferSelect;
 type SuccessfulMutation = Omit<TeamBalanceMutationResult, "replayed">;
@@ -226,6 +228,37 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
     private readonly database: V2Database,
     private readonly ratingProvider: TeamBalanceRatingProvider = new PostgresTeamBalanceRatingProvider(),
   ) {}
+
+  async getPlayerOverride(playerId: string) {
+    const player = (await this.database.select({ id: players.id }).from(players).where(eq(players.id, playerId)).limit(1))[0];
+    if (!player) throw new TeamBalanceServiceError("NOT_FOUND", "플레이어를 찾을 수 없습니다.");
+    const current = (await this.database.select().from(teamBalancePlayerOverrides).where(eq(teamBalancePlayerOverrides.playerId, playerId)).limit(1))[0];
+    return { playerId, score: current?.score ?? 0, reason: current?.reason ?? "", revision: current?.revision ?? 0,
+      configured: Boolean(current), updatedAt: current?.updatedAt.toISOString() ?? null };
+  }
+
+  async setPlayerOverride(envelope: TeamBalanceCommandEnvelope, expectedRevision: number, input: TeamBalanceOverrideInput, now = new Date()): Promise<TeamBalanceMutationResult> {
+    const validated = parseTeamBalanceOverride(input);
+    if (envelope.actorSession.role !== "SUPER_ADMIN" || envelope.authorization !== "ADMIN_MUTATION") throw new TeamBalanceServiceError("FORBIDDEN", "최고 관리자만 팀 편성 보정을 변경할 수 있습니다.");
+    if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0 || envelope.scope !== "admin:team-balance:override") throw new TeamBalanceServiceError("INVALID_INPUT", "보정 revision 또는 명령 범위가 올바르지 않습니다.");
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
+      // The existing idempotent helper rechecks the exact SUPER role and TOTP
+      // session before receipt replay. Player locking also serializes first insert.
+      const player = (await transaction.select({ id: players.id, status: players.status }).from(players).where(eq(players.id, validated.playerId)).for("update").limit(1))[0];
+      if (!player || player.status !== "ACTIVE") throw new TeamBalanceServiceError("NOT_FOUND", "활성 플레이어를 찾을 수 없습니다.");
+      const before = (await transaction.select().from(teamBalancePlayerOverrides).where(eq(teamBalancePlayerOverrides.playerId, validated.playerId)).for("update").limit(1))[0];
+      if ((before?.revision ?? 0) !== expectedRevision) throw new TeamBalanceServiceError("PRECONDITION_FAILED", "보정값이 변경되었습니다. 최신 상태를 확인해 주세요.");
+      const revision = expectedRevision + 1;
+      const next = { ...validated, revision, updatedByUserAccountId: envelope.actorUserAccountId, updatedAt: now };
+      await transaction.insert(teamBalancePlayerOverrides).values(next).onConflictDoUpdate({ target: teamBalancePlayerOverrides.playerId, set: next });
+      const body = { ...validated, revision, configured: true, updatedAt: now.toISOString() };
+      await transaction.insert(auditEvents).values({ requestId: envelope.requestId, actorUserAccountId: envelope.actorUserAccountId,
+        action: "TEAM_BALANCE_OVERRIDE_SET", targetType: "TEAM_BALANCE_PLAYER_OVERRIDE", targetId: validated.playerId,
+        beforeJson: before ? { score: before.score, reason: before.reason, revision: before.revision } : null,
+        afterJson: body, metadataJson: { affectsMmr: false }, createdAt: now });
+      return { body, status: 200, revision };
+    });
+  }
 
   private async idempotent(
     envelope: TeamBalanceCommandEnvelope,

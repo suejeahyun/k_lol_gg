@@ -6,7 +6,7 @@ export type StatisticsDrainResult = Readonly<{
   applied: number;
   replayed: number;
   failed: number;
-  stopped: "IDLE" | "FAILED" | "LIMIT";
+  stopped: "IDLE" | "FAILED" | "LIMIT" | "TIME_BUDGET";
 }>;
 
 /**
@@ -15,14 +15,30 @@ export type StatisticsDrainResult = Readonly<{
  */
 export async function drainStatisticsProjection(
   repository: StatisticsProjectionRepository,
-  options: Readonly<{ maximumEvents: number; now?: () => Date }>,
+  options: Readonly<{
+    maximumEvents: number;
+    maximumDurationMs?: number;
+    now?: () => Date;
+    monotonicNow?: () => number;
+  }>,
 ): Promise<StatisticsDrainResult> {
   if (!Number.isSafeInteger(options.maximumEvents) || options.maximumEvents < 1 || options.maximumEvents > 100) {
     throw new RangeError("maximumEvents must be between 1 and 100");
   }
+  if (options.maximumDurationMs !== undefined && (
+    !Number.isSafeInteger(options.maximumDurationMs) || options.maximumDurationMs < 1 || options.maximumDurationMs > 30_000
+  )) {
+    throw new RangeError("maximumDurationMs must be between 1 and 30000");
+  }
+  const monotonicNow = options.monotonicNow ?? (() => performance.now());
+  const startedAt = monotonicNow();
   let applied = 0;
   let replayed = 0;
   for (let processed = 0; processed < options.maximumEvents; processed += 1) {
+    // Finish an already claimed transaction; only stop before taking another lease.
+    if (options.maximumDurationMs !== undefined && monotonicNow() - startedAt >= options.maximumDurationMs) {
+      return { processed, applied, replayed, failed: 0, stopped: "TIME_BUDGET" };
+    }
     const result = await processNextMatchChanged(repository, options.now?.() ?? new Date());
     if (result.kind === "IDLE") {
       return { processed, applied, replayed, failed: 0, stopped: "IDLE" };

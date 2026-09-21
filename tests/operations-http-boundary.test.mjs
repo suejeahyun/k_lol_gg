@@ -41,7 +41,7 @@ test("internal maintenance requires a signed job and never accepts session autho
   assert.match(verifier, /x-job-nonce/);
 });
 
-test("Vercel invokes only the daily Kakao close GET through an exact Bearer boundary", async () => {
+test("Vercel schedules statistics and daily Kakao close through protected GET boundaries", async () => {
   const [route, verifier, configuration] = await Promise.all([
     source("src/app/api/cron/kakao-daily-close/route.ts"),
     source("src/modules/operations/infrastructure/vercel-kakao-daily-close.ts"),
@@ -56,6 +56,9 @@ test("Vercel invokes only the daily Kakao close GET through an exact Bearer boun
   assert.match(verifier, /recruitingOperatingDateKey/);
   assert.doesNotMatch(verifier, /OPERATIONS_JOB_SECRET|process\.env|console\./);
   assert.deepEqual(JSON.parse(configuration).crons, [{
+    path: "/api/cron/statistics-projection",
+    schedule: "*/5 * * * *",
+  }, {
     path: "/api/cron/kakao-daily-close",
     schedule: "0 21 * * *",
   }]);

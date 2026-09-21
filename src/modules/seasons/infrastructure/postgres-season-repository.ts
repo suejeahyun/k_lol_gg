@@ -9,6 +9,7 @@ import {
   ilike,
   inArray,
   isNull,
+  ne,
   or,
   sql,
 } from "drizzle-orm";
@@ -52,6 +53,8 @@ import {
   planSiteApplicationMerge,
 } from "../domain/application-source-policy";
 import { assertInhouseSeatAvailable, INHOUSE_DISCORD_WAIT_NOTICE, reachedInhouseCapacity } from "../domain/inhouse-enrollment";
+import { enqueueSiteInhouseNotice } from "../kakao-site-notices/repository";
+import { inhouseApplicationScope, inhousePendingScope, type InhouseRosterScope } from "./inhouse-roster-scope";
 import {
   normalizedSeasonIdentity,
   seasonAcceptsApplications,
@@ -177,7 +180,7 @@ function adminPendingApplication(
     mainPosition: row.mainPosition,
     subPositions: row.subPositions,
     reserve: row.reserve,
-    matchState: row.matchState,
+    matchState: row.linkReason === "UNVERIFIED" ? "UNVERIFIED" : row.matchState,
     status: row.status,
     matchedPlayer: player ? { id: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` } : null,
     revision: row.revision,
@@ -463,12 +466,14 @@ export class PostgresSeasonRepository implements SeasonRepository {
     const pendingCounts = await this.database.select({ reserve: seasonKakaoPendingApplications.reserve, value: count() })
       .from(seasonKakaoPendingApplications).where(and(eq(seasonKakaoPendingApplications.seasonId, season.id),
         eq(seasonKakaoPendingApplications.applyDate, today), eq(seasonKakaoPendingApplications.recruitNo, recruitNo),
+        inhousePendingScope(selectedRound),
         eq(seasonKakaoPendingApplications.status, "ACTIVE"))).groupBy(seasonKakaoPendingApplications.reserve);
     const unlinkedCount = pendingCounts.reduce((sum, row) => sum + Number(row.value), 0);
     const publicPredicates = and(
       eq(seasonApplications.seasonId, season.id),
       eq(seasonApplications.applyDate, today),
       eq(seasonApplications.recruitNo, recruitNo),
+      inhouseApplicationScope(selectedRound),
       inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
       eq(players.status, "ACTIVE"),
     );
@@ -663,7 +668,14 @@ export class PostgresSeasonRepository implements SeasonRepository {
     if (query.seasonId) predicates.push(eq(seasonKakaoPendingApplications.seasonId, query.seasonId));
     if (query.applyDate) predicates.push(eq(seasonKakaoPendingApplications.applyDate, query.applyDate));
     if (query.recruitNo) predicates.push(eq(seasonKakaoPendingApplications.recruitNo, query.recruitNo));
-    if (query.matchState) predicates.push(eq(seasonKakaoPendingApplications.matchState, query.matchState));
+    if (query.matchState === "UNVERIFIED") {
+      predicates.push(eq(seasonKakaoPendingApplications.linkReason, "UNVERIFIED"));
+    } else if (query.matchState) {
+      predicates.push(eq(seasonKakaoPendingApplications.matchState, query.matchState));
+      if (query.matchState === "UNMATCHED") predicates.push(or(
+        isNull(seasonKakaoPendingApplications.linkReason), ne(seasonKakaoPendingApplications.linkReason, "UNVERIFIED"),
+      )!);
+    }
     if (query.status) predicates.push(eq(seasonKakaoPendingApplications.status, query.status));
     if (query.query) {
       const escaped = query.query.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
@@ -1121,14 +1133,16 @@ export class PostgresSeasonRepository implements SeasonRepository {
     await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season-inhouse:${seasonId}:${applyDate}`}, 0))`);
   }
 
-  private async inhouseParticipantCount(transaction: V2Transaction, seasonId: string, applyDate: string, recruitNo: number) {
+  private async inhouseParticipantCount(transaction: V2Transaction, seasonId: string, applyDate: string, recruitNo: number, round: InhouseRosterScope | null) {
     const [members, pending] = await Promise.all([
       transaction.select({ value: count() }).from(seasonApplications).where(and(
         eq(seasonApplications.seasonId, seasonId), eq(seasonApplications.applyDate, applyDate),
+        inhouseApplicationScope(round),
         eq(seasonApplications.recruitNo, recruitNo), inArray(seasonApplications.status, ["APPLIED", "CONFIRMED"]),
       )),
       transaction.select({ value: count() }).from(seasonKakaoPendingApplications).where(and(
         eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.applyDate, applyDate),
+        inhousePendingScope(round),
         eq(seasonKakaoPendingApplications.recruitNo, recruitNo), eq(seasonKakaoPendingApplications.status, "ACTIVE"),
         eq(seasonKakaoPendingApplications.reserve, false),
       )),
@@ -1166,9 +1180,10 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .limit(1);
       const current = currentRows[0];
       const mergePlan = planSiteApplicationMerge(current ?? null);
-      const beforeCount = await this.inhouseParticipantCount(transaction, season.id, input.applyDate, input.recruitNo);
+      const beforeCount = await this.inhouseParticipantCount(transaction, season.id, input.applyDate, input.recruitNo, round);
       const reserve = input.reserve === true;
-      const alreadyParticipating = current?.status === "APPLIED" || current?.status === "CONFIRMED";
+      const currentInScope = !round || current?.source === "SITE" || Boolean(current?.sourceRoomIdHash?.equals(round.sourceRoomIdHash) && current.sourceMode === round.mode);
+      const alreadyParticipating = currentInScope && (current?.status === "APPLIED" || current?.status === "CONFIRMED");
       assertInhouseSeatAvailable({ capacity: round?.capacity ?? 10, participantCount: beforeCount, alreadyParticipating, reserve });
       const nextCount = beforeCount + (reserve ? 0 : 1) - (alreadyParticipating ? 1 : 0);
       const notice = reachedInhouseCapacity(beforeCount, nextCount, round?.capacity ?? 10) ? INHOUSE_DISCORD_WAIT_NOTICE : null;
@@ -1197,6 +1212,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
           .returning();
         const created = rows[0]!;
         const body = { ...publicApplicationBody(created), notice };
+        if (notice && round) await enqueueSiteInhouseNotice(transaction, { round, applicationId: created.id, applicationRevision: created.revision, now });
         await this.auditWriter.append(transaction, {
           requestId: envelope.requestId,
           actorUserAccountId: envelope.actorUserAccountId,
@@ -1244,6 +1260,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
       const updated = rows[0];
       if (!updated) throw new SeasonServiceError("PRECONDITION_FAILED", "신청 revision이 변경되었습니다.");
       const body = { ...publicApplicationBody(updated), notice };
+      if (notice && round) await enqueueSiteInhouseNotice(transaction, { round, applicationId: updated.id, applicationRevision: updated.revision, now });
       await this.auditWriter.append(transaction, {
         requestId: envelope.requestId,
         actorUserAccountId: envelope.actorUserAccountId,
@@ -1352,7 +1369,10 @@ export class PostgresSeasonRepository implements SeasonRepository {
       }
       if (input.status === "CONFIRMED") {
         const round = await this.assertRecruitRoundExists(transaction, current.seasonId, current.applyDate, current.recruitNo);
-        const total = await this.inhouseParticipantCount(transaction, current.seasonId, current.applyDate, current.recruitNo);
+        if (round && current.source === "KAKAO" && (!current.sourceRoomIdHash?.equals(round.sourceRoomIdHash) || current.sourceMode !== round.mode)) {
+          throw new SeasonServiceError("INVALID_TRANSITION", "신청의 내전 범위가 현재 모집과 달라 확인이 필요합니다.");
+        }
+        const total = await this.inhouseParticipantCount(transaction, current.seasonId, current.applyDate, current.recruitNo, round);
         assertInhouseSeatAvailable({ capacity: round?.capacity ?? 10, participantCount: total,
           alreadyParticipating: current.status === "APPLIED" || current.status === "CONFIRMED", reserve: false });
       }
@@ -1439,7 +1459,10 @@ export class PostgresSeasonRepository implements SeasonRepository {
       const plan = planSeasonApplicationMerge(existing);
       if (plan.action !== "PRESERVE" && input.applicationStatus === "APPLIED") {
         const round = await this.assertRecruitRoundExists(transaction, pending.seasonId, pending.applyDate, pending.recruitNo);
-        const total = await this.inhouseParticipantCount(transaction, pending.seasonId, pending.applyDate, pending.recruitNo);
+        if (round && (!pending.sourceRoomIdHash?.equals(round.sourceRoomIdHash) || pending.sourceMode !== round.mode)) {
+          throw new SeasonServiceError("INVALID_TRANSITION", "접수의 내전 범위가 현재 모집과 달라 확인이 필요합니다.");
+        }
+        const total = await this.inhouseParticipantCount(transaction, pending.seasonId, pending.applyDate, pending.recruitNo, round);
         assertInhouseSeatAvailable({ capacity: round?.capacity ?? 10, participantCount: total,
           alreadyParticipating: !pending.reserve || existing?.status === "APPLIED" || existing?.status === "CONFIRMED", reserve: false });
       }

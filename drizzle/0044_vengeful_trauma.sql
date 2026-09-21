@@ -1,0 +1,2 @@
+ALTER TABLE "riot"."summaries" DROP CONSTRAINT "riot_summaries_recent_solo_pair";--> statement-breakpoint
+ALTER TABLE "riot"."summaries" ADD CONSTRAINT "riot_summaries_recent_solo_pair" CHECK (("riot"."summaries"."recent_solo_json" IS NULL AND "riot"."summaries"."recent_solo_synced_at" IS NULL) OR ("riot"."summaries"."recent_solo_json" IS NOT NULL AND jsonb_typeof("riot"."summaries"."recent_solo_json") = 'object' AND "riot"."summaries"."recent_solo_synced_at" IS NOT NULL));

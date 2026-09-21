@@ -2,7 +2,6 @@ import type { KakaoOpenChatStatusDto } from "../kakao-assistant/domain";
 import { partyCopyReference } from "../application/party-copy-reference";
 
 type Party = KakaoOpenChatStatusDto["parties"][number];
-type DisplayGroup = "RECRUITING" | "WAITING" | "PLAYING" | "LARGE";
 
 const LINE_POSITIONS = ["TOP", "JUG", "MID", "ADC", "SUP"] as const;
 
@@ -29,58 +28,6 @@ function isLineParty(type: Party["type"] | string) {
   return type === "FLEX_RANK" || type === "NORMAL_GAME" || type === "PARTY_RIFT";
 }
 
-function isImmediateStart(value: string | null | undefined) {
-  const text = String(value ?? "").replace(/\s+/gu, "").toLowerCase();
-  if (!text) return false;
-  return text.includes("모바시") || text.includes("모바") || text.includes("모이면바로") ||
-    text.includes("모이면시작") || text.includes("모이면ㄱ") || text.includes("모이면고") ||
-    text.includes("바로시작") || text.includes("즉시시작") || text.includes("지금시작") ||
-    text.includes("지금바로") || text.includes("지금ㄱ") || text.includes("롸잇나우") ||
-    text.includes("라잇나우") || text.includes("라이트나우") || text.includes("rightnow") ||
-    text === "now" || text === "ㄱ" || text === "ㄱㄱ";
-}
-
-function clockMinutes(value: string | null | undefined) {
-  const match = String(value ?? "").trim().match(/(오전|오후)?\s*(\d{1,2})(?:\s*[:시]\s*(\d{1,2}))?/u);
-  if (!match) return null;
-  let hour = Number(match[2]);
-  const minute = match[3] ? Number(match[3]) : 0;
-  if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 24 || minute < 0 || minute > 59) return null;
-  if (match[1] === "오후" && hour < 12) hour += 12;
-  if (match[1] === "오전" && hour === 12) hour = 0;
-  if (hour === 24) hour = 0;
-  return hour * 60 + minute;
-}
-
-function kstNowMinutes(now: Date) {
-  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1_000);
-  return kst.getUTCHours() * 60 + kst.getUTCMinutes();
-}
-
-function hasStarted(party: Party, now: Date) {
-  if (isImmediateStart(party.startTimeText)) return true;
-  if (party.scheduledStartAt) {
-    const scheduled = new Date(party.scheduledStartAt);
-    if (!Number.isNaN(scheduled.getTime())) return now.getTime() >= scheduled.getTime();
-  }
-  const minutes = clockMinutes(party.startTimeText);
-  return minutes === null ? false : kstNowMinutes(now) >= minutes;
-}
-
-function displayGroup(party: Party, now: Date): DisplayGroup {
-  if (hasStarted(party, now)) return "PLAYING";
-  if (activeMembers(party).length >= party.maximumMembers) return "WAITING";
-  if (party.maximumMembers >= 6) return "LARGE";
-  return "RECRUITING";
-}
-
-function groupTitle(group: DisplayGroup) {
-  if (group === "RECRUITING") return "[구인중]";
-  if (group === "WAITING") return "[대기중]";
-  if (group === "PLAYING") return "[진행중]";
-  return "[대형파티]";
-}
-
 function compactTitle(party: Pick<Party, "type" | "title" | "maximumMembers">) {
   const fallback = party.type === "FLEX_RANK" ? "자랭"
     : party.type === "NORMAL_GAME" ? "일반"
@@ -99,43 +46,29 @@ function compactTitle(party: Pick<Party, "type" | "title" | "maximumMembers">) {
     .trim() || `${party.maximumMembers}인 파티`;
 }
 
-function startTime(value: string | null | undefined) {
-  const text = String(value ?? "").trim();
-  if (!text) return "미정";
-  if (isImmediateStart(text)) return "바로 시작";
-  return text
-    .replace(/(\d{1,2})\s*시\s*(\d{1,2})\s*분/gu, (_match, hour: string, minute: string) => `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`)
-    .replace(/(\d{1,2})\s*시(?!\s*간)/gu, (_match, hour: string) => `${String(hour).padStart(2, "0")}:00`)
-    .replace(/(^|\D)0(\d):/gu, "$1$2:");
-}
-
-function gameInfo(value: string | null | undefined) {
-  const text = String(value ?? "").trim();
-  if (!text) return "미입력";
-  return text
-    .replace(/수준\s*예상/gu, "예상")
-    .replace(
-      /(구합니다|구함|구해요)\s+((?:아이언|브론즈|실버|골드|플래티넘|플래|플레|에메랄드|에메|다이아몬드|다이아|마스터|그랜드마스터|그마|챌린저)[^\n]*)/gu,
-      "$1 / $2",
-    )
-    .replace(/\s{2,}/gu, " ")
-    .trim();
-}
-
-function memberSummary(party: Party) {
-  const names = activeMembers(party).sort((left, right) => left.slotNo - right.slotNo).map((member) => member.name.trim());
-  if (names.length === 0) return "참여: 없음";
-  if (party.maximumMembers <= 5 || names.length <= 5) return `참여: ${names.join(", ")}`;
-  return `참여: ${names.slice(0, 5).join(", ")} 외 ${names.length - 5}명`;
+// Overview fields are shortened while stored values and details remain intact.
+// All 99 party numbers fit in fewer than 12,000 UTF-16 code units.
+function summaryText(value: string | null | undefined, maximum: number) {
+  const text = String(value ?? "").trim().replace(/\s+/gu, " ") || "미정";
+  if (text.length <= maximum) return text;
+  let result = "";
+  for (const character of text) {
+    if (result.length + character.length > maximum - 1) break;
+    result += character;
+  }
+  return result + "…";
 }
 
 function summary(party: Party) {
+  const reserves = reserveMembers(party).length;
   return [
-    `#${party.recruitNumber} · ${compactTitle(party)} · ${Math.min(activeMembers(party).length, party.maximumMembers)}/${party.maximumMembers} · ${startTime(party.startTimeText)} · ${gameInfo(party.gameInfo)}`,
-    `주최자: ${party.organizerText || "미입력"}`,
-    memberSummary(party),
-    `└ 상세 ${party.recruitNumber}`,
+    `[파티 #${party.recruitNumber}] ${summaryText(compactTitle(party), 18)} · ${summaryText(party.startTimeText, 12)} · ${summaryText(party.gameInfo === "미입력" ? "미정" : party.gameInfo, 16)} · ${activeMembers(party).length}/${party.maximumMembers}명${reserves ? ` · 예비 ${reserves}명` : ""}`,
+    `└ 구인상세 ${party.recruitNumber}`,
   ].join("\n");
+}
+
+function editableMetadata(value: string | null | undefined) {
+  return value === "미정" || value === "미입력" ? "" : value ?? "";
 }
 
 function detailBlock(party: Party) {
@@ -173,10 +106,12 @@ function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" |
   const main = party.members.filter((member) => !member.substitute);
   const reserves = party.members.filter((member) => member.substitute).sort((a, b) => a.slotNo - b.slotNo);
   const title = compactTitle({ ...party, title: party.type === "ARAM" && /증바람/u.test(party.title) ? "증바람" : "" });
+  const editable = party.type === "PARTY_NUMBER";
   const lines = [
     `[파티 #${party.recruitNumber}] ${title} · ${main.length}/${party.maximumMembers}명`,
-    `시작: ${party.startTimeText ?? "미정"}`,
-    `게임: ${party.gameInfo ?? "미정"}`,
+    ...(editable ? [`양식코드: ${formCode}`, "──────────────",
+      `시작 시간 : ${editableMetadata(party.startTimeText)}`, `게임 종류 : ${editableMetadata(party.gameInfo)}`]
+      : [`시작: ${party.startTimeText ?? "미정"}`, `게임: ${party.gameInfo ?? "미정"}`]),
     "",
   ];
   for (let slot = 1; slot <= party.maximumMembers; slot += 1) {
@@ -186,7 +121,7 @@ function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" |
   }
   lines.push("");
   lines.push(...reserveSlotLines(reserves));
-  lines.push("", `양식코드: ${formCode}`);
+  if (!editable) lines.push("", `양식코드: ${formCode}`);
   return lines.join("\n");
 }
 
@@ -217,27 +152,14 @@ export function v1StrictPartyTemplate(input: Readonly<{
   return lines.join("\n");
 }
 
-export function v1StrictPartySyncReply(recruitNumber: number, maximumMembers: number, members: readonly Readonly<{ substitute: boolean }>[]) {
-  const activeCount = members.filter((member) => !member.substitute).length;
-  const reserveCount = members.length - activeCount;
-  return [
-    `[파티 #${recruitNumber} 반영]`,
-    `${Math.min(activeCount, maximumMembers)}/${maximumMembers} · 예비 ${reserveCount}명`,
-  ].join("\n");
-}
-
 export function v1StrictPartyStatusReply(parties: readonly Party[], now = new Date()) {
-  if (parties.length === 0) return "[K-LOL.GG 구인구직 현황]\n\n현재 진행 중인 구인글이 없습니다.";
-  const groups: Record<DisplayGroup, Party[]> = { RECRUITING: [], WAITING: [], PLAYING: [], LARGE: [] };
-  for (const party of parties) groups[displayGroup(party, now)].push(party);
-  const lines = ["[K-LOL.GG 구인구직 현황]", "🔎 전체 명단: 상세 번호", ""];
-  for (const group of ["RECRUITING", "WAITING", "PLAYING", "LARGE"] as const) {
-    if (groups[group].length === 0) continue;
-    lines.push(groupTitle(group));
-    for (const party of groups[group]) lines.push(summary(party));
-    lines.push("");
-  }
-  return lines.join("\n").trimEnd();
+  // Preserve the old optional argument; time/fullness no longer groups a party.
+  void now;
+  const active = parties.filter((party) => party.status === "IN_PROGRESS")
+    .toSorted((left, right) => left.recruitNumber - right.recruitNumber);
+  return ["📋 현재 구인", "", active.length
+    ? active.map(summary).join("\n\n")
+    : "현재 모집 중인 파티가 없습니다."].join("\n");
 }
 
 export function v1StrictPartyDetailReply(party: Party | null, recruitNumber: number) {

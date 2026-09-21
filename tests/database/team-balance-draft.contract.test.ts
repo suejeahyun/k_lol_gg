@@ -14,14 +14,23 @@ import {
   type TeamBalanceRatingSnapshot,
 } from "../../src/modules/team-tools";
 import { PostgresTeamBalanceRepository } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-repository";
+import { PostgresTeamBalanceRatingProvider } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-rating-provider";
+import { teamBalanceCommandEnvelope } from "../../src/modules/team-tools/application/team-balance-service";
 import { PostgresTeamBalanceRecommendationRepository } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-recommendation-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
   auditEvents,
   authSessions,
+  championCatalog,
+  matchGames,
+  matchParticipants,
+  matchSeries,
   matchSubmissions,
   players,
+  riotAccountLinks,
+  riotSummaries,
+  mmrManualAdjustments,
   seasonProjectionStates,
   seasons,
   teamBalanceCommandReceipts,
@@ -29,12 +38,140 @@ import {
   teamBalanceDraftParticipants,
   teamBalanceDrafts,
   teamBalanceOutbox,
+  teamBalancePlayerOverrides,
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 import { prepareTeamBalanceCaptureFixture } from "../../scripts/test-db/prepare-team-balance-capture-fixture";
 
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
+
+test("team internal experience counts published games only and converges after void and restore", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const playerId = randomUUID();
+  const seasonId = randomUUID();
+  const championKey = `team-source-${randomUUID()}`;
+  const publishedId = randomUUID();
+  const now = new Date();
+  const provider = new PostgresTeamBalanceRatingProvider(() => now);
+  try {
+    await applyMigrations(database);
+    await database.insert(players).values({ id: playerId, memberName: "내전 집계 계약", memberNameNormalized: `internal-${playerId}`,
+      nickname: "InternalCount", nicknameNormalized: `internal-${playerId}`, tagLine: "TEST", tagLineNormalized: "test" });
+    await database.insert(seasons).values({ id: seasonId, name: "팀 내전 집계 계약", nameNormalized: `internal-${seasonId}` });
+    await database.insert(championCatalog).values({ key: championKey, displayName: "집계 계약 챔피언" });
+    const records = [
+      { id: publishedId, status: "PUBLISHED" as const, position: "MID" as const },
+      { id: randomUUID(), status: "DRAFT" as const, position: "TOP" as const },
+      { id: randomUUID(), status: "VOIDED" as const, position: "SUP" as const },
+    ];
+    for (const record of records) {
+      await database.insert(matchSeries).values({ id: record.id, seasonId, title: "팀 집계 계약 경기", titleNormalized: `internal-${record.id}`,
+        playedOn: "2026-09-22", blueWins: 1, redWins: 0, gameCount: 1, status: record.status,
+        publishedAt: record.status === "DRAFT" ? null : now, voidedAt: record.status === "VOIDED" ? now : null,
+        voidReason: record.status === "VOIDED" ? "검증용 무효 경기" : null });
+      const gameId = randomUUID();
+      await database.insert(matchGames).values({ id: gameId, seriesId: record.id, gameNumber: 1, durationSeconds: 1800,
+        winnerTeam: "BLUE", mvpPlayerId: playerId, mvpScoreUnits2: 20, mvpFormulaVersion: "V1_COMPAT_1", mvpSelection: "WINNER_SCORE_KDA_PLAYER_ID_V1" });
+      await database.insert(matchParticipants).values({ id: randomUUID(), gameId, playerId, nicknameSnapshot: "InternalCount", tagLineSnapshot: "TEST",
+        championKey, team: "BLUE", position: record.position, kills: 2, deaths: 1, assists: 3, mvpScoreUnits2: 20, mvpFormulaVersion: "V1_COMPAT_1" });
+    }
+    const published = (await provider.load(database, [playerId])).ratings.get(playerId)?.v1;
+    assert.equal(published?.internalGames, 1);
+    assert.deepEqual(published?.internalPositionGames, { MID: 1 }, "draft and voided positions cannot influence experience");
+    await database.update(matchSeries).set({ status: "VOIDED", voidedAt: now, voidReason: "게시 경기 무효 회귀" }).where(eq(matchSeries.id, publishedId));
+    const voided = (await provider.load(database, [playerId])).ratings.get(playerId)?.v1;
+    assert.equal(voided?.internalGames, 0);
+    assert.deepEqual(voided?.internalPositionGames, {});
+    assert.equal((await database.select({ id: matchParticipants.id }).from(matchParticipants).where(eq(matchParticipants.playerId, playerId))).length, 3, "void preserves source participants for audit and restore");
+    await database.update(matchSeries).set({ status: "PUBLISHED", voidedAt: null, voidReason: null }).where(eq(matchSeries.id, publishedId));
+    const restored = (await provider.load(database, [playerId])).ratings.get(playerId)?.v1;
+    assert.equal(restored?.internalGames, 1);
+    assert.deepEqual(restored?.internalPositionGames, { MID: 1 });
+  } finally { await pool.end(); }
+});
+
+test("team-only override is SUPER/TOTP audited and recent solo provider requires connected fresh identity", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const playerId = randomUUID();
+  const ownerId = randomUUID();
+  const superId = randomUUID();
+  const adminId = randomUUID();
+  const superSessionId = randomUUID();
+  const adminSessionId = randomUUID();
+  const linkId = randomUUID();
+  const now = new Date();
+  const superActor = { userAccountId: superId, sessionId: superSessionId, role: "SUPER_ADMIN", authVersion: 0 } as const;
+  const adminActor = { userAccountId: adminId, sessionId: adminSessionId, role: "ADMIN", authVersion: 0 } as const;
+  const repository = new PostgresTeamBalanceRepository(database);
+  const provider = new PostgresTeamBalanceRatingProvider(() => now);
+  const input = { playerId, score: 25, reason: "운영자가 확인한 팀 편성 보조 조정" };
+  const command = (actor: TransactionSessionActor, key: string, revision = 0, body = input) => teamBalanceCommandEnvelope(
+    commandContext(actor, "ADMIN_MUTATION", `override:${key}`), "admin:team-balance:override", { ...body, expectedRevision: revision },
+  );
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values([
+      { id: ownerId, loginId: `aux-owner-${ownerId}`, loginIdNormalized: `aux-owner-${ownerId}`, status: "APPROVED" },
+      { id: superId, loginId: `aux-super-${superId}`, loginIdNormalized: `aux-super-${superId}`, status: "APPROVED", role: "SUPER_ADMIN" },
+      { id: adminId, loginId: `aux-admin-${adminId}`, loginIdNormalized: `aux-admin-${adminId}`, status: "APPROVED", role: "ADMIN" },
+    ]);
+    await database.insert(authSessions).values([superActor, adminActor].map((actor) => ({
+      id: actor.sessionId, tokenHash: randomBytes(32), userAccountId: actor.userAccountId, authVersion: 0, role: actor.role,
+      purpose: "ADMIN" as const, totpVerifiedAt: now, issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000),
+    })));
+    await database.insert(players).values({ id: playerId, userAccountId: ownerId, memberName: "Aux contract", memberNameNormalized: `aux-${playerId}`,
+      nickname: "AuxPlayer", nicknameNormalized: `aux${playerId}`, tagLine: "KR1", tagLineNormalized: "kr1" });
+    const initial = (await provider.load(database, [playerId])).ratings.get(playerId)?.v1;
+    assert.equal(initial?.balanceOverrideScore, 0);
+    assert.equal(initial?.recentSolo, null);
+    assert.deepEqual(initial?.missingSources, ["RECENT_SOLO", "BALANCE_OVERRIDE"]);
+    const mmrBefore = await database.select({ id: mmrManualAdjustments.id }).from(mmrManualAdjustments);
+    const original = command(superActor, "set");
+    const result = await repository.setPlayerOverride(original, 0, input, now);
+    assert.equal(result.revision, 1);
+    assert.equal((await repository.setPlayerOverride(original, 0, input, now)).replayed, true);
+    assert.equal((await database.select().from(auditEvents).where(and(eq(auditEvents.action, "TEAM_BALANCE_OVERRIDE_SET"), eq(auditEvents.targetId, playerId)))).length, 1);
+    const audit = (await database.select().from(auditEvents).where(and(eq(auditEvents.action, "TEAM_BALANCE_OVERRIDE_SET"), eq(auditEvents.targetId, playerId))))[0]!;
+    assert.equal(audit.afterJson?.score, 25);
+    assert.equal(audit.metadataJson?.affectsMmr, false);
+    await assert.rejects(repository.setPlayerOverride(command(adminActor, "admin"), 1, input, now), serviceError("FORBIDDEN"));
+    await assert.rejects(repository.setPlayerOverride(command(superActor, "stale"), 0, input, now), serviceError("PRECONDITION_FAILED"));
+    const changed = { ...input, score: 40 };
+    await assert.rejects(repository.setPlayerOverride(command(superActor, "set", 0, changed), 0, changed, now), serviceError("IDEMPOTENCY_MISMATCH"));
+    assert.deepEqual(await database.select({ id: mmrManualAdjustments.id }).from(mmrManualAdjustments), mmrBefore, "team override never creates an MMR adjustment");
+
+    const recentSolo = { games: 2, wins: 1, kda: 3, mainPosition: "MID", subPosition: "TOP", positionConfidence: 0.5, averageDamage: 18000, averageVisionScore: 20 };
+    await database.insert(riotAccountLinks).values({ id: linkId, playerId, ownerUserAccountId: ownerId, gameName: "AuxPlayer", tagLine: "KR1", normalizedKey: `aux${playerId.slice(0, 8)}#kr1`, protectedPuuid: "encrypted-test-placeholder", method: "RSO_VERIFIED", linkedAt: now });
+    await database.insert(riotSummaries).values({ playerId, linkId, gameName: "AuxPlayer", tagLine: "KR1", lastSyncedAt: now, recentSoloJson: recentSolo, recentSoloSyncedAt: now });
+    const fresh = (await provider.load(database, [playerId])).ratings.get(playerId)?.v1;
+    assert.deepEqual(fresh?.recentSolo, recentSolo);
+    assert.equal(fresh?.balanceOverrideScore, 25);
+    assert.deepEqual(fresh?.missingSources, []);
+    await database.update(riotSummaries).set({ recentSoloSyncedAt: new Date(now.getTime() - 24 * 3_600_000 - 1) }).where(eq(riotSummaries.playerId, playerId));
+    assert.equal((await provider.load(database, [playerId])).ratings.get(playerId)?.v1?.recentSolo, null);
+    await database.update(riotSummaries).set({ recentSoloSyncedAt: now, gameName: "OldIdentity" }).where(eq(riotSummaries.playerId, playerId));
+    assert.equal((await provider.load(database, [playerId])).ratings.get(playerId)?.v1?.recentSolo, null);
+    await database.update(riotSummaries).set({ gameName: "AuxPlayer" }).where(eq(riotSummaries.playerId, playerId));
+    await database.update(riotAccountLinks).set({ status: "DISCONNECTED", protectedPuuid: null, disconnectedAt: now }).where(eq(riotAccountLinks.id, linkId));
+    assert.equal((await provider.load(database, [playerId])).ratings.get(playerId)?.v1?.recentSolo, null);
+    await database.update(riotAccountLinks).set({ status: "CONNECTED", protectedPuuid: "new-encrypted-test-placeholder", disconnectedAt: null, linkedAt: new Date(now.getTime() + 1) }).where(eq(riotAccountLinks.id, linkId));
+    assert.equal((await provider.load(database, [playerId])).ratings.get(playerId)?.v1?.recentSolo, null, "relinking requires a summary refreshed after the new link began");
+    await assert.rejects(database.update(riotSummaries).set({ recentSoloJson: null }).where(eq(riotSummaries.playerId, playerId)), (error: unknown) => (error as { cause?: { constraint?: string } }).cause?.constraint === "riot_summaries_recent_solo_pair");
+    await assert.rejects(database.update(teamBalancePlayerOverrides).set({ score: 1001 }).where(eq(teamBalancePlayerOverrides.playerId, playerId)), (error: unknown) => (error as { cause?: { constraint?: string } }).cause?.constraint === "team_balance_override_score_range");
+    await database.update(authSessions).set({ totpVerifiedAt: null }).where(eq(authSessions.id, superSessionId));
+    await assert.rejects(repository.setPlayerOverride(original, 0, input, now), serviceError("SESSION_STALE"));
+    await database.update(authSessions).set({ totpVerifiedAt: now }).where(eq(authSessions.id, superSessionId));
+    await database.update(userAccounts).set({ authVersion: 1 }).where(eq(userAccounts.id, superId));
+    await assert.rejects(repository.setPlayerOverride(original, 0, input, now), serviceError("SESSION_STALE"));
+  } finally { await pool.end(); }
+});
 
 class MutableRatingProvider implements TeamBalanceRatingProvider {
   snapshot: TeamBalanceRatingSnapshot = { generation: null, ratings: new Map() };

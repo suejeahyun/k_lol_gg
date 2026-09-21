@@ -40,9 +40,10 @@ test("the reusable V4 text transport is one signed five-second request without b
 });
 
 test("the V1 strict phone installer uses the current private artifact and omits public-only provenance", async () => {
-  const [builder, installGuide] = await Promise.all([
+  const [builder, installGuide, publicArtifact] = await Promise.all([
     read("scripts/build-private-messengerbot-v1-strict.mjs"),
     read("integrations/messengerbot-r/MESSENGERBOT_R_INSTALL.md"),
+    read("integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js"),
   ]);
 
   assert.match(builder, /const executableMarker = "var KLOL_V1_GATEWAY =";/u);
@@ -51,7 +52,9 @@ test("the V1 strict phone installer uses the current private artifact and omits 
   assert.match(builder, /function isPartyMetadataActivationForm\(text\)/u);
   assert.match(builder, /if \(isRetiredScrimInput\(localText\)\)/u);
   assert.match(installGuide, /\.private\/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R\.js/u);
-  assert.match(installGuide, /KLOL_KAKAO_BOT_V40_R24_2026_09_20/u);
+  const botVersion = /var BOT_CODE_VERSION = "([A-Z0-9_]+)";/u.exec(publicArtifact)?.[1];
+  assert.ok(botVersion, "the public artifact declares the generated bot version");
+  assert.ok(installGuide.includes(botVersion), "the install guide names the actual generated version");
   assert.match(installGuide, /공개 검토·생성 기준, 설치 금지/u);
   assert.doesNotMatch(installGuide, /현재 설치본[\s\S]*R9_2026_09_13_MEMBER_COMMANDS/u);
 });

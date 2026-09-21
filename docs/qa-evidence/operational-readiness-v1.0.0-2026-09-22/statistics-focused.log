@@ -1,0 +1,24 @@
+Captured tool output from the focused local run on 2026-09-22.
+Command: node node_modules/tsx/dist/cli.mjs --test tests/statistics-projection-cron.test.ts tests/statistics-projection-service.test.ts tests/statistics-connection.test.ts
+Exit code: 0
+
+✔ statistics public queries accept only singular canonical allowlisted values (1.7816ms)
+✔ statistics recalculate command binds exact body, projection revision and idempotency identity (0.988ms)
+✔ bounded statistics drain stops on idle, failure and hard event limit (1.2931ms)
+✔ statistics cron rejects credentials, query overrides, wrong path and method before opening the database (17.6601ms)
+✔ authenticated empty queue is a no-op; a request never consumes more than ten events (1.9531ms)
+✔ time budget finishes the current event and stops before claiming another (0.7175ms)
+✔ failed event stops the batch, returns retryable status and exposes no event or raw error (0.4998ms)
+✔ database setup, claim and release failures remain retryable without disclosing internals (1.0932ms)
+✔ affected seasons dedupe and lock in canonical order for every S04 action scope (1.0973ms)
+✔ application passes old/new season rebuild scope to one atomic repository operation (0.2106ms)
+✔ application reports idle and releases a failed exact lease without touching READY data (0.2271ms)
+✔ statistics failure storage allowlists domain and SQLSTATE codes without copying raw errors (0.3004ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1777.246

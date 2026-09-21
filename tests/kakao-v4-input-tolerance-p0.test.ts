@@ -582,6 +582,30 @@ test(
         audits.map((event) => event.action).sort(),
         ["RECRUITING_FINISH_PARTY", "RECRUITING_SYNC_PARTY"],
       );
+
+      // Once no active party remains, the same scoped number may cancel its
+      // draft. A later repeated finish must not change either closed record.
+      const canceled = await execute(roomAService, {
+        installationId: roomAInstallation,
+        senderId: "sender-user-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        eventId: "event-p0-multiuser-db-draft-cancel-0001",
+        text: "12ㅉ",
+      });
+      assert.match(canceled.reply, /초안 취소 완료/u);
+      const canceledDraft = (await database.select().from(recruitParties).where(eq(recruitParties.id, draftDecoyId)))[0];
+      assert.equal(canceledDraft?.status, "CANCELED");
+      assert.equal(canceledDraft?.revision, 1);
+      const repeated = await execute(roomAService, {
+        installationId: roomAInstallation,
+        senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        eventId: "event-p0-multiuser-db-draft-cancel-0002",
+        text: "12ㅉ",
+      });
+      assert.match(repeated.reply, /이미 마감되거나 종료된 파티/u);
+      assert.equal((await database.select().from(recruitParties).where(eq(recruitParties.id, draftDecoyId)))[0]?.revision, 1);
+      assert.equal((await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]?.revision, 2);
+      const cancelAudits = await database.select().from(auditEvents).where(eq(auditEvents.targetId, draftDecoyId));
+      assert.deepEqual(cancelAudits.map((event) => event.action), ["RECRUITING_FINISH_PARTY"]);
     } finally {
       await pool.end();
     }

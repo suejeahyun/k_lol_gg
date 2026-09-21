@@ -225,14 +225,18 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
         inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
         lt(scrimRecruits.recruitDate, currentOperatingDate),
       ));
+    const rosterBeforeClose = await database.select().from(seasonApplications).where(eq(seasonApplications.seasonId, inhouseSeasonId)).orderBy(seasonApplications.id);
+    const pendingBeforeClose = await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.seasonId, inhouseSeasonId)).orderBy(seasonKakaoPendingApplications.id);
     const closeInput = { jobName: "kakao-daily-close" as const, nonce: "daily_close_1234567890", requestHashHex: "cd".repeat(32), requestId: randomUUID(), idleHours: 12, maximumClosures: 100 };
     const close = await repository.runSignedKakaoDailyClose(closeInput);
     assert.equal(close.counts.partiesClosed, eligiblePartiesBeforeClose.length);
     assert.equal(close.counts.partyDraftsReset, eligibleDraftsBeforeClose.length);
     assert.equal(close.counts.scrimsClosed, eligibleScrimsBeforeClose.length);
     assert.equal(close.counts.inhouseRoundsClosed, 1);
-    assert.equal(close.counts.inhouseApplicationsCancelled, 1);
-    assert.equal(close.counts.inhousePendingCancelled, 1);
+    assert.equal(close.counts.inhouseApplicationsCancelled, 0);
+    assert.equal(close.counts.inhousePendingCancelled, 0);
+    assert.deepEqual(await database.select().from(seasonApplications).where(eq(seasonApplications.seasonId, inhouseSeasonId)).orderBy(seasonApplications.id), rosterBeforeClose);
+    assert.deepEqual(await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.seasonId, inhouseSeasonId)).orderBy(seasonKakaoPendingApplications.id), pendingBeforeClose);
     const closedParty = (await database.select().from(recruitParties).where(eq(recruitParties.id, idlePartyId)))[0];
     assert.equal(closedParty?.status, "FINISHED");
     assert.equal(closedParty?.revision, 1);
@@ -244,7 +248,7 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
       assert.equal(scrim?.revision, 1);
     }
     assert.equal((await database.select().from(scrimRecruits).where(eq(scrimRecruits.id, currentScrimId)))[0]?.status, "RECRUITING");
-    assert.equal((await database.select().from(seasonInhouseRounds).where(eq(seasonInhouseRounds.id, staleInhouseRoundId)))[0]?.status, "CANCELED");
+    assert.equal((await database.select().from(seasonInhouseRounds).where(eq(seasonInhouseRounds.id, staleInhouseRoundId)))[0]?.status, "CLOSED");
     assert.equal((await database.select().from(seasonInhouseRounds).where(eq(seasonInhouseRounds.id, currentInhouseRoundId)))[0]?.status, "DRAFT");
     const closedInhouseApplications = await database.select().from(seasonApplications).where(and(
       eq(seasonApplications.seasonId, inhouseSeasonId),
@@ -252,9 +256,9 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
     ));
     assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[0])?.status, "APPLIED", "SITE application is preserved");
     assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[1])?.status, "CONFIRMED", "reviewed Kakao decision is preserved");
-    assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[2])?.status, "CANCELLED");
+    assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[2])?.status, "APPLIED");
     assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[3])?.status, "APPLIED", "another room is preserved");
-    assert.equal((await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.id, pendingInhouseId)))[0]?.status, "CANCELLED");
+    assert.equal((await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.id, pendingInhouseId)))[0]?.status, "ACTIVE");
     assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, idlePartyId))).length, 1);
     assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, staleDraftId))).length, 1);
     for (const scrimId of staleScrimIds) {

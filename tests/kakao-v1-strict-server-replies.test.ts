@@ -144,7 +144,7 @@ function harness(parties: readonly Party[] = [], scrims: KakaoOpenChatStatusDto[
   return { dispatcher: new KakaoV4CommandDispatcher({ recruiting, assistant }), handled };
 }
 
-test("strict V1 and ordinary V4 reserve full copyable drafts and return one current form after saving", async () => {
+test("strict V1 and ordinary V4 reserve copyable drafts and return the overview after saving", async () => {
   const createCommand = {
     domain: "PARTY" as const,
     action: "CREATE" as const,
@@ -196,13 +196,10 @@ test("strict V1 and ordinary V4 reserve full copyable drafts and return one curr
   const strictSync = await strictState.dispatcher.dispatch(context(true, "전체 양식", 3), syncCommand);
   const normalSync = await normalState.dispatcher.dispatch(context(false, "전체 양식", 4), syncCommand);
   for (const result of [strictSync, normalSync]) {
-    assert.match(result.legacyReply, /^신청 내용을 저장했어요\.\n\n\[K-LOL\.GG 구인상세 #12\]/u);
-    assert.match(result.legacyReply, /^#12 · 5인 파티 · 1\/5$/mu);
-    assert.match(result.legacyReply, /^》시작시간 : 09:26$/mu);
-    assert.match(result.legacyReply, /^1\. 재현\n2\.\n3\.\n4\.\n5\.\n예비 1\. 민서\n예비 2\./mu);
-    assert.match(result.legacyReply, /저장기준 : 2026-09-11 \/ P[a-f0-9]{32}-R3/u);
-    assert.doesNotMatch(result.legacyReply, /파티 #12 반영|구인구직 현황/u);
-    assert.equal(result.legacyReply.match(/\[K-LOL\.GG 구인상세/gu)?.length, 1);
+    assert.match(result.legacyReply, /^✅ 파티수정 완료 · #12\n\n📋 현재 구인/u);
+    assert.match(result.legacyReply, /\[파티 #12\] 5인 파티 · 09:26 · 미정 · 1\/5명 · 예비 1명/u);
+    assert.match(result.legacyReply, /└ 구인상세 12/u);
+    assert.doesNotMatch(result.legacyReply, /재현|민서|저장기준|양식코드/u);
   }
 });
 
@@ -231,7 +228,7 @@ test("strict V1 detail is the full copyable form without repeated command guidan
   ].join("\n"));
 });
 
-test("strict V1 status renders recruiting, waiting, playing, and large-party groups", async () => {
+test("party overview keeps full, started and large parties in numeric order", async () => {
   const one = (name: string, slotNo: number) => ({ name, position: null, slotNo, substitute: false } as const);
   const future = new Date(Date.now() + 86_400_000).toISOString();
   const parties = [
@@ -241,13 +238,9 @@ test("strict V1 status renders recruiting, waiting, playing, and large-party gro
     party({ recruitNumber: 4, maximumMembers: 8, members: [one("소영", 1)], title: "기타게임 하실분!", type: "OTHER_GAME", scheduledStartAt: future }),
   ];
   const result = await harness(parties).dispatcher.dispatch(context(true, "구인현황"), { domain: "PARTY", action: "STATUS" });
-  assert.match(result.legacyReply, /\[구인중\][\s\S]*#1 · 5인 파티/u);
-  assert.match(result.legacyReply, /\[대기중\][\s\S]*#2 · 2인 파티/u);
-  assert.match(result.legacyReply, /\[진행중\][\s\S]*#3 · 일반/u);
-  assert.match(result.legacyReply, /\[대형파티\][\s\S]*#4 · 기타게임/u);
-  assert.ok(result.legacyReply.indexOf("[구인중]") < result.legacyReply.indexOf("[대기중]"));
-  assert.ok(result.legacyReply.indexOf("[대기중]") < result.legacyReply.indexOf("[진행중]"));
-  assert.ok(result.legacyReply.indexOf("[진행중]") < result.legacyReply.indexOf("[대형파티]"));
+  assert.deepEqual([...result.legacyReply.matchAll(/\[파티 #(\d+)\]/gu)].map((match) => Number(match[1])), [1, 2, 3, 4]);
+  assert.match(result.legacyReply, /일반 · 모바 · 미정/u);
+  assert.doesNotMatch(result.legacyReply, /주최자|참여:|구인중|대기중|진행중|대형파티/u);
 });
 
 test("strict V1 missing detail uses the canonical not-found reply", async () => {

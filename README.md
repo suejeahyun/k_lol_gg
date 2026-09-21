@@ -4,17 +4,19 @@ V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 
 
 ## 현재 범위
 
-- 공개·계정·관리자 영역의 App Router 화면 105개와 API route 198개
+- 공개·계정·관리자 영역의 App Router 화면과 API
 - 가입·로그인·TOTP, 플레이어·시즌·경기·통계·MMR·팀 도구·대회·징계·미디어·운영 기능
-- PostgreSQL 18과 Drizzle 기준 103개 테이블, 전진 migration의 현재 head는 [migration journal](drizzle/meta/_journal.json) 참조
+- PostgreSQL 18과 Drizzle 스키마, 전진 migration의 현재 head는 [migration journal](drizzle/meta/_journal.json) 참조
 - Riot·Kakao·Blob 경계를 운영 자격증명과 분리해 검증할 수 있는 adapter·보안 계약
 - V1 호환 경로와 Kakao V4 명령/양식 흐름, PWA와 반응형 사용자·관리자 셸
 
-2026-09-11 운영 검증 기준 커밋 `8dcbee42`의 Vercel Production 배포 및 health/DB 연결을 확인했습니다. 다만 Kakao R5 휴대폰 산출물은 아직 실제 MessengerBot R에 설치하지 않았고, 외부 연동별 실기기·실데이터 검증 범위도 서로 다릅니다. 정확한 소스·서버·DB·휴대폰 상태는 `docs/STATUS.md`에서 구분합니다.
+확인된 기존 운영 기준은 2026-09-22 복사 양식 안정화 `1.0.1`, source `b7798363`, Vercel `dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ`, DB `0041`입니다. [해당 운영 QA](docs/qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/README.md)는 당시 배포 근거이며, 이후 소스 패치의 배포 근거와 구분합니다.
+
+2026-09-22 후속 운영 준비 소스에는 파티 전체 목록·직접 상세·초안 취소, 통계 자동 갱신 경로, 사이트 충원 카카오 알림 큐·회원 연결 미확인 필터, 최근 솔로 경기·관리자 밸런스 보정 데이터 연결이 추가되어 있습니다. **이번 후속 소스의 통합 검증과 운영 반영 상태는 별도 확인 대상**입니다. 소스·서버·DB·휴대폰 상태는 [STATUS](docs/STATUS.md)를 확인합니다.
+
+카카오 편집·보호 정책은 승인된 [파티 ADR0011](docs/architecture/0011-kakao-party-editable-copy-flow.md)과 [내전 ADR0012](docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따릅니다. 기존 R24 서버 호환과 실제 기기 설치는 구분하며, 사용자 확인 앱 버전은 MessengerBot R **0.7.29a**입니다. 사이트 충원 알림용 [별도 companion](integrations/messengerbot-r/site-notices/README.md)은 기본 OFF이며 대상 세션 등록·실기기 확인 후 활성화합니다.
 
 ## 로컬 실행
-
-2026-09-22 복사 양식 안정화 1.0.1과 내전 DB 변경 0041을 운영에 적용했습니다. 번호형 파티 편집·구형 내전 호환·오류 안내·공개 도움말을 보완했으며, 운영 확인 21/21과 배포 소스·백업 근거는 [운영 QA](docs/qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/README.md)에서 확인할 수 있습니다.
 
 ```bash
 npm install

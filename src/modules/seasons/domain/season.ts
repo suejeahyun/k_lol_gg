@@ -8,7 +8,14 @@ export const SEASON_APPLICATION_STATUSES = [
 ] as const;
 export const SEASON_APPLICATION_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 export const SEASON_APPLICATION_SOURCES = ["SITE", "KAKAO"] as const;
-export const SEASON_KAKAO_PENDING_MATCH_STATES = ["MATCHED_RESERVE", "UNMATCHED", "AMBIGUOUS"] as const;
+// UNVERIFIED is the public review state backed by linkReason, not a new DB enum.
+export const SEASON_KAKAO_PENDING_MATCH_STATES = ["MATCHED_RESERVE", "UNMATCHED", "AMBIGUOUS", "UNVERIFIED"] as const;
+export const SEASON_KAKAO_PENDING_MATCH_LABELS = {
+  MATCHED_RESERVE: "예비 자동 일치",
+  UNMATCHED: "일치 후보 없음",
+  AMBIGUOUS: "동명이인 확인 필요",
+  UNVERIFIED: "후보 1명 · 회원 연결 미확인",
+} as const;
 export const SEASON_KAKAO_PENDING_STATUSES = ["ACTIVE", "CANCELLED", "RESOLVED"] as const;
 export const SEASON_COMMAND_RECEIPT_TTL_MS = 24 * 60 * 60 * 1_000;
 

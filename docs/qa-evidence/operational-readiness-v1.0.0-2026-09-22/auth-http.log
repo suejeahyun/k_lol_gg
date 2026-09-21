@@ -1,0 +1,5 @@
+
+> klol-gg-v2@0.1.0 verify:auth-http
+> node scripts/verify-auth-http.mjs
+
+Auth HTTP verification passed: guards, limits, password+TOTP, cookie, roles, headers, logout, production fixture lockout.

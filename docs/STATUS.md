@@ -1,5 +1,22 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-22 운영 준비 후속 소스 — 통합 검증·새 운영 반영 확인 전
+
+이 절은 현재 후속 소스의 상태다. 아래 날짜별 릴리스 기록은 해당 시점의 사실로 보존하며, 과거의 `현재`·`최신`·`미배포` 문구를 이번 소스의 상태로 읽지 않는다. 새 배포 ID·소스 SHA·health 근거를 확보하기 전 기존 운영 기준은 바로 다음 절의 `kakao-copy-reliability@1.0.1` / source `b7798363` / DB0041이다. 저장소 migration head는 [journal](../drizzle/meta/_journal.json)로 확인하며 운영 DB head와 혼동하지 않는다.
+
+| 범위 | 현재 소스에서 확인한 변경 | 남은 확인 |
+|---|---|---|
+| 파티 목록·상세·초안 | 20건 목록 의존 제거, scope·운영일·번호 직접 상세, 초안 재조회·취소, 저장 뒤 목록, 새 번호형 빈 양식 | 격리 DB·통합 검사와 새 배포, 실제 폰 복붙 왕복 |
+| 경기 변경 후 통계 | 인증된 통계 projection cron·5분 예약 설정, 소비·실패 상태 처리 보완 | 운영 scheduler 실제 실행과 재처리 결과 |
+| 사이트 충원 안내 | 9→10 transaction outbox, 서명 poll/ack, scope·target 분리, 재시도·중복 억제, daily-close 보관정리 | **기본 OFF**. migration·새 배포 및 정확 대상 세션 등록·실수신 |
+| 회원 연결 | 후보 1명 미확인을 일반 미일치와 구분하는 `UNVERIFIED` 표시·필터 | 통합 DB·화면 회귀 |
+| 팀 밸런스 입력 | 최근 솔로 경기 요약·갱신시각, 관리자 보정값을 provider에 연결 | migration, 실제 Riot 데이터·권한 경계와 통합 회귀 |
+
+- 앱 버전 **MessengerBot R 0.7.29a**는 사용자 확인이다. 실제 설치된 일반 봇 JS 버전·해시와 `/봇버전` 응답, 물리 카카오방 송수신은 아직 확인하지 않았다. R24/R25 서버 호환을 실제 휴대폰 설치 확인으로 대신하지 않는다.
+- 사이트 알림 companion은 최신 channelId API를 사용하지 않는다. 일회용 등록 메시지의 replier 세션만 쓰며 재시작 후 재등록한다. SDK 호출 수락·실수신은 별개이고, 불명확한 전송은 자동 재발송하지 않는다.
+- 이번 소스 범위의 전체 QA·백업·운영 배포 결과는 총괄 통합 증거에 연결한다. [파티 focused QA](./qa-evidence/kakao-party-overview-v1.0.0-2026-09-22/README.md), [사이트 알림 focused QA](./qa-evidence/site-notices-v1.0.0-2026-09-22/README.md), [companion 설치·복구](../integrations/messengerbot-r/site-notices/README.md).
+- 실제 Riot 계정 연동, Blob 업로드·읽기·삭제, 외부 예약 실행, 휴대폰·모바일 사용성은 합성 검사와 별도로 판정한다. 기존 전체 화면 QA를 이번 모든 변경의 재검증으로 확대 해석하지 않는다.
+
 ## 2026-09-22 복사 양식 안정화 1.0.1 — 운영 적용
 
 - source `b7798363f9b0caee847a654afe2dde07afbcb2f9`, tag `kakao-copy-reliability-v1.0.1`, Vercel `dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ` READY·production. 00:58 KST 운영 alias·소스 metadata 확인.
@@ -359,7 +376,7 @@
 - Kakao 구인·내전 입력 복구: `v1.0.1` 사이트·서버 운영 배포와 health 확인 완료
 - 휴대폰 Kakao V1 strict R8: `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
 
-## 확인된 상태
+## 2026-09-12 기록 당시 확인된 상태
 
 - 현재 소스에는 공개·계정·관리자 영역을 포함한 105개 `page.tsx`가 있다.
 - 새 Riot ID와 신규 플레이어를 함께 만드는 일반 사용자 가입은 같은 transaction에서 `APPROVED`·`ACTIVE`로 자동 승인된다. 기존 플레이어와 일치하는 Riot ID는 `PENDING` claim 수동 검토를 유지한다.
@@ -390,7 +407,7 @@
 
 2026-09-07 화면 원본과 모음 이미지는 [`qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md`](./qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md)에 있다. 현재 V1 팀 밸런스·결과 공유 운영 릴리스는 [`qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md`](./qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md), 최신 Kakao R8·플레이어 편집 QA 운영 릴리스는 [`qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/README.md`](./qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/README.md), 프로젝트 규칙·ERD·UI 재사용 검증은 [`qa-evidence/project-governance-erd-reuse-2026-09-11/README.md`](./qa-evidence/project-governance-erd-reuse-2026-09-11/README.md)에 있다.
 
-## 구현된 범위
+## 2026-09-12 기록 당시 구현된 범위
 
 - 밝고 가벼운 Community Breeze 디자인, 여성 챔피언 중심 브랜드 비주얼, 반응형 사용자/관리자 셸
 - 가입 자동승인·로그인·TOTP·계정 수동 승인/복구/역할/플레이어 claim과 본인 Riot ID·티어 관리
@@ -402,7 +419,7 @@
 - PWA 설치와 V1 호환 redirect 진입점
 - 외부 미디어 장애 시 깨진 이미지 대신 명시적인 복구 안내, YouTube 클릭 후 로드
 
-## 운영 상태와 남은 조건
+## 2026-09-12 기록 당시 운영 상태와 남은 조건
 
 최신 Kakao 기능 commit과 tag, Vercel deployment, 운영 별칭 health와 운영 DB head를 확인했다. 이 범위에서 사이트·서버 운영 반영을 확인했다. 아래 항목은 별도의 운영 권한·실기기·실데이터 근거가 있어야 완료로 판정한다.
 
@@ -419,7 +436,7 @@
 - 운영 도메인 CSP/WAF/관측/알림/cleanup scheduler 확인
 - V1 최근 솔로 20경기 상세 데이터와 관리자 밸런스 수동 보정 원천 데이터는 V2에 없어 명시적 0/미제공 경로 사용
 
-## 근거 있는 다음 패치 추천
+## 2026-09-12 기록 당시 다음 패치 추천
 
 1. Vercel Production에 별도 `CRON_SECRET`을 설정하고 기능 커밋을 배포한 뒤 alias health와 오전 6시 예약 호출을 기록한다.
 2. 실제 휴대폰에서 R8 private 전체 설치본 hash와 `/봇버전`을 대조하고 두 Kakao 방 canary를 기록한다.

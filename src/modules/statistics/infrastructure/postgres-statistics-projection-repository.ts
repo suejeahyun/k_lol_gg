@@ -265,6 +265,8 @@ export class PostgresStatisticsProjectionRepository implements StatisticsProject
 
   async claimNextMatchChanged(now: Date): Promise<ClaimedMatchChangedEvent | null> {
     return this.database.transaction(async (transaction) => {
+      await transaction.execute(sql`SET LOCAL statement_timeout = '10s'`);
+      await transaction.execute(sql`SET LOCAL lock_timeout = '2s'`);
       const result = await transaction.execute(sql<ClaimRow>`
         WITH candidate AS (
           SELECT id
@@ -327,6 +329,8 @@ export class PostgresStatisticsProjectionRepository implements StatisticsProject
     now: Date;
   }>): Promise<MatchChangedApplyResult> {
     return this.database.transaction(async (transaction) => {
+      await transaction.execute(sql`SET LOCAL statement_timeout = '10s'`);
+      await transaction.execute(sql`SET LOCAL lock_timeout = '2s'`);
       const [receipt] = await transaction
         .select()
         .from(matchProjectionReceipts)
@@ -468,6 +472,7 @@ export class PostgresStatisticsProjectionRepository implements StatisticsProject
         lockedAt: null,
         deliveredAt: null,
         lastErrorCode: input.failureCode.slice(0, 64),
+        availableAt: sql`${input.now}::timestamptz + make_interval(secs => least(900, 30 * power(2, least(greatest(${matchRecalculationOutbox.attemptCount} - 1, 0), 5)))::double precision)`,
         updatedAt: input.now,
       })
       .where(and(

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray } from "drizzle-orm";
 
 import {
   MMR_POSITIONS,
@@ -10,8 +10,12 @@ import {
   mmrPlayerProfiles,
   mmrProjectionStates,
 } from "@/platform/db/schema/mmr";
-import { matchParticipants } from "@/platform/db/schema/matches";
+import { matchGames, matchParticipants, matchSeries } from "@/platform/db/schema/matches";
 import { players } from "@/platform/db/schema/registry";
+import { riotAccountLinks, riotSummaries } from "@/platform/db/schema/riot";
+import { teamBalancePlayerOverrides } from "@/platform/db/schema/team-tools";
+import { PUBLIC_RIOT_SNAPSHOT_STALE_AFTER_MS } from "@/modules/riot/application/riot-query";
+import { parseRecentSoloSummary } from "@/modules/riot/domain/recent-solo-summary";
 import { seasons } from "@/platform/db/schema/seasons";
 import {
   playerPositionStats,
@@ -34,6 +38,7 @@ function confidence(games: number) {
 }
 
 export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvider {
+  constructor(private readonly now: () => Date = () => new Date()) {}
   private async attachV1Inputs(
     executor: Parameters<TeamBalanceRatingProvider["load"]>[0],
     playerIds: readonly string[],
@@ -49,7 +54,7 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
         .orderBy(desc(seasonProjectionStates.calculatedAt), desc(seasons.createdAt))
         .limit(1)
     )[0];
-    const [registryRows, seasonRows, positionRows] = await Promise.all([
+    const [registryRows, seasonRows, positionRows, recentRows, overrideRows] = await Promise.all([
       executor
         .select({ id: players.id, legacyId: players.legacyId, currentTier: players.currentTier, peakTier: players.peakTier })
         .from(players)
@@ -67,11 +72,24 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
       executor
         .select({ playerId: matchParticipants.playerId, position: matchParticipants.position, games: count() })
         .from(matchParticipants)
-        .where(inArray(matchParticipants.playerId, [...playerIds]))
+        .innerJoin(matchGames, eq(matchGames.id, matchParticipants.gameId))
+        .innerJoin(matchSeries, eq(matchSeries.id, matchGames.seriesId))
+        .where(and(inArray(matchParticipants.playerId, [...playerIds]), eq(matchSeries.status, "PUBLISHED")))
         .groupBy(matchParticipants.playerId, matchParticipants.position),
+      executor.select({ playerId: riotSummaries.playerId, summary: riotSummaries.recentSoloJson, syncedAt: riotSummaries.recentSoloSyncedAt })
+        .from(riotSummaries).innerJoin(riotAccountLinks, and(
+          eq(riotAccountLinks.id, riotSummaries.linkId), eq(riotAccountLinks.playerId, riotSummaries.playerId),
+          eq(riotAccountLinks.status, "CONNECTED"), eq(riotAccountLinks.gameName, riotSummaries.gameName), eq(riotAccountLinks.tagLine, riotSummaries.tagLine),
+          gte(riotSummaries.recentSoloSyncedAt, riotAccountLinks.linkedAt),
+        )).where(inArray(riotSummaries.playerId, [...playerIds])),
+      executor.select({ playerId: teamBalancePlayerOverrides.playerId, score: teamBalancePlayerOverrides.score })
+        .from(teamBalancePlayerOverrides).where(inArray(teamBalancePlayerOverrides.playerId, [...playerIds])),
     ]);
     const registryById = new Map(registryRows.map((row) => [row.id, row]));
     const seasonById = new Map(seasonRows.map((row) => [row.playerId, row]));
+    const recentById = new Map(recentRows.map((row) => [row.playerId, row]));
+    const overrideById = new Map(overrideRows.map((row) => [row.playerId, row]));
+    const now = this.now().getTime();
     const internalPositionsById = new Map<string, Partial<Record<TeamBalancePosition, number>>>();
     const internalGamesById = new Map<string, number>();
     for (const row of positionRows) {
@@ -86,6 +104,10 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
       const registry = registryById.get(playerId);
       const season = seasonById.get(playerId);
       const v1Mmr = v1MmrRatings.get(playerId);
+      const recent = recentById.get(playerId);
+      const age = recent?.syncedAt ? now - recent.syncedAt.getTime() : Infinity;
+      const recentSolo = age >= 0 && age <= PUBLIC_RIOT_SNAPSHOT_STALE_AFTER_MS ? parseRecentSoloSummary(recent?.summary) : null;
+      const override = overrideById.get(playerId);
       ratings.set(playerId, {
         overall: base?.overall ?? null,
         confidence: base?.confidence ?? null,
@@ -98,8 +120,8 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
           season: season ? { totalGames: season.totalGames, wins: season.wins, mvpCount: season.mvpCount } : null,
           internalGames: internalGamesById.get(playerId) ?? 0,
           internalPositionGames: internalPositionsById.get(playerId) ?? {},
-          recentSolo: null,
-          balanceOverrideScore: 0,
+          recentSolo,
+          balanceOverrideScore: override?.score ?? 0,
           mmr: {
             overall: v1Mmr?.overall ?? 50,
             confidence: v1Mmr?.confidence ?? 0,
@@ -108,7 +130,7 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
               v1Mmr?.positions?.[position]?.score ?? v1Mmr?.overall ?? 50,
             ])),
           },
-          missingSources: ["RECENT_SOLO", "BALANCE_OVERRIDE"],
+          missingSources: [...(recentSolo ? [] : ["RECENT_SOLO" as const]), ...(override ? [] : ["BALANCE_OVERRIDE" as const])],
         },
       });
     }

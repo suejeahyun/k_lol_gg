@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-09-21T21:36:30.4853521Z",
+  "enabled": false,
+  "targetConfigured": true,
+  "phoneInstalled": false,
+  "changes": [
+    {
+      "key": "KAKAO_SITE_NOTICE_ENABLED",
+      "action": "CREATED",
+      "id": "jjJ5D0xASCez04SU"
+    },
+    {
+      "key": "KAKAO_SITE_NOTICE_TARGET_HASH",
+      "action": "CREATED",
+      "id": "AuwEWj0QKc2HQloF"
+    }
+  ]
+}

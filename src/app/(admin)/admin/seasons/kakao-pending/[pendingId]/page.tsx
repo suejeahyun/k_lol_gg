@@ -4,6 +4,7 @@ import { Database, UserRoundSearch } from "lucide-react";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseCandidateQuery } from "@/modules/seasons/infrastructure/admin-kakao-pending-query";
 import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-season-data";
+import { SEASON_KAKAO_PENDING_MATCH_LABELS } from "@/modules/seasons/domain/season";
 
 import { PendingApplicationActions } from "../pending-actions";
 import styles from "../pending.module.css";
@@ -30,7 +31,7 @@ export default async function KakaoPendingApplicationDetailPage({ params, search
     <header className={styles.header}><div><span>KAKAO REVIEW DETAIL</span><h1>카카오 접수·회원 연결</h1><p>이름으로 접수된 신청입니다. 제공된 정보와 활성 플레이어를 직접 대조한 뒤 연결합니다.</p></div><Link href="/admin/seasons/kakao-pending">목록으로 돌아가기</Link></header>
     {result.state !== "ready" ? <section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Database aria-hidden="true" /><h2>보류 신청 상세를 불러오지 못했습니다.</h2></section> : <section className={styles.detailGrid}>
       <article className={styles.panel}><div className={styles.panelHeading}><div><span>SUPPLIED DATA</span><h2>{result.data.application.suppliedName}</h2></div><strong>{result.data.application.status}</strong></div>
-        <dl className={styles.detailList}><div><dt>제공 Riot ID</dt><dd>{result.data.application.suppliedRiotId ?? "미제공"}</dd></div><div><dt>시즌</dt><dd>{result.data.application.seasonName}</dd></div><div><dt>신청 단위</dt><dd>{result.data.application.applyDate} · {result.data.application.recruitNo}회차 · 슬롯 {result.data.application.slotNo}</dd></div><div><dt>라인</dt><dd>{result.data.application.mainPosition} / {result.data.application.subPositions.join(" · ") || "부라인 없음"}</dd></div><div><dt>자동 판정</dt><dd>{result.data.application.matchState}{result.data.application.matchedPlayer ? ` · ${result.data.application.matchedPlayer.displayName}` : ""}</dd></div><div><dt>revision</dt><dd>{result.data.application.revision}</dd></div></dl>
+        <dl className={styles.detailList}><div><dt>제공 Riot ID</dt><dd>{result.data.application.suppliedRiotId ?? "미제공"}</dd></div><div><dt>시즌</dt><dd>{result.data.application.seasonName}</dd></div><div><dt>신청 단위</dt><dd>{result.data.application.applyDate} · {result.data.application.recruitNo}회차 · 슬롯 {result.data.application.slotNo}</dd></div><div><dt>라인</dt><dd>{result.data.application.mainPosition} / {result.data.application.subPositions.join(" · ") || "부라인 없음"}</dd></div><div><dt>자동 판정</dt><dd>{SEASON_KAKAO_PENDING_MATCH_LABELS[result.data.application.matchState]}{result.data.application.matchedPlayer ? ` · ${result.data.application.matchedPlayer.displayName}` : ""}</dd></div><div><dt>revision</dt><dd>{result.data.application.revision}</dd></div></dl>
       </article>
       <article className={styles.panel}><div className={styles.panelHeading}><div><span>PLAYER MATCH</span><h2>활성 플레이어 선택</h2></div><UserRoundSearch aria-hidden="true" /></div>
         <form className={styles.candidateSearch} method="get"><label>회원명·닉네임·Riot ID<input name="q" maxLength={80} defaultValue={candidateQuery} /></label><button type="submit">후보 검색</button></form>

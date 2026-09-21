@@ -1,0 +1,31 @@
+✔ approved owner direct link/unlink is transactional, idempotent, and never leaks PUUID (5.9208ms)
+✔ direct and RSO links must match the player's canonical registry Riot ID (3.6403ms)
+✔ feature flag fails closed and outbox failure rolls link, audit, and receipt back together (1.0969ms)
+✔ RSO callback is internal-return, expiring, one-time and exchange-idempotent across response replay (1.7803ms)
+✔ only SUPER_ADMIN can bulk/sync-all while owner is restricted to the owned link (1.5644ms)
+✔ SUPER bulk-link derives registry Riot IDs and atomically records exact replay (1.6205ms)
+✔ bulk-link rolls every successful link back when durable event recording fails (0.5569ms)
+✔ sync enforces cooldown, Retry-After, stale lease recovery and partial completion (2.2356ms)
+✔ recent solo summary persists only when complete; missing data preserves rank and 429 retains retry (2.594ms)
+✔ PUUID encryption is authenticated, opaque and rotation-ready (1.8485ms)
+✔ Riot gateway resolves Riot ID and reads the SOLO queue through bounded official endpoints (15.6763ms)
+✔ Riot gateway classifies 429, 404, 5xx and malformed responses without exposing credentials (0.9047ms)
+✔ production runtime configuration is all-or-nothing and binds the exact callback (0.8722ms)
+✔ RSO state is HMAC-bound and authorization URL never includes the client secret (1.6354ms)
+✔ 0020 adds only the protected exchange cache and signed sync consumer route (1.7624ms)
+✔ recent solo uses queue 420, 20 matches, at most two concurrent requests and a summary-only result (157.9423ms)
+✔ empty history and explicit remakes are known zero samples while malformed or wrong-scope details are unavailable (1.1088ms)
+✔ rate limiting stops subsequent chunks and propagates bounded Retry-After (0.6605ms)
+✔ total time, response size, unsafe IDs and duplicate IDs are bounded before further provider reads (1.079ms)
+✔ stored recent-solo summaries reject extra identity data, invalid counts and invalid numeric values (0.29ms)
+✔ team override HTTP binds origin, scope, revision and idempotency; response is private and replayable (22.3612ms)
+✔ override route and Korean control retain ADMIN read, SUPER mutation and optimistic concurrency (7.5115ms)
+✔ team-only overrides retain the existing -1000..1000 integer contract without touching MMR inputs (2.53ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 687.5694

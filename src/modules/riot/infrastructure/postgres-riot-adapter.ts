@@ -385,6 +385,7 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
             wins: projection.wins,
             losses: projection.losses,
             lastSyncedAt: projection.syncedAt,
+            ...(projection.recentSolo ? { recentSoloJson: projection.recentSolo, recentSoloSyncedAt: projection.syncedAt } : {}),
           }).onConflictDoUpdate({ target: riotSummaries.playerId, set: {
             linkId: link.id,
             gameName: projection.gameName,
@@ -395,6 +396,10 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
             wins: projection.wins,
             losses: projection.losses,
             lastSyncedAt: projection.syncedAt,
+            ...(projection.recentSolo ? { recentSoloJson: projection.recentSolo, recentSoloSyncedAt: projection.syncedAt } : {
+              recentSoloJson: sql`CASE WHEN ${riotSummaries.linkId} = ${link.id} AND ${riotSummaries.gameName} = ${projection.gameName} AND ${riotSummaries.tagLine} = ${projection.tagLine} THEN ${riotSummaries.recentSoloJson} ELSE NULL END`,
+              recentSoloSyncedAt: sql`CASE WHEN ${riotSummaries.linkId} = ${link.id} AND ${riotSummaries.gameName} = ${projection.gameName} AND ${riotSummaries.tagLine} = ${projection.tagLine} THEN ${riotSummaries.recentSoloSyncedAt} ELSE NULL END`,
+            }),
             updatedAt: new Date(),
           } });
         },

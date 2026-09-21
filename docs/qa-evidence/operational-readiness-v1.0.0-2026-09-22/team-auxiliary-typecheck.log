@@ -1,0 +1,1 @@
+src/modules/team-tools/infrastructure/postgres-team-balance-rating-provider.ts(81,11): error TS2304: Cannot find name 'sql'.

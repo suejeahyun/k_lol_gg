@@ -132,6 +132,7 @@ export type RiotProjectionUpdate = Readonly<{
   wins: number | null;
   losses: number | null;
   syncedAt: Date;
+  recentSolo?: import("../domain/recent-solo-summary").RiotRecentSoloSummary;
 }>;
 
 export interface RiotRepository {
@@ -218,6 +219,10 @@ export interface RiotGatewayPort {
   fetchRank(input: Readonly<{ puuid: string }>): Promise<
     | Readonly<{ outcome: Extract<RiotSyncOutcome, { kind: "SUCCESS" }>; snapshot: RiotRankSnapshot }>
     | Readonly<{ outcome: Exclude<RiotSyncOutcome, { kind: "SUCCESS" }> }>
+  >;
+  fetchRecentSolo?(input: Readonly<{ puuid: string }>): Promise<
+    | Readonly<{ kind: "SUCCESS"; summary: import("../domain/recent-solo-summary").RiotRecentSoloSummary }>
+    | Readonly<{ kind: "UNAVAILABLE"; retryAfterSeconds?: number }>
   >;
 }
 

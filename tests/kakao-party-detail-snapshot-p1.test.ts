@@ -54,7 +54,7 @@ test("R24 compact party form keeps the complete saved-result envelope copyable w
   assert.match(detail, /^\[파티 #12\] 5인 파티 · 1\/5명$/mu);
   assert.match(detail, /양식코드: ABCDE-23456/u);
   assert.doesNotMatch(detail, /저장기준|운영일|주최자/u);
-  assert.ok(detail.indexOf("양식코드:") > detail.indexOf("예비 2."));
+  assert.ok(detail.indexOf("양식코드:") < detail.indexOf("시작 시간 :"));
 
   const edited = `신청 저장: 기존\n\n${detail.replace("2.\n", "2. 민규\n")}`;
   const parsed = parsePartyForm(edited);
@@ -77,7 +77,8 @@ test("R24 fresh party templates need only a name and retain unknown time explici
   ] as const) {
     const template = v1StrictPartyTemplate({ recruitNumber: 12, recruitDate: "2026-09-11", id: "party-12", revision: 0, partyType, title, maximumMembers, formCode: "ABCDE-23456" });
     assert.match(template, /^\[파티 #12\] .+ · 0\/\d+명$/mu);
-    assert.match(template, /시작: 미정/u);
+    assert.match(template, partyType === "PARTY_NUMBER" ? /^시작 시간 : $/mu : /시작: 미정/u);
+    assert.match(template, partyType === "PARTY_NUMBER" ? /^게임 종류 : $/mu : /게임: 미정/u);
     assert.doesNotMatch(template, /주최자/u);
     const edited = template.replace(partyType === "FLEX_RANK" ? "TOP.\n" : "1.\n", partyType === "FLEX_RANK" ? "TOP. 민규\n" : "1. 민규\n");
     const command = canonical(edited);

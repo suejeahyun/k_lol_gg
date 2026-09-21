@@ -786,6 +786,7 @@ export class PostgresKakaoAssistant {
 
   getOpenChatStatus(input: SignedReadInput & Readonly<{
     projection?: "PARTY" | "SCRIM";
+    partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number }>;
     now?: Date;
     afterMutation?: boolean;
   }>): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
@@ -808,11 +809,13 @@ export class PostgresKakaoAssistant {
           organizerText: recruitParties.organizerText,
           scheduledStartAt: recruitParties.scheduledStartAt,
         }).from(recruitParties).where(and(
-          eq(recruitParties.status, "IN_PROGRESS"),
+          input.partyTarget ? inArray(recruitParties.status, ["DRAFT", "IN_PROGRESS"]) : eq(recruitParties.status, "IN_PROGRESS"),
           eq(recruitParties.sourceRoomId, input.intent.roomId),
           eq(recruitParties.recruitDate, operatingDate),
+          input.partyTarget ? eq(recruitParties.recruitDate, input.partyTarget.recruitDate) : undefined,
+          input.partyTarget ? eq(recruitParties.recruitNumber, input.partyTarget.recruitNumber) : undefined,
         ))
-          .orderBy(desc(recruitParties.recruitDate), asc(recruitParties.recruitNumber)).limit(MAXIMUM_STATUS_RESULTS + 1);
+          .orderBy(asc(recruitParties.recruitNumber), desc(recruitParties.resetSequence));
       const scrimRows = input.projection === "PARTY" ? [] : await transaction.select({
           id: scrimRecruits.id,
           revision: scrimRecruits.revision,
@@ -846,12 +849,15 @@ export class PostgresKakaoAssistant {
       const latestScrimRows = input.projection ? [] : await transaction.select({ scrimNumber: scrimRecruits.scrimNumber })
           .from(scrimRecruits).where(eq(scrimRecruits.recruitDate, operatingDate))
           .orderBy(desc(scrimRecruits.scrimNumber)).limit(1);
-      const parties = partyRows.slice(0, MAXIMUM_STATUS_RESULTS);
+      // A detail is selected in SQL, never from a truncated overview. Multiple
+      // active reset identities fail closed instead of selecting another party.
+      if (input.partyTarget && partyRows.length > 1) throw new KakaoAssistantError("CONFLICT");
+      const parties = partyRows;
       const scrims = scrimRows.slice(0, MAXIMUM_STATUS_RESULTS);
       const latestParty = latestPartyRows[0];
       const latestScrim = latestScrimRows[0];
       const partyFormCodes = new Map<string, string>();
-      for (const party of parties) {
+      for (const party of input.partyTarget ? parties : []) {
         const formCode = await issueKakaoFormSnapshot(transaction, {
           kind: "PARTY", scopeHash: createHash("sha256").update(input.intent.roomId).digest(),
           targetId: party.id, operatingDate, now: statusNow,
@@ -877,7 +883,7 @@ export class PostgresKakaoAssistant {
             recruitNumber: party.recruitNumber,
             type: party.type,
             title: party.title,
-            status: "IN_PROGRESS" as const,
+            status: party.status as "DRAFT" | "IN_PROGRESS",
             memberCount: members.filter((member) => !member.substitute).length,
             reserveCount: members.filter((member) => member.substitute).length,
             maximumMembers: party.maximumMembers,

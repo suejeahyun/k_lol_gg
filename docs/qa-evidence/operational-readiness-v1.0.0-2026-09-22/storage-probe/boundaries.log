@@ -1,0 +1,25 @@
+✔ private storage mode is one fail-closed production policy (1.8472ms)
+✔ fake private storage can preload immutable local QA bytes without sharing caller buffers (89.5167ms)
+✔ official SDK seam uses private deterministic collision-safe put/get/delete options (2.6556ms)
+✔ connected private Blob credentials prefer OIDC and pass only the store-scoped SDK options (0.3918ms)
+✔ deterministic retries are idempotent only for the same digest and DELETE_PENDING cleanup is repeatable (0.5515ms)
+✔ adapter rejects traversal, mismatched digest, invalid containers and pre-aborted calls before SDK access (0.3187ms)
+✔ all application and Blob boundaries share the 4 MiB server upload ceiling (0.079ms)
+✔ storage probe rejects invalid signature, route, query and body before any job dependency (26.1343ms)
+✔ storage probe uses a generated UUID and exposes only the matching anonymous trace (1.117ms)
+✔ storage probe preserves replay/rate-limit status and hides job exceptions (1.1034ms)
+✔ storage probe reads exact bytes and removes only its new diagnostic object (1.2538ms)
+✔ ambiguous write failure is compensated and raw errors never escape (0.2916ms)
+✔ cleanup failure is visible and arbitrary keys are rejected before storage access (0.5147ms)
+✔ probe bytes pass the production image adapter and cleanup reads bypass the CDN (4.3549ms)
+✔ Vercel cron accepts only the exact timing-safe Bearer secret (0.672ms)
+✔ daily close identity changes at 06:00 KST and remains stable for delayed retries (1.8913ms)
+✔ invalid cron clocks fail closed before any repository input is made (0.2952ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 244.1795

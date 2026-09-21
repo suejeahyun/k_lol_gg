@@ -321,8 +321,26 @@ test("R23 blank draft activates with participant name only and no organizer", as
     copyGuard: { operatingDate: party.recruitDate, saveReference: partyCopyReference(party) },
   }, { ...delivery, eventId: "event-r23-draft-save", nonce: "r23_save_nonce_12345678" }));
   assert.equal(result.body.status, "IN_PROGRESS");
+  assert.equal(result.body.data.registrationCreated, true);
   assert.equal(harness.snapshot.parties.get(party.id)?.members[0]?.name, "서지오");
   assert.equal(harness.snapshot.parties.get(party.id)?.organizerText, null);
+});
+
+test("ADR0011 finishing a draft cancels once and replay preserves its record and audit", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const delivery = { eventId: "event-adr0011-draft-create", senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", nonce: "adr0011_create_12345678" };
+  await handler.handle(v4Command("CREATE_PARTY", "party-adr0011-draft", 0,
+    { ...createParty().payload, partyType: "PARTY_NUMBER", members: [], initialStatus: "DRAFT" }, delivery));
+  const finish = v4Command("FINISH_PARTY", "party-adr0011-draft", 0, {},
+    { ...delivery, eventId: "event-adr0011-draft-finish", nonce: "adr0011_finish_12345678" });
+  const result = await handler.handle(finish);
+  assert.equal(result.body.status, "CANCELED");
+  assert.equal(harness.snapshot.parties.get("party-adr0011-draft")?.revision, 1);
+  assert.deepEqual(harness.snapshot.parties.get("party-adr0011-draft")?.members, []);
+  const counts = { audits: harness.snapshot.audits.length, outbox: harness.snapshot.outbox.length };
+  assert.equal((await handler.handle(finish)).replayed, true);
+  assert.deepEqual({ audits: harness.snapshot.audits.length, outbox: harness.snapshot.outbox.length }, counts);
 });
 
 function editablePartyPayload(base: RecruitParty, members: RecruitParty["members"] = base.members) {

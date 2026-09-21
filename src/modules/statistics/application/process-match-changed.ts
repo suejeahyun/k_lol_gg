@@ -36,9 +36,26 @@ export function affectedSeasonIdsForMatchChanged(
 }
 
 function boundedFailureCode(error: unknown): string {
-  const raw = error instanceof Error && error.message ? error.message : "STATISTICS_PROJECTION_FAILED";
-  const canonical = raw.toUpperCase().replace(/[^A-Z0-9_:-]/g, "_").slice(0, 64);
-  return canonical || "STATISTICS_PROJECTION_FAILED";
+  const safeCodes = new Set([
+    "INVALID_MATCH_CHANGED_SCOPE",
+    "INVALID_MATCH_CHANGED_PROVENANCE",
+    "STATISTICS_RECEIPT_PROVENANCE_MISMATCH",
+    "STATISTICS_EVENT_LEASE_LOST",
+    "STATISTICS_SEASON_NOT_FOUND",
+    "STATISTICS_STATE_NOT_FOUND",
+  ]);
+  if (error instanceof Error && safeCodes.has(error.message)) return error.message;
+  // Driver messages may contain SQL, connection details or values. Persist only
+  // known SQLSTATE classes, never a normalized copy of arbitrary error text.
+  let cause: unknown = error;
+  for (let depth = 0; depth < 3 && cause && typeof cause === "object"; depth += 1) {
+    const record = cause as { code?: unknown; cause?: unknown };
+    if (["40001", "40P01", "55P03", "57014"].includes(String(record.code))) {
+      return "STATISTICS_TRANSIENT_DATABASE_FAILURE";
+    }
+    cause = record.cause;
+  }
+  return "STATISTICS_PROJECTION_FAILED";
 }
 
 export type ProcessStatisticsEventResult =

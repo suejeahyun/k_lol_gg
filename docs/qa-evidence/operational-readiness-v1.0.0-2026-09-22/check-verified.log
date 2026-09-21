@@ -1,0 +1,640 @@
+
+> klol-gg-v2@0.1.0 check
+> npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build
+
+
+> klol-gg-v2@0.1.0 lint
+> eslint
+
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js
+   1:838   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+   5:130   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  32:231   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:79    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:196   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  34:274   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  35:200   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  36:66    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  44:347   warning  'n' is defined but never used  @typescript-eslint/no-unused-vars
+  54:409   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  56:71    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  59:168   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  60:318   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  65:1002  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  74:403   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:151   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:216   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:497   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  78:2934  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  79:8     warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  80:116   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  81:378   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V1_COMPAT.js
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
+    2:5  warning  'KLOL_V41_BUNDLE_START_SENTINEL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  369:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\v1-strict\KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_SOURCE_SHA256' is assigned a value but never used           @typescript-eslint/no-unused-vars
+     2:5   warning  'KLOL_V1_EXTRACTED_SHA256' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     3:5   warning  'KLOL_V1_SOURCE_FUNCTIONS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     6:5   warning  'KLOL_V1_TRANSPORT_SEAMS' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    35:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   119:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   208:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   281:10  warning  'ignoredJavaNormalizationError' is defined but never used            @typescript-eslint/no-unused-vars
+   291:10  warning  'parsePartyMemberMutationCommand' is defined but never used          @typescript-eslint/no-unused-vars
+   434:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   453:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   468:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   506:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   532:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   544:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   582:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   586:29  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   586:35  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   586:43  warning  'imageBase64' is defined but never used                              @typescript-eslint/no-unused-vars
+   586:56  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   589:36  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   589:42  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   589:50  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   731:77  warning  'packageName' is defined but never used                              @typescript-eslint/no-unused-vars
+   742:10  warning  'ignoredImageError' is defined but never used                        @typescript-eslint/no-unused-vars
+   746:10  warning  'ignoredImageBase64Error' is defined but never used                  @typescript-eslint/no-unused-vars
+   759:10  warning  'ignoredImageBitmapError' is defined but never used                  @typescript-eslint/no-unused-vars
+  1775:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1777:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1807:10  warning  'response' is defined but never used                                 @typescript-eslint/no-unused-vars
+
+✖ 55 problems (0 errors, 55 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+
+> klol-gg-v2@0.1.0 typecheck
+> tsc --noEmit
+
+
+> klol-gg-v2@0.1.0 db:erd:check
+> tsx scripts/database/generate-erd.ts --check
+
+[db:erd] up to date: 105 tables, 168 foreign keys, schema sha256 2fe6810527b1714f7c1555c39f7d6aa85e4d936424f757676f2a7488bd2f25ae
+
+> klol-gg-v2@0.1.0 test
+> npm run test:contracts && npm run test:unit
+
+
+> klol-gg-v2@0.1.0 test:contracts
+> node --test tests/*.test.mjs
+
+✔ public match and player detail use the same allowlisted champion portrait with a safe fallback (2.23ms)
+✔ my account connects bounded participation and current discipline status to details and evidence (2.0473ms)
+✔ event and destruction details retain actions while exposing readable lifecycle and result hierarchy (0.501ms)
+✔ own player mutation keeps approval, origin, revision and idempotency guards (4.3634ms)
+✔ own player form keeps one idempotency key for an uncertain retry and explains Riot relinking (1.889ms)
+✔ account pages reuse the account shell and avoid decorative English headings (2.3957ms)
+✔ isolated account HTTP verification runs the real Chromium owner profile regression (1.9382ms)
+✔ 역할 변경 API는 same-origin 세션 검사 뒤 일반 ADMIN을 mutation parsing 전에 거부한다 (4.665ms)
+✔ 역할 관리 UI와 목록 진입점은 SUPER_ADMIN에게만 노출된다 (2.2945ms)
+✔ 승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구하지 않는다 (2.5755ms)
+✔ 플레이어 상세는 연결 계정 revision으로 기존 SUPER_ADMIN 역할 API를 안전하게 재사용한다 (1.3239ms)
+✔ administrator balance status uses readable Korean operational labels (5.9588ms)
+✔ administrator balance navigation is a visible keyboard-focusable control (1.2476ms)
+✔ MMR 수동 조정은 raw UUID 대신 bounded 플레이어 선택기를 사용한다 (1.292ms)
+✔ Riot 작업은 현재 목록에서 플레이어와 link를 선택하고 revision을 자동 계산한다 (0.3345ms)
+✔ 징계 대상 선택은 관리자 전용 bounded endpoint의 allowlist metadata로 표시값을 채운다 (1.3523ms)
+✔ 공통 bounded picker는 원격 metadata를 문자열 allowlist로 제한한다 (0.3062ms)
+✔ the contracted match edit page reuses the guarded editor and preserves the AI review alias (5.3053ms)
+✔ season administration presents lifecycle, status, source, and position labels in Korean (6.3669ms)
+✔ account and settings administration avoid decorative English labels (1.6216ms)
+✔ admin HTTP guard matrix covers every canonical App Router page (96.5443ms)
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (6.3089ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (1.1428ms)
+✔ administrator drafts support recoverable archive and persisted match registration (2.967ms)
+✔ capture fixture example resolves every repository page without placeholders (184.4598ms)
+✔ browser QA server emits setup credentials, actor identity and fail-fast dynamic source IDs (1.3747ms)
+✔ browser quality boundary accepts WCAG and performance values at their budgets (2.2826ms)
+✔ browser quality boundary reports semantic, keyboard, motion, axe and performance failures (0.3903ms)
+✔ compact standalone auth pages do not require a skip link or a single h1 (0.165ms)
+✔ full-page capture uses stable light reduced-motion rendering and wakes lazy media (0.8116ms)
+✔ full-page capture fails visible repository error states even when HTTP is 200 (0.1242ms)
+✔ full-page capture accepts synthetic credentials through bounded stdin (0.1831ms)
+✔ champion administrator pages reuse the highlight content shell and keep safe mutations (6.1099ms)
+✔ champion read APIs keep public and administrator namespaces separated (2.064ms)
+✔ Data Dragon version monitor discovers the upstream latest version without changing the pinned catalog (4.4976ms)
+✔ 핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상이다 (5.8671ms)
+✔ 기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다 (1.0866ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.0354ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (2.459ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.2363ms)
+✔ public discipline API exposes aggregate statistics only (9.2985ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (5.1367ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (2.5641ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (0.8937ms)
+✔ discipline pages declare real empty, error, and unavailable states (1.5112ms)
+✔ discipline administrator headings and status labels are readable Korean (1.383ms)
+✔ public competition pages expose list/detail/application states without administrator controls (4.5593ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (0.9576ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.3261ms)
+✔ full-page QA runner parses only tagged synthetic harness values (2.3024ms)
+✔ full-page QA summary fails count drift and any route issue (0.2492ms)
+✔ capture credentials use bounded stdin instead of command-line secrets (8.3264ms)
+✔ capture CLI rejects unknown stdin credential fields before opening files or Chromium (130.1407ms)
+✔ 홈과 데스크톱 메뉴는 이미 구현된 경기·팀 밸런스를 준비 중으로 표시하지 않는다 (2.3888ms)
+✔ 홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센다 (0.4375ms)
+✔ 홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 갤러리를 조회한다 (0.8051ms)
+✔ 홈 피드 공개 projection은 소유자·회원·Discord 필드를 선택하지 않는다 (0.3367ms)
+✔ 홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST 일일 안내 챔피언을 선택한다 (1.1684ms)
+✔ 홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다 (0.6834ms)
+✔ 홈의 지표별 랭킹 요약은 모바일에서 44px 터치 영역과 단일 열을 유지한다 (0.8915ms)
+✔ Kakao admin API splits ADMIN reads from SUPER TOTP mutations (8.3032ms)
+✔ legacy Kakao admin pages permanently redirect to canonical real-state tabs (4.8155ms)
+✔ every canonical Kakao handler checks the stored feature policy (3.8965ms)
+✔ owner image session creation honors site and Kakao feature switches (1.0451ms)
+✔ Kakao assistant routes share raw-body HMAC and durable read receipts (8.81ms)
+✔ managed forms remain isolated while season snapshots and owner-bound images are durable (4.2228ms)
+✔ legacy Kakao paths execute the signed canonical POST handlers without redirects (5.8154ms)
+✔ Kakao route capability policy is explicit for every phone endpoint (8.1666ms)
+✔ season member submissions and reads use the FEATURES room but force cancel has a trusted command gate (1.8286ms)
+✔ normal room authorization uses only canonical registry state and keeps environment bootstrap explicit (1.0606ms)
+✔ private installer generator preserves shared settings and creates one identity per Kakao room (572.8542ms)
+✔ Kakao routes are explicitly isolated between recruit and features installations (7.0549ms)
+✔ wrong-room failures remain short and actionable on the phone (1.6387ms)
+✔ recruit mutations expose PII-free stage timing for p50 and p95 aggregation (1.2579ms)
+✔ companion is ES5 and below both editor character limits (24.6323ms)
+✔ no registration, disabled, wrong app/code, or another session cannot send (2.2056ms)
+✔ ACK loss retries ACK without sending again, including after restart (1.8173ms)
+✔ crash marker or ambiguous SDK result never resends automatically (1.3551ms)
+✔ ledger write failure, wrong target and stale lease fail closed before send (2.7316ms)
+✔ explicit SDK rejection is retryable after manual session renewal (1.2358ms)
+✔ the ADR freezes every non-negotiable V1-exact adapter constraint (8.8908ms)
+✔ the reusable V4 text transport is one signed five-second request without bearer fallback (1.4018ms)
+✖ the V1 strict phone installer uses the current private artifact and omits public-only provenance (4.4247ms)
+✔ installation profiles, not callback room or sender role, form the V4 text authorization boundary (35.973ms)
+✔ V2 services can reserve a hidden DRAFT and legacy bearer routes remain closed (1.5527ms)
+✔ the existing image service is separately signed, bounded, and session-backed (69.6855ms)
+✔ canonical V40 R2 routes managed commands to site-first links, not the legacy image session creator (37.3691ms)
+✔ a clean V1-strict install keeps imageDB silent instead of inventing an unreachable UUID flow (8.7737ms)
+✔ the dormant legacy image receiver remains secure for non-strict clients without reopening bearer access (1.5659ms)
+✔ builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact (413.4153ms)
+✔ Rhino audit detects functions that mix value and bare returns (1.069ms)
+✔ V1 strict routes organizer-only metadata activation forms with or without one slash (49.8183ms)
+✔ V1 strict routes scoped in-house finish commands as unchanged raw text (39.8011ms)
+✔ R23 retired scrim commands and forms reply locally without an HTTP request (189.0328ms)
+✔ R25 local help matches optional member linking, Rift lanes, protected editing and detail rereads (25.8156ms)
+✔ R24 compact copy forms keep complete success and pending envelopes in one signed request (247.1514ms)
+✔ R24 compact form routing leaves malformed references to the server and ignores prose (24.331ms)
+✔ R24 actual server-rendered party and inhouse templates accept one name through the phone (359.4479ms)
+✔ R23 copy-paste party and inhouse forms forward names and saved references unchanged (7.2501ms)
+✔ V1 strict routes the full organizer-only template returned by the production server (3.5509ms)
+✔ artifact excludes legacy HTTP, bearer, and embedded secret material (1.5279ms)
+✔ all response-reachable non-transport V1 executable lines are preserved without comments or blank spacers (38.8106ms)
+✔ strict adapter reuses the canonical V1 local dedupe storage keys (1.0498ms)
+✔ local replies, echo rules, events, and no-reply behavior equal the canonical V1 (14.6153ms)
+✔ R19 chooses one complete tone when the OpenChat entry guide appears (6.0051ms)
+✔ R19 consumes the raw join event and accepts only the OpenChat entry heading (3.3478ms)
+✔ approved party member mutations parse safely and use one RECRUIT gateway request (8.486ms)
+✔ inhouse member shortcuts reach the matching profile gateway (14.7792ms)
+✔ reported inhouse loading echo is ignored while user commands and explicit member edits keep one reply (4.2482ms)
+✔ same MessengerBot logId replay suppresses only the duplicate visible reply (2.3668ms)
+✔ ambiguous party member text never reaches the mutation gateway (11.8628ms)
+✔ local recruit help documents member commands and keeps full-form guidance (3.0248ms)
+✔ command and form predicates are byte-derived and behaviorally equal to V1 (7.132ms)
+✔ one public command performs one five-second signed gateway request without room binding (4.1875ms)
+✔ recoverable season rows reach the gateway once even with whitespace numbering and partial fields (2.2016ms)
+✔ completed augment-ARAM in-house forms reach the FEATURES gateway and always reply (1.7034ms)
+✔ completed augment-ARAM metadata with ten empty name rows activates through FEATURES (2.4245ms)
+✔ a complete empty season snapshot reaches the gateway once for authoritative cancellation (6.1761ms)
+✔ empty-snapshot gate rejects incomplete forms and ordinary conversation (8.3256ms)
+✔ clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior (2.2599ms)
+✔ all seven active text seams preserve V1 success and empty replies while failures use safe common notices (39.8597ms)
+✔ literal transport failures distinguish settings, input, and connection errors without exposing values (21.9236ms)
+✔ both V40 R2 image seams stay inactive for every transport outcome (6.7436ms)
+✔ V1-strict keeps completion diagnostics but routes incomplete operation-form candidates (10.2212ms)
+✔ V1-strict candidate routing ignores ordinary label discussion (7.594ms)
+✔ V1-strict ordinary label discussion performs no request or local dedupe write (17.7902ms)
+✔ V1-strict accepts standalone wrapper titles but ignores wrappers embedded in prose (9.371ms)
+✔ V1-strict response forwards one incomplete form request to the FEATURES gateway (6.2159ms)
+✔ V1-strict canonicalizes tolerant label spelling before gateway classification (2.9902ms)
+✔ V1_STRICT fixture preserves the canonical V1 bytes across checkout line endings (1.8883ms)
+✔ V1_STRICT fixture contains no hard-coded credential value (1.4666ms)
+✔ V1_STRICT fixture remains ES5 and Rhino-static warning free (88.9304ms)
+✔ V1_STRICT executes the original bot-version reply with or without slash (6.4554ms)
+✔ V1_STRICT executes the original user help exactly (3.9532ms)
+✔ APPROVED_EXTENSIONS cannot be mislabeled as commands from the V1_STRICT oracle (10.1177ms)
+✔ [A01] the unified phone artifact is a readable ES5 single file below 40,000 characters (28.7162ms)
+✔ [A02] the final unified artifact has zero Rhino static warning candidates (25.1589ms)
+✔ [A03] the generated artifact classifies each command into exactly one server profile (3.0958ms)
+✔ [A04] callback room, channel and group values are neither read nor transmitted (4.1501ms)
+✔ [A05] text transport timeout is no more than five seconds (1.2303ms)
+✔ V4 source template is one thin command-family routing client (14.5675ms)
+✔ the generated unified phone file is standalone ES5 with one callback (24.1105ms)
+✔ builder owns the unified output and refreshes deprecated split fixtures (2.5978ms)
+✔ release docs lock one phone, one MessengerBot profile, and two Kakao rooms (2.8719ms)
+✔ [C01] each entry sends its own static profile regardless of poisoned callback room values (21.5477ms)
+✔ [C02] RECRUIT ignores FEATURES commands locally without a server call (1.8031ms)
+✔ [C03] FEATURES ignores RECRUIT commands locally without a server call (1.481ms)
+✔ [C03A] one unified phone bot routes both room command families exactly once (8.147ms)
+✔ [C03C] party template commands including spaced aliases use exactly one server request for a V1 number (5.8653ms)
+✔ [C03D] a copied V1 party form without its number returns the exact local guidance (3.2158ms)
+✔ [C03B] unified bot version is one local reply and never reaches transport (4.9503ms)
+✔ [C04] malformed slash, URLs and middle slash are rejected before transport (3.0765ms)
+✔ [C05] no-logId boot counter gives every independent command a new event ID (2.3209ms)
+✔ [C06] one command performs one HTTP execute with a five-second maximum (2.3562ms)
+✔ [C05A] logId replay is stable in one boot and isolated across profiles and restarts (4.6727ms)
+✔ [C05C] phone settings are read from MessengerBot storage once within one request cache (1.5282ms)
+✔ [C05B] unified echo suppression checks both room-specific bot display names (2.3249ms)
+✔ [C07] one scrim command performs exactly one client-to-server send (11.0386ms)
+✔ [C08:WRONG_PROFILE] client exposes the WRONG_PROFILE error category (1.6994ms)
+✔ [C08:INVALID_SIGNATURE] client exposes the INVALID_SIGNATURE error category (1.8407ms)
+✔ [C08:REPLAY_CONFLICT] client exposes the REPLAY_CONFLICT error category (2.2926ms)
+✔ [C08:SERVER_UNAVAILABLE] client exposes the SERVER_UNAVAILABLE error category (1.6823ms)
+✔ [C08:INVALID_FORM] client exposes the INVALID_FORM error category (1.8708ms)
+✔ [C08A] INVALID_FORM keeps the server parser detail and has a safe fallback (1.6168ms)
+✔ [P3-C01] FEATURES entry sends one request for 내전구인 (29.7193ms)
+✔ [P3-C02] FEATURES entry sends one request for 내전구인 협곡 2026-09-09 21:30 #2 10명 (2.1957ms)
+✔ [P3-C03] FEATURES entry sends one request for 내전구인 칼바람 2026-09-09 21:30 #3 10명 (1.2719ms)
+✔ [P3-C04] FEATURES entry sends one request for 내전구인 증바람 2026-09-09 21:30 #4 10명 (1.2229ms)
+✔ [P3-C05] FEATURES entry sends one request for 내전현황 (1.1982ms)
+✔ [P3-C06] FEATURES entry sends one request for 내전상세 2 (1.1943ms)
+✔ [P3-C07] FEATURES entry sends one request for 📢 내전하실분 #2 (1.8239ms)
+✔ [P3-C08] RECRUIT entry sends one request for 스크림구인 (1.9669ms)
+✔ [P3-C09] RECRUIT entry sends one request for [K-LOL.GG 스크림 구인 양식] (1.2684ms)
+✔ [P3-C10] FEATURES entry sends one request for 지인 이름: 친구 (1.6936ms)
+✔ [P3-C11] FEATURES entry sends one request for 본인 이름 및 닉네임: 홍길동/테스터 (2.0343ms)
+✔ [P3-C12] FEATURES entry sends one request for 주최자 이름 및 닉네임: 홍길동/테스터 (1.4775ms)
+✔ [P3-C13] FEATURES entry sends one request for 이름 및 닉네임: 신청자/닉 (1.3472ms)
+✔ [P3-C14] FEATURES entry sends one request for 등록 (3.9468ms)
+✔ [P3-C15] FEATURES entry sends one request for 내전등록 (1.6955ms)
+✔ [P3-C16] FEATURES entry sends one request for 경고등록 (2.8575ms)
+✔ [P3-C17] FEATURES entry sends one request for 인증 (1.7322ms)
+✔ [P3-C18] FEATURES entry sends one request for 경고현황 (4.6063ms)
+✔ [P3-C19] FEATURES entry sends one request for 결과현황 (1.1445ms)
+✔ [P3-C20] FEATURES entry sends one request for 사진취소 (2.1654ms)
+✔ [P3-C21] FEATURES entry sends one request for 자동공지 20 (1.3095ms)
+✔ [P4-C01] unified 봇버전 is client-only with exact local content (32.8965ms)
+✔ [P4-C02] unified 도움말 is client-only with exact local content (15.8355ms)
+✔ [P4-C03] unified 구인도움말 is client-only with exact local content (30.6529ms)
+✔ [P4-C04] unified 구인웹도우미 is client-only with exact local content (15.4042ms)
+✔ [P4-C05] every V1 PUBLIC alias is classified by the unified phone with at most one send (87.7602ms)
+✔ [P4-C06] malformed slash, URL and middle-slash inputs never enter public transport (248.674ms)
+✔ [P4-I01] V2도움말 never enters public V4 transport (34.8199ms)
+✔ [P4-I02] V2진단 never enters public V4 transport (21.8447ms)
+✔ [P4-I03] V2연동확인 never enters public V4 transport (24.3128ms)
+✔ [P4-I04] 연동확인 never enters public V4 transport (21.1563ms)
+✔ [P4-I05] V2모집 never enters public V4 transport (15.2886ms)
+✔ [P4-I06] V2시즌 never enters public V4 transport (2.5235ms)
+✔ [P4-I07] V2양식 never enters public V4 transport (9.7724ms)
+✔ [P4-I08] V2사진세션 never enters public V4 transport (10.4693ms)
+✔ [P4-I09] V2사진취소 never enters public V4 transport (22.1728ms)
+✔ [P4-A01] final unified phone artifact is synchronized ES5, under 40k and Rhino-static clean (70.9358ms)
+✔ [P4-C01] every public V1 alias passes the correct phone profile with zero-or-one slash (26.8527ms)
+✔ [P4-C02] local public replies are exact and never include V2 operator commands (2.1166ms)
+✔ [P4-C02A] all actual V41 public command samples pass the matching V4 phone profile (7.0419ms)
+✔ [P4-C03] photo and retired preview commands reply locally with no server transmission (4.8029ms)
+✔ [P4-C04] internal, unknown, and malformed inputs are rejected before transport (1.6828ms)
+✔ [P4-C05] unified entry preserves one send site, five-second timeout, and dynamic family split (1.6258ms)
+✔ [P4-C02B] member shortcuts tolerate mobile normalization and reject ambiguous mutations (15.0206ms)
+✔ V4 private generator creates one ignored paste-ready file without printing secrets (1040.3548ms)
+✔ [R01] V4 durable receipt and nonce schema is present in the ordered migration ledger (40.21ms)
+✔ [R02] installation, canonical room, key and capability migrations match the runtime schema (18.8426ms)
+✔ [R03] V3 and V4 server intake coexist while one V4 entry binds profile-specific installation identity (1.2127ms)
+✔ [RESOLVED R04] V4 uses deterministic installation scope without a pairing command (0.9577ms)
+✔ [R05] documented Vercel variable names cover the V4 runtime without reading values (0.9059ms)
+✔ contract fixture has traceable V1 evidence and all required domains (1.8687ms)
+✔ zero or exactly one leading slash routes to the same command (0.411ms)
+✔ double slash, URL slash, separated slash, and middle slash are not commands (0.1326ms)
+✔ same installation scope members can edit and finish across sender identities (0.1849ms)
+✔ initial party form exposes the three activation fields without participant rows (0.2243ms)
+✔ full party forms are authoritative snapshots and allow A→B→A (0.2524ms)
+✔ party member shortcuts retain the full-form workflow and current-scope mutation boundary (0.1716ms)
+✔ Rift, ARAM, and Augment ARAM preserve their V1 field policies (0.2306ms)
+✔ scrim keeps full-form editing and V1 disabled manual lifecycle replies (0.2165ms)
+✔ operation forms retain V1 labels, wrappers, missing-field reply, and echo guard (1.0662ms)
+✔ registration and warning guidance preserve exact V1 headings and destinations (0.1909ms)
+✔ user-facing help excludes V2 diagnostics and raw JSON commands (0.1711ms)
+✔ representative record, recent, and ranking replies remain exact V1 fixtures (0.1218ms)
+✔ V40 구인도움말 문구와 줄바꿈을 그대로 유지한다 (28.7949ms)
+✔ V40 5인파티 생성 응답에 모집번호가 있는 편집 가능한 전체 양식을 유지한다 (37.9356ms)
+✔ V40 구인현황 제목과 상세 명령 CTA를 포함한 정확한 응답을 유지한다 (16.1767ms)
+✔ V40 bare 멸망전스크림 입력을 스크림 명령으로 분류한다 (20.524ms)
+✔ V40 일반 도움말의 제목·항목·줄바꿈을 모든 별칭에서 그대로 유지한다 (41.0161ms)
+✔ V40 구인 웹 도우미와 구인 도움말을 서로 다른 응답으로 유지한다 (21.1591ms)
+✔ V40 등록 센터의 설명과 기존 링크를 모든 별칭에서 그대로 유지한다 (30.6223ms)
+▶ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다
+  ✔ 내전등록 (39.9262ms)
+  ✔ 경고등록 (13.1101ms)
+  ✔ 인증 (8.5763ms)
+  ✔ 경고현황 (3.981ms)
+  ✔ 결과현황 (113.2314ms)
+✔ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다 (180.4609ms)
+▶ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다
+  ✔ 전적 (65.1097ms)
+  ✔ 최근 (21.5485ms)
+  ✔ 랭킹 (17.3068ms)
+✔ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다 (105.0699ms)
+✔ V40처럼 오픈채팅봇이 출력한 운영 양식은 재접수하지 않는다 (6.1828ms)
+✔ V40 운영 양식은 서버가 만든 접수 문구를 그대로 전달한다 (18.6912ms)
+✔ V40 사진취소 별칭의 사이트 우선 안내 동작을 그대로 유지한다 (20.8913ms)
+✔ V40 입장·퇴장·초대·서버 echo 동작을 유지한다 (7.1012ms)
+✔ V40 스크림구인은 자동배정 번호와 원래 줄바꿈을 가진 전체 양식을 반환한다 (19.9743ms)
+✔ V40 스크림현황은 파티 현황과 섞지 않고 한글 상태와 상세 명령을 표시한다 (5.7211ms)
+✔ V40 스크림현황 빈 상태 문구를 정확히 유지한다 (7.5793ms)
+✔ V40 스크림상세는 복사 가능한 전체 양식과 수정 안내를 그대로 반환한다 (2.8684ms)
+✔ V40 스크림 전체 양식 신규 제출은 즉시 한 번 저장하고 등록 완료만 응답한다 (11.963ms)
+✔ V40 원본 양식은 멸망전번호 없이 서버의 단일 활성 대회 자동 판별을 사용한다 (5.3931ms)
+✔ V40 스크림 전체 양식 수정 제출은 별도 확인 없이 같은 번호를 교체 반영한다 (6.9925ms)
+✔ V40에서 사용 중단된 참가·확정·취소·수동 종료는 원래 안내만 하고 변경하지 않는다 (20.7395ms)
+✔ paste-ready V41 bot routes major commands only through the signed V2 transport (16.6869ms)
+✔ mobile installer has no Rhino CODE_HAS_NO_SIDE_EFFECTS statement candidates (113.7722ms)
+✔ phone transport renders actionable HTTP failure categories (3.0424ms)
+✔ Kakao pending slot lookup is lifecycle-neutral and only cancels ACTIVE rows (2.8173ms)
+✔ 자동 수집한 전체 명령 계약은 slash/무슬래시를 하나의 canonical command로 만든다 (28.5814ms)
+✔ V1 호환 파서는 모든 공개 V1 명령에서 slash/무슬래시 분류를 동일하게 유지한다 (42.7139ms)
+✔ canonical command 경계는 본문과 Riot ID를 보존하고 slash 오인식을 막는다 (9.6426ms)
+✔ 휴대폰 압축본의 V1 무통신 명령은 읽기 쉬운 전체본과 동일하게 응답한다 (32.5133ms)
+✔ room and channel callback fields are not used for installation scope (41.1274ms)
+✔ installation scope is stable across signing-key rotation and differs across installations (7.8182ms)
+✔ delivery identity ignores raw room and channel while binding installation, sender, log, and message (2.5053ms)
+✔ opaque sender uses userHash when available and display-name fallback is labeled (1.6184ms)
+✔ field diagnostics explicitly use installation scope and retain opaque sender (0.9883ms)
+✔ response stores a season preview and only the matching one-time code performs SYNC (32.4856ms)
+✔ response requires a complete authoritative snapshot scope and supports preview cancellation (5.7192ms)
+✔ response ignores server echoes and restores legacy guide aliases after full-width normalization (6.8184ms)
+✔ response preserves V40 room events, missing-number guidance, and parameterized managed shortcuts (10.423ms)
+✔ response keeps an active image session when MessengerBot only exposes a placeholder (6.0935ms)
+✔ response routes legacy record, recent, and ranking commands through V2 data while preserving V1 replies (3.4731ms)
+✔ response formats scheduled notice aliases as read-only previews (2.7007ms)
+✔ response accepts bitmap fallback, reports image progress, and clears terminal or cancelled sessions (4.0891ms)
+✔ response exposes a secret-free V2 transport diagnostic (3.3412ms)
+✔ response scopes different senders to one installation and ignores broken room parser fields (5.0308ms)
+✔ response suppresses a duplicate callback with the same Kakao log identity (1.8887ms)
+✔ response entry point keeps representative V1 and V2 replies identical with or without slash (87.2186ms)
+✔ raw V2 recruiting JSON is explicitly marked for the server-side operator gate (2.3618ms)
+✔ response entry point does not treat slash-only, URL, middle slash, double slash, or slash-space as commands (3.9631ms)
+✔ V41 season output uses the site application fields and round-trips as bot input (23.2237ms)
+✔ V41 season input accepts the labeled site form and rejects invalid sub positions (2.953ms)
+✔ V41 authoritative sync response reports create, update, cancel and review counts (3.4055ms)
+✔ V1 compatibility parser stays ES5, transport-free, and rejects unsafe input (33.3252ms)
+✔ all V40 party creation, finish, help, status, and detail aliases are classified (6.019ms)
+✔ party form parser preserves metadata, positions, numbered members, and substitutes (6.6702ms)
+✔ party form metadata accepts line endings and colon variants without rewriting values (9.1212ms)
+✔ party form tolerates clipped headers, Markdown escapes, attached values, and controlled line wraps (6.1133ms)
+✔ inhouse aliases parse mode, date, time, recruit number, and capacity (6.2721ms)
+✔ scrim aliases and legacy full form are converted without a transport call (6.3927ms)
+✔ four operation forms become exact V2 payload shapes with sender fallbacks (4.7368ms)
+✔ four legacy 외출 wrappers parse identically and missing fields are explicit (33.5533ms)
+✔ registration, warning, result, evidence, status, and photo-cancel aliases are classified (30.5592ms)
+✔ V1: 내전구인만 입력하면 종목 선택 안내를 정확히 보낸다 (24.0356ms)
+✔ V1: 알 수 없는 내전 종목에만 입력값을 포함한 오류와 선택 안내를 보낸다 (6.8557ms)
+✔ V1: 협곡 내전구인은 티어·라인과 빈 칸을 포함한 전체 양식을 정확히 보낸다 (12.7769ms)
+✔ V1: 칼바람 내전구인은 이름 전용 전체 양식을 정확히 보낸다 (3.9049ms)
+✔ V1: 번호 없는 내전현황은 모든 회차 요약과 내전상세 명령을 정확히 보낸다 (2.7734ms)
+✔ V1: 내전상세 번호는 참여자와 빈 칸을 포함한 편집 가능한 전체 양식을 정확히 보낸다 (4.3458ms)
+✔ V1: 작성한 전체 신청 양식은 확인 단계 없이 한 번 동기화하고 서버 답변을 그대로 보낸다 (7.5201ms)
+✔ V1: 같은 전체 신청 양식이 연속 수신되면 첫 반영 뒤 중복 요청과 중복 답변을 내지 않는다 (5.9334ms)
+✔ V1: 빈 전체 양식은 일반·ASCII slash·전각 slash 모두 0명 authoritative sync로 처리한다 (9.1138ms)
+✔ V1: 불완전한 빈 양식과 double·URL·중간 slash는 authoritative sync를 실행하지 않는다 (45.0138ms)
+✔ 외출 필수값 누락은 항목별 안내만 보내고 서버 제출을 실행하지 않는다 (15.6518ms)
+✔ 오류 제목이 이미 포함된 서버 상세는 K-LOL.GG 요청 실패 제목을 중복하지 않는다 (17.2027ms)
+✔ legacy party create suppresses a duplicate callback before a second V2 mutation (38.3471ms)
+✔ legacy full party form maps positions to slots and synchronizes the existing V2 party (8.8721ms)
+✔ slash and plain temporary/form flows share server-first metadata fallback and preserve free text (11.3721ms)
+✔ 99 재현, 지오, 97 기용 fixtures complete public create, form, and finish flows with or without slash (35.002ms)
+✔ legacy party candidates stay separate from primary capacity (3.9963ms)
+✔ legacy finish suppresses a duplicate callback after the party leaves active status (3.882ms)
+✔ same-room users can clear and finish another user's two-digit party while repeated forms stay idempotent (35.2681ms)
+✔ failed party mutations return the cause without fetching or appending status (4.9114ms)
+✔ successful sync, blank deletion, and finish explain a failed status refresh (7.1195ms)
+✔ legacy operation form, inhouse template, and scrim template stay available (6.9608ms)
+✔ legacy scrim full form is stored through the typed V2 mutation and replays safely (9.0831ms)
+✔ 숫자형 플레이어·미디어 상세는 존재 확인 뒤 canonical UUID로 이동한다 (1.3651ms)
+✔ 숫자형 이벤트전·멸망전은 존재 확인 뒤 canonical UUID로 이동한다 (1.544ms)
+✔ 관리자 직접 가져오기는 파일·붙여넣기·비공개 미리보기·재시도 복구를 제공한다 (10.6541ms)
+✔ 관리자 로그아웃은 가져오기 복구 namespace만 best-effort로 지운다 (1.1139ms)
+✔ 직접 가져오기 API는 예약→bounded body→work gate→private finalize 순서를 지킨다 (0.9072ms)
+✔ 검토 UI는 fuzzy 자동 연결 없이 구조화 행별 사람 확인을 요구한다 (2.4695ms)
+✔ admin import cancellation is authorized only for ADMIN-source rows (1.6267ms)
+✔ match editor exposes only the structured form and traps the void confirmation dialog (8.7275ms)
+✔ picker status copy is outside the listbox and visual active row matches aria active descendant (2.0933ms)
+✔ submission reject dialog shares the accessible modal behavior (4.5313ms)
+✔ submission conflict keeps component identity and adopts only a verified latest revision (5.2069ms)
+✔ match editor conflict preserves local input and adopts only a verified latest aggregate (4.0244ms)
+✔ match editor save action stays readable in enabled and disabled states (0.9963ms)
+✔ OCR route reserves before the process gate and all external work (11.2682ms)
+✔ OCR reservation is durable, single-image and replay-first (21.7191ms)
+✔ submission approval durably transfers team-balance provenance into the match aggregate (1.3111ms)
+✔ ordinary match amendments cannot clear immutable team-balance provenance (0.151ms)
+✔ web submission linkage revalidates draft ownership, lifecycle and selected layout in its transaction (0.3048ms)
+✔ match changed outbox carries team-balance provenance in its typed row and payload (0.209ms)
+✔ public match detail returns a not-found contract instead of a blank success (8.4077ms)
+✔ match submission accepts only an owner-verified selected team-balance draft (0.8435ms)
+✔ successful server selection remounts both draft workspaces without resetting local edits (0.1492ms)
+✔ 홈과 이미지 상세은 같은 접근 가능한 수동 캐러셀을 사용한다 (2.8396ms)
+✔ 캐러셀은 빈 상태를 안전하게 닫고 한 장에는 이동 컨트롤을 숨기며 여러 장에는 직접 이동을 제공한다 (1.1096ms)
+✔ 캐러셀은 모바일 비율·44px 조작 영역·모션 감소 설정을 유지한다 (0.4104ms)
+✔ 홈 우승 사진은 FK 연결을 우선하고 엄격한 레거시 후보만 보강하며 실제 자산 URL을 사용한다 (0.5637ms)
+✔ gallery image load failures keep a clear, accessible fallback in the reserved card area (6.1614ms)
+✔ migration journal has contiguous indices, increasing timestamps, and matching SQL tags (8.3601ms)
+✔ public MMR page exposes canonical allowlisted filters and bounded projection summaries (1.1763ms)
+✔ admin MMR workspace connects protected recalculate, adjustment, players and review states (0.6495ms)
+✔ team balance provider selects READY MMR before statistics fallback (1.8263ms)
+✔ signed operation-form submit retains raw-body HMAC and durable replay boundaries (19.0336ms)
+✔ admin mutation requires ADMIN session, same-origin, If-Match and idempotency (2.4989ms)
+✔ admin pages expose filtered empty/error/unavailable states and compatibility routes (2.7264ms)
+✔ public operations endpoints expose bounded settings and minimum health only (15.0615ms)
+✔ admin mutations and downloads retain strong server authorization boundaries (3.287ms)
+✔ internal maintenance requires a signed job and never accepts session authorization (3.8444ms)
+✔ Vercel schedules statistics and daily Kakao close through protected GET boundaries (2.121ms)
+✔ route groups are removed while concrete and dynamic segments become canonical URLs (115.5789ms)
+✔ route fixtures override parameter fixtures and every missing dynamic fixture fails immediately (1.1701ms)
+✔ recommendation query variants reject a malformed transcribed draft fixture (0.6178ms)
+✔ capture sessions are isolated by authentication boundary (0.2168ms)
+[capture-plan] 1 page files -> 4 capture targets at C:\Users\sjh11\AppData\Local\Temp\klol-capture-cli-Lgfe4m\nested\capture-plan.json
+✔ the CLI contract reads a fixtures JSON file and creates its output directory (48.2512ms)
+✔ the repository plan covers every page once, resolves IDs and adds reviewed variants (112.2478ms)
+✔ 사용자·관리자 상세 화면은 저장소 오류 상태에서도 페이지 제목과 상태 의미를 유지한다 (1.8777ms)
+✔ 공용 미디어 편집 화면도 저장소 오류 상태에서 페이지 제목을 유지한다 (0.3219ms)
+✔ 챔피언 이미지 projection은 0025 적용 전에도 공개 통계·목록 조회를 유지한다 (1.4556ms)
+✔ 플레이어 공개 프로필은 실제 경기 KDA와 신청 포지션 배치·팀 밸런스 점수를 함께 설명한다 (3.3838ms)
+✔ 공개 Riot 읽기는 API·RSO 비밀 구성과 분리되고 UI가 미연동·대기·오류를 구분한다 (0.664ms)
+✔ 플레이어 검색어는 문자열·배열·미입력을 하나의 안전한 문자열로 정규화한다 (0.7831ms)
+✔ 중복 q 파라미터 배열은 첫 값으로 정규화되어 trim 오류를 만들지 않는다 (0.2272ms)
+✔ 검색 유스케이스는 PlayerRepository 포트를 통해 주입된 구현만 호출한다 (0.6253ms)
+✔ PWA manifest and layout publish the expected install contract (9.9469ms)
+✔ service worker caches static public assets only (1.0367ms)
+✔ install icons exist and are not empty (5.1144ms)
+✔ 공개 구인 카드와 API DTO는 참여자 표시 정보만 노출한다 (2.321ms)
+✔ 내전 등록·상세 UI는 경기 시간을 입력하거나 표시하지 않는다 (1.1897ms)
+✔ 이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름을 독립 경로로 유지한다 (2.7686ms)
+✔ Kakao pending API splits ADMIN reads from SUPER TOTP mutations (5.0903ms)
+✔ pending operator UI uses bounded filters, a player picker and revision-safe commands (5.0091ms)
+✔ public season applications expose Kakao-started recruit rounds without leaking pending identities (5.4847ms)
+✔ feature-gated site assistant is mounted globally and uses protected AI contracts (1.6151ms)
+✔ site feature access fails closed for missing or unreadable settings (1.3377ms)
+✔ registration feature protects both its page and mutation before credential work (0.5247ms)
+✔ match submission feature keeps reads available but guards every owner mutation (1.5227ms)
+✔ Kakao help feature controls its public guide without exposing configuration (0.4278ms)
+✔ recruit guide teaches participation and guarded edits before optional creation (0.4061ms)
+✔ recommendation APIs keep owner/admin scope and the team-balance feature boundary (9.0979ms)
+✔ team-balance pages expose recommendation views and fail closed with the site switch (3.5128ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (1.4735ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (5.7379ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (1.062ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (5.9631ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (0.8851ms)
+✔ 시작 페이지는 익명·계정 상태·승인 계정·관리자 진입을 구분한다 (0.9937ms)
+✔ Riot 도움말은 운영 연동 제한과 공개·비공개 범위를 안내한다 (0.4142ms)
+✔ 설치 화면은 install prompt와 iOS·Android PWA·개인 캐시 금지를 구분한다 (1.2458ms)
+✔ 사용자 shell은 skip target, landmark, modal search, 모바일 5개 진입점을 제공한다 (8.3573ms)
+✔ 전체 메뉴는 로그인 상태에 맞지 않는 계정·인증 경로를 숨긴다 (0.7814ms)
+✔ 일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다 (1.421ms)
+✔ V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다 (1.3069ms)
+✔ 사용자와 관리자 로그아웃 UI는 세션 폐기 성공 뒤에만 로그인 화면으로 이동한다 (1.5598ms)
+✔ 관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 축소하지 않는다 (1.2656ms)
+✔ 모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아웃을 제공한다 (0.8027ms)
+✔ 관리자 로그인 1단계는 존재하지 않는 TOTP 필드를 null로 보내지 않는다 (0.6724ms)
+✔ 계정 작업 UI는 stale revision에서 최신 projection을 읽고 안내를 유지한다 (1.4119ms)
+✔ 일회성 비밀번호는 숨김·BFCache 복귀·명시적 닫기에서 메모리와 안내를 함께 종료한다 (1.1573ms)
+✔ 내 계정 플레이어 탭은 대기 claim과 거절 claim을 구분한다 (1.1885ms)
+✔ 내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기본 문구를 구분한다 (0.8085ms)
+✔ 계정 시각은 공통 Asia/Seoul 24시간 포맷터를 사용한다 (2.3796ms)
+✔ 가입·본인 비밀번호 변경 UI는 성공과 pagehide에서 비밀번호 fingerprint ref를 즉시 비운다 (1.2173ms)
+✔ 정적 마감 대상의 native button은 submit 여부를 명시한다 (267.9748ms)
+✔ 이벤트 운영 폼은 내부 UUID나 JSON 복사를 요구하지 않는다 (1.2133ms)
+✔ 완성된 메뉴와 관리자 검색은 과거 단계 문구를 노출하지 않는다 (0.4207ms)
+✔ Riot ID의 게임 이름과 태그는 각각 이름을 가진다 (0.2763ms)
+✔ 전체 화면 효과는 공개·관리자 범위를 구분하고 동적 화면에도 재사용된다 (1.2396ms)
+✔ 전역 효과 CSS는 감속 모드·정밀 포인터·강제 색상 경계를 유지한다 (0.5163ms)
+ℹ tests 416
+ℹ suites 0
+ℹ pass 415
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2117.5153
+
+✖ failing tests:
+
+test at tests\kakao-v1-exact-v4-adapter-architecture.test.mjs:42:1
+✖ the V1 strict phone installer uses the current private artifact and omits public-only provenance (4.4247ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /KLOL_KAKAO_BOT_V40_R24_2026_09_20/u. Input:
+
+  '# MessengerBot R 일반 봇·사이트 알림 설치 안내\n' +
+    '\n' +
+    '## 현재 설치본\n' +
+    '\n' +
+    '현재 확인된 운영 서버는 2026-09-22 복사 양식 안정화 1.0.1이며 DB migration은 `0041`이다. R24 호환 검사를 통과했으므로 이번 서버 패치를 쓰려고 일반 봇을 반드시 교체할 필요는 없다. [확인된 운영 배포 근거](../../docs/qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/README.md). 이후 운영 준비 패치와 알림 companion은 소스 상태이며 새 배포 근거는 [현재 상태](../../docs/STATUS.md)를 따른다.\n' +
+    '\n' +
+    '사용자가 확인한 **MessengerBot R 앱 버전은 0.7.29a**다. 이것은 아래 봇 JavaScript 버전과 다르다. 실제 휴대폰 봇 버전·해시·컴파일·채팅방 송수신은 아직 미확인이다. 로컬 생성된 일반 봇 설치 후보는 **R25**이며, 교체할 때에는 아래 **비공개 한 파일만** 전체 복사한다.\n' +
+    '\n' +
+    '`.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`\n' +
+    '\n' +
+    '`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 신규 교체 시에는 위 `.private` 파일을 사용하며, 생성 버전·해시를 확인한 뒤 붙인다.\n' +
+    '\n' +
+    'V1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내전을 짧은 양식 복사 참가로 통일하며, 카카오 스크림 종료를 유지한다. 편집 범위는 승인된 [ADR0011](../../docs/architecture/0011-kakao-party-editable-copy-flow.md)·[ADR0012](../../docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따른다. 짧은 양식코드의 원본과 최신 명단을 함께 비교해 동시 참가를 합치며, V4 서명·멱등성·단일 요청 경계를 유지한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.\n' +
+    '\n' +
+    '사이트 참가로 내전 10명이 찼을 때 알리는 기능은 별도 [사이트 알림 companion](site-notices/README.md)이다. 기본 OFF이며 일반 봇에 이어 붙이지 않는다. 서버 설정·정확한 수신 세션 등록·0.7.29a 실기기 검사가 필요하다.\n' +
+    '\n' +
+    '한 대의 휴대폰에서 MessengerBot R 봇 프로필 하나가 구인구직방과 기능방 두 곳을 구독한다. 메시지 내용에 따라 서버 프로필을 자동 선택한다.\n' +
+    '\n' +
+    '- 파티·구인 계열: `RECRUIT` (스크림은 종료 안내만 표시)\n' +
+    '- 내전·전적·랭킹·운영 양식 계열: `FEATURES`\n' +
+    '\n' +
+    '카카오 알림 parser의 방 이름은 인증이나 라우팅에 쓰지 않는다. 따라서 잘못된 방에서 명령을 보내도 명령 종류가 맞으면 실행될 수 있다. 물리적인 두 방 분리는 MessengerBot R의 구독 대상과 운영 안내로 유지한다.\n' +
+    '\n' +
+    '## 일반 봇을 교체할 때의 순서\n' +
+    '\n' +
+    '1. 휴대폰 MessengerBot R에서 기존 K-LOL 봇을 중지한다.\n' +
+    '2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.\n' +
+    '3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.\n' +
+    '4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.\n' +
+    '5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R25_2026_09_22`를 검색한다.\n' +
+    '6. 마지막 줄이 단독 `}`이고 파일 안에 `function response(`가 한 번만 있는지 확인한다.\n' +
+    '7. 저장·컴파일 후 봇을 다시 시작한다.\n' +
+    '8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.\n' +
+    '9. 두 방에서 각각 `봇버전`과 `/봇버전`을 확인한다.\n' +
+    '10. `오픈채팅봇`의 `입장시 할 일` 안내 뒤 서로 다른 네 가지 톤 중 하나로 완성된 안내 한 건만 표시되는지 확인한다.\n' +
+    '\n' +
+    '휴대폰에 붙일 비공개 파일에는 필요한 네 설정을 먼저 `DataBase`에 기록하는 초기화 코드가 포함되어 있다. 값을 채팅이나 Git에 복사하지 않는다. 공개 설치본은 비밀값이 없으므로 휴대폰 `DataBase`에 설정이 이미 존재할 때만 단독으로 동작한다.\n' +
+    '\n' +
+    '## 현재 파일 검증값\n' +
+    '\n' +
+    '| 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |\n' +
+    '| --- | --- | ---: | ---: | ---: | --- |\n' +
+    '| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,304 | 65,145 | 1,842 | `e18ea983d2125ffb2c187d1e330f4e1671f56f1878c7ce9b99e9a272b03b2886` |\n' +
+    '| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,593 | 63,435 | 1,843 | `145f46e6de4e17c6b6608fb6175962f0d19869596c34276024ba6a1131a56b3e` |\n' +
+    '\n' +
+    '위 값은 2026-09-22 로컬 생성 파일의 값이며 실기기 설치 증거가 아니다. 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. 원본 fixture를 바꾸지 않고 생성본의 빈 줄·행 선행 들여쓰기를 제거하며 승인 변경 밖의 V1 실행문 동일성은 별도로 검증한다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.\n' +
+    '\n' +
+    'R23 private 백업: `.private/backups/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.pre-r24-20260920-065116-919.js` (SHA-256 `e81d1f800f4a52d66f3afde85f21b16546a527db7dc18ccdf73bf1d246951a6c`). 이 과거 백업을 현재 서버에 바로 설치하지 않는다. 롤백은 사용하려는 서버와 휴대폰 조합의 호환 근거를 확인하고 진행하며, snapshot 테이블은 삭제하지 않는다.\n' +
+    '\n' +
+    '해시나 끝 표시가 다르면 일부만 복사됐거나 다른 버전이 섞인 것이다. 오류 행에 임의로 `}`나 따옴표를 추가하지 말고 전체 파일을 다시 교체한다.\n' +
+    '\n' +
+    '## 서버 연결 확인\n' +
+    '\n' +
+    '비공개 설치본의 설정은 다음 네 항목이다.\n' +
+    '\n' +
+    '- `KLOL_V2_BASE_URL`\n' +
+    '- `KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT`\n' +
+    '- `KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT`\n' +
+    '- `KLOL_V4_KAKAO_IDENTITY_SECRET`\n' +
+    '\n' +
+    '공개 저장소나 문서에는 실제 값이 없어야 한다. 서버와 휴대폰 서명 키·키 ID가 글자 하나까지 같아야 하며 identity secret은 서명 키와 다른 32바이트 이상 값이어야 한다.\n' +
+    '\n' +
+    '로컬 비공개 설정을 이용한 운영 읽기 전용 smoke는 `RECRUIT`와 `FEATURES` 두 프로필 모두 HTTP 200 및 command gateway 정상 응답을 확인한다.\n' +
+    '\n' +
+    '```powershell\n' +
+    'npm run bot:kakao:v1-strict\n' +
+    'npm run bot:kakao:v1-strict:private\n' +
+    'node scripts/verify-private-messengerbot-v1-strict-live.mjs\n' +
+    '```\n' +
+    '\n' +
+    '이 검사는 비밀값을 출력하지 않는다. 실제 휴대폰 컴파일과 카카오 송수신은 휴대폰 설치 후 별도로 확인해야 한다.\n' +
+    '\n' +
+    '## 기능 확인 순서\n' +
+    '\n' +
+    '구인구직방:\n' +
+    '\n' +
+    '1. `5인파티` → 양식만 출력되고 사용자에게 보이는 구인은 아직 시작되지 않음\n' +
+    '2. 출력된 전체 양식 복사 → 빈 참가 칸에 이름 입력 → 전체 전송 → 같은 번호 활성화와 최신 전체 양식 출력 (주최자 입력 필수 아님)\n' +
+    '3. `상세 번호 추가 이름`, `상세 번호 삭제 이름`은 보조 기능 → 1명 변경 후 최신 전체 양식 출력\n' +
+    '4. `구인현황`, `상세 번호`, 다른 사용자가 만든 `번호ㅉ`\n' +
+    '5. `스크림구인`, `스크림현황`, `스크림 번호ㅉ` → 기능 종료 안내, 저장 호출 없음\n' +
+    '\n' +
+    '기능방:\n' +
+    '\n' +
+    '1. `내전구인` → 모드 선택 → 전체 양식 복사 → 이름 입력 → 전체 전송 → 최신 전체 양식. `내전현황`, `내전 번호ㅉ` 유지\n' +
+    '2. `내전상세 번호 추가 이름/mid/ad` 또는 `이름/mid,ad` → 첫 라인은 주라인, 이후 라인은 부라인\n' +
+    '3. `내전상세 번호 추가 이름/mid,all` → MID를 제외한 네 라인을 부라인으로 저장\n' +
+    '4. 같은 이름에 라인을 다시 보내면 기존 슬롯을 유지하고 라인만 수정\n' +
+    '5. 최신 전체 내전 양식의 빈칸에 사이트 등록 이름 추가. 카카오 신청은 양식에서 추가·삭제·라인 수정할 수 있고 사이트 신청·팀 확정·보호 대상은 보존한다. 회원 확인 필요 명단은 확정 인원과 분리하며, 주라인 1개·부라인 최대 4개와 본 참가 10명 상한을 확인한다.\n' +
+    '6. `전적 RiotID#태그`, `최근 RiotID#태그`, `랭킹`\n' +
+    '7. 외출·지인·건의·모임 양식\n' +
+    '\n' +
+    '모든 명령은 맨 앞 `/`가 있거나 없어도 같게 처리한다. 구인 운영일은 KST 오전 6시에 바뀐다. 번호·양식코드는 수정하지 않는다. 원본·사용자 편집본·현재 명단을 비교해 동시 편집을 합친다. 전체 행을 명시한 빈칸은 허용 범위에서 삭제로 처리하고, 누락 행을 삭제로 추측하지 않는다. 카카오 본 참가 10명을 넘으면 전체 저장을 거부하며 예비 전환은 명시적으로 입력한다. 보호 대상, 모집 정보 변경, 만료·다른 대상 코드는 저장하지 않고 최신 양식을 안내한다. 구형 저장기준 없는 양식은 기존 정보 보존 추가만 허용한다. 수동 마감은 명단을 보존한다.\n' +
+    '\n' +
+    '`0040_kakao_form_snapshot_codes.sql`은 새 snapshot 테이블·인덱스만 추가한다. 기존 모집·내전·스크림 기록 삭제는 없다. 코드 사용은 다음 운영일 06:00 KST부터 거부하며, 만료 행 물리 정리는 요청당 최대 256개다. 무트래픽 때 즉시 삭제되는 주기 작업은 아니다.\n' +
+    '\n' +
+    '## 판정 기준\n' +
+    '\n' +
+    '- 소스 빌드·ES5/Rhino·서명 smoke 통과: 코드와 서버 연결 확인\n' +
+    '- 휴대폰 컴파일 성공: 설치 파일 무결성 확인\n' +
+    '- 실제 두 방에서 위 기능 확인: 외부 설치 완료\n' +
+    '\n' +
+    '앞의 두 단계만 통과한 상태를 휴대폰 운영 완료라고 기록하지 않는다.\n'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/kakao-v4-gateway/tests/kakao-v1-exact-v4-adapter-architecture.test.mjs:54:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '# MessengerBot R 일반 봇·사이트 알림 설치 안내\n\n## 현재 설치본\n\n현재 확인된 운영 서버는 2026-09-22 복사 양식 안정화 1.0.1이며 DB migration은 `0041`이다. R24 호환 검사를 통과했으므로 이번 서버 패치를 쓰려고 일반 봇을 반드시 교체할 필요는 없다. [확인된 운영 배포 근거](../../docs/qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/README.md). 이후 운영 준비 패치와 알림 companion은 소스 상태이며 새 배포 근거는 [현재 상태](../../docs/STATUS.md)를 따른다.\n\n사용자가 확인한 **MessengerBot R 앱 버전은 0.7.29a**다. 이것은 아래 봇 JavaScript 버전과 다르다. 실제 휴대폰 봇 버전·해시·컴파일·채팅방 송수신은 아직 미확인이다. 로컬 생성된 일반 봇 설치 후보는 **R25**이며, 교체할 때에는 아래 **비공개 한 파일만** 전체 복사한다.\n\n`.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`\n\n`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 신규 교체 시에는 위 `.private` 파일을 사용하며, 생성 버전·해시를 확인한 뒤 붙인다.\n\nV1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내전을 짧은 양식 복사 참가로 통일하며, 카카오 스크림 종료를 유지한다. 편집 범위는 승인된 [ADR0011](../../docs/architecture/0011-kakao-party-editable-copy-flow.md)·[ADR0012](../../docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따른다. 짧은 양식코드의 원본과 최신 명단을 함께 비교해 동시 참가를 합치며, V4 서명·멱등성·단일 요청 경계를 유지한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.\n\n사이트 참가로 내전 10명이 찼을 때 알리는 기능은 별도 [사이트 알림 companion](site-notices/README.md)이다. 기본 OFF이며 일반 봇에 이어 붙이지 않는다. 서버 설정·정확한 수신 세션 등록·0.7.29a 실기기 검사가 필요하다.\n\n한 대의 휴대폰에서 MessengerBot R 봇 프로필 하나가 구인구직방과 기능방 두 곳을 구독한다. 메시지 내용에 따라 서버 프로필을 자동 선택한다.\n\n- 파티·구인 계열: `RECRUIT` (스크림은 종료 안내만 표시)\n- 내전·전적·랭킹·운영 양식 계열: `FEATURES`\n\n카카오 알림 parser의 방 이름은 인증이나 라우팅에 쓰지 않는다. 따라서 잘못된 방에서 명령을 보내도 명령 종류가 맞으면 실행될 수 있다. 물리적인 두 방 분리는 MessengerBot R의 구독 대상과 운영 안내로 유지한다.\n\n## 일반 봇을 교체할 때의 순서\n\n1. 휴대폰 MessengerBot R에서 기존 K-LOL 봇을 중지한다.\n2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.\n3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.\n4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.\n5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R25_2026_09_22`를 검색한다.\n6. 마지막 줄이 단독 `}`이고 파일 안에 `function response(`가 한 번만 있는지 확인한다.\n7. 저장·컴파일 후 봇을 다시 시작한다.\n8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.\n9. 두 방에서 각각 `봇버전`과 `/봇버전`을 확인한다.\n10. `오픈채팅봇`의 `입장시 할 일` 안내 뒤 서로 다른 네 가지 톤 중 하나로 완성된 안내 한 건만 표시되는지 확인한다.\n\n휴대폰에 붙일 비공개 파일에는 필요한 네 설정을 먼저 `DataBase`에 기록하는 초기화 코드가 포함되어 있다. 값을 채팅이나 Git에 복사하지 않는다. 공개 설치본은 비밀값이 없으므로 휴대폰 `DataBase`에 설정이 이미 존재할 때만 단독으로 동작한다.\n\n## 현재 파일 검증값\n\n| 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |\n| --- | --- | ---: | ---: | ---: | --- |\n| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,304 | 65,145 | 1,842 | `e18ea983d2125ffb2c187d1e330f4e1671f56f1878c7ce9b99e9a272b03b2886` |\n| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,593 | 63,435 | 1,843 | `145f46e6de4e17c6b6608fb6175962f0d19869596c34276024ba6a1131a56b3e` |\n\n위 값은 2026-09-22 로컬 생성 파일의 값이며 실기기 설치 증거가 아니다. 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. 원본 fixture를 바꾸지 않고 생성본의 빈 줄·행 선행 들여쓰기를 제거하며 승인 변경 밖의 V1 실행문 동일성은 별도로 검증한다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.\n\nR23 private 백업: `.private/backups/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.pre-r24-20260920-065116-919.js` (SHA-256 `e81d1f800f4a52d66f3afde85f21b16546a527db7dc18ccdf73bf1d246951a6c`). 이 과거 백업을 현재 서버에 바로 설치하지 않는다. 롤백은 사용하려는 서버와 휴대폰 조합의 호환 근거를 확인하고 진행하며, snapshot 테이블은 삭제하지 않는다.\n\n해시나 끝 표시가 다르면 일부만 복사됐거나 다른 버전이 섞인 것이다. 오류 행에 임의로 `}`나 따옴표를 추가하지 말고 전체 파일을 다시 교체한다.\n\n## 서버 연결 확인\n\n비공개 설치본의 설정은 다음 네 항목이다.\n\n- `KLOL_V2_BASE_URL`\n- `KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT`\n- `KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT`\n- `KLOL_V4_KAKAO_IDENTITY_SECRET`\n\n공개 저장소나 문서에는 실제 값이 없어야 한다. 서버와 휴대폰 서명 키·키 ID가 글자 하나까지 같아야 하며 identity secret은 서명 키와 다른 32바이트 이상 값이어야 한다.\n\n로컬 비공개 설정을 이용한 운영 읽기 전용 smoke는 `RECRUIT`와 `FEATURES` 두 프로필 모두 HTTP 200 및 command gateway 정상 응답을 확인한다.\n\n```powershell\nnpm run bot:kakao:v1-strict\nnpm run bot:kakao:v1-strict:private\nnode scripts/verify-private-messengerbot-v1-strict-live.mjs\n```\n\n이 검사는 비밀값을 출력하지 않는다. 실제 휴대폰 컴파일과 카카오 송수신은 휴대폰 설치 후 별도로 확인해야 한다.\n\n## 기능 확인 순서\n\n구인구직방:\n\n1. `5인파티` → 양식만 출력되고 사용자에게 보이는 구인은 아직 시작되지 않음\n2. 출력된 전체 양식 복사 → 빈 참가 칸에 이름 입력 → 전체 전송 → 같은 번호 활성화와 최신 전체 양식 출력 (주최자 입력 필수 아님)\n3. `상세 번호 추가 이름`, `상세 번호 삭제 이름`은 보조 기능 → 1명 변경 후 최신 전체 양식 출력\n4. `구인현황`, `상세 번호`, 다른 사용자가 만든 `번호ㅉ`\n5. `스크림구인`, `스크림현황`, `스크림 번호ㅉ` → 기능 종료 안내, 저장 호출 없음\n\n기능방:\n\n1. `내전구인` → 모드 선택 → 전체 양식 복사 → 이름 입력 → 전체 전송 → 최신 전체 양식. `내전현황`, `내전 번호ㅉ` 유지\n2. `내전상세 번호 추가 이름/mid/ad` 또는 `이름/mid,ad` → 첫 라인은 주라인, 이후 라인은 부라인\n3. `내전상세 번호 추가 이름/mid,all` → MID를 제외한 네 라인을 부라인으로 저장\n4. 같은 이름에 라인을 다시 보내면 기존 슬롯을 유지하고 라인만 수정\n5. 최신 전체 내전 양식의 빈칸에 사이트 등록 이름 추가. 카카오 신청은 양식에서 추가·삭제·라인 수정할 수 있고 사이트 신청·팀 확정·보호 대상은 보존한다. 회원 확인 필요 명단은 확정 인원과 분리하며, 주라인 1개·부라인 최대 4개와 본 참가 10명 상한을 확인한다.\n6. `전적 RiotID#태그`, `최근 RiotID#태그`, `랭킹`\n7. 외출·지인·건의·모임 양식\n\n모든 명령은 맨 앞 `/`가 있거나 없어도 같게 처리한다. 구인 운영일은 KST 오전 6시에 바뀐다. 번호·양식코드는 수정하지 않는다. 원본·사용자 편집본·현재 명단을 비교해 동시 편집을 합친다. 전체 행을 명시한 빈칸은 허용 범위에서 삭제로 처리하고, 누락 행을 삭제로 추측하지 않는다. 카카오 본 참가 10명을 넘으면 전체 저장을 거부하며 예비 전환은 명시적으로 입력한다. 보호 대상, 모집 정보 변경, 만료·다른 대상 코드는 저장하지 않고 최신 양식을 안내한다. 구형 저장기준 없는 양식은 기존 정보 보존 추가만 허용한다. 수동 마감은 명단을 보존한다.\n\n`0040_kakao_form_snapshot_codes.sql`은 새 snapshot 테이블·인덱스만 추가한다. 기존 모집·내전·스크림 기록 삭제는 없다. 코드 사용은 다음 운영일 06:00 KST부터 거부하며, 만료 행 물리 정리는 요청당 최대 256개다. 무트래픽 때 즉시 삭제되는 주기 작업은 아니다.\n\n## 판정 기준\n\n- 소스 빌드·ES5/Rhino·서명 smoke 통과: 코드와 서버 연결 확인\n- 휴대폰 컴파일 성공: 설치 파일 무결성 확인\n- 실제 두 방에서 위 기능 확인: 외부 설치 완료\n\n앞의 두 단계만 통과한 상태를 휴대폰 운영 완료라고 기록하지 않는다.\n',
+    expected: /KLOL_KAKAO_BOT_V40_R24_2026_09_20/u,
+    operator: 'match',
+    diff: 'simple'
+  }

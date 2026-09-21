@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `41236032574ef205a4c4030a01aac791760b7219407c14c0c4caac99b648a069`
-- Tables: 103
-- Foreign keys: 165
+- Schema SHA-256: `2fe6810527b1714f7c1555c39f7d6aa85e4d936424f757676f2a7488bd2f25ae`
+- Tables: 105
+- Foreign keys: 168
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -1227,6 +1227,22 @@ erDiagram
         timestamp_with_time_zone registered_at "NOT NULL"
         timestamp_with_time_zone updated_at "NOT NULL"
     }
+    recruiting__kakao_site_notices {
+        uuid id PK "NOT NULL"
+        varchar_100 event_key UK "NOT NULL"
+        uuid round_id FK "NOT NULL"
+        bytea source_room_id_hash "NOT NULL"
+        bytea target_hash "NOT NULL"
+        varchar_16 status "NOT NULL"
+        integer attempts "NOT NULL"
+        timestamp_with_time_zone available_at "NOT NULL"
+        bytea lease_token_hash "nullable"
+        timestamp_with_time_zone lease_until "nullable"
+        timestamp_with_time_zone expires_at "NOT NULL"
+        timestamp_with_time_zone delivered_at "nullable"
+        varchar_32 failure_code "nullable"
+        timestamp_with_time_zone created_at "NOT NULL"
+    }
     recruiting__nonce_bindings {
         uuid id PK "NOT NULL"
         varchar_12 actor_kind "NOT NULL"
@@ -1329,6 +1345,7 @@ erDiagram
     auth__user_accounts o|--o{ recruiting__operation_forms : "reviewed_by_user_account_id to id"
     auth__user_accounts o|--o{ recruiting__parties : "owner_user_account_id to id"
     auth__user_accounts o|--o{ recruiting__scrims : "owner_user_account_id to id"
+    competition__season_inhouse_rounds ||--o{ recruiting__kakao_site_notices : "round_id to id"
     recruiting__kakao_bot_installations ||--o{ recruiting__kakao_room_bindings : "installation_id to id"
     recruiting__kakao_bot_installations o|--o{ recruiting__kakao_room_pairings : "consumed_installation_id to id"
     recruiting__kakao_image_sessions ||--o{ recruiting__kakao_inbound_images : "session_id to id"
@@ -1465,6 +1482,8 @@ erDiagram
         integer league_points "nullable"
         integer wins "nullable"
         integer losses "nullable"
+        jsonb recent_solo_json "nullable"
+        timestamp_with_time_zone recent_solo_synced_at "nullable"
         timestamp_with_time_zone last_synced_at "NOT NULL"
         timestamp_with_time_zone updated_at "NOT NULL"
     }
@@ -1651,12 +1670,22 @@ erDiagram
         timestamp_with_time_zone created_at "NOT NULL"
         timestamp_with_time_zone delivered_at "nullable"
     }
+    team_tools__team_balance_player_overrides {
+        uuid player_id PK, FK "NOT NULL"
+        integer score "NOT NULL"
+        varchar_300 reason "NOT NULL"
+        integer revision "NOT NULL"
+        uuid updated_by_user_account_id FK "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
     auth__user_accounts ||--o{ team_tools__team_balance_command_receipts : "actor_user_account_id to id"
     auth__user_accounts ||--o{ team_tools__team_balance_draft_candidates : "created_by_user_account_id to id"
     auth__user_accounts ||--o{ team_tools__team_balance_drafts : "created_by_user_account_id to id"
     auth__user_accounts ||--o{ team_tools__team_balance_drafts : "owner_user_account_id to id"
     auth__user_accounts ||--o{ team_tools__team_balance_drafts : "updated_by_user_account_id to id"
+    auth__user_accounts ||--o{ team_tools__team_balance_player_overrides : "updated_by_user_account_id to id"
     registry__players ||--o{ team_tools__team_balance_draft_participants : "player_id to id"
+    registry__players ||--o| team_tools__team_balance_player_overrides : "player_id to id"
     team_tools__team_balance_drafts ||--o{ team_tools__team_balance_draft_candidates : "draft_id to id"
     team_tools__team_balance_drafts ||--o{ team_tools__team_balance_draft_participants : "draft_id to id"
     team_tools__team_balance_drafts ||--o{ team_tools__team_balance_outbox : "draft_id to id"

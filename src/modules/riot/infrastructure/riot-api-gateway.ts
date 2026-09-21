@@ -5,6 +5,7 @@ import {
   type RiotRankSnapshot,
 } from "../application/ports";
 import { canonicalRiotId } from "../domain/riot-integration";
+import { recentSoloSample, summarizeRecentSolo } from "../domain/recent-solo-summary";
 
 type Fetch = typeof fetch;
 
@@ -14,6 +15,7 @@ type GatewayConfiguration = Readonly<{
   platformBaseUrl: string;
   timeoutMilliseconds?: number;
   fetch?: Fetch;
+  monotonicNow?: () => number;
 }>;
 
 type FetchResult =
@@ -167,6 +169,39 @@ export class RiotApiGateway implements RiotGatewayPort {
     return { tier: null, rank: null, leaguePoints: null, wins: null, losses: null, partial: false };
   }
 
+  async fetchRecentSolo(input: Readonly<{ puuid: string }>): ReturnType<NonNullable<RiotGatewayPort["fetchRecentSolo"]>> {
+    if (!boundedString(input.puuid, 128) || /\s/u.test(input.puuid)) return { kind: "UNAVAILABLE" };
+    const clock = this.configuration.monotonicNow ?? (() => performance.now());
+    const deadline = clock() + 25_000;
+    const read = (url: URL, maximumBytes: number) => {
+      const remaining = Math.floor(deadline - clock());
+      return remaining > 0 ? this.fetchJson(url, maximumBytes, Math.min(this.timeoutMilliseconds, remaining))
+        : Promise.resolve({ kind: "TRANSIENT", code: "TIMEOUT" } as const);
+    };
+    const idsUrl = new URL(`/lol/match/v5/matches/by-puuid/${encodeURIComponent(input.puuid)}/ids`, this.configuration.regionalBaseUrl);
+    idsUrl.searchParams.set("queue", "420");
+    idsUrl.searchParams.set("start", "0");
+    idsUrl.searchParams.set("count", "20");
+    const ids = await read(idsUrl, 8 * 1_024);
+    if (ids.kind !== "SUCCESS") return { kind: "UNAVAILABLE", ...(ids.kind === "RATE_LIMITED" ? { retryAfterSeconds: ids.retryAfterSeconds } : {}) };
+    if (!Array.isArray(ids.value) || ids.value.length > 20 || ids.value.some((id) => typeof id !== "string" || !/^[A-Z0-9]{2,8}_[0-9]{1,20}$/u.test(id)) || new Set(ids.value).size !== ids.value.length) return { kind: "UNAVAILABLE" };
+    const samples: Exclude<ReturnType<typeof recentSoloSample>, "REMAKE" | null>[] = [];
+    // Two concurrent reads at most; a failed chunk stops further provider calls.
+    for (let index = 0; index < ids.value.length; index += 2) {
+      const chunk = ids.value.slice(index, index + 2) as string[];
+      const results = await Promise.all(chunk.map((id) => read(new URL(`/lol/match/v5/matches/${encodeURIComponent(id)}`, this.configuration.regionalBaseUrl), 256 * 1_024)));
+      const limited = results.filter((result): result is Extract<FetchResult, { kind: "RATE_LIMITED" }> => result.kind === "RATE_LIMITED");
+      if (limited.length) return { kind: "UNAVAILABLE", retryAfterSeconds: Math.max(...limited.map((result) => result.retryAfterSeconds)) };
+      for (const [offset, result] of results.entries()) {
+        if (result.kind !== "SUCCESS") return { kind: "UNAVAILABLE" };
+        const sample = recentSoloSample(result.value, chunk[offset]!, input.puuid);
+        if (!sample) return { kind: "UNAVAILABLE" };
+        if (sample !== "REMAKE") samples.push(sample);
+      }
+    }
+    return { kind: "SUCCESS", summary: summarizeRecentSolo(samples) };
+  }
+
   private syncFailure(result: FetchResult): Awaited<ReturnType<RiotGatewayPort["fetchRank"]>> | null {
     if (result.kind === "NOT_FOUND") return { outcome: { kind: "PERMANENT_FAILURE", code: "NOT_FOUND" } };
     if (result.kind === "UNAUTHORIZED") return { outcome: { kind: "PERMANENT_FAILURE", code: "UNAUTHORIZED" } };
@@ -176,9 +211,9 @@ export class RiotApiGateway implements RiotGatewayPort {
     return null;
   }
 
-  private async fetchJson(url: URL): Promise<FetchResult> {
+  private async fetchJson(url: URL, maximumBytes = 64 * 1_024, timeoutMilliseconds = this.timeoutMilliseconds): Promise<FetchResult> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.timeoutMilliseconds);
+    const timeout = setTimeout(() => controller.abort(), timeoutMilliseconds);
     try {
       const response = await this.request(url, {
         method: "GET",
@@ -194,7 +229,7 @@ export class RiotApiGateway implements RiotGatewayPort {
       }
       if (response.status >= 500) return { kind: "TRANSIENT", code: "UPSTREAM_5XX" };
       if (!response.ok) return { kind: "INVALID_RESPONSE" };
-      try { return { kind: "SUCCESS", value: await readBoundedJson(response) }; }
+      try { return { kind: "SUCCESS", value: await readBoundedJson(response, maximumBytes) }; }
       catch { return { kind: "INVALID_RESPONSE" }; }
     } catch {
       return { kind: "TRANSIENT", code: controller.signal.aborted ? "TIMEOUT" : "NETWORK" };

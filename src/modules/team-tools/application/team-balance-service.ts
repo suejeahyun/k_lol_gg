@@ -151,6 +151,8 @@ function envelope(
   };
 }
 
+export { envelope as teamBalanceCommandEnvelope };
+
 function emptyBody(value: unknown) {
   objectBody(value, []);
 }

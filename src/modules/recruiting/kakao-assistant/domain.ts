@@ -45,7 +45,7 @@ export type KakaoOpenChatStatusDto = Readonly<{
     recruitNumber: number;
     type: "FLEX_RANK" | "NORMAL_GAME" | "SOLO_RANK" | "ARAM" | "TFT_NORMAL" | "TFT_RANK" | "DOUBLE_UP" | "PARTY_NUMBER" | "PARTY_RIFT" | "OTHER_GAME";
     title: string;
-    status: "IN_PROGRESS";
+    status: "DRAFT" | "IN_PROGRESS";
     memberCount: number;
     reserveCount: number;
     maximumMembers: number;

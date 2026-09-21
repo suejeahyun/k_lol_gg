@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Disposable QA artifacts and private credentials are not source inputs.
+    ".tmp/**",
+    ".private/**",
   ]),
 ]);
 

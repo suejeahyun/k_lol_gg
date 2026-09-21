@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-09-21T21:13:07.985Z",
+  "scope": "unique synthetic image only",
+  "credentials": "oidc",
+  "productionContentModified": false,
+  "storageKey": "readiness/5cc3d82b-b728-4513-a7c9-32deaa98de90",
+  "status": "FAIL",
+  "failureCode": "BLOB_PROVIDER_TEST_FAILED",
+  "failureType": "Error",
+  "diagnostic": "Vercel Blob: OIDC is enabled for this project, but not for the \"development\" environment."
+}

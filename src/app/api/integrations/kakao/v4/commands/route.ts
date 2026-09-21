@@ -51,7 +51,26 @@ function runtimeService() {
 }
 
 export async function POST(request: Request) {
-  const traceId = readValidatedTraceId(request.headers);
+  const traceId = readValidatedTraceId(request.headers) ?? randomUUID().replaceAll("-", "");
+  const startedAt = performance.now();
+  let status = 500;
+  let replayed = false;
+  try {
+    const response = await handleCommand(request, traceId);
+    status = response.status;
+    replayed = response.headers.get("Idempotency-Replayed") === "true";
+    response.headers.set("Server-Timing", `command;dur=${Math.round(performance.now() - startedAt)}`);
+    return response;
+  } finally {
+    // Never include command text, participant names, room identifiers, or credentials.
+    console.info("KAKAO_V4_COMMAND_COMPLETED", {
+      route: "/api/integrations/kakao/v4/commands", traceId, status, replayed,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
+  }
+}
+
+async function handleCommand(request: Request, traceId: string) {
   if (new URL(request.url).searchParams.size > 0) return kakaoV4ProblemResponse("QUERY_FORBIDDEN", traceId);
   if (FORBIDDEN_IDENTITY_HEADERS.some((header) => request.headers.has(header))) {
     return kakaoV4ProblemResponse("FORBIDDEN_IDENTITY_HEADER", traceId);

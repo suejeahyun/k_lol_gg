@@ -19,6 +19,19 @@ import { players } from "./registry";
 
 const timestamptz = (name: string) => timestamp(name, { mode: "date", withTimezone: true });
 
+export const teamBalancePlayerOverrides = teamToolsSchema.table("team_balance_player_overrides", {
+  playerId: uuid("player_id").primaryKey().references(() => players.id, { onDelete: "restrict" }),
+  score: integer("score").default(0).notNull(),
+  reason: varchar("reason", { length: 300 }).notNull(),
+  revision: integer("revision").default(0).notNull(),
+  updatedByUserAccountId: uuid("updated_by_user_account_id").notNull().references(() => userAccounts.id, { onDelete: "restrict" }),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  check("team_balance_override_score_range", sql`${table.score} BETWEEN -1000 AND 1000`),
+  check("team_balance_override_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("team_balance_override_reason_length", sql`char_length(btrim(${table.reason})) BETWEEN 3 AND 300`),
+]);
+
 export const teamBalanceDraftStatus = teamToolsSchema.enum("team_balance_draft_status", [
   "EVALUATED",
   "SAVED",

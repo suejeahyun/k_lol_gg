@@ -1,0 +1,334 @@
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ all journaled migrations install idempotently on a distinct empty PostgreSQL 18 database (936.7884ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1667.4842
+✔ 0041 fresh install, populated 0040 upgrade and reapply preserve enrollment history (2639.6985ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3379.7199
+✔ four guards reject unsafe database targets (0.769ms)
+▶ migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18
+  ✔ forward migration preserves existing player rows and is idempotent (1163.5598ms)
+  ✔ auth and TOTP constraints fail closed (137.8061ms)
+  ✔ database auth repository persists durable session, TOTP, and rate-limit state (258.2885ms)
+  ✔ registry uniqueness and lifecycle constraints are enforced (6.7484ms)
+  ✔ PostgresPlayerRepository returns only public active projections (23.879ms)
+  ✔ domain change and audit append commit or roll back atomically (7.433ms)
+✔ migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18 (1604.3343ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2357.8086
+▶ administrator TOTP lifecycle is serialized, audited, and rolled back atomically
+  ✔ a TOTP setup session that expires while queued cannot mutate security state (529.5052ms)
+  ✔ pending setup never rotates silently and explicit cancellation is auditable (16.9904ms)
+  ✔ concurrent enable has one winner and revokes every session in its transaction (19.4207ms)
+  ✔ audit insertion failure rolls credential, version, and revocation back (13.2603ms)
+  ✔ concurrent self-disable deletes the factor and revokes all sessions exactly once (11.1054ms)
+  ✔ USER is rejected while SUPER_ADMIN self-setup remains allowed (16.4475ms)
+✔ administrator TOTP lifecycle is serialized, audited, and rolled back atomically (712.821ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1461.903
+✔ S02 player mutations, legacy mapping, privacy, replay, and rollback hold on PostgreSQL 18 (1175.4999ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1961.2856
+▶ season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18
+  ✔ retired lifecycle timestamps reject activated or ended history (3.5939ms)
+  ✔ concurrent activation leaves exactly one active season (233.8139ms)
+  ✔ clone creates a draft and stale clone revision is rejected (12.4752ms)
+  ✔ Kakao provenance hash and position invariants are enforced by PostgreSQL (324.2927ms)
+  ✔ SUPER resolves or cancels pending Kakao applications with idempotency, merge policy and safe team handoff (358.7567ms)
+  ✔ SITE upsert reuses the same player/date/round row imported from Kakao (22.08ms)
+  ✔ command receipts expire after 24 hours and an expired key is safely reusable (10.2004ms)
+  ✔ season audit snapshots retain lifecycle and schedule field diffs (17.7899ms)
+  ✔ clone and cancellation roll back with their audit event (10.4122ms)
+  ✔ owner cancellation, resubmission and admin review honor revisions (99.7299ms)
+  ✔ public DTO excludes member, login, Discord and internal review fields (7.7388ms)
+  ✔ public status counts cover the full roster while the projection is capped at 200 (69.0487ms)
+  ✔ viewer approval and active-player capability are rechecked from the database (30.7395ms)
+  ✔ non-approved account is rechecked inside the mutation transaction (1.1353ms)
+  ✔ ACCOUNT and ADMIN purposes cannot cross-authorize season commands (2ms)
+  ✔ ADMIN and SUPER_ADMIN roles may use approved user actions only through ACCOUNT sessions (24.3068ms)
+  ✔ session revocation wins over a queued ACCOUNT mutation (163.8836ms)
+  ✔ TOTP removal wins over a queued ADMIN mutation (166.6215ms)
+  ✔ soft-deleted account is rejected again inside the mutation transaction (2.2425ms)
+  ✔ reviewer history restricts hard deletion of the reviewer account (5.4824ms)
+  ✔ audit failure rolls the season and idempotency receipt back together (4.3292ms)
+  ✔ ending and retirement preserve history instead of cascading deletion (9.688ms)
+✔ season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18 (1709.5954ms)
+✔ site and Kakao serialize the last seat, allow explicit reserves and block closed rounds (427.3689ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2976.8817
+▶ site capacity transition queue is atomic, scoped, replay-safe and offline tolerant
+  ✔ UNVERIFIED matches only one-candidate review items (14.3517ms)
+  ✔ website roster ignores legacy pending in another scope or mode (97.9068ms)
+  ✔ 9 to 10, retry and unchanged 10 create a single notification (43.1516ms)
+  ✔ failed application transaction rolls back its notification (41.4457ms)
+  ✔ another scope or target cannot claim and replay is refused (14.5931ms)
+  ✔ offline lease expires, concurrent polls claim once, ACK is idempotent (39.7475ms)
+  ✔ uncertain send is terminal; a newer 9 to 10 transition remains separate (50.3608ms)
+  ✔ expiry, failure bound and retention are enforced (50.6143ms)
+✔ site capacity transition queue is atomic, scoped, replay-safe and offline tolerant (454.3442ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1243.4172
+✔ S01 account lifecycle, recovery security, races, replay, and rollback hold on PostgreSQL 18 (4282.941ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8444.5206
+▶ S04 stores participant display identity and rejection reasons as durable history
+  ✔ published detail keeps ten KDA rows and exposes a real API 404/fallback contract (55.5514ms)
+  ✔ registry rename does not rewrite a recorded participant or its archived revision (277.4491ms)
+  ✔ reject after and reopen before audit snapshots retain the cleared public reason (20.3399ms)
+  ✔ web submission accepts only the owner's current valid selected team draft (28.6997ms)
+  ✔ admin match creation rechecks and persists the exact selected team draft (26.6487ms)
+  ✔ submission approval carries team-balance provenance through match history and outbox (44.2295ms)
+✔ S04 stores participant display identity and rejection reasons as durable history (623.3343ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1379.3407
+✔ S05 rebuilds PUBLISHED match statistics atomically and receipts make replay idempotent (446.5303ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1225.8545
+✔ S10 media publication is TOTP-authorized, idempotent, asset-safe, auditable, and soft archived (340.1601ms)
+✔ S10 admin upload persists STAGED to READY, lists by exact draft, attaches safely, and tombstones unused assets (289.7819ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1480.5326
+✔ team internal experience counts published games only and converges after void and restore (258.6349ms)
+✔ team-only override is SUPER/TOTP audited and recent solo provider requires connected fresh identity (295.3956ms)
+✔ S06 draft lifecycle is owner/admin authorized, append-only, transactional, and idempotent (699.1555ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2140.7974
+✔ S05-B persists canonical full-ledger MMR replay without competing for the S04 outbox (489.8382ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1248.5425
+✔ S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomically with owner/session checks (247.1817ms)
+✔ party member statistics are bounded and count distinct parties and primary companions (104.8243ms)
+✔ S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity (119.7271ms)
+✔ Kakao aggregate controllers block confused-deputy lifecycle mutations (166.5064ms)
+✔ V4 scrim finish completes only the active same-room target and replays without duplicate writes (114.6874ms)
+✔ concurrent V4 party member commands serialize on the locked latest aggregate (331.2898ms)
+✔ concurrent V4 scrim participant commands compose after the database row lock (187.5568ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2130.0232
+✔ S09 operation forms persist signed submissions and ADMIN TOTP mutations atomically (193.4193ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 940.3801
+✔ signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room (180.7381ms)
+✔ in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room (368.7644ms)
+✔ authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes (214.0152ms)
+✔ signed Kakao season snapshots match exact players and preserve unresolved entries for review (185.5269ms)
+✔ recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks (141.6606ms)
+✔ in-house shortcuts and full snapshots enforce integrated SITE capacity while preserving confirmed decisions (224.8102ms)
+✔ in-house finish preserves every roster row, hides the round, and replays without writes (139.3674ms)
+✔ editable inhouse forms count unlinked names, merge concurrent additions, protect SITE rows and retain closed rosters (393.0302ms)
+✔ name-first in-house copies keep pending slots and merge metadata without overwriting newer edits (230.3347ms)
+✔ in-house copy forms reopen a vacated reserve slot and preserve the remaining roster (180.6238ms)
+✔ owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke (163.3543ms)
+✔ Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox (202.919ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3551.2019
+▶ Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST
+  ✔ scope, kind, target and operating-day binding are mandatory (8.6858ms)
+  ✔ concurrent readers reuse a single durable original (125.2413ms)
+  ✔ transaction rollback does not leave an issued code behind (3.4452ms)
+  ✔ database constraints fail closed even when application validation is bypassed (149.2304ms)
+  ✔ midnight preserves the code but the exact 06:00 boundary rejects it (75.2936ms)
+  ✔ bounded retention cleanup never removes a live original (35.0024ms)
+✔ Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST (523.9029ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1297.1052
+✔ one installation maps to exactly one canonical room without room parsing or sender allowlists (313.0366ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1060.9956
+✔ ADR0011 lists more than twenty parties without snapshots and reads scoped active/draft details directly (153.0315ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 970.5876
+✔ [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle (1.2301ms)
+✔ [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member (8.8387ms)
+✔ [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot (3.9809ms)
+✔ [P0-PARTY-03] slash and comma in one reserve row stay in one display name (0.6103ms)
+✔ [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target (1.4827ms)
+✔ [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot (0.5233ms)
+✔ [P0-PARTY-06] member order is canonical and independent of pasted row order (0.6415ms)
+✔ [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved (1.4234ms)
+✔ [P0-PARTY-08] multiline metadata values match their single-line semantic values (1.5455ms)
+✔ [P0-PARTY-09] an automatic-number empty draft never creates a recruit (1.2187ms)
+✔ [P0-OPS-01] all four forms preserve values continued on the following line (4.1521ms)
+✔ [P0-OPS-02] all four forms expose exact missing-field contracts without submission (1.1703ms)
+✔ [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter (0.3173ms)
+✔ [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN (1.2643ms)
+✔ [P0-OPS-05:friends] field order does not alter the canonical payload (0.3832ms)
+✔ [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form (0.2624ms)
+✔ [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field (0.3193ms)
+✔ [P0-OPS-05:suggestions] field order does not alter the canonical payload (0.2033ms)
+✔ [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form (0.1454ms)
+✔ [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field (0.2236ms)
+✔ [P0-OPS-05:meetups] field order does not alter the canonical payload (0.4237ms)
+✔ [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form (0.231ms)
+✔ [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field (0.369ms)
+✔ [P0-OPS-05:leaves] field order does not alter the canonical payload (0.2804ms)
+✔ [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form (0.2133ms)
+✔ [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field (0.6073ms)
+✔ [P0-OPS-08] prose mentioning every label is not classified as a form (0.1481ms)
+✔ [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed (0.6914ms)
+✔ [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched (0.6783ms)
+✔ [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch (0.5088ms)
+✔ [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server (0.15ms)
+✔ [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker (0.196ms)
+✖ [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role (155.5813ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 32
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1004.6624
+
+✖ failing tests:
+
+test at tests\kakao-v4-input-tolerance-p0.test.ts:396:1
+✖ [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role (155.5813ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 2
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\kakao-v4-gateway\tests\kakao-v4-input-tolerance-p0.test.ts:569:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+[db-contract] cluster stopped and disposable workspace path removed
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:498
+      throw new Error(`${relativeTestFile} failed with exit code ${exitCode}.`);
+            ^
+
+Error: tests/kakao-v4-input-tolerance-p0.test.ts failed with exit code 1.
+    at runContractTests (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:498:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async runFreshThenUpgradeContractTests (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:659:3)
+    at async main (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:1244:5)
+    at async <anonymous> (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:1265:1)
+
+Node.js v24.14.1
+[full-page-qa] cleanup warning: isolated browser QA harness failed with exit code 1.
+Error: isolated browser QA harness failed with exit code 1.
+    at ChildProcess.<anonymous> (file:///E:/k-LOL.GG/worktrees/kakao-v4-gateway/scripts/run-full-page-qa.mjs:84:35)
+    at Object.onceWrapper (node:events:623:26)
+    at ChildProcess.emit (node:events:508:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:294:12)

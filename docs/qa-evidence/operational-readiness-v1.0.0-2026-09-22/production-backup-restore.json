@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-09-21T21:21:46.702Z",
+  "targetFingerprint": "c5918218dd171001",
+  "sourceReadOnly": true,
+  "archive": ".private/recovery/readiness-befa22a5-a3d2-47d8-8dee-7b568ed2d018/production-before.dump",
+  "status": "PASS",
+  "backupMs": 99178,
+  "bytes": 5426541,
+  "sha256": "2c7922cdd88097f7302f778815f8af9bce622c6c6876b2339ac6f3c0dedd6e64",
+  "archiveCatalogReadable": true,
+  "restoreMs": 5160,
+  "tables": 184,
+  "rowCountsMatch": true,
+  "columnsMatch": false,
+  "constraintsMatch": false,
+  "invalidConstraints": 0,
+  "migrationHead": {
+    "hash": "07f5b26458e2c792152826d9defd8839660c338b745c5795d9113e1f83219ebd",
+    "created_at": "1789982580113"
+  },
+  "migrationHeadMatches": true,
+  "providerPitrTested": false,
+  "retainedPrivateArchive": true,
+  "originalDatabaseChanged": false,
+  "clusterStopped": true,
+  "logicalColumnsMatch": true,
+  "logicalConstraintsMatch": true,
+  "constraintsCompared": 886,
+  "canonicalizedChecks": 22,
+  "sourcePostgresVersion": "17.11 (8a81ecb)",
+  "restorePostgresVersion": "18.3",
+  "schemaComparisonNotes": [
+    "pg_dump compacts physical ordinal gaps left by dropped columns; logical column order/name/type/nullability/default are compared.",
+    "PostgreSQL 18 adds catalog NOT NULL constraints; nullability is verified in columns.",
+    "Source CHECK definitions are reparsed on the restored PostgreSQL version inside a rolled-back local transaction, then compared exactly."
+  ],
+  "schemaVerifiedAt": "2026-09-21T21:26:06.105Z"
+}

@@ -1,0 +1,13 @@
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ team internal experience counts published games only and converges after void and restore (1111.3953ms)
+✔ team-only override is SUPER/TOTP audited and recent solo provider requires connected fresh identity (301.4053ms)
+✔ S06 draft lifecycle is owner/admin authorized, append-only, transactional, and idempotent (710.6394ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2968.1542
+[db-contract] cluster stopped and disposable workspace path removed

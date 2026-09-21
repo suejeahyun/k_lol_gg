@@ -485,6 +485,9 @@ export function transitionRecruitParty(input: Readonly<{
 }>): RecruitParty {
   expectedRevision(input.party.revision, input.expectedRevision);
   validDate(input.now, "INVALID_RECRUIT_TIME");
+  if (input.party.status === "DRAFT" && input.command === "FINISH") {
+    return { ...input.party, revision: input.party.revision + 1, status: "CANCELED", lastActivityAt: input.now };
+  }
   if (input.party.status !== "IN_PROGRESS") throw new Error("RECRUIT_NOT_MUTABLE");
   const status = input.command === "FINISH" ? "FINISHED" : input.command === "CANCEL" ? "CANCELED" : "RESET";
   return { ...input.party, revision: input.party.revision + 1, status, lastActivityAt: input.now };

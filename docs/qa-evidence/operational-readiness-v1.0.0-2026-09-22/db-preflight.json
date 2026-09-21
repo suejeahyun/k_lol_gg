@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-09-21T21:09:34.226Z",
+  "targetFingerprint": "c5918218dd171001",
+  "readOnly": true,
+  "migrations": [
+    {
+      "count": 42,
+      "latest_at": "1789982580113"
+    }
+  ],
+  "head": [
+    {
+      "hash": "07f5b26458e2c792152826d9defd8839660c338b745c5795d9113e1f83219ebd",
+      "created_at": "1789982580113"
+    }
+  ],
+  "statisticsQueue": [
+    {
+      "status": "PENDING",
+      "count": 4,
+      "oldest": "2026-09-18T09:51:26.566Z",
+      "maximum_attempts": 0
+    }
+  ],
+  "projections": [
+    {
+      "status": "READY",
+      "count": 1,
+      "oldest_calculated": "2026-09-07T15:34:17.448Z",
+      "latest_calculated": "2026-09-07T15:34:17.448Z"
+    }
+  ],
+  "statisticsRuns": [],
+  "riotLinks": [
+    {
+      "status": "DISCONNECTED",
+      "count": 92
+    }
+  ],
+  "riotJobs": [],
+  "maintenance": [
+    {
+      "job_name": "kakao-daily-close",
+      "status": "SUCCEEDED",
+      "count": 9,
+      "latest_completed": "2026-09-21T21:00:18.368Z"
+    }
+  ],
+  "tableCount": [
+    {
+      "count": 184
+    }
+  ]
+}

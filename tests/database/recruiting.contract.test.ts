@@ -124,9 +124,9 @@ test("S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomic
     const rows = await database.select().from(recruitParties).where(eq(recruitParties.id, partyId));
     assert.equal(rows.length, 1);
     assert.equal(rows[0]?.ownerUserAccountId, accountId);
-    assert.equal((await database.select().from(recruitingCommandReceipts)).length, 1);
-    assert.equal((await database.select().from(recruitingOutbox)).length, 1);
-    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "RECRUIT_PARTY"))).length, 1);
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, accountId))).length, 1);
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, partyId))).length, 1);
+    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetId, partyId))).length, 1);
     const feed = await adapter.listPublicFeed();
     assert.equal(feed.parties.length, 1);
     assert.deepEqual(Object.keys(feed.parties[0]!).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
@@ -254,9 +254,9 @@ test("S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request ide
     const first = botCommand(randomUUID(), "s09-bot-contract-0001", 1);
     await handler.handle(first);
     await assert.rejects(handler.handle(botCommand(randomUUID(), "s09-bot-contract-0002", 2)), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
-    assert.equal((await database.select().from(recruitingNonceBindings)).length, 1);
+    assert.equal((await database.select().from(recruitingNonceBindings).where(eq(recruitingNonceBindings.actorPrincipalId, "bot:kakao"))).length, 1);
     assert.equal((await database.select().from(recruitParties).where(eq(recruitParties.recruitDate, "2026-09-08"))).length, 1);
-    const storedNonce = await database.select().from(recruitingNonceBindings);
+    const storedNonce = await database.select().from(recruitingNonceBindings).where(eq(recruitingNonceBindings.actorPrincipalId, "bot:kakao"));
     assert.notEqual(storedNonce[0]?.nonceHash.toString("utf8"), nonce);
     assert.equal(storedNonce[0]?.bindingHash.length, createHash("sha256").digest().length);
   } finally {

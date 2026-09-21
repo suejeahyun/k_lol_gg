@@ -1,6 +1,8 @@
 # MessengerBot R V1-strict
 
-이 디렉터리는 사용자가 제공한 V1/V40 원본의 `response()` 순서, 명령 판정, 로컬 문구, 무응답과 echo 방지를 그대로 유지하면서 전송 경계만 현재 V4 HMAC 명령 API로 교체한다.
+이 디렉터리는 사용자가 제공한 V1/V40 원본을 기준으로 전송 경계를 V4 HMAC 명령 API에 연결한다. 원본 fixture는 불변이며, 승인된 [ADR0011 파티 편집](../../../docs/architecture/0011-kakao-party-editable-copy-flow.md)·[ADR0012 내전 편집](../../../docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)의 제품 동작을 현재 생성본에 반영한다. 승인 범위 밖의 `response()` 순서, 로컬 명령, 무응답과 echo 방지는 원본 계약을 유지한다.
+
+현재 공개·비공개 생성본은 `KLOL_KAKAO_BOT_V40_R25_2026_09_22`다. 서버의 R24 호환과 실제 휴대폰 설치는 별개다. 사용자 확인 앱 버전 **MessengerBot R 0.7.29a**는 봇 JS 버전과 다르며 실제 설치 JS·해시는 아직 미확인이다. 사이트 충원 알림은 일반 봇과 분리된 [기본 OFF companion](../site-notices/README.md)으로 설치한다.
 
 - 원본: Git `4f84e84aa0a4ee986c2aad2c7377d8e3bcf2e097:KLOL_KAKAO_BOT_V40_GUIDED_HUB.js`
 - Git LF blob SHA-256: `0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2`

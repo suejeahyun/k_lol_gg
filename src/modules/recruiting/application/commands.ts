@@ -136,7 +136,8 @@ const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Se
 
 /** PARTY compatibility lookups must select only states mutable by the command. */
 export function partyCompatTargetStatuses(type: RecruitingCommand["type"]): readonly RecruitPartyStatus[] | undefined {
-  if (type === "FINISH_PARTY") return ["IN_PROGRESS"];
+  // Finish resolves these states in order, not in one reset-sorted query.
+  if (type === "FINISH_PARTY") return ["IN_PROGRESS", "DRAFT"];
   if (type === "SYNC_PARTY") return ["DRAFT", "IN_PROGRESS"];
   if (type === "PARTY_MEMBER_ADD" || type === "PARTY_MEMBER_REMOVE") return ["IN_PROGRESS"];
   return undefined;

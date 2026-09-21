@@ -136,11 +136,14 @@ export const riotSummaries = riotSchema.table("summaries", {
   leaguePoints: integer("league_points"),
   wins: integer("wins"),
   losses: integer("losses"),
+  recentSoloJson: jsonb("recent_solo_json").$type<Record<string, unknown>>(),
+  recentSoloSyncedAt: timestamptz("recent_solo_synced_at"),
   lastSyncedAt: timestamptz("last_synced_at").notNull(),
   updatedAt: timestamptz("updated_at").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("riot_summaries_link_uidx").on(table.linkId),
   check("riot_summaries_counts_nonnegative", sql`(${table.leaguePoints} IS NULL OR ${table.leaguePoints} >= 0) AND (${table.wins} IS NULL OR ${table.wins} >= 0) AND (${table.losses} IS NULL OR ${table.losses} >= 0)`),
+  check("riot_summaries_recent_solo_pair", sql`(${table.recentSoloJson} IS NULL AND ${table.recentSoloSyncedAt} IS NULL) OR (${table.recentSoloJson} IS NOT NULL AND jsonb_typeof(${table.recentSoloJson}) = 'object' AND ${table.recentSoloSyncedAt} IS NOT NULL)`),
 ]);
 
 export const riotCommandReceipts = riotSchema.table("command_receipts", {

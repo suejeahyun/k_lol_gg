@@ -285,7 +285,7 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     }
     assert.ok((await database.select().from(riotCommandReceipts)).length >= 7);
     assert.ok((await database.select().from(riotOutbox)).length >= 13);
-    assert.equal((await database.select().from(riotSummaries)).length, 1, "private projection remains durable but hidden after unlink");
+    assert.equal((await database.select().from(riotSummaries).where(eq(riotSummaries.playerId, playerId))).length, 1, "the owner's private projection remains durable but hidden after unlink");
 
     await database.update(authSessions).set({ revokedAt: new Date() }).where(eq(authSessions.id, sessionId));
     await assert.rejects(service.connectDirect({

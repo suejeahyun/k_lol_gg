@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import type { AuthRole, AuthSession } from "@/modules/auth/domain/auth-session";
 import { transactionSessionActor } from "@/modules/auth/domain/transaction-session";
 import { hasSameOrigin } from "@/modules/auth/application/mutation-request-guard";
-import { authorizeApiRole } from "@/modules/auth/infrastructure/server-authorization";
 import {
   definePublicProblem,
   formatRevisionEtag,
@@ -22,7 +21,6 @@ import {
 import type { TeamBalanceCommandContext } from "../application/team-balance-service";
 import type { TeamBalanceMutationResult } from "../application/ports/team-balance-repository";
 import { TeamBalanceServiceError } from "../domain/team-balance-draft";
-import { requireSiteFeature } from "@/modules/operations/infrastructure/site-feature-access";
 
 const problems = Object.freeze({
   forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "이 팀 초안에 접근할 수 있는 계정으로 다시 시도해 주세요." }),
@@ -37,6 +35,10 @@ const problems = Object.freeze({
 });
 
 export async function requireTeamBalanceApiSession(requiredRole: AuthRole, request: Request) {
+  const [{ authorizeApiRole }, { requireSiteFeature }] = await Promise.all([
+    import("@/modules/auth/infrastructure/server-authorization"),
+    import("@/modules/operations/infrastructure/site-feature-access"),
+  ]);
   const decision = await authorizeApiRole(requiredRole);
   if (decision.allowed) {
     const featureFailure = await requireSiteFeature(request, "teamBalance");

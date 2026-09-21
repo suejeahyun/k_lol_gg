@@ -1,6 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "node scripts/releases/ignore-docs-only-deployment.mjs",
   "crons": [
+    {
+      "path": "/api/cron/statistics-projection",
+      "schedule": "*/5 * * * *"
+    },
     {
       "path": "/api/cron/kakao-daily-close",
       "schedule": "0 21 * * *"

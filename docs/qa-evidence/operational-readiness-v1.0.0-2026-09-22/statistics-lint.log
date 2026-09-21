@@ -1,0 +1,4 @@
+Focused local lint on 2026-09-22.
+Command: node node_modules/eslint/bin/eslint.js src/modules/statistics/application/drain-statistics-projection.ts src/modules/statistics/application/process-match-changed.ts src/modules/statistics/infrastructure/postgres-statistics-projection-repository.ts src/modules/statistics/infrastructure/statistics-projection-cron.ts src/app/api/cron/statistics-projection/route.ts tests/statistics-projection-cron.test.ts tests/statistics-projection-service.test.ts tests/database/statistics-projection.contract.test.ts
+Exit code: 0
+Output: empty (no warnings or errors).

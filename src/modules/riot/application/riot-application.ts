@@ -576,11 +576,27 @@ export class RiotApplicationService {
 
     let outcome: RiotSyncOutcome;
     let snapshot: RiotRankSnapshot | undefined;
+    let recentSolo: import("../domain/recent-solo-summary").RiotRecentSoloSummary | undefined;
+    let rankSucceeded = false;
     try {
       const puuid = await this.dependencies.identityProtector.reveal(claimed.link.puuidCiphertext!);
       const result = await this.dependencies.gateway.fetchRank({ puuid });
       outcome = result.outcome;
       snapshot = "snapshot" in result ? result.snapshot : undefined;
+      rankSucceeded = outcome.kind === "SUCCESS";
+      if (outcome.kind === "SUCCESS" && this.dependencies.gateway.fetchRecentSolo) {
+        try {
+          const recent = await this.dependencies.gateway.fetchRecentSolo({ puuid });
+          if (recent.kind === "SUCCESS") recentSolo = recent.summary;
+          else outcome = recent.retryAfterSeconds !== undefined
+            ? { kind: "RATE_LIMITED", retryAfterSeconds: recent.retryAfterSeconds }
+            : { kind: "SUCCESS", partial: true };
+        } catch {
+          // Rank success remains usable; old recent-history data is preserved
+          // with its original timestamp and eventually becomes unavailable.
+          outcome = { kind: "SUCCESS", partial: true };
+        }
+      }
     } catch {
       outcome = { kind: "TRANSIENT_FAILURE", code: "NETWORK" };
       snapshot = undefined;
@@ -597,7 +613,7 @@ export class RiotApplicationService {
         outcome,
         now: this.now(),
       });
-      if (outcome.kind === "SUCCESS" && snapshot) {
+      if (rankSucceeded && snapshot) {
         await this.dependencies.repository.saveProjection(transaction, {
           playerId: claimed.link.playerId,
           gameName: claimed.link.gameName,
@@ -608,6 +624,7 @@ export class RiotApplicationService {
           wins: snapshot.wins,
           losses: snapshot.losses,
           syncedAt: this.now(),
+          ...(recentSolo ? { recentSolo } : {}),
         });
       }
       await this.dependencies.repository.saveSyncJob(transaction, next);

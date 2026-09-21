@@ -80,5 +80,22 @@ test("application reports idle and releases a failed exact lease without touchin
   };
   const result = await processNextMatchChanged(failing);
   assert.equal(result.kind, "FAILED");
-  assert.equal(failureCode, "DATABASE_TEMPORARILY_UNAVAILABLE");
+  assert.equal(failureCode, "STATISTICS_PROJECTION_FAILED");
+});
+
+test("statistics failure storage allowlists domain and SQLSTATE codes without copying raw errors", async () => {
+  for (const [failure, expected] of [
+    [new Error("STATISTICS_EVENT_LEASE_LOST"), "STATISTICS_EVENT_LEASE_LOST"],
+    [new Error("private SQL or connection value", { cause: { code: "40001" } }), "STATISTICS_TRANSIENT_DATABASE_FAILURE"],
+    [new Error("member or private connection detail"), "STATISTICS_PROJECTION_FAILED"],
+  ] as const) {
+    let saved: string | undefined;
+    const repository: StatisticsProjectionRepository = {
+      async claimNextMatchChanged() { return event(); },
+      async applyClaimedMatchChanged() { throw failure; },
+      async failClaimedMatchChanged(input) { saved = input.failureCode; },
+    };
+    assert.equal((await processNextMatchChanged(repository)).kind, "FAILED");
+    assert.equal(saved, expected);
+  }
 });

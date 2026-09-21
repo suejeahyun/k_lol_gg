@@ -4,6 +4,7 @@ import { Database, Filter, MessageCircleQuestion } from "lucide-react";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseAdminKakaoPendingQuery } from "@/modules/seasons/infrastructure/admin-kakao-pending-query";
 import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-season-data";
+import { SEASON_KAKAO_PENDING_MATCH_LABELS } from "@/modules/seasons/domain/season";
 
 import styles from "./pending.module.css";
 
@@ -62,14 +63,14 @@ export default async function KakaoPendingApplicationsPage({
           <label><span>시즌</span><select name="seasonId" defaultValue={query.seasonId ?? ""}><option value="">전체</option>{result.data.seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
           <label><span>신청일</span><input type="date" name="applyDate" defaultValue={query.applyDate} /></label>
           <label><span>회차</span><input type="number" name="recruitNo" min={1} max={999} defaultValue={query.recruitNo} /></label>
-          <label><span>일치 상태</span><select name="matchState" defaultValue={query.matchState ?? ""}><option value="">전체</option><option value="MATCHED_RESERVE">예비 자동 일치</option><option value="UNMATCHED">미일치</option><option value="AMBIGUOUS">동명이인</option></select></label>
+          <label><span>일치 상태</span><select name="matchState" defaultValue={query.matchState ?? ""}><option value="">전체</option>{Object.entries(SEASON_KAKAO_PENDING_MATCH_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label><span>처리 상태</span><select name="status" defaultValue={query.status ?? ""}><option value="">전체</option><option value="ACTIVE">대기</option><option value="RESOLVED">해결</option><option value="CANCELLED">취소</option></select></label>
           <button type="submit">조회</button><Link href="/admin/seasons/kakao-pending">초기화</Link>
         </form>
         {queryError ? <p className={styles.notice} role="alert">허용되지 않거나 올바르지 않은 조회 조건을 초기화했습니다.</p> : null}
         {result.data.pending.applications.length === 0 ? <div className={styles.empty}><MessageCircleQuestion aria-hidden="true" /><p>조건에 맞는 Kakao 보류 신청이 없습니다.</p></div> : <ul className={styles.list}>{result.data.pending.applications.map((application) => <li key={application.id}>
           <div><b data-status={application.status}>{application.status === "ACTIVE" ? "대기" : application.status === "RESOLVED" ? "해결" : "취소"}</b><strong>{application.suppliedName}</strong><small>{application.suppliedRiotId ?? "Riot ID 미제공"}</small></div>
-          <dl><div><dt>시즌·회차</dt><dd>{application.seasonName}<small>{application.applyDate} · {application.recruitNo}회차 · 슬롯 {application.slotNo}</small></dd></div><div><dt>판정</dt><dd>{application.matchState}<small>{application.mainPosition} · {application.subPositions.join(" / ") || "부라인 없음"}</small></dd></div></dl>
+          <dl><div><dt>시즌·회차</dt><dd>{application.seasonName}<small>{application.applyDate} · {application.recruitNo}회차 · 슬롯 {application.slotNo}</small></dd></div><div><dt>판정</dt><dd>{SEASON_KAKAO_PENDING_MATCH_LABELS[application.matchState]}<small>{application.mainPosition} · {application.subPositions.join(" / ") || "부라인 없음"}</small></dd></div></dl>
           <Link href={`/admin/seasons/kakao-pending/${application.id}`}>상세 검토</Link>
         </li>)}</ul>}
         {result.data.pending.totalPages > 1 ? <nav className={styles.pagination} aria-label="Kakao 보류 신청 페이지">{result.data.pending.page > 1 ? <Link href={pageHref(pagination, result.data.pending.page - 1)}>이전</Link> : <span aria-disabled="true">이전</span>}<strong>{result.data.pending.page} / {result.data.pending.totalPages}</strong>{result.data.pending.page < result.data.pending.totalPages ? <Link href={pageHref(pagination, result.data.pending.page + 1)}>다음</Link> : <span aria-disabled="true">다음</span>}</nav> : null}

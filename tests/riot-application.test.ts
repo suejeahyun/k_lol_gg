@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { RiotGatewayPort } from "../src/modules/riot/application/ports";
 
 import {
   FakeRiotGateway,
@@ -49,6 +50,7 @@ class Harness {
   private serial = 0;
 
   readonly gateway = new FakeRiotGateway();
+  recentSoloResult: Awaited<ReturnType<NonNullable<RiotGatewayPort["fetchRecentSolo"]>>> | null = null;
   readonly rso = new FakeRsoAdapter();
   readonly protector = new FakeRiotIdentityProtector();
 
@@ -230,6 +232,7 @@ class Harness {
       gateway: {
         resolveRiotId: checkedExternal((input) => this.gateway.resolveRiotId(input)),
         fetchRank: checkedExternal((input) => this.gateway.fetchRank(input)),
+        fetchRecentSolo: checkedExternal(async () => this.recentSoloResult ?? { kind: "UNAVAILABLE" as const }),
       },
       rso: {
         issueState: (stateId) => this.rso.issueState(stateId),
@@ -451,5 +454,36 @@ test("sync enforces cooldown, Retry-After, stale lease recovery and partial comp
   job = [...harness.snapshot.jobs.values()][0]!;
   assert.equal(job.status, "PARTIAL");
   assert.equal(harness.snapshot.projections.length, 1);
+  assert.equal(harness.externalInsideTransaction, false);
+});
+
+test("recent solo summary persists only when complete; missing data preserves rank and 429 retains retry", async () => {
+  const { harness, service } = setup();
+  await service.connectDirect({ context: harness.ownerContext("recent-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+  const linkId = [...harness.snapshot.links.keys()][0]!;
+  harness.gateway.registerRank("private-puuid-1", { tier: "DIAMOND", rank: "I", leaguePoints: 50, wins: 10, losses: 5, partial: false });
+  const summary = { games: 2, wins: 1, kda: 3, mainPosition: "MID" as const, subPosition: null, positionConfidence: 1, averageDamage: 12000, averageVisionScore: 15 };
+  harness.recentSoloResult = { kind: "SUCCESS", summary };
+  await service.requestSync({ context: harness.ownerContext("recent-request"), mode: "SINGLE", linkIds: [linkId] });
+  await service.runNextSync(harness.jobAuthorization());
+  assert.deepEqual(harness.snapshot.projections.at(-1)?.recentSolo, summary);
+  assert.equal([...harness.snapshot.jobs.values()].at(-1)?.status, "SUCCEEDED");
+
+  harness.now = new Date(harness.now.getTime() + 301_000);
+  harness.recentSoloResult = { kind: "UNAVAILABLE" };
+  await service.requestSync({ context: harness.ownerContext("recent-unavailable"), mode: "SINGLE", linkIds: [linkId] });
+  await service.runNextSync(harness.jobAuthorization());
+  assert.equal(harness.snapshot.projections.at(-1)?.soloTier, "DIAMOND");
+  assert.equal(harness.snapshot.projections.at(-1)?.recentSolo, undefined);
+  assert.equal([...harness.snapshot.jobs.values()].at(-1)?.status, "PARTIAL");
+
+  harness.now = new Date(harness.now.getTime() + 301_000);
+  harness.recentSoloResult = { kind: "UNAVAILABLE", retryAfterSeconds: 120 };
+  await service.requestSync({ context: harness.ownerContext("recent-throttled"), mode: "SINGLE", linkIds: [linkId] });
+  await service.runNextSync(harness.jobAuthorization());
+  const job = [...harness.snapshot.jobs.values()].at(-1)!;
+  assert.equal(job.status, "RETRY_WAIT");
+  assert.equal(job.availableAt.getTime(), harness.now.getTime() + 120_000);
+  assert.equal(harness.snapshot.projections.length, 3, "successful rank remains available while the optional source retries");
   assert.equal(harness.externalInsideTransaction, false);
 });

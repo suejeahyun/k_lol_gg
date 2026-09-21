@@ -10,6 +10,7 @@ import { noStoreJsonResponse, readValidatedTraceId } from "@/platform/http";
 
 const path = "/api/internal/jobs/riot-sync";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const traceId = readValidatedTraceId(request.headers);

@@ -467,6 +467,7 @@ export class RecruitingCommandHandler {
       (nextParty!.status === "DRAFT" || nextParty!.status === "IN_PROGRESS")
       ? await this.dependencies.repository.issuePartyCopySnapshot?.(transaction, nextParty!, now) : null;
     const data = partyCommand ? { ...partyJson(nextParty!), ...(memberMutation ?? {}), ...(formCode ? { formCode } : {}),
+      ...(command.type === "SYNC_PARTY" ? { registrationCreated: party!.status === "DRAFT" } : {}),
       ...(command.type === "SYNC_PARTY" && command.payload.copyGuard ? { copyAddedNames: nextParty!.members.filter((member) => !party!.members.some((old) => old.name === member.name)).map((member) => member.name), copyChanged: nextParty!.revision !== party!.revision } : {}) }
       : { ...scrimJson(nextScrim!), ...(memberMutation ?? {}) };
     const body: RecruitMutationBody = { aggregateKind: partyCommand ? "PARTY" : "SCRIM", aggregateId: next.id, revision: next.revision, status: next.status, commandType: command.type, data };

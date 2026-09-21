@@ -1,0 +1,47 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle (1.1253ms)
+✔ [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member (7.8389ms)
+✔ [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot (4.3904ms)
+✔ [P0-PARTY-03] slash and comma in one reserve row stay in one display name (0.4138ms)
+✔ [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target (1.1531ms)
+✔ [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot (0.5094ms)
+✔ [P0-PARTY-06] member order is canonical and independent of pasted row order (0.6628ms)
+✔ [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved (1.0863ms)
+✔ [P0-PARTY-08] multiline metadata values match their single-line semantic values (0.8938ms)
+✔ [P0-PARTY-09] an automatic-number empty draft never creates a recruit (0.8951ms)
+✔ [P0-OPS-01] all four forms preserve values continued on the following line (3.9243ms)
+✔ [P0-OPS-02] all four forms expose exact missing-field contracts without submission (0.7164ms)
+✔ [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter (0.1883ms)
+✔ [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN (1.1415ms)
+✔ [P0-OPS-05:friends] field order does not alter the canonical payload (0.5761ms)
+✔ [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form (0.3883ms)
+✔ [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field (0.4972ms)
+✔ [P0-OPS-05:suggestions] field order does not alter the canonical payload (0.3775ms)
+✔ [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form (0.1812ms)
+✔ [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field (0.2415ms)
+✔ [P0-OPS-05:meetups] field order does not alter the canonical payload (0.2627ms)
+✔ [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form (0.1992ms)
+✔ [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field (0.3957ms)
+✔ [P0-OPS-05:leaves] field order does not alter the canonical payload (0.321ms)
+✔ [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form (0.1937ms)
+✔ [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field (0.2452ms)
+✔ [P0-OPS-08] prose mentioning every label is not classified as a form (0.157ms)
+✔ [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed (0.7981ms)
+✔ [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched (0.7471ms)
+✔ [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch (0.5169ms)
+✔ [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server (0.1501ms)
+✔ [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker (0.2234ms)
+✔ [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role (1011.7352ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1950.1345
+[db-contract] cluster stopped and disposable workspace path removed

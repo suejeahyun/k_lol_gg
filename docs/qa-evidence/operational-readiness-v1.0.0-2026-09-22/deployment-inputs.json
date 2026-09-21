@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-09-21T21:37:59.5576427Z",
+  "status": "PASS",
+  "fileCount": 2563,
+  "totalSize": 191647340,
+  "ignored": [
+    ".env.local",
+    ".git",
+    ".gitignore",
+    ".next",
+    ".private",
+    ".tmp",
+    ".vercel",
+    "node_modules"
+  ],
+  "privateInputs": 0
+}

@@ -47,7 +47,10 @@ test("Kakao help feature controls its public guide without exposing configuratio
   assert.ok(page.indexOf("복사·붙여넣기로 참가하기") < page.indexOf("새로 모집하는 사람만"));
   assert.match(page, /입력 후 종목을 선택하거나/);
   assert.match(page, /내전구인 협곡/);
-  assert.match(page, /첫 전송 전에 시간·게임을 정하고/);
+  assert.match(page, /저장 후 현재 구인 목록/);
+  assert.match(page, /구인상세 번호/);
+  assert.match(page, /처음 등록할 때는 이름이 한 명 이상/);
+  assert.match(page, /초안을 취소하세요/);
   assert.match(page, /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
   assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
   assert.match(page, /신규·교체 참가자는 라인이 필요/);
@@ -71,7 +74,10 @@ test("recruit guide teaches participation and guarded edits before optional crea
   assert.match(page, /번호 행을 남기고 이름만 비운/);
   assert.match(page, /입력 후 종목을 선택하세요/);
   assert.match(page, /내전구인 협곡/);
-  assert.match(page, /첫 전송 전에 시간·게임을 정하고/);
+  assert.match(page, /저장 후 현재 구인 목록/);
+  assert.match(page, /구인상세 번호/);
+  assert.match(page, /처음 등록할 때는 이름이 한 명 이상/);
+  assert.match(page, /초안을 취소하세요/);
   assert.match(page, /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
   assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
   assert.match(page, /신규·교체 참가자는 라인이 필요/);

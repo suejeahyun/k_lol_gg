@@ -1,14 +1,18 @@
-# MessengerBot R V1 strict R24 설치 안내
+# MessengerBot R 일반 봇·사이트 알림 설치 안내
 
 ## 현재 설치본
 
-2026-09-21 운영 DB migration 0040과 서버 R24 적용을 마쳤다. 운영 health 및 RECRUIT·FEATURES 서명 인증은 HTTP 200으로 확인했다. **휴대폰 교체·실제 채팅방 송수신은 아직 미확인**이다. 이제 아래 **비공개 한 파일만** 전체 복사해 휴대폰에 설치한다. [운영 배포 근거](../../docs/qa-evidence/kakao-r24-copy-restore-2026-09-21/README.md).
+현재 확인된 운영 서버는 2026-09-22 복사 양식 안정화 1.0.1이며 DB migration은 `0041`이다. R24 호환 검사를 통과했으므로 이번 서버 패치를 쓰려고 일반 봇을 반드시 교체할 필요는 없다. [확인된 운영 배포 근거](../../docs/qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/README.md). 이후 운영 준비 패치와 알림 companion은 소스 상태이며 새 배포 근거는 [현재 상태](../../docs/STATUS.md)를 따른다.
+
+사용자가 확인한 **MessengerBot R 앱 버전은 0.7.29a**다. 이것은 아래 봇 JavaScript 버전과 다르다. 실제 휴대폰 봇 버전·해시·컴파일·채팅방 송수신은 아직 미확인이다. 로컬 생성된 일반 봇 설치 후보는 **R25** (`KLOL_KAKAO_BOT_V40_R25_2026_09_22`)이며, 교체할 때에는 아래 **비공개 한 파일만** 전체 복사한다.
 
 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
 
-`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 휴대폰 설치에는 이 공개 파일이나 과거 설치본을 사용하지 말고, 위 `.private` R24 파일만 사용한다.
+`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 **공개 검토·생성 기준, 설치 금지** 파일이다. 신규 교체 시에는 위 `.private` 파일을 사용하며, 생성 버전·해시를 확인한 뒤 붙인다.
 
-V1/V40 원본 fixture는 보존한다. R24는 파티·사이트 연동 내전을 짧은 양식 복사 참가로 통일하며, R23의 카카오 스크림 종료를 유지한다. 짧은 양식코드가 저장된 원본을 참조해 동시 참가를 안전하게 합친다. V4 서명·멱등성·단일 요청 경계는 유지한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.
+V1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내전을 짧은 양식 복사 참가로 통일하며, 카카오 스크림 종료를 유지한다. 편집 범위는 승인된 [ADR0011](../../docs/architecture/0011-kakao-party-editable-copy-flow.md)·[ADR0012](../../docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따른다. 짧은 양식코드의 원본과 최신 명단을 함께 비교해 동시 참가를 합치며, V4 서명·멱등성·단일 요청 경계를 유지한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.
+
+사이트 참가로 내전 10명이 찼을 때 알리는 기능은 별도 [사이트 알림 companion](site-notices/README.md)이다. 기본 OFF이며 일반 봇에 이어 붙이지 않는다. 서버 설정·정확한 수신 세션 등록·0.7.29a 실기기 검사가 필요하다.
 
 한 대의 휴대폰에서 MessengerBot R 봇 프로필 하나가 구인구직방과 기능방 두 곳을 구독한다. 메시지 내용에 따라 서버 프로필을 자동 선택한다.
 
@@ -17,13 +21,13 @@ V1/V40 원본 fixture는 보존한다. R24는 파티·사이트 연동 내전을
 
 카카오 알림 parser의 방 이름은 인증이나 라우팅에 쓰지 않는다. 따라서 잘못된 방에서 명령을 보내도 명령 종류가 맞으면 실행될 수 있다. 물리적인 두 방 분리는 MessengerBot R의 구독 대상과 운영 안내로 유지한다.
 
-## 한 번에 교체하는 순서
+## 일반 봇을 교체할 때의 순서
 
 1. 휴대폰 MessengerBot R에서 기존 K-LOL 봇을 중지한다.
 2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
 3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
 4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
-5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R24_2026_09_20`을 검색한다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R25_2026_09_22`를 검색한다.
 6. 마지막 줄이 단독 `}`이고 파일 안에 `function response(`가 한 번만 있는지 확인한다.
 7. 저장·컴파일 후 봇을 다시 시작한다.
 8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
@@ -36,12 +40,12 @@ V1/V40 원본 fixture는 보존한다. R24는 파티·사이트 연동 내전을
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 62,928 | 64,769 | 1,842 | `b1ee39b0c48f925d2d3b39831bd720c4e82356fef999eb168b785d29fb7e85fe` |
-| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,217 | 63,059 | 1,843 | `49cbf16a70d0e34f5ebabfa3181baf012a6548cf405e1b9a8170f728aec6ed39` |
+| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,304 | 65,145 | 1,842 | `e18ea983d2125ffb2c187d1e330f4e1671f56f1878c7ce9b99e9a272b03b2886` |
+| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,593 | 63,435 | 1,843 | `145f46e6de4e17c6b6608fb6175962f0d19869596c34276024ba6a1131a56b3e` |
 
-두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. 원본 fixture를 바꾸지 않고 생성본의 빈 줄·행 선행 들여쓰기를 제거하며 V1 실행문 동일성은 별도로 검증한다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.
+위 값은 2026-09-22 로컬 생성 파일의 값이며 실기기 설치 증거가 아니다. 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. 원본 fixture를 바꾸지 않고 생성본의 빈 줄·행 선행 들여쓰기를 제거하며 승인 변경 밖의 V1 실행문 동일성은 별도로 검증한다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.
 
-R23 private 백업: `.private/backups/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.pre-r24-20260920-065116-919.js` (SHA-256 `e81d1f800f4a52d66f3afde85f21b16546a527db7dc18ccdf73bf1d246951a6c`). 롤백은 서버와 휴대폰을 함께 이전 버전으로 되돌리며, 신규 snapshot 테이블은 삭제하지 않아도 된다.
+R23 private 백업: `.private/backups/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.pre-r24-20260920-065116-919.js` (SHA-256 `e81d1f800f4a52d66f3afde85f21b16546a527db7dc18ccdf73bf1d246951a6c`). 이 과거 백업을 현재 서버에 바로 설치하지 않는다. 롤백은 사용하려는 서버와 휴대폰 조합의 호환 근거를 확인하고 진행하며, snapshot 테이블은 삭제하지 않는다.
 
 해시나 끝 표시가 다르면 일부만 복사됐거나 다른 버전이 섞인 것이다. 오류 행에 임의로 `}`나 따옴표를 추가하지 말고 전체 파일을 다시 교체한다.
 
@@ -82,11 +86,11 @@ node scripts/verify-private-messengerbot-v1-strict-live.mjs
 2. `내전상세 번호 추가 이름/mid/ad` 또는 `이름/mid,ad` → 첫 라인은 주라인, 이후 라인은 부라인
 3. `내전상세 번호 추가 이름/mid,all` → MID를 제외한 네 라인을 부라인으로 저장
 4. 같은 이름에 라인을 다시 보내면 기존 슬롯을 유지하고 라인만 수정
-5. 최신 전체 내전 양식의 빈칸에 사이트 등록 이름 추가. 사이트 신청·기존 라인 보존, 회원 확인 필요 명단은 확정 인원과 분리. 기존 이름 삭제·교체·라인 수정은 복사 참가에서 차단하며 별도 명령을 사용한다.
+5. 최신 전체 내전 양식의 빈칸에 사이트 등록 이름 추가. 카카오 신청은 양식에서 추가·삭제·라인 수정할 수 있고 사이트 신청·팀 확정·보호 대상은 보존한다. 회원 확인 필요 명단은 확정 인원과 분리하며, 주라인 1개·부라인 최대 4개와 본 참가 10명 상한을 확인한다.
 6. `전적 RiotID#태그`, `최근 RiotID#태그`, `랭킹`
 7. 외출·지인·건의·모임 양식
 
-모든 명령은 맨 앞 `/`가 있거나 없어도 같게 처리한다. 구인 운영일은 KST 오전 6시에 바뀐다. 번호·양식코드는 수정하지 않는다. 같은 원본의 이름 추가는 최신 명단에 합치며, 번호 칸이 겹치면 빈 번호 칸에 배치한다. 라인 자리는 자동 변경하지 않고 정원이 차면 예비 칸 입력을 안내한다. 기존 이름 삭제·교체, 모집 정보 변경, 만료·다른 대상 코드는 저장하지 않고 최신 양식을 안내한다. 구형 저장기준 없는 양식도 기존 정보 보존 추가만 허용한다.
+모든 명령은 맨 앞 `/`가 있거나 없어도 같게 처리한다. 구인 운영일은 KST 오전 6시에 바뀐다. 번호·양식코드는 수정하지 않는다. 원본·사용자 편집본·현재 명단을 비교해 동시 편집을 합친다. 전체 행을 명시한 빈칸은 허용 범위에서 삭제로 처리하고, 누락 행을 삭제로 추측하지 않는다. 카카오 본 참가 10명을 넘으면 전체 저장을 거부하며 예비 전환은 명시적으로 입력한다. 보호 대상, 모집 정보 변경, 만료·다른 대상 코드는 저장하지 않고 최신 양식을 안내한다. 구형 저장기준 없는 양식은 기존 정보 보존 추가만 허용한다. 수동 마감은 명단을 보존한다.
 
 `0040_kakao_form_snapshot_codes.sql`은 새 snapshot 테이블·인덱스만 추가한다. 기존 모집·내전·스크림 기록 삭제는 없다. 코드 사용은 다음 운영일 06:00 KST부터 거부하며, 만료 행 물리 정리는 요청당 최대 256개다. 무트래픽 때 즉시 삭제되는 주기 작업은 아니다.
 

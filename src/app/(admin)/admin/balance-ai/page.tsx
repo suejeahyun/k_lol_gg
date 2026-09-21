@@ -6,6 +6,7 @@ import { requirePageRole } from "@/modules/auth/infrastructure/server-authorizat
 import { loadRuntimeMmr } from "@/modules/mmr/infrastructure/runtime-mmr";
 
 import { MmrAdminActions } from "./mmr-admin-actions";
+import { TeamBalanceOverrideActions } from "./team-balance-override-actions";
 import styles from "./mmr-admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function AdminBalanceAiPage({ searchParams }: {
           allowed={session.role === "SUPER_ADMIN"}
           startWithRecalculateConfirmation={action === "recalculate"}
         />
+        <TeamBalanceOverrideActions allowed={session.role === "SUPER_ADMIN"} />
       </> : <section className={styles.state} role={result.state === "error" ? "alert" : "status"}><h2>MMR 저장소를 불러올 수 없습니다.</h2><p>데이터베이스와 migration 상태를 확인해 주세요.</p></section>}
     </main>
   );

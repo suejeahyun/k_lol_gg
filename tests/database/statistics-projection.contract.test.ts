@@ -9,6 +9,8 @@ import {
   PostgresStatisticsProjectionRepository,
 } from "../../src/modules/statistics";
 import { PostgresStatisticsQueryRepository } from "../../src/modules/statistics/infrastructure/postgres-statistics-query-repository";
+import { handleStatisticsProjectionCron } from "../../src/modules/statistics/infrastructure/statistics-projection-cron";
+import type { StatisticsProjectionRepository } from "../../src/modules/statistics/application/ports/statistics-projection-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -50,10 +52,10 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
   const now = new Date("2026-09-07T05:00:00.000Z");
 
   async function enqueue(
-    action: "PUBLISHED" | "AMENDED",
+    action: "PUBLISHED" | "AMENDED" | "VOIDED" | "RESTORED",
     revision: number,
     oldSeasonId: string | null,
-    newSeasonId: string,
+    newSeasonId: string | null,
     eventNow: Date,
   ): Promise<string> {
     const eventId = randomUUID();
@@ -68,7 +70,7 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
       oldSeasonId,
       newSeasonId,
       oldOrderKey: oldSeasonId ? `2026-09-07:${matchId}` : null,
-      newOrderKey: `2026-09-07:${matchId}`,
+      newOrderKey: newSeasonId ? `2026-09-07:${matchId}` : null,
       inputDigest: createHash("sha256").update(`statistics:${matchId}:${revision}`).digest(),
       payloadJson: { matchId, revision },
       status: "PENDING",
@@ -77,6 +79,13 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
       updatedAt: eventNow,
     });
     return eventId;
+  }
+
+  function runCron(at: Date, worker: StatisticsProjectionRepository = repository) {
+    const secret = "synthetic-statistics-cron-secret-000000";
+    return handleStatisticsProjectionCron(new Request("https://v2.example/api/cron/statistics-projection", {
+      headers: { authorization: `Bearer ${secret}` },
+    }), { secret, getRepository: () => worker, now: () => at });
   }
 
   try {
@@ -312,6 +321,63 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
       (await database.select().from(playerSeasonStats).where(eq(playerSeasonStats.seasonId, movedSeasonId))).length,
       2,
     );
+
+    // The production HTTP boundary consumes the same repository. Failed work
+    // retains READY data, backs off durably, then converges on a later invocation.
+    const failureAt = new Date(now.getTime() + 3_000);
+    const retryEventId = await enqueue("AMENDED", 3, movedSeasonId, movedSeasonId, failureAt);
+    const failed = await runCron(failureAt, {
+      claimNextMatchChanged: (at) => repository.claimNextMatchChanged(at),
+      async applyClaimedMatchChanged() { throw new Error("synthetic private driver error"); },
+      failClaimedMatchChanged: (input) => repository.failClaimedMatchChanged(input),
+    });
+    assert.equal(failed.status, 503);
+    assert.equal((await failed.json()).failed, 1);
+    const failedRow = (await database.select().from(matchRecalculationOutbox).where(eq(matchRecalculationOutbox.id, retryEventId)))[0]!;
+    assert.equal(failedRow.status, "FAILED");
+    assert.equal(failedRow.attemptCount, 1);
+    assert.equal(failedRow.lastErrorCode, "STATISTICS_PROJECTION_FAILED");
+    assert.equal(failedRow.availableAt.getTime(), failureAt.getTime() + 30_000);
+    assert.equal(await repository.claimNextMatchChanged(new Date(failureAt.getTime() + 29_999)), null);
+    assert.equal((await database.select().from(seasonProjectionStates).where(eq(seasonProjectionStates.seasonId, movedSeasonId)))[0]!.generation, 1);
+
+    const recovered = await runCron(failedRow.availableAt);
+    assert.equal(recovered.status, 200);
+    assert.equal((await recovered.json()).applied, 1);
+    const recoveredRow = (await database.select().from(matchRecalculationOutbox).where(eq(matchRecalculationOutbox.id, retryEventId)))[0]!;
+    assert.equal(recoveredRow.status, "DELIVERED");
+    assert.equal(recoveredRow.attemptCount, 2);
+    assert.equal(recoveredRow.lastErrorCode, null);
+
+    const voidedAt = new Date(now.getTime() + 40_000);
+    await database.update(matchSeries).set({ status: "VOIDED", revision: 4, voidedAt, voidReason: "합성 무효화 회귀", updatedAt: voidedAt }).where(eq(matchSeries.id, matchId));
+    await enqueue("VOIDED", 4, movedSeasonId, null, voidedAt);
+    assert.equal((await (await runCron(voidedAt)).json()).applied, 1);
+    assert.equal((await database.select().from(playerSeasonStats).where(eq(playerSeasonStats.seasonId, movedSeasonId))).length, 0);
+    assert.equal((await database.select().from(seasonProjectionStates).where(eq(seasonProjectionStates.seasonId, movedSeasonId)))[0]!.sourceMatchCount, 0);
+
+    const restoredAt = new Date(now.getTime() + 41_000);
+    await database.update(matchSeries).set({ status: "PUBLISHED", revision: 5, voidedAt: null, voidReason: null, updatedAt: restoredAt }).where(eq(matchSeries.id, matchId));
+    await enqueue("RESTORED", 5, null, movedSeasonId, restoredAt);
+    assert.equal((await (await runCron(restoredAt)).json()).applied, 1);
+    assert.equal((await database.select().from(playerSeasonStats).where(eq(playerSeasonStats.seasonId, movedSeasonId))).length, 2);
+
+    // Concurrent deliveries must claim the event once; a crashed worker's lease
+    // becomes available to the next invocation without duplicate projection runs.
+    const concurrentAt = new Date(now.getTime() + 42_000);
+    const concurrentEventId = await enqueue("AMENDED", 6, movedSeasonId, movedSeasonId, concurrentAt);
+    const concurrentResponses = await Promise.all([runCron(concurrentAt), runCron(concurrentAt)]);
+    assert.deepEqual(concurrentResponses.map((response) => response.status), [200, 200]);
+    const concurrentResults = await Promise.all(concurrentResponses.map((response) => response.json()));
+    assert.equal(concurrentResults.reduce((sum, result) => sum + result.applied, 0), 1);
+    assert.equal((await database.select().from(matchProjectionReceipts).where(eq(matchProjectionReceipts.outboxEventId, concurrentEventId))).length, 1);
+
+    const abandonedAt = new Date(now.getTime() + 43_000);
+    const abandonedEventId = await enqueue("AMENDED", 7, movedSeasonId, movedSeasonId, abandonedAt);
+    assert.equal((await repository.claimNextMatchChanged(abandonedAt))?.eventId, abandonedEventId);
+    assert.equal((await (await runCron(new Date(abandonedAt.getTime() + 59_999))).json()).processed, 0);
+    assert.equal((await (await runCron(new Date(abandonedAt.getTime() + 60_000))).json()).applied, 1);
+    assert.equal((await database.select().from(statisticsProjectionRuns).where(eq(statisticsProjectionRuns.requestedOutboxEventId, abandonedEventId))).length, 1);
 
     await assert.rejects(
       database.insert(playerSeasonStats).values({

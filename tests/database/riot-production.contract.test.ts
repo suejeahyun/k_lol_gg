@@ -115,7 +115,12 @@ test("production RSO cache and signed sync job survive application retry without
     featureEnabled: true,
     jobVerifier: new PostgresRiotJobVerifier(jobSecret),
   });
-  const service = new RiotApplicationService({ ...adapter.dependencies, gateway, rso, identityProtector: protector });
+  const recentSolo = { games: 2, wins: 1, kda: 3, mainPosition: "MID" as const, subPosition: null, positionConfidence: 1, averageDamage: 18000, averageVisionScore: 20 };
+  const service = new RiotApplicationService({ ...adapter.dependencies, gateway: {
+    resolveRiotId: (input) => gateway.resolveRiotId(input),
+    fetchRank: (input) => gateway.fetchRank(input),
+    fetchRecentSolo: async () => ({ kind: "SUCCESS", summary: recentSolo }),
+  }, rso, identityProtector: protector });
 
   try {
     await applyMigrations(database);
@@ -212,7 +217,11 @@ test("production RSO cache and signed sync job survive application retry without
     };
     const processed = await service.runNextSync({ principalId: "job:riot-sync", authorizationIntent: jobIntent });
     assert.equal(processed.status, "PROCESSED");
-    assert.equal((await database.select().from(riotSummaries).where(eq(riotSummaries.playerId, playerId))).length, 1);
+    const summaryRows = await database.select().from(riotSummaries).where(eq(riotSummaries.playerId, playerId));
+    assert.equal(summaryRows.length, 1);
+    assert.deepEqual(summaryRows[0]?.recentSoloJson, recentSolo);
+    assert.ok(summaryRows[0]?.recentSoloSyncedAt);
+    assert.equal(JSON.stringify(summaryRows).includes("private-rso-puuid"), false);
     assert.equal((await database.select().from(jobNonceBindings).where(eq(jobNonceBindings.jobName, "riot-sync"))).length, 1);
     const accounts = await adapter.listAdmin({ tab: "accounts", action: "NONE", status: "ALL", source: "ALL", q: "", batchSize: 10, page: 1, pageSize: 25 });
     assert.equal(accounts.tab, "accounts");
@@ -249,6 +258,16 @@ test("production RSO cache and signed sync job survive application retry without
       service.runNextSync({ principalId: "job:riot-sync", authorizationIntent: jobIntent }),
       (error: unknown) => error instanceof RiotApplicationError && error.code === "NOT_FOUND",
     );
+    const projection = { playerId, gameName: "VerifiedPlayer", tagLine: "KR1", soloTier: "DIAMOND", soloRank: "IV", leaguePoints: 10, wins: 22, losses: 13, syncedAt: new Date() };
+    await adapter.dependencies.unitOfWork.transaction((transaction) => adapter.dependencies.repository.saveProjection(transaction, projection));
+    const retained = (await database.select().from(riotSummaries).where(eq(riotSummaries.playerId, playerId)))[0]!;
+    assert.deepEqual(retained.recentSoloJson, recentSolo, "optional upstream failure preserves the same identity's summary");
+    assert.equal(retained.recentSoloSyncedAt?.getTime(), summaryRows[0]!.recentSoloSyncedAt!.getTime(), "failed optional refresh must never freshen old history");
+    await database.update(riotAccountLinks).set({ gameName: "ChangedPlayer" }).where(eq(riotAccountLinks.id, linkId));
+    await adapter.dependencies.unitOfWork.transaction((transaction) => adapter.dependencies.repository.saveProjection(transaction, { ...projection, gameName: "ChangedPlayer" }));
+    const cleared = (await database.select().from(riotSummaries).where(eq(riotSummaries.playerId, playerId)))[0]!;
+    assert.equal(cleared.recentSoloJson, null, "a new identity must never inherit the previous identity's recent matches");
+    assert.equal(cleared.recentSoloSyncedAt, null);
   } finally {
     await pool.end();
   }

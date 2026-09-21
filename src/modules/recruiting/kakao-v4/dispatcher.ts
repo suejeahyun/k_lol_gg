@@ -29,7 +29,6 @@ import type { KakaoV4InstallationAuthorization } from "./installation-scope";
 import {
   v1StrictPartyDetailReply,
   v1StrictPartyStatusReply,
-  v1StrictPartySyncReply,
   v1StrictPartyTemplate,
 } from "./v1-strict-party-replies";
 import {
@@ -69,6 +68,7 @@ export type KakaoV4RecruitingPort = Readonly<{
 export type KakaoV4AssistantPort = Readonly<{
   getOpenChatStatus(input: SignedAssistantInput & Readonly<{
     projection?: "PARTY" | "SCRIM";
+    partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number }>;
     now?: Date;
     afterMutation?: boolean;
   }>): Promise<Readonly<{ body: KakaoOpenChatStatusDto; replayed: boolean }>>;
@@ -175,37 +175,6 @@ function commandMetadata(context: KakaoV4DispatchContext, expectedRevision: numb
       bodyDigestHex: context.requestDigestHex,
     },
   };
-}
-
-function partyLines(party: KakaoOpenChatStatusDto["parties"][number]) {
-  return v1StrictPartyDetailReply(party, party.recruitNumber);
-}
-
-function partyTypeLabel(party: KakaoOpenChatStatusDto["parties"][number]) {
-  if (party.type === "FLEX_RANK") return "자랭";
-  if (party.type === "NORMAL_GAME") return "일반";
-  if (party.type === "SOLO_RANK") return "솔랭";
-  if (party.type === "ARAM") return party.title.includes("증바람") ? "증바람" : "칼바람";
-  if (party.type === "TFT_NORMAL") return "롤체 일반";
-  if (party.type === "TFT_RANK") return "롤체 랭크";
-  if (party.type === "DOUBLE_UP") return "더블업";
-  if (party.type === "PARTY_RIFT") return "5인 협곡";
-  if (party.type === "OTHER_GAME") return "기타게임";
-  return `${party.maximumMembers}인 파티`;
-}
-
-function partyStatusReply(parties: KakaoOpenChatStatusDto["parties"]) {
-  if (parties.length === 0) return "[K-LOL.GG 구인구직 현황]\n\n현재 진행 중인 구인글이 없습니다.";
-  const lines = ["[K-LOL.GG 구인구직 현황]", "🔎 전체 명단: 상세 번호", "", "[구인중]"];
-  for (const [index, party] of parties.entries()) {
-    lines.push(`#${party.recruitNumber} · ${partyTypeLabel(party)} · ${party.memberCount}/${party.maximumMembers} · ${party.startTimeText || "미정"} · ${party.gameInfo || "미입력"}`);
-    lines.push(`주최자: ${party.organizerText || "미입력"}`);
-    const names = party.members.filter((member) => !member.substitute).map((member) => member.name);
-    if (names.length > 0) lines.push(`참여: ${names.join(", ")}`);
-    lines.push(`└ 상세 ${party.recruitNumber}`);
-    if (index + 1 < parties.length) lines.push("");
-  }
-  return lines.join("\n");
 }
 
 type PartyMemberMutationAction = "ADD" | "REMOVE";
@@ -713,24 +682,23 @@ export class KakaoV4CommandDispatcher {
     });
   }
 
-  private async openChatStatus(context: KakaoV4DispatchContext, projection?: "PARTY" | "SCRIM", afterMutation = false) {
+  private async openChatStatus(context: KakaoV4DispatchContext, projection?: "PARTY" | "SCRIM", afterMutation = false, partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number }>) {
     return this.dependencies.assistant.getOpenChatStatus({
       ...signedInput(context),
       projection,
+      partyTarget,
       now: new Date(context.envelope.timestamp * 1_000),
       afterMutation,
     });
   }
 
-  private async appendLatestPartyStatus(context: KakaoV4DispatchContext, reply: string, v1Strict: boolean) {
+  private async appendLatestPartyStatus(context: KakaoV4DispatchContext, reply: string) {
     try {
       const status = await this.openChatStatus(context, "PARTY", true);
-      const statusReply = v1Strict
-        ? v1StrictPartyStatusReply(status.body.parties)
-        : partyStatusReply(status.body.parties);
+      const statusReply = v1StrictPartyStatusReply(status.body.parties);
       return `${reply}\n\n${statusReply}`;
     } catch {
-      return `${reply}\n\n[K-LOL.GG 구인구직 현황]\n조회 실패. 구인현황을 입력해 주세요.`;
+      return `${reply}\n\n현재 구인 목록을 불러오지 못했어요.\n구인현황을 입력해 주세요.`;
     }
   }
 
@@ -757,8 +725,8 @@ export class KakaoV4CommandDispatcher {
 
   private async latestPartyForm(context: KakaoV4DispatchContext, recruitNumber: number, reply?: string) {
     try {
-      const status = await this.openChatStatus(context, "PARTY", true);
       const date = recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
+      const status = await this.openChatStatus(context, "PARTY", true, { recruitDate: date, recruitNumber });
       const party = status.body.parties.find((item) => item.recruitDate === date && item.recruitNumber === recruitNumber);
       if (!party) return `${reply ?? "저장했습니다."}\n\n최신 양식을 찾지 못했습니다. 구인현황을 확인해 주세요.`;
       const form = v1StrictPartyDetailReply(party, recruitNumber);
@@ -772,7 +740,6 @@ export class KakaoV4CommandDispatcher {
     context: KakaoV4DispatchContext,
     target: Readonly<{ recruitDate: string; recruitNumber: number | null }>,
     action: "SYNC" | "FINISH",
-    v1Strict: boolean,
     stateChanged = false,
   ): Promise<KakaoV4DispatcherResult> {
     const closed = target.recruitNumber === null ? null : await this.dependencies.recruiting.resolveCompatTarget({
@@ -790,7 +757,7 @@ export class KakaoV4CommandDispatcher {
           "최신 구인현황을 확인해 주세요.", `내전 모집을 마치려면: 내전 ${target.recruitNumber}ㅉ`].join("\n")
         : `[K-LOL.GG 파티 #${target.recruitNumber}]\n저장하지 않았어요. 현재 운영일의 이 모집을 찾지 못했습니다.\n구인현황에서 모집번호를 확인하고 최신 양식을 받아 주세요.`;
     return Object.freeze({ kind: "PARTY", action, aggregate: null,
-      legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict), replayed: false });
+      legacyReply: await this.appendLatestPartyStatus(context, reply), replayed: false });
   }
 
   private async resolve(context: KakaoV4DispatchContext, kind: "PARTY" | "SCRIM", target: KakaoV4RecruitTarget) {
@@ -810,7 +777,7 @@ export class KakaoV4CommandDispatcher {
   ): Promise<KakaoV4DispatcherResult> {
     const v1Strict = usesKakaoV1StrictResponse(context.envelope);
     if (command.action === "STATUS" || command.action === "DETAIL") {
-      const status = await this.openChatStatus(context, "PARTY");
+      const status = await this.openChatStatus(context, "PARTY", false, command.action === "DETAIL" ? command.target : undefined);
       const parties = command.action === "STATUS"
         ? status.body.parties
         : status.body.parties.filter((party) => party.recruitDate === command.target.recruitDate && party.recruitNumber === command.target.recruitNumber);
@@ -825,7 +792,7 @@ export class KakaoV4CommandDispatcher {
             : v1StrictPartyStatusReply(parties)
           : missingDetail
             ? `[K-LOL.GG 요청 실패]\n진행 중인 파티 #${command.target.recruitNumber}을 찾지 못했습니다.`
-            : command.action === "DETAIL" ? partyLines(parties[0]!) : partyStatusReply(parties),
+            : command.action === "DETAIL" ? v1StrictPartyDetailReply(parties[0]!, command.target.recruitNumber) : v1StrictPartyStatusReply(parties),
         replayed: status.replayed,
       });
     }
@@ -849,7 +816,7 @@ export class KakaoV4CommandDispatcher {
           kind: "PARTY",
           action: command.action,
           aggregate: null,
-          legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict),
+          legacyReply: await this.appendLatestPartyStatus(context, reply),
           replayed: false,
         });
       }
@@ -877,7 +844,7 @@ export class KakaoV4CommandDispatcher {
             kind: "PARTY",
             action: command.action,
             aggregate: null,
-            legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict),
+            legacyReply: await this.appendLatestPartyStatus(context, reply),
             replayed: false,
           });
         }
@@ -953,15 +920,21 @@ export class KakaoV4CommandDispatcher {
 
     let recruitingCommand: RecruitingCommand;
     if (command.action === "FINISH") {
-      const target = await this.dependencies.recruiting.resolveCompatTarget({
-        kind: "PARTY",
-        sourceRoomId: context.authorization.roomId,
-        recruitDate: command.target.recruitDate,
-        recruitNumber: command.target.recruitNumber,
-        allowedPartyStatuses: partyCompatTargetStatuses("FINISH_PARTY"),
-      });
+      let target: Awaited<ReturnType<KakaoV4RecruitingPort["resolveCompatTarget"]>> = null;
+      // Preserve the existing active-party target even if a later reset left a
+      // draft with the same number. Draft cancellation is only the fallback.
+      for (const status of partyCompatTargetStatuses("FINISH_PARTY") ?? []) {
+        target = await this.dependencies.recruiting.resolveCompatTarget({
+          kind: "PARTY",
+          sourceRoomId: context.authorization.roomId,
+          recruitDate: command.target.recruitDate,
+          recruitNumber: command.target.recruitNumber,
+          allowedPartyStatuses: [status],
+        });
+        if (target) break;
+      }
       if (!target) {
-        return this.unavailablePartyReply(context, command.target, command.action, v1Strict);
+        return this.unavailablePartyReply(context, command.target, command.action);
       }
       recruitingCommand = sealRecruitingCommand({
         type: "FINISH_PARTY",
@@ -985,7 +958,7 @@ export class KakaoV4CommandDispatcher {
           })
         : null;
       if (!automaticRecruitNumber && !target) {
-        return this.unavailablePartyReply(context, command.target, command.action, v1Strict);
+        return this.unavailablePartyReply(context, command.target, command.action);
       }
       if (automaticRecruitNumber && command.payload.members.length === 0) {
         throw new KakaoV4DispatcherError("INVALID_FORM");
@@ -1055,7 +1028,7 @@ export class KakaoV4CommandDispatcher {
         PARTY_COPY_DUPLICATE_NAME: "저장하지 않았어요. 같은 이름이 중복되어 있어요. 구분할 수 있는 이름을 적어 주세요.",
       };
       if (copyError === "RECRUIT_NOT_MUTABLE" || command.action === "FINISH" && code === "REVISION_CONFLICT") {
-        return this.unavailablePartyReply(context, command.target, command.action, v1Strict, code === "REVISION_CONFLICT");
+        return this.unavailablePartyReply(context, command.target, command.action, code === "REVISION_CONFLICT");
       }
       if (command.action === "SYNC" && copyMessages[copyError]) {
         return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
@@ -1077,28 +1050,19 @@ export class KakaoV4CommandDispatcher {
     const data = result.body.data;
     const recruitNumber = typeof data.recruitNumber === "number" ? data.recruitNumber : null;
     if (recruitNumber === null) throw new KakaoV4DispatcherError("UNAVAILABLE");
-    const primaryCount = command.action === "FINISH" ? 0 : Number(data.memberCount);
-    const reserveCount = command.action === "FINISH" ? 0 : Number(data.reserveCount ?? 0);
-    const replyMembers = [
-      ...Array.from({ length: primaryCount }, () => ({ substitute: false })),
-      ...Array.from({ length: reserveCount }, () => ({ substitute: true })),
-    ];
-    const mutationReply = command.action === "FINISH"
-        ? `[K-LOL.GG 파티 #${String(recruitNumber)}]\n모집을 마감했습니다.`
-        : v1Strict
-          ? v1StrictPartySyncReply(recruitNumber, Number(data.maximumMembers), replyMembers)
-          : [
-            `[파티 #${String(recruitNumber)} 반영]`,
-            `${String(primaryCount)}/${String(data.maximumMembers)} · 예비 ${String(reserveCount)}명`,
-            `시작시간: ${String(data.startTimeText)} · 게임정보: ${String(data.gameInfo)}`,
-            `주최자: ${String(data.organizerText ?? "미입력")}`,
-          ].join("\n");
-    const legacyReply = command.action === "FINISH"
-      ? await this.appendLatestPartyStatus(context, mutationReply, v1Strict)
-      : await this.latestPartyForm(context, recruitNumber,
-          Array.isArray(data.copyAddedNames) && data.copyAddedNames.length > 0
-            ? `신청 저장: ${data.copyAddedNames.map(String).join(", ")}`
-            : data.copyChanged === false ? "이미 같은 내용으로 저장되어 있어요." : "신청 내용을 저장했어요.");
+    const registered = data.registrationCreated === true || recruitingCommand.type === "CREATE_PARTY";
+    const addedNames = registered && Array.isArray(data.copyAddedNames)
+      ? data.copyAddedNames.filter((name): name is string => typeof name === "string") : [];
+    const registeredNames = addedNames.slice(0, 3).map((name) => {
+      const characters = [...name.trim().replace(/\s+/gu, " ")];
+      return characters.length > 40 ? characters.slice(0, 39).join("") + "…" : characters.join("");
+    }).join(", ") + (addedNames.length > 3 ? ` 외 ${addedNames.length - 3}명` : "");
+    const saveReply = command.action === "FINISH"
+      ? `✅ 파티 #${recruitNumber} ${result.body.status === "CANCELED" ? "초안 취소" : "마감"} 완료`
+      : data.copyChanged === false
+        ? "이미 같은 내용으로 저장되어 있어요."
+        : `✅ 파티${registered ? "등록" : "수정"} 완료 · #${recruitNumber}${registeredNames ? ` · ${registeredNames}` : ""}`;
+    const legacyReply = await this.appendLatestPartyStatus(context, saveReply);
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
   }
 
