@@ -1023,6 +1023,106 @@
         "verifiedAt": "2026-09-21T21:54:32.954Z",
         "healthStatus": "ready"
       }
+    },
+    {
+      "featureId": "integrations-activation",
+      "version": "1.0.0",
+      "gitTag": "integrations-activation-v1.0.0",
+      "commit": "c3442ace1e04054ada05f1f6842f4699b45a0bb6",
+      "releasedAt": "2026-09-21T23:41:09.212Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/integrations-activation-v1.0.0-2026-09-22/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-22-integrations-activation.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_BdpAWrcHPKAchNU9K644dHfajNxu",
+        "url": "https://k-lol-9xz5yaj9g-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-21T23:41:09.212Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R 0.7.29a general bot (user transcript verified)",
+          "version": "KLOL_KAKAO_BOT_V40_R25_2026_09_22",
+          "status": "INSTALLED"
+        },
+        {
+          "name": "MessengerBot R 0.7.29a site notice companion (enabled installer)",
+          "version": "KLOL_SITE_NOTICE_COMPANION_1.0.1",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
+      "featureId": "kakao-site-notices",
+      "version": "1.0.1",
+      "gitTag": "kakao-site-notices-v1.0.1",
+      "commit": "c3442ace1e04054ada05f1f6842f4699b45a0bb6",
+      "releasedAt": "2026-09-21T23:41:09.212Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/integrations-activation-v1.0.0-2026-09-22/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-22-integrations-activation.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_BdpAWrcHPKAchNU9K644dHfajNxu",
+        "url": "https://k-lol-9xz5yaj9g-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-21T23:41:09.212Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R 0.7.29a general bot (user transcript verified)",
+          "version": "KLOL_KAKAO_BOT_V40_R25_2026_09_22",
+          "status": "INSTALLED"
+        },
+        {
+          "name": "MessengerBot R 0.7.29a site notice companion (enabled installer)",
+          "version": "KLOL_SITE_NOTICE_COMPANION_1.0.1",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
+      "featureId": "riot-api-integration",
+      "version": "1.0.0",
+      "gitTag": "riot-api-integration-v1.0.0",
+      "commit": "c3442ace1e04054ada05f1f6842f4699b45a0bb6",
+      "releasedAt": "2026-09-21T23:41:09.212Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/integrations-activation-v1.0.0-2026-09-22/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-22-integrations-activation.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_BdpAWrcHPKAchNU9K644dHfajNxu",
+        "url": "https://k-lol-9xz5yaj9g-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-21T23:41:09.212Z",
+        "healthStatus": "ready"
+      }
+    },
+    {
+      "featureId": "admin-operational-health",
+      "version": "1.0.0",
+      "gitTag": "admin-operational-health-v1.0.0",
+      "commit": "c3442ace1e04054ada05f1f6842f4699b45a0bb6",
+      "releasedAt": "2026-09-21T23:41:09.212Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/integrations-activation-v1.0.0-2026-09-22/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-22-integrations-activation.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_BdpAWrcHPKAchNU9K644dHfajNxu",
+        "url": "https://k-lol-9xz5yaj9g-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-21T23:41:09.212Z",
+        "healthStatus": "ready"
+      }
     }
   ]
 }

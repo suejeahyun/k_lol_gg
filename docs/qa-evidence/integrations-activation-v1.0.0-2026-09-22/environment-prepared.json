@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-09-21T23:26:26.781Z",
+  "targetHashMatched": true,
+  "apiKeyChanged": false,
+  "rsoConfigured": false,
+  "changes": [
+    {
+      "key": "RIOT_ENCRYPTION_KEYS",
+      "prepared": true
+    },
+    {
+      "key": "V2_RIOT_INTEGRATION_ENABLED",
+      "prepared": true
+    },
+    {
+      "key": "KAKAO_SITE_NOTICE_ENABLED",
+      "prepared": true
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-09-21T23:43:14.722Z",
+  "deploymentId": "dpl_BdpAWrcHPKAchNU9K644dHfajNxu",
+  "requestCount": 39,
+  "statusCounts": {
+    "200": 23,
+    "307": 3,
+    "401": 9,
+    "409": 4
+  },
+  "errorOrFatal": 0,
+  "server5xx": 0,
+  "expectedDeniedRequestsIncluded": true,
+  "cron": [
+    {
+      "timestamp": 1790034067610,
+      "status": 401
+    },
+    {
+      "timestamp": 1790034010783,
+      "status": 401
+    },
+    {
+      "timestamp": 1790033933032,
+      "status": 401
+    }
+  ]
+}

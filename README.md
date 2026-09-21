@@ -10,11 +10,11 @@ V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 
 - Riot·Kakao·Blob 경계를 운영 자격증명과 분리해 검증할 수 있는 adapter·보안 계약
 - V1 호환 경로와 Kakao V4 명령/양식 흐름, PWA와 반응형 사용자·관리자 셸
 
-현재 운영은 **운영 준비 보완 1.0.0**, source `c5cbbcd8`, Vercel `dpl_7FHerKERF1CKe4kFvN5DQkvUHX8k`, DB `0044`입니다. 파티 목록·직접 상세·초안 취소, 통계 자동 갱신, 명단 보존 마감, 회원 연결 검토와 팀 보정·운영 진단을 반영했습니다. 전체 코드·DB·339개 화면·운영 읽기·실제 Blob 검사는 [릴리스 QA](docs/qa-evidence/operational-readiness-v1.0.0-2026-09-22/README.md)에 기록했습니다.
+현재 운영은 **사이트 알림·Riot API·운영 진단 1.0.0**, source `c3442ace`, Vercel `dpl_BdpAWrcHPKAchNU9K644dHfajNxu`, DB `0044`입니다. API 직접 연결·주기 갱신, 관리자 연동 진단과 사이트 충원 서버 알림을 활성화했습니다. 계약·단위·격리 DB·339개 화면·운영 경계와 실제 Riot 상태 API 결과는 [릴리스 QA](docs/qa-evidence/integrations-activation-v1.0.0-2026-09-22/README.md)에 기록했습니다. 이전 파티·통계·마감·Blob 검증은 [운영 준비 QA](docs/qa-evidence/operational-readiness-v1.0.0-2026-09-22/README.md)를 따릅니다.
 
-사이트 충원 카카오 알림과 Riot 최근 경기 공급은 서버 코드까지 반영했으며, 휴대폰 설치와 Riot 자격·실계정 확인이 남아 비활성 상태입니다. 소스·서버·DB·외부 기기 상태는 [STATUS](docs/STATUS.md)를 확인합니다.
+사이트 충원 별도 봇의 실제 설치·등록·수신, 사용자가 명시 연결한 Riot 계정의 실제 전적 확인, 별도 RSO 승인은 남아 있습니다. 운영 API 키만으로 Riot 로그인 소유권 인증 상태를 만들지 않습니다. 소스·서버·DB·외부 기기 상태는 [STATUS](docs/STATUS.md)를 확인합니다.
 
-카카오 편집·보호 정책은 승인된 [파티 ADR0011](docs/architecture/0011-kakao-party-editable-copy-flow.md)과 [내전 ADR0012](docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따릅니다. 기존 R24 서버 호환과 실제 기기 설치는 구분하며, 사용자 확인 앱 버전은 MessengerBot R **0.7.29a**입니다. 사이트 충원 알림용 [별도 companion](integrations/messengerbot-r/site-notices/README.md)은 기본 OFF이며 대상 세션 등록·실기기 확인 후 활성화합니다.
+카카오 편집·보호 정책은 승인된 [파티 ADR0011](docs/architecture/0011-kakao-party-editable-copy-flow.md)과 [내전 ADR0012](docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따릅니다. 사용자 확인 앱 버전은 MessengerBot R **0.7.29a**, 일반 봇은 **R25**입니다. 사이트 충원 알림용 [별도 companion](integrations/messengerbot-r/site-notices/README.md)은 일반 봇과 분리해 설치하고 그룹 세션을 명시 등록합니다. 서버 ON과 실제 수신 완료는 구분합니다.
 
 ## 로컬 실행
 

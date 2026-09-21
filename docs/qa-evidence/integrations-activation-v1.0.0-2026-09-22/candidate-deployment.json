@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-09-21T23:39:10.248Z",
+  "id": "dpl_BdpAWrcHPKAchNU9K644dHfajNxu",
+  "url": "k-lol-9xz5yaj9g-tjdmswo11-3715s-projects.vercel.app",
+  "readyState": "READY",
+  "target": "production",
+  "sha": "c3442ace1e04054ada05f1f6842f4699b45a0bb6",
+  "ref": "feat/kakao-v4-gateway-20260910",
+  "alias": [
+    "k-lol-gg-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/statistics-projection",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/kakao-daily-close",
+      "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/riot-sync",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

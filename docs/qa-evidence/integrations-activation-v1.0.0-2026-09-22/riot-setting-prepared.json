@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-09-21T23:27:10.148Z",
+  "targetFingerprint": "c5918218dd171001",
+  "applied": false,
+  "requestId": "8237b20c-99c2-45e6-9652-d6930a7f71b6",
+  "previousRevision": 0,
+  "nextRevision": 1,
+  "riotEnabled": true,
+  "existingDisconnectedAccounts": 92,
+  "externalAccountsLinked": 0,
+  "humanActorImpersonated": false,
+  "auditAndOutbox": true
+}

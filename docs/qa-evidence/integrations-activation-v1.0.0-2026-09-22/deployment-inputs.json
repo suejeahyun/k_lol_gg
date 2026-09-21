@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-09-21T23:33:13.011Z",
+  "fileCount": 2626,
+  "totalBytes": 195155665,
+  "privateFilesExcluded": true,
+  "ignored": [
+    ".env.local",
+    ".git",
+    ".gitignore",
+    ".next",
+    ".private",
+    ".tmp",
+    ".vercel",
+    "node_modules"
+  ]
+}

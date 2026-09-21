@@ -1,0 +1,22 @@
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit and outbox atomic (1004.5287ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1659.051
+✔ production RSO cache and signed sync job survive application retry without persisting credentials (351.4668ms)
+✔ scheduled Riot repository excludes ineligible identities and duplicate/recent work (105.6849ms)
+✔ Riot key probe persists only safe outcomes and rejects replay, rapid retry, invalid signature and disabled flag (77.0583ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1197.0373
+[db-contract] cluster stopped and disposable workspace path removed

@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-09-21T23:39:26.918Z",
+  "baseUrl": "https://k-lol-9xz5yaj9g-tjdmswo11-3715s-projects.vercel.app",
+  "checks": [
+    {
+      "name": "Riot status endpoint accepts configured key",
+      "status": 200,
+      "passed": true,
+      "code": "STATUS_ENDPOINT_ACCEPTED",
+      "providerStatus": 200
+    },
+    {
+      "name": "Riot probe nonce replay blocked",
+      "status": 409,
+      "passed": true,
+      "code": "REPLAY"
+    }
+  ],
+  "memberAccountLinked": false,
+  "scope": "KR status-v4 key acceptance only; no League/Match or RSO claim"
+}

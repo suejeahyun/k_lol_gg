@@ -1,0 +1,5 @@
+
+> klol-gg-v2@0.1.0 release:evidence:check
+> node scripts/releases/verify-release-evidence.mjs
+
+기능 릴리스 48개 · Git tag 48개 · migration 근거 정상

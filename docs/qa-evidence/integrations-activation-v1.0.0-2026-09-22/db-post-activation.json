@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-09-21T23:46:34.128Z",
+  "targetFingerprint": "c5918218dd171001",
+  "readOnly": true,
+  "riotJobAuthentication": [
+    {
+      "count": 1,
+      "latest": "2026-09-21T23:45:45.521Z"
+    }
+  ],
+  "riotProbe": [
+    {
+      "status": "SUCCEEDED",
+      "started_at": "2026-09-21T23:39:16.418Z",
+      "completed_at": "2026-09-21T23:39:16.709Z",
+      "status_endpoint_accepted": 1,
+      "provider_status": 200,
+      "failure_code": null
+    }
+  ],
+  "settings": [
+    {
+      "id": 1,
+      "revision": "1",
+      "riot_enabled": true
+    }
+  ],
+  "riotLinks": [
+    {
+      "status": "DISCONNECTED",
+      "count": 92
+    }
+  ],
+  "riotJobs": [],
+  "notices": [],
+  "migrations": [
+    {
+      "count": 45,
+      "latest_at": "1790025671009"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+
+> klol-gg-v2@0.1.0 check
+> npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build
+
+
+> klol-gg-v2@0.1.0 lint
+> eslint
+
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js
+   1:838   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+   5:130   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  32:231   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:79    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:196   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  34:274   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  35:200   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  36:66    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  44:347   warning  'n' is defined but never used  @typescript-eslint/no-unused-vars
+  54:409   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  56:71    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  59:168   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  60:318   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  65:1002  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  74:403   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:151   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:216   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:497   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  78:2934  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  79:8     warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  80:116   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  81:378   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V1_COMPAT.js
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
+    2:5  warning  'KLOL_V41_BUNDLE_START_SENTINEL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  369:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\v1-strict\KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_SOURCE_SHA256' is assigned a value but never used           @typescript-eslint/no-unused-vars
+     2:5   warning  'KLOL_V1_EXTRACTED_SHA256' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     3:5   warning  'KLOL_V1_SOURCE_FUNCTIONS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     6:5   warning  'KLOL_V1_TRANSPORT_SEAMS' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    35:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   119:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   208:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   281:10  warning  'ignoredJavaNormalizationError' is defined but never used            @typescript-eslint/no-unused-vars
+   291:10  warning  'parsePartyMemberMutationCommand' is defined but never used          @typescript-eslint/no-unused-vars
+   434:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   453:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   468:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   506:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   532:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   544:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   582:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   586:29  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   586:35  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   586:43  warning  'imageBase64' is defined but never used                              @typescript-eslint/no-unused-vars
+   586:56  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   589:36  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   589:42  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   589:50  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   731:77  warning  'packageName' is defined but never used                              @typescript-eslint/no-unused-vars
+   742:10  warning  'ignoredImageError' is defined but never used                        @typescript-eslint/no-unused-vars
+   746:10  warning  'ignoredImageBase64Error' is defined but never used                  @typescript-eslint/no-unused-vars
+   759:10  warning  'ignoredImageBitmapError' is defined but never used                  @typescript-eslint/no-unused-vars
+  1775:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1777:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1807:10  warning  'response' is defined but never used                                 @typescript-eslint/no-unused-vars
+
+✖ 55 problems (0 errors, 55 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+
+> klol-gg-v2@0.1.0 typecheck
+> tsc --noEmit
+
+tests/database/riot-production.contract.test.ts(341,110): error TS2345: Argument of type '{ method: string; path: string; timestampSeconds: number; nonce: string; bodyDigestHex: string; }' is not assignable to parameter of type 'Omit<Readonly<{ method: "POST"; path: string; timestampSeconds: number; nonce: string; bodyDigestHex: string; signatureHex: string; }>, "signatureHex">'.
+  Types of property 'method' are incompatible.
+    Type 'string' is not assignable to type '"POST"'.
+tests/riot-activation.test.ts(94,217): error TS2345: Argument of type '{ method: string; path: string; nonce: string; timestampSeconds: number; bodyDigestHex: string; }' is not assignable to parameter of type 'Omit<Readonly<{ method: "POST"; path: string; timestampSeconds: number; nonce: string; bodyDigestHex: string; signatureHex: string; }>, "signatureHex">'.
+  Types of property 'method' are incompatible.
+    Type 'string' is not assignable to type '"POST"'.

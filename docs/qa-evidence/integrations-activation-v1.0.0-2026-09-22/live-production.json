@@ -1,0 +1,64 @@
+{
+  "checkedAt": "2026-09-21T23:41:09.212Z",
+  "baseUrl": "https://k-lol-gg.vercel.app",
+  "stage": "production",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "cron rejects anonymous",
+      "status": 401,
+      "passed": true,
+      "code": "JOB_AUTH_FAILED"
+    },
+    {
+      "name": "probe rejects anonymous",
+      "status": 401,
+      "passed": true,
+      "code": "JOB_AUTH_FAILED"
+    },
+    {
+      "name": "site notice authenticated server registration",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "site notice nonce replay blocked",
+      "status": 409,
+      "passed": true,
+      "code": "NONCE_REPLAYED"
+    },
+    {
+      "name": "site notice missing signature rejected",
+      "status": 401,
+      "passed": true,
+      "code": "AUTHENTICATION_FAILED"
+    },
+    {
+      "name": "signed Riot runtime queue readable",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "/admin anonymous access guarded",
+      "status": 307,
+      "passed": true,
+      "streamedLoginRedirect": false
+    },
+    {
+      "name": "/account/riot anonymous access guarded",
+      "status": 200,
+      "passed": true,
+      "streamedLoginRedirect": true
+    }
+  ],
+  "phoneInstalled": false,
+  "actualKakaoMessageSent": false,
+  "memberAccountLinked": false,
+  "siteRegistrationIsServerProbeOnly": true,
+  "riotStatusProbeDoesNotProveLeagueMatchPermissions": true
+}

@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-09-21T23:25:44.908Z",
+  "targetFingerprint": "c5918218dd171001",
+  "readOnly": true,
+  "settings": [
+    {
+      "id": 1,
+      "revision": "0",
+      "riot_enabled": false
+    }
+  ],
+  "riotLinks": [
+    {
+      "status": "DISCONNECTED",
+      "count": 92
+    }
+  ],
+  "riotJobs": [],
+  "notices": [],
+  "migrations": [
+    {
+      "count": 45,
+      "latest_at": "1790025671009"
+    }
+  ]
+}

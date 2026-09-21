@@ -1,0 +1,31 @@
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ S13 settings, AI ledger and signed maintenance preserve authorization and idempotency contracts (1037.1887ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1696.2708
+✔ storage probe atomically limits concurrent jobs, rejects replay, and records synthetic storage success and failure (137.5449ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 726.4717
+(node:31340) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ admin diagnostics aggregate only current notice scope and fixed operational evidence in a bounded read-only transaction (221.6118ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 860.7951
+[db-contract] cluster stopped and disposable workspace path removed

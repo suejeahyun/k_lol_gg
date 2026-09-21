@@ -1,0 +1,14 @@
+✔ Riot cron rejects invalid requests before runtime access and noops when unconfigured (14.1627ms)
+✔ Riot cron signs one bounded consumer call with a fresh replay nonce and returns only safe counters (1.1041ms)
+✔ disabled Riot cron is a safe noop; unexpected errors stay opaque (0.6548ms)
+✔ missing RSO never supplies state or verified identity (0.3236ms)
+✔ key probe requests only fixed KR status once, discards body, and exposes no credentials (0.8043ms)
+✔ probe HTTP authenticates exact empty request and rejects caller URLs before invocation (2.2649ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 213.7876

@@ -1,0 +1,742 @@
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ all journaled migrations install idempotently on a distinct empty PostgreSQL 18 database (780.0158ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1392.8113
+✔ 0041 fresh install, populated 0040 upgrade and reapply preserve enrollment history (2281.1089ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2874.1845
+✔ four guards reject unsafe database targets (0.7407ms)
+▶ migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18
+  ✔ forward migration preserves existing player rows and is idempotent (1003.3602ms)
+  ✔ auth and TOTP constraints fail closed (105.151ms)
+  ✔ database auth repository persists durable session, TOTP, and rate-limit state (217.4868ms)
+  ✔ registry uniqueness and lifecycle constraints are enforced (5.5409ms)
+  ✔ PostgresPlayerRepository returns only public active projections (22.1095ms)
+  ✔ domain change and audit append commit or roll back atomically (7.5652ms)
+✔ migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18 (1368.1278ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2033.0418
+▶ administrator TOTP lifecycle is serialized, audited, and rolled back atomically
+  ✔ a TOTP setup session that expires while queued cannot mutate security state (528.7937ms)
+  ✔ pending setup never rotates silently and explicit cancellation is auditable (14.198ms)
+  ✔ concurrent enable has one winner and revokes every session in its transaction (19.0351ms)
+  ✔ audit insertion failure rolls credential, version, and revocation back (11.6508ms)
+  ✔ concurrent self-disable deletes the factor and revokes all sessions exactly once (8.9135ms)
+  ✔ USER is rejected while SUPER_ADMIN self-setup remains allowed (15.716ms)
+✔ administrator TOTP lifecycle is serialized, audited, and rolled back atomically (678.7028ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1294.2401
+✔ S02 player mutations, legacy mapping, privacy, replay, and rollback hold on PostgreSQL 18 (1110.1747ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1755.7922
+▶ season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18
+  ✔ retired lifecycle timestamps reject activated or ended history (2.8519ms)
+  ✔ concurrent activation leaves exactly one active season (138.6606ms)
+  ✔ clone creates a draft and stale clone revision is rejected (11.6986ms)
+  ✔ Kakao provenance hash and position invariants are enforced by PostgreSQL (203.6505ms)
+  ✔ SUPER resolves or cancels pending Kakao applications with idempotency, merge policy and safe team handoff (249.9853ms)
+  ✔ SITE upsert reuses the same player/date/round row imported from Kakao (15.4668ms)
+  ✔ command receipts expire after 24 hours and an expired key is safely reusable (7.5827ms)
+  ✔ season audit snapshots retain lifecycle and schedule field diffs (11.4129ms)
+  ✔ clone and cancellation roll back with their audit event (9.1674ms)
+  ✔ owner cancellation, resubmission and admin review honor revisions (84.6784ms)
+  ✔ public DTO excludes member, login, Discord and internal review fields (5.9973ms)
+  ✔ public status counts cover the full roster while the projection is capped at 200 (45.4012ms)
+  ✔ viewer approval and active-player capability are rechecked from the database (32.5976ms)
+  ✔ non-approved account is rechecked inside the mutation transaction (0.9265ms)
+  ✔ ACCOUNT and ADMIN purposes cannot cross-authorize season commands (1.7677ms)
+  ✔ ADMIN and SUPER_ADMIN roles may use approved user actions only through ACCOUNT sessions (28.7359ms)
+  ✔ session revocation wins over a queued ACCOUNT mutation (162.4534ms)
+  ✔ TOTP removal wins over a queued ADMIN mutation (169.5518ms)
+  ✔ soft-deleted account is rejected again inside the mutation transaction (1.5999ms)
+  ✔ reviewer history restricts hard deletion of the reviewer account (3.9375ms)
+  ✔ audit failure rolls the season and idempotency receipt back together (3.6773ms)
+  ✔ ending and retirement preserve history instead of cascading deletion (6.6086ms)
+✔ season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18 (1289.8516ms)
+✔ site and Kakao serialize the last seat, allow explicit reserves and block closed rounds (397.6956ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2357.0133
+▶ site capacity transition queue is atomic, scoped, replay-safe and offline tolerant
+  ✔ UNVERIFIED matches only one-candidate review items (11.1349ms)
+  ✔ website roster ignores legacy pending in another scope or mode (184.9978ms)
+  ✔ 9 to 10, retry and unchanged 10 create a single notification (32.5746ms)
+  ✔ failed application transaction rolls back its notification (30.2327ms)
+  ✔ another scope or target cannot claim and replay is refused (11.7796ms)
+  ✔ offline lease expires, concurrent polls claim once, ACK is idempotent (30.0423ms)
+  ✔ uncertain send is terminal; a newer 9 to 10 transition remains separate (36.8557ms)
+  ✔ expiry, failure bound and retention are enforced (39.3912ms)
+✔ site capacity transition queue is atomic, scoped, replay-safe and offline tolerant (454.6129ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1123.7905
+✔ S01 account lifecycle, recovery security, races, replay, and rollback hold on PostgreSQL 18 (4058.3506ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8132.6558
+▶ S04 stores participant display identity and rejection reasons as durable history
+  ✔ published detail keeps ten KDA rows and exposes a real API 404/fallback contract (46.2033ms)
+  ✔ registry rename does not rewrite a recorded participant or its archived revision (269.9994ms)
+  ✔ reject after and reopen before audit snapshots retain the cleared public reason (26.4796ms)
+  ✔ web submission accepts only the owner's current valid selected team draft (27.1695ms)
+  ✔ admin match creation rechecks and persists the exact selected team draft (14.3269ms)
+  ✔ submission approval carries team-balance provenance through match history and outbox (38.3926ms)
+✔ S04 stores participant display identity and rejection reasons as durable history (619.2408ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1268.055
+✔ S05 rebuilds PUBLISHED match statistics atomically and receipts make replay idempotent (362.2047ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1040.429
+✔ S10 media publication is TOTP-authorized, idempotent, asset-safe, auditable, and soft archived (277.8168ms)
+✔ S10 admin upload persists STAGED to READY, lists by exact draft, attaches safely, and tombstones unused assets (222.4096ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1189.2899
+✔ team internal experience counts published games only and converges after void and restore (224.4363ms)
+✔ team-only override is SUPER/TOTP audited and recent solo provider requires connected fresh identity (270.3828ms)
+✔ S06 draft lifecycle is owner/admin authorized, append-only, transactional, and idempotent (584.7839ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1740.1967
+✔ S05-B persists canonical full-ledger MMR replay without competing for the S04 outbox (422.2821ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1083.4933
+✔ S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomically with owner/session checks (213.1436ms)
+✔ party member statistics are bounded and count distinct parties and primary companions (76.5529ms)
+✔ S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity (83.3919ms)
+✔ Kakao aggregate controllers block confused-deputy lifecycle mutations (144.1781ms)
+✔ V4 scrim finish completes only the active same-room target and replays without duplicate writes (94.1271ms)
+✔ concurrent V4 party member commands serialize on the locked latest aggregate (264.6632ms)
+✔ concurrent V4 scrim participant commands compose after the database row lock (145.06ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1719.9849
+✔ S09 operation forms persist signed submissions and ADMIN TOTP mutations atomically (161.2926ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 796.5928
+✔ signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room (140.6652ms)
+✔ in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room (302.8027ms)
+✔ authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes (190.3816ms)
+✔ signed Kakao season snapshots match exact players and preserve unresolved entries for review (161.7039ms)
+✔ recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks (119.1863ms)
+✔ in-house shortcuts and full snapshots enforce integrated SITE capacity while preserving confirmed decisions (195.5867ms)
+✔ in-house finish preserves every roster row, hides the round, and replays without writes (119.5754ms)
+✔ editable inhouse forms count unlinked names, merge concurrent additions, protect SITE rows and retain closed rosters (322.3914ms)
+✔ name-first in-house copies keep pending slots and merge metadata without overwriting newer edits (182.426ms)
+✔ in-house copy forms reopen a vacated reserve slot and preserve the remaining roster (145.1046ms)
+✔ owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke (131.9587ms)
+✔ Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox (157.3735ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2940.5228
+▶ Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST
+  ✔ scope, kind, target and operating-day binding are mandatory (5.4171ms)
+  ✔ concurrent readers reuse a single durable original (63.6016ms)
+  ✔ transaction rollback does not leave an issued code behind (3.2573ms)
+  ✔ database constraints fail closed even when application validation is bypassed (101.3738ms)
+  ✔ midnight preserves the code but the exact 06:00 boundary rejects it (54.0358ms)
+  ✔ bounded retention cleanup never removes a live original (24.8047ms)
+✔ Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST (346.3639ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 947.1877
+✔ one installation maps to exactly one canonical room without room parsing or sender allowlists (256.018ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 879.9218
+✔ ADR0011 lists more than twenty parties without snapshots and reads scoped active/draft details directly (127.3227ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 735.3364
+✔ [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle (0.9701ms)
+✔ [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member (6.5874ms)
+✔ [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot (3.3669ms)
+✔ [P0-PARTY-03] slash and comma in one reserve row stay in one display name (0.3801ms)
+✔ [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target (1.0724ms)
+✔ [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot (0.4975ms)
+✔ [P0-PARTY-06] member order is canonical and independent of pasted row order (0.6017ms)
+✔ [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved (1.0649ms)
+✔ [P0-PARTY-08] multiline metadata values match their single-line semantic values (0.8875ms)
+✔ [P0-PARTY-09] an automatic-number empty draft never creates a recruit (0.7454ms)
+✔ [P0-OPS-01] all four forms preserve values continued on the following line (2.6918ms)
+✔ [P0-OPS-02] all four forms expose exact missing-field contracts without submission (0.6593ms)
+✔ [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter (0.2004ms)
+✔ [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN (0.8513ms)
+✔ [P0-OPS-05:friends] field order does not alter the canonical payload (0.3422ms)
+✔ [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form (0.2372ms)
+✔ [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field (0.289ms)
+✔ [P0-OPS-05:suggestions] field order does not alter the canonical payload (0.1966ms)
+✔ [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form (0.1376ms)
+✔ [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field (0.2147ms)
+✔ [P0-OPS-05:meetups] field order does not alter the canonical payload (0.29ms)
+✔ [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form (0.1901ms)
+✔ [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field (0.2786ms)
+✔ [P0-OPS-05:leaves] field order does not alter the canonical payload (0.2725ms)
+✔ [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form (0.1754ms)
+✔ [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field (0.2416ms)
+✔ [P0-OPS-08] prose mentioning every label is not classified as a form (0.1338ms)
+✔ [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed (0.6462ms)
+✔ [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched (0.6524ms)
+✔ [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch (0.4695ms)
+✔ [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server (0.1483ms)
+✔ [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker (0.1828ms)
+✔ [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role (123.4912ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 794.5211
+(node:3656) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ S07 event adapter persists exact-ten lifecycle, S06 teams, correction invalidation and owner-safe reads (757.8529ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1410.4748
+✔ S08 adapter persists recruitment, seeded auction, BO stages, roster history, MVP revote and atomic receipts (1242.6155ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1868.6857
+✔ S13 settings, AI ledger and signed maintenance preserve authorization and idempotency contracts (321.1411ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 929.7054
+✔ storage probe atomically limits concurrent jobs, rejects replay, and records synthetic storage success and failure (135.698ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 709.9256
+✔ admin diagnostics aggregate only current notice scope and fixed operational evidence in a bounded read-only transaction (226.358ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 805.3172
+✔ S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit and outbox atomic (294.8609ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 887.9224
+✔ production RSO cache and signed sync job survive application retry without persisting credentials (376.4745ms)
+✔ scheduled Riot repository excludes ineligible identities and duplicate/recent work (114.0101ms)
+✔ Riot key probe persists only safe outcomes and rejects replay, rapid retry, invalid signature and disabled flag (84.7893ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1199.38
+✔ S11 discipline records and private evidence persist with masked ownership, replay, and exact review state (428.1284ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1100.9746
+✔ S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledgers atomic (234.6746ms)
+✔ S10 champion image backfill applies and rolls back all 173 NULL fixture rows (166.4305ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1027.9264
+{"kind":"isolated-postgresql-recovery","archiveBytes":1007125,"archiveSha256":"ca252476baf3b23ea63595f6efa8ad55d183aa7120b0cc61a7e50b209fb19f0d","migrationCount":45,"migrationHead":"0044_vengeful_trauma","tableCount":106,"schemaDefinitionCount":3511,"exactTableCountsMatched":true,"fixtureRelationMatched":true,"foreignKeysValidated":true,"migrationReplayNoop":true,"failedMigrationRolledBack":true}
+✔ PostgreSQL custom archive restores the complete schema, data and migration head (3243.9184ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3819.6172
+✔ bounded maintenance deletes only expired rows and records an atomic replayable result (114.042ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 729.9056
+[browser-qa-command] ready | code | empty | season-error | season-restore | account-error | account-restore | sessions-error | sessions-restore | bump-approved | stop
+[capture] 1/339 200 / -> 001-desktop.png
+[capture] 2/339 200 /account -> 002-desktop-account.png
+[capture] 3/339 200 /account/discipline -> 003-desktop-account-discipline.png
+[capture] 4/339 200 /account/password -> 004-desktop-account-password.png
+[capture] 5/339 200 /account/riot -> 005-desktop-account-riot.png
+[capture] 6/339 200 /admin -> 006-desktop-admin.png
+[capture] 7/339 200 /admin/balance -> 007-desktop-admin-balance.png
+[capture] 8/339 200 /admin/balance-ai -> 008-desktop-admin-balance-ai.png
+[capture] 9/339 200 /admin/balance/drafts -> 009-desktop-admin-balance-drafts.png
+[capture] 10/339 200 /admin/balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb -> 010-desktop-admin-balance-drafts-draftId.png
+[capture] 11/339 200 /admin/champions -> 011-desktop-admin-champions.png
+[capture] 12/339 200 /admin/champions/v1-1/edit -> 012-desktop-admin-champions-championId-edit.png
+[capture] 13/339 200 /admin/champions/new -> 013-desktop-admin-champions-new.png
+[capture] 14/339 200 /admin/discipline -> 014-desktop-admin-discipline.png
+[capture] 15/339 200 /admin/discipline/5cc181da-21ab-4a50-8b1b-d36561f1d27e -> 015-desktop-admin-discipline-recordId.png
+[capture] 16/339 200 /admin/discipline/new -> 016-desktop-admin-discipline-new.png
+[capture] 17/339 200 /admin/highlights -> 017-desktop-admin-highlights.png
+[capture] 18/339 200 /admin/highlights/b5a8b85b-c9d4-474a-814f-a0627275c5c0/edit -> 018-desktop-admin-highlights-highlightId-edit.png
+[capture] 19/339 200 /admin/highlights/new -> 019-desktop-admin-highlights-new.png
+[capture] 20/339 200 /admin/images -> 020-desktop-admin-images.png
+[capture] 21/339 200 /admin/images/fedea87a-8fe0-453e-9357-4b71be35f86b/edit -> 021-desktop-admin-images-imageId-edit.png
+[capture] 22/339 200 /admin/images/new -> 022-desktop-admin-images-new.png
+[capture] 23/339 200 /admin/kakao -> 023-desktop-admin-kakao.png
+[capture] 24/339 200 /admin/kakao/rooms -> 024-desktop-admin-kakao-rooms.png
+[capture] 25/339 200 /admin/login -> 025-desktop-admin-login.png
+[capture] 26/339 200 /admin/logs -> 026-desktop-admin-logs.png
+[capture] 27/339 200 /admin/matches -> 027-desktop-admin-matches.png
+[capture] 28/339 200 /admin/matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003 -> 028-desktop-admin-matches-matchId.png
+[capture] 29/339 200 /admin/matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003/edit -> 029-desktop-admin-matches-matchId-edit.png
+[capture] 30/339 200 /admin/matches/new -> 030-desktop-admin-matches-new.png
+[capture] 31/339 200 /admin/matches/submissions/ec36da7b-fc44-48fc-bd0c-9e04ac63c2be -> 031-desktop-admin-matches-submissions-submissionId.png
+[capture] 32/339 200 /admin/operation-forms -> 032-desktop-admin-operation-forms.png
+[capture] 33/339 200 /admin/operation-forms/suggestions -> 033-desktop-admin-operation-forms-formType.png
+[capture] 34/339 200 /admin/operation-forms/suggestions/8ddeecde-f0f9-494c-8b5b-5a35872b5d71 -> 034-desktop-admin-operation-forms-formType-id.png
+[capture] 35/339 200 /admin/players -> 035-desktop-admin-players.png
+[capture] 36/339 200 /admin/players/488cbd33-ce1e-4285-8a06-bcb956e62475 -> 036-desktop-admin-players-playerId.png
+[capture] 37/339 200 /admin/players/new -> 037-desktop-admin-players-new.png
+[capture] 38/339 200 /admin/private-assets -> 038-desktop-admin-private-assets.png
+[capture] 39/339 200 /admin/private-assets/2e47541d-bca4-40f4-8239-4c6949fa1563 -> 039-desktop-admin-private-assets-assetId.png
+[capture] 40/339 200 /admin/progress/destruction -> 040-desktop-admin-progress-destruction.png
+[capture] 41/339 200 /admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b -> 041-desktop-admin-progress-destruction-tournamentId.png
+[capture] 42/339 200 /admin/progress/destruction/new -> 042-desktop-admin-progress-destruction-new.png
+[capture] 43/339 200 /admin/progress/event -> 043-desktop-admin-progress-event.png
+[capture] 44/339 200 /admin/progress/event/adf298a2-0db1-4752-a0b9-ac2a48637c94 -> 044-desktop-admin-progress-event-eventId.png
+[capture] 45/339 200 /admin/progress/event/new -> 045-desktop-admin-progress-event-new.png
+[capture] 46/339 200 /admin/riot -> 046-desktop-admin-riot.png
+[capture] 47/339 200 /admin/search -> 047-desktop-admin-search.png
+[capture] 48/339 200 /admin/seasons -> 048-desktop-admin-seasons.png
+[capture] 49/339 200 /admin/seasons/kakao-pending -> 049-desktop-admin-seasons-kakao-pending.png
+[capture] 50/339 200 /admin/seasons/kakao-pending/1fef512c-dd2a-42b1-9fc0-c737d614bee1 -> 050-desktop-admin-seasons-kakao-pending-pendingId.png
+[capture] 51/339 200 /admin/security -> 051-desktop-admin-security.png
+[capture] 52/339 200 /admin/site-settings -> 052-desktop-admin-site-settings.png
+[capture] 53/339 200 /admin/users -> 053-desktop-admin-users.png
+[capture] 54/339 200 /admin/users/62f24a08-05fc-4493-b25a-4e3e5a1ca05f -> 054-desktop-admin-users-userAccountId.png
+[capture] 55/339 200 /applications -> 055-desktop-applications.png
+[capture] 56/339 200 /competitions -> 056-desktop-competitions.png
+[capture] 57/339 200 /competitions/destruction -> 057-desktop-competitions-destruction.png
+[capture] 58/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b -> 058-desktop-competitions-destruction-tournamentId.png
+[capture] 59/339 200 /competitions/events -> 059-desktop-competitions-events.png
+[capture] 60/339 200 /competitions/events/adf298a2-0db1-4752-a0b9-ac2a48637c94 -> 060-desktop-competitions-events-eventId.png
+[capture] 61/339 200 /discipline -> 061-desktop-discipline.png
+[capture] 62/339 200 /forbidden -> 062-desktop-forbidden.png
+[capture] 63/339 200 /forgot-password -> 063-desktop-forgot-password.png
+[capture] 64/339 200 /help/kakao -> 064-desktop-help-kakao.png
+[capture] 65/339 200 /help/recruits -> 065-desktop-help-recruits.png
+[capture] 66/339 200 /help/riot -> 066-desktop-help-riot.png
+[capture] 67/339 200 /highlights -> 067-desktop-highlights.png
+[capture] 68/339 200 /highlights/b5a8b85b-c9d4-474a-814f-a0627275c5c0 -> 068-desktop-highlights-highlightId.png
+[capture] 69/339 200 /images -> 069-desktop-images.png
+[capture] 70/339 200 /images/fedea87a-8fe0-453e-9357-4b71be35f86b -> 070-desktop-images-imageId.png
+[capture] 71/339 200 /install -> 071-desktop-install.png
+[capture] 72/339 200 /login -> 072-desktop-login.png
+[capture] 73/339 200 /matches -> 073-desktop-matches.png
+[capture] 74/339 200 /matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003 -> 074-desktop-matches-matchId.png
+[capture] 75/339 200 /matches/submissions -> 075-desktop-matches-submissions.png
+[capture] 76/339 200 /matches/submit -> 076-desktop-matches-submit.png
+[capture] 77/339 200 /players -> 077-desktop-players.png
+[capture] 78/339 200 /players/488cbd33-ce1e-4285-8a06-bcb956e62475 -> 078-desktop-players-playerId.png
+[capture] 79/339 200 /privacy -> 079-desktop-privacy.png
+[capture] 80/339 200 /rankings -> 080-desktop-rankings.png
+[capture] 81/339 200 /rankings/mmr -> 081-desktop-rankings-mmr.png
+[capture] 82/339 200 /recruits -> 082-desktop-recruits.png
+[capture] 83/339 200 /signup -> 083-desktop-signup.png
+[capture] 84/339 200 /start -> 084-desktop-start.png
+[capture] 85/339 200 /terms -> 085-desktop-terms.png
+[capture] 86/339 200 /tools/coin-toss -> 086-desktop-tools-coin-toss.png
+[capture] 87/339 200 /tools/random-team -> 087-desktop-tools-random-team.png
+[capture] 88/339 200 /tools/team-balance -> 088-desktop-tools-team-balance.png
+[capture] 89/339 200 /tools/team-balance/drafts -> 089-desktop-tools-team-balance-drafts.png
+[capture] 90/339 200 /tools/team-balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb -> 090-desktop-tools-team-balance-drafts-draftId.png
+[capture] 91/339 200 /account?tab=player -> 091-desktop-account-player.png
+[capture] 92/339 200 /admin/balance-ai?tab=players -> 092-desktop-admin-balance-ai-players.png
+[capture] 93/339 200 /admin/balance-ai?tab=reviews -> 093-desktop-admin-balance-ai-reviews.png
+[capture] 94/339 200 /admin/balance-ai?tab=reviews&review=13214fac-9e39-4e0e-888f-f163c53b054c -> 094-desktop-admin-balance-ai-review-detail.png
+[capture] 95/339 200 /admin/balance-ai?action=recalculate -> 095-desktop-admin-balance-ai-recalculate-confirmation.png
+[capture] 96/339 200 /admin/balance/drafts?view=recommendations&draftId=9b0cc799-d080-4805-b567-d8c7b534dfeb&team=RED -> 096-desktop-admin-balance-drafts-recommendations-red.png
+[capture] 97/339 200 /admin/balance/drafts?view=recommendations&draftId=9b0cc799-d080-4805-b567-d8c7b534dfeb&team=BLUE -> 097-desktop-admin-balance-drafts-recommendations-blue.png
+[capture] 98/339 200 /admin/balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb?tab=recommendations&team=RED -> 098-desktop-admin-balance-drafts-draftId-recommendations-red.png
+[capture] 99/339 200 /admin/balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb?tab=recommendations&team=BLUE -> 099-desktop-admin-balance-drafts-draftId-recommendations-blue.png
+[capture] 100/339 200 /admin/discipline?tab=tasks -> 100-desktop-admin-discipline-tasks.png
+[capture] 101/339 200 /admin/discipline?tab=reviews -> 101-desktop-admin-discipline-reviews.png
+[capture] 102/339 200 /admin/kakao?tab=recruits -> 102-desktop-admin-kakao-recruits.png
+[capture] 103/339 200 /admin/kakao?tab=scrims -> 103-desktop-admin-kakao-scrims.png
+[capture] 104/339 200 /admin/kakao?tab=stats -> 104-desktop-admin-kakao-stats.png
+[capture] 105/339 200 /admin/kakao?tab=settings -> 105-desktop-admin-kakao-settings.png
+[capture] 106/339 200 /admin/kakao?tab=logs -> 106-desktop-admin-kakao-logs.png
+[capture] 107/339 200 /admin/kakao?tab=health -> 107-desktop-admin-kakao-health.png
+[capture] 108/339 200 /admin/logs?view=stats -> 108-desktop-admin-logs-stats.png
+[capture] 109/339 200 /admin/logs?view=ai-requests -> 109-desktop-admin-logs-ai-requests.png
+[capture] 110/339 200 /admin/matches?view=submissions -> 110-desktop-admin-matches-submissions.png
+[capture] 111/339 200 /admin/matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003?tab=ai-review -> 111-desktop-admin-matches-matchId-ai-review.png
+[capture] 112/339 200 /admin/operation-forms?type=friends -> 112-desktop-admin-operation-forms-friends.png
+[capture] 113/339 200 /admin/operation-forms?type=leaves -> 113-desktop-admin-operation-forms-leaves.png
+[capture] 114/339 200 /admin/operation-forms?type=meetups -> 114-desktop-admin-operation-forms-meetups.png
+[capture] 115/339 200 /admin/operation-forms?type=suggestions -> 115-desktop-admin-operation-forms-suggestions.png
+[capture] 116/339 200 /admin/players/488cbd33-ce1e-4285-8a06-bcb956e62475?mode=edit -> 116-desktop-admin-players-playerId-edit.png
+[capture] 117/339 200 /admin/players/488cbd33-ce1e-4285-8a06-bcb956e62475?tab=balance -> 117-desktop-admin-players-playerId-balance.png
+[capture] 118/339 200 /admin/players/488cbd33-ce1e-4285-8a06-bcb956e62475?tab=riot -> 118-desktop-admin-players-playerId-riot.png
+[capture] 119/339 200 /admin/private-assets?status=READY -> 119-desktop-admin-private-assets-ready.png
+[capture] 120/339 200 /admin/private-assets?status=DELETE_PENDING -> 120-desktop-admin-private-assets-cleanup.png
+[capture] 121/339 200 /admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=auction&mode=live -> 121-desktop-admin-progress-destruction-tournamentId-live-auction.png
+[capture] 122/339 200 /admin/riot?tab=sync -> 122-desktop-admin-riot-sync.png
+[capture] 123/339 200 /admin/riot?tab=logs -> 123-desktop-admin-riot-logs.png
+[capture] 124/339 200 /admin/riot?tab=accounts&action=bulk-link&q=QA&batchSize=10 -> 124-desktop-admin-riot-bulk-link.png
+[capture] 125/339 200 /admin/seasons?view=applications -> 125-desktop-admin-seasons-applications.png
+[capture] 126/339 200 /applications?type=season -> 126-desktop-applications-season.png
+[capture] 127/339 200 /applications?type=season&source=pwa -> 127-desktop-applications-season-pwa-entry.png
+[capture] 128/339 200 /applications?type=event -> 128-desktop-applications-event.png
+[capture] 129/339 200 /applications?type=destruction -> 129-desktop-applications-destruction.png
+[capture] 130/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?action=apply -> 130-desktop-competitions-destruction-tournamentId-apply.png
+[capture] 131/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=captain-points -> 131-desktop-competitions-destruction-tournamentId-captain-points.png
+[capture] 132/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants -> 132-desktop-competitions-destruction-tournamentId-participants.png
+[capture] 133/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants&player=94af92f5-751e-4a14-a065-b3c6eab3a3e9 -> 133-desktop-competitions-destruction-tournamentId-participant-detail.png
+[capture] 134/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery -> 134-desktop-competitions-destruction-tournamentId-gallery.png
+[capture] 135/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery&imageIndex=0 -> 135-desktop-competitions-destruction-tournamentId-gallery-lightbox.png
+[capture] 136/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=mvp -> 136-desktop-competitions-destruction-tournamentId-mvp.png
+[capture] 137/339 200 /competitions/events/adf298a2-0db1-4752-a0b9-ac2a48637c94?action=apply -> 137-desktop-competitions-events-eventId-apply.png
+[capture] 138/339 200 /players/488cbd33-ce1e-4285-8a06-bcb956e62475?tab=riot -> 138-desktop-players-playerId-riot.png
+[capture] 139/339 200 /rankings/mmr?view=players -> 139-desktop-rankings-mmr-players.png
+[capture] 140/339 200 /tools/random-team?mode=tier -> 140-desktop-tools-random-team-tier.png
+[capture] 141/339 200 /tools/team-balance/drafts?view=recommendations&draftId=9b0cc799-d080-4805-b567-d8c7b534dfeb&team=RED -> 141-desktop-tools-team-balance-drafts-recommendations-red.png
+[capture] 142/339 200 /tools/team-balance/drafts?view=recommendations&draftId=9b0cc799-d080-4805-b567-d8c7b534dfeb&team=BLUE -> 142-desktop-tools-team-balance-drafts-recommendations-blue.png
+[capture] 143/339 200 /tools/team-balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb?tab=recommendations&team=RED -> 143-desktop-tools-team-balance-drafts-draftId-recommendations-red.png
+[capture] 144/339 200 /tools/team-balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb?tab=recommendations&team=BLUE -> 144-desktop-tools-team-balance-drafts-draftId-recommendations-blue.png
+[capture] 145/339 200 /admin/ai-requests -> 145-desktop-admin-ai-requests-redirect-contract.png
+[capture] 146/339 200 /admin/kakao/operation-forms -> 146-desktop-admin-kakao-operation-forms-redirect-contract.png
+[capture] 147/339 200 /admin/kakao/operation-forms/suggestions -> 147-desktop-admin-kakao-operation-forms-formType-redirect-contract.png
+[capture] 148/339 200 /admin/kakao/recruits -> 148-desktop-admin-kakao-recruits-redirect-contract.png
+[capture] 149/339 200 /admin/kakao/recruits/logs -> 149-desktop-admin-kakao-recruits-logs-redirect-contract.png
+[capture] 150/339 200 /admin/kakao/recruits/settings -> 150-desktop-admin-kakao-recruits-settings-redirect-contract.png
+[capture] 151/339 200 /admin/kakao/scrims -> 151-desktop-admin-kakao-scrims-redirect-contract.png
+[capture] 152/339 200 /admin/kakao/season-apply -> 152-desktop-admin-kakao-season-apply-redirect-contract.png
+[capture] 153/339 200 /admin/kakao/settings -> 153-desktop-admin-kakao-settings-redirect-contract.png
+[capture] 154/339 200 /admin/kakao/stats -> 154-desktop-admin-kakao-stats-redirect-contract.png
+[capture] 155/339 200 /admin/logs/kakao -> 155-desktop-admin-logs-kakao-redirect-contract.png
+[capture] 156/339 200 /admin/operation-forms/warnings -> 156-desktop-admin-operation-forms-warnings-redirect-contract.png
+[capture] 157/339 200 /admin/recruits -> 157-desktop-admin-recruits-redirect-contract.png
+[capture] 158/339 200 /app -> 158-desktop-app-redirect-contract.png
+[capture] 159/339 200 /app/players -> 159-desktop-app-players-redirect-contract.png
+[capture] 160/339 200 / -> 160-tablet.png
+[capture] 161/339 200 /account -> 161-tablet-account.png
+[capture] 162/339 200 /account/discipline -> 162-tablet-account-discipline.png
+[capture] 163/339 200 /account/password -> 163-tablet-account-password.png
+[capture] 164/339 200 /account/riot -> 164-tablet-account-riot.png
+[capture] 165/339 200 /admin -> 165-tablet-admin.png
+[capture] 166/339 200 /admin/balance -> 166-tablet-admin-balance.png
+[capture] 167/339 200 /admin/balance-ai -> 167-tablet-admin-balance-ai.png
+[capture] 168/339 200 /admin/balance/drafts -> 168-tablet-admin-balance-drafts.png
+[capture] 169/339 200 /admin/balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb -> 169-tablet-admin-balance-drafts-draftId.png
+[capture] 170/339 200 /admin/champions -> 170-tablet-admin-champions.png
+[capture] 171/339 200 /admin/champions/v1-1/edit -> 171-tablet-admin-champions-championId-edit.png
+[capture] 172/339 200 /admin/champions/new -> 172-tablet-admin-champions-new.png
+[capture] 173/339 200 /admin/discipline -> 173-tablet-admin-discipline.png
+[capture] 174/339 200 /admin/discipline/5cc181da-21ab-4a50-8b1b-d36561f1d27e -> 174-tablet-admin-discipline-recordId.png
+[capture] 175/339 200 /admin/discipline/new -> 175-tablet-admin-discipline-new.png
+[capture] 176/339 200 /admin/highlights -> 176-tablet-admin-highlights.png
+[capture] 177/339 200 /admin/highlights/b5a8b85b-c9d4-474a-814f-a0627275c5c0/edit -> 177-tablet-admin-highlights-highlightId-edit.png
+[capture] 178/339 200 /admin/highlights/new -> 178-tablet-admin-highlights-new.png
+[capture] 179/339 200 /admin/images -> 179-tablet-admin-images.png
+[capture] 180/339 200 /admin/images/fedea87a-8fe0-453e-9357-4b71be35f86b/edit -> 180-tablet-admin-images-imageId-edit.png
+[capture] 181/339 200 /admin/images/new -> 181-tablet-admin-images-new.png
+[capture] 182/339 200 /admin/kakao -> 182-tablet-admin-kakao.png
+[capture] 183/339 200 /admin/kakao/rooms -> 183-tablet-admin-kakao-rooms.png
+[capture] 184/339 200 /admin/login -> 184-tablet-admin-login.png
+[capture] 185/339 200 /admin/logs -> 185-tablet-admin-logs.png
+[capture] 186/339 200 /admin/matches -> 186-tablet-admin-matches.png
+[capture] 187/339 200 /admin/matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003 -> 187-tablet-admin-matches-matchId.png
+[capture] 188/339 200 /admin/matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003/edit -> 188-tablet-admin-matches-matchId-edit.png
+[capture] 189/339 200 /admin/matches/new -> 189-tablet-admin-matches-new.png
+[capture] 190/339 200 /admin/matches/submissions/ec36da7b-fc44-48fc-bd0c-9e04ac63c2be -> 190-tablet-admin-matches-submissions-submissionId.png
+[capture] 191/339 200 /admin/operation-forms -> 191-tablet-admin-operation-forms.png
+[capture] 192/339 200 /admin/operation-forms/suggestions -> 192-tablet-admin-operation-forms-formType.png
+[capture] 193/339 200 /admin/operation-forms/suggestions/8ddeecde-f0f9-494c-8b5b-5a35872b5d71 -> 193-tablet-admin-operation-forms-formType-id.png
+[capture] 194/339 200 /admin/players -> 194-tablet-admin-players.png
+[capture] 195/339 200 /admin/players/488cbd33-ce1e-4285-8a06-bcb956e62475 -> 195-tablet-admin-players-playerId.png
+[capture] 196/339 200 /admin/players/new -> 196-tablet-admin-players-new.png
+[capture] 197/339 200 /admin/private-assets -> 197-tablet-admin-private-assets.png
+[capture] 198/339 200 /admin/private-assets/2e47541d-bca4-40f4-8239-4c6949fa1563 -> 198-tablet-admin-private-assets-assetId.png
+[capture] 199/339 200 /admin/progress/destruction -> 199-tablet-admin-progress-destruction.png
+[capture] 200/339 200 /admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b -> 200-tablet-admin-progress-destruction-tournamentId.png
+[capture] 201/339 200 /admin/progress/destruction/new -> 201-tablet-admin-progress-destruction-new.png
+[capture] 202/339 200 /admin/progress/event -> 202-tablet-admin-progress-event.png
+[capture] 203/339 200 /admin/progress/event/adf298a2-0db1-4752-a0b9-ac2a48637c94 -> 203-tablet-admin-progress-event-eventId.png
+[capture] 204/339 200 /admin/progress/event/new -> 204-tablet-admin-progress-event-new.png
+[capture] 205/339 200 /admin/riot -> 205-tablet-admin-riot.png
+[capture] 206/339 200 /admin/search -> 206-tablet-admin-search.png
+[capture] 207/339 200 /admin/seasons -> 207-tablet-admin-seasons.png
+[capture] 208/339 200 /admin/seasons/kakao-pending -> 208-tablet-admin-seasons-kakao-pending.png
+[capture] 209/339 200 /admin/seasons/kakao-pending/1fef512c-dd2a-42b1-9fc0-c737d614bee1 -> 209-tablet-admin-seasons-kakao-pending-pendingId.png
+[capture] 210/339 200 /admin/security -> 210-tablet-admin-security.png
+[capture] 211/339 200 /admin/site-settings -> 211-tablet-admin-site-settings.png
+[capture] 212/339 200 /admin/users -> 212-tablet-admin-users.png
+[capture] 213/339 200 /admin/users/62f24a08-05fc-4493-b25a-4e3e5a1ca05f -> 213-tablet-admin-users-userAccountId.png
+[capture] 214/339 200 /applications -> 214-tablet-applications.png
+[capture] 215/339 200 /competitions -> 215-tablet-competitions.png
+[capture] 216/339 200 /competitions/destruction -> 216-tablet-competitions-destruction.png
+[capture] 217/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b -> 217-tablet-competitions-destruction-tournamentId.png
+[capture] 218/339 200 /competitions/events -> 218-tablet-competitions-events.png
+[capture] 219/339 200 /competitions/events/adf298a2-0db1-4752-a0b9-ac2a48637c94 -> 219-tablet-competitions-events-eventId.png
+[capture] 220/339 200 /discipline -> 220-tablet-discipline.png
+[capture] 221/339 200 /forbidden -> 221-tablet-forbidden.png
+[capture] 222/339 200 /forgot-password -> 222-tablet-forgot-password.png
+[capture] 223/339 200 /help/kakao -> 223-tablet-help-kakao.png
+[capture] 224/339 200 /help/recruits -> 224-tablet-help-recruits.png
+[capture] 225/339 200 /help/riot -> 225-tablet-help-riot.png
+[capture] 226/339 200 /highlights -> 226-tablet-highlights.png
+[capture] 227/339 200 /highlights/b5a8b85b-c9d4-474a-814f-a0627275c5c0 -> 227-tablet-highlights-highlightId.png
+[capture] 228/339 200 /images -> 228-tablet-images.png
+[capture] 229/339 200 /images/fedea87a-8fe0-453e-9357-4b71be35f86b -> 229-tablet-images-imageId.png
+[capture] 230/339 200 /install -> 230-tablet-install.png
+[capture] 231/339 200 /login -> 231-tablet-login.png
+[capture] 232/339 200 /matches -> 232-tablet-matches.png
+[capture] 233/339 200 /matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003 -> 233-tablet-matches-matchId.png
+[capture] 234/339 200 /matches/submissions -> 234-tablet-matches-submissions.png
+[capture] 235/339 200 /matches/submit -> 235-tablet-matches-submit.png
+[capture] 236/339 200 /players -> 236-tablet-players.png
+[capture] 237/339 200 /players/488cbd33-ce1e-4285-8a06-bcb956e62475 -> 237-tablet-players-playerId.png
+[capture] 238/339 200 /privacy -> 238-tablet-privacy.png
+[capture] 239/339 200 /rankings -> 239-tablet-rankings.png
+[capture] 240/339 200 /rankings/mmr -> 240-tablet-rankings-mmr.png
+[capture] 241/339 200 /recruits -> 241-tablet-recruits.png
+[capture] 242/339 200 /signup -> 242-tablet-signup.png
+[capture] 243/339 200 /start -> 243-tablet-start.png
+[capture] 244/339 200 /terms -> 244-tablet-terms.png
+[capture] 245/339 200 /tools/coin-toss -> 245-tablet-tools-coin-toss.png
+[capture] 246/339 200 /tools/random-team -> 246-tablet-tools-random-team.png
+[capture] 247/339 200 /tools/team-balance -> 247-tablet-tools-team-balance.png
+[capture] 248/339 200 /tools/team-balance/drafts -> 248-tablet-tools-team-balance-drafts.png
+[capture] 249/339 200 /tools/team-balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb -> 249-tablet-tools-team-balance-drafts-draftId.png
+[capture] 250/339 200 / -> 250-mobile.png
+[capture] 251/339 200 /account -> 251-mobile-account.png
+[capture] 252/339 200 /account/discipline -> 252-mobile-account-discipline.png
+[capture] 253/339 200 /account/password -> 253-mobile-account-password.png
+[capture] 254/339 200 /account/riot -> 254-mobile-account-riot.png
+[capture] 255/339 200 /admin -> 255-mobile-admin.png
+[capture] 256/339 200 /admin/balance -> 256-mobile-admin-balance.png
+[capture] 257/339 200 /admin/balance-ai -> 257-mobile-admin-balance-ai.png
+[capture] 258/339 200 /admin/balance/drafts -> 258-mobile-admin-balance-drafts.png
+[capture] 259/339 200 /admin/balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb -> 259-mobile-admin-balance-drafts-draftId.png
+[capture] 260/339 200 /admin/champions -> 260-mobile-admin-champions.png
+[capture] 261/339 200 /admin/champions/v1-1/edit -> 261-mobile-admin-champions-championId-edit.png
+[capture] 262/339 200 /admin/champions/new -> 262-mobile-admin-champions-new.png
+[capture] 263/339 200 /admin/discipline -> 263-mobile-admin-discipline.png
+[capture] 264/339 200 /admin/discipline/5cc181da-21ab-4a50-8b1b-d36561f1d27e -> 264-mobile-admin-discipline-recordId.png
+[capture] 265/339 200 /admin/discipline/new -> 265-mobile-admin-discipline-new.png
+[capture] 266/339 200 /admin/highlights -> 266-mobile-admin-highlights.png
+[capture] 267/339 200 /admin/highlights/b5a8b85b-c9d4-474a-814f-a0627275c5c0/edit -> 267-mobile-admin-highlights-highlightId-edit.png
+[capture] 268/339 200 /admin/highlights/new -> 268-mobile-admin-highlights-new.png
+[capture] 269/339 200 /admin/images -> 269-mobile-admin-images.png
+[capture] 270/339 200 /admin/images/fedea87a-8fe0-453e-9357-4b71be35f86b/edit -> 270-mobile-admin-images-imageId-edit.png
+[capture] 271/339 200 /admin/images/new -> 271-mobile-admin-images-new.png
+[capture] 272/339 200 /admin/kakao -> 272-mobile-admin-kakao.png
+[capture] 273/339 200 /admin/kakao/rooms -> 273-mobile-admin-kakao-rooms.png
+[capture] 274/339 200 /admin/login -> 274-mobile-admin-login.png
+[capture] 275/339 200 /admin/logs -> 275-mobile-admin-logs.png
+[capture] 276/339 200 /admin/matches -> 276-mobile-admin-matches.png
+[capture] 277/339 200 /admin/matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003 -> 277-mobile-admin-matches-matchId.png
+[capture] 278/339 200 /admin/matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003/edit -> 278-mobile-admin-matches-matchId-edit.png
+[capture] 279/339 200 /admin/matches/new -> 279-mobile-admin-matches-new.png
+[capture] 280/339 200 /admin/matches/submissions/ec36da7b-fc44-48fc-bd0c-9e04ac63c2be -> 280-mobile-admin-matches-submissions-submissionId.png
+[capture] 281/339 200 /admin/operation-forms -> 281-mobile-admin-operation-forms.png
+[capture] 282/339 200 /admin/operation-forms/suggestions -> 282-mobile-admin-operation-forms-formType.png
+[capture] 283/339 200 /admin/operation-forms/suggestions/8ddeecde-f0f9-494c-8b5b-5a35872b5d71 -> 283-mobile-admin-operation-forms-formType-id.png
+[capture] 284/339 200 /admin/players -> 284-mobile-admin-players.png
+[capture] 285/339 200 /admin/players/488cbd33-ce1e-4285-8a06-bcb956e62475 -> 285-mobile-admin-players-playerId.png
+[capture] 286/339 200 /admin/players/new -> 286-mobile-admin-players-new.png
+[capture] 287/339 200 /admin/private-assets -> 287-mobile-admin-private-assets.png
+[capture] 288/339 200 /admin/private-assets/2e47541d-bca4-40f4-8239-4c6949fa1563 -> 288-mobile-admin-private-assets-assetId.png
+[capture] 289/339 200 /admin/progress/destruction -> 289-mobile-admin-progress-destruction.png
+[capture] 290/339 200 /admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b -> 290-mobile-admin-progress-destruction-tournamentId.png
+[capture] 291/339 200 /admin/progress/destruction/new -> 291-mobile-admin-progress-destruction-new.png
+[capture] 292/339 200 /admin/progress/event -> 292-mobile-admin-progress-event.png
+[capture] 293/339 200 /admin/progress/event/adf298a2-0db1-4752-a0b9-ac2a48637c94 -> 293-mobile-admin-progress-event-eventId.png
+[capture] 294/339 200 /admin/progress/event/new -> 294-mobile-admin-progress-event-new.png
+[capture] 295/339 200 /admin/riot -> 295-mobile-admin-riot.png
+[capture] 296/339 200 /admin/search -> 296-mobile-admin-search.png
+[capture] 297/339 200 /admin/seasons -> 297-mobile-admin-seasons.png
+[capture] 298/339 200 /admin/seasons/kakao-pending -> 298-mobile-admin-seasons-kakao-pending.png
+[capture] 299/339 200 /admin/seasons/kakao-pending/1fef512c-dd2a-42b1-9fc0-c737d614bee1 -> 299-mobile-admin-seasons-kakao-pending-pendingId.png
+[capture] 300/339 200 /admin/security -> 300-mobile-admin-security.png
+[capture] 301/339 200 /admin/site-settings -> 301-mobile-admin-site-settings.png
+[capture] 302/339 200 /admin/users -> 302-mobile-admin-users.png
+[capture] 303/339 200 /admin/users/62f24a08-05fc-4493-b25a-4e3e5a1ca05f -> 303-mobile-admin-users-userAccountId.png
+[capture] 304/339 200 /applications -> 304-mobile-applications.png
+[capture] 305/339 200 /competitions -> 305-mobile-competitions.png
+[capture] 306/339 200 /competitions/destruction -> 306-mobile-competitions-destruction.png
+[capture] 307/339 200 /competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b -> 307-mobile-competitions-destruction-tournamentId.png
+[capture] 308/339 200 /competitions/events -> 308-mobile-competitions-events.png
+[capture] 309/339 200 /competitions/events/adf298a2-0db1-4752-a0b9-ac2a48637c94 -> 309-mobile-competitions-events-eventId.png
+[capture] 310/339 200 /discipline -> 310-mobile-discipline.png
+[capture] 311/339 200 /forbidden -> 311-mobile-forbidden.png
+[capture] 312/339 200 /forgot-password -> 312-mobile-forgot-password.png
+[capture] 313/339 200 /help/kakao -> 313-mobile-help-kakao.png
+[capture] 314/339 200 /help/recruits -> 314-mobile-help-recruits.png
+[capture] 315/339 200 /help/riot -> 315-mobile-help-riot.png
+[capture] 316/339 200 /highlights -> 316-mobile-highlights.png
+[capture] 317/339 200 /highlights/b5a8b85b-c9d4-474a-814f-a0627275c5c0 -> 317-mobile-highlights-highlightId.png
+[capture] 318/339 200 /images -> 318-mobile-images.png
+[capture] 319/339 200 /images/fedea87a-8fe0-453e-9357-4b71be35f86b -> 319-mobile-images-imageId.png
+[capture] 320/339 200 /install -> 320-mobile-install.png
+[capture] 321/339 200 /login -> 321-mobile-login.png
+[capture] 322/339 200 /matches -> 322-mobile-matches.png
+[capture] 323/339 200 /matches/1d44ef53-c5c4-4635-b05b-74db1dfa4003 -> 323-mobile-matches-matchId.png
+[capture] 324/339 200 /matches/submissions -> 324-mobile-matches-submissions.png
+[capture] 325/339 200 /matches/submit -> 325-mobile-matches-submit.png
+[capture] 326/339 200 /players -> 326-mobile-players.png
+[capture] 327/339 200 /players/488cbd33-ce1e-4285-8a06-bcb956e62475 -> 327-mobile-players-playerId.png
+[capture] 328/339 200 /privacy -> 328-mobile-privacy.png
+[capture] 329/339 200 /rankings -> 329-mobile-rankings.png
+[capture] 330/339 200 /rankings/mmr -> 330-mobile-rankings-mmr.png
+[capture] 331/339 200 /recruits -> 331-mobile-recruits.png
+[capture] 332/339 200 /signup -> 332-mobile-signup.png
+[capture] 333/339 200 /start -> 333-mobile-start.png
+[capture] 334/339 200 /terms -> 334-mobile-terms.png
+[capture] 335/339 200 /tools/coin-toss -> 335-mobile-tools-coin-toss.png
+[capture] 336/339 200 /tools/random-team -> 336-mobile-tools-random-team.png
+[capture] 337/339 200 /tools/team-balance -> 337-mobile-tools-team-balance.png
+[capture] 338/339 200 /tools/team-balance/drafts -> 338-mobile-tools-team-balance-drafts.png
+[capture] 339/339 200 /tools/team-balance/drafts/9b0cc799-d080-4805-b567-d8c7b534dfeb -> 339-mobile-tools-team-balance-drafts-draftId.png
+[full-page-qa] PASS 105 pages / 339 captures -> E:\k-LOL.GG\worktrees\kakao-v4-gateway\.tmp\integrations-qa-complete
+[db-contract] cluster stopped and disposable workspace path removed

@@ -1,5 +1,16 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-22 사이트 알림·Riot API·운영 진단 1.0.0 — 운영 적용
+
+- source `c3442ace1e04054ada05f1f6842f4699b45a0bb6`, Vercel `dpl_BdpAWrcHPKAchNU9K644dHfajNxu` READY·운영 alias 반영, DB head `0044` 유지. 08:41 KST 운영 health·인증 경계·기존 카카오 조회 PASS.
+- Riot API 직접 연결·티어/최근 솔로 요약을 RSO 설정과 분리했다. 기존 운영 키를 유지하고 암호화·API/DB flag를 활성화했으며 실제 status-v4 수락 HTTP 200을 확인했다. RSO는 사용자 확인상 미승인이고 해당 기능은 준비 중이다.
+- 이미 연결된 승인·활성 계정의 갱신을 5분당 최대 1건으로 예약했다. 예약 요청 최소 간격 6시간과 429 전체 대기를 적용한다. 현재 92건 모두 DISCONNECTED이며 임의로 연결하지 않았다. 실제 회원 League/Match 갱신은 소유자의 명시 연결 후 확인해야 한다.
+- 운영자 `/admin`에서 통계·일일 마감·저장소·Riot API/RSO·사이트 알림 기록을 확인한다. 외부 수신처 장애 발송 없이 화면을 열거나 새로고침할 때 갱신한다.
+- 사이트 충원 서버 알림 ON, 별도 활성 companion 1.0.1 설치 묶음 준비. 사용자가 설치·실행 확인한 일반 R25는 유지한다. companion 설치·그룹 등록·실제 충원 수신은 아직 미확인이다.
+- 계약 424 PASS·단위 948 PASS(+DB 1 skip), 전체 PG 142 PASS, 인증 HTTP PASS, 105페이지·339화면 issue 0, 비밀 검사·원격 CI PASS. 08:45 KST 실제 Riot 예약 요청 200과 DB 인증 nonce 확인. [통합 QA](./qa-evidence/integrations-activation-v1.0.0-2026-09-22/README.md), [패치 공지](./patch-notes/2026-09-22-integrations-activation.md), [Riot 운영·RSO 신청](./operations/RIOT_ACTIVATION_RUNBOOK.md), [관리자 진단](./operations/ADMIN_OPERATIONAL_HEALTH_RUNBOOK.md).
+
+아래 기록은 각 과거 릴리스 검증 시점의 상태다.
+
 ## 2026-09-22 운영 준비 보완 1.0.0 — 운영 적용
 
 - source `c5cbbcd8a700a84c33283ab922bc1b5631e3123f`, Vercel `dpl_7FHerKERF1CKe4kFvN5DQkvUHX8k` READY·production. 운영 alias와 main의 서버 소스 일치, DB `0044_vengeful_trauma`. 기능별 tag·배포 ID는 [release registry](./releases/registry.json)에 연결했다.
