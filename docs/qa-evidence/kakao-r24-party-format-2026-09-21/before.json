@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-09-21T02:25:35.216Z",
+  "deploymentId": "dpl_6ZtchrtMHPisXZWNTeoR7HZ6GQCC",
+  "url": "k-lol-8qdhu6ixs-tjdmswo11-3715s-projects.vercel.app",
+  "readyState": "READY",
+  "artifacts": [
+    {
+      "path": "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js",
+      "sha256": "b1ee39b0c48f925d2d3b39831bd720c4e82356fef999eb168b785d29fb7e85fe",
+      "unchangedFromR24": true
+    },
+    {
+      "path": ".private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js",
+      "sha256": "49cbf16a70d0e34f5ebabfa3181baf012a6548cf405e1b9a8170f728aec6ed39",
+      "unchangedFromR24": true
+    }
+  ]
+}

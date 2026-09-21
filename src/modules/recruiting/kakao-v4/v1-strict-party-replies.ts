@@ -172,18 +172,19 @@ function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" |
     `[파티 #${party.recruitNumber}] ${title} · ${main.length}/${party.maximumMembers}명`,
     `시작: ${party.startTimeText ?? "미정"}`,
     `게임: ${party.gameInfo ?? "미정"}`,
-    "", "전체 복사 → 빈칸에 이름 → 전체 전송", "",
+    "", "", "",
   ];
   for (let slot = 1; slot <= party.maximumMembers; slot += 1) {
     const name = main.find((member) => member.slotNo === slot)?.name;
     const label = isLineParty(party.type) ? LINE_POSITIONS[slot - 1] : String(slot);
     lines.push(`${label}.${name ? ` ${name}` : ""}`);
   }
+  lines.push("");
   for (const member of reserves) lines.push(`예비 ${member.slotNo}. ${member.name}`);
   let blank = 1;
   while (reserves.some((member) => member.slotNo === blank)) blank += 1;
   if (blank <= 99) lines.push(`예비 ${blank}.`);
-  lines.push("", `양식코드: ${formCode} (그대로 두세요)`);
+  lines.push("", `양식코드: ${formCode}`);
   return lines.join("\n");
 }
 

@@ -431,8 +431,8 @@ test("R24 party creation shows all empty slots with unknown time and a short foo
     });
     assert.equal(result.legacyReply, [
       "[파티 #8] 5인 파티 · 0/5명", "시작: 미정", "게임: 미정", "",
-      "전체 복사 → 빈칸에 이름 → 전체 전송", "", "1.", "2.", "3.", "4.", "5.", "예비 1.", "",
-      "양식코드: ABCDE-23456 (그대로 두세요)",
+      "", "", "1.", "2.", "3.", "4.", "5.", "", "예비 1.", "",
+      "양식코드: ABCDE-23456",
     ].join("\n"));
     const created = state.handled[0];
     if (created?.type !== "CREATE_PARTY") assert.fail("expected a reserved draft");
