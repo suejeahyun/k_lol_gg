@@ -224,7 +224,7 @@
 .actionButtons { display: flex; flex-wrap: wrap; gap: 8px; }
 .actionButtons button[data-variant="danger"] { color: #a13c56; background: #fff0f4; }
 .actionButtons button:disabled { cursor: wait; opacity: 0.62; }
-.liveMessage { margin: 0; color: #315e78; font-size: 12px; font-weight: 800; }
+.liveMessage { margin: 0; color: #315e78; font-size: 12px; font-weight: 800; white-space: pre-line; }
 .revision { color: var(--text-muted); font-size: 10px; }
 
 .myStatus {

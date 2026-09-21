@@ -1,3 +1,4 @@
+import { inhouseCopyFormReply, inhouseSaveReply, v1StrictSeasonReply } from "../../src/modules/recruiting/kakao-v4/v1-strict-replies";
 import assert from "node:assert/strict";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
@@ -455,7 +456,8 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.equal(reserved.body.recruitNo, 62);
     assert.equal(reserved.body.roundMetadata?.recruitNo, 62);
     const hiddenDraft = await reserveRound("STATUS", null);
-    assert.equal(hiddenDraft.body.roundMetadata, null, "reserved draft must stay out of public inhouse status DTOs");
+    assert.equal(hiddenDraft.body.roundMetadata?.status, "DRAFT", "a draft can be reopened in detail");
+    assert.doesNotMatch(v1StrictSeasonReply(hiddenDraft.body, "STATUS"), /#62/u);
     const activatedDraft = await reserveRound("SYNC", "재현");
     assert.equal(activatedDraft.body.roundMetadata?.organizerText, "재현");
     assert.equal(activatedDraft.body.pendingCount, 1);
@@ -524,6 +526,7 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
       organizerText: null,
       noticeText: "승리팀 랜덤 1인 스킨 증정",
       revision: 0,
+      status: "IN_PROGRESS",
     });
 
     const metadataOnly = await sync({ room: roomA, mode: "RIFT", name: `방A-${suffix}`, time: "19:30", notice: "공지 변경" });
@@ -748,7 +751,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       slotNo: 1,
       status: "APPLIED",
       source: "KAKAO",
-      suppliedName: `Exact${suffix}`,
+      suppliedName: `정확-${suffix}`,
       suppliedRiotId: `Exact${suffix}#KR1`,
       mainPosition: "MID",
       subPositions: ["SUP"],
@@ -1096,11 +1099,10 @@ test("in-house shortcuts and full snapshots enforce integrated SITE capacity whi
       },
     ]);
 
-    const protectedRemoval = await call({
+    await assert.rejects(call({
       action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
       name: `확정-${suffix}`, participants: [],
-    });
-    assert.equal(protectedRemoval.body.cancelledCount, 0);
+    }), (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
     assert.equal((await database.select().from(seasonApplications).where(and(
       eq(seasonApplications.seasonId, seasonId), eq(seasonApplications.playerId, confirmedPlayerId),
       eq(seasonApplications.recruitNo, 73),
@@ -1130,16 +1132,14 @@ test("in-house shortcuts and full snapshots enforce integrated SITE capacity whi
     assert.equal(updatedPending?.slotNo, 3, "a position update preserves the existing slot");
     assert.equal(updatedPending?.mainPosition, "ADC");
     assert.deepEqual(updatedPending?.subPositions, ["TOP", "JGL", "MID", "SUP"]);
-    const nameOnlyReplay = await call({
+    await assert.rejects(call({
       action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
       name: `미확인-${suffix}`, participants: [],
-    });
-    assert.equal(nameOnlyReplay.body.updatedCount, 0, "name-only add does not erase saved positions");
-    const protectedSiteUpdate = await call({
+    }), (error: unknown) => error instanceof KakaoAssistantError && error.code === "INVALID_INPUT");
+    await assert.rejects(call({
       action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
       name: `사이트-${suffix}`, mainPosition: "MID", subPositions: ["SUP"], participants: [],
-    });
-    assert.equal(protectedSiteUpdate.body.updatedCount, 0, "Kakao shortcuts do not overwrite SITE applications");
+    }), (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
     await assert.rejects(call({
       action: "ADD_PARTICIPANT", seasonId, applyDate: today, recruitNo: 73,
       name: `초과-${suffix}`, mainPosition: "ALL", participants: [],
@@ -1190,7 +1190,7 @@ test("in-house shortcuts and full snapshots enforce integrated SITE capacity whi
   }
 });
 
-test("in-house finish cancels only mutable same-room rows, hides the round, and replays without writes", async () => {
+test("in-house finish preserves every roster row, hides the round, and replays without writes", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
@@ -1317,7 +1317,7 @@ test("in-house finish cancels only mutable same-room rows, hides the round, and 
 
     const first = await assistant.syncSeasonSnapshot(finishInput);
     assert.equal(first.replayed, false);
-    assert.equal(first.body.cancelledCount, 3);
+    assert.equal(first.body.cancelledCount, 0);
     assert.equal(first.body.metadataUpdated, true);
     assert.deepEqual(first.body.availableRecruitNos, []);
     assert.doesNotMatch(first.body.v1StrictLegacyReply ?? "", /#86/u);
@@ -1327,22 +1327,22 @@ test("in-house finish cancels only mutable same-room rows, hides the round, and 
     assert.deepEqual(replay.body, first.body);
 
     const rounds = new Map((await database.select().from(seasonInhouseRounds)).map((row) => [row.id, row]));
-    assert.equal(rounds.get(targetRoundId)?.status, "CANCELED");
+    assert.equal(rounds.get(targetRoundId)?.status, "CLOSED");
     assert.equal(rounds.get(targetRoundId)?.revision, 5);
-    assert.equal(rounds.get(draftRoundId)?.status, "DRAFT");
-    assert.equal(rounds.get(draftRoundId)?.revision, 1);
+    assert.equal(rounds.get(draftRoundId)?.status, "CANCELED");
+    assert.equal(rounds.get(draftRoundId)?.revision, 2);
     assert.equal(rounds.get(foreignRoundId)?.status, "IN_PROGRESS");
     assert.equal(rounds.get(foreignRoundId)?.revision, 0);
     assert.equal(rounds.get(terminalRoundId)?.status, "CANCELED");
     assert.equal(rounds.get(terminalRoundId)?.revision, 2);
 
     const applications = new Map((await database.select().from(seasonApplications)).map((row) => [row.id, row]));
-    assert.equal(applications.get(applicationIds.applied)?.status, "CANCELLED");
-    assert.equal(applications.get(applicationIds.applied)?.revision, 1);
-    assert.ok(applications.get(applicationIds.applied)?.cancelledAt);
-    assert.equal(applications.get(applicationIds.reserve)?.status, "CANCELLED");
-    assert.equal(applications.get(applicationIds.reserve)?.revision, 1);
-    assert.equal(applications.get(applicationIds.reserve)?.reviewedByUserAccountId, null);
+    assert.equal(applications.get(applicationIds.applied)?.status, "APPLIED");
+    assert.equal(applications.get(applicationIds.applied)?.revision, 0);
+    assert.equal(applications.get(applicationIds.applied)?.cancelledAt, null);
+    assert.equal(applications.get(applicationIds.reserve)?.status, "RESERVE");
+    assert.equal(applications.get(applicationIds.reserve)?.revision, 0);
+    assert.equal(applications.get(applicationIds.reserve)?.reviewedByUserAccountId, reviewerId);
     assert.equal(applications.get(applicationIds.site)?.status, "APPLIED");
     assert.equal(applications.get(applicationIds.site)?.revision, 0);
     assert.equal(applications.get(applicationIds.confirmed)?.status, "CONFIRMED");
@@ -1351,9 +1351,9 @@ test("in-house finish cancels only mutable same-room rows, hides the round, and 
     assert.equal(applications.get(applicationIds.foreign)?.revision, 0);
 
     const pending = new Map((await database.select().from(seasonKakaoPendingApplications)).map((row) => [row.id, row]));
-    assert.equal(pending.get(pendingIds.target)?.status, "CANCELLED");
-    assert.equal(pending.get(pendingIds.target)?.revision, 1);
-    assert.ok(pending.get(pendingIds.target)?.cancelledAt);
+    assert.equal(pending.get(pendingIds.target)?.status, "ACTIVE");
+    assert.equal(pending.get(pendingIds.target)?.revision, 0);
+    assert.equal(pending.get(pendingIds.target)?.cancelledAt, null);
     assert.equal(pending.get(pendingIds.foreign)?.status, "ACTIVE");
     assert.equal(pending.get(pendingIds.foreign)?.revision, 0);
 
@@ -1380,117 +1380,104 @@ test("in-house finish cancels only mutable same-room rows, hides the round, and 
   }
 });
 
-test("in-house copy codes merge concurrent additions, preserve site-linked lanes, block destructive edits and never revive cancelled originals", async () => {
+test("editable inhouse forms count unlinked names, merge concurrent additions, protect SITE rows and retain closed rosters", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
-  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 5 });
   const now = new Date();
   const today = recruitingOperatingDateKey(now);
   const suffix = randomUUID().slice(0, 8);
   const seasonId = randomUUID();
-  const room = `room-copy-${suffix}`;
-  const ids = [randomUUID(), randomUUID(), randomUUID(), randomUUID()];
-  const names = ids.map((_, index) => `복사${index}-${suffix}`);
+  const room = `editable-${suffix}`;
   const assistant = new PostgresKakaoAssistant(database);
   let sequence = 0;
   const send = (command: KakaoSeasonSnapshotCommand) => {
-    sequence += 1;
-    return assistant.syncSeasonSnapshot({
-      actorPrincipalId: principalId, intent: intent(`nonce-copy-${suffix}-${sequence}`, `copy-${suffix}-${sequence}`, room),
-      requestKey: `copy-${suffix}-${sequence}`, scope: "kakao:season-copy-contract", command, requestId: randomUUID(), now,
-    });
+    const key = `editable-${suffix}-${++sequence}`;
+    return assistant.syncSeasonSnapshot({ actorPrincipalId: principalId, intent: intent(`nonce-${key}`, key, room),
+      requestKey: key, scope: "kakao:editable-contract", command, requestId: randomUUID(), now });
   };
   const metadata = { capacity: 10, startTimeText: "21:00", scheduledStartAt: new Date(`${today}T21:00:00+09:00`).toISOString(), gameInfo: null, organizerText: null, noticeText: null };
-  const member = (index: number, slotNo = index + 1) => ({ slotNo, name: names[index]!, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false, nameOnly: true as const });
-  const syncCommand = (body: KakaoSeasonSnapshotDto, participants: Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }>["participants"]): Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }> => ({
-    action: "SYNC", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants,
-    reserveSectionObserved: true, copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
+  const row = (slotNo: number, name: string) => ({ slotNo, name, riotId: null, mainPosition: "MID" as const, subPositions: ["TOP" as const], reserve: slotNo > 10 });
+  const detail = () => send({ action: "STATUS", seasonId, applyDate: today, recruitNo: 1, participants: [] });
+  const sync = (body: KakaoSeasonSnapshotDto, participants: Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }>["participants"], extra = metadata) => send({
+    action: "SYNC", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", participants, roundMetadata: extra,
+    observedSlotNos: Array.from({ length: 20 }, (_, i) => i + 1), reserveSectionObserved: true,
+    copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
   });
-  const precondition = (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED";
+  const roster = (body: KakaoSeasonSnapshotDto) => body.entries.map((entry) => ({ ...row(entry.slotNo, entry.suppliedName), mainPosition: entry.mainPosition, subPositions: entry.subPositions, reserve: entry.reserve ?? false }));
+  const knownName = `회원-${suffix}`;
+  const duplicateName = `동명-${suffix}`;
+  const playerIds = Array.from({ length: 3 }, () => randomUUID());
   try {
     await applyMigrations(database);
-    await database.insert(seasons).values({ id: seasonId, name: `Copy ${suffix}`, nameNormalized: `copy ${suffix}`, status: "ACTIVE", activatedAt: now });
-    await database.insert(players).values(ids.map((id, index) => ({ id, memberName: names[index]!, memberNameNormalized: names[index]!, nickname: `Copy${index}${suffix}`, nicknameNormalized: `copy${index}${suffix}`, tagLine: "QA", tagLineNormalized: "qa" })));
+    await database.insert(seasons).values({ id: seasonId, name: `Editable ${suffix}`, nameNormalized: `editable ${suffix}`, status: "ACTIVE", activatedAt: now });
+    await database.insert(players).values(playerIds.map((id, i) => ({ id, memberName: i === 0 ? knownName : duplicateName, memberNameNormalized: i === 0 ? knownName : duplicateName,
+      nickname: `Editable${i}${suffix}`, nicknameNormalized: `editable${i}${suffix}`, tagLine: "QA", tagLineNormalized: "qa" })));
     const draft = await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants: [] });
-    assert.match(draft.body.saveReference ?? "", /^S[a-f0-9]{32}$/u);
-    assert.match(draft.body.formCode ?? "", /^[A-Z0-9]{5}-[A-Z0-9]{5}$/u);
-    const first = await send(syncCommand(draft.body, [{ ...member(0), nameOnly: undefined, mainPosition: "MID", subPositions: ["SUP"] }]));
-    assert.equal(first.body.entries.length, 1);
-    assert.equal(first.body.roundMetadata?.organizerText, names[0]);
-    assert.match(first.body.v1StrictLegacyReply ?? "", /전체 복사 → 빈칸에 이름 → 전체 전송/u);
-    assert.match(first.body.v1StrictLegacyReply ?? "", /양식코드:/u);
-    assert.doesNotMatch(first.body.v1StrictLegacyReply ?? "", /이름\/현티어/u);
-    const concurrent = await Promise.allSettled([
-      send(syncCommand(first.body, [member(0), member(1, 2)])),
-      send(syncCommand(first.body, [member(0), member(2, 2)])),
+    const nine = [row(1, knownName), row(2, duplicateName), ...Array.from({ length: 7 }, (_, i) => row(i + 3, `손님${i}-${suffix}`))];
+    const first = await sync(draft.body, nine);
+    assert.equal(first.body.registrationCreated, true);
+    assert.equal(first.body.pendingCount, 9);
+    assert.equal(first.body.appliedCount, 0);
+    assert.equal(first.body.entries[0]?.memberLinkStatus, "UNVERIFIED");
+    assert.equal(first.body.entries[1]?.memberLinkStatus, "AMBIGUOUS");
+    assert.equal(first.body.entries[2]?.memberLinkStatus, "UNMATCHED");
+    assert.equal(first.body.rosterFilled, false);
+    assert.match(inhouseSaveReply(first.body), /가입했다면 사이트 등록 이름/u);
+    assert.match(inhouseSaveReply(first.body), /이름\(닉네임\)/u);
+    const attempts = await Promise.allSettled([
+      sync(first.body, [...nine, row(10, `마지막갑-${suffix}`)]),
+      sync(first.body, [...nine, row(10, `마지막을-${suffix}`)]),
     ]);
-    assert.equal(concurrent.filter((result) => result.status === "fulfilled").length, 2);
-    const current = (await send({ action: "STATUS", seasonId, applyDate: today, recruitNo: 1, participants: [] })).body;
-    assert.equal(current.entries.length, 3);
-    assert.equal(new Set(current.entries.map((entry) => entry.slotNo)).size, 3);
-    assert.equal(current.entries.find((entry) => entry.player?.playerId === ids[0])?.mainPosition, "MID");
-    assert.deepEqual(current.entries.find((entry) => entry.player?.playerId === ids[0])?.subPositions, ["SUP"]);
-    const roster = current.entries.map((entry) => ({ slotNo: entry.slotNo, name: entry.player!.memberName!, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false, nameOnly: true as const }));
-    await assert.rejects(send({ ...syncCommand(current, [member(0)]), copyGuard: { operatingDate: null, saveReference: null } }), precondition);
-    await assert.rejects(send(syncCommand(current, [member(0)])), precondition);
-    const legacyAdd = await send({ ...syncCommand(current, [...roster, member(3, 4)]), copyGuard: { operatingDate: null, saveReference: null } });
-    assert.equal(legacyAdd.body.entries.length, 4);
-    for (const changedMetadata of [
-      { ...metadata, startTimeText: "22:00" }, { ...metadata, gameInfo: "덮어쓰기" },
-      { ...metadata, organizerText: "다른주최자" }, { ...metadata, noticeText: "옛 복사본 공지" },
-    ]) {
-      await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), roundMetadata: changedMetadata, copyGuard: { operatingDate: null, saveReference: null } }), precondition);
-    }
-    await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), copyGuard: { operatingDate: "2026-01-01", saveReference: legacyAdd.body.saveReference! } }), precondition);
-    const unchanged = await send({ action: "STATUS", seasonId, applyDate: today, recruitNo: 1, participants: [] });
-    assert.equal(unchanged.body.saveReference, legacyAdd.body.saveReference);
-    const removed = await send({ action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 1, name: names[3]!, participants: [] });
-    assert.notEqual(removed.body.saveReference, legacyAdd.body.saveReference, "member-only edits must invalidate a copied form");
-    assert.match(removed.body.legacyReply ?? "", /10\.\n/u, "member changes return the full copyable roster");
-    const notRevived = await send(syncCommand(legacyAdd.body, [...roster, member(3, 4)]));
-    assert.equal(notRevived.body.entries.length, 3);
-    assert.equal(notRevived.body.entries.some((entry) => entry.player?.playerId === ids[3]), false);
-    const pending = await send(syncCommand(notRevived.body, [...roster, { ...member(3, 4), name: `미등록-${suffix}` }]));
-    assert.equal(pending.body.appliedCount, 3);
-    assert.equal(pending.body.pendingCount, 1);
-    assert.match(pending.body.v1StrictLegacyReply ?? "", /\[내전 #1\] 4\/10명/u);
-    assert.doesNotMatch(pending.body.v1StrictLegacyReply ?? "", /회원 확인|아직 참가 확정 전/u);
-    assert.ok(pending.body.v1StrictLegacyReply?.includes(`4. 미등록-${suffix}`));
-    await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", roundMetadata: metadata, participants: [] });
-    const siteApplicationId = randomUUID();
-    await database.insert(seasonApplications).values({
-      id: siteApplicationId, seasonId, playerId: ids[0]!, applyDate: today, recruitNo: 2,
-      source: "SITE", sourceSlotNo: null, mainPosition: "TOP", subPositions: ["JGL"], status: "APPLIED", createdAt: now, updatedAt: now,
-    });
-    const mixed = await send({ action: "SYNC", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", roundMetadata: metadata,
-      participants: [member(1, 2), { ...member(3, 3), name: `대기검토-${suffix}` }] });
-    const copyText = mixed.body.v1StrictLegacyReply!;
-    const parsed = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text: copyText }), {
-      profileId: "FEATURES", installationId: "install-copy", senderId: "sender-copy", eventId: "event-copy-roundtrip",
-      timestamp: Math.floor(now.getTime() / 1_000), nonce: "f".repeat(32), text: copyText,
-    });
-    if (parsed?.domain !== "SEASON" || parsed.action !== "SYNC") assert.fail("actual generated mixed site/pending copy must parse");
-    const roundtrip = await send({
-      action: "SYNC", seasonId, applyDate: parsed.applyDate, recruitNo: parsed.recruitNumber, mode: parsed.mode,
-      roundMetadata: parsed.roundMetadata, participants: parsed.participants,
-      preserveSlotNos: parsed.preserveSlotNos, reserveSectionObserved: parsed.reserveSectionObserved, copyGuard: parsed.copyGuard,
-    });
-    assert.equal(roundtrip.body.createdCount, 0);
-    assert.equal(roundtrip.body.updatedCount, 0);
-    assert.equal(roundtrip.body.cancelledCount, 0);
-    assert.equal(roundtrip.body.appliedCount, 2);
-    assert.equal(roundtrip.body.pendingCount, 1);
-    const siteAfter = (await database.select().from(seasonApplications).where(eq(seasonApplications.id, siteApplicationId)))[0]!;
-    assert.equal(siteAfter.source, "SITE");
-    assert.equal(siteAfter.sourceSlotNo, null);
-    assert.equal(siteAfter.mainPosition, "TOP");
-    assert.deepEqual(siteAfter.subPositions, ["JGL"]);
+    assert.equal(attempts.filter((result) => result.status === "fulfilled").length, 1);
+    const winner = attempts.find((result) => result.status === "fulfilled");
+    assert.ok(winner && winner.status === "fulfilled");
+    assert.equal(winner.value.body.rosterFilled, true);
+    assert.match(inhouseSaveReply(winner.value.body), /시작 시간 10분 전 내전 디스코드방에 대기해주세요~/u);
+    const full = await detail();
+    assert.equal(full.body.entries.length, 10);
+    const unchanged = await sync(full.body, roster(full.body));
+    assert.equal(unchanged.body.rosterFilled, false);
+    assert.equal(unchanged.body.updatedCount, 0);
+    const renamedRoster = roster(full.body).map((entry) => entry.slotNo === 2 ? { ...entry, name: `${duplicateName}(Editable1${suffix})` } : entry);
+    const renamed = await sync(full.body, renamedRoster, { ...metadata, startTimeText: "모이면", scheduledStartAt: null as unknown as string });
+    assert.equal(renamed.body.entries.length, 10);
+    assert.equal(renamed.body.roundMetadata?.startTimeText, "모이면");
+    assert.equal(renamed.body.entries[1]?.player, null, "a label is not proof of account ownership");
+    await assert.rejects(sync(full.body, roster(full.body).map((entry) => entry.slotNo === 2 ? { ...entry, name: "충돌" } : entry)),
+      (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
+    const removed = await sync(renamed.body, roster(renamed.body).filter((entry) => entry.slotNo !== 9));
+    assert.equal(removed.body.entries.length, 9);
+    const stale = await sync(renamed.body, roster(renamed.body));
+    assert.equal(stale.body.entries.length, 9, "an unchanged stale name does not revive a deletion");
+    await database.insert(seasonApplications).values({ id: randomUUID(), seasonId, playerId: playerIds[0]!, applyDate: today, recruitNo: 1,
+      source: "SITE", sourceSlotNo: null, mainPosition: "TOP", subPositions: [], status: "APPLIED" });
+    const mixed = await detail();
+    assert.equal(mixed.body.entries.length, 10);
+    const site = mixed.body.entries.find((entry) => entry.source === "SITE");
+    assert.ok(site);
+    assert.equal(site.protectedReason, "SITE");
+    // The separate pending label remains until an operator explicitly links it.
+    const protectedRoster = roster(mixed.body);
+    await assert.rejects(sync(mixed.body, protectedRoster.filter((entry) => entry.slotNo !== site.slotNo)),
+      (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
+    const closed = await send({ action: "FINISH", seasonId, applyDate: today, recruitNo: 1, participants: [] });
+    assert.equal(closed.body.cancelledCount, 0);
+    const archived = await detail();
+    assert.equal(archived.body.entries.length, 10);
+    assert.equal(archived.body.roundMetadata?.status, "CLOSED");
+    assert.equal(archived.body.formCode, undefined);
+    assert.match(inhouseCopyFormReply(archived.body), /모집 마감 · 명단 보관/u);
+    assert.doesNotMatch(v1StrictSeasonReply(closed.body, "STATUS"), /\[내전 #1\]/u);
+    await assert.rejects(sync(mixed.body, protectedRoster), (error: unknown) => error instanceof KakaoAssistantError && error.code === "INVALID_STATE");
+    assert.equal((await database.select().from(seasonApplications).where(eq(seasonApplications.seasonId, seasonId)))[0]?.status, "APPLIED");
   } finally {
-    await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();
   }
 });
+
 
 test("name-first in-house copies keep pending slots and merge metadata without overwriting newer edits", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
@@ -1518,10 +1505,10 @@ test("name-first in-house copies keep pending slots and merge metadata without o
     scheduledStartAt: time && /^\d{2}:\d{2}$/u.test(time) ? new Date(`${today}T${time}:00+09:00`).toISOString() : null,
     gameInfo: null, organizerText: null, noticeText: null,
   });
-  const member = (name: string, slotNo: number) => ({ slotNo, name, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false, nameOnly: true as const });
+  const member = (name: string, slotNo: number) => ({ slotNo, name, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false });
   const sync = (body: KakaoSeasonSnapshotDto, time: string | null, participants: Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }>["participants"]) => send({
     action: "SYNC", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata(time), participants,
-    reserveSectionObserved: true, copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
+    observedSlotNos: Array.from({ length: 20 }, (_, index) => index + 1), reserveSectionObserved: true, copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
   });
   const precondition = (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED";
   try {
@@ -1533,8 +1520,8 @@ test("name-first in-house copies keep pending slots and merge metadata without o
     assert.equal(first.body.pendingCount, 1);
     assert.match(first.body.v1StrictLegacyReply!, /\[내전 #1\] 1\/10명/u);
     assert.ok(first.body.v1StrictLegacyReply!.includes(`1. ${names[0]}`));
-    assert.match(first.body.v1StrictLegacyReply!, /^신청 저장:/u);
-    assert.doesNotMatch(first.body.v1StrictLegacyReply!, /회원 확인|확인 1\.|사이트 등록 이름/u);
+    assert.match(inhouseSaveReply(first.body), /내전등록 완료/u);
+    assert.match(inhouseSaveReply(first.body), /이름 확인/u);
     assert.equal((await database.select().from(players).where(eq(players.memberName, names[0]!))).length, 0);
 
     const twoMembers = [member(names[0]!, 1), member(names[1]!, 2)];
@@ -1613,11 +1600,11 @@ test("in-house copy forms reopen a vacated reserve slot and preserve the remaini
     assert.equal(full.body.reserveCount, 10);
     const removed = await send({ action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 1, name: members[1]!.name, participants: [] });
     assert.equal(removed.body.reserveCount, 9);
-    assert.match(removed.body.legacyReply ?? "", /^예비 1\.$/mu);
+    assert.match(inhouseCopyFormReply(removed.body), /^예비 1\.$/mu);
     for (let index = 2; index <= 10; index += 1) {
-      assert.ok(removed.body.legacyReply?.includes(`예비 ${index}. ${members[index]!.name}`));
+      assert.ok(inhouseCopyFormReply(removed.body).includes(`예비 ${index}. ${members[index]!.name}`));
     }
-    const copyText = removed.body.legacyReply!.replace(/^예비 1\.$/mu, `예비 1. ${members[1]!.name}`);
+    const copyText = inhouseCopyFormReply(removed.body).replace(/^예비 1\.$/mu, `예비 1. ${members[1]!.name}/all`);
     const parsed = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text: copyText }), {
       profileId: "FEATURES", installationId: "install-reserve-gap", senderId: "sender-reserve-gap", eventId: "event-reserve-gap",
       timestamp: Math.floor(now.getTime() / 1_000), nonce: "e".repeat(32), text: copyText,
@@ -1626,12 +1613,12 @@ test("in-house copy forms reopen a vacated reserve slot and preserve the remaini
     const restored = await send({
       action: "SYNC", seasonId, applyDate: parsed.applyDate, recruitNo: parsed.recruitNumber, mode: parsed.mode,
       roundMetadata: parsed.roundMetadata, participants: parsed.participants,
-      preserveSlotNos: parsed.preserveSlotNos, reserveSectionObserved: parsed.reserveSectionObserved, copyGuard: parsed.copyGuard,
+      observedSlotNos: parsed.observedSlotNos, preserveSlotNos: parsed.preserveSlotNos, reserveSectionObserved: parsed.reserveSectionObserved, copyGuard: parsed.copyGuard,
     });
     assert.equal(restored.body.appliedCount, 1);
     assert.equal(restored.body.reserveCount, 10);
     assert.equal(restored.body.cancelledCount, 0);
-    assert.equal(restored.body.entries.find((entry) => entry.player?.playerId === members[1]!.id)?.slotNo, 11);
+    assert.equal(restored.body.entries.find((entry) => entry.suppliedName === members[1]!.name)?.slotNo, 11);
     for (const entry of removed.body.entries) {
       assert.deepEqual(restored.body.entries.find((current) => current.player?.playerId === entry.player?.playerId), entry);
     }

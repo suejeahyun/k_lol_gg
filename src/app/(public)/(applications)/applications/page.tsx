@@ -92,8 +92,8 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 <span>ACTIVE SEASON</span>
                 <h2 id="season-overview-title">{result.data.currentSeason.name}</h2>
               </div>
-              <strong data-open={result.data.currentSeason.applicationsOpen}>
-                {result.data.currentSeason.applicationsOpen ? "신청 가능" : "신청 마감"}
+              <strong data-open={result.data.currentSeason.applicationsOpen && !result.data.round.closed}>
+                {result.data.currentSeason.applicationsOpen && !result.data.round.closed ? "모집 중" : "모집 마감"}
               </strong>
             </div>
             {result.data.availableRecruitNos.length > 1 ? <nav className={styles.roundTabs} aria-label="오늘 모집 회차">{result.data.availableRecruitNos.map((recruitNo) => {
@@ -102,10 +102,11 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               return <Link key={recruitNo} href={`/applications?${query.toString()}`} aria-current={recruitNo === result.data.selectedRecruitNo ? "page" : undefined}>{recruitNo}회차</Link>;
             })}</nav> : null}
             <div className={styles.stats}>
-              <article><span>신청</span><strong>{result.data.counts.applied}</strong></article>
+              <article><span>본 참가</span><strong>{result.data.counts.applied + result.data.counts.confirmed}/{result.data.round.capacity}</strong></article>
               <article><span>예비</span><strong>{result.data.counts.reserve}</strong></article>
               <article><span>확정</span><strong>{result.data.counts.confirmed}</strong></article>
             </div>
+            {result.data.unlinkedCount > 0 ? <p className={styles.mergeNotice}>회원 연결 확인 중 {result.data.unlinkedCount}명도 참가 인원에 포함되어 있어요.</p> : null}
           </section>
 
           {result.data.viewer === "RESTRICTED" ? (
@@ -135,6 +136,10 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               recruitNo={result.data.selectedRecruitNo}
               applicantPlayer={result.data.applicantPlayer!}
               applyDate={result.data.applyDate}
+              mode={result.data.round.mode}
+              closed={result.data.round.closed}
+              capacity={result.data.round.capacity}
+              participantCount={result.data.counts.applied + result.data.counts.confirmed}
             />
           ) : result.data.currentSeason.applicationsOpen && result.data.myApplication ? (
             <ApplicationActions
@@ -142,6 +147,10 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               recruitNo={result.data.selectedRecruitNo}
               applicantPlayer={result.data.applicantPlayer!}
               applyDate={result.data.applyDate}
+              mode={result.data.round.mode}
+              closed={result.data.round.closed}
+              capacity={result.data.round.capacity}
+              participantCount={result.data.counts.applied + result.data.counts.confirmed}
             />
           ) : (
             <section className={styles.stateCard}>

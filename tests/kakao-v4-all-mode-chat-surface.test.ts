@@ -173,10 +173,10 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
   assert.ok(inhouseCommand);
   const inhouse = await dispatcher.dispatch(inhouseContext, inhouseCommand);
   assert.equal(seasonCalls[0]?.action, "RESERVE");
-  assert.match(inhouse.legacyReply, /\[내전 #7\] 0\/10명/u);
+  assert.match(inhouse.legacyReply, /\[내전 #7\] 협곡 · 0\/10명/u);
   assert.match(inhouse.legacyReply, /\n1\.\n[\s\S]*\n10\.\n[\s\S]*예비 1\./u);
-  assert.match(inhouse.legacyReply, /빈칸에 이름/u);
-  assert.match(inhouse.legacyReply, /》시작: 미정/u);
+  assert.match(inhouse.legacyReply, /──────────────/u);
+  assert.match(inhouse.legacyReply, /시작 시간: /u);
   assert.match(inhouse.legacyReply, /양식코드: ABCDE-FGHJK/u);
   assert.doesNotMatch(inhouse.legacyReply, /빠른 추가:|마감:/u);
 
@@ -215,7 +215,7 @@ test("내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은
   const inhouseCreate = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseContext.envelope), inhouseContext.envelope);
   assert.ok(inhouseCreate);
   const inhouseTemplate = (await dispatcher.dispatch(inhouseContext, inhouseCreate)).legacyReply;
-  const inhouseSubmission = inhouseTemplate.replace("\n1.\n", "\n1. 재현\n");
+  const inhouseSubmission = inhouseTemplate.replace("\n1.\n", "\n1. 재현/all\n");
   const inhouseEnvelope = { ...inhouseContext.envelope, eventId: "event-inhouse-notice-000002", text: inhouseSubmission };
   const inhouseSync = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseEnvelope), inhouseEnvelope);
   if (!inhouseSync || inhouseSync.domain !== "SEASON" || inhouseSync.action !== "SYNC") assert.fail("expected inhouse snapshot");
@@ -302,27 +302,29 @@ test("내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고
     assert.ok(canonical);
     const result = await dispatcher.dispatch(context, canonical);
     assert.match(result.legacyReply, text.includes("민혁") ? /추가 완료: 민혁/u : text.includes("정민") ? /예비 추가 완료: 정민/u : /추가 완료: 재현/u);
-    assert.match(result.legacyReply, /재현/u);
+    assert.match(result.legacyReply, profileId === "FEATURES" ? /현재 내전/u : /재현/u);
   }
-  assert.equal(seasonCalls[0]?.action, "ADD_PARTICIPANT");
-  if (seasonCalls[0]?.action === "ADD_PARTICIPANT") assert.equal(seasonCalls[0].mainPosition, undefined);
-  assert.equal(seasonCalls[1]?.action, "ADD_PARTICIPANT");
-  if (seasonCalls[1]?.action === "ADD_PARTICIPANT") {
-    assert.equal(seasonCalls[1].mainPosition, "MID");
-    assert.deepEqual(seasonCalls[1].subPositions, ["TOP"]);
+  const mutations = seasonCalls.filter((command) => command.action === "ADD_PARTICIPANT");
+  assert.equal(seasonCalls.filter((command) => command.action === "STATUS").length, 5);
+  assert.equal(mutations[0]?.action, "ADD_PARTICIPANT");
+  if (mutations[0]?.action === "ADD_PARTICIPANT") assert.equal(mutations[0].mainPosition, undefined);
+  assert.equal(mutations[1]?.action, "ADD_PARTICIPANT");
+  if (mutations[1]?.action === "ADD_PARTICIPANT") {
+    assert.equal(mutations[1].mainPosition, "MID");
+    assert.deepEqual(mutations[1].subPositions, ["TOP"]);
   }
-  if (seasonCalls[2]?.action === "ADD_PARTICIPANT") {
-    assert.equal(seasonCalls[2].mainPosition, "MID");
-    assert.deepEqual(seasonCalls[2].subPositions, ["ADC"]);
+  if (mutations[2]?.action === "ADD_PARTICIPANT") {
+    assert.equal(mutations[2].mainPosition, "MID");
+    assert.deepEqual(mutations[2].subPositions, ["ADC"]);
   }
-  if (seasonCalls[3]?.action === "ADD_PARTICIPANT") {
-    assert.equal(seasonCalls[3].mainPosition, "MID");
-    assert.deepEqual(seasonCalls[3].subPositions, ["TOP", "JGL", "ADC", "SUP"]);
+  if (mutations[3]?.action === "ADD_PARTICIPANT") {
+    assert.equal(mutations[3].mainPosition, "MID");
+    assert.deepEqual(mutations[3].subPositions, ["TOP", "JGL", "ADC", "SUP"]);
   }
-  if (seasonCalls[4]?.action === "ADD_PARTICIPANT") {
-    assert.equal(seasonCalls[4].reserve, true);
-    assert.equal(seasonCalls[4].mainPosition, "MID");
-    assert.deepEqual(seasonCalls[4].subPositions, ["ADC"]);
+  if (mutations[4]?.action === "ADD_PARTICIPANT") {
+    assert.equal(mutations[4].reserve, true);
+    assert.equal(mutations[4].mainPosition, "MID");
+    assert.deepEqual(mutations[4].subPositions, ["ADC"]);
   }
   assert.equal(recruitingCalls[0]?.type, "ADD_SCRIM_PARTICIPANT");
 });

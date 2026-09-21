@@ -51,6 +51,7 @@ export const seasonInhouseRoundStatus = competitionSchema.enum("season_inhouse_r
   "DRAFT",
   "IN_PROGRESS",
   "CANCELED",
+  "CLOSED",
 ]);
 
 export const seasons = competitionSchema.table(
@@ -182,6 +183,7 @@ export const seasonApplications = competitionSchema.table(
     applyDate: date("apply_date", { mode: "string" }).notNull(),
     recruitNo: integer("recruit_no").default(1).notNull(),
     sourceSlotNo: integer("source_slot_no"),
+    sourceDisplayName: varchar("source_display_name", { length: 100 }),
     mainPosition: seasonApplicationPosition("main_position").notNull(),
     subPositions: seasonApplicationPosition("sub_positions")
       .array()
@@ -272,7 +274,7 @@ export const seasonApplications = competitionSchema.table(
       sql`(
         (${table.status} IN ('REJECTED', 'RESERVE', 'CONFIRMED') AND ${table.reviewedAt} IS NOT NULL AND ${table.reviewedByUserAccountId} IS NOT NULL)
         OR (
-          ${table.status} IN ('APPLIED', 'CANCELLED')
+          ${table.status} IN ('APPLIED', 'CANCELLED', 'RESERVE')
           AND ${table.reviewNote} IS NULL
           AND ${table.reviewedAt} IS NULL
           AND ${table.reviewedByUserAccountId} IS NULL
@@ -320,6 +322,7 @@ export const seasonKakaoPendingApplications = competitionSchema.table(
       .notNull(),
     reserve: boolean("reserve").default(false).notNull(),
     matchState: seasonKakaoPendingMatchState("match_state").notNull(),
+    linkReason: varchar("link_reason", { length: 16 }),
     status: seasonKakaoPendingStatus("status").default("ACTIVE").notNull(),
     sourceReferenceHash: bytea("source_reference_hash").notNull(),
     sourceRoomIdHash: bytea("source_room_id_hash"),
@@ -331,14 +334,14 @@ export const seasonKakaoPendingApplications = competitionSchema.table(
     updatedAt: timestamptz("updated_at").defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex("season_kakao_pending_slot_uidx").on(
+    uniqueIndex("season_kakao_pending_active_slot_uidx").on(
       table.seasonId,
       table.applyDate,
       table.recruitNo,
       table.slotNo,
       table.sourceRoomIdHash,
       table.sourceMode,
-    ),
+    ).where(sql`${table.status} = 'ACTIVE'`),
     index("season_kakao_pending_review_idx").on(
       table.seasonId,
       table.applyDate,

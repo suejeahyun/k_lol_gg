@@ -48,6 +48,7 @@ export type OwnSeasonApplication = Readonly<{
   subPositions: readonly SeasonApplicationPosition[];
   status: SeasonApplicationStatus;
   source: SeasonApplicationSource;
+  reviewed?: boolean;
   revision: number;
   updatedAt: string;
 }>;
@@ -66,6 +67,8 @@ export type ApplicationHub = Readonly<{
   participantsTruncated: boolean;
   selectedRecruitNo: number;
   availableRecruitNos: readonly number[];
+  round: Readonly<{ mode: string; capacity: number; closed: boolean; ambiguous: boolean }>;
+  unlinkedCount: number;
 }>;
 
 export type AdminSeasonKakaoPendingApplication = Readonly<{
@@ -236,6 +239,11 @@ export const SEASON_SERVICE_ERROR_CODES = [
   "ACTIVE_SEASON_EXISTS",
   "APPLICATION_CLOSED",
   "APPLICATION_REVIEWED",
+  "RECRUIT_FULL",
+  "RECRUIT_CLOSED",
+  "RECRUIT_AMBIGUOUS",
+  "RIFT_POSITION_REQUIRED",
+  "APPLICATION_ALREADY_EXISTS",
   "DUPLICATE",
   "FORBIDDEN",
   "IDEMPOTENCY_MISMATCH",

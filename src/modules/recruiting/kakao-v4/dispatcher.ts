@@ -33,6 +33,8 @@ import {
   v1StrictPartyTemplate,
 } from "./v1-strict-party-replies";
 import {
+  inhouseCopyFormReply,
+  inhouseSaveReply,
   v1StrictOperationFormReply,
   v1StrictPlayerRecordReply,
   v1StrictRankingReply,
@@ -73,6 +75,7 @@ export type KakaoV4AssistantPort = Readonly<{
   syncSeasonSnapshot(input: SignedAssistantInput & Readonly<{
     command: KakaoSeasonSnapshotCommand;
     requestId: string;
+    afterMutation?: boolean;
   }>): Promise<Readonly<{ body: KakaoSeasonSnapshotDto; replayed: boolean }>>;
   getPlayerRecord?(input: SignedAssistantInput & Readonly<{ query: string; mode: "RECORD" | "RECENT" }>): Promise<Readonly<{ body: KakaoPlayerRecordDto; replayed: boolean }>>;
   getRanking?(input: SignedAssistantInput): Promise<Readonly<{ body: KakaoRankingDto; replayed: boolean }>>;
@@ -433,37 +436,33 @@ function inhouseTemplate(command: Readonly<{
   saveReference?: string;
   formCode?: string;
 }>) {
-  const mode = command.mode === "RIFT" ? "협곡" : command.mode === "ARAM" ? "칼바람" : "증바람";
-  const lines = [
-    `[내전 #${command.recruitNumber}] 0/${command.capacity}명`,
-    `》모드: ${mode}`,
-    `》시작: ${command.time}`,
-    "",
-    "전체 복사 → 빈칸에 이름 → 전체 전송",
-    ...(command.mode === "RIFT" ? ["라인 선택: 이름/주라인/부라인"] : []),
-  ];
-  lines.push("");
-  for (let slot = 1; slot <= command.capacity; slot += 1) lines.push(`${slot}.`);
-  lines.push("", "예비 1.");
-  if (command.formCode) lines.push("", `양식코드: ${command.formCode}`);
-  else if (command.saveReference) lines.push("", `저장기준: ${command.operatingDate ?? command.applyDate} / ${command.saveReference}`);
-  return lines.join("\n");
+  return inhouseCopyFormReply({
+    kind: "SEASON_APPLICATION_SNAPSHOT", seasonId: "", applyDate: command.applyDate,
+    recruitNo: command.recruitNumber, entries: [], appliedCount: 0, reserveCount: 0,
+    confirmedCount: 0, pendingCount: 0, cancelledCount: 0,
+    formCode: command.formCode, saveReference: command.saveReference, operatingDate: command.operatingDate,
+    roundMetadata: { recruitNo: command.recruitNumber, mode: command.mode, capacity: command.capacity,
+      startTimeText: command.time === "미정" ? null : command.time, scheduledStartAt: null,
+      noticeText: null, revision: 0, status: "DRAFT" },
+  });
 }
 
 function participationGuide(publicOrigin: string) {
   return [
     "[K-LOL.GG 내전 참가 방법 안내]",
     "",
-    "1. 가장 최근 봇 명단 전체 복사 (없으면 내전현황)",
-    "2. 봇이 보낸 최신 양식 전체 복사",
+    "1. 내전현황에서 모집 번호 확인",
+    "2. 내전상세 번호 → 최신 양식 전체 복사",
     "3. 빈 번호에 내 이름 입력 (정원이 차면 예비 칸)",
-    "4. 메시지 전체 전송하면 저장",
+    "4. 메시지 전체 전송 → 저장 결과 확인",
     "",
-    "저장 후 나온 최신 명단을 다음 사람이 복사해주세요.",
-    "협곡 라인은 이름/주라인/부라인으로 선택 입력할 수 있습니다.",
+    "협곡은 라인 필수: 이름/top,mid 또는 이름/탑/미드",
+    "이름/top,all = 주 탑 · 부 나머지 전부",
+    "이름/all = 모든 라인 가능",
+    "칼바람·증바람은 이름만 작성하면 돼요.",
     "",
-    "사이트 회원 이름으로 신청하면 기존 회원 정보와 연결됩니다.",
-    "사이트 회원이 아니어도 이름으로 먼저 접수됩니다. 회원 연결은 나중에 운영진이 도와드려요.",
+    "미가입자도 접수할 수 있어요. 회원 연결은 나중에 운영진이 도와드려요.",
+    "동명이인은 이름(닉네임)으로 구분해주세요.",
     `${publicOrigin}/signup`,
   ].join("\n");
 }
@@ -571,15 +570,6 @@ function scheduledNoticeReply(body: KakaoScheduledNoticeDto) {
   ].join("\n");
 }
 
-function seasonReply(body: KakaoSeasonSnapshotDto, allowLegacyReply = true) {
-  if (allowLegacyReply && body.legacyReply) return body.legacyReply;
-  return [
-    "[K-LOL.GG 내전 신청 반영]",
-    `신청일: ${body.applyDate}${body.recruitNo === null ? "" : ` · 회차: #${body.recruitNo}`}`,
-    `현재 ${body.entries.length}명 · 추가 ${body.createdCount ?? 0} · 수정 ${body.updatedCount ?? 0} · 취소 ${body.cancelledCount}`,
-  ].join("\n");
-}
-
 function compactInhouseNickname(value: string) {
   const normalized = value.normalize("NFKC").replace(/[\r\n]+/gu, " ").replace(/\s+/gu, " ").trim();
   const characters = Array.from(normalized);
@@ -608,7 +598,8 @@ export function formatInhouseMemberReply(
         : `${input.reserve ? "예비 " : ""}추가 완료: ${input.name}`
       : `이미 명단에 있습니다: ${input.name}`
     : applied ? `삭제 완료: ${input.name}` : `명단에서 찾지 못했습니다: ${input.name}`;
-  const capacity = body.roundMetadata?.capacity ?? 10;
+  if (body.roundMetadata) return `${outcome}\n\n${inhouseSaveReply(body)}`;
+  const capacity = 10;
   const entries = body.entries
     .filter((entry) => entry.status !== "CANCELLED")
     .sort((left, right) => left.slotNo - right.slotNo);
@@ -749,6 +740,18 @@ export class KakaoV4CommandDispatcher {
       return `${reply}\n\n${scrimStatusReply(status.body.scrims, v1Strict)}`;
     } catch {
       return `${reply}\n\n[K-LOL.GG 스크림 현황]\n조회 실패. 스크림현황을 입력해 주세요.`;
+    }
+  }
+
+  private async appendLatestInhouseStatus(context: KakaoV4DispatchContext, body: KakaoSeasonSnapshotDto, reply: string) {
+    try {
+      const result = await this.dependencies.assistant.syncSeasonSnapshot({
+        ...signedInput(context), requestId: context.requestId, afterMutation: true,
+        command: { action: "STATUS", seasonId: body.seasonId, applyDate: body.applyDate, recruitNo: null, participants: [] },
+      });
+      return `${reply}\n\n${v1StrictSeasonReply(result.body, "STATUS")}`;
+    } catch {
+      return `${reply}\n\n현재 목록을 불러오지 못했어요. 내전현황을 입력해주세요.`;
     }
   }
 
@@ -1426,17 +1429,14 @@ export class KakaoV4CommandDispatcher {
         }
         throw error;
       }
-      const statusReply = usesKakaoV1StrictResponse(context.envelope)
-        ? result.body.v1StrictLegacyReply
-        : result.body.legacyReply;
       return Object.freeze({
         kind: "SEASON",
         action: command.action,
         aggregate: result.body,
         legacyReply: [
-          `[K-LOL.GG 내전 #${String(command.recruitNumber)}]`,
-          "모집을 마감했습니다.",
-          ...(statusReply ? ["", statusReply] : []),
+          `✅ 내전 #${String(command.recruitNumber)} 모집 마감`,
+          "신규 접수를 마감하고 참가 명단을 보관했어요.",
+          "", v1StrictSeasonReply(result.body, "STATUS"),
         ].join("\n"),
         replayed: result.replayed,
       });
@@ -1469,9 +1469,13 @@ export class KakaoV4CommandDispatcher {
               },
         });
       } catch (error) {
+        if (error instanceof KakaoAssistantError && error.publicMessage) {
+          return Object.freeze({ kind: "SEASON", action: command.action, aggregate: null, replayed: false,
+            legacyReply: `아직 저장되지 않았어요.\n${error.publicMessage}\n\n내전상세 ${command.recruitNumber}에서 최신 양식을 확인해 주세요.` });
+        }
         if (error instanceof KakaoAssistantError && error.code === "NOT_FOUND") {
           return Object.freeze({
-            kind: "SEASON", action: command.action, aggregate: null,
+          kind: "SEASON", action: command.action, aggregate: null,
             legacyReply: [
               `[K-LOL.GG 내전 #${command.recruitNumber} 명단]`,
               "현재 운영일의 수정 가능한 내전을 찾지 못했습니다.",
@@ -1484,13 +1488,13 @@ export class KakaoV4CommandDispatcher {
       }
       return Object.freeze({
         kind: "SEASON", action: command.action, aggregate: result.body,
-        legacyReply: formatInhouseMemberReply(result.body, {
+        legacyReply: await this.appendLatestInhouseStatus(context, result.body, formatInhouseMemberReply(result.body, {
           action: command.action === "ADD_MEMBER" ? "ADD" : "REMOVE",
           recruitNumber: command.recruitNumber,
           name: command.name,
           reserve: command.reserve,
           positionsSpecified: command.mainPosition !== undefined,
-        }),
+        })),
         replayed: result.replayed,
       });
     }
@@ -1503,6 +1507,7 @@ export class KakaoV4CommandDispatcher {
           mode: command.mode,
           roundMetadata: command.roundMetadata,
           participants: command.participants,
+          ...(command.observedSlotNos ? { observedSlotNos: command.observedSlotNos } : {}),
           ...(command.preserveSlotNos ? { preserveSlotNos: command.preserveSlotNos } : {}),
           ...(command.reserveSectionObserved ? { reserveSectionObserved: true } : {}),
           ...(command.copyGuard ? { copyGuard: command.copyGuard } : {}),
@@ -1523,19 +1528,19 @@ export class KakaoV4CommandDispatcher {
       });
     } catch (error) {
       if (command.action === "SYNC" && error instanceof KakaoAssistantError &&
-          (error.code === "PRECONDITION_FAILED" || error.code === "INVALID_STATE" || error.code === "CONFLICT")) {
+          (error.code === "PRECONDITION_FAILED" || error.code === "INVALID_STATE" || error.code === "CONFLICT" || error.code === "INVALID_INPUT")) {
         const latestOperatingDate = recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
         const latest = await this.dependencies.assistant.syncSeasonSnapshot({
           ...signedInput(context), requestId: context.requestId,
           command: { action: "STATUS", seasonId: command.seasonId, applyDate: latestOperatingDate, recruitNo: command.applyDate === latestOperatingDate ? command.recruitNumber : null, participants: [] },
-        });
+        }).catch(() => null);
         return Object.freeze({
-          kind: "SEASON", action: command.action, aggregate: latest.body, replayed: latest.replayed,
+          kind: "SEASON", action: command.action, aggregate: latest?.body ?? null, replayed: latest?.replayed ?? false,
           legacyReply: ["아직 저장되지 않았어요.",
-            error.code === "INVALID_STATE" ? "마감된 내전입니다. 내전현황에서 진행 중인 명단을 확인해주세요." :
+            error.publicMessage ?? (error.code === "INVALID_STATE" ? "마감된 내전입니다. 내전현황에서 진행 중인 명단을 확인해주세요." :
               error.code === "CONFLICT" ? "신청 가능한 자리가 없거나 모집 상태가 바뀌었습니다. 아래 명단에서 빈칸 또는 예비를 확인해주세요." :
-                "최신 명단을 복사해 빈칸에 내 이름만 추가해주세요. 취소는 내전상세 번호 삭제 이름으로 할 수 있어요.",
-            "", v1StrictSeasonReply(latest.body, "DETAIL"),
+                "다른 사람이 먼저 수정했거나 입력을 확인해야 해요. 아래 최신 양식에서 다시 작성해주세요."),
+            "", latest ? v1StrictSeasonReply(latest.body, "DETAIL") : `내전상세 ${command.recruitNumber}에서 최신 양식을 확인해 주세요.`,
           ].join("\n"),
         });
       }
@@ -1557,9 +1562,9 @@ export class KakaoV4CommandDispatcher {
       kind: "SEASON",
       action: command.action,
       aggregate: result.body,
-      legacyReply: usesKakaoV1StrictResponse(context.envelope)
-        ? v1StrictSeasonReply(result.body, command.action)
-        : command.action === "SYNC" ? v1StrictSeasonReply(result.body, "SYNC") : seasonReply(result.body),
+      legacyReply: command.action === "SYNC"
+        ? await this.appendLatestInhouseStatus(context, result.body, inhouseSaveReply(result.body, this.dependencies.publicOrigin))
+        : v1StrictSeasonReply(result.body, command.action),
       replayed: result.replayed,
     });
   }

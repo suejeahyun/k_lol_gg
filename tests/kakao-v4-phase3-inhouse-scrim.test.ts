@@ -156,10 +156,9 @@ test("Phase 3-A: 내전 모드 선택과 협곡·칼바람 복사 양식을 출�
   for (const [mode, number, sequence] of [["협곡", 2, 3], ["칼바람", 3, 4]] as const) {
     const result = await reply(state.service, envelope("FEATURES", `내전구인 ${mode} 2026-09-09 21:30 #${number} 10명`, sequence));
     assert.equal(result.reply, [
-      `[내전 #${number}] 0/10명`, `》모드: ${mode}`, "》시작: 21:30", "", "전체 복사 → 빈칸에 이름 → 전체 전송",
-      ...(mode === "협곡" ? ["라인 선택: 이름/주라인/부라인"] : []), "",
+      `[내전 #${number}] ${mode} · 0/10명`, `저장기준: 2026-09-09 / S${"a".repeat(32)}`,
+      "──────────────", "시작 시간: 21:30", "",
       ...Array.from({ length: 10 }, (_, index) => `${index + 1}.`), "", "예비 1.",
-      "", `저장기준: 2026-09-09 / S${"a".repeat(32)}`,
     ].join("\n"));
   }
   assert.deepEqual(state.seasonCalls.map(({ command }) => command.action), ["RESERVE", "RESERVE"]);
@@ -184,10 +183,10 @@ test("Phase 3-A: 협곡 명단 A→B→A와 0명은 각 입력당 한 번의 aut
   for (const [sequence, form] of [[6, withA], [7, withB], [8, withA], [9, empty]] as const) {
     await reply(state.service, envelope("FEATURES", form, sequence));
   }
-  assert.deepEqual(state.seasonCalls.map(({ command }) => command.action === "SYNC" ? command.participants.map((participant) => participant.name) : null), [
+  assert.deepEqual(state.seasonCalls.filter(({ command }) => command.action === "SYNC").map(({ command }) => command.action === "SYNC" ? command.participants.map((participant) => participant.name) : null), [
     ["재현"], ["민서"], ["재현"], [],
   ]);
-  assert.ok(state.seasonCalls.every(({ command }) => command.seasonId === null));
+  assert.ok(state.seasonCalls.filter(({ command }) => command.action === "SYNC").every(({ command }) => command.seasonId === null));
   assert.equal(state.handled.length, 0);
 });
 
@@ -232,7 +231,7 @@ test("Phase 3-A: 번호 행 하나가 빠진 양식은 그 슬롯을 보존하�
   const state = harness();
   const malformed = contract.inhouse.riftTemplate.split("\n").filter((line) => line !== "10.").join("\n");
   await state.service.execute(envelope("FEATURES", malformed, 16), "current");
-  assert.equal(state.seasonCalls.length, 1);
+  assert.equal(state.seasonCalls.length, 2);
   assert.deepEqual(state.seasonCalls[0]?.command.action === "SYNC" ? state.seasonCalls[0].command.preserveSlotNos : null, [10]);
   assert.equal(state.handled.length, 0);
 });

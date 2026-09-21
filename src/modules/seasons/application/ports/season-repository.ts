@@ -45,8 +45,9 @@ export type UpsertOwnApplicationInput = Readonly<{
   applyDate: string;
   recruitNo: number;
   expectedRevision: number;
-  mainPosition: SeasonApplicationPosition;
+  mainPosition: SeasonApplicationPosition | null;
   subPositions: readonly SeasonApplicationPosition[];
+  reserve?: boolean;
 }>;
 
 export type ReviewApplicationInput = Readonly<{

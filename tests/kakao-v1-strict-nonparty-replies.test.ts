@@ -82,7 +82,7 @@ test("V1 strict operation and season empty replies keep public V1 labels", () =>
     pendingCount: 0,
     cancelledCount: 0,
     availableRecruitNos: [],
-  }, "STATUS"), "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.");
+  }, "STATUS"), "📋 현재 내전\n\n현재 모집 중인 내전이 없습니다.");
 });
 
 function seasonSnapshot(input: Partial<KakaoSeasonSnapshotDto>): KakaoSeasonSnapshotDto {
@@ -103,7 +103,7 @@ function seasonSnapshot(input: Partial<KakaoSeasonSnapshotDto>): KakaoSeasonSnap
 }
 
 test("V1 strict season STATUS keeps canonical zero, one, and multiple-round results", () => {
-  const empty = "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.";
+  const empty = "📋 현재 내전\n\n현재 모집 중인 내전이 없습니다.";
   assert.equal(v1StrictSeasonReply(seasonSnapshot({ v1StrictLegacyReply: empty }), "STATUS"), empty);
 
   const oneRound = [
@@ -141,6 +141,6 @@ test("V1 strict season DETAIL keeps the full existing form and empty missing res
   }), "DETAIL"), existing);
   assert.equal(v1StrictSeasonReply(seasonSnapshot({
     recruitNo: 404,
-    v1StrictLegacyReply: "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.",
-  }), "DETAIL"), "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.");
+    v1StrictLegacyReply: "📋 현재 내전\n\n현재 모집 중인 내전이 없습니다.",
+  }), "DETAIL"), "📋 현재 내전\n\n현재 모집 중인 내전이 없습니다.");
 });

@@ -179,7 +179,8 @@ test("R24 server help separates adding a name from initial party settings and in
     assert.match(result.reply, /최근 봇 명단 전체 복사/u);
     assert.match(result.reply, /빈칸에 내 이름 입력/u);
     assert.match(result.reply, /메시지 전체 전송 = 저장/u);
-    assert.match(result.reply, /사이트에 등록한 이름/u);
+    assert.match(result.reply, /협곡은 이름과 라인 필수/u);
+    assert.match(result.reply, /사이트 회원 연결은 나중에/u);
     assert.match(result.reply, /내전구인 협곡/u);
     assert.match(result.reply, /처음 파티를 만들 때만 첫 전송 전에 시간·게임/u);
     assert.ok(result.reply.indexOf("최근 봇 명단 전체 복사") < result.reply.indexOf("새 모집 만들기"));

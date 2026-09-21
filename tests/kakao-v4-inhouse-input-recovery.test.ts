@@ -53,7 +53,7 @@ test("real RIFT input recovers one missing position slash and accepts empty flex
     if (command?.domain !== "SEASON" || command.action !== "SYNC") continue;
     assert.deepEqual(command.participants, [
       { slotNo: 1, name: "지오", riotId: null, mainPosition: "ADC", subPositions: ["MID"], reserve: false },
-      { slotNo: 2, name: secondName, riotId: null, mainPosition: "MID", subPositions: [], reserve: false },
+      { slotNo: 2, name: secondName, riotId: null, mainPosition: "MID", subPositions: ["TOP", "JGL", "ADC", "SUP"], reserve: false },
     ]);
   }
 });
@@ -117,18 +117,7 @@ test("mixed real-world rows keep valid entries, route partial rows to review, an
     classifyKakaoV4Command({ profileId: "FEATURES", text }),
     envelope(text),
   );
-  assert.equal(command?.domain, "SEASON");
-  assert.equal(command?.action, "SYNC");
-  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected a recoverable season snapshot");
-  assert.deepEqual(command.participants, [
-    { slotNo: 1, name: "정상", riotId: null, mainPosition: "TOP", subPositions: ["MID"], reserve: false },
-    { slotNo: 2, name: "이름만", riotId: null, mainPosition: "ALL", subPositions: [], reserve: false, nameOnly: true },
-    { slotNo: 3, name: "중복", riotId: null, mainPosition: "MID", subPositions: [], reserve: false },
-    { slotNo: 4, name: "중복", riotId: null, mainPosition: "MID", subPositions: ["SUP"], reserve: false, reviewRequired: true },
-    { slotNo: 5, name: "확인행", riotId: null, mainPosition: "ALL", subPositions: [], reserve: false, reviewRequired: true },
-    { slotNo: 9, name: "나중", riotId: null, mainPosition: "ADC", subPositions: [], reserve: false },
-  ]);
-  assert.deepEqual(command.preserveSlotNos, [8]);
+  assert.equal(command, null, "missing or invalid RIFT lanes reject the entire form before writing");
 });
 
 test("a final empty duplicate row means cancellation while a missing numbered row is preserved", () => {

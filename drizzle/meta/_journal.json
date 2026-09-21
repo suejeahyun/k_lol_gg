@@ -288,6 +288,13 @@
       "when": 1789854667439,
       "tag": "0040_kakao_form_snapshot_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789982580113,
+      "tag": "0041_clever_skullbuster",
+      "breakpoints": true
     }
   ]
 }

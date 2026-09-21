@@ -123,6 +123,7 @@ export type KakaoSeasonRoundMetadataDto = Readonly<{
   organizerText?: string | null;
   noticeText: string | null;
   revision: number;
+  status?: "DRAFT" | "IN_PROGRESS" | "CLOSED" | "CANCELED";
 }>;
 
 type KakaoSeasonSnapshotCommandBase = Readonly<{
@@ -161,6 +162,7 @@ export type KakaoSeasonSnapshotCommand =
       participants: readonly KakaoSeasonSnapshotParticipant[];
       /** In-process V4 only; absent numbered rows preserve their current state. */
       preserveSlotNos?: readonly number[];
+      observedSlotNos?: readonly number[];
       /** In-process V4 only; an explicit reserve section makes reserve rows authoritative. */
       reserveSectionObserved?: boolean;
       /** In-process V4 copy form guard; null fields identify a legacy form. */
@@ -215,6 +217,8 @@ export type KakaoSeasonSnapshotEntryDto = Readonly<{
   subPositions: readonly SeasonApplicationPosition[];
   player: Readonly<{ playerId: string; displayName: string; riotId: string; memberName?: string }> | null;
   reserve?: boolean;
+  protectedReason?: "SITE" | "REVIEWED";
+  memberLinkStatus?: "UNMATCHED" | "AMBIGUOUS" | "UNVERIFIED";
 }>;
 
 export type KakaoPlayerRecordDto = Readonly<{
@@ -296,6 +300,9 @@ export type KakaoSeasonSnapshotDto = Readonly<{
   operatingDate?: string;
   saveReference?: string;
   formCode?: string;
+  rosterFilled?: boolean;
+  registrationCreated?: boolean;
+  rounds?: readonly (KakaoSeasonRoundMetadataDto & Readonly<{ mainCount: number; reserveCount: number }>)[];
 }>;
 
 export type KakaoImageReceiveCommand = Readonly<{
@@ -341,7 +348,7 @@ export type KakaoAssistantResponse =
   | KakaoImageReceiveDto;
 
 export class KakaoAssistantError extends Error {
-  constructor(readonly code: "INVALID_INPUT" | "IDEMPOTENCY_MISMATCH" | "NONCE_CONFLICT" | "INCOMPLETE_RECEIPT" | "NOT_FOUND" | "CONFLICT" | "INVALID_STATE" | "FORBIDDEN" | "PRECONDITION_FAILED") {
+  constructor(readonly code: "INVALID_INPUT" | "IDEMPOTENCY_MISMATCH" | "NONCE_CONFLICT" | "INCOMPLETE_RECEIPT" | "NOT_FOUND" | "CONFLICT" | "INVALID_STATE" | "FORBIDDEN" | "PRECONDITION_FAILED", readonly publicMessage?: string) {
     super(code);
   }
 }

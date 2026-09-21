@@ -139,6 +139,8 @@ export type CanonicalKakaoV4Command =
       roundMetadata?: KakaoV4InhouseRoundMetadata;
       participants: readonly KakaoV4SeasonParticipant[];
       preserveSlotNos?: readonly number[];
+      /** Includes explicit empty main/reserve rows; omitted rows are not deletions. */
+      observedSlotNos?: readonly number[];
       reserveSectionObserved?: boolean;
       copyGuard?: Readonly<{ operatingDate: string | null; saveReference: string | null; formCode?: string | null }>;
     }>
@@ -212,7 +214,6 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
   const koreanClock = clock ? null : /(?:^|\s)([01]?\d|2[0-3])\s*시(?:\s*([0-5]?\d)\s*분?)?(?:\s|$)/u.exec(` ${argumentsText} `);
   const hour = Number(clock?.[1] ?? koreanClock?.[1] ?? 21);
   const minute = Number(clock?.[2] ?? koreanClock?.[2] ?? 0);
-  const capacityValue = /(?:^|\s)(\d{1,2})\s*명(?:\s|$)/u.exec(` ${argumentsText} `)?.[1];
   const recruitValue = /(?:^|\s)#\s*(\d{1,3})(?:\s|$)/u.exec(` ${argumentsText} `)?.[1];
   const modeValue = textParameter(parameters, "mode");
   const mode = modeValue === "RIFT" || modeValue === "ARAM" || modeValue === "AUGMENT_ARAM" ? modeValue : null;
@@ -231,7 +232,7 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
     action: "RESERVE" as const,
     applyDate,
     recruitNumber: recruitValue ? Number(recruitValue) : null,
-    capacity: capacityValue ? Math.min(Math.max(Number(capacityValue), 2), 20) : 10,
+    capacity: 10,
     time: clock || koreanClock ? `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` : "미정",
     mode,
   });
@@ -240,7 +241,7 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
 function inhouseSnapshot(text: string, fallbackDate: string) {
   const normalized = text.replace(/\r\n?/gu, "\n").trim();
   const lines = normalized.split("\n");
-  const modernHeader = /^\s*\[내전\s*#\s*(\d{1,3})\]\s*\d{1,2}\s*\/\s*(\d{1,2})명\s*$/mu.exec(normalized);
+  const modernHeader = /^\s*\[내전\s*#\s*(\d{1,3})\]\s*(?:(협곡|칼바람|증바람|증강칼바람)\s*·\s*)?\d{1,2}\s*\/\s*(\d{1,2})명\s*$/mu.exec(normalized);
   const recruitNumber = Number(modernHeader?.[1] ?? /^\s*📢\s*내전하실분\s*#\s*(\d{1,3})\s*$/mu.exec(normalized)?.[1] ?? 0);
   const dateValue = /^\s*》\s*(20\d{2}-\d{2}-\d{2})(?:\s|$)/mu.exec(normalized)?.[1] ?? null;
   const applyDate = validDateKey(dateValue, fallbackDate);
@@ -253,8 +254,10 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const codeMatch = codeLines.length === 1 ? /^\s*양식코드\s*[:：]\s*([A-Z0-9]{5}-[A-Z0-9]{5})\s*$/u.exec(codeLines[0]!) : null;
   if ((codeLines.length > 0 && !codeMatch) || (codeMatch && saveMatch)) return null;
   if (modernHeader && !codeMatch) return null;
-  const capacity = Number(modernHeader?.[2] ?? /^\s*👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명\s*$/mu.exec(normalized)?.[1] ?? 0);
-  const modeLabel = /^\s*》\s*(?:모드\s*[:：]\s*)?(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(normalized)?.[1] ?? null;
+  const capacity = Number(modernHeader?.[3] ?? /^\s*👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명\s*$/mu.exec(normalized)?.[1] ?? 0);
+  const legacyModeLabel = /^\s*》\s*(?:모드\s*[:：]\s*)?(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(normalized)?.[1] ?? null;
+  if (modernHeader?.[2] && legacyModeLabel && modernHeader[2] !== legacyModeLabel) return null;
+  const modeLabel = modernHeader?.[2] ?? legacyModeLabel;
   const mode: KakaoV4InhouseMode | null = modeLabel === "협곡"
     ? "RIFT"
     : modeLabel === "칼바람"
@@ -267,9 +270,10 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const schedulePattern = /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+([01]?\d|2[0-3])\s*:\s*([0-5]\d)\s*시작(?:\s+(.*?))?\s*$/u;
   const scheduleIndex = lines.findIndex((line) => schedulePattern.test(line));
   const scheduleLine = scheduleIndex < 0 ? null : schedulePattern.exec(lines[scheduleIndex]!) ?? null;
-  const modernTime = modernHeader ? /^[^\S\n]*》[^\S\n]*시작[^\S\n]*[:：][^\S\n]*([^\n]*)$/mu.exec(normalized) : null;
+  const modernTimeLines = modernHeader ? lines.filter((line) => /^[^\S\n]*》?[^\S\n]*시작(?:[^\S\n]*시간)?[^\S\n]*[:：]/u.test(line)) : [];
+  const modernTime = modernTimeLines.length === 1 ? /^[^\S\n]*》?[^\S\n]*시작(?:[^\S\n]*시간)?[^\S\n]*[:：][^\S\n]*(.*)$/u.exec(modernTimeLines[0]!) : null;
   const modernTimeText = modernTime?.[1]?.trim() ?? null;
-  if (modernHeader && (!modernTimeText || modernTimeText.length > 32 || /[\u0000-\u001F\u007F-\u009F\u2028\u2029]/u.test(modernTimeText))) return null;
+  if (modernHeader && (modernTimeText === null || modernTimeText.length > 32 || /[\u0000-\u001F\u007F-\u009F\u2028\u2029]/u.test(modernTimeText))) return null;
   const modernClock = modernTimeText && /^(?:[01]?\d|2[0-3]):[0-5]\d$/u.test(modernTimeText);
   const startTimeText = modernTimeText && modernTimeText !== "미정" ? (modernClock ? modernTimeText.padStart(5, "0") : modernTimeText) : scheduleLine
     ? `${String(Number(scheduleLine[1])).padStart(2, "0")}:${scheduleLine[2]}`
@@ -327,7 +331,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const noticeLines = [...new Set(noticeCandidates)]
     .slice(0, 6)
     .map((line) => line.slice(0, 160));
-  const noticeText = modernHeader ? metadataValue("공지") : noticeLines.join("\n").slice(0, 600) || null;
+  const noticeText = modernHeader ? metadataValue("안내") ?? metadataValue("공지") : noticeLines.join("\n").slice(0, 600) || null;
 
   type SlotValue =
     | Readonly<{ state: "EMPTY" }>
@@ -335,12 +339,9 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     | Readonly<{ state: "PARTICIPANT"; participant: KakaoV4InhouseParticipant }>;
   const slots = new Map<number, SlotValue>();
   const modernBodySlots = new Set<number>();
+  const modernReviewSlotNos = new Set<number>();
   const modernReviewSlots = new Map<number, SlotValue>();
   const observedSlotNos = new Set<number>();
-  const requireReview = (participant: KakaoV4InhouseParticipant): KakaoV4InhouseParticipant => Object.freeze({
-    ...participant,
-    reviewRequired: true,
-  });
   let reserveSectionObserved = false;
   for (const line of normalized.split("\n")) {
     const pendingRow = /^\s*확인\s+(.*)$/u.exec(line);
@@ -358,10 +359,20 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     if (!row.matched) continue;
     if (reserveRow) reserveSectionObserved = true;
     const slotNo = reserveRow ? capacity + row.slotNo : row.slotNo;
-    if (row.slotNo < 1 || row.slotNo > capacity) continue;
+    if (row.slotNo < 1 || row.slotNo > capacity) return null;
     if (modernHeader) {
-      if (pendingRow ? modernReviewSlots.has(slotNo) : modernBodySlots.has(slotNo)) return null;
-      if (!pendingRow) modernBodySlots.add(slotNo);
+      if (pendingRow ? modernReviewSlotNos.has(slotNo) : modernBodySlots.has(slotNo)) return null;
+      if (pendingRow) {
+        modernReviewSlotNos.add(slotNo);
+        if (slots.has(slotNo)) continue;
+      } else modernBodySlots.add(slotNo);
+    }
+    // A complete legacy roster can be followed by a numbered prose footer.
+    // Only that previously supported footer is ignored; invalid roster rows
+    // never become pending applications or silently preserve partial input.
+    if (!row.valid) {
+      if (!modernHeader && observedSlotNos.size >= capacity && !reserveRow && !participantLine.includes("/")) continue;
+      return null;
     }
     const participant = row.participant
       ? Object.freeze({ ...row.participant, slotNo, reserve: reserveRow || row.participant.reserve, ...(pendingRow ? { reviewRequired: true as const } : {}) })
@@ -406,6 +417,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   for (const [slotNo, value] of modernReviewSlots) {
     if (!slots.has(slotNo)) slots.set(slotNo, value);
   }
+  if (modernHeader && Array.from({ length: capacity }, (_, index) => index + 1).some((slotNo) => !modernBodySlots.has(slotNo))) return null;
   const preserveSlotNos: number[] = [];
   const participants: KakaoV4SeasonParticipant[] = [];
   const seenNames = new Set<string>();
@@ -417,9 +429,9 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     }
     if (slot.state !== "PARTICIPANT") continue;
     const nameKey = slot.participant.name.normalize("NFKC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("ko-KR");
-    const participant = seenNames.has(nameKey) ? requireReview(slot.participant) : slot.participant;
+    if (seenNames.has(nameKey)) return null;
     seenNames.add(nameKey);
-    participants.push(participant);
+    participants.push(slot.participant);
   }
   return Object.freeze({
     domain: "SEASON" as const,
@@ -432,6 +444,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     roundMetadata: Object.freeze({ capacity, startTimeText, scheduledStartAt, gameInfo, organizerText, noticeText }),
     participants: Object.freeze(participants),
     ...(preserveSlotNos.length > 0 ? { preserveSlotNos: Object.freeze(preserveSlotNos) } : {}),
+    observedSlotNos: Object.freeze([...(modernHeader ? modernBodySlots : observedSlotNos)].sort((left, right) => left - right)),
     ...(reserveSectionObserved ? { reserveSectionObserved: true } : {}),
   });
 }

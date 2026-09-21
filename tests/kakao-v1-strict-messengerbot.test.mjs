@@ -392,7 +392,7 @@ test("R24 actual server-rendered party and inhouse templates accept one name thr
       const dispatcher = new KakaoV4CommandDispatcher({ recruiting: {}, assistant: { async syncSeasonSnapshot() { return { body: { recruitNo: 9, operatingDate: "2026-09-20", formCode: "ABCDE-23456" }, replayed: false }; } } });
       for (const mode of ["RIFT", "ARAM", "AUGMENT_ARAM"]) {
         const result = await dispatcher.dispatch(context, { domain: "SEASON", action: "RESERVE", applyDate: "2026-09-20", recruitNumber: null, capacity: 10, time: "미정", mode });
-        forms.push({ profile: "FEATURES", text: result.legacyReply.replace("1.\\n", "1. 민규\\n") });
+        forms.push({ profile: "FEATURES", text: result.legacyReply.replace("1.\\n", mode === "RIFT" ? "1. 민규/top,all\\n" : "1. 민규\\n") });
       }
       for (const form of forms) {
         const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: form.profile, text: form.text }), { ...context.envelope, profileId: form.profile, text: form.text });

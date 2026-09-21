@@ -24,6 +24,11 @@ import type { SeasonCommandContext } from "../application/season-service";
 import { SeasonServiceError } from "../domain/season";
 
 const SEASON_HTTP_PROBLEMS = Object.freeze({
+  recruitFull: definePublicProblem({ code: "RECRUIT_FULL", status: 409, title: "본 참가 정원이 찼어요.", detail: "예비 참가를 선택해 주세요. 본 참가로 자동 전환되지는 않습니다." }),
+  recruitClosed: definePublicProblem({ code: "RECRUIT_CLOSED", status: 409, title: "내전 모집이 마감됐어요.", detail: "명단은 보관 중입니다. 참가 변경은 운영진에게 요청해 주세요." }),
+  recruitAmbiguous: definePublicProblem({ code: "RECRUIT_AMBIGUOUS", status: 409, title: "같은 번호의 내전이 여러 개 있어요.", detail: "다른 내전에 잘못 접수하지 않도록 운영진에게 모집 확인을 요청해 주세요." }),
+  riftPositionRequired: definePublicProblem({ code: "RIFT_POSITION_REQUIRED", status: 400, title: "협곡은 라인을 선택해 주세요.", detail: "본 참가와 예비 모두 주라인 또는 전체 가능을 직접 선택해야 합니다." }),
+  applicationAlreadyExists: definePublicProblem({ code: "APPLICATION_ALREADY_EXISTS", status: 409, title: "이미 연결된 참가 신청이 있어요.", detail: "동일인인지 확인한 뒤 중복 신청을 정리해 주세요. 이름만으로 다른 신청에 합치지 않습니다." }),
   activeSeasonExists: definePublicProblem({
     code: "ACTIVE_SEASON_EXISTS",
     status: 409,
@@ -225,6 +230,11 @@ export function seasonServiceErrorResponse(error: unknown, traceId?: string): Re
       ACTIVE_SEASON_EXISTS: SEASON_HTTP_PROBLEMS.activeSeasonExists,
       APPLICATION_CLOSED: SEASON_HTTP_PROBLEMS.applicationClosed,
       APPLICATION_REVIEWED: SEASON_HTTP_PROBLEMS.applicationReviewed,
+      RECRUIT_FULL: SEASON_HTTP_PROBLEMS.recruitFull,
+      RECRUIT_CLOSED: SEASON_HTTP_PROBLEMS.recruitClosed,
+      RECRUIT_AMBIGUOUS: SEASON_HTTP_PROBLEMS.recruitAmbiguous,
+      RIFT_POSITION_REQUIRED: SEASON_HTTP_PROBLEMS.riftPositionRequired,
+      APPLICATION_ALREADY_EXISTS: SEASON_HTTP_PROBLEMS.applicationAlreadyExists,
       DUPLICATE: SEASON_HTTP_PROBLEMS.conflict,
       FORBIDDEN: SEASON_HTTP_PROBLEMS.forbidden,
       IDEMPOTENCY_MISMATCH: SEASON_HTTP_PROBLEMS.idempotencyMismatch,

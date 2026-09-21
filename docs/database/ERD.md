@@ -6,7 +6,7 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `735ab2de0b454516240b6144888c77f6775713b51cbc065e2b4e12e97b3ea3f6`
+- Schema SHA-256: `41236032574ef205a4c4030a01aac791760b7219407c14c0c4caac99b648a069`
 - Tables: 103
 - Foreign keys: 165
 - Regenerate: `npm run db:erd`
@@ -515,6 +515,7 @@ erDiagram
         date apply_date "NOT NULL"
         integer recruit_no "NOT NULL"
         integer source_slot_no "nullable"
+        varchar_100 source_display_name "nullable"
         season_application_position main_position "NOT NULL"
         season_application_position_array sub_positions "NOT NULL"
         season_application_status status "NOT NULL"
@@ -574,6 +575,7 @@ erDiagram
         season_application_position_array sub_positions "NOT NULL"
         boolean reserve "NOT NULL"
         season_kakao_pending_match_state match_state "NOT NULL"
+        varchar_16 link_reason "nullable"
         season_kakao_pending_status status "NOT NULL"
         bytea source_reference_hash "NOT NULL"
         bytea source_room_id_hash "nullable"

@@ -34,10 +34,10 @@ export function planSeasonApplicationMerge(
  * wins later snapshots. A completed administrator decision stays immutable.
  */
 export function planSiteApplicationMerge(
-  existing: Readonly<{ source: SeasonApplicationSource; status: SeasonApplicationStatus }> | null,
+  existing: Readonly<{ source: SeasonApplicationSource; status: SeasonApplicationStatus; reviewedAt?: Date | null }> | null,
 ): SiteApplicationMergePlan {
   if (!existing) return { action: "CREATE_SITE", outcome: "SITE_CREATED" };
-  if (["CONFIRMED", "RESERVE", "REJECTED"].includes(existing.status)) {
+  if (["CONFIRMED", "REJECTED"].includes(existing.status) || (existing.status === "RESERVE" && existing.reviewedAt !== null)) {
     return { action: "PRESERVE_REVIEW", outcome: "REVIEWED_PRESERVED" };
   }
   return existing.source === "KAKAO"

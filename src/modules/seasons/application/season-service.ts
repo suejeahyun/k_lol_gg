@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { recruitingOperatingDateKey } from "@/modules/recruiting/domain/operating-day";
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
 import type {
@@ -11,7 +12,6 @@ import {
   canonicalJson,
   isSeasonApplicationPosition,
   isSeasonApplicationStatus,
-  kstDateKey,
   normalizeSeasonName,
   SeasonServiceError,
   type SeasonApplicationPosition,
@@ -332,19 +332,23 @@ export class SeasonService {
     body: unknown,
     now = new Date(),
   ) {
-    const parsed = objectBody(body, ["mainPosition", "subPositions", "recruitNo"]);
-    if (!isSeasonApplicationPosition(parsed.mainPosition)) {
+    const parsed = objectBody(body, ["mainPosition", "subPositions", "recruitNo", "reserve"]);
+    if (parsed.mainPosition != null && !isSeasonApplicationPosition(parsed.mainPosition)) {
       throw new SeasonServiceError("INVALID_INPUT", "주라인을 선택해 주세요.");
     }
-    const mainPosition = parsed.mainPosition;
-    const subPositions = positions(parsed.subPositions, mainPosition);
+    if (parsed.reserve !== undefined && typeof parsed.reserve !== "boolean") {
+      throw new SeasonServiceError("INVALID_INPUT", "본 참가 또는 예비를 선택해 주세요.");
+    }
+    const mainPosition = parsed.mainPosition == null ? null : parsed.mainPosition as SeasonApplicationPosition;
+    const subPositions = positions(parsed.subPositions ?? [], mainPosition ?? "ALL");
     const input = {
       actorUserAccountId: context.actorSession.userAccountId,
-      applyDate: kstDateKey(now),
+      applyDate: recruitingOperatingDateKey(now),
       recruitNo: positiveRecruitNo(parsed.recruitNo ?? 1),
       expectedRevision,
       mainPosition,
       subPositions,
+      reserve: parsed.reserve === true,
     };
     return this.repository.upsertOwnApplication(
       envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:upsert", input),
@@ -360,7 +364,7 @@ export class SeasonService {
     now = new Date(),
   ) {
     const parsed = objectBody(body, ["recruitNo"]);
-    const applyDate = kstDateKey(now);
+    const applyDate = recruitingOperatingDateKey(now);
     const recruitNo = positiveRecruitNo(parsed.recruitNo ?? 1);
     return this.repository.cancelOwnApplication(
       envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:cancel", { applyDate, recruitNo, expectedRevision }),

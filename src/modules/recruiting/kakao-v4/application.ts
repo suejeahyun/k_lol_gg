@@ -8,6 +8,7 @@ import {
 import type { KakaoV4ProfileAuthorizer } from "./installation-scope";
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "./canonical-command";
 import { classifyKakaoV4Command, type KakaoV4CommandClassification } from "./classifier";
+import { getKakaoV4InhouseInputErrors } from "./inhouse-snapshot-parser";
 import {
   KakaoV4CommandDispatcher,
   type KakaoV4DispatcherResult,
@@ -49,24 +50,25 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   }
   if (classification.command === "LOCAL_USER_HELP") return Object.freeze({
     kind: "REPLY" as const,
-    reply: "[K-LOL.GG 일반 도움말]\n\n파티·내전 참가\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\n내전은 사이트에 등록한 이름을 사용해 주세요.\n새 모집 만들기: 5인파티 / 내전구인 협곡\n처음 파티를 만들 때만 첫 전송 전에 시간·게임을 정해 주세요.\n자세한 사용법: 구인도움말\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
+    reply: "[K-LOL.GG 일반 도움말]\n\n파티·내전 참가\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\n협곡은 이름과 라인 필수: 이름/top,mid 또는 이름/all\n칼바람·증바람은 이름만 작성해주세요. 사이트 회원 연결은 나중에 할 수 있어요.\n새 모집 만들기: 5인파티 / 내전구인 협곡\n처음 파티를 만들 때만 첫 전송 전에 시간·게임을 정해 주세요.\n자세한 사용법: 구인도움말\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
   });
   if (classification.command === "LOCAL_RECRUIT_HELP") return Object.freeze({
     kind: "REPLY" as const,
     reply: [
       "[K-LOL.GG 구인 도움말]", "", "참가하기",
       "1. 최근 봇 명단 전체 복사", "2. 빈칸에 내 이름 입력", "3. 메시지 전체 전송 = 저장", "",
-      "내전은 사이트에 등록한 이름으로 작성해 주세요.",
-      "봇의 저장 결과를 확인하고, 다음 사람은 새 명단을 복사해 주세요.",
-      "참가할 때는 다른 사람 이름·시간·게임·양식코드를 그대로 두세요.",
-      "내전은 이름으로 먼저 접수하고 사이트 회원은 나중에 연결할 수 있어요.",
-      "내전 시간·공지는 최신 내전 양식에서 수정할 수 있어요.", "",
+      "협곡은 이름과 라인 필수: 이름/top,mid 또는 이름/all",
+      "칼바람·증바람은 이름만 작성해주세요. 사이트 회원 연결은 나중에 할 수 있어요.",
+      "동명이인은 이름(닉네임)으로 구분해주세요.",
+      "저장 결과 확인 → 내전상세 번호 → 최신 양식 복사",
+      "내전 이름·라인·시간·안내는 최신 양식에서 수정할 수 있어요.",
+      "사이트 신청·운영진 확정 항목은 해당 경로에서 수정해주세요.", "",
       "연결 오류가 나오면 내전상세 번호로 저장 여부를 먼저 확인해 주세요.", "",
       "새 모집 만들기", "파티: 5인파티", "내전: 내전구인 협곡 / 내전구인 칼바람 / 내전구인 증바람",
       "처음 파티를 만들 때만 첫 전송 전에 시간·게임을 정하고 내 이름을 넣으세요.",
       "참가가 시작된 파티는 복붙으로 시간·게임을 바꿀 수 없어요.", "",
       "파티: 구인현황 / 상세 번호 / 종료: 번호ㅉ", "내전: 내전현황 / 내전상세 번호 / 종료: 내전 번호ㅉ",
-      "내전은 매일 오전 6시 자동 종료됩니다.", "", "취소·수정이 필요할 때",
+      "내전 모집이 마감되어도 경기용 명단은 보관됩니다.", "", "취소·수정이 필요할 때",
       "상세 번호 추가/삭제 이름", "내전상세 번호 추가/삭제 이름", "내전상세 번호 수정/예비추가/예비삭제 이름/라인",
     ].join("\n"),
   });
@@ -134,7 +136,11 @@ export class KakaoV4CommandService {
         result = Object.freeze({ kind: "REPLY" as const, reply: dispatched.legacyReply });
         replayed = dispatched.replayed;
       } else if (classification.kind === "SNAPSHOT") {
-        throw new KakaoV4CommandError("INVALID_FORM");
+        const inputErrors = classification.family === "INHOUSE" ? getKakaoV4InhouseInputErrors(envelope.text) : [];
+        if (inputErrors.length === 0) throw new KakaoV4CommandError("INVALID_FORM");
+        result = Object.freeze({ kind: "REPLY" as const,
+          reply: ["✏️ 아직 저장되지 않았어요", "", ...inputErrors, "", "내전상세 번호로 최신 양식을 받아 수정해주세요."].join("\n"),
+        });
       }
     }
     if (!result) {

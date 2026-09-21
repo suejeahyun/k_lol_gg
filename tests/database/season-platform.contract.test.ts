@@ -14,7 +14,9 @@ import {
 } from "../../src/modules/seasons/domain/season";
 import { PostgresSeasonRepository } from "../../src/modules/seasons/infrastructure/postgres-season-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
-import { auditEvents, authSessions, players, seasonApplications, seasonCommandReceipts, seasonKakaoPendingApplications, seasons, userAccounts } from "../../src/platform/db/schema";
+import { auditEvents, authSessions, players, seasonApplications, seasonCommandReceipts, seasonInhouseRounds, seasonKakaoPendingApplications, seasons, userAccounts } from "../../src/platform/db/schema";
+import { recruitingOperatingDateKey } from "../../src/modules/recruiting/domain/operating-day";
+import type { KakaoSeasonSnapshotCommand } from "../../src/modules/recruiting/kakao-assistant/domain";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 const sessionActors = new Map<
@@ -1014,11 +1016,11 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
         const result = await service.upsertOwnApplication(
           command(accountActor.id, `${role.toLocaleLowerCase()}-account-user-action`),
           0,
-          { mainPosition: role === "ADMIN" ? "ADC" : "SUP", subPositions: [] },
+          { mainPosition: role === "ADMIN" ? "ADC" : "SUP", subPositions: [], reserve: true },
           now,
         );
         const application = result.body.application as { status: string };
-        assert.equal(application.status, "APPLIED");
+        assert.equal(application.status, "RESERVE");
         assert.equal((await database.select({ value: count() }).from(seasonApplications).where(
           eq(seasonApplications.playerId, playerId),
         ))[0]?.value, 1);
@@ -1198,6 +1200,71 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
       assert.ok(auditRows.some((event) => event.action === "SEASON_ENDED"));
     });
   } finally {
+    await pool.end();
+  }
+});
+
+test("site and Kakao serialize the last seat, allow explicit reserves and block closed rounds", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 5 });
+  const service = new SeasonService(new PostgresSeasonRepository(database));
+  const assistant = new PostgresKakaoAssistant(database);
+  const now = new Date();
+  const applyDate = recruitingOperatingDateKey(now);
+  const seasonId = randomUUID();
+  const suffix = randomUUID().slice(0, 8);
+  const account = approvedAccount(`seat-${suffix}`);
+  const room = `seat-room-${suffix}`;
+  const metadata = { capacity: 10, startTimeText: "21:00", scheduledStartAt: null, gameInfo: null, organizerText: null, noticeText: null };
+  let sequence = 0;
+  const send = (snapshot: KakaoSeasonSnapshotCommand) => {
+    const key = `seat-${suffix}-${++sequence}`;
+    return assistant.syncSeasonSnapshot({ actorPrincipalId: "bot:kakao:test-seat", intent: {
+      kind: "KAKAO_HMAC", keyId: "test", timestampSeconds: Math.floor(now.getTime() / 1000), nonce: key,
+      bodyDigestHex: createHash("sha256").update(key).digest("hex"), roomId: room, senderId: "test-seat", requireNonceClaim: true, transactionRecheck: true,
+    }, requestKey: key, scope: "test-seat", command: snapshot, requestId: randomUUID(), now });
+  };
+  try {
+    await database.insert(userAccounts).values(accountRow(account));
+    await database.insert(authSessions).values({ id: account.sessionId, tokenHash: randomBytes(32), userAccountId: account.id,
+      authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 30 * 60_000) });
+    await database.insert(players).values({ id: randomUUID(), userAccountId: account.id, memberName: `본인-${suffix}`,
+      memberNameNormalized: `본인-${suffix}`, nickname: `Seat${suffix}`, nicknameNormalized: `seat${suffix}`, tagLine: "QA", tagLineNormalized: "qa" });
+    await database.insert(seasons).values({ id: seasonId, name: `Seat ${suffix}`, nameNormalized: `seat ${suffix}`, status: "ACTIVE", activatedAt: now });
+    const draft = await send({ action: "RESERVE", seasonId, applyDate, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants: [] });
+    const participants = Array.from({ length: 9 }, (_, i) => ({ slotNo: i + 1, name: `가상${i}-${suffix}`, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false }));
+    const nine = await send({ action: "SYNC", seasonId, applyDate, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants,
+      observedSlotNos: Array.from({ length: 10 }, (_, i) => i + 1), copyGuard: { formCode: draft.body.formCode, operatingDate: null, saveReference: null } });
+    await assert.rejects(service.upsertOwnApplication(command(account.id, `missing-line-${suffix}`), 0, { recruitNo: 1 }, now), errorCode("RIFT_POSITION_REQUIRED"));
+    const race = await Promise.allSettled([
+      service.upsertOwnApplication(command(account.id, `last-seat-${suffix}`), 0, { recruitNo: 1, mainPosition: "TOP", subPositions: [] }, now),
+      send({ action: "SYNC", seasonId, applyDate, recruitNo: 1, mode: "RIFT", roundMetadata: metadata,
+        participants: [...participants, { ...participants[0]!, slotNo: 10, name: `열번째-${suffix}` }], observedSlotNos: Array.from({ length: 10 }, (_, i) => i + 1),
+        copyGuard: { formCode: nine.body.formCode, operatingDate: null, saveReference: null } }),
+    ]);
+    assert.equal(race.filter((result) => result.status === "fulfilled").length, 1);
+    const current = await service.getApplicationHub(account.id, 1, now);
+    assert.equal(current.counts.applied + current.counts.confirmed, 10);
+    assert.ok(current.unlinkedCount >= 9);
+    if (race[0]?.status === "fulfilled") assert.equal(race[0].value.body.notice, "시작 시간 10분 전 내전 디스코드방에 대기해주세요~");
+    else await assert.rejects(service.upsertOwnApplication(command(account.id, `full-${suffix}`), 0, { recruitNo: 1, mainPosition: "TOP" }, now), errorCode("RECRUIT_FULL"));
+    const reserve = await service.upsertOwnApplication(command(account.id, `reserve-${suffix}`), current.myApplication?.revision ?? 0,
+      { recruitNo: 1, mainPosition: "TOP", subPositions: [], reserve: true }, now);
+    assert.equal((reserve.body.application as { status: string }).status, "RESERVE");
+    assert.ok(typeof reserve.revision === "number");
+    await service.cancelOwnApplication(command(account.id, `cancel-reserve-${suffix}`), reserve.revision, { recruitNo: 1 }, now);
+    await send({ action: "FINISH", seasonId, applyDate, recruitNo: 1, participants: [] });
+    assert.equal((await service.getApplicationHub(account.id, 1, now)).round.closed, true);
+    await assert.rejects(service.upsertOwnApplication(command(account.id, `closed-${suffix}`), reserve.revision + 1,
+      { recruitNo: 1, mainPosition: "TOP", reserve: true }, now), errorCode("RECRUIT_CLOSED"));
+    await database.insert(seasonInhouseRounds).values({ id: randomUUID(), seasonId, applyDate, recruitNo: 2,
+      sourceRoomIdHash: createHash("sha256").update(room).digest(), sourceReferenceHash: randomBytes(32), mode: "ARAM", status: "IN_PROGRESS", capacity: 10 });
+    const aram = await service.upsertOwnApplication(command(account.id, `aram-${suffix}`), 0, { recruitNo: 2 }, now);
+    assert.equal((aram.body.application as { status: string }).status, "APPLIED");
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();
   }
 });

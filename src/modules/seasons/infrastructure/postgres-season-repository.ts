@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm";
 
 import { auditEvents } from "@/platform/db/schema/audit";
+import { recruitingOperatingDateKey } from "@/modules/recruiting/domain/operating-day";
 import {
   ADMIN_MUTATION_SESSION_POLICY,
   APPROVED_ACCOUNT_MUTATION_SESSION_POLICY,
@@ -25,6 +26,7 @@ import {
   seasonApplications,
   seasonCommandReceipts,
   seasonKakaoPendingApplications,
+  seasonInhouseRounds,
   seasons,
 } from "@/platform/db/schema/seasons";
 import type { V2Database } from "@/platform/db/database";
@@ -49,8 +51,8 @@ import {
   planSeasonApplicationMerge,
   planSiteApplicationMerge,
 } from "../domain/application-source-policy";
+import { assertInhouseSeatAvailable, INHOUSE_DISCORD_WAIT_NOTICE, reachedInhouseCapacity } from "../domain/inhouse-enrollment";
 import {
-  kstDateKey,
   normalizedSeasonIdentity,
   seasonAcceptsApplications,
   SEASON_COMMAND_RECEIPT_TTL_MS,
@@ -94,6 +96,7 @@ function ownApplication(row: ApplicationRow): OwnSeasonApplication {
     subPositions: row.subPositions,
     status: row.status,
     source: row.source,
+    reviewed: row.reviewedAt !== null,
     revision: row.revision,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -370,7 +373,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
   }
 
   async getApplicationHub(actorUserAccountId: string | null, now: Date, recruitNo: number) {
-    const today = kstDateKey(now);
+    const today = recruitingOperatingDateKey(now);
     let viewer: "ANONYMOUS" | "RESTRICTED" | "APPROVED" = "ANONYMOUS";
     let applicantPlayerId: string | null = null;
     let applicantPlayer: Readonly<{ id: string; displayName: string; riotId: string }> | null = null;
@@ -416,10 +419,12 @@ export class PostgresSeasonRepository implements SeasonRepository {
         participantsTruncated: false,
         selectedRecruitNo: recruitNo,
         availableRecruitNos: [1],
+        round: { mode: "RIFT", capacity: 10, closed: true, ambiguous: false },
+        unlinkedCount: 0,
       };
     }
 
-    const [applicationRoundRows, pendingRoundRows] = await Promise.all([
+    const [applicationRoundRows, pendingRoundRows, inhouseRounds] = await Promise.all([
       this.database
         .selectDistinct({ recruitNo: seasonApplications.recruitNo })
         .from(seasonApplications)
@@ -436,16 +441,30 @@ export class PostgresSeasonRepository implements SeasonRepository {
           eq(seasonKakaoPendingApplications.applyDate, today),
           eq(seasonKakaoPendingApplications.status, "ACTIVE"),
         )),
+      this.database.select().from(seasonInhouseRounds).where(and(
+        eq(seasonInhouseRounds.seasonId, season.id), eq(seasonInhouseRounds.applyDate, today),
+      )),
     ]);
     const availableRecruitNos = [...new Set([
       1,
       ...applicationRoundRows.map((row) => row.recruitNo),
       ...pendingRoundRows.map((row) => row.recruitNo),
+      ...inhouseRounds.filter((row) => row.status === "IN_PROGRESS" || row.status === "CLOSED").map((row) => row.recruitNo),
     ])].sort((left, right) => left - right);
     if (!availableRecruitNos.includes(recruitNo)) {
       throw new SeasonServiceError("INVALID_INPUT", "현재 공개된 모집 회차가 아닙니다.");
     }
 
+    const selectedRounds = inhouseRounds.filter((row) => row.recruitNo === recruitNo);
+    const selectedRound = selectedRounds[0];
+    const round = { mode: selectedRound?.mode ?? "RIFT", capacity: selectedRound?.capacity ?? 10,
+      closed: selectedRounds.length > 1 || Boolean(selectedRound && selectedRound.status !== "IN_PROGRESS"),
+      ambiguous: selectedRounds.length > 1 };
+    const pendingCounts = await this.database.select({ reserve: seasonKakaoPendingApplications.reserve, value: count() })
+      .from(seasonKakaoPendingApplications).where(and(eq(seasonKakaoPendingApplications.seasonId, season.id),
+        eq(seasonKakaoPendingApplications.applyDate, today), eq(seasonKakaoPendingApplications.recruitNo, recruitNo),
+        eq(seasonKakaoPendingApplications.status, "ACTIVE"))).groupBy(seasonKakaoPendingApplications.reserve);
+    const unlinkedCount = pendingCounts.reduce((sum, row) => sum + Number(row.value), 0);
     const publicPredicates = and(
       eq(seasonApplications.seasonId, season.id),
       eq(seasonApplications.applyDate, today),
@@ -477,6 +496,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
       if (row.status === "RESERVE") counts.reserve = row.value;
       if (row.status === "CONFIRMED") counts.confirmed = row.value;
     }
+    const linkedTotal = counts.applied + counts.reserve + counts.confirmed;
+    counts.applied += Number(pendingCounts.find((row) => !row.reserve)?.value ?? 0);
+    counts.reserve += Number(pendingCounts.find((row) => row.reserve)?.value ?? 0);
     const participantTotal = counts.applied + counts.reserve + counts.confirmed;
 
     let mine: OwnSeasonApplication | null = null;
@@ -517,16 +539,19 @@ export class PostgresSeasonRepository implements SeasonRepository {
       viewer,
       canApply: Boolean(
         applicantPlayerId &&
+        !round.closed &&
         seasonAcceptsApplications(season, now) &&
-        (!mine || mine.status === "APPLIED" || mine.status === "CANCELLED"),
+        (!mine || mine.status === "APPLIED" || mine.status === "CANCELLED" || (mine.status === "RESERVE" && !mine.reviewed)),
       ),
       hasActivePlayer: Boolean(applicantPlayerId),
       applicantPlayer,
       applyDate: today,
       participantTotal,
-      participantsTruncated: participantTotal > publicRows.length,
+      participantsTruncated: linkedTotal > publicRows.length,
       selectedRecruitNo: recruitNo,
       availableRecruitNos,
+      round,
+      unlinkedCount,
     };
   }
 
@@ -1063,7 +1088,14 @@ export class PostgresSeasonRepository implements SeasonRepository {
     applyDate: string,
     recruitNo: number,
   ) {
-    if (recruitNo === 1) return;
+    const roundRows = await transaction.select().from(seasonInhouseRounds).where(and(
+      eq(seasonInhouseRounds.seasonId, seasonId),
+      eq(seasonInhouseRounds.applyDate, applyDate),
+      eq(seasonInhouseRounds.recruitNo, recruitNo),
+    )).for("update");
+    if (roundRows.length > 1) throw new SeasonServiceError("RECRUIT_AMBIGUOUS", "같은 번호의 내전이 여러 개 있어요.");
+    if (roundRows[0]) return roundRows[0];
+    if (recruitNo === 1) return null;
     const [applicationRows, pendingRows] = await Promise.all([
       transaction.select({ id: seasonApplications.id }).from(seasonApplications).where(and(
         eq(seasonApplications.seasonId, seasonId),
@@ -1081,6 +1113,27 @@ export class PostgresSeasonRepository implements SeasonRepository {
     if (!applicationRows[0] && !pendingRows[0]) {
       throw new SeasonServiceError("INVALID_INPUT", "Kakao에서 시작되지 않은 추가 모집 회차입니다.");
     }
+    return null;
+  }
+
+  private async lockInhouseEnrollment(transaction: V2Transaction, seasonId: string, applyDate: string) {
+    await transaction.select({ id: seasons.id }).from(seasons).where(eq(seasons.id, seasonId)).for("update");
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`season-inhouse:${seasonId}:${applyDate}`}, 0))`);
+  }
+
+  private async inhouseParticipantCount(transaction: V2Transaction, seasonId: string, applyDate: string, recruitNo: number) {
+    const [members, pending] = await Promise.all([
+      transaction.select({ value: count() }).from(seasonApplications).where(and(
+        eq(seasonApplications.seasonId, seasonId), eq(seasonApplications.applyDate, applyDate),
+        eq(seasonApplications.recruitNo, recruitNo), inArray(seasonApplications.status, ["APPLIED", "CONFIRMED"]),
+      )),
+      transaction.select({ value: count() }).from(seasonKakaoPendingApplications).where(and(
+        eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.applyDate, applyDate),
+        eq(seasonKakaoPendingApplications.recruitNo, recruitNo), eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        eq(seasonKakaoPendingApplications.reserve, false),
+      )),
+    ]);
+    return Number(members[0]?.value ?? 0) + Number(pending[0]?.value ?? 0);
   }
 
   async upsertOwnApplication(
@@ -1090,8 +1143,14 @@ export class PostgresSeasonRepository implements SeasonRepository {
   ) {
     return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
+      await this.lockInhouseEnrollment(transaction, season.id, input.applyDate);
       const player = await this.actorPlayerForUpdate(transaction, input.actorUserAccountId);
-      await this.assertRecruitRoundExists(transaction, season.id, input.applyDate, input.recruitNo);
+      const round = await this.assertRecruitRoundExists(transaction, season.id, input.applyDate, input.recruitNo);
+      if (round && round.status !== "IN_PROGRESS") throw new SeasonServiceError("RECRUIT_CLOSED", "내전 모집이 마감됐어요.");
+      if ((!round || round.mode === "RIFT") && input.mainPosition === null) {
+        throw new SeasonServiceError("RIFT_POSITION_REQUIRED", "협곡은 주라인 또는 전체 가능을 직접 선택해 주세요.");
+      }
+      const mainPosition = input.mainPosition ?? "ALL";
       const currentRows = await transaction
         .select()
         .from(seasonApplications)
@@ -1107,6 +1166,12 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .limit(1);
       const current = currentRows[0];
       const mergePlan = planSiteApplicationMerge(current ?? null);
+      const beforeCount = await this.inhouseParticipantCount(transaction, season.id, input.applyDate, input.recruitNo);
+      const reserve = input.reserve === true;
+      const alreadyParticipating = current?.status === "APPLIED" || current?.status === "CONFIRMED";
+      assertInhouseSeatAvailable({ capacity: round?.capacity ?? 10, participantCount: beforeCount, alreadyParticipating, reserve });
+      const nextCount = beforeCount + (reserve ? 0 : 1) - (alreadyParticipating ? 1 : 0);
+      const notice = reachedInhouseCapacity(beforeCount, nextCount, round?.capacity ?? 10) ? INHOUSE_DISCORD_WAIT_NOTICE : null;
 
       if (!current) {
         if (input.expectedRevision !== 0) {
@@ -1120,16 +1185,18 @@ export class PostgresSeasonRepository implements SeasonRepository {
             playerId: player.id,
             applyDate: input.applyDate,
             recruitNo: input.recruitNo,
-            mainPosition: input.mainPosition,
+            mainPosition,
             subPositions: [...input.subPositions],
-            status: "APPLIED",
+            status: reserve ? "RESERVE" : "APPLIED",
             source: "SITE",
+            sourceRoomIdHash: round?.sourceRoomIdHash ?? null,
+            sourceMode: round?.mode ?? null,
             createdAt: now,
             updatedAt: now,
           })
           .returning();
         const created = rows[0]!;
-        const body = publicApplicationBody(created);
+        const body = { ...publicApplicationBody(created), notice };
         await this.auditWriter.append(transaction, {
           requestId: envelope.requestId,
           actorUserAccountId: envelope.actorUserAccountId,
@@ -1152,16 +1219,18 @@ export class PostgresSeasonRepository implements SeasonRepository {
       const rows = await transaction
         .update(seasonApplications)
         .set({
-          mainPosition: input.mainPosition,
+          mainPosition,
           subPositions: [...input.subPositions],
-          status: "APPLIED",
+          status: reserve ? "RESERVE" : "APPLIED",
           reviewNote: null,
           reviewedAt: null,
           reviewedByUserAccountId: null,
           cancelledAt: null,
           source: "SITE",
-          sourceSlotNo: null,
+          sourceSlotNo: current.sourceSlotNo,
           sourceReferenceHash: null,
+          sourceRoomIdHash: round?.sourceRoomIdHash ?? current.sourceRoomIdHash,
+          sourceMode: round?.mode ?? current.sourceMode,
           revision: sql`${seasonApplications.revision} + 1`,
           updatedAt: now,
         })
@@ -1174,7 +1243,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .returning();
       const updated = rows[0];
       if (!updated) throw new SeasonServiceError("PRECONDITION_FAILED", "신청 revision이 변경되었습니다.");
-      const body = publicApplicationBody(updated);
+      const body = { ...publicApplicationBody(updated), notice };
       await this.auditWriter.append(transaction, {
         requestId: envelope.requestId,
         actorUserAccountId: envelope.actorUserAccountId,
@@ -1202,8 +1271,10 @@ export class PostgresSeasonRepository implements SeasonRepository {
   ) {
     return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
+      await this.lockInhouseEnrollment(transaction, season.id, applyDate);
       const player = await this.actorPlayerForUpdate(transaction, envelope.actorUserAccountId);
-      await this.assertRecruitRoundExists(transaction, season.id, applyDate, recruitNo);
+      const round = await this.assertRecruitRoundExists(transaction, season.id, applyDate, recruitNo);
+      if (round && round.status !== "IN_PROGRESS") throw new SeasonServiceError("RECRUIT_CLOSED", "내전 모집이 마감됐어요.");
       const currentRows = await transaction
         .select()
         .from(seasonApplications)
@@ -1222,7 +1293,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
       if (current.revision !== expectedRevision) {
         throw new SeasonServiceError("PRECONDITION_FAILED", "신청 revision이 변경되었습니다.");
       }
-      if (current.status !== "APPLIED") {
+      if (current.status !== "APPLIED" && !(current.status === "RESERVE" && current.reviewedAt === null)) {
         throw new SeasonServiceError("INVALID_TRANSITION", "접수 상태의 신청만 본인이 취소할 수 있습니다.");
       }
       const rows = await transaction
@@ -1262,6 +1333,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
     now: Date,
   ) {
     return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
+      const seed = (await transaction.select().from(seasonApplications).where(eq(seasonApplications.id, input.id)).limit(1))[0];
+      if (!seed) throw new SeasonServiceError("NOT_FOUND", "참가 신청을 찾을 수 없습니다.");
+      await this.lockInhouseEnrollment(transaction, seed.seasonId, seed.applyDate);
       const currentRows = await transaction
         .select()
         .from(seasonApplications)
@@ -1275,6 +1349,12 @@ export class PostgresSeasonRepository implements SeasonRepository {
       }
       if (current.status === "CANCELLED") {
         throw new SeasonServiceError("INVALID_TRANSITION", "취소된 신청은 검토할 수 없습니다.");
+      }
+      if (input.status === "CONFIRMED") {
+        const round = await this.assertRecruitRoundExists(transaction, current.seasonId, current.applyDate, current.recruitNo);
+        const total = await this.inhouseParticipantCount(transaction, current.seasonId, current.applyDate, current.recruitNo);
+        assertInhouseSeatAvailable({ capacity: round?.capacity ?? 10, participantCount: total,
+          alreadyParticipating: current.status === "APPLIED" || current.status === "CONFIRMED", reserve: false });
       }
       const rows = await transaction
         .update(seasonApplications)
@@ -1316,6 +1396,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
     now: Date,
   ) {
     return this.idempotent(envelope, "SUPER_ADMIN_MUTATION", async (transaction) => {
+      const seed = (await transaction.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.id, input.id)).limit(1))[0];
+      if (!seed) throw new SeasonServiceError("NOT_FOUND", "Kakao 접수를 찾을 수 없습니다.");
+      await this.lockInhouseEnrollment(transaction, seed.seasonId, seed.applyDate);
       const pendingRows = await transaction
         .select()
         .from(seasonKakaoPendingApplications)
@@ -1354,6 +1437,12 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .limit(1);
       const existing = existingRows[0] ?? null;
       const plan = planSeasonApplicationMerge(existing);
+      if (plan.action !== "PRESERVE" && input.applicationStatus === "APPLIED") {
+        const round = await this.assertRecruitRoundExists(transaction, pending.seasonId, pending.applyDate, pending.recruitNo);
+        const total = await this.inhouseParticipantCount(transaction, pending.seasonId, pending.applyDate, pending.recruitNo);
+        assertInhouseSeatAvailable({ capacity: round?.capacity ?? 10, participantCount: total,
+          alreadyParticipating: !pending.reserve || existing?.status === "APPLIED" || existing?.status === "CONFIRMED", reserve: false });
+      }
       if (existing?.source === "KAKAO" && (
         (existing.sourceRoomIdHash !== null && (pending.sourceRoomIdHash === null ||
           !Buffer.from(existing.sourceRoomIdHash).equals(pending.sourceRoomIdHash))) ||
@@ -1374,6 +1463,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
           applyDate: pending.applyDate,
           recruitNo: pending.recruitNo,
           sourceSlotNo: pending.slotNo,
+          sourceDisplayName: pending.suppliedName,
           mainPosition: pending.mainPosition,
           subPositions: pending.subPositions,
           status: input.applicationStatus,
@@ -1390,6 +1480,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
       } else if (plan.action === "REFRESH_KAKAO") {
         const refreshedRows = await transaction.update(seasonApplications).set({
           sourceSlotNo: pending.slotNo,
+          sourceDisplayName: pending.suppliedName,
           mainPosition: pending.mainPosition,
           subPositions: pending.subPositions,
           status: input.applicationStatus,
@@ -1465,6 +1556,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
     now: Date,
   ) {
     return this.idempotent(envelope, "SUPER_ADMIN_MUTATION", async (transaction) => {
+      const seed = (await transaction.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.id, id)).limit(1))[0];
+      if (!seed) throw new SeasonServiceError("NOT_FOUND", "Kakao 보류 신청을 찾을 수 없습니다.");
+      await this.lockInhouseEnrollment(transaction, seed.seasonId, seed.applyDate);
       const currentRows = await transaction.select().from(seasonKakaoPendingApplications)
         .where(eq(seasonKakaoPendingApplications.id, id)).for("update").limit(1);
       const current = currentRows[0];

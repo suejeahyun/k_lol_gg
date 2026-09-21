@@ -50,13 +50,7 @@ test("내전 빠른 명단 응답은 결과를 한 줄로 요약하고 본명과
     roundMetadata: { recruitNo: 1, mode: "RIFT", capacity: 10, startTimeText: "21:00", scheduledStartAt: null, gameInfo: null, organizerText: "민서", noticeText: null, revision: 1 },
   }, { action: "ADD", recruitNumber: 1, name: "명환" });
 
-  assert.equal(reply, [
-    "[K-LOL.GG 내전 #1 명단] 추가 완료: 명환 현재 3/10명 · 예비 0명",
-    "",
-    "1. 민서 / 크리티컬히트",
-    "2. 정민 / 원딜은죄인이다",
-    "3. 명환 / 계란 안에 쌀 넣...",
-  ].join("\n"));
+  assert.equal(reply, "추가 완료: 명환\n\n✅ 내전수정 완료 · #1");
 });
 
 test("내전 빠른 추가 대상이 미등록이어도 이름과 접수 인원에 포함한다", () => {
@@ -86,11 +80,9 @@ test("내전 빠른 추가 대상이 미등록이어도 이름과 접수 인원�
     roundMetadata: { recruitNo: 1, mode: "RIFT", capacity: 10, startTimeText: "21:00", scheduledStartAt: null, gameInfo: null, organizerText: "민서", noticeText: null, revision: 1 },
   }, { action: "ADD", recruitNumber: 1, name: "신규회원" });
 
-  assert.equal(reply, [
-    "[K-LOL.GG 내전 #1 명단] 추가 완료: 신규회원 현재 1/10명 · 예비 0명",
-    "",
-    "4. 신규회원",
-  ].join("\n"));
+  assert.match(reply, /추가 완료: 신규회원/u);
+  assert.match(reply, /참가 접수는 완료됐어요/u);
+  assert.match(reply, /가입했다면 사이트 등록 이름으로 수정/u);
   assert.doesNotMatch(reply, /빠른 추가|빠른 삭제|마감:/u);
 });
 
@@ -820,7 +812,7 @@ test("scrim status requests only the scrim projection", async () => {
   assert.match(result.legacyReply, /K-LOL\.GG 스크림 현황/u);
 });
 
-test("season authoritative zero-person snapshot stays one transactional assistant call", async () => {
+test("season authoritative zero-person snapshot writes once then reads the overview", async () => {
   const state = harness();
   const featuresContext: KakaoV4DispatchContext = {
     ...context,
@@ -831,9 +823,10 @@ test("season authoritative zero-person snapshot stays one transactional assistan
     domain: "SEASON", action: "SYNC", seasonId: "11111111-1111-4111-8111-111111111111",
     applyDate: "2026-09-10", recruitNumber: 2, mode: "RIFT", participants: [],
   });
-  assert.equal(state.seasonCalls.length, 1);
+  assert.equal(state.seasonCalls.length, 2);
+  assert.equal((state.seasonCalls[1]?.command as { action: string }).action, "STATUS");
   assert.equal((state.seasonCalls[0]?.command as { action: string }).action, "SYNC");
-  assert.match(result.legacyReply, /취소 2/u);
+  assert.match(result.legacyReply, /내전수정 완료/u);
 });
 
 test("season SYNC exposes the latest copy reply to both ordinary and strict clients", async () => {
@@ -854,7 +847,7 @@ test("season SYNC exposes the latest copy reply to both ordinary and strict clie
     participants: [],
   };
   const normal = await state.dispatcher.dispatch(featuresContext, command);
-  assert.equal(normal.legacyReply, legacyReply);
+  assert.ok(normal.legacyReply.endsWith(legacyReply));
   assert.match(normal.legacyReply, /명단 업데이트/u);
 
   const strict = await state.dispatcher.dispatch({
@@ -866,7 +859,7 @@ test("season SYNC exposes the latest copy reply to both ordinary and strict clie
       responseFormat: KAKAO_V1_STRICT_RESPONSE_FORMAT,
     },
   }, command);
-  assert.equal(strict.legacyReply, legacyReply);
+  assert.equal(strict.legacyReply, normal.legacyReply);
 });
 
 test("V1 strict season STATUS maps no active season to the canonical empty reply only", async () => {

@@ -6,13 +6,15 @@ V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 
 
 - 공개·계정·관리자 영역의 App Router 화면 105개와 API route 198개
 - 가입·로그인·TOTP, 플레이어·시즌·경기·통계·MMR·팀 도구·대회·징계·미디어·운영 기능
-- PostgreSQL 18과 Drizzle 기준 101개 테이블, 전진 migration 35개(head `0034_kakao_room_capability_profiles`)
+- PostgreSQL 18과 Drizzle 기준 103개 테이블, 전진 migration의 현재 head는 [migration journal](drizzle/meta/_journal.json) 참조
 - Riot·Kakao·Blob 경계를 운영 자격증명과 분리해 검증할 수 있는 adapter·보안 계약
 - V1 호환 경로와 Kakao V4 명령/양식 흐름, PWA와 반응형 사용자·관리자 셸
 
 2026-09-11 운영 검증 기준 커밋 `8dcbee42`의 Vercel Production 배포 및 health/DB 연결을 확인했습니다. 다만 Kakao R5 휴대폰 산출물은 아직 실제 MessengerBot R에 설치하지 않았고, 외부 연동별 실기기·실데이터 검증 범위도 서로 다릅니다. 정확한 소스·서버·DB·휴대폰 상태는 `docs/STATUS.md`에서 구분합니다.
 
 ## 로컬 실행
+
+2026-09-21 내전 복사 양식 패치는 소스·로컬 검증을 마쳤으며 **운영 미배포**입니다. [변경 사항과 QA](docs/qa-evidence/kakao-inhouse-copy-v1.0.0-2026-09-21/README.md)에서 확인할 수 있습니다.
 
 ```bash
 npm install

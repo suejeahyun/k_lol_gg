@@ -433,6 +433,7 @@ async function runContractTests(connectionString: string): Promise<void> {
 
   const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
   const allTestFiles = [
+    "tests/database/inhouse-migration.contract.test.ts",
     "tests/database/data-platform.contract.test.ts",
     "tests/database/auth-totp-lifecycle.contract.test.ts",
     "tests/database/player-admin.contract.test.ts",
@@ -464,7 +465,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     statistics: ["tests/database/statistics-projection.contract.test.ts"],
     "team-tools": ["tests/database/team-balance-draft.contract.test.ts"],
     mmr: ["tests/database/mmr-projection.contract.test.ts"],
-    recruiting: ["tests/database/recruiting.contract.test.ts", "tests/database/operation-forms.contract.test.ts", "tests/database/kakao-assistant.contract.test.ts", "tests/database/kakao-form-snapshots.contract.test.ts", "tests/database/kakao-room-registry.contract.test.ts", "tests/database/season-platform.contract.test.ts", "tests/kakao-v4-input-tolerance-p0.test.ts"],
+    recruiting: ["tests/database/inhouse-migration.contract.test.ts", "tests/database/recruiting.contract.test.ts", "tests/database/operation-forms.contract.test.ts", "tests/database/kakao-assistant.contract.test.ts", "tests/database/kakao-form-snapshots.contract.test.ts", "tests/database/kakao-room-registry.contract.test.ts", "tests/database/season-platform.contract.test.ts", "tests/kakao-v4-input-tolerance-p0.test.ts"],
     "kakao-v4": ["tests/kakao-v4-input-tolerance-p0.test.ts"],
     media: ["tests/database/media.contract.test.ts"],
     events: ["tests/database/event-competition.contract.test.ts"],

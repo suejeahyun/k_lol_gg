@@ -63,7 +63,7 @@ test("[P0-INHOUSE-LIVE-01] 동휘/김동휘 실양식은 Mid all을 복구해 �
     if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected SEASON/SYNC");
     assert.deepEqual(command.participants, [
       { slotNo: 1, name: "지오", riotId: null, mainPosition: "ADC", subPositions: ["MID"], reserve: false },
-      { slotNo: 2, name: secondName, riotId: null, mainPosition: "MID", subPositions: [], reserve: false },
+      { slotNo: 2, name: secondName, riotId: null, mainPosition: "MID", subPositions: ["TOP", "JGL", "ADC", "SUP"], reserve: false },
     ]);
 
     let dispatchCount = 0;
@@ -113,7 +113,7 @@ test("[P0-INHOUSE-LIVE-02] slash 계약에 맞춘 MID 또는 ALL 입력은 이�
   }
 });
 
-test("[P0-INHOUSE-LIVE-03] Mid all 복구는 mainPosition MID를 유지하고 ALL 부라인을 저장하지 않는다", () => {
+test("[P0-INHOUSE-LIVE-03] Mid all 복구는 mainPosition MID를 유지하고 나머지 네 부라인을 저장한다", () => {
   const parsed = parseKakaoV4InhouseParticipantRow("2.동휘/M/M/Mid all", "RIFT");
   assert.equal(parsed.matched, true);
   if (!parsed.matched) assert.fail("expected a numbered row");
@@ -124,7 +124,7 @@ test("[P0-INHOUSE-LIVE-03] Mid all 복구는 mainPosition MID를 유지하고 AL
     name: "동휘",
     riotId: null,
     mainPosition: "MID",
-    subPositions: [],
+    subPositions: ["TOP", "JGL", "ADC", "SUP"],
     reserve: false,
   });
   assert.deepEqual(parsed.diagnostics, [{

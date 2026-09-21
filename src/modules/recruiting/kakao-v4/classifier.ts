@@ -214,8 +214,8 @@ function countFilledNumberedRows(text: string) {
 }
 
 function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
-  const compactInhouse = /^\s*\[내전\s*#(\d+)\]\s*\d+\/\d+명\s*$/mu.exec(text);
-  const compactMode = /^\s*》\s*모드\s*[:：]\s*(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(text)?.[1];
+  const compactInhouse = /^\s*\[내전\s*#\s*(\d+)\]\s*(?:(협곡|칼바람|증바람|증강칼바람)\s*·\s*)?\d+\s*\/\s*\d+명\s*$/mu.exec(text);
+  const compactMode = compactInhouse?.[2] ?? /^\s*》\s*모드\s*[:：]\s*(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(text)?.[1];
   if (compactInhouse && compactMode) {
     return recognized("INHOUSE_SNAPSHOT", text, {
       recruitNumber: Number(compactInhouse[1]),
@@ -394,7 +394,7 @@ function classifyInhouse(text: string): KakaoV4RecognizedCommand | null {
   const modeToken = argumentsText.split(/\s+/u)[0]?.toLowerCase() ?? "";
   const modes: Readonly<Record<string, string>> = Object.freeze({
     협곡: "RIFT", 소환사의협곡: "RIFT", rift: "RIFT", 칼바람: "ARAM", 칼바람아수라장: "ARAM", aram: "ARAM",
-    증바: "AUGMENT_ARAM", 증바람: "AUGMENT_ARAM", 증강칼바람: "AUGMENT_ARAM", augmentaram: "AUGMENT_ARAM",
+    증바: "AUGMENT_ARAM", 증바람: "AUGMENT_ARAM", 증칼: "AUGMENT_ARAM", 증강칼바람: "AUGMENT_ARAM", augmentaram: "AUGMENT_ARAM",
   });
   return recognized("INHOUSE_CREATE", text, { mode: modes[modeToken] ?? null, argumentsText: argumentsText || null });
 }

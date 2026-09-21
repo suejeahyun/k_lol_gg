@@ -11,8 +11,8 @@ import { planInhouseCopyAdditions, type InhouseCopyRow } from "../src/modules/re
 const baseForm = [
   "📢 내전하실분 #9", " 》협곡", " 》2026-09-20 21:00 시작", " 》게임정보 :",
   ` 》저장기준 : 2026-09-20 / S${"a".repeat(32)}`, "👥 1/10명", "", "*참가 신청 양식*",
-  "이름", "EX) 1.지후", "", "1. 서지오", "2. 민규", ...Array.from({ length: 8 }, (_, index) => `${index + 3}.`),
-  "", "예비 1. 지후", "", "라인 선택: 이름/주라인/부라인 (예: 지후/AD/MD)", "", "빈 칸에 내 이름 입력 → 메시지 전체 전송 = 저장",
+  "이름", "EX) 1.지후", "", "1. 서지오/all", "2. 민규/all", ...Array.from({ length: 8 }, (_, index) => `${index + 3}.`),
+  "", "예비 1. 지후/all", "", "라인 선택: 이름/주라인/부라인 (예: 지후/AD/MD)", "", "빈 칸에 내 이름 입력 → 메시지 전체 전송 = 저장",
 ].join("\n");
 
 function parse(text: string) {
@@ -22,14 +22,14 @@ function parse(text: string) {
   });
 }
 
-test("inhouse copy accepts names-only main/reserve rows and preserves save reference separately from notices", () => {
+test("inhouse copy requires explicit lanes for RIFT main/reserve rows and preserves save reference separately from notices", () => {
   const command = parse(baseForm);
   if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected complete copy form");
   assert.deepEqual(command.copyGuard, { operatingDate: "2026-09-20", saveReference: `S${"a".repeat(32)}` });
   assert.deepEqual(command.participants.map(({ name, slotNo, reserve, nameOnly }) => ({ name, slotNo, reserve, nameOnly })), [
-    { name: "서지오", slotNo: 1, reserve: false, nameOnly: true },
-    { name: "민규", slotNo: 2, reserve: false, nameOnly: true },
-    { name: "지후", slotNo: 11, reserve: true, nameOnly: true },
+    { name: "서지오", slotNo: 1, reserve: false, nameOnly: undefined },
+    { name: "민규", slotNo: 2, reserve: false, nameOnly: undefined },
+    { name: "지후", slotNo: 11, reserve: true, nameOnly: undefined },
   ]);
   assert.equal(command.roundMetadata?.noticeText, null);
   assert.equal(command.roundMetadata?.organizerText, null);
@@ -44,11 +44,11 @@ test("inhouse copy rejects malformed/duplicate save references and marks old for
   assert.deepEqual(legacy.copyGuard, { operatingDate: null, saveReference: null });
 });
 
-test("inhouse copy still accepts optional lanes and routes malformed lane input to review", () => {
+test("inhouse copy accepts valid lanes and rejects malformed lane input", () => {
   const positioned = parseKakaoV4InhouseParticipantRow("2. 민규/MID/SUP", "RIFT");
   assert.equal(positioned.matched && positioned.valid && positioned.participant?.mainPosition, "MID");
   const malformed = parseKakaoV4InhouseParticipantRow("2. 민규/MID/unknown", "RIFT");
-  assert.equal(malformed.matched && !malformed.valid && malformed.participant?.reviewRequired, true);
+  assert.equal(malformed.matched && !malformed.valid, true);
 });
 
 test("inhouse stale forms return the latest copy without retrying the mutation, and old days show today's rounds", async () => {
@@ -92,7 +92,7 @@ test("inhouse stale forms return the latest copy without retrying the mutation, 
 test("compact inhouse copies retain site-linked optional lanes and separate review rows from participants", () => {
   const form = ["신청 저장: 1. 서지오", "", "[내전 #9] 1/10명", "》모드: 협곡", "》시작: 미정", "",
     "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송", "라인 선택: 이름/주라인/부라인", "",
-    "1. 서지오", "2. (회원 확인 중)", "3. 민규/MID/SUP", ...Array.from({ length: 7 }, (_, i) => `${i + 4}.`),
+    "1. 서지오/all", "2. 가입전/all", "3. 민규/MID/SUP", ...Array.from({ length: 7 }, (_, i) => `${i + 4}.`),
     "", "예비 1.", "", "회원 확인 필요 1명 · 아직 참가 확정 전", "확인 2. 가입전", "", "양식코드: ABCDE-FGHJK"].join("\n");
   const command = parse(form);
   if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected compact form");
@@ -100,7 +100,7 @@ test("compact inhouse copies retain site-linked optional lanes and separate revi
   assert.equal(command.roundMetadata?.startTimeText, null);
   assert.equal(command.roundMetadata?.noticeText, null);
   assert.deepEqual(command.participants.map((row) => [row.slotNo, row.name, row.mainPosition, row.reviewRequired ?? false]), [
-    [1, "서지오", "ALL", false], [2, "가입전", "ALL", true], [3, "민규", "MID", false],
+    [1, "서지오", "ALL", false], [2, "가입전", "ALL", false], [3, "민규", "MID", false],
   ]);
   assert.equal(parse(`${form}\n양식코드: ABCDE-FGHJK`), null);
   assert.equal(parse(form.replace("ABCDE-FGHJK", "broken")), null);
@@ -123,37 +123,36 @@ test("copy delta preserves latest rows, merges only pure additions, and never re
 
 const pendingCopyForm = [
   "[내전 #9] 1/10명", "》모드: 협곡", "》시작: 21:00", "",
-  "1. 검사갑", "2. (회원 확인 중)", ...Array.from({ length: 8 }, (_, index) => `${index + 3}.`),
+  "1. 검사갑/all", "2. (회원 확인 중)", ...Array.from({ length: 8 }, (_, index) => `${index + 3}.`),
   "", "예비 1.", "", "회원 확인 필요 1명 · 아직 참가 확정 전", "확인 2. 검사를", "", "양식코드: ABCDE-FGHJK",
 ].join("\n");
 
 test("old pending footers restore placeholders but never override a corrected body row", () => {
   for (const footer of ["확인 2. 검사를", "확인 2."]) {
-    const edited = pendingCopyForm.replace("2. (회원 확인 중)", "2. 새이름").replace("확인 2. 검사를", footer);
+    const edited = pendingCopyForm.replace("2. (회원 확인 중)", "2. 새이름/all").replace("확인 2. 검사를", footer);
     const command = parse(edited);
     if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("pending name correction must parse");
     assert.equal(command.participants.find((row) => row.slotNo === 2)?.name, "새이름");
     assert.equal(command.participants.find((row) => row.slotNo === 2)?.reviewRequired, undefined);
   }
   const unchanged = parse(pendingCopyForm);
-  if (unchanged?.domain !== "SEASON" || unchanged.action !== "SYNC") assert.fail("old placeholder must still parse");
-  assert.equal(unchanged.participants.find((row) => row.slotNo === 2)?.name, "검사를");
+  assert.equal(unchanged, null, "RIFT placeholders without an explicit lane require correction");
   assert.equal(parse(`${pendingCopyForm}\n확인 2. 다른이름`), null, "duplicate footers remain ambiguous");
   assert.equal(parse(`${pendingCopyForm}\n2. 다른이름`), null, "duplicate body slots remain ambiguous");
 });
 
 test("copy start text preserves free-form event descriptions without inventing a scheduled clock", () => {
   for (const value of ["저티어내전 최티E3까지 9시 시작", "9시", "모이면 시작"]) {
-    const command = parse(pendingCopyForm.replace("21:00", value));
+    const command = parse(pendingCopyForm.replace("2. (회원 확인 중)", "2. 검사를/all").replace("21:00", value));
     if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("free-form start must parse");
     assert.equal(command.roundMetadata?.startTimeText, value);
     assert.equal(command.roundMetadata?.scheduledStartAt, null);
   }
-  const clock = parse(pendingCopyForm.replace("21:00", "9:30"));
+  const clock = parse(pendingCopyForm.replace("2. (회원 확인 중)", "2. 검사를/all").replace("21:00", "9:30"));
   if (clock?.domain !== "SEASON" || clock.action !== "SYNC") assert.fail("explicit clock must parse");
   assert.equal(clock.roundMetadata?.startTimeText, "09:30");
   assert.match(clock.roundMetadata?.scheduledStartAt ?? "", /T00:30:00\.000Z$/u);
-  for (const value of ["", "가".repeat(33), "모이면\u0007시작"]) {
+  for (const value of ["가".repeat(33), "모이면\u0007시작"]) {
     assert.equal(parse(pendingCopyForm.replace("21:00", value)), null);
   }
 });

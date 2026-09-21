@@ -12,7 +12,7 @@ export type KakaoV4InhouseParticipant = Readonly<{
   mainPosition: SeasonApplicationPosition;
   subPositions: readonly SeasonApplicationPosition[];
   reserve: boolean;
-  /** A name-only copy keeps any positions already saved for this member. */
+  /** Kept for snapshots saved before explicit RIFT positions became mandatory. */
   nameOnly?: true;
   /** Internal V4 hint: preserve the row for manual review instead of auto-matching it. */
   reviewRequired?: true;
@@ -57,15 +57,23 @@ function looksLikeLegacyFullParticipant(value: string) {
     (fields[2] === "" || LEGACY_TIER_TOKEN.test(fields[2]));
 }
 
+function positionTokens(value: string) {
+  // A comma or slash always separates actual choices. Do not turn a trailing
+  // comma into a valid main-only entry by filtering its empty token away.
+  const fields = value.split(/[/,，、]/u).map((field) => field.trim());
+  if (fields.some((field) => !field)) return null;
+  return fields.flatMap((field) => field.split(/\s+/u));
+}
+
 export function parseKakaoV4InhousePositionShortcut(value: string): KakaoV4InhouseParticipant | null {
   const normalized = value.normalize("NFKC").trim();
   if (!normalized || /[\r\n\u2028\u2029]/u.test(normalized)) return null;
   const fields = normalized.split("/").map((field) => field.trim());
   if (fields.length < 2 || fields.some((field) => !field)) return null;
   const name = fields[0]!;
-  const positionTokens = fields.slice(1).flatMap((field) => field.split(/[\s,，、]+/u)).filter(Boolean);
-  if (positionTokens.length < 1) return null;
-  const positions = positionTokens.map(seasonPosition);
+  const tokens = positionTokens(fields.slice(1).join("/"));
+  if (!tokens?.length) return null;
+  const positions = tokens.map(seasonPosition);
   if (positions.some((position) => position === null)) return null;
   const mainPosition = positions[0]!;
   const requestedSubPositions = positions.slice(1) as SeasonApplicationPosition[];
@@ -152,13 +160,9 @@ export function parseKakaoV4InhouseParticipantRow(
     });
   }
   if (fields.length === 1) {
-    return Object.freeze({
-      matched: true, valid: true, slotNo,
-      participant: Object.freeze({ slotNo, name, riotId: null, mainPosition: "ALL", subPositions: Object.freeze([]), reserve, nameOnly: true }),
-      diagnostics: Object.freeze([]),
-    });
+    return invalid(slotNo, "mainPosition", null);
   }
-  if (fields.length < 4) {
+  if (!looksLikeLegacyFullParticipant(value)) {
     const shortcut = parseKakaoV4InhousePositionShortcut(value);
     if (shortcut) return Object.freeze({
       matched: true,
@@ -167,21 +171,26 @@ export function parseKakaoV4InhouseParticipantRow(
       participant: Object.freeze({ ...shortcut, slotNo, reserve }),
       diagnostics: Object.freeze([]),
     });
-    return invalid(slotNo, "mainPosition", reviewParticipant(slotNo, name, "ALL", [], reserve));
+    return invalid(slotNo, "mainPosition", null);
   }
 
   const positionFields = fields.slice(3);
-  const positionTokens = positionFields.flatMap((field) => field.split(/[\s,，]+/u)).filter(Boolean);
+  // Older five-field forms allow an empty final sub-position, but still need
+  // an explicit valid main position. Empty comma-separated choices are errors.
+  const populatedPositionFields = [...positionFields];
+  if (populatedPositionFields.length > 1 && populatedPositionFields.at(-1) === "") populatedPositionFields.pop();
+  const tokens = positionTokens(populatedPositionFields.join("/"));
+  if (!tokens?.length) return invalid(slotNo, "mainPosition", null);
   const diagnostics: KakaoV4InhouseParticipantDiagnostic[] = [];
-  if (positionFields.length === 1 && positionTokens.length >= 2) {
+  if (positionFields.length === 1 && tokens.length >= 2) {
     diagnostics.push(Object.freeze({ code: "RECOVERED_MISSING_POSITION_DELIMITER", field: "mainPosition/subPositions" }));
   }
 
-  const mainPosition = seasonPosition(positionTokens[0] ?? "");
+  const mainPosition = seasonPosition(tokens[0] ?? "");
   if (!mainPosition) {
     return invalid(slotNo, "mainPosition", reviewParticipant(slotNo, name, "ALL", [], reserve), Object.freeze(diagnostics));
   }
-  const rawSubPositions = positionTokens.slice(1)
+  const rawSubPositions = tokens.slice(1)
     .filter((field) => field.length > 0 && !isEmptySubPosition(field));
   const parsedSubPositions = rawSubPositions.map(seasonPosition);
   if (parsedSubPositions.some((position) => position === null)) {
@@ -192,11 +201,11 @@ export function parseKakaoV4InhouseParticipantRow(
       Object.freeze(diagnostics),
     );
   }
-  const subPositions = parsedSubPositions.filter((position): position is SeasonApplicationPosition => Boolean(
-    position && position !== "ALL" && position !== mainPosition,
-  ));
+  const subPositions = parsedSubPositions.includes("ALL")
+    ? RIFT_POSITIONS.filter((position) => position !== mainPosition)
+    : parsedSubPositions.filter((position): position is SeasonApplicationPosition => Boolean(position && position !== mainPosition));
   const uniqueSubPositions = Object.freeze([...new Set(subPositions)]);
-  if (mainPosition === "ALL" && uniqueSubPositions.length > 0) {
+  if (mainPosition === "ALL" && parsedSubPositions.length > 0) {
     return invalid(slotNo, "subPositions", reviewParticipant(slotNo, name, "ALL", [], reserve), Object.freeze(diagnostics));
   }
   return Object.freeze({
@@ -213,4 +222,73 @@ export function parseKakaoV4InhouseParticipantRow(
     }),
     diagnostics: Object.freeze(diagnostics),
   });
+}
+
+/** User-facing diagnostics for a rejected full copy, with no partial mutation. */
+export function getKakaoV4InhouseInputErrors(
+  text: string,
+  mode?: "RIFT" | "ARAM" | "AUGMENT_ARAM",
+): readonly string[] {
+  const normalized = text.normalize("NFKC").replace(/\r\n?/gu, "\n");
+  const modernHeader = /^\s*\[내전\s*#\s*\d{1,3}\]\s*(?:(협곡|칼바람|증바람|증강칼바람)\s*·\s*)?\d{1,2}\s*\/\s*(\d{1,2})명\s*$/mu.exec(normalized);
+  const modeLabel = modernHeader?.[1] ?? /^\s*》\s*(?:모드\s*[:：]\s*)?(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(normalized)?.[1];
+  const resolvedMode = mode ?? (modeLabel === "협곡" ? "RIFT" : modeLabel === "칼바람" ? "ARAM" : modeLabel ? "AUGMENT_ARAM" : null);
+  const capacity = Number(modernHeader?.[2] ?? /^\s*👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명\s*$/mu.exec(normalized)?.[1] ?? 0);
+  if (!resolvedMode || capacity < 2 || capacity > 20) return Object.freeze([]);
+
+  const errors: string[] = [];
+  const mainSlots = new Set<number>();
+  const bodySlots = new Set<number>();
+  const rows = new Map<number, Readonly<{ name: string; label: string }>>();
+  const pendingRows: string[] = [];
+  for (const line of normalized.split("\n")) {
+    if (/^\s*확인\s+/u.test(line)) {
+      pendingRows.push(line.replace(/^\s*확인\s+/u, ""));
+      continue;
+    }
+    const row = parseKakaoV4InhouseParticipantRow(line, resolvedMode);
+    if (!row.matched) continue;
+    const reserve = /^\s*(?:예비|대기)\s*\d/u.test(line);
+    const slotNo = reserve ? capacity + row.slotNo : row.slotNo;
+    const label = `${reserve ? "예비 " : ""}${row.slotNo}번`;
+    if (!row.valid && !modernHeader && mainSlots.size >= capacity && !reserve && !line.includes("/")) continue;
+    if (!reserve) mainSlots.add(row.slotNo);
+    if (row.slotNo < 1 || row.slotNo > capacity) {
+      errors.push(`${label}은 양식 번호 범위를 벗어났어요. 최신 내전상세 양식을 복사해 주세요.`);
+      continue;
+    }
+    if (modernHeader && bodySlots.has(slotNo)) errors.push(`${label}이 두 번 들어 있어요. 각 번호는 한 줄만 남겨 주세요.`);
+    bodySlots.add(slotNo);
+    if (!row.valid) {
+      if (modernHeader && /^\s*\d{1,2}\.\s*\(회원 확인 중\)\s*$/u.test(line)) continue;
+      errors.push(row.field === "name"
+        ? `${label}에 이름을 입력해 주세요.`
+        : `${label}은 협곡 라인이 필요해요. 예: 이름/top,mid 또는 이름/all. 빈 구분자와 all,mid는 사용할 수 없어요.`);
+      continue;
+    }
+    if (row.participant) rows.set(slotNo, { name: row.participant.name, label });
+    else rows.delete(slotNo);
+  }
+  // Old forms may have pending names below the roster. The edited body is
+  // authoritative, while an unchanged placeholder still needs explicit lanes.
+  for (const line of pendingRows) {
+    const row = parseKakaoV4InhouseParticipantRow(line, resolvedMode);
+    if (!row.matched) continue;
+    const reserve = /^\s*(?:예비|대기)\s*\d/u.test(line);
+    const slotNo = reserve ? capacity + row.slotNo : row.slotNo;
+    if (rows.has(slotNo)) continue;
+    if (!row.valid) errors.push(`${reserve ? "예비 " : ""}${row.slotNo}번은 협곡 라인이 필요해요. 본문에 이름/top,mid 또는 이름/all로 적어 주세요.`);
+  }
+  if (modernHeader) {
+    const missing = Array.from({ length: capacity }, (_, index) => index + 1).filter((slotNo) => !mainSlots.has(slotNo));
+    if (missing.length) errors.push(`${missing.join(", ")}번 행이 빠졌어요. 이름을 지울 때도 번호는 남기고 전체 양식을 보내 주세요.`);
+  }
+  const names = new Map<string, string>();
+  for (const { name, label } of rows.values()) {
+    const key = name.trim().replace(/\s+/gu, " ").toLocaleLowerCase("ko-KR");
+    const previous = names.get(key);
+    if (previous) errors.push(`${previous}과 ${label}의 이름이 같아요. 동명이인은 이름(닉네임)처럼 구분해서 적어 주세요.`);
+    else names.set(key, label);
+  }
+  return Object.freeze([...new Set(errors)].slice(0, 5));
 }
