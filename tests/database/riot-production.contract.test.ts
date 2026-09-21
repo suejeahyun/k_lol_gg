@@ -3,7 +3,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import type { TransactionSessionActor } from "../../src/modules/auth/domain/transaction-session";
 import { signJobRequest } from "../../src/modules/operations/infrastructure/job-signature";
@@ -17,6 +17,8 @@ import { RiotAesGcmIdentityProtector, parseRiotEncryptionKeyring } from "../../s
 import { PostgresRiotJobVerifier } from "../../src/modules/riot/infrastructure/riot-job-verifier";
 import { PostgresRiotAdapter } from "../../src/modules/riot/infrastructure/postgres-riot-adapter";
 import { RiotRsoAdapter } from "../../src/modules/riot/infrastructure/riot-rso-adapter";
+import { runPostgresRiotApiProbe } from "../../src/modules/riot/infrastructure/postgres-riot-api-probe";
+import type { RiotProductionConfiguration } from "../../src/modules/riot/infrastructure/riot-runtime-policy";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -27,6 +29,9 @@ import {
   riotRsoExchangeResults,
   riotRsoStates,
   riotSummaries,
+  riotSyncJobs,
+  maintenanceRuns,
+  siteSettings,
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -269,6 +274,99 @@ test("production RSO cache and signed sync job survive application retry without
     assert.equal(cleared.recentSoloJson, null, "a new identity must never inherit the previous identity's recent matches");
     assert.equal(cleared.recentSoloSyncedAt, null);
   } finally {
+    await pool.end();
+  }
+});
+
+test("scheduled Riot repository excludes ineligible identities and duplicate/recent work", { timeout: 30_000 }, async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const ownerId = randomUUID();
+  const playerId = randomUUID();
+  const linkId = `00000000-0000-4000-8000-${randomUUID().slice(-12)}`;
+  const now = new Date("2050-01-01T00:00:00Z");
+  const before = new Date(now.getTime() - 6 * 60 * 60_000);
+  const name = `Auto${ownerId.slice(0, 8)}`;
+  const adapter = new PostgresRiotAdapter(database, { featureEnabled: true });
+  const next = () => adapter.dependencies.unitOfWork.transaction((tx) => adapter.dependencies.repository.loadNextScheduledSyncLinkForUpdate(tx, now, before));
+  const eligible = () => adapter.dependencies.unitOfWork.transaction((tx) => adapter.dependencies.repository.loadLinkForUpdate(tx, linkId));
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: ownerId, loginId: `auto-${ownerId}`, loginIdNormalized: `auto-${ownerId}`, status: "APPROVED" });
+    await database.insert(players).values({ id: playerId, userAccountId: ownerId, memberName: name, memberNameNormalized: name.toLowerCase(), nickname: name, nicknameNormalized: name.toLowerCase(), tagLine: "KR1", tagLineNormalized: "kr1" });
+    await database.insert(riotAccountLinks).values({ id: linkId, playerId, ownerUserAccountId: ownerId, gameName: name, tagLine: "KR1", normalizedKey: `${name.toLowerCase()}#kr1`, protectedPuuid: "opaque-test-only", method: "DIRECT_OWNER", status: "CONNECTED", linkedAt: new Date("2026-01-01T00:00:00Z") });
+    assert.equal((await next())?.id, linkId);
+    await database.update(players).set({ status: "INACTIVE", deactivatedAt: now }).where(eq(players.id, playerId));
+    assert.equal(await eligible(), null);
+    assert.notEqual((await next())?.id, linkId);
+    await database.update(players).set({ status: "ACTIVE", deactivatedAt: null }).where(eq(players.id, playerId));
+    await database.update(userAccounts).set({ status: "PENDING" }).where(eq(userAccounts.id, ownerId));
+    assert.equal(await eligible(), null);
+    assert.notEqual((await next())?.id, linkId);
+    await database.update(userAccounts).set({ status: "APPROVED" }).where(eq(userAccounts.id, ownerId));
+    await database.update(riotAccountLinks).set({ normalizedKey: "different#kr1" }).where(eq(riotAccountLinks.id, linkId));
+    assert.equal(await eligible(), null);
+    assert.notEqual((await next())?.id, linkId);
+    await database.update(riotAccountLinks).set({ normalizedKey: `${name.toLowerCase()}#kr1` }).where(eq(riotAccountLinks.id, linkId));
+    const jobId = randomUUID();
+    await database.insert(riotSyncJobs).values({ id: jobId, linkId, requestedBy: "JOB", requestedAt: new Date(now.getTime() - 1000), availableAt: now, status: "SUCCEEDED", completedAt: now });
+    assert.notEqual((await next())?.id, linkId);
+    await database.update(riotSyncJobs).set({ requestedAt: before, status: "QUEUED", completedAt: null }).where(eq(riotSyncJobs.id, jobId));
+    assert.notEqual((await next())?.id, linkId);
+    await database.update(riotSyncJobs).set({ status: "SUCCEEDED", completedAt: now }).where(eq(riotSyncJobs.id, jobId));
+    assert.ok(await eligible());
+    await database.update(riotSyncJobs).set({ status: "RETRY_WAIT", failureCode: "RATE_LIMITED", availableAt: new Date(now.getTime() + 1000), completedAt: null }).where(eq(riotSyncJobs.id, jobId));
+    assert.equal(await next(), null, "global provider cooldown suppresses all newly scheduled work");
+    assert.equal(await adapter.dependencies.unitOfWork.transaction((tx) => adapter.dependencies.repository.loadNextClaimableSyncJobForUpdate(tx, now)), null);
+    await database.update(riotSyncJobs).set({ status: "FAILED", completedAt: now }).where(eq(riotSyncJobs.id, jobId));
+    assert.equal(await next(), null, "terminal 429 still holds the provider cooldown");
+    assert.equal(await adapter.dependencies.unitOfWork.transaction((tx) => adapter.dependencies.repository.loadNextClaimableSyncJobForUpdate(tx, now)), null);
+    await database.update(riotSyncJobs).set({ status: "CANCELLED", completedAt: now }).where(eq(riotSyncJobs.id, jobId));
+  } finally {
+    await database.update(riotAccountLinks).set({ status: "DISCONNECTED", protectedPuuid: null, disconnectedAt: now }).where(eq(riotAccountLinks.id, linkId));
+    await pool.end();
+  }
+});
+
+test("Riot key probe persists only safe outcomes and rejects replay, rapid retry, invalid signature and disabled flag", { timeout: 30_000 }, async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const jobSecret = "riot-probe-database-contract-secret-0000";
+  const configuration = { apiKey: "synthetic-private-api-key", jobSecret } as RiotProductionConfiguration;
+  let requests = 0;
+  const dependencies = { database, configuration, fetch: async () => { requests++; return new Response("upstream-private-content", { status: 200 }); } };
+  const signed = () => {
+    const unsigned = { method: "POST" as const, path: "/api/internal/jobs/riot-api-probe", timestampSeconds: Math.floor(Date.now() / 1000), nonce: `probe_${randomUUID().replaceAll("-", "")}`, bodyDigestHex };
+    return { ok: true as const, body: {}, requestId: randomUUID(), ...unsigned, signatureHex: signJobRequest(unsigned, jobSecret) };
+  };
+  let previous: Record<string, boolean> | undefined;
+  try {
+    await applyMigrations(database);
+    previous = (await database.select().from(siteSettings).where(eq(siteSettings.id, 1)))[0]?.featuresJson;
+    await database.insert(siteSettings).values({ id: 1, brandName: "Test", tagline: "Test", featuresJson: { riotIntegration: true }, aiAllowedRolesJson: [] })
+      .onConflictDoUpdate({ target: siteSettings.id, set: { featuresJson: sql`${siteSettings.featuresJson} || '{"riotIntegration": true}'::jsonb` } });
+    const first = signed();
+    assert.equal((await runPostgresRiotApiProbe({ ...first, signatureHex: "0".repeat(64) }, dependencies)).status, 401);
+    assert.equal(requests, 0);
+    const result = await runPostgresRiotApiProbe(first, dependencies);
+    assert.equal(result.status, 200);
+    assert.equal((await runPostgresRiotApiProbe(first, dependencies)).status, 409);
+    assert.equal((await runPostgresRiotApiProbe(signed(), dependencies)).status, 429);
+    assert.equal(requests, 1);
+    const run = (await database.select().from(maintenanceRuns).where(eq(maintenanceRuns.requestId, first.requestId)))[0]!;
+    assert.equal(run.status, "SUCCEEDED");
+    assert.deepEqual(run.countsJson, { requests: 1, statusEndpointAccepted: 1, providerStatus: 200 });
+    assert.equal(JSON.stringify(run).includes(configuration.apiKey), false);
+    await database.update(siteSettings).set({ featuresJson: { riotIntegration: false } }).where(eq(siteSettings.id, 1));
+    assert.equal((await runPostgresRiotApiProbe(signed(), dependencies)).status, 403);
+    assert.equal(requests, 1);
+  } finally {
+    if (previous) await database.update(siteSettings).set({ featuresJson: previous }).where(eq(siteSettings.id, 1));
+    else await database.delete(siteSettings).where(eq(siteSettings.id, 1));
     await pool.end();
   }
 });

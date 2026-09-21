@@ -122,20 +122,8 @@ export class RiotApiGateway implements RiotGatewayPort {
     if (!boundedString(input.puuid, 128) || /\s/u.test(input.puuid)) {
       return { outcome: { kind: "PERMANENT_FAILURE", code: "NOT_FOUND" } };
     }
-    const summoner = await this.fetchJson(new URL(
-      `/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(input.puuid)}`,
-      this.configuration.platformBaseUrl,
-    ));
-    const summonerFailure = this.syncFailure(summoner);
-    if (summonerFailure) return summonerFailure;
-    if (summoner.kind !== "SUCCESS" || !summoner.value || typeof summoner.value !== "object" || Array.isArray(summoner.value)) {
-      return { outcome: { kind: "PERMANENT_FAILURE", code: "INVALID_RESPONSE" } };
-    }
-    const summonerId = boundedString((summoner.value as Record<string, unknown>).id, 256);
-    if (!summonerId) return { outcome: { kind: "PERMANENT_FAILURE", code: "INVALID_RESPONSE" } };
-
     const league = await this.fetchJson(new URL(
-      `/lol/league/v4/entries/by-summoner/${encodeURIComponent(summonerId)}`,
+      `/lol/league/v4/entries/by-puuid/${encodeURIComponent(input.puuid)}`,
       this.configuration.platformBaseUrl,
     ));
     const leagueFailure = this.syncFailure(league);

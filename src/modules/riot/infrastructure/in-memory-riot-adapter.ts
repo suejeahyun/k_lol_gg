@@ -138,12 +138,22 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
           assertTransaction(transaction);
           return [...this.state.links.values()].filter((link) => link.status === "CONNECTED" && (!linkIds || linkIds.includes(link.id)));
         },
+        loadNextScheduledSyncLinkForUpdate: async (transaction, now, requestedBefore) => {
+          assertTransaction(transaction);
+          const jobs = [...this.state.jobs.values()];
+          if (jobs.some((job) => ["RETRY_WAIT", "FAILED"].includes(job.status) && job.failureCode === "RATE_LIMITED" && job.availableAt > now)) return null;
+          return [...this.state.links.values()].filter((link) => link.status === "CONNECTED" && link.puuidCiphertext &&
+            !jobs.some((job) => job.linkId === link.id && (["QUEUED", "RUNNING", "RETRY_WAIT"].includes(job.status) ||
+              (job.requestedAt > requestedBefore && job.requestedAt >= link.linkedAt))))
+            .sort((left, right) => left.id.localeCompare(right.id))[0] ?? null;
+        },
         saveSyncJob: async (transaction, job) => {
           assertTransaction(transaction);
           this.state.jobs.set(job.id, structuredClone(job));
         },
         loadNextClaimableSyncJobForUpdate: async (transaction, now) => {
           assertTransaction(transaction);
+          if ([...this.state.jobs.values()].some((job) => ["RETRY_WAIT", "FAILED"].includes(job.status) && job.failureCode === "RATE_LIMITED" && job.availableAt > now)) return null;
           return [...this.state.jobs.values()].filter((job) =>
             (["QUEUED", "RETRY_WAIT"].includes(job.status) && job.availableAt <= now) ||
             (job.status === "RUNNING" && job.lockedAt !== null && job.lockedAt.getTime() <= now.getTime() - 60_000))

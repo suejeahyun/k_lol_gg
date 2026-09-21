@@ -150,6 +150,8 @@ export interface RiotRepository {
   saveRsoState(transaction: RiotTransaction, state: RiotRsoState): Promise<void>;
   latestSyncRequestedAt(transaction: RiotTransaction, linkId: string): Promise<Date | null>;
   listConnectedLinksForUpdate(transaction: RiotTransaction, linkIds: readonly string[] | null): Promise<readonly RiotAccountLink[]>;
+  /** One already connected, eligible link with no active job and no recent request. */
+  loadNextScheduledSyncLinkForUpdate(transaction: RiotTransaction, now: Date, requestedBefore: Date): Promise<RiotAccountLink | null>;
   saveSyncJob(transaction: RiotTransaction, job: RiotSyncJob): Promise<void>;
   loadNextClaimableSyncJobForUpdate(transaction: RiotTransaction, now: Date): Promise<RiotSyncJob | null>;
   loadSyncJobForUpdate(transaction: RiotTransaction, jobId: string): Promise<RiotSyncJob | null>;

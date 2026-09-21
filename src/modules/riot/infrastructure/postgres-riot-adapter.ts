@@ -8,6 +8,7 @@ import {
   lockTransactionSessionActor,
 } from "@/modules/auth/infrastructure/transaction-session-guard";
 import { auditEvents } from "@/platform/db/schema/audit";
+import { userAccounts } from "@/platform/db/schema/auth";
 import { players } from "@/platform/db/schema/registry";
 import { siteSettings } from "@/platform/db/schema/operations";
 import {
@@ -38,6 +39,12 @@ type StateRow = typeof riotRsoStates.$inferSelect;
 type JobRow = typeof riotSyncJobs.$inferSelect;
 
 const RIOT_PROFILE_DISCONNECT_ACTION = "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE";
+
+function riotProviderAvailable(now: Date) {
+  return sql<boolean>`NOT EXISTS (SELECT 1 FROM riot.sync_jobs rate_limited
+    WHERE rate_limited.status IN ('RETRY_WAIT', 'FAILED') AND rate_limited.failure_code = 'RATE_LIMITED'
+      AND rate_limited.available_at > ${now})`;
+}
 
 function profileDisconnectAuditDetail(metadata: Record<string, unknown> | null) {
   const source = metadata?.source === "OWNER_PROFILE"
@@ -156,6 +163,8 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
     this.dependencies = {
       unitOfWork: {
         transaction: (operation) => this.database.transaction(async (databaseTransaction) => {
+          await databaseTransaction.execute(sql`SET LOCAL statement_timeout = '10s'`);
+          await databaseTransaction.execute(sql`SET LOCAL lock_timeout = '2s'`);
           const context = Object.freeze({}) as RiotTransaction;
           this.transactions.set(context, databaseTransaction);
           try { return await operation(context); }
@@ -269,8 +278,14 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
           return row ? linkFromRow(row) : null;
         },
         loadLinkForUpdate: async (context, linkId) => {
-          const row = (await this.tx(context).select().from(riotAccountLinks).where(eq(riotAccountLinks.id, linkId)).for("update").limit(1))[0];
-          return row ? linkFromRow(row) : null;
+          const row = (await this.tx(context).select({ link: riotAccountLinks }).from(riotAccountLinks)
+            .innerJoin(players, eq(players.id, riotAccountLinks.playerId))
+            .innerJoin(userAccounts, eq(userAccounts.id, riotAccountLinks.ownerUserAccountId))
+            .where(and(eq(riotAccountLinks.id, linkId), eq(players.status, "ACTIVE"), eq(userAccounts.status, "APPROVED"),
+              eq(players.userAccountId, riotAccountLinks.ownerUserAccountId),
+              sql<boolean>`${riotAccountLinks.normalizedKey} = ${players.nicknameNormalized} || '#' || ${players.tagLineNormalized}`))
+            .for("update").limit(1))[0];
+          return row ? linkFromRow(row.link) : null;
         },
         saveLink: async (context, link, expectedRevision) => {
           const transaction = this.tx(context);
@@ -332,6 +347,22 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
           )).orderBy(riotAccountLinks.id).for("update");
           return rows.map(linkFromRow);
         },
+        loadNextScheduledSyncLinkForUpdate: async (context, now, requestedBefore) => {
+          const row = (await this.tx(context).select({ link: riotAccountLinks }).from(riotAccountLinks)
+            .innerJoin(players, eq(players.id, riotAccountLinks.playerId))
+            .innerJoin(userAccounts, eq(userAccounts.id, riotAccountLinks.ownerUserAccountId))
+            .where(and(eq(riotAccountLinks.status, "CONNECTED"), eq(players.status, "ACTIVE"), eq(userAccounts.status, "APPROVED"),
+              eq(players.userAccountId, riotAccountLinks.ownerUserAccountId),
+              sql<boolean>`${riotAccountLinks.protectedPuuid} IS NOT NULL`,
+              sql<boolean>`${riotAccountLinks.normalizedKey} = ${players.nicknameNormalized} || '#' || ${players.tagLineNormalized}`,
+              sql<boolean>`NOT EXISTS (SELECT 1 FROM riot.sync_jobs j WHERE j.link_id = ${riotAccountLinks.id} AND
+                (j.status IN ('QUEUED', 'RUNNING', 'RETRY_WAIT') OR (j.requested_at > ${requestedBefore} AND j.requested_at >= ${riotAccountLinks.linkedAt})))`,
+              riotProviderAvailable(now),
+            ))
+            .orderBy(sql`COALESCE((SELECT max(j.requested_at) FROM riot.sync_jobs j WHERE j.link_id = ${riotAccountLinks.id}), '-infinity'::timestamptz)`, riotAccountLinks.id)
+            .for("update", { skipLocked: true }).limit(1))[0];
+          return row ? linkFromRow(row.link) : null;
+        },
         saveSyncJob: async (context, job) => {
           await this.tx(context).insert(riotSyncJobs).values({
             id: job.id,
@@ -361,10 +392,10 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
         },
         loadNextClaimableSyncJobForUpdate: async (context, now) => {
           const staleAt = new Date(now.getTime() - 60_000);
-          const row = (await this.tx(context).select().from(riotSyncJobs).where(or(
+          const row = (await this.tx(context).select().from(riotSyncJobs).where(and(riotProviderAvailable(now), or(
             and(inArray(riotSyncJobs.status, ["QUEUED", "RETRY_WAIT"]), lte(riotSyncJobs.availableAt, now)),
             and(eq(riotSyncJobs.status, "RUNNING"), lte(riotSyncJobs.lockedAt, staleAt)),
-          )).orderBy(riotSyncJobs.availableAt, riotSyncJobs.id).for("update", { skipLocked: true }).limit(1))[0];
+          ))).orderBy(riotSyncJobs.availableAt, riotSyncJobs.id).for("update", { skipLocked: true }).limit(1))[0];
           return row ? jobFromRow(row) : null;
         },
         loadSyncJobForUpdate: async (context, jobId) => {

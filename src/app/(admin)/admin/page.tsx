@@ -15,6 +15,7 @@ import { requirePageRole } from "@/modules/auth/infrastructure/server-authorizat
 import { ADMIN_WORKSPACES, type AdminWorkspaceIconKey } from "@/modules/admin/domain/admin-workspaces";
 import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
 import { loadRuntimeOperations } from "@/modules/operations/infrastructure/runtime-operations";
+import { OperationalHealth } from "./operational-health";
 import styles from "./page.module.css";
 
 const icons = {
@@ -33,7 +34,10 @@ const areas = ADMIN_WORKSPACES.filter((workspace) => workspace.id !== "home");
 
 export default async function AdminDashboardPage() {
   const session = await requirePageRole("ADMIN", "/admin");
-  const operations = await loadRuntimeOperations((repository) => repository.getDashboard());
+  const [operations, health] = await Promise.all([
+    loadRuntimeOperations((repository) => repository.getDashboard()),
+    loadRuntimeOperations((repository) => repository.getOperationalHealth()),
+  ]);
 
   return (
     <main className={styles.page}>
@@ -66,6 +70,13 @@ export default async function AdminDashboardPage() {
           {session.role === "SUPER_ADMIN" ? <p><Link href="/admin/site-settings">사이트 설정</Link> · <Link href="/admin/logs">감사 로그</Link> · <Link href="/admin/ai-requests">AI 요청 내역</Link></p> : null}
         </div>
       </section>
+
+      {health.state === "ready" ? <OperationalHealth snapshot={health.data} /> : (
+        <section className={styles.notice} aria-labelledby="admin-health-title">
+          <div><BookOpenCheck aria-hidden="true" /></div>
+          <div><h2 id="admin-health-title">자동 작업과 연동 상태</h2><p>운영 진단을 불러올 수 없습니다. 상태는 미확인이며, 잠시 후 새로고침해 주세요.</p></div>
+        </section>
+      )}
 
       <section className={styles.areas} aria-labelledby="admin-areas-title">
         <div className={styles.sectionHeading}>

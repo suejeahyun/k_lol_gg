@@ -3,7 +3,7 @@
  * The source callback's one-argument Replier is the only message destination.
  * No room-name lookup, Api.replyRoom, channelId, or ordinary command replies.
  */
-var KLOL_SITE_NOTICE_CODE_VERSION = "KLOL_SITE_NOTICE_COMPANION_1.0.0";
+var KLOL_SITE_NOTICE_CODE_VERSION = "KLOL_SITE_NOTICE_COMPANION_1.0.1";
 function createKlolSiteNoticeWorker(io) {
   var session = null;
   var ledgerKey = "KLOL_SITE_NOTICE_LEDGER_V1";
@@ -20,6 +20,9 @@ function createKlolSiteNoticeWorker(io) {
     if (io.read(ledgerKey) !== serialized) throw new Error("LEDGER_WRITE_FAILED");
   }
   function enabled() { return io.read("KLOL_SITE_NOTICE_ENABLED") === "true"; }
+  function replySafely(replier, text) {
+    try { replier.reply(text); } catch (ignoredReplyFailure) {}
+  }
   function register(message, isGroupChat, replier, packageName) {
     if (!enabled() || session || !isGroupChat || packageName !== "com.kakao.talk") return false;
     var code = io.read("KLOL_SITE_NOTICE_REGISTRATION_CODE");
@@ -37,6 +40,35 @@ function createKlolSiteNoticeWorker(io) {
       session = replier;
       return true;
     } finally { io.leave(); }
+  }
+  function handleMessage(message, isGroupChat, replier, packageName) {
+    if (!isGroupChat || packageName !== "com.kakao.talk" || !replier || typeof replier.reply !== "function") return false;
+    if (message === "사이트알림버전") {
+      replySafely(replier, "사이트 알림 버전: " + KLOL_SITE_NOTICE_CODE_VERSION);
+      return true;
+    }
+    if (message === "사이트알림상태") {
+      var stateText = "사이트 알림 상태를 확인하지 못했어요. 설치 설정을 점검해주세요.";
+      try {
+        stateText = "사이트 알림 버전: " + KLOL_SITE_NOTICE_CODE_VERSION +
+          "\n휴대폰 알림: " + (enabled() ? "켜짐" : "꺼짐") +
+          "\n수신 세션: " + (session ? "등록됨" : "등록 필요") +
+          "\n서버 연결과 실제 알림 수신은 별도 확인이 필요해요.";
+      } catch (ignoredStateFailure) {}
+      replySafely(replier, stateText);
+      return true;
+    }
+    if (!/^사이트알림연동 [a-f0-9]{32}$/.test(message)) return false;
+    var registrationText = "사이트 알림 등록에 실패했어요. 새 등록 코드가 담긴 설치본으로 교체한 뒤 다시 등록해주세요.";
+    try {
+      if (!enabled()) registrationText = "휴대폰 사이트 알림이 꺼져 있어 등록하지 않았어요. 활성 설치본을 적용한 뒤 다시 등록해주세요.";
+      else if (session) registrationText = "사이트 알림은 이미 등록되어 있어요. 수신 대상은 변경하지 않았어요.";
+      else if (register(message, isGroupChat, replier, packageName)) {
+        registrationText = "사이트 알림 수신 세션을 등록했어요. 휴대폰이 실행 중이면 새 내전 충원 안내를 확인해요. 실제 알림 수신은 별도로 확인해주세요.";
+      }
+    } catch (ignoredRegistrationFailure) {}
+    replySafely(replier, registrationText);
+    return true;
   }
   function poll() {
     if (!enabled() || !session || !io.enter()) return;
@@ -82,7 +114,7 @@ function createKlolSiteNoticeWorker(io) {
       // Unacked leases are retried by the server; persistent ledger dedupes.
     } finally { io.leave(); }
   }
-  return { register: register, poll: poll, stop: function () { session = null; },
+  return { register: register, handleMessage: handleMessage, poll: poll, stop: function () { session = null; },
     status: function () { return enabled() ? session ? "REGISTERED" : "REGISTRATION_REQUIRED" : "DISABLED"; } };
 }
 
@@ -132,11 +164,11 @@ var KLOL_SITE_NOTICE = (function () {
   var worker = createKlolSiteNoticeWorker({ read: read, write: write, targetHash: targetHash, request: request, now: function () { return new Date().getTime(); },
     enter: function () { return workerLock.tryLock(); }, leave: function () { workerLock.unlock(); } });
   if (read("KLOL_SITE_NOTICE_ENABLED") === "true") timer = setInterval(worker.poll, 30000);
-  return { register: worker.register, poll: worker.poll, status: worker.status, targetHash: targetHash,
+  return { register: worker.register, handleMessage: worker.handleMessage, poll: worker.poll, status: worker.status, targetHash: targetHash,
     stop: function () { if (timer !== null) clearInterval(timer); timer = null; worker.stop(); } };
 }());
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
-  try { KLOL_SITE_NOTICE.register(String(msg), isGroupChat, replier, String(packageName || "")); } catch (ignoredRegistrationFailure) {}
+  try { KLOL_SITE_NOTICE.handleMessage(String(msg), isGroupChat, replier, String(packageName || "")); } catch (ignoredResponseFailure) {}
 }
 function onStartCompile() { KLOL_SITE_NOTICE.stop(); }

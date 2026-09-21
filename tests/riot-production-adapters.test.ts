@@ -12,7 +12,7 @@ import {
   parseRiotEncryptionKeyring,
 } from "../src/modules/riot/infrastructure/riot-identity-protector";
 import { RiotRsoAdapter } from "../src/modules/riot/infrastructure/riot-rso-adapter";
-import { readRiotProductionConfiguration } from "../src/modules/riot/infrastructure/riot-runtime-policy";
+import { readRiotConfigurationReadiness, readRiotProductionConfiguration } from "../src/modules/riot/infrastructure/riot-runtime-policy";
 import type { V2Database } from "../src/platform/db/database";
 import { riotRsoExchangeResults } from "../src/platform/db/schema/riot";
 
@@ -47,7 +47,6 @@ test("Riot gateway resolves Riot ID and reads the SOLO queue through bounded off
   const calls: Array<{ url: string; init?: RequestInit }> = [];
   const responses = [
     new Response(JSON.stringify({ puuid: "private-puuid-value", gameName: "A hri", tagLine: "KR1" }), { status: 200 }),
-    new Response(JSON.stringify({ id: "encrypted-summoner-id" }), { status: 200 }),
     new Response(JSON.stringify([
       { queueType: "RANKED_FLEX_SR", tier: "GOLD", rank: "I", leaguePoints: 1, wins: 1, losses: 1 },
       { queueType: "RANKED_SOLO_5x5", tier: "DIAMOND", rank: "II", leaguePoints: 72, wins: 30, losses: 20 },
@@ -74,8 +73,8 @@ test("Riot gateway resolves Riot ID and reads the SOLO queue through bounded off
     snapshot: { tier: "DIAMOND", rank: "II", leaguePoints: 72, wins: 30, losses: 20, partial: false },
   });
   assert.match(calls[0]!.url, /accounts\/by-riot-id\/A%20hri\/KR1$/u);
-  assert.match(calls[1]!.url, /summoners\/by-puuid\/private-puuid-value$/u);
-  assert.match(calls[2]!.url, /entries\/by-summoner\/encrypted-summoner-id$/u);
+  assert.match(calls[1]!.url, /entries\/by-puuid\/private-puuid-value$/u);
+  assert.equal(calls.length, 2);
   assert.equal(new Headers(calls[0]!.init?.headers).get("x-riot-token"), requestCredential);
 });
 
@@ -109,7 +108,7 @@ test("Riot gateway classifies 429, 404, 5xx and malformed responses without expo
   });
 });
 
-test("production runtime configuration is all-or-nothing and binds the exact callback", () => {
+test("production API configuration is independent of optional RSO and binds the exact callback", () => {
   const origin = "https://klol.example";
   const complete = {
     NODE_ENV: "production",
@@ -129,10 +128,18 @@ test("production runtime configuration is all-or-nothing and binds the exact cal
   };
   const parsed = readRiotProductionConfiguration(complete);
   assert.ok(parsed);
-  assert.equal(parsed.rsoRedirectUri, `${origin}/api/me/riot/rso/callback`);
+  assert.equal(parsed.rso?.redirectUri, `${origin}/api/me/riot/rso/callback`);
   assert.equal(readRiotProductionConfiguration({ ...complete, RIOT_API_KEY: undefined }), null);
   assert.equal(readRiotProductionConfiguration({ ...complete, V2_RIOT_INTEGRATION_ENABLED: "TRUE" }), null);
-  assert.equal(readRiotProductionConfiguration({ ...complete, RIOT_RSO_REDIRECT_URI: "https://evil.example/callback" }), null);
+  assert.equal(readRiotProductionConfiguration({ ...complete, RIOT_RSO_REDIRECT_URI: "https://evil.example/callback" })?.rso, null);
+  const apiOnly = { ...complete, RIOT_RSO_CLIENT_ID: undefined, RIOT_RSO_CLIENT_SECRET: undefined,
+    RIOT_RSO_STATE_SECRET: undefined, RIOT_RSO_REDIRECT_URI: undefined };
+  assert.equal(readRiotProductionConfiguration(apiOnly)?.rso, null);
+  assert.equal(readRiotProductionConfiguration({ ...apiOnly, RIOT_ENCRYPTION_KEYS: "{}" }), null);
+  assert.equal(readRiotProductionConfiguration({ ...apiOnly, OPERATIONS_JOB_SECRET: undefined }), null);
+  assert.deepEqual(readRiotConfigurationReadiness({ ...apiOnly, V2_RIOT_INTEGRATION_ENABLED: "false" }), {
+    integrationEnabled: false, apiConfigured: true, rsoConfigured: false,
+  });
   assert.equal(readRiotProductionConfiguration({ ...complete, V2_RIOT_FAKE_RUNTIME: "true" }), null);
 });
 

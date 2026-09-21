@@ -19,7 +19,7 @@ async function mutate(path: string, method: "POST" | "DELETE", body: object, rev
   return data;
 }
 
-export function RiotOwnerActions({ linkRevision, connected }: Readonly<{ linkRevision: number; connected: boolean }>) {
+export function RiotOwnerActions({ linkRevision, connected, rsoAvailable }: Readonly<{ linkRevision: number; connected: boolean; rsoAvailable: boolean }>) {
   const [gameName, setGameName] = useState("");
   const [tagLine, setTagLine] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -48,7 +48,8 @@ export function RiotOwnerActions({ linkRevision, connected }: Readonly<{ linkRev
         <form className={styles.form} onSubmit={(event) => { event.preventDefault(); void run(() => mutate("/api/me/riot", "POST", { gameName, tagLine }, linkRevision), "직접 연결 요청을 반영했습니다. 새로고침해 상태를 확인해 주세요."); }}>
           <label>게임 이름<input value={gameName} onChange={(event) => setGameName(event.target.value)} maxLength={16} required /></label>
           <label>태그<input value={tagLine} onChange={(event) => setTagLine(event.target.value)} maxLength={5} required /></label>
-          <div className={styles.actions}><button type="submit" disabled={pending}>직접 연결</button><button data-tone="quiet" type="button" disabled={pending} onClick={() => void run(() => mutate("/api/me/riot/rso/start", "POST", { returnTo: "/account/riot" }), "RSO 연결을 준비했습니다.")}>RSO로 확인</button></div>
+          <p>직접 연결하면 등록된 Riot ID의 공개 티어·전적을 가져옵니다. Riot 계정 소유권을 확인한 상태는 아닙니다.</p>
+          <div className={styles.actions}><button type="submit" disabled={pending}>공개 전적 연결</button><button data-tone="quiet" type="button" disabled={pending || !rsoAvailable} onClick={() => void run(() => mutate("/api/me/riot/rso/start", "POST", { returnTo: "/account/riot" }), "RSO 연결을 준비했습니다.")}>{rsoAvailable ? "Riot 로그인으로 소유권 확인" : "소유권 확인 승인 준비 중"}</button></div>
         </form>
       ) : (
         <div className={styles.actions}>

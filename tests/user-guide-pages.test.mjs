@@ -18,11 +18,12 @@ test("시작 페이지는 익명·계정 상태·승인 계정·관리자 진입
   ]) assert.equal(page.includes(contract), true, contract);
 });
 
-test("Riot 도움말은 운영 연동 제한과 공개·비공개 범위를 안내한다", () => {
+test("Riot 도움말은 직접 연결과 별도 본인 인증, 공개·비공개 범위를 안내한다", () => {
   const page = source("../src/app/(public)/(guides)/help/riot/page.tsx");
   for (const contract of [
-    "현재 이용 제한",
-    "공식 로그인",
+    "공개 전적 연결과 본인 인증",
+    "Riot 로그인",
+    "직접 연결만으로 계정 소유권이 인증되지는 않습니다",
     "공개 요약",
     "항상 비공개",
     "인증 정보",

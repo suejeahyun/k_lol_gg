@@ -353,6 +353,13 @@ export function claimRiotSyncJob(input: Readonly<{
   };
 }
 
+export function retireRiotSyncJob(job: RiotSyncJob, reason: "LINK_UNAVAILABLE" | "LINK_CHANGED" | "ATTEMPTS_EXHAUSTED", now: Date): RiotSyncJob {
+  finiteDate(now, "INVALID_RIOT_SYNC_TIME");
+  if (!["QUEUED", "RETRY_WAIT", "RUNNING"].includes(job.status)) throw new Error("RIOT_SYNC_NOT_CLAIMABLE");
+  return { ...job, revision: job.revision + 1, status: reason === "ATTEMPTS_EXHAUSTED" ? "FAILED" : "CANCELLED",
+    lockedAt: null, leaseId: null, completedAt: now, failureCode: reason };
+}
+
 export function finishRiotSyncJob(input: Readonly<{
   job: RiotSyncJob;
   expectedRevision: number;
@@ -373,7 +380,8 @@ export function finishRiotSyncJob(input: Readonly<{
   const failureCode = input.outcome.kind === "RATE_LIMITED" ? "RATE_LIMITED" : input.outcome.code;
   const exhausted = input.job.attemptCount >= input.job.maximumAttempts;
   if (input.outcome.kind === "PERMANENT_FAILURE" || exhausted) {
-    return { ...input.job, revision: input.job.revision + 1, status: "FAILED", lockedAt: null, leaseId: null, completedAt: input.now, failureCode };
+    return { ...input.job, revision: input.job.revision + 1, status: "FAILED", lockedAt: null, leaseId: null, completedAt: input.now, failureCode,
+      ...(input.outcome.kind === "RATE_LIMITED" ? { availableAt: new Date(input.now.getTime() + Math.min(3_600, Math.max(1, Math.ceil(input.outcome.retryAfterSeconds))) * 1_000) } : {}) };
   }
   const retrySeconds = input.outcome.kind === "RATE_LIMITED"
     ? Math.min(3_600, Math.max(1, Math.ceil(input.outcome.retryAfterSeconds)))

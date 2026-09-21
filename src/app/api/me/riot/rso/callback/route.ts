@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code") ?? "";
   if (!state || state.length > 1_000 || !code || code.length > 2_000) return accountRedirect("failed");
   const runtime = getRuntimeRiot();
-  if (!runtime) return accountRedirect("failed");
+  if (!runtime?.rsoAvailable) return accountRedirect("failed");
   try {
     const owner = await runtime.query.getOwnerStatus(auth.session.userId);
     if (!owner) return accountRedirect("failed");
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   const prepared = await prepareRiotMutation(request, auth.session, "riot:rso:callback", { revision: "required" }); if (!prepared.ok) return prepared.response;
   const body = prepared.value.body;
   if (!exactObject(body, ["state", "code"]) || typeof body.state !== "string" || typeof body.code !== "string") return riotInvalidInputResponse(prepared.value.traceId);
-  const runtime = getRuntimeRiot(); if (!runtime) return riotUnavailableResponse(prepared.value.traceId);
+  const runtime = getRuntimeRiot(); if (!runtime?.rsoAvailable) return riotUnavailableResponse(prepared.value.traceId);
   try {
     const owner = await runtime.query.getOwnerStatus(auth.session.userId); if (!owner) return riotNotFoundResponse(prepared.value.traceId);
     return riotMutationResponse(await runtime.service.completeRso({ context: prepared.value.context, playerId: owner.playerId, expectedRevision: prepared.value.expectedRevision, publicState: body.state, authorizationCode: body.code }), prepared.value.traceId);

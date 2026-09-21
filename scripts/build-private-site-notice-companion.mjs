@@ -56,6 +56,6 @@ await writeFile(output, artifact, "utf8");
 await writeFile(setupPath, JSON.stringify({ targetId, registrationCode, setupRevision, targetHash, enabled,
   serverEnvironment: { KAKAO_SITE_NOTICE_ENABLED: "false", KAKAO_SITE_NOTICE_TARGET_HASH: targetHash },
   registrationMessage: "사이트알림연동 " + registrationCode,
-  note: "실기기 세션 검증 후 운영자가 서버 ENABLED를 true로 변경. 재등록은 이 빌드를 다시 실행해 새 코드를 발급. 기존 파일 재컴파일은 코드를 복구하지 않음." }, null, 2) + "\n", "utf8");
+  note: "serverEnvironment는 기본 OFF 예시이며 운영 상태 조회가 아님. 등록 전에 운영자가 서버 targetHash 일치와 ENABLED=true 반영을 확인. 실제 충원 수신은 별도 검증. 재등록은 이 빌드를 다시 실행해 새 코드를 발급. 기존 파일 재컴파일은 코드를 복구하지 않음." }, null, 2) + "\n", "utf8");
 console.log(JSON.stringify({ artifact: ".private/KLOL_SITE_NOTICE_COMPANION_PRIVATE.js", setup: ".private/site-notice-setup.json", enabled,
   characters: artifact.length, sha256: createHash("sha256").update(artifact).digest("hex") }));

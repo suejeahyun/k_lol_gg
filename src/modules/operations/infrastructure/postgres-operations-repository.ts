@@ -43,6 +43,7 @@ import type { V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
 import { recruitingOperatingDateKey } from "@/modules/recruiting/domain/operating-day";
 import { pruneSiteNotices } from "@/modules/seasons/kakao-site-notices/repository";
+import { readOperationalHealth } from "./postgres-operational-health";
 
 const RECEIPT_TTL_MS = 24 * 60 * 60 * 1_000;
 const JOB_NONCE_TTL_MS = 15 * 60 * 1_000;
@@ -308,6 +309,10 @@ export class PostgresOperationsRepository implements OperationsQueryPort, Operat
       pendingOperationsEvents: pendingEvents[0]?.value ?? 0,
       lastAuditAt: latestAudit[0]?.createdAt.toISOString() ?? null,
     };
+  }
+
+  async getOperationalHealth() {
+    return readOperationalHealth(this.database);
   }
 
   async listAuditLogs(input: { page: number; pageSize: number; action?: string }) {

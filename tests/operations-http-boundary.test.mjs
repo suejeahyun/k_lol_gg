@@ -61,5 +61,8 @@ test("Vercel schedules statistics and daily Kakao close through protected GET bo
   }, {
     path: "/api/cron/kakao-daily-close",
     schedule: "0 21 * * *",
+  }, {
+    path: "/api/cron/riot-sync",
+    schedule: "*/5 * * * *",
   }]);
 });

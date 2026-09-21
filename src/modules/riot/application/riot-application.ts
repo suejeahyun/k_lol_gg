@@ -9,6 +9,7 @@ import {
   createRsoState,
   disconnectRiotAccount,
   finishRiotSyncJob,
+  retireRiotSyncJob,
   safeRsoReturnTo,
   type RiotAccountLink,
   type RiotSyncOutcome,
@@ -556,23 +557,39 @@ export class RiotApplicationService {
   async runNextSync(input: Readonly<{
     principalId: string;
     authorizationIntent: Extract<import("./ports").RiotAuthorizationIntent, { kind: "SIGNED_JOB" }>;
+    queueDue?: boolean;
   }>): Promise<Readonly<{ status: "IDLE" } | { status: "PROCESSED"; body: RiotSafeBody }>> {
     const claimed = await this.dependencies.unitOfWork.transaction(async (transaction) => {
       const actor = await this.authorizeRaw(transaction, input.principalId, input.authorizationIntent, "CLAIM_SYNC");
       const now = this.now();
-      const job = await this.dependencies.repository.loadNextClaimableSyncJobForUpdate(transaction, now);
+      let job = await this.dependencies.repository.loadNextClaimableSyncJobForUpdate(transaction, now);
+      if (!job && input.queueDue === true) {
+        const due = await this.dependencies.repository.loadNextScheduledSyncLinkForUpdate(transaction, now, new Date(now.getTime() - 6 * 60 * 60_000));
+        if (due) {
+          job = createRiotSyncJob({ id: this.dependencies.ids.next("SYNC_JOB"), linkId: due.id, requestedBy: "JOB", now });
+          await this.dependencies.repository.saveSyncJob(transaction, job);
+        }
+      }
       if (!job) return null;
       const link = await this.dependencies.repository.loadLinkForUpdate(transaction, job.linkId);
-      if (!link || link.status !== "CONNECTED" || !link.puuidCiphertext) {
-        throw new RiotApplicationError("NOT_FOUND", "Sync link is not available.");
+      const reason = !link || link.status !== "CONNECTED" || !link.puuidCiphertext ? "LINK_UNAVAILABLE"
+        : job.requestedAt < link.linkedAt ? "LINK_CHANGED"
+          : job.attemptCount >= job.maximumAttempts ? "ATTEMPTS_EXHAUSTED" : null;
+      if (reason) {
+        const retired = retireRiotSyncJob(job, reason, now);
+        await this.dependencies.repository.saveSyncJob(transaction, retired);
+        await this.recordJob(transaction, actor, "FINISH_SYNC", jobSnapshot(job), jobSnapshot(retired), retired);
+        return { kind: "FINISHED", finished: jobSnapshot(retired) } as const;
       }
+      if (!link) throw new RiotApplicationError("NOT_FOUND", "Sync link is not available.");
       const leaseId = this.dependencies.ids.next("LEASE");
       const next = claimRiotSyncJob({ job, expectedRevision: job.revision, leaseId, now });
       await this.dependencies.repository.saveSyncJob(transaction, next);
       await this.recordJob(transaction, actor, "CLAIM_SYNC", jobSnapshot(job), jobSnapshot(next), next);
-      return { job: next, link, leaseId };
+      return { kind: "CLAIMED", job: next, link, leaseId } as const;
     });
     if (!claimed) return { status: "IDLE" };
+    if (claimed.kind === "FINISHED") return { status: "PROCESSED", body: claimed.finished };
 
     let outcome: RiotSyncOutcome;
     let snapshot: RiotRankSnapshot | undefined;
@@ -613,6 +630,14 @@ export class RiotApplicationService {
         outcome,
         now: this.now(),
       });
+      const currentLink = await this.dependencies.repository.loadLinkForUpdate(transaction, claimed.link.id);
+      if (!currentLink || currentLink.status !== "CONNECTED" || currentLink.revision !== claimed.link.revision ||
+        currentLink.puuidCiphertext !== claimed.link.puuidCiphertext || currentLink.ownerAccountId !== claimed.link.ownerAccountId) {
+        const retired = retireRiotSyncJob(current, "LINK_CHANGED", this.now());
+        await this.dependencies.repository.saveSyncJob(transaction, retired);
+        await this.recordJob(transaction, actor, "FINISH_SYNC", jobSnapshot(current), jobSnapshot(retired), retired);
+        return jobSnapshot(retired);
+      }
       if (rankSucceeded && snapshot) {
         await this.dependencies.repository.saveProjection(transaction, {
           playerId: claimed.link.playerId,

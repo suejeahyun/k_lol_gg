@@ -14,8 +14,10 @@ import { RiotAesGcmIdentityProtector, parseRiotEncryptionKeyring } from "./riot-
 import { PostgresRiotJobVerifier } from "./riot-job-verifier";
 import { RiotRsoAdapter } from "./riot-rso-adapter";
 import { isRiotFeatureEnabled, readRiotProductionConfiguration } from "./riot-runtime-policy";
+import { unavailableRiotRso } from "./unavailable-riot-rso";
 
 export type RuntimeRiot = Readonly<{
+  rsoAvailable: boolean;
   service: RiotApplicationService;
   query: RiotQueryRepository;
 }>;
@@ -33,6 +35,7 @@ export function getRuntimeRiot(): RuntimeRiot | null {
   if (fakeRuntimeEnabled()) {
     const adapter = new InMemoryRiotAdapter(true);
     globalThis.__klolV2FakeRiotRuntime = {
+      rsoAvailable: true,
       query: adapter,
       service: new RiotApplicationService({
         ...adapter.dependencies,
@@ -57,6 +60,7 @@ export function getRuntimeRiot(): RuntimeRiot | null {
       jobVerifier: new PostgresRiotJobVerifier(configuration.jobSecret),
     });
     globalThis.__klolV2FakeRiotRuntime = {
+      rsoAvailable: configuration.rso !== null,
       query: adapter,
       service: new RiotApplicationService({
         ...adapter.dependencies,
@@ -66,16 +70,10 @@ export function getRuntimeRiot(): RuntimeRiot | null {
           platformBaseUrl: configuration.platformBaseUrl,
           timeoutMilliseconds: configuration.requestTimeoutMilliseconds,
         }),
-        rso: new RiotRsoAdapter(database, identityProtector, {
-          authorizeUrl: configuration.rsoAuthorizeUrl,
-          tokenUrl: configuration.rsoTokenUrl,
-          accountUrl: configuration.rsoAccountUrl,
-          clientId: configuration.rsoClientId,
-          clientSecret: configuration.rsoClientSecret,
-          redirectUri: configuration.rsoRedirectUri,
-          stateSecret: configuration.rsoStateSecret,
+        rso: configuration.rso ? new RiotRsoAdapter(database, identityProtector, {
+          ...configuration.rso,
           timeoutMilliseconds: configuration.requestTimeoutMilliseconds,
-        }),
+        }) : unavailableRiotRso,
         identityProtector,
       }),
     };

@@ -193,12 +193,21 @@ class Harness {
           assertTransaction();
           return [...this.snapshot.links.values()].filter((link) => link.status === "CONNECTED" && (!linkIds || linkIds.includes(link.id)));
         },
+        loadNextScheduledSyncLinkForUpdate: async (_transaction, now, requestedBefore) => {
+          assertTransaction();
+          const jobs = [...this.snapshot.jobs.values()];
+          if (jobs.some((job) => ["RETRY_WAIT", "FAILED"].includes(job.status) && job.failureCode === "RATE_LIMITED" && job.availableAt > now)) return null;
+          return [...this.snapshot.links.values()].filter((link) => link.status === "CONNECTED" && link.puuidCiphertext &&
+            !jobs.some((job) => job.linkId === link.id && (["QUEUED", "RUNNING", "RETRY_WAIT"].includes(job.status) ||
+              (job.requestedAt > requestedBefore && job.requestedAt >= link.linkedAt))))[0] ?? null;
+        },
         saveSyncJob: async (_transaction, job) => {
           assertTransaction();
           this.snapshot.jobs.set(job.id, structuredClone(job));
         },
         loadNextClaimableSyncJobForUpdate: async (_transaction, now) => {
           assertTransaction();
+          if ([...this.snapshot.jobs.values()].some((job) => ["RETRY_WAIT", "FAILED"].includes(job.status) && job.failureCode === "RATE_LIMITED" && job.availableAt > now)) return null;
           return [...this.snapshot.jobs.values()]
             .filter((job) =>
               (["QUEUED", "RETRY_WAIT"].includes(job.status) && job.availableAt <= now) ||
@@ -259,6 +268,65 @@ function setup() {
   harness.gateway.registerIdentity({ gameName: "Ahri", tagLine: "KR1", puuid: "private-puuid-1" });
   return { harness, service: harness.service() };
 }
+
+test("scheduled sync queues one connected account, keeps direct links unverified and respects six hours", async () => {
+  const { harness, service } = setup();
+  assert.deepEqual(await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true }), { status: "IDLE" });
+  await service.connectDirect({ context: harness.ownerContext("scheduled-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+  harness.gateway.registerRank("private-puuid-1", { tier: "GOLD", rank: "I", leaguePoints: 10, wins: 4, losses: 3, partial: false });
+  assert.equal((await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true })).status, "PROCESSED");
+  assert.equal(harness.snapshot.jobs.size, 1);
+  assert.equal([...harness.snapshot.links.values()][0]?.method, "DIRECT_OWNER");
+  assert.deepEqual(await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true }), { status: "IDLE" });
+  harness.now = new Date(initialNow.getTime() + 6 * 60 * 60_000);
+  assert.equal((await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true })).status, "PROCESSED");
+  assert.equal(harness.snapshot.jobs.size, 2);
+  await service.disconnect({ context: harness.ownerContext("scheduled-disconnect"), playerId: "player-1", expectedRevision: 0 });
+  harness.now = new Date(harness.now.getTime() + 7 * 60 * 60_000);
+  assert.deepEqual(await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true }), { status: "IDLE" });
+  assert.equal([...harness.snapshot.links.values()][0]?.status, "DISCONNECTED");
+});
+
+test("queued sync is cancelled after disconnect and stale exhausted leases cannot block later jobs", async () => {
+  const { harness, service } = setup();
+  await service.connectDirect({ context: harness.ownerContext("retire-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+  const linkId = [...harness.snapshot.links.keys()][0]!;
+  await service.requestSync({ context: harness.ownerContext("retire-request"), mode: "SINGLE", linkIds: [linkId] });
+  await service.disconnect({ context: harness.ownerContext("retire-disconnect"), playerId: "player-1", expectedRevision: 0 });
+  assert.equal((await service.runNextSync(harness.jobAuthorization())).status, "PROCESSED");
+  assert.equal([...harness.snapshot.jobs.values()][0]?.status, "CANCELLED");
+  assert.equal(harness.snapshot.projections.length, 0);
+  await service.connectDirect({ context: harness.ownerContext("retire-reconnect"), playerId: "player-1", expectedRevision: 1, gameName: "Ahri", tagLine: "KR1" });
+  const old = [...harness.snapshot.jobs.values()][0]!;
+  harness.snapshot.jobs.set(old.id, { ...old, status: "RUNNING", attemptCount: old.maximumAttempts, lockedAt: new Date(harness.now.getTime() - 61_000), leaseId: "old-lease", completedAt: null });
+  assert.equal((await service.runNextSync(harness.jobAuthorization())).status, "PROCESSED");
+  assert.equal(harness.snapshot.jobs.get(old.id)?.failureCode, "ATTEMPTS_EXHAUSTED");
+});
+
+test("sync discards a provider response when owner disconnects during the network request", async () => {
+  const { harness, service } = setup();
+  await service.connectDirect({ context: harness.ownerContext("race-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+  harness.gateway.fetchRank = async () => {
+    await service.disconnect({ context: harness.ownerContext("race-disconnect"), playerId: "player-1", expectedRevision: 0 });
+    return { outcome: { kind: "SUCCESS", partial: false }, snapshot: { tier: "GOLD", rank: "I", leaguePoints: 1, wins: 1, losses: 1, partial: false } };
+  };
+  const result = await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true });
+  assert.equal(result.status, "PROCESSED");
+  assert.equal([...harness.snapshot.jobs.values()][0]?.failureCode, "LINK_CHANGED");
+  assert.equal(harness.snapshot.projections.length, 0);
+});
+
+test("a provider rate limit pauses both queued consumption and scheduled account discovery", async () => {
+  const { harness, service } = setup();
+  await service.connectDirect({ context: harness.ownerContext("hold-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+  harness.gateway.registerFailure("private-puuid-1", { kind: "RATE_LIMITED", retryAfterSeconds: 600 });
+  await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true });
+  assert.equal([...harness.snapshot.jobs.values()][0]?.status, "RETRY_WAIT");
+  assert.deepEqual(await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true }), { status: "IDLE" });
+  assert.equal(harness.snapshot.jobs.size, 1);
+  harness.now = new Date(harness.now.getTime() + 600_000);
+  assert.equal((await service.runNextSync({ ...harness.jobAuthorization(), queueDue: true })).status, "PROCESSED");
+});
 
 test("approved owner direct link/unlink is transactional, idempotent, and never leaks PUUID", async () => {
   const { harness, service } = setup();

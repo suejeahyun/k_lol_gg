@@ -66,6 +66,14 @@ test("last allowed transient attempt becomes terminal failure", () => {
   assert.equal(failed.failureCode, "TIMEOUT");
 });
 
+test("last allowed rate-limited attempt retains its provider cooldown after terminal failure", () => {
+  const running = claimRiotSyncJob({ job: createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "JOB", now, maximumAttempts: 1 }), expectedRevision: 0, leaseId: "lease", now });
+  const failed = finishRiotSyncJob({ job: running, expectedRevision: 1, expectedLeaseId: "lease", outcome: { kind: "RATE_LIMITED", retryAfterSeconds: 600 }, now });
+  assert.equal(failed.status, "FAILED");
+  assert.equal(failed.failureCode, "RATE_LIMITED");
+  assert.equal(failed.availableAt.getTime(), now.getTime() + 600_000);
+});
+
 test("stale RUNNING lease is recoverable and the old worker cannot finish it", () => {
   const first = claimRiotSyncJob({
     job: createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "JOB", now }),

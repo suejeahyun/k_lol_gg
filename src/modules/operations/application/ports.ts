@@ -2,6 +2,7 @@ import type { AuthRole, AuthSessionAccountStatus } from "@/modules/auth/domain/a
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
 import type { SiteSettings, SiteSettingsPatch } from "../domain/site-settings";
+import type { OperationalHealthSnapshot } from "./operational-health";
 
 export type OperationsActor = Readonly<{
   session: TransactionSessionActor;
@@ -89,6 +90,7 @@ export type AiRequestResultBody = Readonly<{
 export interface OperationsQueryPort {
   getSiteSettings(): Promise<SiteSettings>;
   getDashboard(): Promise<PublicOperationsDashboardDto>;
+  getOperationalHealth(): Promise<OperationalHealthSnapshot>;
   listAuditLogs(input: Readonly<{ page: number; pageSize: number; action?: string }>): Promise<Readonly<{ items: AuditLogDto[]; totalCount: number }>>;
   getAuditStats(): Promise<AuditStatsDto>;
   listAiRequests(input: Readonly<{ page: number; pageSize: number; status?: AiRequestLedgerDto["status"] }>): Promise<Readonly<{ items: AiRequestLedgerDto[]; totalCount: number }>>;
