@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-09-21T08:30:52.234Z",
+  "version": "KLOL_KAKAO_BOT_V40_R24_2026_09_20",
+  "unchanged": true,
+  "artifacts": [
+    {
+      "kind": "public",
+      "sha256": "b1ee39b0c48f925d2d3b39831bd720c4e82356fef999eb168b785d29fb7e85fe"
+    },
+    {
+      "kind": "private",
+      "sha256": "49cbf16a70d0e34f5ebabfa3181baf012a6548cf405e1b9a8170f728aec6ed39"
+    }
+  ]
+}

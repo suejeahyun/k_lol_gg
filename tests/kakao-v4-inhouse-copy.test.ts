@@ -114,9 +114,80 @@ test("copy delta preserves latest rows, merges only pure additions, and never re
   const participant = (slotNo: number, name: string) => ({ slotNo, name, reserve: false, riotId: null, mainPosition: "ALL" as const, subPositions: [], nameOnly: true as const });
   const original = [row(1, "서지오")];
   const current = [row(2, "먼저신청")];
-  assert.deepEqual(planInhouseCopyAdditions({ original, current, submitted: [participant(1, "서지오"), participant(2, "민규")] })?.map((item) => item.name), ["민규"]);
+  assert.deepEqual(planInhouseCopyAdditions({ original, current, submitted: [participant(1, "서지오"), participant(2, "민규")] })?.additions.map((item) => item.name), ["민규"]);
   assert.equal(planInhouseCopyAdditions({ original, current, submitted: [participant(2, "민규")] }), null);
   assert.equal(planInhouseCopyAdditions({ original, current, submitted: [participant(1, "바꾼이름")] }), null);
   assert.equal(planInhouseCopyAdditions({ original, current, submitted: [participant(2, "서지오")] }), null);
   assert.equal(planInhouseCopyAdditions({ original, current, submitted: [{ ...participant(1, "서지오"), nameOnly: undefined, mainPosition: "TOP", subPositions: [] }] }), null);
+});
+
+const pendingCopyForm = [
+  "[내전 #9] 1/10명", "》모드: 협곡", "》시작: 21:00", "",
+  "1. 검사갑", "2. (회원 확인 중)", ...Array.from({ length: 8 }, (_, index) => `${index + 3}.`),
+  "", "예비 1.", "", "회원 확인 필요 1명 · 아직 참가 확정 전", "확인 2. 검사를", "", "양식코드: ABCDE-FGHJK",
+].join("\n");
+
+test("old pending footers restore placeholders but never override a corrected body row", () => {
+  for (const footer of ["확인 2. 검사를", "확인 2."]) {
+    const edited = pendingCopyForm.replace("2. (회원 확인 중)", "2. 새이름").replace("확인 2. 검사를", footer);
+    const command = parse(edited);
+    if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("pending name correction must parse");
+    assert.equal(command.participants.find((row) => row.slotNo === 2)?.name, "새이름");
+    assert.equal(command.participants.find((row) => row.slotNo === 2)?.reviewRequired, undefined);
+  }
+  const unchanged = parse(pendingCopyForm);
+  if (unchanged?.domain !== "SEASON" || unchanged.action !== "SYNC") assert.fail("old placeholder must still parse");
+  assert.equal(unchanged.participants.find((row) => row.slotNo === 2)?.name, "검사를");
+  assert.equal(parse(`${pendingCopyForm}\n확인 2. 다른이름`), null, "duplicate footers remain ambiguous");
+  assert.equal(parse(`${pendingCopyForm}\n2. 다른이름`), null, "duplicate body slots remain ambiguous");
+});
+
+test("copy start text preserves free-form event descriptions without inventing a scheduled clock", () => {
+  for (const value of ["저티어내전 최티E3까지 9시 시작", "9시", "모이면 시작"]) {
+    const command = parse(pendingCopyForm.replace("21:00", value));
+    if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("free-form start must parse");
+    assert.equal(command.roundMetadata?.startTimeText, value);
+    assert.equal(command.roundMetadata?.scheduledStartAt, null);
+  }
+  const clock = parse(pendingCopyForm.replace("21:00", "9:30"));
+  if (clock?.domain !== "SEASON" || clock.action !== "SYNC") assert.fail("explicit clock must parse");
+  assert.equal(clock.roundMetadata?.startTimeText, "09:30");
+  assert.match(clock.roundMetadata?.scheduledStartAt ?? "", /T00:30:00\.000Z$/u);
+  for (const value of ["", "가".repeat(33), "모이면\u0007시작"]) {
+    assert.equal(parse(pendingCopyForm.replace("21:00", value)), null);
+  }
+});
+
+test("pending name corrections require the original pending row to still be current", () => {
+  const pending: InhouseCopyRow = { slotNo: 2, name: "검사를", reserve: false, pending: true, mainPosition: "MID", subPositions: ["SUP"] };
+  const corrected = { slotNo: 2, name: "새이름", reserve: false, riotId: null, mainPosition: "ALL" as const, subPositions: [], nameOnly: true as const };
+  const plan = planInhouseCopyAdditions({ original: [pending], current: [pending], submitted: [corrected] });
+  assert.deepEqual(plan?.additions, []);
+  assert.equal(plan?.pendingEdits.length, 1);
+  assert.deepEqual(plan?.pendingEdits[0]?.submitted, { ...corrected, mainPosition: "MID", subPositions: ["SUP"] });
+  for (const current of [
+    [], [{ ...pending, name: "누군가수정" }], [{ ...pending, pending: false }],
+    [{ ...pending, mainPosition: "TOP" as const }], [{ ...pending, reserve: true }],
+    [pending, { ...pending, slotNo: 3, name: corrected.name }],
+  ]) {
+    assert.equal(planInhouseCopyAdditions({ original: [pending], current, submitted: [corrected] }), null);
+  }
+  assert.equal(planInhouseCopyAdditions({ original: [{ ...pending, pending: false }], current: [pending], submitted: [corrected] }), null);
+  assert.equal(planInhouseCopyAdditions({ original: [pending], current: [pending], submitted: [] }), null);
+});
+
+test("pending corrections and concurrent additions preserve other saved and cancelled rows", () => {
+  const first: InhouseCopyRow = { slotNo: 1, name: "검사갑", reserve: false, pending: false, mainPosition: "MID", subPositions: ["TOP"] };
+  const pending: InhouseCopyRow = { ...first, slotNo: 2, name: "검사를", pending: true };
+  const participant = (slotNo: number, name: string) => ({ slotNo, name, reserve: false, riotId: null, mainPosition: "ALL" as const, subPositions: [], nameOnly: true as const });
+  const current = [pending, { ...first, slotNo: 3, name: "동시참가" }];
+  const plan = planInhouseCopyAdditions({ original: [first, pending], current,
+    submitted: [participant(1, first.name), participant(2, "새이름"), participant(3, "새참가")] });
+  assert.deepEqual(plan?.additions.map((row) => row.name), ["새참가"]);
+  assert.deepEqual(plan?.pendingEdits.map((edit) => edit.submitted.name), ["새이름"]);
+  const staleDraft = planInhouseCopyAdditions({ original: [], current: [first],
+    submitted: [{ ...participant(1, first.name), nameOnly: undefined, mainPosition: "MID", subPositions: ["TOP"] }, participant(2, "새참가")] });
+  assert.deepEqual(staleDraft?.additions.map((row) => row.name), ["새참가"]);
+  assert.equal(planInhouseCopyAdditions({ original: [pending], current: [pending],
+    submitted: [participant(2, pending.name), participant(3, pending.name)] }), null);
 });

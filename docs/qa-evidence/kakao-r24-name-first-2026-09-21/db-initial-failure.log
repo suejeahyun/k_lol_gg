@@ -1,0 +1,101 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomically with owner/session checks (1038.0315ms)
+✔ party member statistics are bounded and count distinct parties and primary companions (75.7798ms)
+✔ S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity (83.4533ms)
+✔ Kakao aggregate controllers block confused-deputy lifecycle mutations (135.3079ms)
+✔ V4 scrim finish completes only the active same-room target and replays without duplicate writes (86.4169ms)
+✔ concurrent V4 party member commands serialize on the locked latest aggregate (216.0503ms)
+✔ concurrent V4 scrim participant commands compose after the database row lock (158.5318ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2615.6346
+✔ S09 operation forms persist signed submissions and ADMIN TOTP mutations atomically (152.4679ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 823.9752
+✔ signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room (180.8501ms)
+✖ in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room (158.8898ms)
+✔ authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes (185.18ms)
+✔ signed Kakao season snapshots match exact players and preserve unresolved entries for review (143.5026ms)
+✔ recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks (113.3254ms)
+✔ in-house shortcuts and full snapshots enforce integrated SITE capacity while preserving confirmed decisions (182.6456ms)
+✔ in-house finish cancels only mutable same-room rows, hides the round, and replays without writes (109.5675ms)
+✔ in-house copy codes merge concurrent additions, preserve site-linked lanes, block destructive edits and never revive cancelled originals (327.3804ms)
+✔ name-first in-house copies keep pending slots and merge metadata without overwriting newer edits (193.6449ms)
+✔ in-house copy forms reopen a vacated reserve slot and preserve the remaining roster (130.8932ms)
+✔ owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke (123.8334ms)
+✔ Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox (156.9068ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2946.4215
+
+✖ failing tests:
+
+test at tests\database\kakao-assistant.contract.test.ts:305:1
+✖ in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room (158.8898ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /확인 1\. 재현/u. Input:
+  
+  '[내전 #62] 1/10명\n' +
+    '》모드: 협곡\n' +
+    '》시작: 21:00\n' +
+    '\n' +
+    '전체 복사 → 빈칸에 이름 → 전체 전송\n' +
+    '라인 선택: 이름/주라인/부라인\n' +
+    '\n' +
+    '1. 재현\n' +
+    '2.\n' +
+    '3.\n' +
+    '4.\n' +
+    '5.\n' +
+    '6.\n' +
+    '7.\n' +
+    '8.\n' +
+    '9.\n' +
+    '10.\n' +
+    '\n' +
+    '예비 1.\n' +
+    '\n' +
+    '양식코드: MNNMQ-6SAEN'
+  
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\kakao-v4-gateway\tests\database\kakao-assistant.contract.test.ts:469:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '[내전 #62] 1/10명\n》모드: 협곡\n》시작: 21:00\n\n전체 복사 → 빈칸에 이름 → 전체 전송\n라인 선택: 이름/주라인/부라인\n\n1. 재현\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n예비 1.\n\n양식코드: MNNMQ-6SAEN',
+    expected: /확인 1\. 재현/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+[db-contract] cluster stopped and disposable workspace path removed
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:494
+      throw new Error(`${relativeTestFile} failed with exit code ${exitCode}.`);
+            ^
+
+Error: tests/database/kakao-assistant.contract.test.ts failed with exit code 1.
+    at runContractTests (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:494:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async main (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:1236:7)
+    at async <anonymous> (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:1261:1)
+
+Node.js v24.14.1

@@ -466,7 +466,8 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     const activatedStatus = await reserveRound("STATUS", null);
     assert.equal(activatedStatus.body.roundMetadata?.recruitNo, 62);
     assert.equal(activatedStatus.body.roundMetadata?.organizerText, "재현");
-    assert.match(activatedStatus.body.v1StrictLegacyReply ?? "", /확인 1\. 재현/u);
+    assert.match(activatedStatus.body.v1StrictLegacyReply ?? "", /^1\. 재현$/mu);
+    assert.match(activatedStatus.body.v1StrictLegacyReply ?? "", /\[내전 #62\] 1\/10명/u);
     sequence += 1;
     const quickReserve = await assistant.syncSeasonSnapshot({
       actorPrincipalId: principalId,
@@ -512,7 +513,7 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
 
     const first = await sync({ room: roomA, mode: "RIFT", name: `방A-${suffix}`, time: "20:00", notice: "승리팀 랜덤 1인 스킨 증정" });
     assert.equal(first.body.metadataUpdated, true);
-    assert.match(first.body.v1StrictLegacyReply ?? "", /신청 저장|회원 확인 필요/u);
+    assert.match(first.body.v1StrictLegacyReply ?? "", /신청 저장/u);
     assert.deepEqual(first.body.roundMetadata, {
       recruitNo: 61,
       mode: "RIFT",
@@ -598,7 +599,7 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.match(roomAStatus.body.legacyReply ?? "", /》모드: 칼바람/u);
     assert.match(roomAStatus.body.legacyReply ?? "", /》시작: 20:30/u);
     assert.match(roomAStatus.body.legacyReply ?? "", /칼바람 공지/u);
-    assert.match(roomAStatus.body.legacyReply ?? "", /전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송/u);
+    assert.match(roomAStatus.body.legacyReply ?? "", /전체 복사 → 빈칸에 이름 → 전체 전송/u);
     assert.match(roomAStatus.body.legacyReply ?? "", new RegExp(`^1\\. 방A-${suffix}$`, "mu"));
     assert.match(roomAStatus.body.legacyReply ?? "", new RegExp(`사이트-${suffix}`, "u"));
     assert.doesNotMatch(roomAStatus.body.legacyReply ?? "", new RegExp(`방B-${suffix}`, "u"));
@@ -789,8 +790,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       "[K-LOL.GG 내전현황]",
       "🔎 전체 명단: 내전상세 번호",
       "",
-      `#7 ${year}-${month}-${day} 미정 시작 (1/10 / 예비 1)`,
-      "회원 확인 필요 2명",
+      `#7 ${year}-${month}-${day} 미정 시작 (3/10 / 예비 1)`,
       "└ 내전상세 7",
       `#8 ${year}-${month}-${day} 미정 시작 (1/10)`,
       "└ 내전상세 8",
@@ -812,7 +812,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     assert.equal(siteRound.body.entries[0]?.source, "SITE");
     assert.equal(siteRound.body.legacyReply, [
       "[내전 #8] 1/10명", "》모드: 협곡", "》시작: 미정", "",
-      "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송", "",
+      "전체 복사 → 빈칸에 이름 → 전체 전송", "",
       `1. 사이트-${suffix}`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
       "", "예비 1.", "", `양식코드: ${siteRound.body.formCode}`,
     ].join("\n"));
@@ -1418,7 +1418,7 @@ test("in-house copy codes merge concurrent additions, preserve site-linked lanes
     const first = await send(syncCommand(draft.body, [{ ...member(0), nameOnly: undefined, mainPosition: "MID", subPositions: ["SUP"] }]));
     assert.equal(first.body.entries.length, 1);
     assert.equal(first.body.roundMetadata?.organizerText, names[0]);
-    assert.match(first.body.v1StrictLegacyReply ?? "", /전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송/u);
+    assert.match(first.body.v1StrictLegacyReply ?? "", /전체 복사 → 빈칸에 이름 → 전체 전송/u);
     assert.match(first.body.v1StrictLegacyReply ?? "", /양식코드:/u);
     assert.doesNotMatch(first.body.v1StrictLegacyReply ?? "", /이름\/현티어/u);
     const concurrent = await Promise.allSettled([
@@ -1441,7 +1441,6 @@ test("in-house copy codes merge concurrent additions, preserve site-linked lanes
       { ...metadata, organizerText: "다른주최자" }, { ...metadata, noticeText: "옛 복사본 공지" },
     ]) {
       await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), roundMetadata: changedMetadata, copyGuard: { operatingDate: null, saveReference: null } }), precondition);
-      await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), roundMetadata: changedMetadata }), precondition);
     }
     await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), copyGuard: { operatingDate: "2026-01-01", saveReference: legacyAdd.body.saveReference! } }), precondition);
     const unchanged = await send({ action: "STATUS", seasonId, applyDate: today, recruitNo: 1, participants: [] });
@@ -1455,9 +1454,9 @@ test("in-house copy codes merge concurrent additions, preserve site-linked lanes
     const pending = await send(syncCommand(notRevived.body, [...roster, { ...member(3, 4), name: `미등록-${suffix}` }]));
     assert.equal(pending.body.appliedCount, 3);
     assert.equal(pending.body.pendingCount, 1);
-    assert.match(pending.body.v1StrictLegacyReply ?? "", /\[내전 #1\] 3\/10명/u);
-    assert.match(pending.body.v1StrictLegacyReply ?? "", /회원 확인 필요 1명 · 아직 참가 확정 전/u);
-    assert.match(pending.body.v1StrictLegacyReply ?? "", /4\. \(회원 확인 중\)/u);
+    assert.match(pending.body.v1StrictLegacyReply ?? "", /\[내전 #1\] 4\/10명/u);
+    assert.doesNotMatch(pending.body.v1StrictLegacyReply ?? "", /회원 확인|아직 참가 확정 전/u);
+    assert.ok(pending.body.v1StrictLegacyReply?.includes(`4. 미등록-${suffix}`));
     await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", roundMetadata: metadata, participants: [] });
     const siteApplicationId = randomUUID();
     await database.insert(seasonApplications).values({
@@ -1489,6 +1488,89 @@ test("in-house copy codes merge concurrent additions, preserve site-linked lanes
     assert.deepEqual(siteAfter.subPositions, ["JGL"]);
   } finally {
     await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test("name-first in-house copies keep pending slots and merge metadata without overwriting newer edits", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const now = new Date();
+  const today = recruitingOperatingDateKey(now);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const room = `room-name-first-${suffix}`;
+  const assistant = new PostgresKakaoAssistant(database);
+  const names = [1, 2, 3].map((index) => `합성접수${index}-${suffix}`);
+  const renamed = `합성정정-${suffix}`;
+  let sequence = 0;
+  const send = (command: KakaoSeasonSnapshotCommand) => {
+    sequence += 1;
+    return assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId, intent: intent(`nonce-name-first-${suffix}-${sequence}`, `name-first-${sequence}`, room),
+      requestKey: `name-first-${suffix}-${sequence}`, scope: "kakao:season-name-first-contract", command, requestId: randomUUID(), now,
+    });
+  };
+  const metadata = (time: string | null) => ({
+    capacity: 10, startTimeText: time,
+    scheduledStartAt: time && /^\d{2}:\d{2}$/u.test(time) ? new Date(`${today}T${time}:00+09:00`).toISOString() : null,
+    gameInfo: null, organizerText: null, noticeText: null,
+  });
+  const member = (name: string, slotNo: number) => ({ slotNo, name, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false, nameOnly: true as const });
+  const sync = (body: KakaoSeasonSnapshotDto, time: string | null, participants: Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }>["participants"]) => send({
+    action: "SYNC", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata(time), participants,
+    reserveSectionObserved: true, copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
+  });
+  const precondition = (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED";
+  try {
+    await applyMigrations(database);
+    await database.insert(seasons).values({ id: seasonId, name: `Name first ${suffix}`, nameNormalized: `name first ${suffix}`, status: "ACTIVE", activatedAt: now });
+    const draft = await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata(null), participants: [] });
+    const first = await sync(draft.body, "21:00", [member(names[0]!, 1)]);
+    assert.equal(first.body.appliedCount, 0, "name-only registration must not invent a linked member");
+    assert.equal(first.body.pendingCount, 1);
+    assert.match(first.body.v1StrictLegacyReply!, /\[내전 #1\] 1\/10명/u);
+    assert.ok(first.body.v1StrictLegacyReply!.includes(`1. ${names[0]}`));
+    assert.match(first.body.v1StrictLegacyReply!, /^신청 저장:/u);
+    assert.doesNotMatch(first.body.v1StrictLegacyReply!, /회원 확인|확인 1\.|사이트 등록 이름/u);
+    assert.equal((await database.select().from(players).where(eq(players.memberName, names[0]!))).length, 0);
+
+    const twoMembers = [member(names[0]!, 1), member(names[1]!, 2)];
+    const fromOldDraft = await sync(draft.body, "21:00", twoMembers);
+    assert.equal(fromOldDraft.body.entries.length, 2, "the first blank form can add a name with the already saved time");
+    const changedTime = await sync(fromOldDraft.body, "21:30", twoMembers);
+    assert.equal(changedTime.body.roundMetadata?.startTimeText, "21:30");
+    assert.equal(changedTime.body.roundMetadata?.scheduledStartAt, metadata("21:30").scheduledStartAt);
+    const threeMembers = [...twoMembers, member(names[2]!, 3)];
+    const staleAdd = await sync(fromOldDraft.body, "21:00", threeMembers);
+    assert.equal(staleAdd.body.entries.length, 3);
+    assert.equal(staleAdd.body.roundMetadata?.startTimeText, "21:30", "an unchanged old time preserves the newer saved time");
+    await assert.rejects(sync(fromOldDraft.body, "22:00", threeMembers), precondition);
+    const afterConflict = await send({ action: "STATUS", seasonId, applyDate: today, recruitNo: 1, participants: [] });
+    assert.equal(afterConflict.body.saveReference, staleAdd.body.saveReference, "conflicting edits roll back completely");
+
+    const originalPending = (await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.slotNo, 2),
+    )))[0]!;
+    const correctedMembers = [member(names[0]!, 1), member(renamed, 2), member(names[2]!, 3)];
+    const corrected = await sync(afterConflict.body, "21:30", correctedMembers);
+    assert.equal(corrected.body.entries.length, 3);
+    const correctedPending = (await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.id, originalPending.id)))[0]!;
+    assert.equal(correctedPending.suppliedName, renamed);
+    assert.equal(correctedPending.slotNo, 2);
+    assert.equal(correctedPending.status, "ACTIVE");
+    await assert.rejects(sync(afterConflict.body, "21:30", [member(names[0]!, 1), member(`다른정정-${suffix}`, 2), member(names[2]!, 3)]), precondition);
+    await assert.rejects(sync(corrected.body, "21:30", [...correctedMembers, member(renamed, 4)]), precondition);
+    const freeTime = "저티어내전 최티E3까지 9시 시작";
+    const descriptiveTime = await sync(corrected.body, freeTime, correctedMembers);
+    assert.equal(descriptiveTime.body.roundMetadata?.startTimeText, freeTime);
+    assert.equal(descriptiveTime.body.roundMetadata?.scheduledStartAt, null);
+    assert.ok(descriptiveTime.body.v1StrictLegacyReply!.includes(`》시작: ${freeTime}`));
+    assert.equal((await database.select().from(seasonApplications).where(eq(seasonApplications.seasonId, seasonId))).length, 0);
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();
   }
 });

@@ -439,7 +439,7 @@ function inhouseTemplate(command: Readonly<{
     `》모드: ${mode}`,
     `》시작: ${command.time}`,
     "",
-    "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송",
+    "전체 복사 → 빈칸에 이름 → 전체 전송",
     ...(command.mode === "RIFT" ? ["라인 선택: 이름/주라인/부라인"] : []),
   ];
   lines.push("");
@@ -463,7 +463,7 @@ function participationGuide(publicOrigin: string) {
     "협곡 라인은 이름/주라인/부라인으로 선택 입력할 수 있습니다.",
     "",
     "사이트 회원 이름으로 신청하면 기존 회원 정보와 연결됩니다.",
-    "회원 확인 필요로 표시되면 가입·이름 확인 후 운영진에게 알려주세요.",
+    "사이트 회원이 아니어도 이름으로 먼저 접수됩니다. 회원 연결은 나중에 운영진이 도와드려요.",
     `${publicOrigin}/signup`,
   ].join("\n");
 }
@@ -614,18 +614,8 @@ export function formatInhouseMemberReply(
     .sort((left, right) => left.slotNo - right.slotNo);
   const isReserve = (entry: KakaoSeasonSnapshotDto["entries"][number]) =>
     Boolean(entry.reserve || entry.status === "RESERVE" || entry.status === "MATCHED_RESERVE");
-  const reviewEntries = entries.filter((entry) => entry.status === "UNMATCHED" || entry.status === "AMBIGUOUS");
-  const reserveEntries = entries.filter((entry) => isReserve(entry) && !reviewEntries.includes(entry));
-  const mainEntries = entries.filter((entry) => !isReserve(entry) && !reviewEntries.includes(entry));
-  const inputIdentity = input.name.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ko-KR");
-  const unmatched = input.action === "ADD" && reviewEntries.find((entry) =>
-    entry.suppliedName.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ko-KR") === inputIdentity);
-  if (unmatched) return [
-    `회원 확인 필요: ${input.name} · 아직 참가 확정 전`,
-    unmatched.status === "AMBIGUOUS" ? "같은 이름의 회원이 있어 운영진 확인이 필요해요." : "신청 내용은 보관했어요. 회원가입 후 운영진에게 확인을 요청해주세요.",
-    "https://k-lol-gg.vercel.app/signup",
-    ...(body.legacyReply ? ["", body.legacyReply] : []),
-  ].join("\n");
+  const reserveEntries = entries.filter(isReserve);
+  const mainEntries = entries.filter((entry) => !isReserve(entry));
   return [
     `[K-LOL.GG 내전 #${input.recruitNumber} 명단] ${outcome} 현재 ${mainEntries.length}/${capacity}명 · 예비 ${reserveEntries.length}명`, "",
     ...(body.legacyReply ? [body.legacyReply] : [
@@ -947,6 +937,7 @@ export class KakaoV4CommandDispatcher {
           "[K-LOL.GG 구인구직 마무리]",
           `현재 운영일의 진행 중인 모집번호 #${String(command.target.recruitNumber)}를 찾지 못했습니다.`,
           "최신 구인현황을 확인해 주세요.",
+          `내전 모집을 마치려면: 내전 ${String(command.target.recruitNumber)}ㅉ`,
         ].join("\n");
         return Object.freeze({
           kind: "PARTY",

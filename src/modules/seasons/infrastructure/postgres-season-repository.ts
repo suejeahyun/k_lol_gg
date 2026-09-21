@@ -1354,6 +1354,17 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .limit(1);
       const existing = existingRows[0] ?? null;
       const plan = planSeasonApplicationMerge(existing);
+      if (existing?.source === "KAKAO" && (
+        (existing.sourceRoomIdHash !== null && (pending.sourceRoomIdHash === null ||
+          !Buffer.from(existing.sourceRoomIdHash).equals(pending.sourceRoomIdHash))) ||
+        (existing.sourceMode !== null && existing.sourceMode !== pending.sourceMode) ||
+        (plan.action === "PRESERVE" && (
+          (existing.sourceRoomIdHash === null && pending.sourceRoomIdHash !== null) ||
+          (existing.sourceMode === null && pending.sourceMode !== null)
+        ))
+      )) {
+        throw new SeasonServiceError("INVALID_TRANSITION", "다른 카카오방 또는 종목의 신청이 있어 자동으로 연결할 수 없습니다.");
+      }
       let application = existing;
       if (plan.action === "CREATE_KAKAO") {
         const createdRows = await transaction.insert(seasonApplications).values({
@@ -1368,6 +1379,8 @@ export class PostgresSeasonRepository implements SeasonRepository {
           status: input.applicationStatus,
           source: "KAKAO",
           sourceReferenceHash: pending.sourceReferenceHash,
+          sourceRoomIdHash: pending.sourceRoomIdHash,
+          sourceMode: pending.sourceMode,
           reviewedByUserAccountId: input.applicationStatus === "RESERVE" ? envelope.actorUserAccountId : null,
           reviewedAt: input.applicationStatus === "RESERVE" ? now : null,
           createdAt: now,
@@ -1381,6 +1394,8 @@ export class PostgresSeasonRepository implements SeasonRepository {
           subPositions: pending.subPositions,
           status: input.applicationStatus,
           sourceReferenceHash: pending.sourceReferenceHash,
+          sourceRoomIdHash: pending.sourceRoomIdHash,
+          sourceMode: pending.sourceMode,
           reviewNote: null,
           reviewedByUserAccountId: input.applicationStatus === "RESERVE" ? envelope.actorUserAccountId : null,
           reviewedAt: input.applicationStatus === "RESERVE" ? now : null,

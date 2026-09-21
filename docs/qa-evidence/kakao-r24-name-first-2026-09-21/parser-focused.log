@@ -1,0 +1,46 @@
+✔ inhouse copy accepts names-only main/reserve rows and preserves save reference separately from notices (7.6066ms)
+✔ inhouse copy rejects malformed/duplicate save references and marks old forms as legacy (1.9983ms)
+✔ inhouse copy still accepts optional lanes and routes malformed lane input to review (0.3798ms)
+✔ inhouse stale forms return the latest copy without retrying the mutation, and old days show today's rounds (1.468ms)
+✔ compact inhouse copies retain site-linked optional lanes and separate review rows from participants (2.1485ms)
+✔ copy delta preserves latest rows, merges only pure additions, and never revives removed originals (0.6445ms)
+✔ old pending footers restore placeholders but never override a corrected body row (1.1118ms)
+✔ copy start text preserves free-form event descriptions without inventing a scheduled clock (1.218ms)
+✔ pending name corrections require the original pending row to still be current (0.3286ms)
+✔ pending corrections and concurrent additions preserve other saved and cancelled rows (0.317ms)
+✔ real RIFT input recovers one missing position slash and accepts empty flexible rows (9.0425ms)
+✔ recovery is limited to two valid position aliases and records the failed field (0.2642ms)
+✔ legacy empty sub-position markers are accepted only in the sub-position field (0.3096ms)
+✔ mixed real-world rows keep valid entries, route partial rows to review, and use the last duplicate slot (0.6121ms)
+✔ a final empty duplicate row means cancellation while a missing numbered row is preserved (0.4136ms)
+✔ an incomplete duplicate footer cannot replace a valid slot while valid edits stay last-write-wins (0.4455ms)
+✔ numbered footer text after a complete empty roster cannot create a pending participant (0.3345ms)
+✔ valid edits and explicit cancellation after a complete roster remain last-write-wins (0.6102ms)
+✔ the former canonical failure maps to the exact public HTTP 400 document (17.595ms)
+✔ [P0-INHOUSE-LIVE-01] 동휘/김동휘 실양식은 Mid all을 복구해 같은 semantic payload로 dispatch한다 (7.9039ms)
+✔ [P0-INHOUSE-LIVE-02] slash 계약에 맞춘 MID 또는 ALL 입력은 이름과 무관하게 정상 payload를 만든다 (1.4762ms)
+✔ [P0-INHOUSE-LIVE-03] Mid all 복구는 mainPosition MID를 유지하고 ALL 부라인을 저장하지 않는다 (0.1783ms)
+✔ [P0-INHOUSE-METADATA-01] 독립 공지와 20시 시작을 전체 스냅샷 메타로 보존한다 (0.5897ms)
+✔ [P0-INHOUSE-METADATA-02] 시작 줄 tail 공지는 수용하고 슬롯 뒤 문장은 공지로 오인하지 않는다 (0.5582ms)
+✔ [P0-INHOUSE-METADATA-03] 공지가 없는 전체 스냅샷은 명시적인 null을 만든다 (0.4302ms)
+✔ [P0-INHOUSE-METADATA-04] 시작 줄 다음과 인원 줄 사이의 공지도 구조 필드와 분리해 저장한다 (0.3935ms)
+✔ V1: 내전구인만 입력하면 종목 선택 안내를 정확히 보낸다 (11.1188ms)
+✔ V1: 알 수 없는 내전 종목에만 입력값을 포함한 오류와 선택 안내를 보낸다 (2.736ms)
+✔ V1: 협곡 내전구인은 티어·라인과 빈 칸을 포함한 전체 양식을 정확히 보낸다 (2.5574ms)
+✔ V1: 칼바람 내전구인은 이름 전용 전체 양식을 정확히 보낸다 (1.7526ms)
+✔ V1: 번호 없는 내전현황은 모든 회차 요약과 내전상세 명령을 정확히 보낸다 (3.6975ms)
+✔ V1: 내전상세 번호는 참여자와 빈 칸을 포함한 편집 가능한 전체 양식을 정확히 보낸다 (2.1417ms)
+✔ V1: 작성한 전체 신청 양식은 확인 단계 없이 한 번 동기화하고 서버 답변을 그대로 보낸다 (3.4944ms)
+✔ V1: 같은 전체 신청 양식이 연속 수신되면 첫 반영 뒤 중복 요청과 중복 답변을 내지 않는다 (3.182ms)
+✔ V1: 빈 전체 양식은 일반·ASCII slash·전각 slash 모두 0명 authoritative sync로 처리한다 (5.9797ms)
+✔ V1: 불완전한 빈 양식과 double·URL·중간 slash는 authoritative sync를 실행하지 않는다 (6.4861ms)
+✔ 외출 필수값 누락은 항목별 안내만 보내고 서버 제출을 실행하지 않는다 (4.1459ms)
+✔ 오류 제목이 이미 포함된 서버 상세는 K-LOL.GG 요청 실패 제목을 중복하지 않는다 (1.8399ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 211.2178

@@ -103,8 +103,8 @@ export function v1StrictSeasonReply(body: KakaoSeasonSnapshotDto, action: "STATU
     return [
       `[K-LOL.GG 내전 #${body.recruitNo ?? 1} 명단 ${changed ? "업데이트" : "변경 없음"}]`,
       ...(changed ? [`추가 ${body.createdCount ?? 0} · 수정 ${body.updatedCount ?? 0} · 취소 ${body.cancelledCount}`] : []),
-      `현재: ${body.appliedCount + body.confirmedCount}/${body.roundMetadata?.capacity ?? 10}`,
-      ...(body.pendingCount > 0 ? [`회원 확인 필요 ${body.pendingCount}명 · 아직 참가 확정 전`] : []),
+      `현재: ${body.appliedCount + body.confirmedCount + body.entries.filter((entry) =>
+        (entry.status === "UNMATCHED" || entry.status === "AMBIGUOUS") && !entry.reserve).length}/${body.roundMetadata?.capacity ?? 10}`,
     ].join("\n");
   }
   return "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.";

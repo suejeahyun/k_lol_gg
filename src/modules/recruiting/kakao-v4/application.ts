@@ -58,7 +58,10 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
       "1. 최근 봇 명단 전체 복사", "2. 빈칸에 내 이름 입력", "3. 메시지 전체 전송 = 저장", "",
       "내전은 사이트에 등록한 이름으로 작성해 주세요.",
       "봇의 저장 결과를 확인하고, 다음 사람은 새 명단을 복사해 주세요.",
-      "다른 사람 이름·시간·게임·양식코드는 그대로 두세요.", "",
+      "참가할 때는 다른 사람 이름·시간·게임·양식코드를 그대로 두세요.",
+      "내전은 이름으로 먼저 접수하고 사이트 회원은 나중에 연결할 수 있어요.",
+      "내전 시간·공지는 최신 내전 양식에서 수정할 수 있어요.", "",
+      "연결 오류가 나오면 내전상세 번호로 저장 여부를 먼저 확인해 주세요.", "",
       "새 모집 만들기", "파티: 5인파티", "내전: 내전구인 협곡 / 내전구인 칼바람 / 내전구인 증바람",
       "처음 파티를 만들 때만 첫 전송 전에 시간·게임을 정하고 내 이름을 넣으세요.",
       "참가가 시작된 파티는 복붙으로 시간·게임을 바꿀 수 없어요.", "",
@@ -78,7 +81,7 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   if (classification.command === "OPERATIONS_INHOUSE_PREVIEW_CANCEL" || classification.command === "OPERATIONS_INHOUSE_CONFIRM") {
     return Object.freeze({
       kind: "REPLY" as const,
-      reply: "[K-LOL.GG 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n미리보기·확인 요청은 취소되었습니다.\n최근 봇 명단 전체 복사 → 빈칸에 사이트 등록 이름 추가 → 전체 전송으로 신청해 주세요.\n기존 이름과 양식코드는 그대로 두고 봇의 저장 결과를 확인해 주세요.\n사이트에는 반영하지 않았으며, 이 명령으로 변경된 내용은 없습니다.",
+      reply: "[K-LOL.GG 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n미리보기·확인 요청은 취소되었습니다.\n최근 봇 명단 전체 복사 → 빈칸에 이름 추가 → 전체 전송으로 신청해 주세요.\n사이트 회원 연결은 접수 후에도 가능합니다.\n기존 이름과 양식코드는 그대로 두고 봇의 저장 결과를 확인해 주세요.\n사이트에는 반영하지 않았으며, 이 명령으로 변경된 내용은 없습니다.",
     });
   }
   if (classification.audience === "INTERNAL") return null;

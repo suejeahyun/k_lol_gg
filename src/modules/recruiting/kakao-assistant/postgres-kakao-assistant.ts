@@ -226,9 +226,8 @@ function legacyInhouseDetail(
   metadata?: LegacySeasonRoundMetadata,
   copyState?: Readonly<{ operatingDate: string; saveReference: string; formCode?: string }>,
 ) {
-  const mainEntries = entries.filter((entry) => !entry.reserve && !entry.pending).sort(compareLegacySeasonEntries);
-  const reserveEntries = entries.filter((entry) => entry.reserve && !entry.pending).sort(compareLegacySeasonEntries);
-  const pendingEntries = entries.filter((entry) => entry.pending).sort(compareLegacySeasonEntries);
+  const mainEntries = entries.filter((entry) => !entry.reserve).sort(compareLegacySeasonEntries);
+  const reserveEntries = entries.filter((entry) => entry.reserve).sort(compareLegacySeasonEntries);
   const capacity = metadata?.capacity ?? LEGACY_INHOUSE_CAPACITY;
   const namesOnly = true;
   const slots: Array<LegacySeasonEntry | null> = Array.from({ length: capacity }, () => null);
@@ -249,25 +248,19 @@ function legacyInhouseDetail(
     ...(metadata?.gameInfo && metadata.gameInfo !== "미입력" ? [`》게임정보: ${metadata.gameInfo}`] : []),
     ...(metadata?.noticeText ? [`》공지: ${oneLineInhouseNotice(metadata.noticeText)}`] : []),
     "",
-    "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송",
+    "전체 복사 → 빈칸에 이름 → 전체 전송",
     ...(metadata?.mode === "RIFT" ? ["라인 선택: 이름/주라인/부라인"] : []),
   ];
   lines.push("");
-  slots.forEach((entry, index) => lines.push(!entry && pendingEntries.some((item) => !item.reserve && item.slotNo === index + 1)
-    ? `${index + 1}. (회원 확인 중)` : legacyInhouseEntryLine(String(index + 1), entry, namesOnly)));
+  slots.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(index + 1), entry, namesOnly)));
   overflow.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(capacity + index + 1), entry, namesOnly)));
   lines.push("");
   reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${entry.slotNo && entry.slotNo > capacity ? entry.slotNo - capacity : index + 1}`, entry, namesOnly)));
-  const occupiedReserveSlots = [...reserveEntries, ...pendingEntries.filter((entry) => entry.reserve)]
+  const occupiedReserveSlots = reserveEntries
     .map((entry, index) => entry.slotNo && entry.slotNo > capacity ? entry.slotNo - capacity : index + 1);
   let nextReserve = 1;
   while (occupiedReserveSlots.includes(nextReserve)) nextReserve += 1;
   if (nextReserve <= capacity) lines.push(`예비 ${nextReserve}.`);
-  if (pendingEntries.length > 0) {
-    lines.push("", `회원 확인 필요 ${pendingEntries.length}명 · 아직 참가 확정 전`);
-    for (const entry of pendingEntries) lines.push(legacyInhouseEntryLine(
-      `확인 ${entry.reserve ? `예비 ${(entry.slotNo ?? capacity + 1) - capacity}` : entry.slotNo ?? 1}`, entry, true));
-  }
   if (copyState?.formCode) lines.push("", `양식코드: ${copyState.formCode}`);
   else if (copyState) lines.push("", `저장기준: ${copyState.operatingDate} / ${copyState.saveReference}`);
   return lines.join("\n");
@@ -286,13 +279,11 @@ function legacyInhouseOverview(
   for (const recruitNo of recruitNos) {
     const entries = grouped.get(recruitNo) ?? [];
     const metadata = metadataByRecruitNo.get(recruitNo);
-    const mainCount = entries.filter((entry) => !entry.reserve && !entry.pending).length;
-    const reserveCount = entries.filter((entry) => entry.reserve && !entry.pending).length;
-    const pendingCount = entries.filter((entry) => entry.pending).length;
+    const mainCount = entries.filter((entry) => !entry.reserve).length;
+    const reserveCount = entries.filter((entry) => entry.reserve).length;
     const reserveText = reserveCount > 0 ? ` / 예비 ${reserveCount}` : "";
     const modeText = metadata ? ` · ${legacyInhouseModeLabel(metadata.mode)}` : "";
     lines.push(`#${recruitNo} ${legacyInhouseDate(applyDate)} ${legacyInhouseStartTime(metadata)} 시작${modeText} (${mainCount}/${metadata?.capacity ?? LEGACY_INHOUSE_CAPACITY}${reserveText})`);
-    if (pendingCount) lines.push(`회원 확인 필요 ${pendingCount}명`);
     if (metadata?.noticeText) lines.push(`공지: ${oneLineInhouseNotice(metadata.noticeText)}`);
     lines.push(`└ 내전상세 ${recruitNo}`);
   }
@@ -345,13 +336,12 @@ function compactLegacySeasonChanges(items: readonly string[]) {
 function legacySeasonSyncReply(recruitNo: number, changes: LegacySeasonSyncChanges) {
   const hasChanges = changes.added.length > 0 || changes.updated.length > 0 || changes.removed.length > 0 ||
     changes.pending.length > 0 || changes.reserve.length > 0;
-  if (!hasChanges && !changes.metadataChanged) return "이미 저장된 명단이에요.";
+  if (!hasChanges && !changes.metadataChanged) return "명단 변경이 없습니다. 참가하려면 번호 옆 빈칸에 이름을 적어주세요.";
   const lines: string[] = [];
   for (const [label, items] of [
-    ["신청 저장", changes.added],
+    ["신청 저장", [...changes.added, ...changes.pending]],
     ["신청 변경 저장", changes.updated],
     ["신청 취소", changes.removed],
-    ["회원 확인 필요 · 아직 참가 확정 전", changes.pending],
     ["예비 신청 저장", changes.reserve],
   ] as const) {
     const text = compactLegacySeasonChanges(items);
@@ -873,7 +863,8 @@ export class PostgresKakaoAssistant {
           command.participants.some((participant) => preserved.includes(participant.slotNo)) ||
           !Number.isSafeInteger(roundMetadata.capacity) || roundMetadata.capacity < 2 || roundMetadata.capacity > 20 ||
           command.participants.some((participant) => participant.slotNo > roundMetadata.capacity * (participant.reserve ? 2 : 1)) ||
-          (roundMetadata.startTimeText !== null && !/^(?:[01]\d|2[0-3]):[0-5]\d$/u.test(roundMetadata.startTimeText)) ||
+          (roundMetadata.startTimeText !== null && (roundMetadata.startTimeText.trim().length < 1 ||
+            roundMetadata.startTimeText.length > 32 || /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/u.test(roundMetadata.startTimeText))) ||
           (roundMetadata.scheduledStartAt !== null && Number.isNaN(new Date(roundMetadata.scheduledStartAt).getTime())) ||
           (roundMetadata.gameInfo != null && (roundMetadata.gameInfo.trim().length < 1 || roundMetadata.gameInfo.length > 500)) ||
           (roundMetadata.organizerText != null && (roundMetadata.organizerText.trim().length < 1 || roundMetadata.organizerText.length > 100)) ||
@@ -1200,32 +1191,44 @@ export class PostgresKakaoAssistant {
             kind: "INHOUSE", scopeHash: sourceRoomIdHash, targetId: beforeCopyState.snapshot.roundId,
             operatingDate: recruitingOperatingDateKey(now), code: formCode, now,
           }) : beforeCopyState.snapshot;
-          if (!stored || stored.roundId !== beforeCopyState.snapshot.roundId || stored.mode !== command.mode || !Array.isArray(stored.rows)) {
+          if (!stored || stored.roundId !== beforeCopyState.snapshot.roundId || stored.mode !== command.mode ||
+              stored.mode !== beforeCopyState.snapshot.mode || !Array.isArray(stored.rows)) {
             throw new KakaoAssistantError("PRECONDITION_FAILED");
           }
           const originalRows = stored.rows as unknown as readonly InhouseCopyRow[];
           const normalizeMetadata = (value: unknown) => typeof value === "string" && value !== "미입력" ? value.trim() || null : null;
-          if (stored.status !== "DRAFT" && requestedMetadata && (
-            requestedMetadata.capacity !== stored.capacity ||
-            requestedMetadata.startTimeText !== stored.startTimeText ||
-            normalizeMetadata(requestedMetadata.gameInfo) !== normalizeMetadata(stored.gameInfo) ||
-            (requestedMetadata.organizerText != null && requestedMetadata.organizerText !== stored.organizerText) ||
-            normalizeMetadata(requestedMetadata.noticeText) !== normalizeMetadata(stored.noticeText)
-          )) throw new KakaoAssistantError("PRECONDITION_FAILED");
-          // A newer SITE/admin edit also makes the old draft's metadata non-authoritative.
-          if (stored.status === "DRAFT" && currentRound?.status !== "DRAFT" && requestedMetadata && (
-            requestedMetadata.capacity !== stored.capacity || requestedMetadata.startTimeText !== stored.startTimeText ||
-            normalizeMetadata(requestedMetadata.gameInfo) !== normalizeMetadata(stored.gameInfo) ||
-            normalizeMetadata(requestedMetadata.noticeText) !== normalizeMetadata(stored.noticeText)
-          )) throw new KakaoAssistantError("PRECONDITION_FAILED");
-          guardedParticipants = planInhouseCopyAdditions({ original: originalRows, current: beforeCopyState.rows, submitted: command.participants });
-          if (!guardedParticipants) throw new KakaoAssistantError("PRECONDITION_FAILED");
-          guardedPreserveSlots = beforeCopyState.rows.map((row) => row.slotNo);
-          if (currentRound && currentRound.status !== "DRAFT") requestedMetadata = {
-            capacity: currentRound.capacity, startTimeText: currentRound.startTimeText,
-            scheduledStartAt: currentRound.scheduledStartAt?.toISOString() ?? null,
-            gameInfo: currentRound.gameInfo, organizerText: currentRound.organizerText, noticeText: currentRound.noticeText,
-          };
+          if (requestedMetadata && currentRound) {
+            if (requestedMetadata.capacity !== stored.capacity || currentRound.capacity !== stored.capacity) {
+              throw new KakaoAssistantError("PRECONDITION_FAILED");
+            }
+            // Only a stored copy identifies the original values well enough to
+            // distinguish an intentional edit from a stale form overwriting a
+            // newer site/admin edit. Legacy reference-only copies remain read-only.
+            const mergeText = (original: unknown, current: string | null, submitted: string | null) => {
+              const base = normalizeMetadata(original);
+              const latest = normalizeMetadata(current);
+              const next = normalizeMetadata(submitted);
+              if (next === base || next === latest) return current;
+              if (formCode && base === latest) return submitted;
+              throw new KakaoAssistantError("PRECONDITION_FAILED");
+            };
+            const startTimeText = mergeText(stored.startTimeText, currentRound.startTimeText, requestedMetadata.startTimeText);
+            requestedMetadata = {
+              capacity: currentRound.capacity,
+              startTimeText,
+              scheduledStartAt: startTimeText === currentRound.startTimeText
+                ? currentRound.scheduledStartAt?.toISOString() ?? null : requestedMetadata.scheduledStartAt,
+              gameInfo: mergeText(stored.gameInfo, currentRound.gameInfo, requestedMetadata.gameInfo ?? null),
+              organizerText: requestedMetadata.organizerText == null ? currentRound.organizerText
+                : mergeText(stored.organizerText, currentRound.organizerText, requestedMetadata.organizerText),
+              noticeText: mergeText(stored.noticeText, currentRound.noticeText ? oneLineInhouseNotice(currentRound.noticeText) : null, requestedMetadata.noticeText),
+            };
+          }
+          const copyPlan = planInhouseCopyAdditions({ original: originalRows, current: beforeCopyState.rows, submitted: command.participants });
+          if (!copyPlan) throw new KakaoAssistantError("PRECONDITION_FAILED");
+          guardedParticipants = [...copyPlan.additions, ...copyPlan.pendingEdits.map((edit) => edit.submitted)];
+          const editedSlots = new Set(copyPlan.pendingEdits.map((edit) => edit.current.slotNo));
+          guardedPreserveSlots = beforeCopyState.rows.filter((row) => !editedSlots.has(row.slotNo)).map((row) => row.slotNo);
         }
         const scopedMetadata = await transaction.select().from(seasonInhouseRounds).where(and(
           eq(seasonInhouseRounds.seasonId, command.seasonId),
@@ -1598,7 +1601,7 @@ export class PostgresKakaoAssistant {
                 ...pendingValues, revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
               }).where(eq(seasonKakaoPendingApplications.id, existing.id));
               updatedCount += 1;
-              (matchState === "MATCHED_RESERVE" ? legacyChanges.reserve : legacyChanges.pending)
+              (participant.reserve ? legacyChanges.reserve : legacyChanges.pending)
                 .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName, capacity));
             }
           } else {
@@ -1608,7 +1611,7 @@ export class PostgresKakaoAssistant {
               ...pendingValues,
             });
             createdCount += 1;
-            (matchState === "MATCHED_RESERVE" ? legacyChanges.reserve : legacyChanges.pending)
+            (participant.reserve ? legacyChanges.reserve : legacyChanges.pending)
               .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName, capacity));
           }
         }
@@ -1792,7 +1795,7 @@ export class PostgresKakaoAssistant {
         copyStates.set(recruitNo, { operatingDate: recruitingOperatingDateKey(now), saveReference: state.saveReference, formCode });
       }
       if (command.action === "SYNC") {
-        legacyChanges.currentMainCount = legacyEntries.filter((entry) => !entry.reserve && !entry.pending).length;
+        legacyChanges.currentMainCount = legacyEntries.filter((entry) => !entry.reserve).length;
         legacyChanges.roundMetadata = metadataByRecruitNo.get(command.recruitNo) ?? null;
       }
       if (command.action === "STATUS" && command.recruitNo === null) {

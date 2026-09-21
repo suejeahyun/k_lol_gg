@@ -5,6 +5,7 @@ import test from "node:test";
 import { and, count, desc, eq } from "drizzle-orm";
 
 import { SeasonService } from "../../src/modules/seasons";
+import { PostgresKakaoAssistant } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-assistant";
 import type { SeasonAuditWriter } from "../../src/modules/seasons/application/ports/season-repository";
 import {
   SEASON_COMMAND_RECEIPT_TTL_MS,
@@ -337,6 +338,8 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
 
     await t.test("SUPER resolves or cancels pending Kakao applications with idempotency, merge policy and safe team handoff", async () => {
       const pendingId = randomUUID();
+      const roomId = `season-link-${pendingId}`;
+      const roomHash = createHash("sha256").update(`klol-v2:kakao-season-room:v1\0${roomId}`).digest();
       await database.insert(seasonKakaoPendingApplications).values({
         id: pendingId,
         seasonId: activeSeasonId,
@@ -351,6 +354,8 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
         matchState: "MATCHED_RESERVE",
         matchedPlayerId: applicantPlayerId,
         sourceReferenceHash: Buffer.alloc(32, 0x10),
+        sourceRoomIdHash: roomHash,
+        sourceMode: "RIFT",
         createdAt: now,
         updatedAt: now,
       });
@@ -379,6 +384,21 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
       ));
       assert.equal(createdRows[0]?.source, "KAKAO");
       assert.equal(createdRows[0]?.status, "RESERVE");
+      assert.deepEqual(createdRows[0]?.sourceRoomIdHash, roomHash);
+      assert.equal(createdRows[0]?.sourceMode, "RIFT");
+      const kakaoAfterLink = await new PostgresKakaoAssistant(database).syncSeasonSnapshot({
+        actorPrincipalId: "bot:season-link-contract",
+        intent: {
+          kind: "KAKAO_HMAC", keyId: "contract", timestampSeconds: Math.floor(Date.now() / 1_000),
+          nonce: `season-link-${pendingId}`, roomId, senderId: "synthetic-link-reviewer",
+          bodyDigestHex: createHash("sha256").update(`season-link-${pendingId}`).digest("hex"),
+          requireNonceClaim: true, transactionRecheck: true,
+        },
+        requestKey: `season-link-${pendingId}`, scope: "kakao:season-link-contract", requestId: randomUUID(), now,
+        command: { action: "STATUS", seasonId: activeSeasonId, applyDate, recruitNo: 10, participants: [] },
+      });
+      assert.equal(kakaoAfterLink.body.entries.length, 1, "resolving a member must not make the name disappear from its Kakao room");
+      assert.equal(kakaoAfterLink.body.entries[0]?.player?.playerId, applicantPlayerId);
       const confirmed = await service.reviewApplication(command(admin.id, "confirm-pending"), createdRows[0]!.id, 0, {
         status: "CONFIRMED",
         reviewNote: "팀 편성 대상",
@@ -387,6 +407,53 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
       const teamRoster = await service.getConfirmedApplicationsForTeamBalance(activeSeasonId, applyDate, 10);
       assert.deepEqual(teamRoster.participants, [{ playerId: applicantPlayerId, displayName: "SeasonSky", mainPosition: "MID", subPositions: ["SUP"] }]);
       assert.equal(/memberName|loginId|sourceReferenceHash/i.test(JSON.stringify(teamRoster)), false);
+
+      const linkScenarios = ["SITE", "CONFIRMED", "NULL_SCOPE", "OTHER_ROOM", "OTHER_MODE", "OTHER_ROOM_CONFIRMED", "OTHER_MODE_RESERVE", "NULL_SCOPE_CONFIRMED"] as const;
+      for (const scenario of linkScenarios) {
+        const recruitNo = 190 + linkScenarios.indexOf(scenario);
+        const applicationId = randomUUID();
+        const reviewPendingId = randomUUID();
+        const source = scenario === "SITE" ? "SITE" as const : "KAKAO" as const;
+        const applicationStatus = scenario.endsWith("CONFIRMED") ? "CONFIRMED" as const
+          : scenario.endsWith("RESERVE") ? "RESERVE" as const : "APPLIED" as const;
+        await database.insert(seasonApplications).values({
+          id: applicationId, seasonId: activeSeasonId, playerId: otherPlayerId, applyDate, recruitNo,
+          sourceSlotNo: 1, mainPosition: "TOP", subPositions: ["ADC"], source, status: applicationStatus,
+          sourceReferenceHash: source === "SITE" ? null : Buffer.alloc(32, 0x21),
+          sourceRoomIdHash: scenario.startsWith("OTHER_ROOM") ? Buffer.alloc(32, 0x22) : scenario.startsWith("NULL_SCOPE") || source === "SITE" ? null : roomHash,
+          sourceMode: scenario.startsWith("OTHER_MODE") ? "ARAM" : scenario.startsWith("NULL_SCOPE") || source === "SITE" ? null : "RIFT",
+          reviewedByUserAccountId: applicationStatus !== "APPLIED" ? admin.id : null,
+          reviewedAt: applicationStatus !== "APPLIED" ? now : null,
+          createdAt: now, updatedAt: now,
+        });
+        const before = (await database.select().from(seasonApplications).where(eq(seasonApplications.id, applicationId)))[0]!;
+        await database.insert(seasonKakaoPendingApplications).values({
+          id: reviewPendingId, seasonId: activeSeasonId, applyDate, recruitNo, slotNo: 2,
+          suppliedName: `합성후연결-${scenario}`, mainPosition: "MID", subPositions: ["SUP"], reserve: false,
+          matchState: "UNMATCHED", status: "ACTIVE", sourceReferenceHash: Buffer.alloc(32, 0x23),
+          sourceRoomIdHash: roomHash, sourceMode: "RIFT", createdAt: now, updatedAt: now,
+        });
+        const resolve = () => service.resolveKakaoPendingApplication(command(superAdmin.id, `link-${reviewPendingId}`), reviewPendingId, 0, {
+          playerId: otherPlayerId, applicationStatus: "APPLIED",
+        }, now);
+        if (scenario.startsWith("OTHER_") || scenario === "NULL_SCOPE_CONFIRMED") {
+          await assert.rejects(resolve(), errorCode("INVALID_TRANSITION"));
+          assert.deepEqual((await database.select().from(seasonApplications).where(eq(seasonApplications.id, applicationId)))[0], before);
+          assert.equal((await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.id, reviewPendingId)))[0]?.status, "ACTIVE");
+        } else {
+          const result = await resolve();
+          const after = (await database.select().from(seasonApplications).where(eq(seasonApplications.id, applicationId)))[0]!;
+          if (scenario === "NULL_SCOPE") {
+            assert.equal(result.body.mergeOutcome, "KAKAO_REFRESHED");
+            assert.deepEqual(after.sourceRoomIdHash, roomHash);
+            assert.equal(after.sourceMode, "RIFT");
+            assert.equal(after.sourceSlotNo, 2);
+          } else {
+            assert.equal(result.body.mergeOutcome, scenario === "SITE" ? "SITE_PRESERVED" : "REVIEWED_PRESERVED");
+            assert.deepEqual(after, before, "linking a pending name must preserve existing site choices and reviewed decisions");
+          }
+        }
+      }
 
       const cancelledPendingId = randomUUID();
       await database.insert(seasonKakaoPendingApplications).values({

@@ -188,7 +188,7 @@ test("R24 server help separates adding a name from initial party settings and in
     if (text === "구인도움말") assert.match(result.reply, /참가가 시작된 파티는 복붙으로 시간·게임을 바꿀 수 없어요/u);
   }
   const retired = await service.execute({ ...envelope, profileId: "FEATURES", text: "내전확인 ABCDEF", eventId: "event-r24-retired-confirm-guide" }, "current");
-  assert.match(retired.reply, /빈칸에 사이트 등록 이름 추가/u);
+  assert.match(retired.reply, /빈칸에 이름 추가/u);
   assert.match(retired.reply, /기존 이름과 양식코드는 그대로/u);
   assert.match(retired.reply, /변경된 내용은 없습니다/u);
   assert.doesNotMatch(retired.reply, /최종 명단으로 즉시 반영|전체 양식을 수정/u);

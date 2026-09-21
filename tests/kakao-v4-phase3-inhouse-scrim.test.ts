@@ -156,7 +156,7 @@ test("Phase 3-A: 내전 모드 선택과 협곡·칼바람 복사 양식을 출�
   for (const [mode, number, sequence] of [["협곡", 2, 3], ["칼바람", 3, 4]] as const) {
     const result = await reply(state.service, envelope("FEATURES", `내전구인 ${mode} 2026-09-09 21:30 #${number} 10명`, sequence));
     assert.equal(result.reply, [
-      `[내전 #${number}] 0/10명`, `》모드: ${mode}`, "》시작: 21:30", "", "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송",
+      `[내전 #${number}] 0/10명`, `》모드: ${mode}`, "》시작: 21:30", "", "전체 복사 → 빈칸에 이름 → 전체 전송",
       ...(mode === "협곡" ? ["라인 선택: 이름/주라인/부라인"] : []), "",
       ...Array.from({ length: 10 }, (_, index) => `${index + 1}.`), "", "예비 1.",
       "", `저장기준: 2026-09-09 / S${"a".repeat(32)}`,

@@ -267,12 +267,14 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const schedulePattern = /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+([01]?\d|2[0-3])\s*:\s*([0-5]\d)\s*시작(?:\s+(.*?))?\s*$/u;
   const scheduleIndex = lines.findIndex((line) => schedulePattern.test(line));
   const scheduleLine = scheduleIndex < 0 ? null : schedulePattern.exec(lines[scheduleIndex]!) ?? null;
-  const modernTime = modernHeader ? /^\s*》\s*시작\s*[:：]\s*((?:[01]?\d|2[0-3]):[0-5]\d|미정)\s*$/mu.exec(normalized) : null;
-  if (modernHeader && !modernTime) return null;
-  const startTimeText = modernTime && modernTime[1] !== "미정" ? modernTime[1]!.padStart(5, "0") : scheduleLine
+  const modernTime = modernHeader ? /^[^\S\n]*》[^\S\n]*시작[^\S\n]*[:：][^\S\n]*([^\n]*)$/mu.exec(normalized) : null;
+  const modernTimeText = modernTime?.[1]?.trim() ?? null;
+  if (modernHeader && (!modernTimeText || modernTimeText.length > 32 || /[\u0000-\u001F\u007F-\u009F\u2028\u2029]/u.test(modernTimeText))) return null;
+  const modernClock = modernTimeText && /^(?:[01]?\d|2[0-3]):[0-5]\d$/u.test(modernTimeText);
+  const startTimeText = modernTimeText && modernTimeText !== "미정" ? (modernClock ? modernTimeText.padStart(5, "0") : modernTimeText) : scheduleLine
     ? `${String(Number(scheduleLine[1])).padStart(2, "0")}:${scheduleLine[2]}`
     : null;
-  const scheduledStartAt = startTimeText
+  const scheduledStartAt = startTimeText && /^(?:[01]\d|2[0-3]):[0-5]\d$/u.test(startTimeText)
     ? new Date(`${applyDate}T${startTimeText}:00+09:00`).toISOString()
     : null;
   const metadataValue = (label: string) => {
@@ -332,6 +334,8 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     | Readonly<{ state: "PRESERVE" }>
     | Readonly<{ state: "PARTICIPANT"; participant: KakaoV4InhouseParticipant }>;
   const slots = new Map<number, SlotValue>();
+  const modernBodySlots = new Set<number>();
+  const modernReviewSlots = new Map<number, SlotValue>();
   const observedSlotNos = new Set<number>();
   const requireReview = (participant: KakaoV4InhouseParticipant): KakaoV4InhouseParticipant => Object.freeze({
     ...participant,
@@ -341,14 +345,24 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   for (const line of normalized.split("\n")) {
     const pendingRow = /^\s*확인\s+(.*)$/u.exec(line);
     const participantLine = pendingRow?.[1] ?? line;
-    if (modernHeader && /^\s*\d{1,2}\.\s*\(회원 확인 중\)\s*$/u.test(participantLine)) continue;
+    const pendingPlaceholder = modernHeader && !pendingRow
+      ? /^\s*(\d{1,2})\.\s*\(회원 확인 중\)\s*$/u.exec(participantLine) : null;
+    if (pendingPlaceholder) {
+      const slotNo = Number(pendingPlaceholder[1]);
+      if (modernBodySlots.has(slotNo)) return null;
+      modernBodySlots.add(slotNo);
+      continue;
+    }
     const reserveRow = /^\s*(?:예비|대기)\s*\d{1,2}(?:(?:\s*\\?\s*[.)])|\s+)/u.test(participantLine.normalize("NFKC"));
     const row = parseKakaoV4InhouseParticipantRow(participantLine, mode);
     if (!row.matched) continue;
     if (reserveRow) reserveSectionObserved = true;
     const slotNo = reserveRow ? capacity + row.slotNo : row.slotNo;
     if (row.slotNo < 1 || row.slotNo > capacity) continue;
-    if (modernHeader && slots.has(slotNo)) return null;
+    if (modernHeader) {
+      if (pendingRow ? modernReviewSlots.has(slotNo) : modernBodySlots.has(slotNo)) return null;
+      if (!pendingRow) modernBodySlots.add(slotNo);
+    }
     const participant = row.participant
       ? Object.freeze({ ...row.participant, slotNo, reserve: reserveRow || row.participant.reserve, ...(pendingRow ? { reviewRequired: true as const } : {}) })
       : null;
@@ -357,6 +371,10 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       : row.valid
         ? Object.freeze({ state: "EMPTY" })
         : Object.freeze({ state: "PRESERVE" });
+    if (modernHeader && pendingRow) {
+      modernReviewSlots.set(slotNo, next);
+      continue;
+    }
     const current = slots.get(slotNo);
     if (
       !modernHeader && observedSlotNos.size >= capacity && !reserveRow &&
@@ -382,6 +400,11 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     // edit top-to-bottom, so the final occurrence is authoritative; a final
     // empty occurrence is therefore an explicit cancellation.
     slots.set(slotNo, next);
+  }
+  // Older bot forms repeated pending names in a footer. An edited body row is
+  // authoritative; the footer only restores a placeholder or an omitted row.
+  for (const [slotNo, value] of modernReviewSlots) {
+    if (!slots.has(slotNo)) slots.set(slotNo, value);
   }
   const preserveSlotNos: number[] = [];
   const participants: KakaoV4SeasonParticipant[] = [];

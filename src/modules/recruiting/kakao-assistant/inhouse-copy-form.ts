@@ -13,7 +13,7 @@ function identity(value: string) {
   return value.normalize("NFKC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("ko-KR");
 }
 
-/** Only the additions to the copied original are applied to the latest DB roster. */
+/** Merge additions and unchanged pending-row corrections without replacing the latest roster. */
 export function planInhouseCopyAdditions(input: Readonly<{
   original: readonly InhouseCopyRow[];
   current: readonly InhouseCopyRow[];
@@ -21,11 +21,26 @@ export function planInhouseCopyAdditions(input: Readonly<{
 }>) {
   const submitted = new Map(input.submitted.map((row) => [row.slotNo, row]));
   if (submitted.size !== input.submitted.length) return null;
+  const pendingEdits: Array<Readonly<{
+    original: InhouseCopyRow;
+    current: InhouseCopyRow;
+    submitted: KakaoSeasonSnapshotParticipant;
+  }>> = [];
   for (const row of input.original) {
     const copy = submitted.get(row.slotNo);
-    if (!copy || identity(copy.name) !== identity(row.name) || copy.reserve !== row.reserve ||
+    if (!copy || copy.reserve !== row.reserve ||
         (!copy.nameOnly && (copy.mainPosition !== row.mainPosition ||
           copy.subPositions.join("|") !== row.subPositions.join("|")))) return null;
+    if (identity(copy.name) === identity(row.name)) continue;
+    const current = input.current.find((candidate) => candidate.slotNo === row.slotNo);
+    if (!row.pending || !current?.pending || identity(current.name) !== identity(row.name) ||
+        current.reserve !== row.reserve || current.mainPosition !== row.mainPosition ||
+        current.subPositions.join("|") !== row.subPositions.join("|") ||
+        input.current.some((candidate) => candidate.slotNo !== row.slotNo && identity(candidate.name) === identity(copy.name))) return null;
+    pendingEdits.push(Object.freeze({ original: row, current, submitted: Object.freeze({
+      ...copy,
+      ...(copy.nameOnly ? { mainPosition: current.mainPosition, subPositions: current.subPositions } : {}),
+    }) }));
   }
   const originalSlots = new Set(input.original.map((row) => row.slotNo));
   const seen = new Set<string>();
@@ -42,5 +57,5 @@ export function planInhouseCopyAdditions(input: Readonly<{
     }
     additions.push(row);
   }
-  return Object.freeze(additions);
+  return Object.freeze({ additions: Object.freeze(additions), pendingEdits: Object.freeze(pendingEdits) });
 }

@@ -175,7 +175,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
   assert.equal(seasonCalls[0]?.action, "RESERVE");
   assert.match(inhouse.legacyReply, /\[내전 #7\] 0\/10명/u);
   assert.match(inhouse.legacyReply, /\n1\.\n[\s\S]*\n10\.\n[\s\S]*예비 1\./u);
-  assert.match(inhouse.legacyReply, /빈칸에 사이트 등록 이름/u);
+  assert.match(inhouse.legacyReply, /빈칸에 이름/u);
   assert.match(inhouse.legacyReply, /》시작: 미정/u);
   assert.match(inhouse.legacyReply, /양식코드: ABCDE-FGHJK/u);
   assert.doesNotMatch(inhouse.legacyReply, /빠른 추가:|마감:/u);

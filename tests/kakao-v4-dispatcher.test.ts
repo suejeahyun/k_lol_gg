@@ -59,7 +59,7 @@ test("내전 빠른 명단 응답은 결과를 한 줄로 요약하고 본명과
   ].join("\n"));
 });
 
-test("내전 빠른 추가 대상이 미등록이면 확인 필요 접수와 회원가입 주소를 안내한다", () => {
+test("내전 빠른 추가 대상이 미등록이어도 이름과 접수 인원에 포함한다", () => {
   const reply = formatInhouseMemberReply({
     kind: "SEASON_APPLICATION_SNAPSHOT",
     seasonId: "season-1",
@@ -87,9 +87,9 @@ test("내전 빠른 추가 대상이 미등록이면 확인 필요 접수와 회
   }, { action: "ADD", recruitNumber: 1, name: "신규회원" });
 
   assert.equal(reply, [
-    "회원 확인 필요: 신규회원 · 아직 참가 확정 전",
-    "신청 내용은 보관했어요. 회원가입 후 운영진에게 확인을 요청해주세요.",
-    "https://k-lol-gg.vercel.app/signup",
+    "[K-LOL.GG 내전 #1 명단] 추가 완료: 신규회원 현재 1/10명 · 예비 0명",
+    "",
+    "4. 신규회원",
   ].join("\n"));
   assert.doesNotMatch(reply, /빠른 추가|빠른 삭제|마감:/u);
 });
