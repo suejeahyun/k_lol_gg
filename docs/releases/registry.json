@@ -875,6 +875,26 @@
       "deployment": {
         "status": "NOT_DEPLOYED"
       }
+    },
+    {
+      "featureId": "kakao-copy-reliability",
+      "version": "1.0.0",
+      "gitTag": "kakao-copy-reliability-v1.0.0",
+      "commit": "be95cf5c7ca1f88b243e5e8f0e799228492ac204",
+      "releasedAt": "2026-09-21T15:47:18.592Z",
+      "migrationHead": "0041_clever_skullbuster",
+      "qaEvidence": "docs/qa-evidence/kakao-copy-reliability-v1.0.0-2026-09-22/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-22-kakao-copy-reliability.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_R25_2026_09_22",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
