@@ -1,0 +1,99 @@
+{
+  "checkedAt": "2026-09-21T08:33:34.076Z",
+  "baseUrl": "https://k-lol-gg.vercel.app",
+  "stage": "production",
+  "status": "PASS",
+  "rosterMutationsSent": false,
+  "rawMemberNamesRecorded": false,
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "passed": true,
+      "healthStatus": "ready"
+    },
+    {
+      "check": "copy-paste help",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 516,
+      "replyCharacters": 575,
+      "traceId": null
+    },
+    {
+      "check": "name-first inhouse guide",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 216,
+      "replyCharacters": 311,
+      "traceId": null
+    },
+    {
+      "check": "party status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 268,
+      "replyCharacters": 95,
+      "traceId": null
+    },
+    {
+      "check": "inhouse status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 501,
+      "replyCharacters": 149,
+      "traceId": null
+    },
+    {
+      "check": "party copy form #3",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 250,
+      "replyCharacters": 83,
+      "traceId": null
+    },
+    {
+      "check": "inhouse copy form #1",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 275,
+      "replyCharacters": 134,
+      "traceId": null
+    },
+    {
+      "check": "inhouse displayed count #1",
+      "passed": true,
+      "displayedCount": 1,
+      "visibleSlots": 1
+    },
+    {
+      "check": "inhouse copy form #2",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 287,
+      "replyCharacters": 188,
+      "traceId": null
+    },
+    {
+      "check": "inhouse displayed count #2",
+      "passed": true,
+      "displayedCount": 10,
+      "visibleSlots": 10
+    },
+    {
+      "check": "/help/kakao",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "check": "/help/recruits",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "check": "/recruits",
+      "status": 200,
+      "passed": true
+    }
+  ]
+}

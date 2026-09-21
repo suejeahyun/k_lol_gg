@@ -4,4 +4,6 @@
 
 서버 변경으로 기존 R24 휴대폰 파일과 DB 구조는 유지한다. 실제 검증 및 배포 상태는 아래 증거 문서를 따른다.
 
+2026-09-21 17:33 KST 운영 반영. 소스 `0c188785315cd781a0e828ba1acc69f96acdbf28`, tag `kakao-r24-site-linked-copy-v1.1.0`, Vercel `dpl_FmnnD2FtSWmTm7Ks6zrZ8it78jF7` READY. 격리 DB 84/84, 전체 검사·빌드, 운영 읽기·인원 일치 13/13 통과. 실제 휴대폰 재접수와 제보의 연결 오류 원인은 별도 미확인이다.
+
 [원인·검증·배포·남은 위험·다음 추천 3개](../qa-evidence/kakao-r24-name-first-2026-09-21/README.md) · [디스코드 공지](../qa-evidence/kakao-r24-name-first-2026-09-21/DISCORD_NOTICE.md)

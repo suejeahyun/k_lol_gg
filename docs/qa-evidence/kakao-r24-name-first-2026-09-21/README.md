@@ -26,9 +26,15 @@ DB migration·휴대폰 R24 코드 변경은 없다. 회원을 자동 생성하�
 - 전체 `npm run check` exit 0: 계약 410/410, 단위 866 PASS·DB 전용 1 skip, 타입·ERD·프로덕션 빌드 PASS. lint 오류 0·경고 326 (`npm-check.log`).
 - 최종 읽기 검토에서 회원 연결의 다른 방/종목 신청 및 범위 미확인 확정 신청의 명단 누락 방지를 재확인했다.
 - 공개/private R24 SHA-256 불변: `installer-unchanged.json`. 비밀정보 검사 PASS: `secret-scan.log`.
-- 운영 배포는 로컬 검사 후 진행하며 배포 ID·소스 commit·alias 확인 결과를 이 문서에 추가한다.
+- 운영 반영: **2026-09-21 17:33 KST**, Vercel `dpl_FmnnD2FtSWmTm7Ks6zrZ8it78jF7` READY · production.
+- 소스 commit `0c188785315cd781a0e828ba1acc69f96acdbf28`, tag `kakao-r24-site-linked-copy-v1.1.0`, 기능 브랜치·tag push 완료. 제공자 API의 소스 메타데이터 일치: `deployment-source.json`.
+- 운영 alias https://k-lol-gg.vercel.app · 고정 배포 https://k-lol-9a2dnzbo3-tjdmswo11-3715s-projects.vercel.app. 배포/alias 근거: `vercel-deploy.log`, `production-after.json`.
+- 운영 확인 **13/13 PASS**: HTTP 읽기 11건 모두 200, 현재 조회 가능한 내전 2건의 표시 인원과 이름이 채워진 슬롯 수 일치 2건. 내전 #1은 1명, #2는 10명으로 접수 인원 표시를 확인했다. 개인 이름 원문을 로그에 기록하거나 운영 명단을 변경하지 않았다 (`live-production.json`).
+- 운영 검사는 명단 조회·안내 응답 검증이다. 실제 휴대폰에서 이번 코드로 새 신청을 보내는 과정은 확인하지 않았다. 저장·후속 회원 연결은 격리 DB의 합성 데이터로 검증했다.
 - 배포 전 소스·운영 ID·휴대폰 SHA-256: `before.json`.
 - 휴대폰 실제 설치 버전·이번 수정 후 실제 카카오방 송수신은 별도 확인 대상이다. 이번 작업은 기존 R24 전달 코드를 그대로 사용한다.
+
+예전에 거부되어 저장되지 않은 양식은 다시 전송해야 한다. 과거에 서로 다른 이름으로 중복 접수된 기록은 동일인이라고 추정해 자동 병합하지 않았다. 기존 확인 대기 접수는 서버 조회 시 일반 이름·접수 인원으로 보이며 별도 데이터 이관은 필요하지 않다.
 
 ## 복구
 
