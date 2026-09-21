@@ -122,7 +122,7 @@ test("phone transport renders actionable HTTP failure categories", async () => {
 test("Kakao pending slot lookup is lifecycle-neutral and only cancels ACTIVE rows", async () => {
   const source = await read("src/modules/recruiting/kakao-assistant/postgres-kakao-assistant.ts");
   const start = source.indexOf("const currentPending =");
-  const end = source.indexOf("for (const { participant, candidates }", start);
+  const end = source.indexOf("for (const item of matched)", start);
   assert.ok(start > 0 && end > start);
   const reconciliation = source.slice(start, end);
   assert.doesNotMatch(reconciliation, /eq\(seasonKakaoPendingApplications\.status,\s*"ACTIVE"\)/u);

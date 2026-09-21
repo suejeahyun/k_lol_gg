@@ -39,7 +39,31 @@ test("Kakao help feature controls its public guide without exposing configuratio
   const page = source("../src/app/(public)/(recruiting)/help/kakao/page.tsx");
   assert.match(page, /readSiteFeatureState\("kakaoHelp"\)/);
   assert.match(page, /SiteFeatureStatePanel/);
-  assert.match(page, /운영일은 한국 시간 오전 6시에 바뀌며/);
-  assert.match(page, /이전 운영일 스크림은 현황에서 제외/);
-  assert.match(page, /운영일 종료 시 자동 마감/);
+  assert.match(page, /운영일은 한국 시간 오전 6시에 바뀝니다/);
+  assert.match(page, /최근 봇 명단 전체를 복사/);
+  assert.match(page, /메시지 전체를 전송/);
+  assert.match(page, /사이트에 등록한 이름/);
+  assert.match(page, /아직 참가 확정이 아니니/);
+  assert.ok(page.indexOf("복사·붙여넣기로 참가하기") < page.indexOf("새로 모집하는 사람만"));
+  assert.match(page, /입력 후 종목을 선택하거나/);
+  assert.match(page, /내전구인 협곡/);
+  assert.match(page, /첫 전송 전에 시간·게임을 정하고/);
+  assert.match(page, /참가가 시작된 파티의 시간·게임은 복사한 명단에서 수정할 수 없어요/);
+  assert.doesNotMatch(page, /티어·포지션 등 참가 정보도 함께 작성/);
+  assert.match(page, /스크림은 카카오 모집 기능에서 제외/);
+  assert.match(page, /기존 저장 기록은 유지/);
+});
+
+test("recruit guide teaches adding a name before optional creation and explicit cancellation", () => {
+  const page = source("../src/app/(public)/(recruiting)/help/recruits/page.tsx");
+  assert.match(page, /최근 봇 명단 전체를 복사/);
+  assert.match(page, /사이트에 등록한 이름/);
+  assert.match(page, /회원 확인 필요 상태는 참가 확정과 다르며/);
+  assert.ok(page.indexOf("복사·붙여넣기로 참가하기") < page.indexOf("새 모집 만들기"));
+  assert.match(page, /내전상세 12 삭제 내이름/);
+  assert.match(page, /복사한 명단에서 이름을 지워 전송하지 마세요/);
+  assert.match(page, /입력 후 종목을 선택하세요/);
+  assert.match(page, /내전구인 협곡/);
+  assert.match(page, /첫 전송 전에 시간·게임을 정하고/);
+  assert.match(page, /참가가 시작된 파티의 시간·게임은 복사한 명단에서 수정할 수 없어요/);
 });

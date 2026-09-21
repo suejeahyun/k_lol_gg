@@ -5,8 +5,10 @@ const POSITION_ROW = /^\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원�
 const RESERVE_ROW = /^\s*(?:예비|후보|대기)(?=\s|[0-9０-９]|[.):：．。）]|$)\s*([0-9０-９]{1,2})?(?:\s*\\?[.):：．。）]|\s+)?\s*(.*?)\s*$/u;
 const RECRUIT_LABEL = /^\s*(?:[》>*#-]\s*)*모\s*집\s*번\s*호\s*[:：]?\s*(.*?)\s*$/u;
 const OPERATING_DATE_LABEL = /^\s*[》>]?\s*운영\s*일\s*[:：]?\s*(.*?)\s*$/u;
-const START_TIME_LABEL = /^\s*[》>]?\s*(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]?\s*(.*?)\s*$/u;
-const GAME_INFO_LABEL = /^\s*[》>]?\s*게임\s*정보\s*[:：]?\s*(.*?)\s*$/u;
+const SAVE_REFERENCE_LABEL = /^\s*[》>]?\s*저장\s*기준\s*[:：]?\s*(.*?)\s*$/u;
+const FORM_CODE_LABEL = /^\s*양식\s*코드\s*[:：]\s*(.*?)\s*$/u;
+const START_TIME_LABEL = /^\s*[》>]?\s*(?:게임\s*)?(?:시작|출발)\s*(?:시간)?\s*[:：]\s*(.*?)\s*$/u;
+const GAME_INFO_LABEL = /^\s*[》>]?\s*게임\s*(?:정보)?\s*[:：]\s*(.*?)\s*$/u;
 const ORGANIZER_LABEL = /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?\s*(.*?)\s*$/u;
 const DETAIL_HEADER = /^\s*\[\s*K-LOL\.GG\s+구인\s*상세\s*#\s*(\d+)\s*\]\s*$/iu;
 const DETAIL_SUMMARY = /^\s*#\s*(\d+)\s*[·ㆍ|]\s*(.*?)\s*[·ㆍ|]\s*(\d+)\s*\/\s*(\d+)(?:\s|$)/u;
@@ -35,6 +37,7 @@ export type PartyFormDiagnosticCode =
   | "MERGED_SLOT_ROWS"
   | "INVALID_SLOT"
   | "VALUE_TOO_LONG"
+  | "INVALID_SAVE_REFERENCE"
   | "DUPLICATE_METADATA_LABEL";
 
 export type PartyFormDiagnostic = Readonly<{
@@ -77,6 +80,7 @@ export type ParsedPartyForm = Readonly<{
   submittedTitle: ParsedPartyTitle | null;
   slots: readonly ParsedPartySlot[];
   operatingDate: ParsedPartyMetadata;
+  saveReference: string | null;
   startTime: ParsedPartyMetadata;
   gameInfo: ParsedPartyMetadata;
   organizer: ParsedPartyMetadata;
@@ -104,6 +108,7 @@ function normalizePartyText(value: string) {
     .replace(/[\u00A0\u3000]/gu, " ")
     .replace(/\\(?=[.):：#*\-])/gu, "")
     .replace(/^\/(?!\/)(?=\S)/u, "")
+    .replace(/^\s*\[파티\s*#(\d+)\]\s*(.+?)\s*·\s*(\d+)\/(\d+)명\s*$/gmu, "[K-LOL.GG 구인상세 #$1]\n#$1 · $2 · $3/$4")
     .trim();
 }
 
@@ -176,7 +181,7 @@ function partySlotContinuation(lines: readonly string[], index: number) {
   const value = normalizedValue(lines[index + 1] ?? "");
   if (!value) return null;
   if (
-    RECRUIT_LABEL.test(value) || OPERATING_DATE_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
+    FORM_CODE_LABEL.test(value) || /^전체 복사/u.test(value) || SAVE_REFERENCE_LABEL.test(value) || /^복사 안내:/u.test(value) || RECRUIT_LABEL.test(value) || OPERATING_DATE_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
     DETAIL_HEADER.test(value) || DETAIL_SUMMARY.test(value) || RESERVE_COUNT_SUMMARY.test(value) ||
     parsePartyReserveRow(value) || parsePartyNumberedRow(value) || parsePartyPositionRow(value) || /^\d{3,}\s*[.)]/u.test(value) ||
     submittedTitle(value, index + 2) || /^\s*(?:\[?K-LOL|📢|참여해|\*?상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(value)
@@ -196,7 +201,7 @@ function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: 
   for (let index = selected.lineIndex + 1; index < lines.length; index += 1) {
     const line = lines[index]!;
     if (
-      RECRUIT_LABEL.test(line) || OPERATING_DATE_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) || ORGANIZER_LABEL.test(line) ||
+      FORM_CODE_LABEL.test(line) || /^전체 복사/u.test(line) || SAVE_REFERENCE_LABEL.test(line) || /^복사 안내:/u.test(line) || RECRUIT_LABEL.test(line) || OPERATING_DATE_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) || ORGANIZER_LABEL.test(line) ||
       DETAIL_HEADER.test(line) || DETAIL_SUMMARY.test(line) || RESERVE_COUNT_SUMMARY.test(line) ||
       parsePartyReserveRow(line) || parsePartyNumberedRow(line) || parsePartyPositionRow(line) ||
       submittedTitle(line, index + 1) || /^\s*(?:\[K-LOL|참여해|\*상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(line)
@@ -213,7 +218,7 @@ function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: 
 
 function decisionFor(diagnostics: readonly PartyFormDiagnostic[], candidate: boolean): PartyFormDecision {
   if (!candidate) return "IGNORE";
-  if (diagnostics.some(({ code }) => ["INVALID_RECRUIT_NUMBER", "INVALID_DETAIL_SUMMARY", "INVALID_SLOT", "VALUE_TOO_LONG"].includes(code))) return "REJECT";
+  if (diagnostics.some(({ code }) => ["INVALID_SAVE_REFERENCE", "INVALID_RECRUIT_NUMBER", "INVALID_DETAIL_SUMMARY", "INVALID_SLOT", "VALUE_TOO_LONG"].includes(code))) return "REJECT";
   if (diagnostics.some(({ code }) => [
     "MULTIPLE_RECRUIT_NUMBERS", "MULTIPLE_SUBMITTED_TITLES", "MISSING_SLOT", "DUPLICATE_SLOT",
     "RECRUIT_NUMBER_CONFLICT", "DETAIL_SUMMARY_CONFLICT", "MIXED_SLOT_SCHEME", "MERGED_SLOT_ROWS", "DUPLICATE_METADATA_LABEL",
@@ -281,6 +286,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
       }
       continue;
     }
+    if ([START_TIME_LABEL, GAME_INFO_LABEL, ORGANIZER_LABEL, OPERATING_DATE_LABEL, SAVE_REFERENCE_LABEL, FORM_CODE_LABEL].some((pattern) => pattern.test(line))) continue;
     const title = submittedTitle(line, lineNumber);
     if (title) {
       titles.push(title);
@@ -358,6 +364,16 @@ export function parsePartyForm(input: string): ParsedPartyForm {
   if (!slots.some((slot) => slot.kind === "RESERVE")) slots.push(Object.freeze({ kind: "RESERVE", slotNo: 1, position: null, state: "ABSENT", value: null, line: null }));
 
   const operatingDate = metadata(lines, OPERATING_DATE_LABEL);
+  const references = lines.flatMap((line) => {
+    const match = SAVE_REFERENCE_LABEL.exec(line) ?? FORM_CODE_LABEL.exec(line);
+    return match ? [normalizedValue(match[1] ?? "").replace(/\s*\(그대로 두세요\)\s*$/u, "")] : [];
+  });
+  const saveReference = references[0] ?? null;
+  const compactHeader = /^\s*\/?\[파티\s*#\d+\]/mu.test(input.normalize("NFKC"));
+  if ((compactHeader && (saveReference === null || !/^[A-Z2-9]{5}-[A-Z2-9]{5}$/u.test(saveReference))) ||
+      references.length > 1 || (saveReference !== null && !/^(?:\d{4}-\d{2}-\d{2} \/ P[a-f0-9]{32}-R\d+|[A-Z2-9]{5}-[A-Z2-9]{5})$/u.test(saveReference))) {
+    diagnostics.push(diagnostic("INVALID_SAVE_REFERENCE", null, "saveReference"));
+  }
   const start = metadata(lines, START_TIME_LABEL);
   const game = metadata(lines, GAME_INFO_LABEL);
   const organizer = metadata(lines, ORGANIZER_LABEL);
@@ -380,6 +396,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
     submittedTitle: selectedTitle,
     slots: Object.freeze(slots),
     operatingDate: operatingDate.field,
+    saveReference,
     startTime: start.field,
     gameInfo: game.field,
     organizer: organizer.field,

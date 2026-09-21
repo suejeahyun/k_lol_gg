@@ -223,7 +223,7 @@ function statusProjection(value: unknown) {
   return { projection: input?.projection, afterMutation: input?.afterMutation };
 }
 
-test("동일 installation event replay는 내전/스크림 마감을 한 번만 실행하고 같은 응답을 반환한다", async () => {
+test("동일 event replay는 내전 마감 한 번과 스크림 종료 안내를 재사용한다", async () => {
   for (const [profileId, text, eventId] of [
     ["FEATURES", "내전 1ㅉ", "event-inhouse-prefixed-finish-replay"],
     ["RECRUIT", "스크림 1ㅉ", "event-scrim-prefixed-finish-replay"],
@@ -244,7 +244,9 @@ test("동일 installation event replay는 내전/스크림 마감을 한 번만 
     if (profileId === "FEATURES") {
       assert.equal(state.seasonCalls.filter((call) => (call as { command: { action: string } }).command.action === "FINISH").length, 1, text);
     } else {
-      assert.equal(state.handled.filter((command) => command.type === "FINISH_SCRIM").length, 1, text);
+      assert.equal(state.handled.length, 0, text);
+      assert.equal(state.statusCalls.length, 0, text);
+      assert.match(first.reply, /스크림 기능 종료/u);
     }
   }
 });

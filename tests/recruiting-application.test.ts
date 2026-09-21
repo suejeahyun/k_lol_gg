@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { partyCopyReference } from "../src/modules/recruiting/application/party-copy-reference";
 
 import {
   hashRecruitingRequestKey,
@@ -236,6 +237,90 @@ function createParty(partyId = "party-1") {
     protectedUntil: null,
   });
 }
+
+test("R23 party copy reference rejects stale, reused-number identity and prior-day forms without mutations", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(createParty());
+  const original = harness.snapshot.parties.get("party-1")!;
+  const reference = partyCopyReference(original);
+  const guard = { operatingDate: original.recruitDate, saveReference: reference };
+  const members = [...original.members, { name: "Bravo", position: "JGL" as const, slotNo: 2, substitute: false }];
+  await handler.handle(command("SYNC_PARTY", original.id, 0, { members, copyGuard: guard }));
+  const saved = structuredClone(harness.snapshot);
+  // Even if the dispatcher resolves the newest revision, the copied token must win.
+  await assert.rejects(handler.handle(command("SYNC_PARTY", original.id, 1, { members: original.members, copyGuard: guard })), { code: "REVISION_CONFLICT" });
+  const latest = harness.snapshot.parties.get(original.id)!;
+  for (const copyGuard of [
+    { operatingDate: "2026-09-08", saveReference: partyCopyReference(latest) },
+    { operatingDate: latest.recruitDate, saveReference: partyCopyReference({ ...latest, id: "old-party-same-number" }) },
+  ]) await assert.rejects(handler.handle(command("SYNC_PARTY", original.id, 1, { members, copyGuard })), { code: "REVISION_CONFLICT" });
+  assert.deepEqual(harness.snapshot, saved);
+});
+
+test("R24 latest copy rejects deletion and duplicate names atomically", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(createParty());
+  const party = harness.snapshot.parties.get("party-1")!;
+  const copyGuard = { operatingDate: party.recruitDate, saveReference: partyCopyReference(party) };
+  await assert.rejects(handler.handle(command("SYNC_PARTY", party.id, 0, {
+    members: [...party.members, { name: "ＡＬＰＨＡ", position: "JGL", slotNo: 2, substitute: false }], copyGuard,
+  })), { message: "PARTY_COPY_DUPLICATE_NAME" });
+  assert.equal(harness.snapshot.parties.get(party.id)?.revision, 0);
+  const before = structuredClone(harness.snapshot);
+  await assert.rejects(handler.handle(command("SYNC_PARTY", party.id, 0, { members: [], copyGuard })), { message: "PARTY_COPY_REMOVAL" });
+  assert.deepEqual(harness.snapshot, before);
+});
+
+test("R23 legacy copies are append-only for both member rows and metadata", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(createParty());
+  const party = harness.snapshot.parties.get("party-1")!;
+  const copyGuard = { operatingDate: party.recruitDate, saveReference: null };
+  for (const payload of [
+    { members: [] },
+    { members: party.members, startTimeText: "22:00", startTimeState: "PRESENT_VALUE" as const },
+    { members: party.members, gameInfo: "다른 게임", gameInfoState: "PRESENT_VALUE" as const },
+    { members: party.members, organizerText: "다른 사람", organizerState: "PRESENT_VALUE" as const },
+  ]) await assert.rejects(handler.handle(command("SYNC_PARTY", party.id, 0, { ...payload, copyGuard })), { message: payload.members.length === 0 ? "PARTY_COPY_REMOVAL" : "PARTY_COPY_METADATA" });
+  const members = [...party.members, { name: "Bravo", position: "JGL" as const, slotNo: 2, substitute: false }];
+  await handler.handle(command("SYNC_PARTY", party.id, 0, { members, copyGuard }));
+  assert.deepEqual(harness.snapshot.parties.get(party.id)?.members, members);
+});
+
+test("R23 unchanged full copy preserves revision, metadata and scheduled timestamp", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(createParty());
+  const party = harness.snapshot.parties.get("party-1")!;
+  const result = await handler.handle(command("SYNC_PARTY", party.id, 0, {
+    members: party.members,
+    copyGuard: { operatingDate: party.recruitDate, saveReference: partyCopyReference(party) },
+    startTimeText: party.startTimeText, startTimeState: "PRESENT_VALUE",
+    gameInfo: party.gameInfo, gameInfoState: "PRESENT_VALUE",
+    organizerText: null, organizerState: "PRESENT_EMPTY", scheduledStartAt: null,
+  }));
+  assert.equal(result.body.revision, 0);
+  assert.deepEqual(harness.snapshot.parties.get(party.id), party);
+});
+
+test("R23 blank draft activates with participant name only and no organizer", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const delivery = { eventId: "event-r23-draft-create", senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", nonce: "r23_draft_nonce_12345678" };
+  await handler.handle(v4Command("CREATE_PARTY", "party-draft-copy", 0, { ...createParty().payload, members: [], initialStatus: "DRAFT" }, delivery));
+  const party = harness.snapshot.parties.get("party-draft-copy")!;
+  const result = await handler.handle(v4Command("SYNC_PARTY", party.id, 0, {
+    members: [{ name: "서지오", position: "TOP", slotNo: 1, substitute: false }],
+    startTimeState: "PRESENT_EMPTY", gameInfoState: "PRESENT_EMPTY", organizerState: "PRESENT_EMPTY",
+    copyGuard: { operatingDate: party.recruitDate, saveReference: partyCopyReference(party) },
+  }, { ...delivery, eventId: "event-r23-draft-save", nonce: "r23_save_nonce_12345678" }));
+  assert.equal(result.body.status, "IN_PROGRESS");
+  assert.equal(harness.snapshot.parties.get(party.id)?.members[0]?.name, "서지오");
+  assert.equal(harness.snapshot.parties.get(party.id)?.organizerText, null);
+});
 
 function createScrim(scrimId = "scrim-1") {
   return command("CREATE_SCRIM", scrimId, 0, {

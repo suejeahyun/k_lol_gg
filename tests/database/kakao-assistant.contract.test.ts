@@ -5,8 +5,10 @@ import test from "node:test";
 import { and, eq } from "drizzle-orm";
 import sharp from "sharp";
 
-import { KakaoAssistantError } from "../../src/modules/recruiting/kakao-assistant/domain";
+import { KakaoAssistantError, type KakaoSeasonSnapshotCommand, type KakaoSeasonSnapshotDto } from "../../src/modules/recruiting/kakao-assistant/domain";
 import { PostgresKakaoAssistant } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-assistant";
+import { canonicalizeKakaoV4Command } from "../../src/modules/recruiting/kakao-v4/canonical-command";
+import { classifyKakaoV4Command } from "../../src/modules/recruiting/kakao-v4/classifier";
 import { PostgresKakaoImageReceive } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-image-receive";
 import { recruitingOperatingDateKey } from "../../src/modules/recruiting/domain/operating-day";
 import { hashKakaoV4EventId, kakaoV4EventRequestFingerprint, KAKAO_V4_EVENT_SCOPE } from "../../src/modules/recruiting";
@@ -463,7 +465,8 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.match(activatedDraft.body.v1StrictLegacyReply ?? "", /1\. 재현/u);
     const activatedStatus = await reserveRound("STATUS", null);
     assert.equal(activatedStatus.body.roundMetadata?.recruitNo, 62);
-    assert.match(activatedStatus.body.v1StrictLegacyReply ?? "", /》주최자 : 재현/u);
+    assert.equal(activatedStatus.body.roundMetadata?.organizerText, "재현");
+    assert.match(activatedStatus.body.v1StrictLegacyReply ?? "", /확인 1\. 재현/u);
     sequence += 1;
     const quickReserve = await assistant.syncSeasonSnapshot({
       actorPrincipalId: principalId,
@@ -509,7 +512,7 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
 
     const first = await sync({ room: roomA, mode: "RIFT", name: `방A-${suffix}`, time: "20:00", notice: "승리팀 랜덤 1인 스킨 증정" });
     assert.equal(first.body.metadataUpdated, true);
-    assert.match(first.body.v1StrictLegacyReply ?? "", /명단\/정보 업데이트/u);
+    assert.match(first.body.v1StrictLegacyReply ?? "", /신청 저장|회원 확인 필요/u);
     assert.deepEqual(first.body.roundMetadata, {
       recruitNo: 61,
       mode: "RIFT",
@@ -526,13 +529,13 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.equal(metadataOnly.body.createdCount, 0);
     assert.equal(metadataOnly.body.updatedCount, 0);
     assert.equal(metadataOnly.body.metadataUpdated, true);
-    assert.match(metadataOnly.body.v1StrictLegacyReply ?? "", /내전 #61 정보 업데이트/u);
+    assert.match(metadataOnly.body.v1StrictLegacyReply ?? "", /내전 #61 정보 저장/u);
     assert.match(metadataOnly.body.v1StrictLegacyReply ?? "", /시작: 19:30/u);
 
     const cleared = await sync({ room: roomA, mode: "RIFT", name: `방A-${suffix}`, time: "19:30", notice: null });
     assert.equal(cleared.body.metadataUpdated, true);
     assert.equal(cleared.body.roundMetadata?.noticeText, null);
-    assert.match(cleared.body.v1StrictLegacyReply ?? "", /공지: 없음/u);
+    assert.doesNotMatch(cleared.body.v1StrictLegacyReply ?? "", /》공지:/u);
 
     const roomBResult = await sync({ room: roomB, mode: "RIFT", name: `방B-${suffix}`, time: "18:00", notice: "다른 방 공지" });
     assert.equal(roomBResult.body.roundMetadata?.startTimeText, "18:00");
@@ -592,15 +595,15 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.equal(afterRejectedApplications.find((row) => row.playerId === confirmedPlayerId)?.status, "CONFIRMED");
 
     const roomAStatus = await status(roomA);
-    assert.match(roomAStatus.body.legacyReply ?? "", /》칼바람/u);
-    assert.match(roomAStatus.body.legacyReply ?? "", /20:30 시작/u);
+    assert.match(roomAStatus.body.legacyReply ?? "", /》모드: 칼바람/u);
+    assert.match(roomAStatus.body.legacyReply ?? "", /》시작: 20:30/u);
     assert.match(roomAStatus.body.legacyReply ?? "", /칼바람 공지/u);
-    assert.match(roomAStatus.body.legacyReply ?? "", /^이름$/mu);
+    assert.match(roomAStatus.body.legacyReply ?? "", /전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송/u);
     assert.match(roomAStatus.body.legacyReply ?? "", new RegExp(`^1\\. 방A-${suffix}$`, "mu"));
     assert.match(roomAStatus.body.legacyReply ?? "", new RegExp(`사이트-${suffix}`, "u"));
     assert.doesNotMatch(roomAStatus.body.legacyReply ?? "", new RegExp(`방B-${suffix}`, "u"));
     const roomBStatus = await status(roomB);
-    assert.match(roomBStatus.body.legacyReply ?? "", /18:00 시작/u);
+    assert.match(roomBStatus.body.legacyReply ?? "", /》시작: 18:00/u);
     assert.match(roomBStatus.body.legacyReply ?? "", /다른 방 공지/u);
     assert.doesNotMatch(roomBStatus.body.legacyReply ?? "", new RegExp(`방A-${suffix}`, "u"));
   } finally {
@@ -786,9 +789,10 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       "[K-LOL.GG 내전현황]",
       "🔎 전체 명단: 내전상세 번호",
       "",
-      `#7 ${year}-${month}-${day} 21:00 시작 (3/10 / 예비 1)`,
+      `#7 ${year}-${month}-${day} 미정 시작 (1/10 / 예비 1)`,
+      "회원 확인 필요 2명",
       "└ 내전상세 7",
-      `#8 ${year}-${month}-${day} 21:00 시작 (1/10)`,
+      `#8 ${year}-${month}-${day} 미정 시작 (1/10)`,
       "└ 내전상세 8",
       "",
       "상세 명령: 내전상세 7 / 내전상세 8",
@@ -807,10 +811,10 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     assert.equal(siteRound.body.entries.length, 1);
     assert.equal(siteRound.body.entries[0]?.source, "SITE");
     assert.equal(siteRound.body.legacyReply, [
-      "📢 내전하실분 #8", " 》협곡", ` 》${today} 21:00 시작`, " 》게임정보 : 미입력", " 》주최자 : 미입력", "👥 1/10명", "",
-      "*참가 신청 양식*", "이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD", "",
-      `1. 사이트-${suffix}/D/M/TOP/AD`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
-      "", "예비 1.",
+      "[내전 #8] 1/10명", "》모드: 협곡", "》시작: 미정", "",
+      "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송", "",
+      `1. 사이트-${suffix}`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
+      "", "예비 1.", "", `양식코드: ${siteRound.body.formCode}`,
     ].join("\n"));
 
     await database.update(seasonApplications).set({
@@ -1372,6 +1376,185 @@ test("in-house finish cancels only mutable same-room rows, hides the round, and 
     assert.doesNotMatch(status.body.v1StrictLegacyReply ?? "", /#86/u);
   } finally {
     await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test("in-house copy codes merge concurrent additions, preserve site-linked lanes, block destructive edits and never revive cancelled originals", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const now = new Date();
+  const today = recruitingOperatingDateKey(now);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const room = `room-copy-${suffix}`;
+  const ids = [randomUUID(), randomUUID(), randomUUID(), randomUUID()];
+  const names = ids.map((_, index) => `복사${index}-${suffix}`);
+  const assistant = new PostgresKakaoAssistant(database);
+  let sequence = 0;
+  const send = (command: KakaoSeasonSnapshotCommand) => {
+    sequence += 1;
+    return assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId, intent: intent(`nonce-copy-${suffix}-${sequence}`, `copy-${suffix}-${sequence}`, room),
+      requestKey: `copy-${suffix}-${sequence}`, scope: "kakao:season-copy-contract", command, requestId: randomUUID(), now,
+    });
+  };
+  const metadata = { capacity: 10, startTimeText: "21:00", scheduledStartAt: new Date(`${today}T21:00:00+09:00`).toISOString(), gameInfo: null, organizerText: null, noticeText: null };
+  const member = (index: number, slotNo = index + 1) => ({ slotNo, name: names[index]!, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false, nameOnly: true as const });
+  const syncCommand = (body: KakaoSeasonSnapshotDto, participants: Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }>["participants"]): Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }> => ({
+    action: "SYNC", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants,
+    reserveSectionObserved: true, copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
+  });
+  const precondition = (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED";
+  try {
+    await applyMigrations(database);
+    await database.insert(seasons).values({ id: seasonId, name: `Copy ${suffix}`, nameNormalized: `copy ${suffix}`, status: "ACTIVE", activatedAt: now });
+    await database.insert(players).values(ids.map((id, index) => ({ id, memberName: names[index]!, memberNameNormalized: names[index]!, nickname: `Copy${index}${suffix}`, nicknameNormalized: `copy${index}${suffix}`, tagLine: "QA", tagLineNormalized: "qa" })));
+    const draft = await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants: [] });
+    assert.match(draft.body.saveReference ?? "", /^S[a-f0-9]{32}$/u);
+    assert.match(draft.body.formCode ?? "", /^[A-Z0-9]{5}-[A-Z0-9]{5}$/u);
+    const first = await send(syncCommand(draft.body, [{ ...member(0), nameOnly: undefined, mainPosition: "MID", subPositions: ["SUP"] }]));
+    assert.equal(first.body.entries.length, 1);
+    assert.equal(first.body.roundMetadata?.organizerText, names[0]);
+    assert.match(first.body.v1StrictLegacyReply ?? "", /전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송/u);
+    assert.match(first.body.v1StrictLegacyReply ?? "", /양식코드:/u);
+    assert.doesNotMatch(first.body.v1StrictLegacyReply ?? "", /이름\/현티어/u);
+    const concurrent = await Promise.allSettled([
+      send(syncCommand(first.body, [member(0), member(1, 2)])),
+      send(syncCommand(first.body, [member(0), member(2, 2)])),
+    ]);
+    assert.equal(concurrent.filter((result) => result.status === "fulfilled").length, 2);
+    const current = (await send({ action: "STATUS", seasonId, applyDate: today, recruitNo: 1, participants: [] })).body;
+    assert.equal(current.entries.length, 3);
+    assert.equal(new Set(current.entries.map((entry) => entry.slotNo)).size, 3);
+    assert.equal(current.entries.find((entry) => entry.player?.playerId === ids[0])?.mainPosition, "MID");
+    assert.deepEqual(current.entries.find((entry) => entry.player?.playerId === ids[0])?.subPositions, ["SUP"]);
+    const roster = current.entries.map((entry) => ({ slotNo: entry.slotNo, name: entry.player!.memberName!, riotId: null, mainPosition: "ALL" as const, subPositions: [], reserve: false, nameOnly: true as const }));
+    await assert.rejects(send({ ...syncCommand(current, [member(0)]), copyGuard: { operatingDate: null, saveReference: null } }), precondition);
+    await assert.rejects(send(syncCommand(current, [member(0)])), precondition);
+    const legacyAdd = await send({ ...syncCommand(current, [...roster, member(3, 4)]), copyGuard: { operatingDate: null, saveReference: null } });
+    assert.equal(legacyAdd.body.entries.length, 4);
+    for (const changedMetadata of [
+      { ...metadata, startTimeText: "22:00" }, { ...metadata, gameInfo: "덮어쓰기" },
+      { ...metadata, organizerText: "다른주최자" }, { ...metadata, noticeText: "옛 복사본 공지" },
+    ]) {
+      await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), roundMetadata: changedMetadata, copyGuard: { operatingDate: null, saveReference: null } }), precondition);
+      await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), roundMetadata: changedMetadata }), precondition);
+    }
+    await assert.rejects(send({ ...syncCommand(legacyAdd.body, [...roster, member(3, 4)]), copyGuard: { operatingDate: "2026-01-01", saveReference: legacyAdd.body.saveReference! } }), precondition);
+    const unchanged = await send({ action: "STATUS", seasonId, applyDate: today, recruitNo: 1, participants: [] });
+    assert.equal(unchanged.body.saveReference, legacyAdd.body.saveReference);
+    const removed = await send({ action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 1, name: names[3]!, participants: [] });
+    assert.notEqual(removed.body.saveReference, legacyAdd.body.saveReference, "member-only edits must invalidate a copied form");
+    assert.match(removed.body.legacyReply ?? "", /10\.\n/u, "member changes return the full copyable roster");
+    const notRevived = await send(syncCommand(legacyAdd.body, [...roster, member(3, 4)]));
+    assert.equal(notRevived.body.entries.length, 3);
+    assert.equal(notRevived.body.entries.some((entry) => entry.player?.playerId === ids[3]), false);
+    const pending = await send(syncCommand(notRevived.body, [...roster, { ...member(3, 4), name: `미등록-${suffix}` }]));
+    assert.equal(pending.body.appliedCount, 3);
+    assert.equal(pending.body.pendingCount, 1);
+    assert.match(pending.body.v1StrictLegacyReply ?? "", /\[내전 #1\] 3\/10명/u);
+    assert.match(pending.body.v1StrictLegacyReply ?? "", /회원 확인 필요 1명 · 아직 참가 확정 전/u);
+    assert.match(pending.body.v1StrictLegacyReply ?? "", /4\. \(회원 확인 중\)/u);
+    await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", roundMetadata: metadata, participants: [] });
+    const siteApplicationId = randomUUID();
+    await database.insert(seasonApplications).values({
+      id: siteApplicationId, seasonId, playerId: ids[0]!, applyDate: today, recruitNo: 2,
+      source: "SITE", sourceSlotNo: null, mainPosition: "TOP", subPositions: ["JGL"], status: "APPLIED", createdAt: now, updatedAt: now,
+    });
+    const mixed = await send({ action: "SYNC", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", roundMetadata: metadata,
+      participants: [member(1, 2), { ...member(3, 3), name: `대기검토-${suffix}` }] });
+    const copyText = mixed.body.v1StrictLegacyReply!;
+    const parsed = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text: copyText }), {
+      profileId: "FEATURES", installationId: "install-copy", senderId: "sender-copy", eventId: "event-copy-roundtrip",
+      timestamp: Math.floor(now.getTime() / 1_000), nonce: "f".repeat(32), text: copyText,
+    });
+    if (parsed?.domain !== "SEASON" || parsed.action !== "SYNC") assert.fail("actual generated mixed site/pending copy must parse");
+    const roundtrip = await send({
+      action: "SYNC", seasonId, applyDate: parsed.applyDate, recruitNo: parsed.recruitNumber, mode: parsed.mode,
+      roundMetadata: parsed.roundMetadata, participants: parsed.participants,
+      preserveSlotNos: parsed.preserveSlotNos, reserveSectionObserved: parsed.reserveSectionObserved, copyGuard: parsed.copyGuard,
+    });
+    assert.equal(roundtrip.body.createdCount, 0);
+    assert.equal(roundtrip.body.updatedCount, 0);
+    assert.equal(roundtrip.body.cancelledCount, 0);
+    assert.equal(roundtrip.body.appliedCount, 2);
+    assert.equal(roundtrip.body.pendingCount, 1);
+    const siteAfter = (await database.select().from(seasonApplications).where(eq(seasonApplications.id, siteApplicationId)))[0]!;
+    assert.equal(siteAfter.source, "SITE");
+    assert.equal(siteAfter.sourceSlotNo, null);
+    assert.equal(siteAfter.mainPosition, "TOP");
+    assert.deepEqual(siteAfter.subPositions, ["JGL"]);
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test("in-house copy forms reopen a vacated reserve slot and preserve the remaining roster", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const now = new Date();
+  const today = recruitingOperatingDateKey(now);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const room = `room-reserve-gap-${suffix}`;
+  const members = Array.from({ length: 11 }, (_, index) => ({ id: randomUUID(), name: `예비공석${index}-${suffix}` }));
+  const assistant = new PostgresKakaoAssistant(database);
+  let sequence = 0;
+  const send = (command: KakaoSeasonSnapshotCommand) => {
+    sequence += 1;
+    return assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId, intent: intent(`nonce-gap-${suffix}-${sequence}`, `gap-${suffix}-${sequence}`, room),
+      requestKey: `gap-${suffix}-${sequence}`, scope: "kakao:season-copy-contract", command, requestId: randomUUID(), now,
+    });
+  };
+  try {
+    await applyMigrations(database);
+    await database.insert(seasons).values({ id: seasonId, name: `Reserve gap ${suffix}`, nameNormalized: `reserve gap ${suffix}`, status: "ACTIVE", activatedAt: now });
+    await database.insert(players).values(members.map((member, index) => ({
+      id: member.id, memberName: member.name, memberNameNormalized: member.name,
+      nickname: `Gap${index}${suffix}`, nicknameNormalized: `gap${index}${suffix}`, tagLine: "QA", tagLineNormalized: "qa",
+    })));
+    const full = await send({
+      action: "SYNC", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", reserveSectionObserved: true,
+      roundMetadata: { capacity: 10, startTimeText: null, scheduledStartAt: null, gameInfo: null, organizerText: null, noticeText: null },
+      participants: members.map((member, index) => ({
+        slotNo: index === 0 ? 1 : 10 + index, name: member.name, riotId: null,
+        mainPosition: "ALL", subPositions: [], reserve: index > 0,
+      })),
+    });
+    assert.equal(full.body.reserveCount, 10);
+    const removed = await send({ action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 1, name: members[1]!.name, participants: [] });
+    assert.equal(removed.body.reserveCount, 9);
+    assert.match(removed.body.legacyReply ?? "", /^예비 1\.$/mu);
+    for (let index = 2; index <= 10; index += 1) {
+      assert.ok(removed.body.legacyReply?.includes(`예비 ${index}. ${members[index]!.name}`));
+    }
+    const copyText = removed.body.legacyReply!.replace(/^예비 1\.$/mu, `예비 1. ${members[1]!.name}`);
+    const parsed = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text: copyText }), {
+      profileId: "FEATURES", installationId: "install-reserve-gap", senderId: "sender-reserve-gap", eventId: "event-reserve-gap",
+      timestamp: Math.floor(now.getTime() / 1_000), nonce: "e".repeat(32), text: copyText,
+    });
+    if (parsed?.domain !== "SEASON" || parsed.action !== "SYNC") assert.fail("the generated reserve vacancy form must parse");
+    const restored = await send({
+      action: "SYNC", seasonId, applyDate: parsed.applyDate, recruitNo: parsed.recruitNumber, mode: parsed.mode,
+      roundMetadata: parsed.roundMetadata, participants: parsed.participants,
+      preserveSlotNos: parsed.preserveSlotNos, reserveSectionObserved: parsed.reserveSectionObserved, copyGuard: parsed.copyGuard,
+    });
+    assert.equal(restored.body.appliedCount, 1);
+    assert.equal(restored.body.reserveCount, 10);
+    assert.equal(restored.body.cancelledCount, 0);
+    assert.equal(restored.body.entries.find((entry) => entry.player?.playerId === members[1]!.id)?.slotNo, 11);
+    for (const entry of removed.body.entries) {
+      assert.deepEqual(restored.body.entries.find((current) => current.player?.playerId === entry.player?.playerId), entry);
+    }
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();
   }
 });

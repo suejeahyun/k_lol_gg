@@ -3,6 +3,7 @@ import test from "node:test";
 
 import type { RecruitingCommand, RecruitingCommandResult } from "../src/modules/recruiting";
 import type { KakaoOpenChatStatusDto } from "../src/modules/recruiting/kakao-assistant/domain";
+import { partyCopyReference } from "../src/modules/recruiting/application/party-copy-reference";
 import { encodeV1StrictScrimTimeText } from "../src/modules/recruiting/domain/v1-strict-scrim-time";
 import {
   KAKAO_V1_STRICT_PROTOCOL,
@@ -112,10 +113,18 @@ function mutationResult(command: RecruitingCommand): RecruitingCommandResult {
 
 function harness(parties: readonly Party[] = [], scrims: KakaoOpenChatStatusDto["scrims"] = []) {
   const handled: RecruitingCommand[] = [];
+  let currentParties = parties;
   const recruiting: KakaoV4RecruitingPort = {
     async handle(command) {
       handled.push(command);
-      return mutationResult(command);
+      const result = mutationResult(command);
+      if (command.type === "SYNC_PARTY") {
+        currentParties = [party({
+          id: command.aggregateId, revision: result.revision, recruitNumber: 12, maximumMembers: 5,
+          members: command.payload.members, startTimeText: "09:26", scheduledStartAt: null,
+        })];
+      }
+      return result;
     },
     async resolveCompatTarget() {
       return { id: "party-12", revision: 2 };
@@ -126,7 +135,7 @@ function harness(parties: readonly Party[] = [], scrims: KakaoOpenChatStatusDto[
   };
   const assistant: KakaoV4AssistantPort = {
     async getOpenChatStatus() {
-      return { body: statusBody(parties, scrims), replayed: false };
+      return { body: statusBody(currentParties, scrims), replayed: false };
     },
     async syncSeasonSnapshot() {
       throw new Error("not used");
@@ -135,7 +144,7 @@ function harness(parties: readonly Party[] = [], scrims: KakaoOpenChatStatusDto[
   return { dispatcher: new KakaoV4CommandDispatcher({ recruiting, assistant }), handled };
 }
 
-test("strict V1 and ordinary V4 create reserve metadata-only drafts", async () => {
+test("strict V1 and ordinary V4 reserve full copyable drafts and return one current form after saving", async () => {
   const createCommand = {
     domain: "PARTY" as const,
     action: "CREATE" as const,
@@ -154,16 +163,20 @@ test("strict V1 and ordinary V4 create reserve metadata-only drafts", async () =
   };
   const strictState = harness();
   const strictCreate = await strictState.dispatcher.dispatch(context(true, "5인파티"), createCommand);
+  const created = strictState.handled[0]!;
   assert.equal(strictCreate.legacyReply, [
-    "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
-    "아래 양식의 모집번호는 유지해서 작성해주세요.", "", "📢 5인 파티 구인",
-    "모집번호: #8", "운영일: 2026-09-11", "", "》시작시간 :", "》게임정보 :", "》주최자 :", "",
-    "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.",
+    "[K-LOL.GG 구인상세 #8]", "", "#8 · 5인 파티 · 0/5", "운영일: 2026-09-11",
+    `》저장기준 : ${partyCopyReference({ id: created.aggregateId, recruitDate: "2026-09-11", revision: 0 })}`,
+    "》시작시간 :", "》게임정보 :", "》주최자 :", "",
+    "1.", "2.", "3.", "4.", "5.", "예비 1.", "",
+    "복사 안내: 전체 복사 → 빈칸에 이름 입력 → 전체 전송으로 저장 (저장기준 유지)",
   ].join("\n"));
 
   const normalState = harness();
   const normalCreate = await normalState.dispatcher.dispatch(context(false, "5인파티", 2), createCommand);
   assert.match(normalCreate.legacyReply, /》시작시간 :[\s\S]*》게임정보 :[\s\S]*》주최자 :/u);
+  assert.match(normalCreate.legacyReply, /^1\.\n2\.\n3\.\n4\.\n5\.\n예비 1\./mu);
+  assert.match(normalCreate.legacyReply, /저장기준 : 2026-09-11 \/ P[a-f0-9]{32}-R0/u);
 
   const syncCommand = {
     domain: "PARTY" as const,
@@ -181,9 +194,16 @@ test("strict V1 and ordinary V4 create reserve metadata-only drafts", async () =
     },
   };
   const strictSync = await strictState.dispatcher.dispatch(context(true, "전체 양식", 3), syncCommand);
-  assert.equal(strictSync.legacyReply, "[파티 #12 반영]\n1/5 · 예비 1명\n\n[K-LOL.GG 구인구직 현황]\n\n현재 진행 중인 구인글이 없습니다.");
   const normalSync = await normalState.dispatcher.dispatch(context(false, "전체 양식", 4), syncCommand);
-  assert.match(normalSync.legacyReply, /시작시간: 09:26 · 게임정보: 미입력/u);
+  for (const result of [strictSync, normalSync]) {
+    assert.match(result.legacyReply, /^신청 내용을 저장했어요\.\n\n\[K-LOL\.GG 구인상세 #12\]/u);
+    assert.match(result.legacyReply, /^#12 · 5인 파티 · 1\/5$/mu);
+    assert.match(result.legacyReply, /^》시작시간 : 09:26$/mu);
+    assert.match(result.legacyReply, /^1\. 재현\n2\.\n3\.\n4\.\n5\.\n예비 1\. 민서\n예비 2\./mu);
+    assert.match(result.legacyReply, /저장기준 : 2026-09-11 \/ P[a-f0-9]{32}-R3/u);
+    assert.doesNotMatch(result.legacyReply, /파티 #12 반영|구인구직 현황/u);
+    assert.equal(result.legacyReply.match(/\[K-LOL\.GG 구인상세/gu)?.length, 1);
+  }
 });
 
 test("strict V1 detail is the full copyable form without repeated command guidance", async () => {
@@ -204,8 +224,10 @@ test("strict V1 detail is the full copyable form without repeated command guidan
   });
   assert.equal(result.legacyReply, [
     "[K-LOL.GG 구인상세 #12]", "", "#12 · 5인 파티 · 2/5",
-    "시작시간: 9:30", "》게임정보 : 자랭 예상 골드", "》주최자 : 미입력", "예비: 1명", "",
+    "운영일: 2026-09-11", `》저장기준 : ${partyCopyReference(target)}`,
+    "》시작시간 : 9시 30분", "》게임정보 : 자랭 수준 예상 골드", "》주최자 : ", "예비: 1명", "",
     "1. 재현", "2.", "3. 민서", "4.", "5.", "예비 1. 기용", "예비 2.",
+    "", "복사 안내: 전체 복사 → 빈칸에 이름 입력 → 전체 전송으로 저장 (저장기준 유지)",
   ].join("\n"));
 });
 

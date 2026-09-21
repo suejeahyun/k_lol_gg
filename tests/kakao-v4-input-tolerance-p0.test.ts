@@ -10,6 +10,7 @@ import { RecruitingCommandHandler } from "../src/modules/recruiting/application/
 import { KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
+import { v1StrictPartyDetailReply } from "../src/modules/recruiting/kakao-v4/v1-strict-party-replies";
 import {
   KakaoV4CommandDispatcher,
   KakaoV4DispatcherError,
@@ -481,25 +482,38 @@ test(
         recruitNumber: 12,
         type: "FLEX_RANK",
         status: "IN_PROGRESS",
-        title: "V1 동일 방 공동 관리 계약",
+        title: "자랭 하실분!",
         maximumMembers: 5,
-        membersJson: [{ name: "작성자", position: null, slotNo: 1, substitute: false }],
+        membersJson: [{ name: "작성자", position: "TOP", slotNo: 1, substitute: false }],
         startTimeText: "21:00",
         gameInfo: "자유 랭크",
         lastActivityAt: new Date(KST_TIMESTAMP * 1_000),
       });
 
+      const beforeEdit = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
+      assert.ok(beforeEdit);
+      const currentForm = v1StrictPartyDetailReply({
+        id: beforeEdit.id, revision: beforeEdit.revision, recruitDate: beforeEdit.recruitDate,
+        resetSequence: beforeEdit.resetSequence, recruitNumber: beforeEdit.recruitNumber,
+        type: "FLEX_RANK", status: "IN_PROGRESS", title: beforeEdit.title,
+        maximumMembers: beforeEdit.maximumMembers, memberCount: 1, reserveCount: 0,
+        members: [{ name: "작성자", position: "TOP", slotNo: 1, substitute: false }],
+        startTimeText: beforeEdit.startTimeText, gameInfo: beforeEdit.gameInfo,
+        organizerText: beforeEdit.organizerText, scheduledStartAt: null,
+      }, 12);
+      assert.match(currentForm, /저장기준 : 2026-09-10 \/ P[a-f0-9]{32}-R0/u);
       const edited = await execute(roomAService, {
         installationId: roomAInstallation,
         senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         eventId: "event-p0-multiuser-db-edit-0001",
-        text: replaceRow(1, "1. 다른 사용자 수정"),
+        text: currentForm.replace("JUG.\n", "JUG. 다른 사용자 참가\n"),
       });
       assert.equal(edited.replayed, false);
       const afterEdit = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
       assert.equal(afterEdit?.revision, 1);
       assert.deepEqual(afterEdit?.membersJson, [
-        { name: "다른 사용자 수정", position: "TOP", slotNo: 1, substitute: false },
+        { name: "작성자", position: "TOP", slotNo: 1, substitute: false },
+        { name: "다른 사용자 참가", position: "JGL", slotNo: 2, substitute: false },
       ]);
 
       await assert.rejects(
@@ -507,7 +521,7 @@ test(
           installationId: roomBInstallation,
           senderId: "sender-user-dddddddddddddddddddddddddddddddd",
           eventId: "event-p0-multiuser-db-other-room-0001",
-          text: replaceRow(1, "1. 다른 방 침범"),
+          text: currentForm.replace("TOP. 작성자", "TOP. 다른 방 침범"),
         }),
         (error: unknown) => error instanceof KakaoV4DispatcherError && error.code === "NOT_FOUND",
       );

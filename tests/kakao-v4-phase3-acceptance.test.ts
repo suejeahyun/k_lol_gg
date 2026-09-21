@@ -3,12 +3,12 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
 
-import { KakaoV4CommandError, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
+import { KAKAO_V4_SCRIM_RETIRED_REPLY, KakaoV4CommandError, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import { canonicalizeKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
 import type { KakaoV4CommandDispatcher } from "../src/modules/recruiting/kakao-v4/dispatcher";
 import type { KakaoV4CommandEnvelope, KakaoV4ProfileId } from "../src/modules/recruiting/kakao-v4/domain";
-import { kakaoV4CommandFailureResponse, kakaoV4ProblemResponse } from "../src/modules/recruiting/kakao-v4/http";
+import { kakaoV4ProblemResponse } from "../src/modules/recruiting/kakao-v4/http";
 
 type V1Contract = Readonly<{
   inhouse: Readonly<{
@@ -202,35 +202,31 @@ test("[P3-I08] ARAM and AUGMENT_ARAM snapshots keep name-only authoritative arra
   }
 });
 
-test("[P3-S01] SCRIM initial form keeps the exact V1 dated template", async () => {
-  await expectExactReply("RECRUIT", "스크림구인", fixture.scrim.initialTemplate, 200);
+test("[P3-S01] R23 SCRIM create returns retirement guidance without dispatch", async () => {
+  const qa = harness();
+  const result = await qa.service.execute(envelope("RECRUIT", "스크림구인", 200), "current");
+  assert.equal(result.reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
+  assert.equal(qa.dispatches.length, 0);
 });
 
 for (const [index, form] of [SCRIM_NEW_FORM, SCRIM_EDIT_FORM].entries()) {
-  test(`[P3-S0${index + 2}] SCRIM ${index === 0 ? "new" : "edit"} full form is dispatched once with exact V1 reply`, async () => {
+  test(`[P3-S0${index + 2}] R23 SCRIM ${index === 0 ? "new" : "edit"} full form cannot reach its former dispatcher`, async () => {
     const expected = index === 0 ? fixture.scrim.newFormReply : SCRIM_EDIT_REPLY;
     const qa = harness({ replies: { [form]: expected } });
     const result = await qa.service.execute(envelope("RECRUIT", form, 201 + index), "current");
     assert.equal(result.kind, "REPLY", "full SCRIM form must not remain 501");
-    if (result.kind === "REPLY") assert.equal(result.reply, expected);
-    assert.equal(qa.dispatches.length, 1, "one command must cause one server dispatch");
+    if (result.kind === "REPLY") assert.equal(result.reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
+    assert.equal(qa.dispatches.length, 0, "retired command must never reach a mutation-capable dispatcher");
   });
 }
 
 for (const [index, reason] of ["NO_ACTIVE_TOURNAMENT", "AMBIGUOUS_ACTIVE_TOURNAMENT"].entries()) {
-  test(`[P3-S0${index + 4}] SCRIM active tournament failure ${reason} maps to INVALID_FORM`, async () => {
+  test(`[P3-S0${index + 4}] R23 SCRIM retirement does not depend on active tournament state ${reason}`, async () => {
     const text = SCRIM_NEW_FORM.replace("번호: #7", `번호: #${8 + index}`);
     const qa = harness({ invalidTexts: new Set([text]) });
-    await assert.rejects(
-      () => qa.service.execute(envelope("RECRUIT", text, 210 + index), "current"),
-      (error) => error instanceof KakaoV4CommandError && error.code === "INVALID_FORM",
-    );
-    const response = kakaoV4CommandFailureResponse(
-      new KakaoV4CommandError("INVALID_FORM"),
-      `trace-${reason.toLowerCase()}`,
-    );
-    assert.equal(response.status, 400);
-    assert.equal((await response.json()).code, "INVALID_FORM");
+    const result = await qa.service.execute(envelope("RECRUIT", text, 210 + index), "current");
+    assert.equal(result.reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
+    assert.equal(qa.dispatches.length, 0);
   });
 }
 

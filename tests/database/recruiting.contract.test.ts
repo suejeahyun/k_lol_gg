@@ -15,6 +15,8 @@ import {
   type RecruitingCommand,
 } from "../../src/modules/recruiting";
 import { PostgresRecruitingAdapter } from "../../src/modules/recruiting/infrastructure/postgres-recruiting-adapter";
+import { partyCopyReference } from "../../src/modules/recruiting/application/party-copy-reference";
+import { recruitingOperatingDateKey } from "../../src/modules/recruiting/domain/operating-day";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -476,7 +478,7 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     clock: { now: () => new Date(), receiptExpiresAt: (createdAt) => new Date(createdAt.getTime() + 86_400_000) },
   });
   const suffix = randomBytes(8).toString("hex");
-  const partyId = randomUUID();
+  let partyId = randomUUID();
   const principalId = `bot:kakao:v4:member-${suffix}`;
   const roomId = `room-v4-member-${suffix}`;
   let sequence = 0;
@@ -598,6 +600,62 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     ), true, "audit metadata contains only pseudonymous actor/room/sender identifiers");
     assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, partyId))).length, 5);
     assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, principalId))).length, 7);
+    const reference = partyCopyReference(afterRemoval);
+    const copyCommands = ["복사A", "복사B"].map((name, index) => {
+      const pending = v4Command("SYNC_PARTY", {
+        members: [
+          { name, slotNo: 1, position: null, substitute: false },
+          ...[members[1]!, members[2]!].map((member) => ({ ...member, position: null })),
+        ],
+        copyGuard: { operatingDate: afterRemoval.recruitDate, saveReference: reference },
+      }, `sender-${suffix}-copy-${index}`);
+      return sealRecruitingCommand({ ...pending, metadata: { ...pending.metadata, expectedRevision: 4 } });
+    });
+    const copyResults = await Promise.allSettled(copyCommands.map((pending) => handler.handle(pending)));
+    assert.equal(copyResults.filter((entry) => entry.status === "fulfilled").length, 1);
+    const rejected = copyResults.find((entry) => entry.status === "rejected");
+    assert.ok(rejected?.status === "rejected" && rejected.reason.code === "REVISION_CONFLICT");
+    const winner = copyResults.findIndex((entry) => entry.status === "fulfilled");
+    assert.equal((await handler.handle(copyCommands[winner]!)).replayed, true);
+    const loser = copyCommands[1 - winner]!;
+    await assert.rejects(handler.handle(sealRecruitingCommand({ ...loser, metadata: { ...loser.metadata, expectedRevision: 5 } })), { code: "REVISION_CONFLICT" });
+    const afterCopy = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
+    assert.equal(afterCopy.revision, 5);
+    assert.equal((afterCopy.membersJson as unknown[]).length, 3);
+
+    // R24 short codes compose two whole-form additions on the same locked target.
+    partyId = randomUUID();
+    const operatingDate = recruitingOperatingDateKey(new Date());
+    const draft = await handler.handle(v4Command("CREATE_PARTY", {
+      recruitDate: operatingDate, resetSequence: 0, recruitNumber: 8,
+      partyType: "PARTY_NUMBER", title: "복사 참가", maximumMembers: 3, members: [],
+      startTimeText: "미정", gameInfo: "미정", organizerText: null, scheduledStartAt: null, protectedUntil: null, initialStatus: "DRAFT",
+    }, `sender-${suffix}-copy-create`));
+    const draftCode = String(draft.body.data.formCode);
+    assert.match(draftCode, /^[A-Z2-9]{5}-[A-Z2-9]{5}$/u);
+    const concurrentCopies = await Promise.all(["한명", "두명"].map((name, index) => handler.handle(v4Command("SYNC_PARTY", {
+      members: [{ name, slotNo: 1, position: null, substitute: false }],
+      startTimeText: "미정", startTimeState: "PRESENT_VALUE", gameInfo: "미정", gameInfoState: "PRESENT_VALUE",
+      copyGuard: { operatingDate, saveReference: draftCode },
+    }, `sender-${suffix}-copy-${index}`))));
+    assert.deepEqual(concurrentCopies.map((entry) => entry.revision).sort(), [1, 2]);
+    const twoMembers = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
+    const baseline = twoMembers.membersJson as { name: string; slotNo: number; position: null; substitute: boolean }[];
+    assert.deepEqual(baseline.map((member) => member.slotNo).sort(), [1, 2]);
+    assert.deepEqual(baseline.map((member) => member.name).sort(), ["두명", "한명"]);
+    const baselineCode = String(concurrentCopies.find((entry) => entry.revision === 2)!.body.data.formCode);
+    await handler.handle(v4Command("PARTY_MEMBER_REMOVE", { name: baseline[0]!.name }, `sender-${suffix}-withdraw`));
+    const third = await handler.handle(v4Command("SYNC_PARTY", {
+      members: [...baseline, { name: "세명", slotNo: 3, position: null, substitute: false }],
+      copyGuard: { operatingDate, saveReference: baselineCode },
+    }, `sender-${suffix}-third`));
+    assert.equal(third.body.data.memberCount, 2);
+    const afterThird = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
+    assert.equal((afterThird.membersJson as { name: string }[]).some((member) => member.name === baseline[0]!.name), false, "an unchanged withdrawn name is not resurrected");
+    await assert.rejects(handler.handle(v4Command("SYNC_PARTY", {
+      members: [], copyGuard: { operatingDate, saveReference: String(third.body.data.formCode) },
+    }, `sender-${suffix}-erase`)), { message: "PARTY_COPY_REMOVAL" });
+    assert.deepEqual((await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0], afterThird);
   } finally {
     await pool.end();
   }

@@ -41,6 +41,7 @@ export type KakaoOpenChatStatusDto = Readonly<{
     revision: number;
     recruitDate: string;
     resetSequence: number;
+    formCode?: string;
     recruitNumber: number;
     type: "FLEX_RANK" | "NORMAL_GAME" | "SOLO_RANK" | "ARAM" | "TFT_NORMAL" | "TFT_RANK" | "DOUBLE_UP" | "PARTY_NUMBER" | "PARTY_RIFT" | "OTHER_GAME";
     title: string;
@@ -109,6 +110,7 @@ export type KakaoSeasonSnapshotParticipant = Readonly<{
   reserve: boolean;
   /** In-process V4 only; forces an otherwise parseable row into manual review. */
   reviewRequired?: true;
+  nameOnly?: true;
 }>;
 
 export type KakaoSeasonRoundMetadataDto = Readonly<{
@@ -161,6 +163,8 @@ export type KakaoSeasonSnapshotCommand =
       preserveSlotNos?: readonly number[];
       /** In-process V4 only; an explicit reserve section makes reserve rows authoritative. */
       reserveSectionObserved?: boolean;
+      /** In-process V4 copy form guard; null fields identify a legacy form. */
+      copyGuard?: Readonly<{ operatingDate: string | null; saveReference: string | null; formCode?: string | null }>;
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "CANCEL";
@@ -289,6 +293,9 @@ export type KakaoSeasonSnapshotDto = Readonly<{
   availableRecruitNos?: readonly number[];
   legacyReply?: string;
   v1StrictLegacyReply?: string;
+  operatingDate?: string;
+  saveReference?: string;
+  formCode?: string;
 }>;
 
 export type KakaoImageReceiveCommand = Readonly<{

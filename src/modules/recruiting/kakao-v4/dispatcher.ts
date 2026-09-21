@@ -11,6 +11,7 @@ import {
 } from "../application/commands";
 import type { RecruitingCommandResult, RecruitingCompatTargetInput } from "../application/ports";
 import { decodeV1StrictScrimTimeText } from "../domain/v1-strict-scrim-time";
+import { recruitingOperatingDateKey } from "../domain/operating-day";
 import {
   KakaoAssistantError,
   type KakaoOpenChatStatusDto,
@@ -174,19 +175,7 @@ function commandMetadata(context: KakaoV4DispatchContext, expectedRevision: numb
 }
 
 function partyLines(party: KakaoOpenChatStatusDto["parties"][number]) {
-  const positionLabels = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
-  const lines = [
-    `[K-LOL.GG 파티 #${party.recruitNumber}]`,
-    party.title || "파티 구인",
-    `인원 ${party.memberCount}/${party.maximumMembers}${party.reserveCount > 0 ? ` · 예비 ${party.reserveCount}` : ""}`,
-    `시작시간: ${party.startTimeText || "미정"} · 게임정보: ${party.gameInfo || "미입력"}`,
-    `주최자: ${party.organizerText || "미입력"}`,
-  ];
-  for (const member of party.members) {
-    lines.push(`${member.substitute ? "예비 " : ""}${member.slotNo}. ${member.name || "이름 미정"}${member.position ? ` · ${positionLabels[member.position]}` : ""}`);
-  }
-  if (party.members.length === 0) lines.push("아직 참가자가 없습니다.");
-  return lines.join("\n");
+  return v1StrictPartyDetailReply(party, party.recruitNumber);
 }
 
 function partyTypeLabel(party: KakaoOpenChatStatusDto["parties"][number]) {
@@ -304,32 +293,8 @@ function partyMemberResultData(
   });
 }
 
-function partyTemplate(input: Readonly<{
-  recruitNumber: number | null;
-  recruitDate: string;
-  partyType: string;
-  title: string;
-  maximumMembers: number;
-  members?: readonly Readonly<{ slotNo: number | null; name: string; position: string | null; substitute: boolean }>[];
-}>) {
-  const lines = [
-    "[K-LOL.GG 구인구직 양식]",
-    "같이 할사람~",
-    "",
-    "아래 양식의 모집번호는 유지해서 작성해주세요.",
-    "",
-    `📢 ${input.title}`,
-    `모집번호: #${String(input.recruitNumber)}`,
-    `운영일: ${input.recruitDate}`,
-    "",
-    "》시작시간 :",
-    "》게임정보 :",
-    "》주최자 :",
-    "",
-    "참여해주실 분은 태그해주세요.",
-    "*상호배려와 존중 부탁드립니다.",
-  ];
-  return lines.join("\n");
+function partyTemplate(input: Parameters<typeof v1StrictPartyTemplate>[0]) {
+  return v1StrictPartyTemplate(input);
 }
 
 function scrimLines(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Strict = false) {
@@ -464,40 +429,42 @@ function inhouseTemplate(command: Readonly<{
   capacity: number;
   time: string;
   mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
+  operatingDate?: string;
+  saveReference?: string;
+  formCode?: string;
 }>) {
   const mode = command.mode === "RIFT" ? "협곡" : command.mode === "ARAM" ? "칼바람" : "증바람";
   const lines = [
-    `📢 내전하실분 #${command.recruitNumber}`,
-    ` 》${mode}`,
-    ` 》${command.applyDate} ${command.time} 시작`,
-    " 》게임정보 :",
-    " 》주최자 :",
-    `👥 0/${command.capacity}명`,
+    `[내전 #${command.recruitNumber}] 0/${command.capacity}명`,
+    `》모드: ${mode}`,
+    `》시작: ${command.time}`,
     "",
-    "*참가 신청 양식*",
+    "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송",
+    ...(command.mode === "RIFT" ? ["라인 선택: 이름/주라인/부라인"] : []),
   ];
-  lines.push(...(command.mode === "RIFT"
-    ? ["이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD"]
-    : ["이름", "EX) 1.지후"]), "");
+  lines.push("");
   for (let slot = 1; slot <= command.capacity; slot += 1) lines.push(`${slot}.`);
   lines.push("", "예비 1.");
+  if (command.formCode) lines.push("", `양식코드: ${command.formCode}`);
+  else if (command.saveReference) lines.push("", `저장기준: ${command.operatingDate ?? command.applyDate} / ${command.saveReference}`);
   return lines.join("\n");
 }
 
 function participationGuide(publicOrigin: string) {
   return [
     "[K-LOL.GG 내전 참가 방법 안내]",
-    "오늘 시즌내전에 참가 가능하신 분은 사이트에서 참가 신청 부탁드립니다.",
     "",
-    "1. K-LOL.GG 접속",
-    publicOrigin,
-    "2. 로그인",
-    "3. 시즌내전 참가하기 클릭",
-    "4. 주 포지션 / 부 포지션 선택",
-    "5. 참가 신청 완료",
+    "1. 가장 최근 봇 명단 전체 복사 (없으면 내전현황)",
+    "2. 봇이 보낸 최신 양식 전체 복사",
+    "3. 빈 번호에 내 이름 입력 (정원이 차면 예비 칸)",
+    "4. 메시지 전체 전송하면 저장",
     "",
-    "참가 신청 기준으로 팀 밸런스가 진행됩니다.",
-    "신청하지 않은 인원은 팀 편성에서 누락될 수 있습니다.",
+    "저장 후 나온 최신 명단을 다음 사람이 복사해주세요.",
+    "협곡 라인은 이름/주라인/부라인으로 선택 입력할 수 있습니다.",
+    "",
+    "사이트 회원 이름으로 신청하면 기존 회원 정보와 연결됩니다.",
+    "회원 확인 필요로 표시되면 가입·이름 확인 후 운영진에게 알려주세요.",
+    `${publicOrigin}/signup`,
   ].join("\n");
 }
 
@@ -647,22 +614,25 @@ export function formatInhouseMemberReply(
     .sort((left, right) => left.slotNo - right.slotNo);
   const isReserve = (entry: KakaoSeasonSnapshotDto["entries"][number]) =>
     Boolean(entry.reserve || entry.status === "RESERVE" || entry.status === "MATCHED_RESERVE");
-  const reserveEntries = entries.filter(isReserve);
-  const mainEntries = entries.filter((entry) => !isReserve(entry));
+  const reviewEntries = entries.filter((entry) => entry.status === "UNMATCHED" || entry.status === "AMBIGUOUS");
+  const reserveEntries = entries.filter((entry) => isReserve(entry) && !reviewEntries.includes(entry));
+  const mainEntries = entries.filter((entry) => !isReserve(entry) && !reviewEntries.includes(entry));
   const inputIdentity = input.name.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ko-KR");
-  const unmatched = input.action === "ADD" && entries.find((entry) =>
-    entry.status === "UNMATCHED" && entry.suppliedName.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ko-KR") === inputIdentity);
+  const unmatched = input.action === "ADD" && reviewEntries.find((entry) =>
+    entry.suppliedName.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase("ko-KR") === inputIdentity);
   if (unmatched) return [
-    `[K-LOL.GG 내전 #${input.recruitNumber} 회원 등록 필요]`,
-    `${input.name}님은 등록된 회원 정보에서 찾지 못했습니다.`,
+    `회원 확인 필요: ${input.name} · 아직 참가 확정 전`,
+    unmatched.status === "AMBIGUOUS" ? "같은 이름의 회원이 있어 운영진 확인이 필요해요." : "신청 내용은 보관했어요. 회원가입 후 운영진에게 확인을 요청해주세요.",
     "https://k-lol-gg.vercel.app/signup",
-    "회원가입을 완료한 뒤 다시 추가해주세요.",
+    ...(body.legacyReply ? ["", body.legacyReply] : []),
   ].join("\n");
   return [
     `[K-LOL.GG 내전 #${input.recruitNumber} 명단] ${outcome} 현재 ${mainEntries.length}/${capacity}명 · 예비 ${reserveEntries.length}명`, "",
-    ...mainEntries.map((entry) => `${entry.slotNo}. ${inhouseMemberRosterLabel(entry)}`),
-    ...reserveEntries.map((entry, index) => `예비 ${index + 1}. ${inhouseMemberRosterLabel(entry)}`),
-    ...(entries.length === 0 ? ["아직 참가자가 없습니다."] : []),
+    ...(body.legacyReply ? [body.legacyReply] : [
+      ...mainEntries.map((entry) => `${entry.slotNo}. ${inhouseMemberRosterLabel(entry)}`),
+      ...reserveEntries.map((entry, index) => `예비 ${index + 1}. ${inhouseMemberRosterLabel(entry)}`),
+      ...(entries.length === 0 ? ["아직 참가자가 없습니다."] : []),
+    ]),
   ].join("\n");
 }
 
@@ -792,6 +762,19 @@ export class KakaoV4CommandDispatcher {
     }
   }
 
+  private async latestPartyForm(context: KakaoV4DispatchContext, recruitNumber: number, reply?: string) {
+    try {
+      const status = await this.openChatStatus(context, "PARTY", true);
+      const date = recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
+      const party = status.body.parties.find((item) => item.recruitDate === date && item.recruitNumber === recruitNumber);
+      if (!party) return `${reply ?? "저장했습니다."}\n\n최신 양식을 찾지 못했습니다. 구인현황을 확인해 주세요.`;
+      const form = v1StrictPartyDetailReply(party, recruitNumber);
+      return reply ? `${reply}\n\n${form}` : form;
+    } catch {
+      return `${reply ?? "저장했습니다."}\n\n최신 양식 조회 실패. 상세 ${recruitNumber}을 입력해 주세요.`;
+    }
+  }
+
   private async resolve(context: KakaoV4DispatchContext, kind: "PARTY" | "SCRIM", target: KakaoV4RecruitTarget) {
     const resolved = await this.dependencies.recruiting.resolveCompatTarget({
       kind,
@@ -892,7 +875,7 @@ export class KakaoV4CommandDispatcher {
         kind: "PARTY",
         action: command.action,
         aggregate: result.body,
-        legacyReply: await this.appendLatestPartyStatus(context, partyMemberMutationReply(data), v1Strict),
+        legacyReply: await this.latestPartyForm(context, command.target.recruitNumber, partyMemberMutationReply(data)),
         replayed: result.replayed,
       });
     }
@@ -910,8 +893,8 @@ export class KakaoV4CommandDispatcher {
           title: command.payload.title,
           maximumMembers: command.payload.maximumMembers,
           members: [],
-          startTimeText: null,
-          gameInfo: null,
+          startTimeText: "미정",
+          gameInfo: "미정",
           organizerText: null,
           scheduledStartAt: null,
           protectedUntil: null,
@@ -927,6 +910,9 @@ export class KakaoV4CommandDispatcher {
         aggregate: result.body,
         legacyReply: v1Strict
           ? v1StrictPartyTemplate({
+              id: result.body.aggregateId,
+              revision: result.body.revision,
+              formCode: typeof result.body.data.formCode === "string" ? result.body.data.formCode : undefined,
               recruitNumber,
               recruitDate: command.payload.recruitDate,
               partyType: command.payload.partyType,
@@ -934,6 +920,9 @@ export class KakaoV4CommandDispatcher {
               maximumMembers: command.payload.maximumMembers,
             })
           : partyTemplate({
+              id: result.body.aggregateId,
+              revision: result.body.revision,
+              formCode: typeof result.body.data.formCode === "string" ? result.body.data.formCode : undefined,
               recruitNumber,
               recruitDate: command.payload.recruitDate,
               partyType: command.payload.partyType,
@@ -997,6 +986,10 @@ export class KakaoV4CommandDispatcher {
             metadata: commandMetadata(context, target.revision),
             payload: {
               members: command.payload.members,
+              copyGuard: command.payload.parsedForm ? {
+                operatingDate: recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000)),
+                saveReference: command.payload.parsedForm.saveReference,
+              } : undefined,
               slotPatches: command.payload.parsedForm?.slots.map((slot) => ({
                 slotNo: slot.slotNo,
                 substitute: slot.kind === "RESERVE",
@@ -1036,6 +1029,27 @@ export class KakaoV4CommandDispatcher {
     try {
       result = await this.dependencies.recruiting.handle(recruitingCommand);
     } catch (error) {
+      const code = typeof error === "object" && error !== null && "code" in error ? error.code : null;
+      const copyError = error instanceof Error ? error.message : "";
+      const copyMessages: Record<string, string> = {
+        PARTY_COPY_CONFLICT: "저장하지 않았어요. 양식코드가 오래되었거나 달라요. 아래 최신 양식에 이름을 추가해 주세요.",
+        PARTY_COPY_REMOVAL: "저장하지 않았어요. 기존 이름은 그대로 두고 빈칸에 참가할 이름만 추가해 주세요.",
+        PARTY_COPY_METADATA: "저장하지 않았어요. 모집 정보가 달라졌어요. 아래 최신 양식에 이름만 추가해 주세요.",
+        PARTY_COPY_FULL: "저장하지 않았어요. 참가 정원이 찼어요. 대기를 원하면 아래 예비 칸에 이름을 적어 주세요.",
+        PARTY_COPY_POSITION_TAKEN: "저장하지 않았어요. 해당 라인에 먼저 참가한 분이 있어요. 빈 라인이나 예비 칸을 선택해 주세요.",
+        PARTY_COPY_DUPLICATE_NAME: "저장하지 않았어요. 같은 이름이 중복되어 있어요. 구분할 수 있는 이름을 적어 주세요.",
+      };
+      if (command.action === "SYNC" && copyMessages[copyError]) {
+        return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
+          legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, copyMessages[copyError]), replayed: false });
+      }
+      if (command.action === "SYNC" && (code === "REVISION_CONFLICT" || code === "AMBIGUOUS_MEMBER")) {
+        const message = code === "AMBIGUOUS_MEMBER"
+          ? "저장하지 않았습니다. 같은 이름이 중복되어 있습니다. 최신 양식에서 이름을 구분해 주세요."
+          : "저장하지 않았습니다. 양식이 오래되었거나 기존 명단과 다릅니다. 최신 양식을 복사해 다시 입력해 주세요.";
+        return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
+          legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, message), replayed: false });
+      }
       if (error instanceof Error && error.message === "EMPTY_DRAFT_ACTIVATION") {
         throw new KakaoV4DispatcherError("INVALID_FORM");
       }
@@ -1060,7 +1074,12 @@ export class KakaoV4CommandDispatcher {
             `시작시간: ${String(data.startTimeText)} · 게임정보: ${String(data.gameInfo)}`,
             `주최자: ${String(data.organizerText ?? "미입력")}`,
           ].join("\n");
-    const legacyReply = await this.appendLatestPartyStatus(context, mutationReply, v1Strict);
+    const legacyReply = command.action === "FINISH"
+      ? await this.appendLatestPartyStatus(context, mutationReply, v1Strict)
+      : await this.latestPartyForm(context, recruitNumber,
+          Array.isArray(data.copyAddedNames) && data.copyAddedNames.length > 0
+            ? `신청 저장: ${data.copyAddedNames.map(String).join(", ")}`
+            : data.copyChanged === false ? "이미 같은 내용으로 저장되어 있어요." : "신청 내용을 저장했어요.");
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
   }
 
@@ -1366,8 +1385,8 @@ export class KakaoV4CommandDispatcher {
           mode: command.mode,
           roundMetadata: {
             capacity: command.capacity,
-            startTimeText: command.time,
-            scheduledStartAt: new Date(`${command.applyDate}T${command.time}:00+09:00`).toISOString(),
+            startTimeText: command.time === "미정" ? null : command.time,
+            scheduledStartAt: command.time === "미정" ? null : new Date(`${command.applyDate}T${command.time}:00+09:00`).toISOString(),
             gameInfo: null,
             organizerText: null,
             noticeText: null,
@@ -1378,7 +1397,7 @@ export class KakaoV4CommandDispatcher {
       if (result.body.recruitNo === null) throw new KakaoV4DispatcherError("UNAVAILABLE");
       return Object.freeze({
         kind: "SEASON", action: command.action, aggregate: result.body,
-        legacyReply: inhouseTemplate({ ...command, recruitNumber: result.body.recruitNo }),
+        legacyReply: inhouseTemplate({ ...command, recruitNumber: result.body.recruitNo, operatingDate: result.body.operatingDate, saveReference: result.body.saveReference, formCode: result.body.formCode }),
         replayed: result.replayed,
       });
     }
@@ -1495,6 +1514,7 @@ export class KakaoV4CommandDispatcher {
           participants: command.participants,
           ...(command.preserveSlotNos ? { preserveSlotNos: command.preserveSlotNos } : {}),
           ...(command.reserveSectionObserved ? { reserveSectionObserved: true } : {}),
+          ...(command.copyGuard ? { copyGuard: command.copyGuard } : {}),
         }
       : {
           action: "STATUS",
@@ -1511,6 +1531,23 @@ export class KakaoV4CommandDispatcher {
         requestId: context.requestId,
       });
     } catch (error) {
+      if (command.action === "SYNC" && error instanceof KakaoAssistantError &&
+          (error.code === "PRECONDITION_FAILED" || error.code === "INVALID_STATE" || error.code === "CONFLICT")) {
+        const latestOperatingDate = recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
+        const latest = await this.dependencies.assistant.syncSeasonSnapshot({
+          ...signedInput(context), requestId: context.requestId,
+          command: { action: "STATUS", seasonId: command.seasonId, applyDate: latestOperatingDate, recruitNo: command.applyDate === latestOperatingDate ? command.recruitNumber : null, participants: [] },
+        });
+        return Object.freeze({
+          kind: "SEASON", action: command.action, aggregate: latest.body, replayed: latest.replayed,
+          legacyReply: ["아직 저장되지 않았어요.",
+            error.code === "INVALID_STATE" ? "마감된 내전입니다. 내전현황에서 진행 중인 명단을 확인해주세요." :
+              error.code === "CONFLICT" ? "신청 가능한 자리가 없거나 모집 상태가 바뀌었습니다. 아래 명단에서 빈칸 또는 예비를 확인해주세요." :
+                "최신 명단을 복사해 빈칸에 내 이름만 추가해주세요. 취소는 내전상세 번호 삭제 이름으로 할 수 있어요.",
+            "", v1StrictSeasonReply(latest.body, "DETAIL"),
+          ].join("\n"),
+        });
+      }
       if (
         command.action !== "SYNC" && usesKakaoV1StrictResponse(context.envelope) &&
         error instanceof KakaoAssistantError && error.code === "NOT_FOUND"
@@ -1531,7 +1568,7 @@ export class KakaoV4CommandDispatcher {
       aggregate: result.body,
       legacyReply: usesKakaoV1StrictResponse(context.envelope)
         ? v1StrictSeasonReply(result.body, command.action)
-        : seasonReply(result.body, command.action !== "SYNC"),
+        : command.action === "SYNC" ? v1StrictSeasonReply(result.body, "SYNC") : seasonReply(result.body),
       replayed: result.replayed,
     });
   }

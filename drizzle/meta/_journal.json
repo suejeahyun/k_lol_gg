@@ -281,6 +281,13 @@
       "when": 1789296503535,
       "tag": "0039_massive_arachne",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789854667439,
+      "tag": "0040_kakao_form_snapshot_codes",
+      "breakpoints": true
     }
   ]
 }

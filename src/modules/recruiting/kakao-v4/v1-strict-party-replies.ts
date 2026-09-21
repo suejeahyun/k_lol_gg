@@ -1,4 +1,5 @@
 import type { KakaoOpenChatStatusDto } from "../kakao-assistant/domain";
+import { partyCopyReference } from "../application/party-copy-reference";
 
 type Party = KakaoOpenChatStatusDto["parties"][number];
 type DisplayGroup = "RECRUITING" | "WAITING" | "PLAYING" | "LARGE";
@@ -12,7 +13,6 @@ function activeMembers(party: Party) {
 function reserveMembers(party: Party) {
   return party.members
     .filter((member) => member.substitute)
-    .map((member) => ({ ...member, name: member.name.replace(/^예비\s*/u, "").trim() }))
     .filter((member) => member.name !== "")
     .sort((left, right) => left.slotNo - right.slotNo);
 }
@@ -73,7 +73,7 @@ function groupTitle(group: DisplayGroup) {
   return "[대형파티]";
 }
 
-function compactTitle(party: Party) {
+function compactTitle(party: Pick<Party, "type" | "title" | "maximumMembers">) {
   const fallback = party.type === "FLEX_RANK" ? "자랭"
     : party.type === "NORMAL_GAME" ? "일반"
       : party.type === "SOLO_RANK" ? "솔랭"
@@ -83,7 +83,7 @@ function compactTitle(party: Party) {
               : party.type === "DOUBLE_UP" ? "더블업"
                 : party.type === "PARTY_RIFT" ? "협곡파티"
                   : party.type === "OTHER_GAME" ? "기타게임"
-                    : "파티";
+                    : `${party.maximumMembers}인 파티`;
   return String(party.title || fallback)
     .replace(/!+$/gu, "")
     .replace(/\s*구인\s*$/gu, "")
@@ -132,18 +132,22 @@ function summary(party: Party) {
 
 function detailBlock(party: Party) {
   const reserves = reserveMembers(party);
+  const copyTitle = compactTitle({ ...party, title: party.type === "ARAM" && /증바람/u.test(party.title) ? "증바람" : "" });
   const lines = [
-    `#${party.recruitNumber} · ${compactTitle(party)} · ${Math.min(activeMembers(party).length, party.maximumMembers)}/${party.maximumMembers}`,
-    `시작시간: ${startTime(party.startTimeText)}`,
-    `》게임정보 : ${gameInfo(party.gameInfo)}`,
-    `》주최자 : ${party.organizerText || "미입력"}`,
+    `#${party.recruitNumber} · ${copyTitle} · ${Math.min(activeMembers(party).length, party.maximumMembers)}/${party.maximumMembers}`,
+    `운영일: ${party.recruitDate}`,
+    `》저장기준 : ${partyCopyReference(party)}`,
+    `》시작시간 : ${party.startTimeText ?? ""}`,
+    `》게임정보 : ${party.gameInfo ?? ""}`,
+    `》주최자 : ${party.organizerText ?? ""}`,
   ];
   if (reserves.length > 0) lines.push(`예비: ${reserves.length}명`);
   lines.push("");
   if (isLineParty(party.type)) {
-    const positionMap = { TOP: "TOP", JUG: "JGL", MID: "MID", ADC: "ADC", SUP: "SUP" } as const;
-    for (const position of LINE_POSITIONS) {
-      const member = party.members.find((item) => !item.substitute && item.position === positionMap[position]);
+    for (const [index, position] of LINE_POSITIONS.entries()) {
+      // Slot patches are keyed by slotNo, including older rows with missing or
+      // inconsistent position metadata. Keep every name in its stored slot.
+      const member = party.members.find((item) => !item.substitute && item.slotNo === index + 1);
       lines.push(`${position}.${member?.name ? ` ${member.name}` : ""}`);
     }
   } else {
@@ -152,8 +156,34 @@ function detailBlock(party: Party) {
       lines.push(`${slotNo}.${member?.name ? ` ${member.name}` : ""}`);
     }
   }
-  reserves.forEach((member, index) => lines.push(`예비 ${index + 1}. ${member.name}`));
-  lines.push(`예비 ${reserves.length + 1}.`);
+  reserves.forEach((member) => lines.push(`예비 ${member.slotNo}. ${member.name}`));
+  let blankReserve = 1;
+  while (reserves.some((member) => member.slotNo === blankReserve)) blankReserve += 1;
+  if (blankReserve <= 99) lines.push(`예비 ${blankReserve}.`);
+  lines.push("", "복사 안내: 전체 복사 → 빈칸에 이름 입력 → 전체 전송으로 저장 (저장기준 유지)");
+  return lines.join("\n");
+}
+
+function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" | "maximumMembers" | "members" | "startTimeText" | "gameInfo">, formCode: string) {
+  const main = party.members.filter((member) => !member.substitute);
+  const reserves = party.members.filter((member) => member.substitute).sort((a, b) => a.slotNo - b.slotNo);
+  const title = compactTitle({ ...party, title: party.type === "ARAM" && /증바람/u.test(party.title) ? "증바람" : "" });
+  const lines = [
+    `[파티 #${party.recruitNumber}] ${title} · ${main.length}/${party.maximumMembers}명`,
+    `시작: ${party.startTimeText ?? "미정"}`,
+    `게임: ${party.gameInfo ?? "미정"}`,
+    "", "전체 복사 → 빈칸에 이름 → 전체 전송", "",
+  ];
+  for (let slot = 1; slot <= party.maximumMembers; slot += 1) {
+    const name = main.find((member) => member.slotNo === slot)?.name;
+    const label = isLineParty(party.type) ? LINE_POSITIONS[slot - 1] : String(slot);
+    lines.push(`${label}.${name ? ` ${name}` : ""}`);
+  }
+  for (const member of reserves) lines.push(`예비 ${member.slotNo}. ${member.name}`);
+  let blank = 1;
+  while (reserves.some((member) => member.slotNo === blank)) blank += 1;
+  if (blank <= 99) lines.push(`예비 ${blank}.`);
+  lines.push("", `양식코드: ${formCode} (그대로 두세요)`);
   return lines.join("\n");
 }
 
@@ -163,14 +193,23 @@ export function v1StrictPartyTemplate(input: Readonly<{
   partyType: Party["type"];
   title: string;
   maximumMembers: number;
+  id?: string;
+  revision?: number;
+  formCode?: string;
 }>) {
+  if (input.formCode) return compactCopyForm({
+    recruitNumber: input.recruitNumber, type: input.partyType, title: input.title,
+    maximumMembers: input.maximumMembers, members: [], startTimeText: "미정", gameInfo: "미정",
+  }, input.formCode);
   const lines = [
-    "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
-    "아래 양식의 모집번호는 유지해서 작성해주세요.", "",
-    `📢 ${input.title}`, `모집번호: #${input.recruitNumber}`, `운영일: ${input.recruitDate}`, "",
+    `[K-LOL.GG 구인상세 #${input.recruitNumber}]`, "",
+    `#${input.recruitNumber} · ${input.title.replace(/\s*구인\s*$/u, "")} · 0/${input.maximumMembers}`,
+    `운영일: ${input.recruitDate}`,
+    ...(input.id ? [`》저장기준 : ${partyCopyReference({ id: input.id, recruitDate: input.recruitDate, revision: input.revision ?? 0 })}`] : []),
     "》시작시간 :", "》게임정보 :", "》주최자 :", "",
-    "참여해주실 분은 태그해주세요.",
-    "*상호배려와 존중 부탁드립니다.",
+    ...(isLineParty(input.partyType) ? LINE_POSITIONS.map((position) => `${position}.`) : Array.from({ length: input.maximumMembers }, (_, index) => `${index + 1}.`)),
+    "예비 1.", "",
+    "복사 안내: 전체 복사 → 빈칸에 이름 입력 → 전체 전송으로 저장 (저장기준 유지)",
   ];
   return lines.join("\n");
 }
@@ -200,5 +239,6 @@ export function v1StrictPartyStatusReply(parties: readonly Party[], now = new Da
 
 export function v1StrictPartyDetailReply(party: Party | null, recruitNumber: number) {
   if (!party) return `[K-LOL.GG 구인상세]\n\n모집번호 #${recruitNumber} 구인글을 찾지 못했습니다.`;
+  if (party.formCode) return compactCopyForm(party, party.formCode);
   return [`[K-LOL.GG 구인상세 #${party.recruitNumber}]`, "", detailBlock(party)].join("\n");
 }

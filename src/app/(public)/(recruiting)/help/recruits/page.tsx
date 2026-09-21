@@ -8,26 +8,44 @@ export default function RecruitHelpPage() {
   return <div className={`page-wrap ${styles.page}`}>
     <header className={styles.hero}>
       <span>RECRUIT GUIDE</span>
-      <h1>파티·스크림 모집 이용 안내</h1>
-      <p>열린 모집을 확인하고 함께할 팀원을 찾아보세요.</p>
+      <h1>파티·내전 모집 이용 안내</h1>
+      <p>명단 전체를 복사하고 내 이름 한 줄만 추가해 보세요.</p>
     </header>
     <section className={styles.section}>
-      <h2>카카오톡에서 빠르게 변경하기</h2>
+      <h2>카카오톡에서 복사·붙여넣기로 참가하기</h2>
       <ol>
-        <li><strong>5인파티</strong>처럼 기존 명령으로 파티와 모집번호를 만듭니다.</li>
-        <li><strong>상세 12 추가 홍길동</strong>으로 첫 빈자리에 한 명을 추가합니다.</li>
-        <li><strong>상세 12 삭제 홍길동</strong>으로 이름이 정확히 일치하는 한 명을 삭제합니다.</li>
-        <li><strong>상세 12</strong>로 명단을 확인하고 <strong>12ㅉ</strong>으로 모집을 마감합니다.</li>
+        <li><strong>최근 봇 명단 전체를 복사</strong>합니다.</li>
+        <li><strong>빈칸에 내 이름</strong>을 넣습니다. 내전은 사이트에 등록한 이름을 사용해 주세요.</li>
+        <li><strong>메시지 전체를 전송</strong>하고 봇의 저장 결과를 확인합니다.</li>
       </ol>
-      <p>명령 앞에는 <strong>/</strong>를 붙여도 됩니다. 여러 명·자리·시간·게임정보를 한꺼번에 바꿀 때는 기존 전체 양식 전송 방식을 그대로 사용하세요.</p>
+      <p>다른 사람 이름·시간·게임·양식코드는 그대로 두세요. 다음 참가자는 저장 후 나온 최신 명단을 복사하면 됩니다.</p>
+      <p>내전은 사이트의 회원·시즌 정보와 연결됩니다. 회원 확인 필요 상태는 참가 확정과 다르며, 티어·라인 정보는 사이트 연동 정보를 사용하거나 양식에 함께 작성할 수 있습니다.</p>
+      <p>정원이 찼을 때 예비 참여를 원하면 예비 칸에 이름을 넣으세요. 저장되지 않았다는 안내가 나오면 봇이 보여 준 최신 명단에 다시 작성해 주세요.</p>
+    </section>
+    <section className={styles.section}>
+      <h2>새 모집 만들기</h2>
+      <p>함께할 사람을 새로 모을 때만 <strong>5인파티</strong>를 입력하세요. 첫 전송 전에 시간·게임을 정하고 첫 빈칸에 이름을 넣어 전체 전송하면 됩니다.</p>
+      <p>내전은 <strong>내전구인</strong> 입력 후 종목을 선택하세요. <strong>내전구인 협곡</strong>, <strong>내전구인 칼바람</strong>, <strong>내전구인 증바람</strong>으로 바로 양식을 받을 수도 있습니다.</p>
+      <p>참가가 시작된 파티의 시간·게임은 복사한 명단에서 수정할 수 없어요. 기존 모집에 참가할 때는 이름만 추가해 주세요.</p>
+    </section>
+    <section className={styles.section}>
+      <h2>명단 찾기·취소·마감</h2>
+      <ul>
+        <li><strong>구인현황</strong> 또는 <strong>내전현황</strong>에서 참여할 모집 번호를 찾습니다.</li>
+        <li><strong>상세 12</strong>로 파티 전체 양식을 다시 받고, <strong>12ㅉ</strong>으로 모집을 마감합니다.</li>
+        <li><strong>내전상세 12</strong>로 내전 전체 양식을 다시 받고, <strong>내전 12ㅉ</strong>으로 모집을 마감합니다.</li>
+        <li>취소는 <strong>상세 12 삭제 내이름</strong> 또는 <strong>내전상세 12 삭제 내이름</strong>을 입력합니다. 복사한 명단에서 이름을 지워 전송하지 마세요.</li>
+        <li>파티의 <strong>상세 12 추가 내이름</strong> 같은 빠른 명령도 사용할 수 있습니다.</li>
+      </ul>
+      <p>명령 앞에는 <strong>/</strong>를 붙여도 됩니다.</p>
     </section>
     <section className={styles.section}>
       <h2>사이트에서 확인하기</h2>
       <ol>
         <li><strong>파티 모집</strong>에서 게임 종류, 현재 인원, 참여자 이름·포지션과 예정 시간을 확인합니다.</li>
-        <li><strong>스크림 모집</strong>에서 BO 형식과 매칭 상태를 확인합니다.</li>
         <li>종료·취소된 모집은 목록에서 제외되며 현재 참여 가능한 모집이 먼저 표시됩니다.</li>
       </ol>
+      <p>카카오 스크림 모집 기능은 제외되었으며, 기존 저장 기록의 조회는 유지됩니다.</p>
     </section>
     <section className={styles.section}>
       <h2>모집 등록 안내</h2>
@@ -38,7 +56,7 @@ export default function RecruitHelpPage() {
         <li>로그인 ID, 연락처, 방·발신자 식별값과 운영 메모는 공개하지 않습니다.</li>
       </ul>
     </section>
-    <p className={styles.notice}>다른 곳에서 모집 내용이 바뀌었다면 목록을 새로고침한 뒤 다시 시도해 주세요.</p>
+    <p className={styles.notice}>카카오톡에서는 봇이 출력한 최신 양식을 사용하고, 사이트에서는 모집 내용이 바뀌었을 때 목록을 새로고침해 주세요.</p>
     <nav className={styles.links}>
       <Link href="/recruits">현재 모집 보기</Link>
       <Link href="/help/kakao">카카오 봇 안내</Link>

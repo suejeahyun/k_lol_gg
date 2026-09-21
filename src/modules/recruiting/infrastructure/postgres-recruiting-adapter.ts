@@ -26,6 +26,9 @@ import type { V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
 
 import { RecruitingApplicationError } from "../application/command-handler";
+import { partyCopySnapshot } from "../application/party-copy-snapshot";
+import { recruitingOperatingDateKey } from "../domain/operating-day";
+import { issueKakaoFormSnapshot, loadKakaoFormSnapshot } from "./kakao-form-snapshots";
 import { kakaoRecruitCommandAccess, type RecruitingCommand, type RecruitingCommandActor } from "../application/commands";
 import {
   parsePartyMemberStatsQuery,
@@ -422,6 +425,22 @@ export class PostgresRecruitingAdapter implements
   async loadPartyForUpdate(context: RecruitingTransactionContext, partyId: string) {
     const row = (await this.transactionFor(context).select().from(recruitParties).where(eq(recruitParties.id, partyId)).for("update").limit(1))[0];
     return row ? partyFromRow(row) : null;
+  }
+
+  async issuePartyCopySnapshot(context: RecruitingTransactionContext, party: RecruitParty, now: Date) {
+    if (!party.sourceRoomId || party.recruitDate !== recruitingOperatingDateKey(now)) return null;
+    return issueKakaoFormSnapshot(this.transactionFor(context), {
+      kind: "PARTY", scopeHash: sha256(party.sourceRoomId), targetId: party.id,
+      operatingDate: party.recruitDate, state: partyCopySnapshot(party), now,
+    });
+  }
+
+  async loadPartyCopySnapshot(context: RecruitingTransactionContext, party: RecruitParty, code: string, now: Date) {
+    if (!party.sourceRoomId) return null;
+    return loadKakaoFormSnapshot(this.transactionFor(context), {
+      kind: "PARTY", scopeHash: sha256(party.sourceRoomId), targetId: party.id,
+      operatingDate: party.recruitDate, code, now,
+    });
   }
 
   async allocateNextPartyIdentityForUpdate(

@@ -281,13 +281,11 @@ test("V1 strict routes organizer-only metadata activation forms with or without 
   }
 });
 
-test("V1 strict routes scoped in-house and scrim finish commands as unchanged raw text", async () => {
+test("V1 strict routes scoped in-house finish commands as unchanged raw text", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const [message, profileId] of [
     ["내전 2ㅉ", "FEATURES"],
     ["/내전 2ㅉ", "FEATURES"],
-    ["스크림 7ㅉ", "RECRUIT"],
-    ["/스크림 7ㅉ", "RECRUIT"],
   ]) {
     const runtime = evaluate(artifact, { responseBody: { reply: "[서버 마감 응답]" } });
     assert.deepEqual(replyFor(runtime, message), ["[서버 마감 응답]"]);
@@ -301,6 +299,150 @@ test("V1 strict routes scoped in-house and scrim finish commands as unchanged ra
     assert.deepEqual(replyFor(runtime, message), [], message);
     assert.equal(runtime.http.calls, 0, message);
   }
+});
+
+test("R23 retired scrim commands and forms reply locally without an HTTP request", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const inputs = [
+    "스크림구인", "/스크림모집", "멸망전스크림", "/멸망전 스크림 현황 #2", "스크림상세 1", "스크림 7ㅉ",
+    "/스크림상세 4 참가 재현", String.raw`/스크림 명단 \#4 제외 재현`,
+    "스크림참가 1 재현", "스크림확정 1", "스크림취소 1", "스크림마감 1", "스크림종료 1",
+    "[K-LOL.GG 스크림 구인 양식]\n우리팀: A\n상대팀: B", "[K-LOL.GG 멸망전 스크림 상세]\n우리팀: A",
+    "[KLOL.GG스크림구인양식]\n우리팀: A",
+  ];
+  for (const message of inputs) {
+    const runtime = evaluate(artifact);
+    assert.deepEqual(replyFor(runtime, message), ["[K-LOL.GG 스크림 기능 종료]\n카카오톡 스크림 기능은 종료되었습니다.\n파티는 5인파티, 내전은 내전구인을 입력해 주세요."], message);
+    assert.equal(runtime.http.calls, 0, message);
+  }
+  const runtime = evaluate(artifact);
+  for (const message of ["//스크림구인", "/ 스크림구인", "오늘 스크림 하고 싶다", "상세 1 추가 스크림", "》게임정보 : 스크림"]) {
+    assert.equal(runtime.isRetiredScrimInput(message), false, message);
+  }
+  assert.deepEqual(replyFor(runtime, "[K-LOL.GG 스크림 구인 양식]\n우리팀: A", { sender: "K-LOL 구인구직 도우미" }), []);
+  assert.equal(runtime.http.calls, 0);
+});
+
+test("R24 local help separates joining from new recruitment and uses site names for inhouse", async () => {
+  const runtime = evaluate(await readFile(artifactPath, "utf8"));
+  for (const command of ["도움말", "/도움말", "명령어", "구인도움말", "내전참가", "/참가신청"]) {
+    const [reply] = replyFor(runtime, command);
+    assert.match(reply, /최근 봇 명단 전체 복사/u, command);
+    assert.match(reply, /빈칸에 내 이름 입력/u, command);
+    assert.match(reply, /메시지 전체 전송 = 저장/u, command);
+    assert.match(reply, /사이트에 등록한 이름/u, command);
+    assert.ok(reply.indexOf("최근 봇 명단 전체 복사") < reply.indexOf("새 모집 만들기"), command);
+    assert.doesNotMatch(reply, /스크림/u, command);
+  }
+  assert.equal(runtime.http.calls, 0);
+});
+
+test("R24 compact copy forms keep complete success and pending envelopes in one signed request", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const kind of ["파티", "내전"]) {
+    for (const prefix of ["", "✅ 민규 님 참가 신청이 저장됐어요.\n\n", "아직 저장되지 않았어요. 최신 명단에 다시 적어 주세요.\n\n"]) {
+      const message = [prefix + `[${kind} #9]${kind === "내전" ? " 2/10명" : ""}`, `${kind === "파티" ? "5인 파티" : "협곡 내전"} · 2/${kind === "파티" ? "5" : "10"}`, "게임: 배그", "시간: 미정", "", "전체 복사 → 빈칸에 이름 → 전체 전송", "", "1. 서지오", "2. 민규", "3. 재현", "4.", "5.", "예비 1.", "", "양식코드: ABCDE-12345 (그대로 두세요)", "회원 확인 필요: 재현 (사이트 등록 이름을 확인해 주세요.)"].join("\n");
+      for (const text of [message, `/${message}`, `／${message}`, message.replaceAll("\n", "\r\n")]) {
+        const runtime = evaluate(artifact, { responseBody: { reply: "✅ 저장했어요.\n\n[최신 명단]" } });
+        assert.deepEqual(replyFor(runtime, text), ["✅ 저장했어요.\n\n[최신 명단]"]);
+        assert.equal(runtime.http.calls, 1);
+        assert.equal(runtime.http.timeout, 5000);
+        const body = JSON.parse(runtime.http.body);
+        assert.equal(body.text, text);
+        assert.equal(body.profileId, kind === "내전" ? "FEATURES" : "RECRUIT");
+      }
+      const echo = evaluate(artifact);
+      assert.deepEqual(replyFor(echo, message, { sender: "K-LOL 구인구직 도우미" }), []);
+      assert.equal(echo.http.calls, 0);
+    }
+  }
+});
+
+test("R24 compact form routing leaves malformed references to the server and ignores prose", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const code of ["", "양식코드: 깨짐", "양식코드: ABCDE-12345\n양식코드: XXXXX-XXXXX"]) {
+    const text = `[파티 #9]\n5인 파티 · 1/5\nTOP. 재현\nJUG.\nMID.\nADC.\nSUP.\n${code}`;
+    const runtime = evaluate(artifact, { responseBody: { reply: "아직 저장되지 않았어요. 최신 명단을 사용해 주세요." } });
+    assert.deepEqual(replyFor(runtime, text), ["아직 저장되지 않았어요. 최신 명단을 사용해 주세요."]);
+    assert.equal(runtime.http.calls, 1);
+    assert.equal(JSON.parse(runtime.http.body).text, text);
+  }
+  for (const text of ["오늘 [파티 #9] 참가할래", "[파티 #9]", "[내전 #9]\n내 이름 써줘", "//[파티 #9]\n1. 재현", "/ [파티 #9]\n1. 재현"]) {
+    const runtime = evaluate(artifact);
+    assert.deepEqual(replyFor(runtime, text), [], text);
+    assert.equal(runtime.http.calls, 0, text);
+  }
+});
+
+test("R24 actual server-rendered party and inhouse templates accept one name through the phone", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const forms = JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "-e", `
+    const { v1StrictPartyDetailReply, v1StrictPartyTemplate } = require("./src/modules/recruiting/kakao-v4/v1-strict-party-replies.ts");
+    const { KakaoV4CommandDispatcher } = require("./src/modules/recruiting/kakao-v4/dispatcher.ts");
+    const { classifyKakaoV4Command } = require("./src/modules/recruiting/kakao-v4/classifier.ts");
+    const { canonicalizeKakaoV4Command } = require("./src/modules/recruiting/kakao-v4/canonical-command.ts");
+    (async () => {
+      const forms = [];
+      for (const [type, title, maximumMembers] of [["PARTY_NUMBER", "5인 파티", 5], ["FLEX_RANK", "자랭", 5], ["ARAM", "칼바람", 5], ["OTHER_GAME", "기타게임", 8]]) {
+        const party = { id: "copy-party-9", revision: 1, recruitDate: "2026-09-20", recruitNumber: 9, resetSequence: 0, type, title, status: "IN_PROGRESS", memberCount: 1, reserveCount: 0, maximumMembers, members: [{slotNo: 1, name: "서지오", position: type === "FLEX_RANK" ? "TOP" : null, substitute: false}], startTimeText: "미정", gameInfo: "미입력", organizerText: null, scheduledStartAt: null, formCode: "ABCDE-23456" };
+        forms.push({ profile: "RECRUIT", text: v1StrictPartyDetailReply(party, 9).replace(type === "FLEX_RANK" ? "JUG.\\n" : "2.\\n", type === "FLEX_RANK" ? "JUG. 민규\\n" : "2. 민규\\n") });
+        forms.push({ profile: "RECRUIT", text: v1StrictPartyTemplate({ ...party, partyType: type }).replace(type === "FLEX_RANK" ? "TOP.\\n" : "1.\\n", type === "FLEX_RANK" ? "TOP. 민규\\n" : "1. 민규\\n") });
+      }
+      const context = { envelope: { profileId: "FEATURES", installationId: "install-11111111111111111111111111111111", senderId: "sender-user-22222222222222222222222222222222", eventId: "event-copy-phone-roundtrip", timestamp: 1789887600, nonce: "1".repeat(32), text: "내전구인 협곡" }, keyId: "current", requestDigestHex: "1".repeat(64), requestId: "request-copy-phone", authorization: { roomId: "00000000-0000-4000-8000-000000000001", roomStatus: "ACTIVE", capabilityProfile: "FEATURES", installationId: "00000000-0000-4000-8000-000000000002" } };
+      const dispatcher = new KakaoV4CommandDispatcher({ recruiting: {}, assistant: { async syncSeasonSnapshot() { return { body: { recruitNo: 9, operatingDate: "2026-09-20", formCode: "ABCDE-23456" }, replayed: false }; } } });
+      for (const mode of ["RIFT", "ARAM", "AUGMENT_ARAM"]) {
+        const result = await dispatcher.dispatch(context, { domain: "SEASON", action: "RESERVE", applyDate: "2026-09-20", recruitNumber: null, capacity: 10, time: "미정", mode });
+        forms.push({ profile: "FEATURES", text: result.legacyReply.replace("1.\\n", "1. 민규\\n") });
+      }
+      for (const form of forms) {
+        const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: form.profile, text: form.text }), { ...context.envelope, profileId: form.profile, text: form.text });
+        if (!canonical || canonical.action !== "SYNC" || canonical.domain !== (form.profile === "RECRUIT" ? "PARTY" : "SEASON")) throw new Error("Generated one-name form failed server canonicalization: " + form.text);
+      }
+      process.stdout.write(JSON.stringify(forms));
+    })().catch((error) => { process.stderr.write(String(error)); process.exitCode = 1; });
+  `], { cwd: root, encoding: "utf8" }));
+  assert.equal(forms.length, 11);
+  for (const form of forms) {
+    assert.match(form.text, /양식코드: ABCDE-23456/u);
+    assert.match(form.text, /민규/u);
+    const runtime = evaluate(artifact, { responseBody: { reply: "신청 저장: 민규\n\n" + form.text } });
+    assert.deepEqual(replyFor(runtime, form.text), ["신청 저장: 민규\n\n" + form.text]);
+    assert.equal(runtime.http.calls, 1);
+    assert.equal(runtime.http.timeout, 5000);
+    assert.equal(JSON.parse(runtime.http.body).text, form.text);
+    assert.equal(JSON.parse(runtime.http.body).profileId, form.profile);
+    const savedCopy = "신청 저장: 민규\n\n" + form.text;
+    const next = evaluate(artifact);
+    replyFor(next, savedCopy);
+    assert.equal(next.http.calls, 1, savedCopy);
+  }
+});
+
+test("R23 copy-paste party and inhouse forms forward names and saved references unchanged", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const party = [
+    "[K-LOL.GG 구인상세 #9]", "", "#9 · 5인 파티 · 2/5", "운영일: 2026-09-20",
+    "》저장기준 : 2026-09-20 / R4 / 11111111111111111111111111111111", "》시작시간 : 모바시", "》게임정보 : 배그", "》주최자 : 서지오", "",
+    "1. 서지오", "2. 민규", "3. 재현", "4.", "5.", "예비 1.", "", "복사 안내: 전체 복사 → 빈칸에 이름 입력 → 전체 전송으로 저장 (저장기준 유지)",
+  ].join("\n");
+  for (const mode of ["협곡", "칼바람", "증바람"]) {
+    const inhouse = [
+      "📢 내전하실분 #2", `》${mode}`, "》2026-09-20 21:00 시작", "》게임정보 : 내전", "》주최자 :", "👥 0/10명",
+      "》저장기준 : 2026-09-20 / S11111111111111111111111111111111", "", "*참가 신청 양식*", "이름", "EX) 1.지후", "",
+      "1. 재현", ...Array.from({ length: 9 }, (_, index) => `${index + 2}.`), "예비 1.", "빈 칸에 내 이름 입력 → 메시지 전체 전송 = 저장",
+    ].join("\n");
+    const runtime = evaluate(artifact, { responseBody: { reply: "[최신 전체 양식]" } });
+    assert.deepEqual(replyFor(runtime, inhouse), ["[최신 전체 양식]"], mode);
+    assert.equal(runtime.http.calls, 1, mode);
+    const request = JSON.parse(runtime.http.body);
+    assert.equal(request.text, inhouse, mode);
+    assert.equal(request.profileId, "FEATURES", mode);
+  }
+  const runtime = evaluate(artifact, { responseBody: { reply: "[최신 전체 양식]" } });
+  assert.deepEqual(replyFor(runtime, party), ["[최신 전체 양식]"]);
+  assert.equal(runtime.http.calls, 1);
+  assert.equal(JSON.parse(runtime.http.body).text, party);
+  assert.equal(JSON.parse(runtime.http.body).profileId, "RECRUIT");
 });
 
 test("V1 strict routes the full organizer-only template returned by the production server", async () => {
@@ -385,7 +527,7 @@ test("all response-reachable non-transport V1 executable lines are preserved wit
     if (name === "response") actual = actual.replace(/^function v1SourceResponse\s*\(/u, "function response(");
     assert.equal(
       actual.split("\n").filter((line) => line.trim().length > 0).join("\n"),
-      expected.split("\n").filter((line) => line.trim().length > 0).join("\n"),
+      expected.split("\n").filter((line) => line.trim().length > 0).map((line) => line.trimStart()).join("\n"),
       name
     );
   }
@@ -413,10 +555,6 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   const canonical = evaluate(canonicalSource());
   const strict = evaluate(await readFile(artifactPath, "utf8"));
   const cases = [
-    { message: "/도움말" },
-    { message: "명령어" },
-    { message: "내전참가" },
-    { message: "/참가신청" },
     { message: "등록" },
     { message: "/등록도움말" },
     { message: "내전등록" },
@@ -424,7 +562,6 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
     { message: "인증" },
     { message: "경고현황" },
     { message: "결과현황" },
-    { message: "구인도움말" },
     { message: "/구인웹도우미" },
     { message: "홍길동님이 나갔습니다" },
     { message: "홍길동님이 초대되었습니다" },
@@ -435,21 +572,13 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
     }
   ];
   for (const item of cases) {
-    const expected = replyFor(canonical, item.message, { sender: item.sender }).map((reply) => item.message === "구인도움말"
-      ? reply.replace(
-        "현황: 구인현황\n종료: 번호ㅉ",
-        "주최자 입력 후 전송\n현황: 구인현황\n상세 번호 추가/삭제 이름\n종료: 번호ㅉ",
-      ).replace(
-        "현황: 내전현황\n매일 오전 6시 자동 종료",
-        "현황: 내전현황\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\n매일 오전 6시 자동 종료",
-      )
-      : reply);
+    const expected = replyFor(canonical, item.message, { sender: item.sender });
     const actual = replyFor(strict, item.message, { sender: item.sender });
     assert.deepEqual(actual, expected, item.message);
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R22_2026_09_18"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R24_2026_09_20"],
   );
 });
 
@@ -517,7 +646,7 @@ test("approved party member mutations parse safely and use one RECRUIT gateway r
   }
 });
 
-test("inhouse and scrim member shortcuts reach the matching profile gateway", async () => {
+test("inhouse member shortcuts reach the matching profile gateway", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const [message, surface, command, profileId] of [
     ["/내전상세 #3 추가 재현", "INHOUSE", "ADD", "FEATURES"],
@@ -530,8 +659,6 @@ test("inhouse and scrim member shortcuts reach the matching profile gateway", as
     ["/내전상세 #3 추가 재현/M/M/ALL", "INHOUSE", "ADD", "FEATURES"],
     ["내전상세 3 추가 재현/M/M/MID/TOP,SUP", "INHOUSE", "ADD", "FEATURES"],
     ["내전 명단 3 삭재 재현", "INHOUSE", "REMOVE", "FEATURES"],
-    ["스크림상세 4 참가 재현", "SCRIM", "ADD", "RECRUIT"],
-    [String.raw`/스크림 명단 \#4 제외 재현`, "SCRIM", "REMOVE", "RECRUIT"],
   ]) {
     const strict = evaluate(artifact, { responseBody: { reply: "[명단 변경 완료]" } });
     const parsed = strict.parseMemberMutationCommand(message);
@@ -604,7 +731,9 @@ test("local recruit help documents member commands and keeps full-form guidance"
   const [reply] = replyFor(strict, "구인도움말");
   assert.match(reply, /상세 번호 추가\/삭제 이름/u);
   assert.match(reply, /내전상세 번호 수정\/예비추가\/예비삭제 이름\/라인/u);
-  assert.match(reply, /공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송/u);
+  assert.match(reply, /메시지 전체 전송 = 저장/u);
+  assert.match(reply, /빈칸에 내 이름 입력/u);
+  assert.doesNotMatch(reply, /스크림/u);
 });
 
 test("command and form predicates are byte-derived and behaviorally equal to V1", async () => {

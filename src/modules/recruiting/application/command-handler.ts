@@ -30,6 +30,8 @@ import type {
   RecruitingUnitOfWork,
 } from "./ports";
 import { toPublicPartyDto, toPublicScrimDto } from "./public-dto";
+import { partyCopyReference } from "./party-copy-reference";
+import { isPartyFormCode, mergePartyCopyAdditions, readPartyCopySnapshot } from "./party-copy-snapshot";
 
 export class RecruitingApplicationError extends Error {
   constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS" | "FORBIDDEN" | "SESSION_STALE" | "ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND" | "ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS" | "AMBIGUOUS_MEMBER" | "RECRUIT_MEMBER_LIMIT_EXCEEDED", message: string) {
@@ -349,7 +351,8 @@ export class RecruitingCommandHandler {
     const create = CREATE_TYPES.has(command.type);
     const current = partyCommand ? party : scrim;
     if (create ? current !== null : current === null) throw new RecruitingApplicationError(create ? "ALREADY_EXISTS" : "NOT_FOUND", create ? "Recruit aggregate already exists." : "Recruit aggregate does not exist.");
-    const appliesToLatestLockedAggregate = PARTY_MEMBER_TYPES.has(command.type) || SCRIM_PARTICIPANT_TYPES.has(command.type);
+    const copyAddition = command.type === "SYNC_PARTY" && isPartyFormCode(command.payload.copyGuard?.saveReference);
+    const appliesToLatestLockedAggregate = PARTY_MEMBER_TYPES.has(command.type) || SCRIM_PARTICIPANT_TYPES.has(command.type) || copyAddition;
     if (create ? command.metadata.expectedRevision !== 0 : !appliesToLatestLockedAggregate && current!.revision !== command.metadata.expectedRevision) throw new RecruitingApplicationError("REVISION_CONFLICT", "Recruit aggregate revision changed.");
 
     const now = this.dependencies.clock.now();
@@ -379,7 +382,9 @@ export class RecruitingCommandHandler {
         });
         break;
       case "SYNC_PARTY":
-        nextParty = sync(command, party!, now);
+        nextParty = sync(command, party!, now, copyAddition
+          ? await this.dependencies.repository.loadPartyCopySnapshot?.(transaction, party!, command.payload.copyGuard!.saveReference!, now) ?? null
+          : undefined);
         break;
       case "PARTY_MEMBER_ADD":
       case "PARTY_MEMBER_REMOVE": {
@@ -458,7 +463,12 @@ export class RecruitingCommandHandler {
     }
 
     const next = (partyCommand ? nextParty : nextScrim)!;
-    const data = partyCommand ? { ...partyJson(nextParty!), ...(memberMutation ?? {}) } : { ...scrimJson(nextScrim!), ...(memberMutation ?? {}) };
+    const formCode = partyCommand && command.metadata.actor.kind === "BOT" && command.metadata.actor.commandSource === "KAKAO_V4" &&
+      (nextParty!.status === "DRAFT" || nextParty!.status === "IN_PROGRESS")
+      ? await this.dependencies.repository.issuePartyCopySnapshot?.(transaction, nextParty!, now) : null;
+    const data = partyCommand ? { ...partyJson(nextParty!), ...(memberMutation ?? {}), ...(formCode ? { formCode } : {}),
+      ...(command.type === "SYNC_PARTY" && command.payload.copyGuard ? { copyAddedNames: nextParty!.members.filter((member) => !party!.members.some((old) => old.name === member.name)).map((member) => member.name), copyChanged: nextParty!.revision !== party!.revision } : {}) }
+      : { ...scrimJson(nextScrim!), ...(memberMutation ?? {}) };
     const body: RecruitMutationBody = { aggregateKind: partyCommand ? "PARTY" : "SCRIM", aggregateId: next.id, revision: next.revision, status: next.status, commandType: command.type, data };
     const nowIso = now.toISOString();
     const mutationApplied = !STATUS_TYPES.has(command.type) && (create || current!.revision !== next.revision);
@@ -499,24 +509,52 @@ export class RecruitingCommandHandler {
   }
 }
 
-function sync(command: Extract<RecruitingCommand, { type: "SYNC_PARTY" }>, party: RecruitParty, now: Date) {
-  return syncRecruitParty({
+function sync(command: Extract<RecruitingCommand, { type: "SYNC_PARTY" }>, party: RecruitParty, now: Date, storedBase?: JsonObject | null) {
+  const guard = command.payload.copyGuard;
+  const shortCode = isPartyFormCode(guard?.saveReference);
+  if (guard && (guard.operatingDate !== party.recruitDate || (!shortCode && guard.saveReference !== null && guard.saveReference !== partyCopyReference(party)))) {
+    throw new RecruitingApplicationError("REVISION_CONFLICT", "PARTY_COPY_CONFLICT");
+  }
+  const base = shortCode ? readPartyCopySnapshot(storedBase ?? null, party) : party;
+  const submittedMembers = command.payload.slotPatches ? mergeRecruitPartySlotPatches(base, command.payload.slotPatches) : command.payload.members;
+  const metadataValue = (value: string | null | undefined, state: string | undefined, fallback: string | null) => state === "ABSENT" || value === undefined ? fallback : value;
+  const submittedTime = metadataValue(command.payload.startTimeText, command.payload.startTimeState, base.startTimeText) || "미정";
+  const submittedGame = metadataValue(command.payload.gameInfo, command.payload.gameInfoState, base.gameInfo) || "미입력";
+  const submittedOrganizer = metadataValue(command.payload.organizerText, command.payload.organizerState, base.organizerText);
+  if (guard && party.status !== "DRAFT" && (
+    submittedTime !== base.startTimeText || submittedGame !== base.gameInfo || submittedOrganizer !== base.organizerText ||
+    base.startTimeText !== party.startTimeText || base.gameInfo !== party.gameInfo || base.organizerText !== party.organizerText
+  )) throw new Error("PARTY_COPY_METADATA");
+  const members = guard ? mergePartyCopyAdditions(base, party, submittedMembers) : submittedMembers;
+  const updated = syncRecruitParty({
     party,
-    expectedRevision: command.metadata.expectedRevision,
-    members: command.payload.slotPatches
-      ? mergeRecruitPartySlotPatches(party, command.payload.slotPatches)
-      : command.payload.members,
-    startTimeText: command.payload.startTimeText,
-    startTimeState: command.payload.startTimeState,
+    expectedRevision: shortCode ? party.revision : command.metadata.expectedRevision,
+    members,
+    startTimeText: guard && party.status === "DRAFT" && !command.payload.startTimeText ? "미정" : command.payload.startTimeText,
+    startTimeState: guard && party.status === "DRAFT" && !command.payload.startTimeText ? "PRESENT_VALUE" : command.payload.startTimeState,
     gameInfo: command.payload.gameInfo,
     gameInfoState: command.payload.gameInfoState,
     organizerText: command.payload.organizerText,
     organizerState: command.payload.organizerState,
-    scheduledStartAt: command.payload.scheduledStartAt === undefined
+    scheduledStartAt: guard && command.payload.startTimeText === party.startTimeText
+      ? party.scheduledStartAt
+      : command.payload.scheduledStartAt === undefined
       ? undefined
       : parseDate(command.payload.scheduledStartAt, "scheduledStartAt"),
     now,
   });
+  if (guard) {
+    const identity = (name: string) => name.normalize("NFKC").trim().replace(/\s+/gu, " ").toLowerCase();
+    const names = updated.members.map((member) => identity(member.name));
+    if (new Set(names).size !== names.length) throw new RecruitingApplicationError("AMBIGUOUS_MEMBER", "PARTY_COPY_DUPLICATE_NAME");
+    if (guard.saveReference === null && party.status !== "DRAFT") {
+      const preserved = party.members.every((member) => updated.members.some((next) => next.slotNo === member.slotNo && next.substitute === member.substitute && next.position === member.position && next.name === member.name));
+      if (!preserved || updated.startTimeText !== party.startTimeText || updated.gameInfo !== party.gameInfo || updated.organizerText !== party.organizerText || updated.scheduledStartAt?.getTime() !== party.scheduledStartAt?.getTime()) {
+        throw new RecruitingApplicationError("REVISION_CONFLICT", "PARTY_COPY_CONFLICT");
+      }
+    }
+  }
+  return updated;
 }
 
 function syncScrim(

@@ -211,7 +211,7 @@ for (const node of sourceProgram.body) {
   if (node.id.name === "response") {
     functionSource = functionSource.replace(/^function response\s*\(/u, "function v1SourceResponse(");
   }
-  extracted.push(functionSource);
+  extracted.push(compactBundleSource(functionSource));
   extractedNames.push(node.id.name);
 }
 
@@ -229,7 +229,7 @@ const provenance = [
   ` * Canonical V1: ${sourceCommit}:${sourcePath}`,
   ` * Canonical SHA-256 (Git LF blob): ${sourceSha256Lf}`,
   ` * User-provided CRLF SHA-256: ${sourceSha256Crlf}`,
-  " * V1 executable/comment lines are preserved; blank spacer lines are removed for the phone limit.",
+  " * V1 executable code is preserved; leading indentation and blank lines are removed for the phone limit.",
   " */",
   `var KLOL_V1_SOURCE_SHA256 = "${sourceSha256Lf}";`,
   `var KLOL_V1_EXTRACTED_SHA256 = "${sha256(withoutBlankLines(withoutComments(extracted.join("\n\n"))))}";`,
@@ -249,6 +249,10 @@ const entry = [
   "    }",
   "  };",
   "  var localText = String(msg || \"\");",
+  "  if (isRetiredScrimInput(localText)) {",
+  "    if (!isKlolBotEchoSender(sender)) guardedReplier.reply(\"[K-LOL.GG 스크림 기능 종료]\\n카카오톡 스크림 기능은 종료되었습니다.\\n파티는 5인파티, 내전은 내전구인을 입력해 주세요.\");",
+  "    return;",
+  "  }",
   "  if (localText.indexOf(\"들어왔습니다\") >= 0) return;",
   "  if (String(sender || \"\") === \"오픈채팅봇\" && localText.replace(/[ \\t]/g, \"\").indexOf(\"입장시할일\") >= 0) {",
   `    var joinTone = ${JSON.stringify(joinGuideTones)}[Math.floor(Math.random() * ${joinGuideTones.length})];`,
@@ -257,8 +261,9 @@ const entry = [
   "  }",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
-  "    if (/^\\/?(?:내전|스크림)[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) {",
-  "      handlePartyRecruitApi(\"\", room, msg, sender, guardedReplier, \"\", msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\");",
+  "    if (handleCopyRosterForm(msg, room, sender, guardedReplier)) return;",
+  "    if (/^\\/?내전[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) {",
+  "      handlePartyRecruitApi(\"\", room, msg, sender, guardedReplier, \"\", \"FEATURES\");",
   "      return;",
   "    }",
   "    if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;",
@@ -291,15 +296,21 @@ const seasonCandidateBinding = [
   "};",
 ].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
 const recruitHelpBinding = [
-  "var v1PartyHelp = getPartyRecruitHelpNotice;",
   "getPartyRecruitHelpNotice = function () {",
-  "  return v1PartyHelp().replace(",
-  "    \"현황: 구인현황\\n종료: 번호ㅉ\",",
-  "    \"주최자 입력 후 전송\\n현황: 구인현황\\n상세 번호 추가/삭제 이름\\n종료: 번호ㅉ\"",
-  "  ).replace(",
-  "    \"현황: 내전현황\\n매일 오전 6시 자동 종료\",",
-  "    \"현황: 내전현황\\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\\n매일 오전 6시 자동 종료\"",
-  "  );",
+  "  return \"[K-LOL.GG 구인 도움말]\\n\\n참가하기\\n1. 최근 봇 명단 전체 복사\\n2. 빈칸에 내 이름 입력\\n3. 메시지 전체 전송 = 저장\\n\\n\" +",
+  "    \"내전은 사이트에 등록한 이름으로 작성해 주세요.\\n봇의 저장 결과를 확인하고, 다음 사람은 새 명단을 복사해 주세요.\\n다른 사람 이름과 양식코드는 그대로 두세요.\\n\\n\" +",
+  "    \"새 모집 만들기\\n파티: 5인파티 / 내전: 내전구인\\n\\n\" +",
+  "    \"파티: 구인현황 / 상세 번호 / 종료: 번호ㅉ\\n내전: 내전현황 / 내전상세 번호 / 종료: 내전 번호ㅉ\\n내전은 매일 오전 6시 자동 종료됩니다.\\n\\n\" +",
+  "    \"취소·수정이 필요할 때\\n상세 번호 추가/삭제 이름\\n내전상세 번호 추가/삭제 이름\\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\";",
+  "};",
+  "var v1UnifiedHelp = getUnifiedHelpNotice;",
+  "getUnifiedHelpNotice = function () {",
+  "  return v1UnifiedHelp().replace(\"LOL-K 기능\", \"파티·내전 참가\\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\\n내전은 사이트에 등록한 이름을 사용해 주세요.\\n새 모집 만들기: 5인파티 / 내전구인\\n자세한 사용법: 구인도움말\\n\\nLOL-K 기능\")",
+  "    .replace(\"구인구직 명령어는 구인도움말을 입력해주세요.\\n스크림구인은 /스크림구인, /스크림현황을 사용해주세요.\\n\\n\", \"\");",
+  "};",
+  "getParticipationGuideNotice = function () {",
+  "  return \"[K-LOL.GG 내전 참가 방법 안내]\\n\\n1. 최근 봇 명단 전체 복사\\n2. 빈칸에 내 이름 입력\\n3. 메시지 전체 전송 = 저장\\n\\n\" +",
+  "    \"사이트에 등록한 이름을 사용하고 봇의 저장 결과를 확인해 주세요.\\n다른 사람 이름과 양식코드는 그대로 두세요.\\n명단 찾기: 내전현황 → 내전상세 번호\\n새 모집 만들기: 내전구인\\n티어·라인 정보는 사이트 연동 정보를 사용하며 양식에 추가 작성할 수 있습니다.\";",
   "};",
 ].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
 const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n${recruitHelpBinding}\n\n${entry}\n`;
@@ -353,8 +364,11 @@ if (!output.includes("isPartyRecruitFormMessageWithoutSeasonSnapshot")) {
 if (!output.includes("function isPartyMetadataActivationForm(text)")) {
   throw new Error("V1-strict output must route metadata-only party activation forms");
 }
-if (!output.includes("msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\"")) {
-  throw new Error("V1-strict output must route scoped in-house and scrim finish commands");
+if (!output.includes("if (isRetiredScrimInput(localText))") || !output.includes("function isRetiredScrimInput(value)")) {
+  throw new Error("R24 must retire scrim commands and forms before the legacy router");
+}
+if (!output.includes("if (handleCopyRosterForm(msg, room, sender, guardedReplier)) return;")) {
+  throw new Error("R24 must route compact copy forms before the legacy router");
 }
 if (!output.includes("if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;")) {
   throw new Error("V1-strict output must route explicit member mutations before the V1 dispatcher");

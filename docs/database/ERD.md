@@ -6,8 +6,8 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `13e835c456bf0c679b38fe0b397be198afc53c8e3b832432806c15e8d5f579bc`
-- Tables: 102
+- Schema SHA-256: `735ab2de0b454516240b6144888c77f6775713b51cbc065e2b4e12e97b3ea3f6`
+- Tables: 103
 - Foreign keys: 165
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
@@ -1121,6 +1121,17 @@ erDiagram
         kakao_bot_installation_status status "NOT NULL"
         timestamp_with_time_zone first_seen_at "NOT NULL"
         timestamp_with_time_zone last_seen_at "NOT NULL"
+    }
+    recruiting__kakao_form_snapshots {
+        varchar_11 code PK "NOT NULL"
+        varchar_8 kind "NOT NULL"
+        bytea scope_hash "NOT NULL"
+        varchar_160 target_id "NOT NULL"
+        date operating_date "NOT NULL"
+        bytea state_hash "NOT NULL"
+        jsonb state_json "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone expires_at "NOT NULL"
     }
     recruiting__kakao_image_sessions {
         uuid id PK "NOT NULL"

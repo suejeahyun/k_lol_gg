@@ -1,0 +1,2 @@
+[rhino-static] passed integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js: ES5, warningCandidates=0, unsafeSequenceOperands=0, voidExpressions=0, bareAssignmentConditions=0, inconsistentReturns=0, characters=61991
+[rhino-static] passed .private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js: ES5, warningCandidates=0, unsafeSequenceOperands=0, voidExpressions=0, bareAssignmentConditions=0, inconsistentReturns=0, characters=60280

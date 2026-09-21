@@ -1,5 +1,5 @@
 var KLOL_V1_SOURCE_SHA256 = "0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2";
-var KLOL_V1_EXTRACTED_SHA256 = "30b769beda4dcc2d83adbbe7edff674ebaa707753ab71dd05e4ab3f224febd4a";
+var KLOL_V1_EXTRACTED_SHA256 = "55859d948b5f8b17af6fce0718ed02ca9fa6a00445b9c4cc75167a3942f61fe6";
 var KLOL_V1_SOURCE_FUNCTIONS = ["isKlolBotEchoSender","isKlolServerEchoMessage","response","isScrimRecruitFormMessageForBot","isScrimRecruitCommand","getScrimRecruitApiUrl","handleScrimRecruitCommand","isLolKCommand","isRecruitCommand","handleLolKCommand","handleRecruitCommand","isSeasonRecruitTemplateCommand","isSeasonRecruitStatusCommand","isPartyRecruitLikeMessage","isSeasonApplyFormMessage","hasSeasonApplySlash","hasSeasonApplyWord","hasSeasonApplyForm","countFilledSeasonApplyLines","isBadSeasonApplyName","isSeasonApplyExampleLine","isPartyRecruitWebHelperCommand","isPartyRecruitHelpCommand","isPartyRecruitStatusCommand",
 "isPartyRecruitCreateCommand","isPartyRecruitFinishCommand","hasPartyRecruitNumber","isPartyRecruitFormWithoutNumber","isPartyRecruitFormMessage","handlePartyRecruitSync","getParticipationGuideNotice","getPartyRecruitWebHelperNotice","getPartyRecruitHelpNotice","getUnifiedHelpNotice","stripOperationLinePrefix","canonicalOperationText","escapeOperationRegExp","makeOperationLabelRegex","lineStartsWithOperationLabel","removeOperationLabelPrefix","includesAllKeywords","isOperationNextLabelLine","readOperationField","cleanOperationField","hasRealOperationValue","detectOperationFormType","isOperationFormMessage","normalizeText",
 "trimText","normalizeCommandText","makeHash","isRegistrationHubCommand","isGuidedRegistrationShortcut","getRegistrationHubNotice","getGuidedInhouseRegistrationNotice","getGuidedDisciplineRegistrationNotice","getGuidedEvidenceNotice","getGuidedDisciplineStatusNotice","getGuidedInhouseStatusNotice","handleGuidedRegistrationShortcut","handleSiteFirstManagedWorkflow","isManagedWorkflowMessage","isImagePlaceholderMessage"];
@@ -194,7 +194,7 @@ shouldSuppressReply: shouldSuppressReply,
 markReplySent: markReplySent
 };
 }());
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R22_2026_09_18";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R24_2026_09_20";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -220,6 +220,28 @@ var normalizedSender = trimText(normalizeText(String(sender || "")));
 var normalizedText = trimText(normalizeText(String(text || ""))).replace(/[ \t]+/g, " ");
 return normalizedSender.indexOf("\uC624\uD508\uCC44\uD305\uBD07") >= 0 &&
 /^\uB0B4\uC804\uAD6C\uC778 \uC591\uC2DD \uBD88\uB7EC\uC624\uB294 \uC911(?:\u2026|\.{3})?$/.test(normalizedText);
+}
+function isRetiredScrimInput(value) {
+var text = normalizePartyMemberMutationCommandText(value).replace(/ᄍ/g, "ㅉ");
+var member = null;
+if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return false;
+if (text.charAt(0) === "/") text = text.substring(1);
+if (/^\s*\[K-?LOL\.GG\s*(?:멸망전\s*)?스크림\s*(?:구인\s*양식|상세)\]/.test(text)) return true;
+if (/[\r\n\u2028\u2029]/.test(text)) return false;
+member = parseMemberMutationCommand(text);
+if (member && member.surface === "SCRIM") return true;
+return /^(?:멸망전\s*)?스크림\s*(?:(?:구인|모집|현황|목록|상세|참가|확정|취소|마감|종료)(?:\s*#?\d+)?(?:\s+.*)?|#?\s*\d{1,2}\s*(?:쫑|ㅉ|마감|종료))$/.test(text) || /^멸망전\s*스크림$/.test(text);
+}
+function handleCopyRosterForm(text, room, sender, replier) {
+var normalized = normalizePartyMemberMutationCommandText(text);
+var header = null;
+if (normalized.indexOf("//") === 0 || /^\/\s/.test(normalized)) return false;
+if (normalized.charAt(0) === "/") normalized = normalized.substring(1);
+header = /^\s*\[(파티|내전)\s*#\s*([1-9]\d{0,2})\](?:[ \t]+(?:[^\r\n]*[·ㆍ|][ \t]*)?\d{1,2}\/\d{1,2}명)?\s*$/m.exec(normalized);
+if (!header || !/^\s*(?:\d{1,2}|TOP|JUG|MID|ADC|SUP|탑|정글|미드|원딜|서폿)\s*\\?\s*[.)]/im.test(normalized)) return false;
+if (isKlolBotEchoSender(sender)) return true;
+handlePartyRecruitApi("", room || RECRUIT_ROOM_LABEL, String(text || ""), sender, replier, "명단 저장", header[1] === "내전" ? "FEATURES" : "RECRUIT");
+return true;
 }
 function v1GatewaySucceeded(result) {
 return Boolean(result && result.ok && v1GatewayFailureStatus(result) < 400 && (!result.body || result.body.ok !== false));
@@ -688,1067 +710,1067 @@ break;
 return trimText(lines.join("\n"));
 }
 function isKlolBotEchoSender(sender) {
-  sender = trimText(String(sender || ""));
-  if (sender == "") return false;
-  return sender.indexOf("\uC624\uD508\uCC44\uD305\uBD07") >= 0 ||
-    sender.indexOf("K-LOL") >= 0 ||
-    sender.indexOf("\uAD6C\uC778\uAD6C\uC9C1 \uB3C4\uC6B0\uBBF8") >= 0 ||
-    sender.indexOf("\uAD6C\uC778\uB3C4\uC6B0\uBBF8") >= 0;
+sender = trimText(String(sender || ""));
+if (sender == "") return false;
+return sender.indexOf("\uC624\uD508\uCC44\uD305\uBD07") >= 0 ||
+sender.indexOf("K-LOL") >= 0 ||
+sender.indexOf("\uAD6C\uC778\uAD6C\uC9C1 \uB3C4\uC6B0\uBBF8") >= 0 ||
+sender.indexOf("\uAD6C\uC778\uB3C4\uC6B0\uBBF8") >= 0;
 }
 function isKlolServerEchoMessage(text) {
-  text = trimText(normalizeText(String(text || "")));
-  if (text == "") return false;
-  return text.indexOf("[K-LOL.GG") === 0 ||
-    text.indexOf("[\uC2A4\uD06C\uB9BC\uAD6C\uC778") === 0 ||
-    text.indexOf("[\uAD6C\uC778\uAD6C\uC9C1") === 0 ||
-    text.indexOf("[\uB0B4\uC804\uD604\uD669") === 0 ||
-    text.indexOf("[\uCC38\uAC00 \uC2E0\uCCAD") === 0 ||
-    text.indexOf("[\uC6B4\uC601 \uC591\uC2DD") === 0 ||
-    text.indexOf("{\"ok\":") === 0;
+text = trimText(normalizeText(String(text || "")));
+if (text == "") return false;
+return text.indexOf("[K-LOL.GG") === 0 ||
+text.indexOf("[\uC2A4\uD06C\uB9BC\uAD6C\uC778") === 0 ||
+text.indexOf("[\uAD6C\uC778\uAD6C\uC9C1") === 0 ||
+text.indexOf("[\uB0B4\uC804\uD604\uD669") === 0 ||
+text.indexOf("[\uCC38\uAC00 \uC2E0\uCCAD") === 0 ||
+text.indexOf("[\uC6B4\uC601 \uC591\uC2DD") === 0 ||
+text.indexOf("{\"ok\":") === 0;
 }
 function v1SourceResponse(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
-  var text = "";
-  var roomText = "";
-  var senderText = "";
-  try {
-    text = trimText(normalizeText(String(msg || "")));
-    roomText = trimText(String(room || ""));
-    senderText = trimText(String(sender || ""));
-    var receivedImage = "";
-    try {
-      if (imageDB && imageDB.getImage) receivedImage = String(imageDB.getImage() || "");
-    } catch (ignoredImageError) { receivedImage = ""; }
-    if (receivedImage == "") {
-      try {
-        if (imageDB && imageDB.getImageBase64) receivedImage = String(imageDB.getImageBase64() || "");
-      } catch (ignoredImageBase64Error) { receivedImage = ""; }
-    }
-    if (receivedImage == "") {
-      try {
-        if (imageDB && imageDB.getImageBitmap) {
-          var receivedBitmap = imageDB.getImageBitmap();
-          if (receivedBitmap) {
-            var imageStream = new java.io.ByteArrayOutputStream();
-            receivedBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 92, imageStream);
-            receivedImage = String(android.util.Base64.encodeToString(imageStream.toByteArray(), android.util.Base64.NO_WRAP) || "");
-            imageStream.close();
-          }
-        }
-      } catch (ignoredImageBitmapError) { receivedImage = ""; }
-    }
-    if (receivedImage != "") {
-      handleManagedImage(roomText || RECRUIT_ROOM_LABEL, senderText, receivedImage, replier);
-      return;
-    }
-    if (isImagePlaceholderMessage(text) && replyManagedImageFallback(roomText || RECRUIT_ROOM_LABEL, senderText, replier)) {
-      return;
-    }
-    if (isKlolBotEchoSender(senderText) && isKlolServerEchoMessage(text)) {
-      return;
-    }
-    if (text.indexOf("들어왔습니다") >= 0) {
-      replier.reply("다시 오셨네요, 반가워요! 😊");
-      return;
-    }
-    if (text.indexOf("나갔습니다") >= 0 || text.indexOf("초대되었습니다") >= 0) {
-      return;
-    }
-    if (text == "") {
-      return;
-    }
-    if (isRegistrationHubCommand(text)) {
-      replier.reply(getRegistrationHubNotice());
-      return;
-    }
-    if (isGuidedRegistrationShortcut(text)) {
-      handleGuidedRegistrationShortcut(text, replier);
-      return;
-    }
-    if (isManagedWorkflowMessage(text)) {
-      handleSiteFirstManagedWorkflow(text, replier);
-      return;
-    }
-    if (isSeasonApplyFormMessage(text)) {
-      handleSeasonApplyMessage(roomText || RECRUIT_ROOM_LABEL, text, senderText, replier);
-      return;
-    }
-    if (senderText.indexOf("오픈채팅봇") < 0 && isOperationFormMessage(text)) {
-      handleOperationFormMessage(roomText || RECRUIT_ROOM_LABEL, text, senderText, replier);
-      return;
-    }
-    if (isScrimRecruitCommand(text)) {
-      handleScrimRecruitCommand(text, roomText || RECRUIT_ROOM_LABEL, senderText, replier);
-      return;
-    }
-    if (isLolKCommand(text)) {
-      handleLolKCommand(text, roomText, senderText, replier);
-      return;
-    }
-    if (isPartyRecruitFormWithoutNumber(text)) {
-      replier.reply(
-        "[K-LOL.GG 양식 확인 필요]\n" +
-        "모집번호를 찾지 못했습니다.\n\n" +
-        "봇이 출력한 원본 양식의 ‘모집번호: #번호’를 유지해서 다시 보내주세요."
-      );
-      return;
-    }
-    if (isRecruitCommand(text)) {
-      handleRecruitCommand(text, roomText, senderText, replier);
-      return;
-    }
-    return;
-  } catch (err) {
-    replier.reply("[봇 처리 오류]\n" + String(err));
-  }
+var text = "";
+var roomText = "";
+var senderText = "";
+try {
+text = trimText(normalizeText(String(msg || "")));
+roomText = trimText(String(room || ""));
+senderText = trimText(String(sender || ""));
+var receivedImage = "";
+try {
+if (imageDB && imageDB.getImage) receivedImage = String(imageDB.getImage() || "");
+} catch (ignoredImageError) { receivedImage = ""; }
+if (receivedImage == "") {
+try {
+if (imageDB && imageDB.getImageBase64) receivedImage = String(imageDB.getImageBase64() || "");
+} catch (ignoredImageBase64Error) { receivedImage = ""; }
+}
+if (receivedImage == "") {
+try {
+if (imageDB && imageDB.getImageBitmap) {
+var receivedBitmap = imageDB.getImageBitmap();
+if (receivedBitmap) {
+var imageStream = new java.io.ByteArrayOutputStream();
+receivedBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 92, imageStream);
+receivedImage = String(android.util.Base64.encodeToString(imageStream.toByteArray(), android.util.Base64.NO_WRAP) || "");
+imageStream.close();
+}
+}
+} catch (ignoredImageBitmapError) { receivedImage = ""; }
+}
+if (receivedImage != "") {
+handleManagedImage(roomText || RECRUIT_ROOM_LABEL, senderText, receivedImage, replier);
+return;
+}
+if (isImagePlaceholderMessage(text) && replyManagedImageFallback(roomText || RECRUIT_ROOM_LABEL, senderText, replier)) {
+return;
+}
+if (isKlolBotEchoSender(senderText) && isKlolServerEchoMessage(text)) {
+return;
+}
+if (text.indexOf("들어왔습니다") >= 0) {
+replier.reply("다시 오셨네요, 반가워요! 😊");
+return;
+}
+if (text.indexOf("나갔습니다") >= 0 || text.indexOf("초대되었습니다") >= 0) {
+return;
+}
+if (text == "") {
+return;
+}
+if (isRegistrationHubCommand(text)) {
+replier.reply(getRegistrationHubNotice());
+return;
+}
+if (isGuidedRegistrationShortcut(text)) {
+handleGuidedRegistrationShortcut(text, replier);
+return;
+}
+if (isManagedWorkflowMessage(text)) {
+handleSiteFirstManagedWorkflow(text, replier);
+return;
+}
+if (isSeasonApplyFormMessage(text)) {
+handleSeasonApplyMessage(roomText || RECRUIT_ROOM_LABEL, text, senderText, replier);
+return;
+}
+if (senderText.indexOf("오픈채팅봇") < 0 && isOperationFormMessage(text)) {
+handleOperationFormMessage(roomText || RECRUIT_ROOM_LABEL, text, senderText, replier);
+return;
+}
+if (isScrimRecruitCommand(text)) {
+handleScrimRecruitCommand(text, roomText || RECRUIT_ROOM_LABEL, senderText, replier);
+return;
+}
+if (isLolKCommand(text)) {
+handleLolKCommand(text, roomText, senderText, replier);
+return;
+}
+if (isPartyRecruitFormWithoutNumber(text)) {
+replier.reply(
+"[K-LOL.GG 양식 확인 필요]\n" +
+"모집번호를 찾지 못했습니다.\n\n" +
+"봇이 출력한 원본 양식의 ‘모집번호: #번호’를 유지해서 다시 보내주세요."
+);
+return;
+}
+if (isRecruitCommand(text)) {
+handleRecruitCommand(text, roomText, senderText, replier);
+return;
+}
+return;
+} catch (err) {
+replier.reply("[봇 처리 오류]\n" + String(err));
+}
 }
 function isScrimRecruitFormMessageForBot(text) {
-  text = trimText(normalizeText(String(text || "")));
-  var normalized = normalizeCommandText(text);
-  if (/\[?K-?LOL\.GG스크림구인양식\]?/.test(normalized)) return true;
-  if (/\[?K-?LOL\.GG멸망전스크림구인양식\]?/.test(normalized)) return true;
-  var hasBaseFields = /일시\s*[:：]/.test(text) && /방식\s*[:：]/.test(text);
-  var hasTeams = /(우리팀|아군팀|요청팀)\s*[:：]/.test(text) && /상대팀\s*[:：]/.test(text);
-  var hasLanes = /(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]/i.test(text);
-  if (hasBaseFields && hasTeams && hasLanes) return true;
-  if (/스크림번호\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
-  if (/멸망전\s*(번호|ID)\s*[:：]/.test(text) && hasBaseFields && hasTeams) return true;
-  return false;
+text = trimText(normalizeText(String(text || "")));
+var normalized = normalizeCommandText(text);
+if (/\[?K-?LOL\.GG스크림구인양식\]?/.test(normalized)) return true;
+if (/\[?K-?LOL\.GG멸망전스크림구인양식\]?/.test(normalized)) return true;
+var hasBaseFields = /일시\s*[:：]/.test(text) && /방식\s*[:：]/.test(text);
+var hasTeams = /(우리팀|아군팀|요청팀)\s*[:：]/.test(text) && /상대팀\s*[:：]/.test(text);
+var hasLanes = /(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]/i.test(text);
+if (hasBaseFields && hasTeams && hasLanes) return true;
+if (/스크림번호\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
+if (/멸망전\s*(번호|ID)\s*[:：]/.test(text) && hasBaseFields && hasTeams) return true;
+return false;
 }
 function isScrimRecruitCommand(text) {
-  text = trimText(normalizeText(String(text || "")));
-  var normalized = normalizeCommandText(text);
-  if (isScrimRecruitFormMessageForBot(text)) return true;
-  if (/^\/?스크림\s*(구인|모집)(?:\s|$)/.test(text)) return true;
-  if (/^\/?스크림\s*(현황|목록|상세)(?:\s|$|#?\d)/.test(text)) return true;
-  if (/^\/?멸망전\s*스크림\s*(구인|모집|현황|목록|상세)?(?:\s*#?\d{1,3})?\s*$/.test(text)) return true;
-  if (/^\/?멸망전스크림(?:구인|모집|현황|목록|상세)?(?:#?\d{1,3})?$/.test(normalized)) return true;
-  return false;
+text = trimText(normalizeText(String(text || "")));
+var normalized = normalizeCommandText(text);
+if (isScrimRecruitFormMessageForBot(text)) return true;
+if (/^\/?스크림\s*(구인|모집)(?:\s|$)/.test(text)) return true;
+if (/^\/?스크림\s*(현황|목록|상세)(?:\s|$|#?\d)/.test(text)) return true;
+if (/^\/?멸망전\s*스크림\s*(구인|모집|현황|목록|상세)?(?:\s*#?\d{1,3})?\s*$/.test(text)) return true;
+if (/^\/?멸망전스크림(?:구인|모집|현황|목록|상세)?(?:#?\d{1,3})?$/.test(normalized)) return true;
+return false;
 }
 function getScrimRecruitApiUrl(text) {
-  var normalized = normalizeCommandText(text);
-  if (isScrimRecruitFormMessageForBot(text)) return SCRIM_RECRUIT_CREATE_API_URL;
-  if (/^\/?(?:스크림구인|스크림모집|멸망전스크림구인|멸망전스크림모집)/.test(normalized)) return SCRIM_RECRUIT_CREATE_API_URL;
-  if (/^\/?(?:스크림현황|스크림목록|스크림상세|멸망전스크림현황|멸망전스크림목록|멸망전스크림상세)/.test(normalized)) return SCRIM_RECRUIT_STATUS_API_URL;
-  return "";
+var normalized = normalizeCommandText(text);
+if (isScrimRecruitFormMessageForBot(text)) return SCRIM_RECRUIT_CREATE_API_URL;
+if (/^\/?(?:스크림구인|스크림모집|멸망전스크림구인|멸망전스크림모집)/.test(normalized)) return SCRIM_RECRUIT_CREATE_API_URL;
+if (/^\/?(?:스크림현황|스크림목록|스크림상세|멸망전스크림현황|멸망전스크림목록|멸망전스크림상세)/.test(normalized)) return SCRIM_RECRUIT_STATUS_API_URL;
+return "";
 }
 function handleScrimRecruitCommand(text, room, sender, replier) {
-  var apiUrl = getScrimRecruitApiUrl(text);
-  if (apiUrl == "") {
-    replier.reply("[K-LOL.GG 스크림구인]\n명령어를 확인하지 못했습니다. 양식 호출: /스크림구인");
-    return;
-  }
-  handlePartyRecruitApi(apiUrl, room, text, sender, replier, "스크림구인");
+var apiUrl = getScrimRecruitApiUrl(text);
+if (apiUrl == "") {
+replier.reply("[K-LOL.GG 스크림구인]\n명령어를 확인하지 못했습니다. 양식 호출: /스크림구인");
+return;
+}
+handlePartyRecruitApi(apiUrl, room, text, sender, replier, "스크림구인");
 }
 function isLolKCommand(text) {
-  var normalized = normalizeCommandText(text);
-  if (normalized == "봇버전" || normalized == "/봇버전") return true;
-  if (normalized == "도움말" || normalized == "/도움말") return true;
-  if (normalized == "명령어" || normalized == "/명령어") return true;
-  if (normalized == "내전참가" || normalized == "/내전참가") return true;
-  if (normalized == "참가신청" || normalized == "/참가신청") return true;
-  if (isSeasonRecruitStatusCommand(text)) return true;
-  if (normalized == "랭킹" || normalized == "/랭킹") return true;
-  if (text.indexOf("전적 ") == 0) return true;
-  if (text.indexOf("/전적 ") == 0) return true;
-  if (text.indexOf("최근 ") == 0) return true;
-  if (text.indexOf("/최근 ") == 0) return true;
-  return false;
+var normalized = normalizeCommandText(text);
+if (normalized == "봇버전" || normalized == "/봇버전") return true;
+if (normalized == "도움말" || normalized == "/도움말") return true;
+if (normalized == "명령어" || normalized == "/명령어") return true;
+if (normalized == "내전참가" || normalized == "/내전참가") return true;
+if (normalized == "참가신청" || normalized == "/참가신청") return true;
+if (isSeasonRecruitStatusCommand(text)) return true;
+if (normalized == "랭킹" || normalized == "/랭킹") return true;
+if (text.indexOf("전적 ") == 0) return true;
+if (text.indexOf("/전적 ") == 0) return true;
+if (text.indexOf("최근 ") == 0) return true;
+if (text.indexOf("/최근 ") == 0) return true;
+return false;
 }
 function isRecruitCommand(text) {
-  if (isSeasonRecruitTemplateCommand(text)) return true;
-  if (isPartyRecruitWebHelperCommand(text)) return true;
-  if (isPartyRecruitHelpCommand(text)) return true;
-  if (isPartyRecruitStatusCommand(text)) return true;
-  if (isPartyRecruitCreateCommand(text)) return true;
-  if (isPartyRecruitFinishCommand(text)) return true;
-  if (isPartyRecruitFormMessage(text)) return true;
-  return false;
+if (isSeasonRecruitTemplateCommand(text)) return true;
+if (isPartyRecruitWebHelperCommand(text)) return true;
+if (isPartyRecruitHelpCommand(text)) return true;
+if (isPartyRecruitStatusCommand(text)) return true;
+if (isPartyRecruitCreateCommand(text)) return true;
+if (isPartyRecruitFinishCommand(text)) return true;
+if (isPartyRecruitFormMessage(text)) return true;
+return false;
 }
 function handleLolKCommand(text, room, sender, replier) {
-  var reply = "";
-  var normalized = normalizeCommandText(text);
-  if (normalized == "봇버전" || normalized == "/봇버전") {
-    replier.reply("[K-LOL.GG 카카오봇 코드 버전]\n" + BOT_CODE_VERSION);
-    return;
-  }
-  if (
-    normalized == "도움말" ||
-    normalized == "/도움말" ||
-    normalized == "명령어" ||
-    normalized == "/명령어"
-  ) {
-    replier.reply(getUnifiedHelpNotice());
-    return;
-  }
-  if (
-    normalized == "내전참가" ||
-    normalized == "/내전참가" ||
-    normalized == "참가신청" ||
-    normalized == "/참가신청"
-  ) {
-    replier.reply(getParticipationGuideNotice());
-    return;
-  }
-  if (isSeasonRecruitStatusCommand(text)) {
-    reply = fetchSeasonRecruitStatusText(RECRUIT_ROOM_LABEL, text, sender);
-    if (reply == "__NO_SEASON_RECRUIT_STATUS__" || reply == "") {
-      reply = "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.";
-    }
-    replier.reply(reply);
-    return;
-  }
-  if (text.indexOf("/전적 ") == 0) {
-    sendSearchPlayerCommand(text.replace(/^\/전적\s+/, "전적 "), room, sender, replier);
-    return;
-  }
-  if (text.indexOf("전적 ") == 0) {
-    sendSearchPlayerCommand(text, room, sender, replier);
-    return;
-  }
-  if (text.indexOf("/최근 ") == 0) {
-    sendOpenchatCommand(text.replace(/^\/최근\s+/, "최근 "), replier);
-    return;
-  }
-  if (text.indexOf("최근 ") == 0) {
-    sendOpenchatCommand(text, replier);
-    return;
-  }
-  if (normalized == "랭킹" || normalized == "/랭킹") {
-    sendOpenchatCommand("랭킹", replier);
-    return;
-  }
+var reply = "";
+var normalized = normalizeCommandText(text);
+if (normalized == "봇버전" || normalized == "/봇버전") {
+replier.reply("[K-LOL.GG 카카오봇 코드 버전]\n" + BOT_CODE_VERSION);
+return;
+}
+if (
+normalized == "도움말" ||
+normalized == "/도움말" ||
+normalized == "명령어" ||
+normalized == "/명령어"
+) {
+replier.reply(getUnifiedHelpNotice());
+return;
+}
+if (
+normalized == "내전참가" ||
+normalized == "/내전참가" ||
+normalized == "참가신청" ||
+normalized == "/참가신청"
+) {
+replier.reply(getParticipationGuideNotice());
+return;
+}
+if (isSeasonRecruitStatusCommand(text)) {
+reply = fetchSeasonRecruitStatusText(RECRUIT_ROOM_LABEL, text, sender);
+if (reply == "__NO_SEASON_RECRUIT_STATUS__" || reply == "") {
+reply = "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.";
+}
+replier.reply(reply);
+return;
+}
+if (text.indexOf("/전적 ") == 0) {
+sendSearchPlayerCommand(text.replace(/^\/전적\s+/, "전적 "), room, sender, replier);
+return;
+}
+if (text.indexOf("전적 ") == 0) {
+sendSearchPlayerCommand(text, room, sender, replier);
+return;
+}
+if (text.indexOf("/최근 ") == 0) {
+sendOpenchatCommand(text.replace(/^\/최근\s+/, "최근 "), replier);
+return;
+}
+if (text.indexOf("최근 ") == 0) {
+sendOpenchatCommand(text, replier);
+return;
+}
+if (normalized == "랭킹" || normalized == "/랭킹") {
+sendOpenchatCommand("랭킹", replier);
+return;
+}
 }
 function handleRecruitCommand(text, room, sender, replier) {
-  if (isSeasonRecruitTemplateCommand(text)) {
-    var seasonTemplateReply = fetchSeasonRecruitStatusText(
-      room || RECRUIT_ROOM_LABEL,
-      text,
-      sender
-    );
-    if (seasonTemplateReply == "__NO_SEASON_RECRUIT_STATUS__" || seasonTemplateReply == "") {
-      seasonTemplateReply = "[K-LOL.GG 내전구인 오류]\n서버 응답이 비어 있습니다. 잠시 후 다시 시도해주세요.";
-    }
-    replier.reply(seasonTemplateReply);
-    return;
-  }
-  if (isPartyRecruitWebHelperCommand(text)) {
-    replier.reply(getPartyRecruitWebHelperNotice());
-    return;
-  }
-  if (isPartyRecruitHelpCommand(text)) {
-    replier.reply(getPartyRecruitHelpNotice());
-    return;
-  }
-  if (isPartyRecruitStatusCommand(text)) {
-    replier.reply(fetchPartyRecruitStatusText(false, text, room || RECRUIT_ROOM_LABEL, sender));
-    return;
-  }
-  if (isPartyRecruitCreateCommand(text)) {
-    handlePartyRecruitApi(
-      PARTY_RECRUIT_CREATE_API_URL,
-      room || RECRUIT_ROOM_LABEL,
-      text,
-      sender,
-      replier,
-      "구인구직 생성"
-    );
-    return;
-  }
-  if (isPartyRecruitFinishCommand(text)) {
-    handlePartyRecruitApi(
-      PARTY_RECRUIT_FINISH_API_URL,
-      room || RECRUIT_ROOM_LABEL,
-      text,
-      sender,
-      replier,
-      "구인구직 마무리"
-    );
-    return;
-  }
-  if (isPartyRecruitFormMessage(text)) {
-    handlePartyRecruitSync(room || RECRUIT_ROOM_LABEL, text, sender, replier);
-    return;
-  }
+if (isSeasonRecruitTemplateCommand(text)) {
+var seasonTemplateReply = fetchSeasonRecruitStatusText(
+room || RECRUIT_ROOM_LABEL,
+text,
+sender
+);
+if (seasonTemplateReply == "__NO_SEASON_RECRUIT_STATUS__" || seasonTemplateReply == "") {
+seasonTemplateReply = "[K-LOL.GG 내전구인 오류]\n서버 응답이 비어 있습니다. 잠시 후 다시 시도해주세요.";
+}
+replier.reply(seasonTemplateReply);
+return;
+}
+if (isPartyRecruitWebHelperCommand(text)) {
+replier.reply(getPartyRecruitWebHelperNotice());
+return;
+}
+if (isPartyRecruitHelpCommand(text)) {
+replier.reply(getPartyRecruitHelpNotice());
+return;
+}
+if (isPartyRecruitStatusCommand(text)) {
+replier.reply(fetchPartyRecruitStatusText(false, text, room || RECRUIT_ROOM_LABEL, sender));
+return;
+}
+if (isPartyRecruitCreateCommand(text)) {
+handlePartyRecruitApi(
+PARTY_RECRUIT_CREATE_API_URL,
+room || RECRUIT_ROOM_LABEL,
+text,
+sender,
+replier,
+"구인구직 생성"
+);
+return;
+}
+if (isPartyRecruitFinishCommand(text)) {
+handlePartyRecruitApi(
+PARTY_RECRUIT_FINISH_API_URL,
+room || RECRUIT_ROOM_LABEL,
+text,
+sender,
+replier,
+"구인구직 마무리"
+);
+return;
+}
+if (isPartyRecruitFormMessage(text)) {
+handlePartyRecruitSync(room || RECRUIT_ROOM_LABEL, text, sender, replier);
+return;
+}
 }
 function isSeasonRecruitTemplateCommand(text) {
-  text = trimText(normalizeText(String(text || "")));
-  return /^\/?(?:내전구인구직|내전구인)(?:\s*#?\s*\d{1,3}|\s+\S(?:.*\S)?)?\s*$/.test(text);
+text = trimText(normalizeText(String(text || "")));
+return /^\/?(?:내전구인구직|내전구인)(?:\s*#?\s*\d{1,3}|\s+\S(?:.*\S)?)?\s*$/.test(text);
 }
 function isSeasonRecruitStatusCommand(text) {
-  text = trimText(normalizeText(String(text || "")));
-  return /^\/?(?:내전현황|내전상세|시즌내전현황|AI공지)(?:\s*#?\s*\d{1,3})?\s*$/.test(text);
+text = trimText(normalizeText(String(text || "")));
+return /^\/?(?:내전현황|내전상세|시즌내전현황|AI공지)(?:\s*#?\s*\d{1,3})?\s*$/.test(text);
 }
 function isPartyRecruitLikeMessage(text) {
-  text = normalizeText(String(text || ""));
-  if (/\d{1,2}\s*인\s*(?:파티\s*)?구인/.test(text)) return true;
-  if (text.indexOf("파티 구인") >= 0) return true;
-  if (text.indexOf("모집번호") >= 0) return true;
-  if (text.indexOf("게임정보") >= 0) return true;
-  if (text.indexOf("시작시간") >= 0 && text.indexOf("파티") >= 0) return true;
-  if (text.indexOf("5인 협곡 파티 구인") >= 0) return true;
-  return false;
+text = normalizeText(String(text || ""));
+if (/\d{1,2}\s*인\s*(?:파티\s*)?구인/.test(text)) return true;
+if (text.indexOf("파티 구인") >= 0) return true;
+if (text.indexOf("모집번호") >= 0) return true;
+if (text.indexOf("게임정보") >= 0) return true;
+if (text.indexOf("시작시간") >= 0 && text.indexOf("파티") >= 0) return true;
+if (text.indexOf("5인 협곡 파티 구인") >= 0) return true;
+return false;
 }
 function isSeasonApplyFormMessage(text) {
-  var filledCount = 0;
-  text = normalizeText(text);
-  if (isPartyRecruitLikeMessage(text)) {
-    return false;
-  }
-  if (!hasSeasonApplySlash(text)) {
-    return false;
-  }
-  filledCount = countFilledSeasonApplyLines(text);
-  if (filledCount < 1) {
-    return false;
-  }
-  if (hasSeasonApplyForm(text)) {
-    return true;
-  }
-  if (hasSeasonApplyWord(text)) {
-    return true;
-  }
-  return false;
+var filledCount = 0;
+text = normalizeText(text);
+if (isPartyRecruitLikeMessage(text)) {
+return false;
+}
+if (!hasSeasonApplySlash(text)) {
+return false;
+}
+filledCount = countFilledSeasonApplyLines(text);
+if (filledCount < 1) {
+return false;
+}
+if (hasSeasonApplyForm(text)) {
+return true;
+}
+if (hasSeasonApplyWord(text)) {
+return true;
+}
+return false;
 }
 function hasSeasonApplySlash(text) {
-  return String(text || "").indexOf("/") >= 0;
+return String(text || "").indexOf("/") >= 0;
 }
 function hasSeasonApplyWord(text) {
-  text = String(text || "");
-  if (text.indexOf("내전") >= 0) return true;
-  if (text.indexOf("참가") >= 0) return true;
-  if (text.indexOf("신청") >= 0) return true;
-  if (text.indexOf("협곡") >= 0) return true;
-  if (text.indexOf("현티어") >= 0) return true;
-  if (text.indexOf("최고티어") >= 0) return true;
-  return false;
+text = String(text || "");
+if (text.indexOf("내전") >= 0) return true;
+if (text.indexOf("참가") >= 0) return true;
+if (text.indexOf("신청") >= 0) return true;
+if (text.indexOf("협곡") >= 0) return true;
+if (text.indexOf("현티어") >= 0) return true;
+if (text.indexOf("최고티어") >= 0) return true;
+return false;
 }
 function hasSeasonApplyForm(text) {
-  text = String(text || "");
-  if (text.indexOf("이름/현티어/최고티어") >= 0) return true;
-  if (text.indexOf("현티어") >= 0 && text.indexOf("최고티어") >= 0) return true;
-  if (text.indexOf("주,부라인") >= 0) return true;
-  if (text.indexOf("주/부라인") >= 0) return true;
-  if (text.indexOf("주라인") >= 0 && text.indexOf("부라인") >= 0) return true;
-  return false;
+text = String(text || "");
+if (text.indexOf("이름/현티어/최고티어") >= 0) return true;
+if (text.indexOf("현티어") >= 0 && text.indexOf("최고티어") >= 0) return true;
+if (text.indexOf("주,부라인") >= 0) return true;
+if (text.indexOf("주/부라인") >= 0) return true;
+if (text.indexOf("주라인") >= 0 && text.indexOf("부라인") >= 0) return true;
+return false;
 }
 function countFilledSeasonApplyLines(text) {
-  var lines = normalizeText(text).split("\n");
-  var count = 0;
-  var i = 0;
-  var line = "";
-  var body = "";
-  var parts = [];
-  var name = "";
-  var currentTier = "";
-  var peakTier = "";
-  var positionText = "";
-  for (i = 0; i < lines.length; i++) {
-    line = trimText(String(lines[i] || ""));
-    if (isSeasonApplyExampleLine(line)) {
-      continue;
-    }
-    if (!/^\d{1,2}\s*[.)]/.test(line)) {
-      continue;
-    }
-    body = trimText(line.replace(/^\d{1,2}\s*[.)]\s*/, ""));
-    if (body == "") continue;
-    if (body.indexOf("/") < 0) continue;
-    parts = body.split("/");
-    if (parts.length < 4) continue;
-    name = trimText(String(parts[0] || ""));
-    currentTier = trimText(String(parts[1] || ""));
-    peakTier = trimText(String(parts[2] || ""));
-    positionText = trimText(String(parts.slice(3).join("/") || ""));
-    if (name == "") continue;
-    if (currentTier == "") continue;
-    if (peakTier == "") continue;
-    if (positionText == "") continue;
-    if (isBadSeasonApplyName(name)) continue;
-    count++;
-  }
-  return count;
+var lines = normalizeText(text).split("\n");
+var count = 0;
+var i = 0;
+var line = "";
+var body = "";
+var parts = [];
+var name = "";
+var currentTier = "";
+var peakTier = "";
+var positionText = "";
+for (i = 0; i < lines.length; i++) {
+line = trimText(String(lines[i] || ""));
+if (isSeasonApplyExampleLine(line)) {
+continue;
+}
+if (!/^\d{1,2}\s*[.)]/.test(line)) {
+continue;
+}
+body = trimText(line.replace(/^\d{1,2}\s*[.)]\s*/, ""));
+if (body == "") continue;
+if (body.indexOf("/") < 0) continue;
+parts = body.split("/");
+if (parts.length < 4) continue;
+name = trimText(String(parts[0] || ""));
+currentTier = trimText(String(parts[1] || ""));
+peakTier = trimText(String(parts[2] || ""));
+positionText = trimText(String(parts.slice(3).join("/") || ""));
+if (name == "") continue;
+if (currentTier == "") continue;
+if (peakTier == "") continue;
+if (positionText == "") continue;
+if (isBadSeasonApplyName(name)) continue;
+count++;
+}
+return count;
 }
 function isBadSeasonApplyName(name) {
-  name = trimText(String(name || ""));
-  if (name == "") return true;
-  if (name.indexOf("이름") >= 0) return true;
-  if (name.indexOf("EX") >= 0) return true;
-  if (name.indexOf("ex") >= 0) return true;
-  if (name.indexOf("예시") >= 0) return true;
-  return false;
+name = trimText(String(name || ""));
+if (name == "") return true;
+if (name.indexOf("이름") >= 0) return true;
+if (name.indexOf("EX") >= 0) return true;
+if (name.indexOf("ex") >= 0) return true;
+if (name.indexOf("예시") >= 0) return true;
+return false;
 }
 function isSeasonApplyExampleLine(line) {
-  line = trimText(String(line || ""));
-  if (line.indexOf("EX)") >= 0) return true;
-  if (line.indexOf("EX.") >= 0) return true;
-  if (line.indexOf("EX ") >= 0) return true;
-  if (line.indexOf("ex)") >= 0) return true;
-  if (line.indexOf("ex.") >= 0) return true;
-  if (line.indexOf("ex ") >= 0) return true;
-  if (line.indexOf("예시") >= 0) return true;
-  if (line.indexOf("양식") >= 0) return true;
-  if (line.indexOf("참가 신청 양식") >= 0) return true;
-  if (line.indexOf("이름/현티어/최고티어") >= 0) return true;
-  return false;
+line = trimText(String(line || ""));
+if (line.indexOf("EX)") >= 0) return true;
+if (line.indexOf("EX.") >= 0) return true;
+if (line.indexOf("EX ") >= 0) return true;
+if (line.indexOf("ex)") >= 0) return true;
+if (line.indexOf("ex.") >= 0) return true;
+if (line.indexOf("ex ") >= 0) return true;
+if (line.indexOf("예시") >= 0) return true;
+if (line.indexOf("양식") >= 0) return true;
+if (line.indexOf("참가 신청 양식") >= 0) return true;
+if (line.indexOf("이름/현티어/최고티어") >= 0) return true;
+return false;
 }
 function isPartyRecruitWebHelperCommand(text) {
-  text = normalizeCommandText(text);
-  return (
-    text == "구인도우미" ||
-    text == "/구인도우미" ||
-    text == "구인웹도우미" ||
-    text == "/구인웹도우미" ||
-    text == "구인매뉴얼" ||
-    text == "/구인매뉴얼" ||
-    text == "명령어페이지" ||
-    text == "/명령어페이지"
-  );
+text = normalizeCommandText(text);
+return (
+text == "구인도우미" ||
+text == "/구인도우미" ||
+text == "구인웹도우미" ||
+text == "/구인웹도우미" ||
+text == "구인매뉴얼" ||
+text == "/구인매뉴얼" ||
+text == "명령어페이지" ||
+text == "/명령어페이지"
+);
 }
 function isPartyRecruitHelpCommand(text) {
-  text = normalizeCommandText(text);
-  return (
-    text == "구인구직도움말" ||
-    text == "/구인구직도움말" ||
-    text == "구인도움말" ||
-    text == "/구인도움말" ||
-    text == "구인명령어" ||
-    text == "/구인명령어"
-  );
+text = normalizeCommandText(text);
+return (
+text == "구인구직도움말" ||
+text == "/구인구직도움말" ||
+text == "구인도움말" ||
+text == "/구인도움말" ||
+text == "구인명령어" ||
+text == "/구인명령어"
+);
 }
 function isPartyRecruitStatusCommand(text) {
-  text = normalizeCommandText(text);
-  return (
-    text == "현재구인구직현황" ||
-    text == "/현재구인구직현황" ||
-    text == "현재구인현황" ||
-    text == "/현재구인현황" ||
-    text == "구인구직현황" ||
-    text == "/구인구직현황" ||
-    text == "구인현황" ||
-    text == "/구인현황" ||
-    text == "현황" ||
-    text == "/현황" ||
-    /^\/?(?:구인상세|상세)\s*#?\s*\d{1,2}$/.test(text)
-  );
+text = normalizeCommandText(text);
+return (
+text == "현재구인구직현황" ||
+text == "/현재구인구직현황" ||
+text == "현재구인현황" ||
+text == "/현재구인현황" ||
+text == "구인구직현황" ||
+text == "/구인구직현황" ||
+text == "구인현황" ||
+text == "/구인현황" ||
+text == "현황" ||
+text == "/현황" ||
+/^\/?(?:구인상세|상세)\s*#?\s*\d{1,2}$/.test(text)
+);
 }
 function isPartyRecruitCreateCommand(text) {
-  text = trimText(normalizeText(text));
-  if (/^\/?\d{1,2}\s*인\s*(?:파티|구인)(?:\s+\d{1,2})?\s*$/.test(text)) {
-    return true;
-  }
-  return /^\/?(칼바람구인|증바람구인|솔랭구인|자랭구인|일반구인|기타게임구인|롤체일반구인|롤체랭크구인|더블업구인|5인협곡파티)(?:\s+\d{1,2})?\s*$/.test(text);
+text = trimText(normalizeText(text));
+if (/^\/?\d{1,2}\s*인\s*(?:파티|구인)(?:\s+\d{1,2})?\s*$/.test(text)) {
+return true;
+}
+return /^\/?(칼바람구인|증바람구인|솔랭구인|자랭구인|일반구인|기타게임구인|롤체일반구인|롤체랭크구인|더블업구인|5인협곡파티)(?:\s+\d{1,2})?\s*$/.test(text);
 }
 function isPartyRecruitFinishCommand(text) {
-  text = trimText(normalizeText(text));
-  if (/^\/?\d{1,2}\s*(\uCAD1|\u3149)\s*$/.test(text)) {
-    return true;
-  }
-  if (/^\/?#?\s*\d{1,2}\s*(\uBC88|\uC778)?\s*(\uD30C\uD2F0|\uAD6C\uC778)?\s*(\uCAD1|\u3149|\uB9C8\uAC10|\uC885\uB8CC)\s*$/.test(text)) {
-    return true;
-  }
-  if (/^\/?\uAD6C\uC778(\uB9C8\uAC10|\uCAD1|\uC885\uB8CC)\s*#?\s*\d{1,2}\s*$/.test(text)) {
-    return true;
-  }
-  if (/^\/?#\s*\d{1,2}\s*(\uCAD1|\u3149)\s*$/.test(text)) {
-    return true;
-  }
-  return false;
+text = trimText(normalizeText(text));
+if (/^\/?\d{1,2}\s*(\uCAD1|\u3149)\s*$/.test(text)) {
+return true;
+}
+if (/^\/?#?\s*\d{1,2}\s*(\uBC88|\uC778)?\s*(\uD30C\uD2F0|\uAD6C\uC778)?\s*(\uCAD1|\u3149|\uB9C8\uAC10|\uC885\uB8CC)\s*$/.test(text)) {
+return true;
+}
+if (/^\/?\uAD6C\uC778(\uB9C8\uAC10|\uCAD1|\uC885\uB8CC)\s*#?\s*\d{1,2}\s*$/.test(text)) {
+return true;
+}
+if (/^\/?#\s*\d{1,2}\s*(\uCAD1|\u3149)\s*$/.test(text)) {
+return true;
+}
+return false;
 }
 function hasPartyRecruitNumber(text) {
-  text = normalizeText(String(text || ""));
-  if (/모집번호\s*[:：]?\s*#?\s*\d{1,2}/.test(text)) {
-    return true;
-  }
-  if (/(^|\s)#\s*\d{1,2}(\s|$)/.test(text)) {
-    return true;
-  }
-  return false;
+text = normalizeText(String(text || ""));
+if (/모집번호\s*[:：]?\s*#?\s*\d{1,2}/.test(text)) {
+return true;
+}
+if (/(^|\s)#\s*\d{1,2}(\s|$)/.test(text)) {
+return true;
+}
+return false;
 }
 function isPartyRecruitFormWithoutNumber(text) {
-  text = trimText(normalizeText(String(text || "")));
-  if (text == "") {
-    return false;
-  }
-  if (hasPartyRecruitNumber(text)) {
-    return false;
-  }
-  if (hasSeasonApplyForm(text) && countFilledSeasonApplyLines(text) > 0) {
-    return false;
-  }
-  if (
-    text.indexOf("TOP.") >= 0 &&
-    text.indexOf("JUG.") >= 0 &&
-    text.indexOf("MID.") >= 0 &&
-    text.indexOf("ADC.") >= 0 &&
-    text.indexOf("SUP.") >= 0
-  ) {
-    return true;
-  }
-  if (
-    text.indexOf("1.") >= 0 &&
-    text.indexOf("2.") >= 0 &&
-    text.indexOf("3.") >= 0 &&
-    text.indexOf("4.") >= 0 &&
-    text.indexOf("5.") >= 0
-  ) {
-    return true;
-  }
-  if (text.indexOf("자랭 하실분") >= 0) return true;
-  if (text.indexOf("일반 하실분") >= 0) return true;
-  if (text.indexOf("솔랭하실분") >= 0) return true;
-  if (text.indexOf("솔랭 하실분") >= 0) return true;
-  if (text.indexOf("칼바람 하실분") >= 0) return true;
-  if (text.indexOf("기타게임 하실분") >= 0) return true;
-  if (text.indexOf("롤체 일반 하실분") >= 0) return true;
-  if (text.indexOf("롤체 랭크 하실분") >= 0) return true;
-  if (text.indexOf("더블업 하실분") >= 0) return true;
-  if (/\d{1,2}\s*인\s*파티\s*구인/.test(text)) return true;
-  if (/\d{1,2}\s*인\s*구인/.test(text)) return true;
-  if (text.indexOf("5인 협곡 파티 구인") >= 0) return true;
-  return false;
+text = trimText(normalizeText(String(text || "")));
+if (text == "") {
+return false;
+}
+if (hasPartyRecruitNumber(text)) {
+return false;
+}
+if (hasSeasonApplyForm(text) && countFilledSeasonApplyLines(text) > 0) {
+return false;
+}
+if (
+text.indexOf("TOP.") >= 0 &&
+text.indexOf("JUG.") >= 0 &&
+text.indexOf("MID.") >= 0 &&
+text.indexOf("ADC.") >= 0 &&
+text.indexOf("SUP.") >= 0
+) {
+return true;
+}
+if (
+text.indexOf("1.") >= 0 &&
+text.indexOf("2.") >= 0 &&
+text.indexOf("3.") >= 0 &&
+text.indexOf("4.") >= 0 &&
+text.indexOf("5.") >= 0
+) {
+return true;
+}
+if (text.indexOf("자랭 하실분") >= 0) return true;
+if (text.indexOf("일반 하실분") >= 0) return true;
+if (text.indexOf("솔랭하실분") >= 0) return true;
+if (text.indexOf("솔랭 하실분") >= 0) return true;
+if (text.indexOf("칼바람 하실분") >= 0) return true;
+if (text.indexOf("기타게임 하실분") >= 0) return true;
+if (text.indexOf("롤체 일반 하실분") >= 0) return true;
+if (text.indexOf("롤체 랭크 하실분") >= 0) return true;
+if (text.indexOf("더블업 하실분") >= 0) return true;
+if (/\d{1,2}\s*인\s*파티\s*구인/.test(text)) return true;
+if (/\d{1,2}\s*인\s*구인/.test(text)) return true;
+if (text.indexOf("5인 협곡 파티 구인") >= 0) return true;
+return false;
 }
 function isPartyRecruitFormMessage(text) {
-  text = normalizeText(text);
-  if (!hasPartyRecruitNumber(text)) {
-    return false;
-  }
-  if (/(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]?/i.test(text)) {
-    return true;
-  }
-  if (/(^|\n)\s*\d{1,2}(?:[.)]|\s+)/.test(text)) {
-    return true;
-  }
-  return false;
+text = normalizeText(text);
+if (!hasPartyRecruitNumber(text)) {
+return false;
+}
+if (/(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]?/i.test(text)) {
+return true;
+}
+if (/(^|\n)\s*\d{1,2}(?:[.)]|\s+)/.test(text)) {
+return true;
+}
+return false;
 }
 function handlePartyRecruitSync(roomLabel, text, sender, replier) {
-  var hash = "";
-  var saved = "";
-  var ok = false;
-  try {
-    text = normalizeText(text);
-    hash = makeHash(
-      "party-sync:" +
-      roomLabel +
-      ":" +
-      sender +
-      ":" +
-      String(Math.floor(new Date().getTime() / 10000)) +
-      ":" +
-      text
-    );
-    if (lastPartyRecruitHash == hash) {
-      return;
-    }
-    saved = DataBase.getDataBase(PARTY_RECRUIT_SAVE_KEY);
-    if (saved == hash) {
-      lastPartyRecruitHash = hash;
-      return;
-    }
-    ok = handlePartyRecruitApi(
-      PARTY_RECRUIT_SYNC_API_URL,
-      roomLabel,
-      text,
-      sender,
-      replier,
-      "구인구직 현황 반영"
-    );
-    if (ok === true) {
-      lastPartyRecruitHash = hash;
-      DataBase.setDataBase(PARTY_RECRUIT_SAVE_KEY, hash);
-    }
-  } catch (err) {
-    replier.reply("[구인구직 현황 반영 오류]\n" + String(err));
-  }
+var hash = "";
+var saved = "";
+var ok = false;
+try {
+text = normalizeText(text);
+hash = makeHash(
+"party-sync:" +
+roomLabel +
+":" +
+sender +
+":" +
+String(Math.floor(new Date().getTime() / 10000)) +
+":" +
+text
+);
+if (lastPartyRecruitHash == hash) {
+return;
+}
+saved = DataBase.getDataBase(PARTY_RECRUIT_SAVE_KEY);
+if (saved == hash) {
+lastPartyRecruitHash = hash;
+return;
+}
+ok = handlePartyRecruitApi(
+PARTY_RECRUIT_SYNC_API_URL,
+roomLabel,
+text,
+sender,
+replier,
+"구인구직 현황 반영"
+);
+if (ok === true) {
+lastPartyRecruitHash = hash;
+DataBase.setDataBase(PARTY_RECRUIT_SAVE_KEY, hash);
+}
+} catch (err) {
+replier.reply("[구인구직 현황 반영 오류]\n" + String(err));
+}
 }
 function getParticipationGuideNotice() {
-  var n = "\n";
-  var text = "";
-  text = "[K-LOL.GG 내전 참가 방법 안내]" + n;
-  text += "오늘 시즌내전에 참가 가능하신 분은 사이트에서 참가 신청 부탁드립니다." + n + n;
-  text += "1. K-LOL.GG 접속" + n;
-  text += BASE_URL + n;
-  text += "2. 로그인" + n;
-  text += "3. 시즌내전 참가하기 클릭" + n;
-  text += "4. 주 포지션 / 부 포지션 선택" + n;
-  text += "5. 참가 신청 완료" + n + n;
-  text += "참가 신청 기준으로 팀 밸런스가 진행됩니다." + n;
-  text += "신청하지 않은 인원은 팀 편성에서 누락될 수 있습니다.";
-  return text;
+var n = "\n";
+var text = "";
+text = "[K-LOL.GG 내전 참가 방법 안내]" + n;
+text += "오늘 시즌내전에 참가 가능하신 분은 사이트에서 참가 신청 부탁드립니다." + n + n;
+text += "1. K-LOL.GG 접속" + n;
+text += BASE_URL + n;
+text += "2. 로그인" + n;
+text += "3. 시즌내전 참가하기 클릭" + n;
+text += "4. 주 포지션 / 부 포지션 선택" + n;
+text += "5. 참가 신청 완료" + n + n;
+text += "참가 신청 기준으로 팀 밸런스가 진행됩니다." + n;
+text += "신청하지 않은 인원은 팀 편성에서 누락될 수 있습니다.";
+return text;
 }
 function getPartyRecruitWebHelperNotice() {
-  var n = "\n";
-  var text = "";
-  text = "[K-LOL.GG 구인도우미]" + n + n;
-  text += "현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요." + n + n;
-  text += BASE_URL + "/recruit-helper" + n + n;
-  text += "구인현황 바로가기:" + n;
-  text += BASE_URL + "/recruit";
-  return text;
+var n = "\n";
+var text = "";
+text = "[K-LOL.GG 구인도우미]" + n + n;
+text += "현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요." + n + n;
+text += BASE_URL + "/recruit-helper" + n + n;
+text += "구인현황 바로가기:" + n;
+text += BASE_URL + "/recruit";
+return text;
 }
 function getPartyRecruitHelpNotice() {
-  var n = "\n";
-  return (
-    "[K-LOL.GG 구인 도움말]" + n +
-    "" + n +
-    "1. 파티" + n +
-    "생성: 5인파티" + n +
-    "현황: 구인현황" + n +
-    "종료: 번호ㅉ" + n +
-    "" + n +
-    "2. 내전" + n +
-    "생성: 내전구인" + n +
-    "현황: 내전현황" + n +
-    "매일 오전 6시 자동 종료" + n +
-    "" + n +
-    "3. 스크림" + n +
-    "생성: 스크림구인" + n +
-    "현황: 스크림현황" + n +
-    "매일 오전 6시 자동 종료" + n +
-    "" + n +
-    "공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송"
-  );
+var n = "\n";
+return (
+"[K-LOL.GG 구인 도움말]" + n +
+"" + n +
+"1. 파티" + n +
+"생성: 5인파티" + n +
+"현황: 구인현황" + n +
+"종료: 번호ㅉ" + n +
+"" + n +
+"2. 내전" + n +
+"생성: 내전구인" + n +
+"현황: 내전현황" + n +
+"매일 오전 6시 자동 종료" + n +
+"" + n +
+"3. 스크림" + n +
+"생성: 스크림구인" + n +
+"현황: 스크림현황" + n +
+"매일 오전 6시 자동 종료" + n +
+"" + n +
+"공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송"
+);
 }
 function getUnifiedHelpNotice() {
-  var n = "\n";
-  return (
-    "[K-LOL.GG 일반 도움말]" + n +
-    "" + n +
-    "LOL-K 기능" + n +
-    "- 내전현황 : 현재 시즌내전 신청 현황" + n +
-    "- 내전참가 / 참가신청 : 참가 방법 안내" + n +
-    "- 전적 닉네임#태그 : 플레이어 전적 조회" + n +
-    "- 최근 닉네임#태그 : 최근 경기 조회" + n +
-    "- 랭킹 : 랭킹 조회" + n +
-    "" + n +
-    "운영 기능" + n +
-    "- /등록 : 초보자용 등록 센터" + n +
-    "- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록" + n +
-    "- /경고등록 : 관리자 경고 등록 화면 열기" + n +
-    "- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출" + n +
-    "- /경고현황 : 내정보의 경고 진행 상황 열기" + n +
-    "- /결과현황 : 사이트의 내 미완료 결과 접수 열기" + n +
-    "" + n +
-    "구인구직 명령어는 구인도움말을 입력해주세요." + n +
-    "스크림구인은 /스크림구인, /스크림현황을 사용해주세요." + n +
-    "" + n +
-    "참고" + n +
-    "- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다." + n +
-    "- 예) /내전현황, /전적 닉네임#태그, /구인도움말"
-  );
+var n = "\n";
+return (
+"[K-LOL.GG 일반 도움말]" + n +
+"" + n +
+"LOL-K 기능" + n +
+"- 내전현황 : 현재 시즌내전 신청 현황" + n +
+"- 내전참가 / 참가신청 : 참가 방법 안내" + n +
+"- 전적 닉네임#태그 : 플레이어 전적 조회" + n +
+"- 최근 닉네임#태그 : 최근 경기 조회" + n +
+"- 랭킹 : 랭킹 조회" + n +
+"" + n +
+"운영 기능" + n +
+"- /등록 : 초보자용 등록 센터" + n +
+"- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록" + n +
+"- /경고등록 : 관리자 경고 등록 화면 열기" + n +
+"- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출" + n +
+"- /경고현황 : 내정보의 경고 진행 상황 열기" + n +
+"- /결과현황 : 사이트의 내 미완료 결과 접수 열기" + n +
+"" + n +
+"구인구직 명령어는 구인도움말을 입력해주세요." + n +
+"스크림구인은 /스크림구인, /스크림현황을 사용해주세요." + n +
+"" + n +
+"참고" + n +
+"- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다." + n +
+"- 예) /내전현황, /전적 닉네임#태그, /구인도움말"
+);
 }
 function stripOperationLinePrefix(line) {
-  line = trimText(String(line || ""));
-  line = line.replace(/^\s*\d+\s*[.)]\s*/, "");
-  return trimText(line);
+line = trimText(String(line || ""));
+line = line.replace(/^\s*\d+\s*[.)]\s*/, "");
+return trimText(line);
 }
 function canonicalOperationText(value) {
-  value = String(value || "");
-  value = value.replace(/\s+/g, "");
-  value = value.replace(/[.:：()（）\[\]{}<>·ㆍ,，\/\\_-]/g, "");
-  return trimText(value);
+value = String(value || "");
+value = value.replace(/\s+/g, "");
+value = value.replace(/[.:：()（）\[\]{}<>·ㆍ,，\/\\_-]/g, "");
+return trimText(value);
 }
 function escapeOperationRegExp(value) {
-  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function makeOperationLabelRegex(label) {
-  var compact = String(label || "").replace(/\s+/g, "");
-  var pattern = "";
-  var i = 0;
-  for (i = 0; i < compact.length; i++) {
-    if (i > 0) {
-      pattern += "\\s*";
-    }
-    pattern += escapeOperationRegExp(compact.charAt(i));
-  }
-  return new RegExp("^\\s*" + pattern + "\\s*");
+var compact = String(label || "").replace(/\s+/g, "");
+var pattern = "";
+var i = 0;
+for (i = 0; i < compact.length; i++) {
+if (i > 0) {
+pattern += "\\s*";
+}
+pattern += escapeOperationRegExp(compact.charAt(i));
+}
+return new RegExp("^\\s*" + pattern + "\\s*");
 }
 function lineStartsWithOperationLabel(line, label) {
-  line = stripOperationLinePrefix(line);
-  return canonicalOperationText(line).indexOf(canonicalOperationText(label)) == 0;
+line = stripOperationLinePrefix(line);
+return canonicalOperationText(line).indexOf(canonicalOperationText(label)) == 0;
 }
 function removeOperationLabelPrefix(line, label) {
-  line = stripOperationLinePrefix(line);
-  return trimText(line.replace(makeOperationLabelRegex(label), ""));
+line = stripOperationLinePrefix(line);
+return trimText(line.replace(makeOperationLabelRegex(label), ""));
 }
 function includesAllKeywords(text, keywords) {
-  var i = 0;
-  var j = 0;
-  var lines = [];
-  var found = false;
-  text = normalizeText(String(text || ""));
-  lines = text.split("\n");
-  for (i = 0; i < keywords.length; i++) {
-    found = false;
-    for (j = 0; j < lines.length; j++) {
-      if (lineStartsWithOperationLabel(lines[j], keywords[i])) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      return false;
-    }
-  }
-  return true;
+var i = 0;
+var j = 0;
+var lines = [];
+var found = false;
+text = normalizeText(String(text || ""));
+lines = text.split("\n");
+for (i = 0; i < keywords.length; i++) {
+found = false;
+for (j = 0; j < lines.length; j++) {
+if (lineStartsWithOperationLabel(lines[j], keywords[i])) {
+found = true;
+break;
+}
+}
+if (!found) {
+return false;
+}
+}
+return true;
 }
 function isOperationNextLabelLine(line, labels) {
-  var i = 0;
-  for (i = 0; i < labels.length; i++) {
-    if (lineStartsWithOperationLabel(line, labels[i])) {
-      return true;
-    }
-  }
-  return false;
+var i = 0;
+for (i = 0; i < labels.length; i++) {
+if (lineStartsWithOperationLabel(line, labels[i])) {
+return true;
+}
+}
+return false;
 }
 function readOperationField(text, label, nextLabels) {
-  var lines = [];
-  var i = 0;
-  var line = "";
-  var out = [];
-  var collecting = false;
-  text = normalizeText(String(text || ""));
-  nextLabels = nextLabels || [];
-  lines = text.split("\n");
-  for (i = 0; i < lines.length; i++) {
-    line = stripOperationLinePrefix(lines[i]);
-    if (!collecting) {
-      if (lineStartsWithOperationLabel(line, label)) {
-        out.push(removeOperationLabelPrefix(line, label));
-        collecting = true;
-      }
-      continue;
-    }
-    if (isOperationNextLabelLine(line, nextLabels)) {
-      break;
-    }
-    out.push(line);
-  }
-  return trimText(out.join("\n"));
+var lines = [];
+var i = 0;
+var line = "";
+var out = [];
+var collecting = false;
+text = normalizeText(String(text || ""));
+nextLabels = nextLabels || [];
+lines = text.split("\n");
+for (i = 0; i < lines.length; i++) {
+line = stripOperationLinePrefix(lines[i]);
+if (!collecting) {
+if (lineStartsWithOperationLabel(line, label)) {
+out.push(removeOperationLabelPrefix(line, label));
+collecting = true;
+}
+continue;
+}
+if (isOperationNextLabelLine(line, nextLabels)) {
+break;
+}
+out.push(line);
+}
+return trimText(out.join("\n"));
 }
 function cleanOperationField(value) {
-  var lines = [];
-  var out = [];
-  var i = 0;
-  var line = "";
-  value = normalizeText(String(value || ""));
-  lines = value.split("\n");
-  for (i = 0; i < lines.length; i++) {
-    line = trimText(lines[i]);
-    if (line == "") continue;
-    line = line.replace(/^\s*[:：]\s*/, "");
-    line = line.replace(/^\s*[-]\s*/, "");
-    line = line.replace(/^\s*\([^)]*\)\s*/, "");
-    line = line.replace(/^\s*（[^）]*）\s*/, "");
-    line = line.replace(/^\s*[:：]\s*/, "");
-    line = line.replace(/^\s*[-]\s*/, "");
-    line = trimText(line);
-    if (line == "") continue;
-    line = trimText(line.replace(/\s*\*\s*EX\)?[\s\S]*$/i, ""));
-    line = trimText(line.replace(/\s*\*\s*예시[\s\S]*$/i, ""));
-    line = trimText(line.replace(/\s*\*\s*선택\s*:?[\s\S]*$/i, ""));
-    line = trimText(line.replace(/\s*\*\s*특별한\s*사유\s*없이는[\s\S]*$/i, ""));
-    if (line == "") continue;
-    if (/^\*\s*EX\)?/i.test(line)) continue;
-    if (/^\*\s*예시/i.test(line)) continue;
-    if (/^\*\s*선택\s*:?/i.test(line)) continue;
-    if (/^\*\s*특별한\s*사유\s*없이는/i.test(line)) continue;
-    if (/^\(?\s*소통방\s*,\s*구인방\s*,\s*디코\s*\)?$/.test(line)) continue;
-    if (/^\(?\s*게임명\s*적기\s*\)?$/.test(line)) continue;
-    if (/^\(?\s*장기\s*,\s*단기\s*,\s*특정\s*게임.*\)?$/.test(line)) continue;
-    out.push(line);
-  }
-  return trimText(out.join("\n"));
+var lines = [];
+var out = [];
+var i = 0;
+var line = "";
+value = normalizeText(String(value || ""));
+lines = value.split("\n");
+for (i = 0; i < lines.length; i++) {
+line = trimText(lines[i]);
+if (line == "") continue;
+line = line.replace(/^\s*[:：]\s*/, "");
+line = line.replace(/^\s*[-]\s*/, "");
+line = line.replace(/^\s*\([^)]*\)\s*/, "");
+line = line.replace(/^\s*（[^）]*）\s*/, "");
+line = line.replace(/^\s*[:：]\s*/, "");
+line = line.replace(/^\s*[-]\s*/, "");
+line = trimText(line);
+if (line == "") continue;
+line = trimText(line.replace(/\s*\*\s*EX\)?[\s\S]*$/i, ""));
+line = trimText(line.replace(/\s*\*\s*예시[\s\S]*$/i, ""));
+line = trimText(line.replace(/\s*\*\s*선택\s*:?[\s\S]*$/i, ""));
+line = trimText(line.replace(/\s*\*\s*특별한\s*사유\s*없이는[\s\S]*$/i, ""));
+if (line == "") continue;
+if (/^\*\s*EX\)?/i.test(line)) continue;
+if (/^\*\s*예시/i.test(line)) continue;
+if (/^\*\s*선택\s*:?/i.test(line)) continue;
+if (/^\*\s*특별한\s*사유\s*없이는/i.test(line)) continue;
+if (/^\(?\s*소통방\s*,\s*구인방\s*,\s*디코\s*\)?$/.test(line)) continue;
+if (/^\(?\s*게임명\s*적기\s*\)?$/.test(line)) continue;
+if (/^\(?\s*장기\s*,\s*단기\s*,\s*특정\s*게임.*\)?$/.test(line)) continue;
+out.push(line);
+}
+return trimText(out.join("\n"));
 }
 function hasRealOperationValue(value) {
-  value = cleanOperationField(value);
-  if (value == "") return false;
-  if (/^[.:：\-_/()（）\[\]{}\s]+$/.test(value)) return false;
-  return true;
+value = cleanOperationField(value);
+if (value == "") return false;
+if (/^[.:：\-_/()（）\[\]{}\s]+$/.test(value)) return false;
+return true;
 }
 function detectOperationFormType(text) {
-  text = normalizeText(String(text || ""));
-  if (includesAllKeywords(text, ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"])) {
-    return "friends";
-  }
-  if (includesAllKeywords(text, ["본인 이름 및 닉네임", "건의 사유", "건의 내용"])) {
-    return "suggestions";
-  }
-  if (includesAllKeywords(text, ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"])) {
-    return "meetups";
-  }
-  if (includesAllKeywords(text, ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"])) {
-    return "leaves";
-  }
-  return "";
+text = normalizeText(String(text || ""));
+if (includesAllKeywords(text, ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"])) {
+return "friends";
+}
+if (includesAllKeywords(text, ["본인 이름 및 닉네임", "건의 사유", "건의 내용"])) {
+return "suggestions";
+}
+if (includesAllKeywords(text, ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"])) {
+return "meetups";
+}
+if (includesAllKeywords(text, ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"])) {
+return "leaves";
+}
+return "";
 }
 function isOperationFormMessage(text) {
-  var values = [];
-  var formType = "";
-  text = normalizeText(String(text || ""));
-  formType = detectOperationFormType(text);
-  if (formType == "friends") {
-    values = [
-      readOperationField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]),
-      readOperationField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]),
-      readOperationField(text, "이용기간", ["디스코드 닉네임 변경"])
-    ];
-    return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]);
-  }
-  if (formType == "suggestions") {
-    values = [
-      readOperationField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]),
-      readOperationField(text, "건의 사유", ["건의 내용"]),
-      readOperationField(text, "건의 내용", [])
-    ];
-    return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]);
-  }
-  if (formType == "meetups") {
-    values = [
-      readOperationField(text, "주최자 이름 및 닉네임", ["일자", "장소", "참여자 명단"]),
-      readOperationField(text, "일자", ["장소", "참여자 명단"]),
-      readOperationField(text, "장소", ["참여자 명단"]),
-      readOperationField(text, "참여자 명단", [])
-    ];
-    return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]) && hasRealOperationValue(values[3]);
-  }
-  if (formType == "leaves") {
-    values = [
-      readOperationField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]),
-      readOperationField(text, "외출기간", ["외출사유", "외출범위"]),
-      readOperationField(text, "외출사유", ["외출범위"])
-    ];
-    return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]);
-  }
-  return false;
+var values = [];
+var formType = "";
+text = normalizeText(String(text || ""));
+formType = detectOperationFormType(text);
+if (formType == "friends") {
+values = [
+readOperationField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]),
+readOperationField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]),
+readOperationField(text, "이용기간", ["디스코드 닉네임 변경"])
+];
+return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]);
+}
+if (formType == "suggestions") {
+values = [
+readOperationField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]),
+readOperationField(text, "건의 사유", ["건의 내용"]),
+readOperationField(text, "건의 내용", [])
+];
+return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]);
+}
+if (formType == "meetups") {
+values = [
+readOperationField(text, "주최자 이름 및 닉네임", ["일자", "장소", "참여자 명단"]),
+readOperationField(text, "일자", ["장소", "참여자 명단"]),
+readOperationField(text, "장소", ["참여자 명단"]),
+readOperationField(text, "참여자 명단", [])
+];
+return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]) && hasRealOperationValue(values[3]);
+}
+if (formType == "leaves") {
+values = [
+readOperationField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]),
+readOperationField(text, "외출기간", ["외출사유", "외출범위"]),
+readOperationField(text, "외출사유", ["외출범위"])
+];
+return hasRealOperationValue(values[0]) && hasRealOperationValue(values[1]) && hasRealOperationValue(values[2]);
+}
+return false;
 }
 function normalizeText(text) {
-  text = String(text || "");
-  text = text.replace(/\r/g, "\n");
-  text = text.replace(/　/g, " ");
-  text = text.replace(/\u00A0/g, " ");
-  text = text.replace(/／/g, "/");
-  text = text.replace(/，/g, ",");
-  text = text.replace(/：/g, ":");
-  text = text.replace(/–/g, "-");
-  text = text.replace(/—/g, "-");
-  text = text.replace(/０/g, "0");
-  text = text.replace(/１/g, "1");
-  text = text.replace(/２/g, "2");
-  text = text.replace(/３/g, "3");
-  text = text.replace(/４/g, "4");
-  text = text.replace(/５/g, "5");
-  text = text.replace(/６/g, "6");
-  text = text.replace(/７/g, "7");
-  text = text.replace(/８/g, "8");
-  text = text.replace(/９/g, "9");
-  text = text.replace(/\n{3,}/g, "\n\n");
-  return text;
+text = String(text || "");
+text = text.replace(/\r/g, "\n");
+text = text.replace(/　/g, " ");
+text = text.replace(/\u00A0/g, " ");
+text = text.replace(/／/g, "/");
+text = text.replace(/，/g, ",");
+text = text.replace(/：/g, ":");
+text = text.replace(/–/g, "-");
+text = text.replace(/—/g, "-");
+text = text.replace(/０/g, "0");
+text = text.replace(/１/g, "1");
+text = text.replace(/２/g, "2");
+text = text.replace(/３/g, "3");
+text = text.replace(/４/g, "4");
+text = text.replace(/５/g, "5");
+text = text.replace(/６/g, "6");
+text = text.replace(/７/g, "7");
+text = text.replace(/８/g, "8");
+text = text.replace(/９/g, "9");
+text = text.replace(/\n{3,}/g, "\n\n");
+return text;
 }
 function trimText(text) {
-  text = String(text || "");
-  text = text.replace(/^\s+/, "");
-  text = text.replace(/\s+$/, "");
-  return text;
+text = String(text || "");
+text = text.replace(/^\s+/, "");
+text = text.replace(/\s+$/, "");
+return text;
 }
 function normalizeCommandText(text) {
-  text = normalizeText(String(text || ""));
-  text = trimText(text);
-  text = text.replace(/\s+/g, "");
-  return text;
+text = normalizeText(String(text || ""));
+text = trimText(text);
+text = text.replace(/\s+/g, "");
+return text;
 }
 function makeHash(text) {
-  var h = 0;
-  var i = 0;
-  text = normalizeText(String(text || ""));
-  for (i = 0; i < text.length; i++) {
-    h = ((h << 5) - h) + text.charCodeAt(i);
-    h = h & h;
-  }
-  return String(h);
+var h = 0;
+var i = 0;
+text = normalizeText(String(text || ""));
+for (i = 0; i < text.length; i++) {
+h = ((h << 5) - h) + text.charCodeAt(i);
+h = h & h;
+}
+return String(h);
 }
 function isRegistrationHubCommand(text) {
-  var normalized = normalizeCommandText(text);
-  return normalized == "등록" ||
-    normalized == "/등록" ||
-    normalized == "등록도움말" ||
-    normalized == "/등록도움말";
+var normalized = normalizeCommandText(text);
+return normalized == "등록" ||
+normalized == "/등록" ||
+normalized == "등록도움말" ||
+normalized == "/등록도움말";
 }
 function isGuidedRegistrationShortcut(text) {
-  var normalized = normalizeCommandText(text);
-  return normalized == "내전등록" ||
-    normalized == "/내전등록" ||
-    normalized == "결과등록" ||
-    normalized == "/결과등록" ||
-    normalized == "내전결과" ||
-    normalized == "/내전결과" ||
-    normalized == "내전등록현황" ||
-    normalized == "/내전등록현황" ||
-    normalized == "경고등록" ||
-    normalized == "/경고등록" ||
-    normalized == "경고" ||
-    normalized == "/경고" ||
-    normalized == "인증" ||
-    normalized == "/인증" ||
-    normalized == "경고인증" ||
-    normalized == "/경고인증" ||
-    normalized == "경고현황" ||
-    normalized == "/경고현황" ||
-    normalized == "결과현황" ||
-    normalized == "/결과현황";
+var normalized = normalizeCommandText(text);
+return normalized == "내전등록" ||
+normalized == "/내전등록" ||
+normalized == "결과등록" ||
+normalized == "/결과등록" ||
+normalized == "내전결과" ||
+normalized == "/내전결과" ||
+normalized == "내전등록현황" ||
+normalized == "/내전등록현황" ||
+normalized == "경고등록" ||
+normalized == "/경고등록" ||
+normalized == "경고" ||
+normalized == "/경고" ||
+normalized == "인증" ||
+normalized == "/인증" ||
+normalized == "경고인증" ||
+normalized == "/경고인증" ||
+normalized == "경고현황" ||
+normalized == "/경고현황" ||
+normalized == "결과현황" ||
+normalized == "/결과현황";
 }
 function getRegistrationHubNotice() {
-  var n = "\n";
-  return (
-    "[K-LOL.GG 쉬운 등록 센터]" + n +
-    "처음 사용하셔도 괜찮아요. 필요한 항목의 링크를 누르면 됩니다." + n +
-    "▶ " + WEB_REGISTRATION_HUB_URL + n +
-    "" + n +
-    "① 내전 결과 등록" + n +
-    "경기 정보와 결과 사진 2~3장을 한 화면에서 제출합니다." + n +
-    "▶ " + WEB_INHOUSE_RESULT_UPLOAD_URL + n +
-    "" + n +
-    "② 주의·경고·벤 등록 (관리자)" + n +
-    "대상 검색부터 사유·근거 사진 등록까지 한 화면에서 처리합니다." + n +
-    "▶ " + WEB_ADMIN_DISCIPLINE_CREATE_URL + n +
-    "※ 관리자 로그인이 필요하며, 권한이 없으면 등록할 수 없습니다." + n +
-    "" + n +
-    "③ 경고 차감 사진 제출" + n +
-    "본인의 진행 과제를 선택하고 남은 사진을 한 번에 제출합니다." + n +
-    "▶ " + WEB_DISCIPLINE_EVIDENCE_URL + n +
-    "※ 본인 계정 로그인이 필요합니다." + n +
-    "" + n +
-    "등록과 사진 제출은 로그인한 본인 계정 기준으로 처리됩니다."
-  );
+var n = "\n";
+return (
+"[K-LOL.GG 쉬운 등록 센터]" + n +
+"처음 사용하셔도 괜찮아요. 필요한 항목의 링크를 누르면 됩니다." + n +
+"▶ " + WEB_REGISTRATION_HUB_URL + n +
+"" + n +
+"① 내전 결과 등록" + n +
+"경기 정보와 결과 사진 2~3장을 한 화면에서 제출합니다." + n +
+"▶ " + WEB_INHOUSE_RESULT_UPLOAD_URL + n +
+"" + n +
+"② 주의·경고·벤 등록 (관리자)" + n +
+"대상 검색부터 사유·근거 사진 등록까지 한 화면에서 처리합니다." + n +
+"▶ " + WEB_ADMIN_DISCIPLINE_CREATE_URL + n +
+"※ 관리자 로그인이 필요하며, 권한이 없으면 등록할 수 없습니다." + n +
+"" + n +
+"③ 경고 차감 사진 제출" + n +
+"본인의 진행 과제를 선택하고 남은 사진을 한 번에 제출합니다." + n +
+"▶ " + WEB_DISCIPLINE_EVIDENCE_URL + n +
+"※ 본인 계정 로그인이 필요합니다." + n +
+"" + n +
+"등록과 사진 제출은 로그인한 본인 계정 기준으로 처리됩니다."
+);
 }
 function getGuidedInhouseRegistrationNotice() {
-  var n = "\n";
-  return (
-    "[K-LOL.GG 내전 결과 등록]" + n +
-    "가장 쉬운 등록 방법을 안내합니다." + n +
-    "" + n +
-    "1. 아래 링크를 엽니다." + n +
-    "2. 세트 수·회차·팀 밸런스를 확인합니다." + n +
-    "3. 결과 사진 2~3장을 한 번에 올리고 제출합니다." + n +
-    "" + n +
-    "▶ " + WEB_INHOUSE_RESULT_UPLOAD_URL + n +
-    "" + n +
-    "로그인하면 진행 중인 제출을 자동으로 찾아 이어서 할 수 있습니다."
-  );
+var n = "\n";
+return (
+"[K-LOL.GG 내전 결과 등록]" + n +
+"가장 쉬운 등록 방법을 안내합니다." + n +
+"" + n +
+"1. 아래 링크를 엽니다." + n +
+"2. 세트 수·회차·팀 밸런스를 확인합니다." + n +
+"3. 결과 사진 2~3장을 한 번에 올리고 제출합니다." + n +
+"" + n +
+"▶ " + WEB_INHOUSE_RESULT_UPLOAD_URL + n +
+"" + n +
+"로그인하면 진행 중인 제출을 자동으로 찾아 이어서 할 수 있습니다."
+);
 }
 function getGuidedDisciplineRegistrationNotice() {
-  var n = "\n";
-  return (
-    "[K-LOL.GG 관리자 경고 등록]" + n +
-    "관리자 화면에서 대상 검색 → 종류 선택 → 사유·사진 등록 순서로 진행합니다." + n +
-    "" + n +
-    "▶ " + WEB_ADMIN_DISCIPLINE_CREATE_URL + n +
-    "" + n +
-    "※ 관리자 로그인과 2차 인증이 필요하며, 완료 후 이 화면으로 돌아옵니다."
-  );
+var n = "\n";
+return (
+"[K-LOL.GG 관리자 경고 등록]" + n +
+"관리자 화면에서 대상 검색 → 종류 선택 → 사유·사진 등록 순서로 진행합니다." + n +
+"" + n +
+"▶ " + WEB_ADMIN_DISCIPLINE_CREATE_URL + n +
+"" + n +
+"※ 관리자 로그인과 2차 인증이 필요하며, 완료 후 이 화면으로 돌아옵니다."
+);
 }
 function getGuidedEvidenceNotice() {
-  return (
-    "[K-LOL.GG 경고 차감 사진 제출]\n" +
-    "사이트에 로그인하면 본인의 진행 과제만 자동으로 표시됩니다.\n" +
-    "로그인 계정 기준으로 남은 사진을 한 번에 제출할 수 있습니다.\n\n" +
-    "▶ " + WEB_DISCIPLINE_EVIDENCE_URL
-  );
+return (
+"[K-LOL.GG 경고 차감 사진 제출]\n" +
+"사이트에 로그인하면 본인의 진행 과제만 자동으로 표시됩니다.\n" +
+"로그인 계정 기준으로 남은 사진을 한 번에 제출할 수 있습니다.\n\n" +
+"▶ " + WEB_DISCIPLINE_EVIDENCE_URL
+);
 }
 function getGuidedDisciplineStatusNotice() {
-  return (
-    "[K-LOL.GG 내 경고 현황]\n" +
-    "내정보에서 경고 상태와 남은 사진 수를 확인하세요.\n\n" +
-    "▶ " + WEB_ACCOUNT_DISCIPLINE_URL
-  );
+return (
+"[K-LOL.GG 내 경고 현황]\n" +
+"내정보에서 경고 상태와 남은 사진 수를 확인하세요.\n\n" +
+"▶ " + WEB_ACCOUNT_DISCIPLINE_URL
+);
 }
 function getGuidedInhouseStatusNotice() {
-  return (
-    "[K-LOL.GG 내전 결과 제출 현황]\n" +
-    "사이트에 로그인하면 진행 중인 내 제출을 자동으로 확인할 수 있습니다.\n\n" +
-    "▶ " + WEB_INHOUSE_RESULT_UPLOAD_URL
-  );
+return (
+"[K-LOL.GG 내전 결과 제출 현황]\n" +
+"사이트에 로그인하면 진행 중인 내 제출을 자동으로 확인할 수 있습니다.\n\n" +
+"▶ " + WEB_INHOUSE_RESULT_UPLOAD_URL
+);
 }
 function handleGuidedRegistrationShortcut(text, replier) {
-  var normalized = normalizeCommandText(text);
-  if (normalized == "내전등록" || normalized == "/내전등록" ||
-      normalized == "결과등록" || normalized == "/결과등록" ||
-      normalized == "내전결과" || normalized == "/내전결과") {
-    replier.reply(getGuidedInhouseRegistrationNotice());
-    return;
-  }
-  if (normalized == "경고등록" || normalized == "/경고등록" ||
-      normalized == "경고" || normalized == "/경고") {
-    replier.reply(getGuidedDisciplineRegistrationNotice());
-    return;
-  }
-  if (normalized == "인증" || normalized == "/인증" ||
-      normalized == "경고인증" || normalized == "/경고인증") {
-    replier.reply(getGuidedEvidenceNotice());
-    return;
-  }
-  if (normalized == "경고현황" || normalized == "/경고현황") {
-    replier.reply(getGuidedDisciplineStatusNotice());
-    return;
-  }
-  replier.reply(getGuidedInhouseStatusNotice());
+var normalized = normalizeCommandText(text);
+if (normalized == "내전등록" || normalized == "/내전등록" ||
+normalized == "결과등록" || normalized == "/결과등록" ||
+normalized == "내전결과" || normalized == "/내전결과") {
+replier.reply(getGuidedInhouseRegistrationNotice());
+return;
+}
+if (normalized == "경고등록" || normalized == "/경고등록" ||
+normalized == "경고" || normalized == "/경고") {
+replier.reply(getGuidedDisciplineRegistrationNotice());
+return;
+}
+if (normalized == "인증" || normalized == "/인증" ||
+normalized == "경고인증" || normalized == "/경고인증") {
+replier.reply(getGuidedEvidenceNotice());
+return;
+}
+if (normalized == "경고현황" || normalized == "/경고현황") {
+replier.reply(getGuidedDisciplineStatusNotice());
+return;
+}
+replier.reply(getGuidedInhouseStatusNotice());
 }
 function handleSiteFirstManagedWorkflow(text, replier) {
-  text = trimText(normalizeText(String(text || "")));
-  if (text.indexOf("경고현황") >= 0) {
-    replier.reply(getGuidedDisciplineStatusNotice());
-    return;
-  }
-  if (text.indexOf("인증") >= 0) {
-    replier.reply(getGuidedEvidenceNotice());
-    return;
-  }
-  if (text.indexOf("내전등록현황") >= 0 || text.indexOf("결과현황") >= 0 ||
-      /^\/내전현황\s+/i.test(text)) {
-    replier.reply(getGuidedInhouseStatusNotice());
-    return;
-  }
-  if (text.indexOf("내전등록") >= 0 || text.indexOf("내전결과") >= 0 ||
-      text.indexOf("결과등록") >= 0 || (text.charAt(0) == "[" && text.indexOf("내전") >= 0)) {
-    replier.reply(getGuidedInhouseRegistrationNotice());
-    return;
-  }
-  if (text.indexOf("경고") >= 0 || (text.charAt(0) == "[" && text.indexOf("징계") >= 0)) {
-    replier.reply(getGuidedDisciplineRegistrationNotice());
-    return;
-  }
-  replier.reply(getRegistrationHubNotice());
+text = trimText(normalizeText(String(text || "")));
+if (text.indexOf("경고현황") >= 0) {
+replier.reply(getGuidedDisciplineStatusNotice());
+return;
+}
+if (text.indexOf("인증") >= 0) {
+replier.reply(getGuidedEvidenceNotice());
+return;
+}
+if (text.indexOf("내전등록현황") >= 0 || text.indexOf("결과현황") >= 0 ||
+/^\/내전현황\s+/i.test(text)) {
+replier.reply(getGuidedInhouseStatusNotice());
+return;
+}
+if (text.indexOf("내전등록") >= 0 || text.indexOf("내전결과") >= 0 ||
+text.indexOf("결과등록") >= 0 || (text.charAt(0) == "[" && text.indexOf("내전") >= 0)) {
+replier.reply(getGuidedInhouseRegistrationNotice());
+return;
+}
+if (text.indexOf("경고") >= 0 || (text.charAt(0) == "[" && text.indexOf("징계") >= 0)) {
+replier.reply(getGuidedDisciplineRegistrationNotice());
+return;
+}
+replier.reply(getRegistrationHubNotice());
 }
 function isManagedWorkflowMessage(text) {
-  text = trimText(normalizeText(String(text || "")));
-  return text == "/경고" || text == "경고" ||
-    text == "/내전등록" || text == "내전등록" ||
-    text == "/내전결과" || text == "내전결과" ||
-    text == "/결과등록" || text == "결과등록" ||
-    text == "/사진취소" || text == "사진취소" ||
-    /^\/?(?:경고|경고등록)\s+/.test(text) ||
-    /^\/?(?:내전등록|결과등록|내전결과)\s+/.test(text) ||
-    (text.charAt(0) == "[" && text.indexOf("양식") >= 0 && text.indexOf(" v") >= 0) ||
-    text == "/경고현황" || text == "경고현황" ||
-    text == "/경고인증" || text == "경고인증" ||
-    text == "/인증" || text == "인증" ||
-    text == "/내전등록현황" || text == "내전등록현황" ||
-    text == "/결과현황" || text == "결과현황" ||
-    text.indexOf("/경고현황 ") === 0 ||
-    text.indexOf("/경고인증 ") === 0 ||
-    text.indexOf("경고현황 ") === 0 ||
-    text.indexOf("경고인증 ") === 0 ||
-    text.indexOf("/인증 ") === 0 ||
-    text.indexOf("인증 ") === 0 ||
-    text.indexOf("/경고인증완료 ") === 0 ||
-    text.indexOf("/내전등록현황 ") === 0 ||
-    text.indexOf("내전등록현황 ") === 0 ||
-    text.indexOf("/결과현황 ") === 0 ||
-    text.indexOf("결과현황 ") === 0 ||
-    /^\/내전현황\s+MR[A-F0-9]{10}$/i.test(text);
+text = trimText(normalizeText(String(text || "")));
+return text == "/경고" || text == "경고" ||
+text == "/내전등록" || text == "내전등록" ||
+text == "/내전결과" || text == "내전결과" ||
+text == "/결과등록" || text == "결과등록" ||
+text == "/사진취소" || text == "사진취소" ||
+/^\/?(?:경고|경고등록)\s+/.test(text) ||
+/^\/?(?:내전등록|결과등록|내전결과)\s+/.test(text) ||
+(text.charAt(0) == "[" && text.indexOf("양식") >= 0 && text.indexOf(" v") >= 0) ||
+text == "/경고현황" || text == "경고현황" ||
+text == "/경고인증" || text == "경고인증" ||
+text == "/인증" || text == "인증" ||
+text == "/내전등록현황" || text == "내전등록현황" ||
+text == "/결과현황" || text == "결과현황" ||
+text.indexOf("/경고현황 ") === 0 ||
+text.indexOf("/경고인증 ") === 0 ||
+text.indexOf("경고현황 ") === 0 ||
+text.indexOf("경고인증 ") === 0 ||
+text.indexOf("/인증 ") === 0 ||
+text.indexOf("인증 ") === 0 ||
+text.indexOf("/경고인증완료 ") === 0 ||
+text.indexOf("/내전등록현황 ") === 0 ||
+text.indexOf("내전등록현황 ") === 0 ||
+text.indexOf("/결과현황 ") === 0 ||
+text.indexOf("결과현황 ") === 0 ||
+/^\/내전현황\s+MR[A-F0-9]{10}$/i.test(text);
 }
 function isImagePlaceholderMessage(text) {
-  text = trimText(normalizeText(String(text || "")));
-  return text == "사진" || text == "[사진]" || text == "Photo" || text == "photo";
+text = trimText(normalizeText(String(text || "")));
+return text == "사진" || text == "[사진]" || text == "Photo" || text == "photo";
 }
 var isOperationFormCompleteMessage = isOperationFormMessage;
 isOperationFormMessage = isOperationFormCandidateMessage;
@@ -1766,15 +1788,21 @@ isPartyRecruitFormMessage = function (text) {
 if (isSeasonApplySnapshotEnvelope(text)) return false;
 return isPartyRecruitFormMessageWithoutSeasonSnapshot(text) || isPartyMetadataActivationForm(text);
 };
-var v1PartyHelp = getPartyRecruitHelpNotice;
 getPartyRecruitHelpNotice = function () {
-return v1PartyHelp().replace(
-  "현황: 구인현황\n종료: 번호ㅉ",
-  "주최자 입력 후 전송\n현황: 구인현황\n상세 번호 추가/삭제 이름\n종료: 번호ㅉ"
-).replace(
-  "현황: 내전현황\n매일 오전 6시 자동 종료",
-  "현황: 내전현황\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\n매일 오전 6시 자동 종료"
-);
+return "[K-LOL.GG 구인 도움말]\n\n참가하기\n1. 최근 봇 명단 전체 복사\n2. 빈칸에 내 이름 입력\n3. 메시지 전체 전송 = 저장\n\n" +
+  "내전은 사이트에 등록한 이름으로 작성해 주세요.\n봇의 저장 결과를 확인하고, 다음 사람은 새 명단을 복사해 주세요.\n다른 사람 이름과 양식코드는 그대로 두세요.\n\n" +
+  "새 모집 만들기\n파티: 5인파티 / 내전: 내전구인\n\n" +
+  "파티: 구인현황 / 상세 번호 / 종료: 번호ㅉ\n내전: 내전현황 / 내전상세 번호 / 종료: 내전 번호ㅉ\n내전은 매일 오전 6시 자동 종료됩니다.\n\n" +
+  "취소·수정이 필요할 때\n상세 번호 추가/삭제 이름\n내전상세 번호 추가/삭제 이름\n내전상세 번호 수정/예비추가/예비삭제 이름/라인";
+};
+var v1UnifiedHelp = getUnifiedHelpNotice;
+getUnifiedHelpNotice = function () {
+return v1UnifiedHelp().replace("LOL-K 기능", "파티·내전 참가\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\n내전은 사이트에 등록한 이름을 사용해 주세요.\n새 모집 만들기: 5인파티 / 내전구인\n자세한 사용법: 구인도움말\n\nLOL-K 기능")
+  .replace("구인구직 명령어는 구인도움말을 입력해주세요.\n스크림구인은 /스크림구인, /스크림현황을 사용해주세요.\n\n", "");
+};
+getParticipationGuideNotice = function () {
+return "[K-LOL.GG 내전 참가 방법 안내]\n\n1. 최근 봇 명단 전체 복사\n2. 빈칸에 내 이름 입력\n3. 메시지 전체 전송 = 저장\n\n" +
+  "사이트에 등록한 이름을 사용하고 봇의 저장 결과를 확인해 주세요.\n다른 사람 이름과 양식코드는 그대로 두세요.\n명단 찾기: 내전현황 → 내전상세 번호\n새 모집 만들기: 내전구인\n티어·라인 정보는 사이트 연동 정보를 사용하며 양식에 추가 작성할 수 있습니다.";
 };
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
 KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);
@@ -1788,6 +1816,10 @@ var guardedReplier = {
   }
 };
 var localText = String(msg || "");
+if (isRetiredScrimInput(localText)) {
+  if (!isKlolBotEchoSender(sender)) guardedReplier.reply("[K-LOL.GG 스크림 기능 종료]\n카카오톡 스크림 기능은 종료되었습니다.\n파티는 5인파티, 내전은 내전구인을 입력해 주세요.");
+  return;
+}
 if (localText.indexOf("들어왔습니다") >= 0) return;
 if (String(sender || "") === "오픈채팅봇" && localText.replace(/[ \t]/g, "").indexOf("입장시할일") >= 0) {
   var joinTone = [["💜 반가워요! K-LOL에 오신 걸 환영해요 😊","앞으로 즐겁게 함께해요 💕"],["📌 K-LOL 안내","확인 감사합니다. 즐거운 시간 보내세요."],["🎮 K-LOL 합류 준비 완료!","준비 끝! 오늘도 즐겜해요 🔥"],["😎 입장 전 간단 퀘스트!","퀘스트 완료! 같이 달려봐요 🎉"]][Math.floor(Math.random() * 4)];
@@ -1796,8 +1828,9 @@ if (String(sender || "") === "오픈채팅봇" && localText.replace(/[ \t]/g, ""
 }
 KLOL_V1_OPERATION_RAW_TEXT = String(msg || "");
 try {
-  if (/^\/?(?:내전|스크림)[ \t]+[1-9]\d{0,2}[ \t]*ㅉ$/.test(msg)) {
-    handlePartyRecruitApi("", room, msg, sender, guardedReplier, "", msg.indexOf("내전") >= 0 ? "FEATURES" : "RECRUIT");
+  if (handleCopyRosterForm(msg, room, sender, guardedReplier)) return;
+  if (/^\/?내전[ \t]+[1-9]\d{0,2}[ \t]*ㅉ$/.test(msg)) {
+    handlePartyRecruitApi("", room, msg, sender, guardedReplier, "", "FEATURES");
     return;
   }
   if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;

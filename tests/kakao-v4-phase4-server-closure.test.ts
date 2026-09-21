@@ -65,14 +65,17 @@ test("[P4-S01] every public fixture alias has a local reply or canonical dispatc
 test("[P4-S02] server fallback gives exact local help, photo guidance, and no-mutation preview notices", async () => {
   const service = new KakaoV4CommandService(authorizer);
   const cases = [
-    ["FEATURES", "도움말", fixture.exactReplies.generalHelp],
-    ["RECRUIT", "구인도움말", fixture.exactReplies.recruitHelp],
     ["RECRUIT", "구인도우미", fixture.exactReplies.recruitWebHelp],
   ] as const;
   let serial = 1;
   for (const [profileId, text, expected] of cases) {
     const result = await service.execute(envelope(profileId, text, serial++), "current");
     assert.equal(result.reply, expected);
+  }
+  for (const [profileId, text] of [["FEATURES", "도움말"], ["RECRUIT", "구인도움말"]] as const) {
+    const result = await service.execute(envelope(profileId, text, serial++), "current");
+    assert.match(result.reply, /메시지 전체 전송 = 저장/u);
+    assert.doesNotMatch(result.reply, /스크림/u);
   }
   const photo = await service.execute(envelope("FEATURES", "사진상태", serial++), "current");
   assert.match(photo.reply, /사이트에 로그인해 사진을 제출/u);

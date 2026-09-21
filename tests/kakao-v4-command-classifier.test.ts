@@ -216,6 +216,16 @@ test("party snapshot accepts metadata-only activation fields and legacy particip
   }
 });
 
+test("R23 scrim retirement is structural and does not capture ordinary party names or game information", () => {
+  const form = LEGACY_PARTY_TEMPLATE.replace(/게임정보\s*:[^\n]*/u, "게임정보 : 스크림").replace(/\n1\.[^\n]*/u, "\n1. 스크림");
+  for (const text of [form, "상세 1 추가 스크림"]) {
+    const result = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+    assert.notEqual(result.kind, "UNKNOWN", text);
+    if (result.kind !== "UNKNOWN") assert.equal(result.family, "PARTY", text);
+  }
+  assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text: "오늘 스크림 하고 싶다" }).kind, "UNKNOWN");
+});
+
 test("party member mutations require an explicit detail prefix and one safe single-line name", () => {
   const accepted = [
     ["상세 15 추가 재현", "PARTY_MEMBER_ADD", "재현"],

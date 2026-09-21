@@ -1,0 +1,22 @@
+[r24-migration] isolated PostgreSQL 18; safe sanitized environment; loopback generated klol_v2_test database; no production credentials loaded
+[r24-migration] disposable cluster stopped and verified workspace directory removed
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+17 !== 8
+
+    at runR24MigrationCheck (E:\k-LOL.GG\worktrees\kakao-v4-gateway\.tmp\r24-migration-check.ts:494:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (E:\k-LOL.GG\worktrees\kakao-v4-gateway\.tmp\r24-migration-check.ts:522:1) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 17,
+  expected: 8,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.1

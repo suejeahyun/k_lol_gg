@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
 import test from "node:test";
 
-import { KakaoV4CommandError, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
+import { KAKAO_V4_SCRIM_RETIRED_REPLY, KakaoV4CommandError, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
+import { canonicalizeKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
+import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
+import type { KakaoV4CommandDispatcher } from "../src/modules/recruiting/kakao-v4/dispatcher";
 import {
   KAKAO_V4_COMMAND_CONTRACT,
   KAKAO_V1_STRICT_PROTOCOL,
@@ -125,6 +128,70 @@ test("hot replay cache binds the verified raw request digest", async () => {
     () => service.execute(envelope, "current", { ...metadata, requestDigestHex: "b".repeat(64) }),
     (error) => error instanceof KakaoV4CommandError && error.code === "IDEMPOTENCY_MISMATCH",
   );
+});
+
+test("R23 retires every old-phone scrim command and form without dispatching or writing", async () => {
+  let dispatches = 0;
+  const service = new KakaoV4CommandService({
+    async authorizeProfile(input) {
+      return { roomId: "00000000-0000-4000-8000-000000000001", roomStatus: "ACTIVE", capabilityProfile: input.requiredCapabilityProfile, installationId: "00000000-0000-4000-8000-000000000002" };
+    },
+  }, {
+    async dispatch() {
+      dispatches += 1;
+      throw new Error("Retired scrim input reached a mutation-capable dispatcher");
+    },
+  } as unknown as KakaoV4CommandDispatcher);
+  const inputs = [
+    "스크림구인", "스크림모집", "멸망전스크림", "멸망전 스크림 모집", "스크림현황", "멸망전스크림목록",
+    "스크림상세 1", "스크림상세 1 추가 지후", "스크림상세 1 삭제 지후", "스크림 1ㅉ",
+    "스크림참가 1 지후", "스크림확정 1", "스크림취소 1", "스크림마감 1", "스크림종료 1",
+    "[K-LOL.GG 스크림 구인 양식]\n운영일: 2026-09-20\n번호: #1\n우리팀: A\n상대팀: B\nTOP. 지후",
+    "[K-LOL.GG 멸망전 스크림 상세]\n우리팀: A\n상대팀: B",
+    "[KLOL.GG스크림구인양식]\n우리팀: A\n상대팀: B",
+  ];
+  for (const [index, text] of inputs.entries()) {
+    for (const prefix of ["", "/"]) {
+      const request = { ...envelope, eventId: `event-scrim-r23-${index}-${prefix ? 1 : 0}`, text: `${prefix}${text}` };
+      const result = await service.execute(request, "current");
+      assert.equal(result.reply, KAKAO_V4_SCRIM_RETIRED_REPLY, request.text);
+      assert.equal((await service.execute(request, "current")).replayed, true);
+      const classification = classifyKakaoV4Command(request);
+      const command = canonicalizeKakaoV4Command(classification, request);
+      if (command) {
+        assert.equal(command.domain, "SCRIM");
+        const canonicalResult = await service.executeCanonical({ envelope: request, keyId: "current", requestDigestHex: "a".repeat(64), requestId: request.eventId, command });
+        assert.equal(canonicalResult.legacyReply, KAKAO_V4_SCRIM_RETIRED_REPLY);
+      }
+    }
+  }
+  assert.equal(dispatches, 0);
+});
+
+test("R24 server help separates adding a name from initial party settings and inhouse mode choice", async () => {
+  const service = new KakaoV4CommandService({
+    async authorizeProfile(input) {
+      return { roomId: "00000000-0000-4000-8000-000000000001", roomStatus: "ACTIVE", capabilityProfile: input.requiredCapabilityProfile, installationId: "00000000-0000-4000-8000-000000000002" };
+    },
+  });
+  for (const text of ["도움말", "구인도움말"]) {
+    const result = await service.execute({ ...envelope, text, eventId: `event-r24-help-${text}` }, "current");
+    assert.match(result.reply, /최근 봇 명단 전체 복사/u);
+    assert.match(result.reply, /빈칸에 내 이름 입력/u);
+    assert.match(result.reply, /메시지 전체 전송 = 저장/u);
+    assert.match(result.reply, /사이트에 등록한 이름/u);
+    assert.match(result.reply, /내전구인 협곡/u);
+    assert.match(result.reply, /처음 파티를 만들 때만 첫 전송 전에 시간·게임/u);
+    assert.ok(result.reply.indexOf("최근 봇 명단 전체 복사") < result.reply.indexOf("새 모집 만들기"));
+    assert.doesNotMatch(result.reply, /1\. 5인파티|저장기준/u);
+    assert.doesNotMatch(result.reply, /스크림/u);
+    if (text === "구인도움말") assert.match(result.reply, /참가가 시작된 파티는 복붙으로 시간·게임을 바꿀 수 없어요/u);
+  }
+  const retired = await service.execute({ ...envelope, profileId: "FEATURES", text: "내전확인 ABCDEF", eventId: "event-r24-retired-confirm-guide" }, "current");
+  assert.match(retired.reply, /빈칸에 사이트 등록 이름 추가/u);
+  assert.match(retired.reply, /기존 이름과 양식코드는 그대로/u);
+  assert.match(retired.reply, /변경된 내용은 없습니다/u);
+  assert.doesNotMatch(retired.reply, /최종 명단으로 즉시 반영|전체 양식을 수정/u);
 });
 
 test("public error responses keep stable status and code contracts", async () => {

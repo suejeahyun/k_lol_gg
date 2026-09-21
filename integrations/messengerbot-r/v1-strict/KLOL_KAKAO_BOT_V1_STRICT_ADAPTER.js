@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R22_2026_09_18";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R24_2026_09_20";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -30,6 +30,31 @@ function isOpenChatBotInhouseLoadingNotice(text, sender) {
   var normalizedText = trimText(normalizeText(String(text || ""))).replace(/[ \t]+/g, " ");
   return normalizedSender.indexOf("\uC624\uD508\uCC44\uD305\uBD07") >= 0 &&
     /^\uB0B4\uC804\uAD6C\uC778 \uC591\uC2DD \uBD88\uB7EC\uC624\uB294 \uC911(?:\u2026|\.{3})?$/.test(normalizedText);
+}
+
+function isRetiredScrimInput(value) {
+  var text = normalizePartyMemberMutationCommandText(value).replace(/ᄍ/g, "ㅉ");
+  var member = null;
+  if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return false;
+  if (text.charAt(0) === "/") text = text.substring(1);
+  if (/^\s*\[K-?LOL\.GG\s*(?:멸망전\s*)?스크림\s*(?:구인\s*양식|상세)\]/.test(text)) return true;
+  if (/[\r\n\u2028\u2029]/.test(text)) return false;
+  member = parseMemberMutationCommand(text);
+  if (member && member.surface === "SCRIM") return true;
+  return /^(?:멸망전\s*)?스크림\s*(?:(?:구인|모집|현황|목록|상세|참가|확정|취소|마감|종료)(?:\s*#?\d+)?(?:\s+.*)?|#?\s*\d{1,2}\s*(?:쫑|ㅉ|마감|종료))$/.test(text) || /^멸망전\s*스크림$/.test(text);
+}
+
+/* Compact copy forms may include a saved-result line before the header. */
+function handleCopyRosterForm(text, room, sender, replier) {
+  var normalized = normalizePartyMemberMutationCommandText(text);
+  var header = null;
+  if (normalized.indexOf("//") === 0 || /^\/\s/.test(normalized)) return false;
+  if (normalized.charAt(0) === "/") normalized = normalized.substring(1);
+  header = /^\s*\[(파티|내전)\s*#\s*([1-9]\d{0,2})\](?:[ \t]+(?:[^\r\n]*[·ㆍ|][ \t]*)?\d{1,2}\/\d{1,2}명)?\s*$/m.exec(normalized);
+  if (!header || !/^\s*(?:\d{1,2}|TOP|JUG|MID|ADC|SUP|탑|정글|미드|원딜|서폿)\s*\\?\s*[.)]/im.test(normalized)) return false;
+  if (isKlolBotEchoSender(sender)) return true;
+  handlePartyRecruitApi("", room || RECRUIT_ROOM_LABEL, String(text || ""), sender, replier, "명단 저장", header[1] === "내전" ? "FEATURES" : "RECRUIT");
+  return true;
 }
 
 function v1GatewaySucceeded(result) {

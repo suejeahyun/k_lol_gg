@@ -214,12 +214,17 @@ function countFilledNumberedRows(text: string) {
 }
 
 function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
+  const compactInhouse = /^\s*\[내전\s*#(\d+)\]\s*\d+\/\d+명\s*$/mu.exec(text);
+  const compactMode = /^\s*》\s*모드\s*[:：]\s*(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(text)?.[1];
+  if (compactInhouse && compactMode) {
+    return recognized("INHOUSE_SNAPSHOT", text, {
+      recruitNumber: Number(compactInhouse[1]),
+      mode: compactMode === "협곡" ? "RIFT" : compactMode === "칼바람" ? "ARAM" : "AUGMENT_ARAM",
+      memberCount: countFilledNumberedRows(text),
+    }, "SNAPSHOT");
+  }
   if (
-    /^\s*\[K-LOL\.GG 스크림 구인 양식\]/u.test(text) &&
-    /^\s*운영일\s*:/mu.test(text) &&
-    /^\s*번호\s*:\s*#(?:자동배정|\d+)/mu.test(text) &&
-    /^\s*우리팀\s*:/mu.test(text) &&
-    /^\s*상대팀\s*:/mu.test(text)
+    /^\s*\[K-?LOL\.GG\s*(?:멸망전\s*)?스크림\s*(?:구인\s*양식|상세)\]/u.test(text)
   ) {
     const scrimNumber = /^\s*번호\s*:\s*#(\d+)/mu.exec(text)?.[1];
     return recognized("SCRIM_SNAPSHOT", text, { scrimNumber: scrimNumber ? Number(scrimNumber) : null }, "SNAPSHOT");

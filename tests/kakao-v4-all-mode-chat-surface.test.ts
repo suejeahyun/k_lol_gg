@@ -160,7 +160,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
       async syncSeasonSnapshot(input) {
         seasonCalls.push(input.command);
         return {
-          body: { kind: "SEASON_APPLICATION_SNAPSHOT", seasonId: "season-1", applyDate: input.command.applyDate, recruitNo: 7, entries: [], appliedCount: 0, reserveCount: 0, confirmedCount: 0, pendingCount: 0, cancelledCount: 0 },
+          body: { kind: "SEASON_APPLICATION_SNAPSHOT", seasonId: "season-1", applyDate: input.command.applyDate, recruitNo: 7, entries: [], appliedCount: 0, reserveCount: 0, confirmedCount: 0, pendingCount: 0, cancelledCount: 0, formCode: "ABCDE-FGHJK" },
           replayed: false,
         };
       },
@@ -173,8 +173,11 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
   assert.ok(inhouseCommand);
   const inhouse = await dispatcher.dispatch(inhouseContext, inhouseCommand);
   assert.equal(seasonCalls[0]?.action, "RESERVE");
-  assert.match(inhouse.legacyReply, /내전하실분 #7/u);
-  assert.match(inhouse.legacyReply, /》주최자\s*:/u);
+  assert.match(inhouse.legacyReply, /\[내전 #7\] 0\/10명/u);
+  assert.match(inhouse.legacyReply, /\n1\.\n[\s\S]*\n10\.\n[\s\S]*예비 1\./u);
+  assert.match(inhouse.legacyReply, /빈칸에 사이트 등록 이름/u);
+  assert.match(inhouse.legacyReply, /》시작: 미정/u);
+  assert.match(inhouse.legacyReply, /양식코드: ABCDE-FGHJK/u);
   assert.doesNotMatch(inhouse.legacyReply, /빠른 추가:|마감:/u);
 
   const scrimContext = dispatchContext("RECRUIT", "스크림구인", "event-scrim-reserve-0000001");
@@ -203,7 +206,7 @@ test("내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은
         return { body: { kind: "OPENCHAT_STATUS", nextPartyRecruitNumber: null, nextPartyResetSequence: 0, nextScrimNumber: null, partiesTruncated: false, scrimsTruncated: false, parties: [], scrims: [] }, replayed: false };
       },
       async syncSeasonSnapshot(input) {
-        return { body: { kind: "SEASON_APPLICATION_SNAPSHOT", seasonId: "season-1", applyDate: input.command.applyDate, recruitNo: 7, entries: [], appliedCount: 0, reserveCount: 0, confirmedCount: 0, pendingCount: 0, cancelledCount: 0 }, replayed: false };
+        return { body: { kind: "SEASON_APPLICATION_SNAPSHOT", seasonId: "season-1", applyDate: input.command.applyDate, recruitNo: 7, entries: [], appliedCount: 0, reserveCount: 0, confirmedCount: 0, pendingCount: 0, cancelledCount: 0, formCode: "ABCDE-FGHJK" }, replayed: false };
       },
     },
   });
@@ -212,12 +215,15 @@ test("내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은
   const inhouseCreate = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseContext.envelope), inhouseContext.envelope);
   assert.ok(inhouseCreate);
   const inhouseTemplate = (await dispatcher.dispatch(inhouseContext, inhouseCreate)).legacyReply;
-  const inhouseSubmission = inhouseTemplate.replace("》주최자 :", "》주최자 : 재현");
+  const inhouseSubmission = inhouseTemplate.replace("\n1.\n", "\n1. 재현\n");
   const inhouseEnvelope = { ...inhouseContext.envelope, eventId: "event-inhouse-notice-000002", text: inhouseSubmission };
   const inhouseSync = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseEnvelope), inhouseEnvelope);
   if (!inhouseSync || inhouseSync.domain !== "SEASON" || inhouseSync.action !== "SYNC") assert.fail("expected inhouse snapshot");
   assert.equal(inhouseSync.roundMetadata?.noticeText, null);
-  assert.equal(inhouseSync.roundMetadata?.organizerText, "재현");
+  assert.equal(inhouseSync.roundMetadata?.organizerText, null);
+  assert.equal(inhouseSync.roundMetadata?.startTimeText, null);
+  assert.equal(inhouseSync.copyGuard?.formCode, "ABCDE-FGHJK");
+  assert.equal(inhouseSync.participants[0]?.name, "재현");
 
   const scrimContext = dispatchContext("RECRUIT", "스크림구인", "event-scrim-empty-draft-0001");
   const scrimCreate = canonicalizeKakaoV4Command(classifyKakaoV4Command(scrimContext.envelope), scrimContext.envelope);

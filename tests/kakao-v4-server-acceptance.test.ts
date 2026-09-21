@@ -96,10 +96,11 @@ test("[S05] FEATURES ranking, record and recent commands return successful repli
   for (const result of results) if (result.kind === "REPLY") assert.ok(result.reply.length > 0);
 });
 
-test("[S06] one successful scrim command is dispatched without a status preflight", async () => {
+test("[S06] a retired scrim command returns the R23 notice after authorization", async () => {
   const { instance, authorizations } = service();
   const result = await instance.execute(command("RECRUIT", "d", 30, "스크림구인"), "current");
   assert.equal(result.kind, "REPLY");
+  assert.match(result.reply, /스크림 기능 종료/u);
   assert.equal(authorizations.length, 1);
 });
 

@@ -1,0 +1,1981 @@
+
+> klol-gg-v2@0.1.0 check
+> npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build
+
+
+> klol-gg-v2@0.1.0 lint
+> eslint
+
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R14_RHINO_CLEAN_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   412:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   431:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   446:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   484:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   510:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   522:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   560:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   564:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   564:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   564:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   564:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   567:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   567:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   567:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   709:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   720:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   724:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   737:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1753:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1755:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R15_ALL_MODE_SNAPSHOT_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   412:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   431:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   446:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   484:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   510:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   522:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   560:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   564:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   564:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   564:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   564:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   567:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   567:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   567:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   709:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   720:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   724:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   737:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1753:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1755:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R16_INHOUSE_PARTY_FLOW_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   426:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   445:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   460:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   498:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   524:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   536:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   574:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   578:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   578:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   578:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   578:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   581:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   581:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   581:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   723:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   734:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   751:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1767:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1769:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R17_MODE_FORMS_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R18_JOIN_GUIDES_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R19_RANDOM_JOIN_TONES_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_R20_INHOUSE_QUICK_POSITIONS_REPLACE_ALL.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   260:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   270:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   413:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   432:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   447:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   485:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   511:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   523:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   561:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   565:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   565:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   565:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   565:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   568:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   568:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   568:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   710:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   721:14  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   725:16  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   738:16  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1754:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1756:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  1780:10  warning  'response' is defined but never used                                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    36:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   120:10  warning  'ignored' is defined but never used                                    @typescript-eslint/no-unused-vars
+   209:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   271:10  warning  'ignoredJavaNormalizationError' is defined but never used              @typescript-eslint/no-unused-vars
+   281:10  warning  'parsePartyMemberMutationCommand' is defined but never used            @typescript-eslint/no-unused-vars
+   424:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   443:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   458:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   496:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   522:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   534:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   572:10  warning  'error' is defined but never used                                      @typescript-eslint/no-unused-vars
+   576:29  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   576:35  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   576:43  warning  'imageBase64' is defined but never used                                @typescript-eslint/no-unused-vars
+   576:56  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   579:36  warning  'room' is defined but never used                                       @typescript-eslint/no-unused-vars
+   579:42  warning  'sender' is defined but never used                                     @typescript-eslint/no-unused-vars
+   579:50  warning  'replier' is defined but never used                                    @typescript-eslint/no-unused-vars
+   721:77  warning  'packageName' is defined but never used                                @typescript-eslint/no-unused-vars
+   732:10  warning  'ignoredImageError' is defined but never used                          @typescript-eslint/no-unused-vars
+   736:10  warning  'ignoredImageBase64Error' is defined but never used                    @typescript-eslint/no-unused-vars
+   749:10  warning  'ignoredImageBitmapError' is defined but never used                    @typescript-eslint/no-unused-vars
+  1765:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1767:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  1796:10  warning  'response' is defined but never used                                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\.private\KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js
+  2:5  warning  'KLOL_V4_PRIVATE_SETTINGS_APPLIED' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js
+   1:838   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+   5:130   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  32:231   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:79    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:196   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  34:274   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  35:200   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  36:66    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  44:347   warning  'n' is defined but never used  @typescript-eslint/no-unused-vars
+  54:409   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  56:71    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  59:168   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  60:318   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  65:1002  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  74:403   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:151   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:216   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:497   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  78:2934  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  79:8     warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  80:116   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  81:378   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V1_COMPAT.js
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
+    2:5  warning  'KLOL_V41_BUNDLE_START_SENTINEL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  369:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\integrations\messengerbot-r\v1-strict\KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_SOURCE_SHA256' is assigned a value but never used           @typescript-eslint/no-unused-vars
+     2:5   warning  'KLOL_V1_EXTRACTED_SHA256' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     3:5   warning  'KLOL_V1_SOURCE_FUNCTIONS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     6:5   warning  'KLOL_V1_TRANSPORT_SEAMS' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    35:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   119:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   208:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   270:10  warning  'ignoredJavaNormalizationError' is defined but never used            @typescript-eslint/no-unused-vars
+   280:10  warning  'parsePartyMemberMutationCommand' is defined but never used          @typescript-eslint/no-unused-vars
+   423:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   442:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   457:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   495:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   521:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   533:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   571:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   575:29  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   575:35  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   575:43  warning  'imageBase64' is defined but never used                              @typescript-eslint/no-unused-vars
+   575:56  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   578:36  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   578:42  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   578:50  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   720:77  warning  'packageName' is defined but never used                              @typescript-eslint/no-unused-vars
+   731:10  warning  'ignoredImageError' is defined but never used                        @typescript-eslint/no-unused-vars
+   735:10  warning  'ignoredImageBase64Error' is defined but never used                  @typescript-eslint/no-unused-vars
+   748:10  warning  'ignoredImageBitmapError' is defined but never used                  @typescript-eslint/no-unused-vars
+  1764:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1766:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1795:10  warning  'response' is defined but never used                                 @typescript-eslint/no-unused-vars
+
+✖ 292 problems (0 errors, 292 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+
+> klol-gg-v2@0.1.0 typecheck
+> tsc --noEmit
+
+
+> klol-gg-v2@0.1.0 db:erd:check
+> tsx scripts/database/generate-erd.ts --check
+
+[db:erd] up to date: 102 tables, 165 foreign keys, schema sha256 13e835c456bf0c679b38fe0b397be198afc53c8e3b832432806c15e8d5f579bc
+
+> klol-gg-v2@0.1.0 test
+> npm run test:contracts && npm run test:unit
+
+
+> klol-gg-v2@0.1.0 test:contracts
+> node --test tests/*.test.mjs
+
+✔ public match and player detail use the same allowlisted champion portrait with a safe fallback (2.1152ms)
+✔ my account connects bounded participation and current discipline status to details and evidence (1.3576ms)
+✔ event and destruction details retain actions while exposing readable lifecycle and result hierarchy (0.5018ms)
+✔ own player mutation keeps approval, origin, revision and idempotency guards (4.1051ms)
+✔ own player form keeps one idempotency key for an uncertain retry and explains Riot relinking (1.166ms)
+✔ account pages reuse the account shell and avoid decorative English headings (1.5105ms)
+✔ isolated account HTTP verification runs the real Chromium owner profile regression (1.7146ms)
+✔ 역할 변경 API는 same-origin 세션 검사 뒤 일반 ADMIN을 mutation parsing 전에 거부한다 (4.1351ms)
+✔ 역할 관리 UI와 목록 진입점은 SUPER_ADMIN에게만 노출된다 (1.2827ms)
+✔ 승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구하지 않는다 (1.4928ms)
+✔ 플레이어 상세는 연결 계정 revision으로 기존 SUPER_ADMIN 역할 API를 안전하게 재사용한다 (1.1562ms)
+✔ administrator balance status uses readable Korean operational labels (4.2623ms)
+✔ administrator balance navigation is a visible keyboard-focusable control (1.1569ms)
+✔ MMR 수동 조정은 raw UUID 대신 bounded 플레이어 선택기를 사용한다 (0.7527ms)
+✔ Riot 작업은 현재 목록에서 플레이어와 link를 선택하고 revision을 자동 계산한다 (0.3047ms)
+✔ 징계 대상 선택은 관리자 전용 bounded endpoint의 allowlist metadata로 표시값을 채운다 (0.9478ms)
+✔ 공통 bounded picker는 원격 metadata를 문자열 allowlist로 제한한다 (0.2729ms)
+✔ the contracted match edit page reuses the guarded editor and preserves the AI review alias (4.1736ms)
+✔ season administration presents lifecycle, status, source, and position labels in Korean (3.248ms)
+✔ account and settings administration avoid decorative English labels (1.5101ms)
+✔ admin HTTP guard matrix covers every canonical App Router page (66.4885ms)
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (4.4411ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (0.753ms)
+✔ administrator drafts support recoverable archive and persisted match registration (2.9499ms)
+✔ capture fixture example resolves every repository page without placeholders (113.2696ms)
+✔ browser QA server emits setup credentials, actor identity and fail-fast dynamic source IDs (1.4192ms)
+✔ browser quality boundary accepts WCAG and performance values at their budgets (2.9748ms)
+✔ browser quality boundary reports semantic, keyboard, motion, axe and performance failures (0.2968ms)
+✔ compact standalone auth pages do not require a skip link or a single h1 (0.159ms)
+✔ full-page capture uses stable light reduced-motion rendering and wakes lazy media (0.5974ms)
+✔ full-page capture fails visible repository error states even when HTTP is 200 (0.1344ms)
+✔ full-page capture accepts synthetic credentials through bounded stdin (0.1233ms)
+✔ champion administrator pages reuse the highlight content shell and keep safe mutations (4.6022ms)
+✔ champion read APIs keep public and administrator namespaces separated (1.8951ms)
+✔ Data Dragon version monitor discovers the upstream latest version without changing the pinned catalog (3.9153ms)
+✔ 핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상이다 (3.7385ms)
+✔ 기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다 (1.3591ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (1.5837ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (1.4839ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.1574ms)
+✔ public discipline API exposes aggregate statistics only (4.702ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (1.3474ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (2.1764ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (0.7952ms)
+✔ discipline pages declare real empty, error, and unavailable states (0.6598ms)
+✔ discipline administrator headings and status labels are readable Korean (0.8481ms)
+✔ public competition pages expose list/detail/application states without administrator controls (2.7379ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (0.8799ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.3093ms)
+✔ full-page QA runner parses only tagged synthetic harness values (1.7033ms)
+✔ full-page QA summary fails count drift and any route issue (0.1877ms)
+✔ capture credentials use bounded stdin instead of command-line secrets (4.4469ms)
+✔ capture CLI rejects unknown stdin credential fields before opening files or Chromium (94.5563ms)
+✔ 홈과 데스크톱 메뉴는 이미 구현된 경기·팀 밸런스를 준비 중으로 표시하지 않는다 (1.9394ms)
+✔ 홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센다 (0.286ms)
+✔ 홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 갤러리를 조회한다 (0.6135ms)
+✔ 홈 피드 공개 projection은 소유자·회원·Discord 필드를 선택하지 않는다 (0.2867ms)
+✔ 홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST 일일 안내 챔피언을 선택한다 (1.0227ms)
+✔ 홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다 (0.5449ms)
+✔ 홈의 지표별 랭킹 요약은 모바일에서 44px 터치 영역과 단일 열을 유지한다 (0.7896ms)
+✔ Kakao admin API splits ADMIN reads from SUPER TOTP mutations (4.7348ms)
+✔ legacy Kakao admin pages permanently redirect to canonical real-state tabs (5.4298ms)
+✔ every canonical Kakao handler checks the stored feature policy (4.6248ms)
+✔ owner image session creation honors site and Kakao feature switches (0.9678ms)
+✔ Kakao assistant routes share raw-body HMAC and durable read receipts (4.9326ms)
+✔ managed forms remain isolated while season snapshots and owner-bound images are durable (1.6249ms)
+✔ legacy Kakao paths execute the signed canonical POST handlers without redirects (2.9254ms)
+✔ Kakao route capability policy is explicit for every phone endpoint (6.1094ms)
+✔ season member submissions and reads use the FEATURES room but force cancel has a trusted command gate (1.1705ms)
+✔ normal room authorization uses only canonical registry state and keeps environment bootstrap explicit (0.8078ms)
+✔ private installer generator preserves shared settings and creates one identity per Kakao room (370.1958ms)
+✔ Kakao routes are explicitly isolated between recruit and features installations (4.9648ms)
+✔ wrong-room failures remain short and actionable on the phone (1.3952ms)
+✔ recruit mutations expose PII-free stage timing for p50 and p95 aggregation (0.7809ms)
+✔ the ADR freezes every non-negotiable V1-exact adapter constraint (4.414ms)
+✔ the reusable V4 text transport is one signed five-second request without bearer fallback (1.246ms)
+✔ the V1 strict phone installer uses the current private artifact and omits public-only provenance (1.807ms)
+✔ installation profiles, not callback room or sender role, form the V4 text authorization boundary (0.8608ms)
+✔ V2 services can reserve a hidden DRAFT and legacy bearer routes remain closed (1.7427ms)
+✔ the existing image service is separately signed, bounded, and session-backed (0.8199ms)
+✔ canonical V40 R2 routes managed commands to site-first links, not the legacy image session creator (24.9865ms)
+✔ a clean V1-strict install keeps imageDB silent instead of inventing an unreachable UUID flow (4.7973ms)
+✔ the dormant legacy image receiver remains secure for non-strict clients without reopening bearer access (1.1162ms)
+✔ builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact (327.2825ms)
+✔ Rhino audit detects functions that mix value and bare returns (0.6383ms)
+✔ V1 strict routes organizer-only metadata activation forms with or without one slash (20.1961ms)
+✔ V1 strict routes scoped in-house finish commands as unchanged raw text (16.1586ms)
+✔ R23 retired scrim commands and forms reply locally without an HTTP request (19.1444ms)
+✔ R23 local help prioritizes copy, own name, and whole-message save (6.6639ms)
+✔ R23 copy-paste party and inhouse forms forward names and saved references unchanged (9.739ms)
+✔ V1 strict routes the full organizer-only template returned by the production server (3.6284ms)
+✔ artifact excludes legacy HTTP, bearer, and embedded secret material (0.8543ms)
+✔ all response-reachable non-transport V1 executable lines are preserved without comments or blank spacers (37.5034ms)
+✔ strict adapter reuses the canonical V1 local dedupe storage keys (1.1172ms)
+✔ local replies, echo rules, events, and no-reply behavior equal the canonical V1 (10.8545ms)
+✔ R19 chooses one complete tone when the OpenChat entry guide appears (7.0374ms)
+✔ R19 consumes the raw join event and accepts only the OpenChat entry heading (3.0808ms)
+✔ approved party member mutations parse safely and use one RECRUIT gateway request (15.1053ms)
+✔ inhouse member shortcuts reach the matching profile gateway (28.5307ms)
+✔ reported inhouse loading echo is ignored while user commands and explicit member edits keep one reply (6.9006ms)
+✔ same MessengerBot logId replay suppresses only the duplicate visible reply (5.6083ms)
+✔ ambiguous party member text never reaches the mutation gateway (22.7085ms)
+✔ local recruit help documents member commands and keeps full-form guidance (3.8725ms)
+✔ command and form predicates are byte-derived and behaviorally equal to V1 (10.1405ms)
+✔ one public command performs one five-second signed gateway request without room binding (4.854ms)
+✔ recoverable season rows reach the gateway once even with whitespace numbering and partial fields (1.8995ms)
+✔ completed augment-ARAM in-house forms reach the FEATURES gateway and always reply (3.6043ms)
+✔ completed augment-ARAM metadata with ten empty name rows activates through FEATURES (4.092ms)
+✔ a complete empty season snapshot reaches the gateway once for authoritative cancellation (7.3849ms)
+✔ empty-snapshot gate rejects incomplete forms and ordinary conversation (9.7907ms)
+✔ clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior (3.3374ms)
+✔ all seven active text seams preserve V1 success and empty replies while failures use safe common notices (46.6407ms)
+✔ literal transport failures distinguish settings, input, and connection errors without exposing values (17.6707ms)
+✔ both V40 R2 image seams stay inactive for every transport outcome (8.4389ms)
+✔ V1-strict keeps completion diagnostics but routes incomplete operation-form candidates (7.7224ms)
+✔ V1-strict candidate routing ignores ordinary label discussion (5.9532ms)
+✔ V1-strict ordinary label discussion performs no request or local dedupe write (6.8915ms)
+✔ V1-strict accepts standalone wrapper titles but ignores wrappers embedded in prose (4.71ms)
+✔ V1-strict response forwards one incomplete form request to the FEATURES gateway (2.6084ms)
+✔ V1-strict canonicalizes tolerant label spelling before gateway classification (2.7118ms)
+✔ V1_STRICT fixture preserves the canonical V1 bytes across checkout line endings (1.7151ms)
+✔ V1_STRICT fixture contains no hard-coded credential value (0.8828ms)
+✔ V1_STRICT fixture remains ES5 and Rhino-static warning free (53.8857ms)
+✔ V1_STRICT executes the original bot-version reply with or without slash (5.9317ms)
+✔ V1_STRICT executes the original user help exactly (3.6514ms)
+✔ APPROVED_EXTENSIONS cannot be mislabeled as commands from the V1_STRICT oracle (10.8736ms)
+✔ [A01] the unified phone artifact is a readable ES5 single file below 40,000 characters (24.1703ms)
+✔ [A02] the final unified artifact has zero Rhino static warning candidates (13.4179ms)
+✔ [A03] the generated artifact classifies each command into exactly one server profile (2.3221ms)
+✔ [A04] callback room, channel and group values are neither read nor transmitted (6.0454ms)
+✔ [A05] text transport timeout is no more than five seconds (1.2975ms)
+✔ V4 source template is one thin command-family routing client (5.385ms)
+✔ the generated unified phone file is standalone ES5 with one callback (20.2887ms)
+✔ builder owns the unified output and refreshes deprecated split fixtures (1.7441ms)
+✔ release docs lock one phone, one MessengerBot profile, and two Kakao rooms (1.5014ms)
+✔ [C01] each entry sends its own static profile regardless of poisoned callback room values (12.9793ms)
+✔ [C02] RECRUIT ignores FEATURES commands locally without a server call (1.4577ms)
+✔ [C03] FEATURES ignores RECRUIT commands locally without a server call (1.924ms)
+✔ [C03A] one unified phone bot routes both room command families exactly once (6.375ms)
+✔ [C03C] party template commands including spaced aliases use exactly one server request for a V1 number (4.1485ms)
+✔ [C03D] a copied V1 party form without its number returns the exact local guidance (3.4163ms)
+✔ [C03B] unified bot version is one local reply and never reaches transport (4.3186ms)
+✔ [C04] malformed slash, URLs and middle slash are rejected before transport (3.0281ms)
+✔ [C05] no-logId boot counter gives every independent command a new event ID (4.92ms)
+✔ [C06] one command performs one HTTP execute with a five-second maximum (1.2777ms)
+✔ [C05A] logId replay is stable in one boot and isolated across profiles and restarts (2.8855ms)
+✔ [C05C] phone settings are read from MessengerBot storage once within one request cache (1.297ms)
+✔ [C05B] unified echo suppression checks both room-specific bot display names (1.1474ms)
+✔ [C07] one scrim command performs exactly one client-to-server send (1.1475ms)
+✔ [C08:WRONG_PROFILE] client exposes the WRONG_PROFILE error category (1.7516ms)
+✔ [C08:INVALID_SIGNATURE] client exposes the INVALID_SIGNATURE error category (1.1945ms)
+✔ [C08:REPLAY_CONFLICT] client exposes the REPLAY_CONFLICT error category (1.1266ms)
+✔ [C08:SERVER_UNAVAILABLE] client exposes the SERVER_UNAVAILABLE error category (0.916ms)
+✔ [C08:INVALID_FORM] client exposes the INVALID_FORM error category (1.7679ms)
+✔ [C08A] INVALID_FORM keeps the server parser detail and has a safe fallback (1.9187ms)
+✔ [P3-C01] FEATURES entry sends one request for 내전구인 (7.784ms)
+✔ [P3-C02] FEATURES entry sends one request for 내전구인 협곡 2026-09-09 21:30 #2 10명 (1.5873ms)
+✔ [P3-C03] FEATURES entry sends one request for 내전구인 칼바람 2026-09-09 21:30 #3 10명 (1.379ms)
+✔ [P3-C04] FEATURES entry sends one request for 내전구인 증바람 2026-09-09 21:30 #4 10명 (1.0955ms)
+✔ [P3-C05] FEATURES entry sends one request for 내전현황 (1.2559ms)
+✔ [P3-C06] FEATURES entry sends one request for 내전상세 2 (1.0701ms)
+✔ [P3-C07] FEATURES entry sends one request for 📢 내전하실분 #2 (1.008ms)
+✔ [P3-C08] RECRUIT entry sends one request for 스크림구인 (3.9011ms)
+✔ [P3-C09] RECRUIT entry sends one request for [K-LOL.GG 스크림 구인 양식] (1.9974ms)
+✔ [P3-C10] FEATURES entry sends one request for 지인 이름: 친구 (1.5667ms)
+✔ [P3-C11] FEATURES entry sends one request for 본인 이름 및 닉네임: 홍길동/테스터 (1.2347ms)
+✔ [P3-C12] FEATURES entry sends one request for 주최자 이름 및 닉네임: 홍길동/테스터 (1.0888ms)
+✔ [P3-C13] FEATURES entry sends one request for 이름 및 닉네임: 신청자/닉 (1.0185ms)
+✔ [P3-C14] FEATURES entry sends one request for 등록 (1.6935ms)
+✔ [P3-C15] FEATURES entry sends one request for 내전등록 (2.6544ms)
+✔ [P3-C16] FEATURES entry sends one request for 경고등록 (2.305ms)
+✔ [P3-C17] FEATURES entry sends one request for 인증 (1.3127ms)
+✔ [P3-C18] FEATURES entry sends one request for 경고현황 (1.4323ms)
+✔ [P3-C19] FEATURES entry sends one request for 결과현황 (1.0799ms)
+✔ [P3-C20] FEATURES entry sends one request for 사진취소 (1.2637ms)
+✔ [P3-C21] FEATURES entry sends one request for 자동공지 20 (1.6966ms)
+✔ [P4-C01] unified 봇버전 is client-only with exact local content (7.515ms)
+✔ [P4-C02] unified 도움말 is client-only with exact local content (2.5387ms)
+✔ [P4-C03] unified 구인도움말 is client-only with exact local content (3.1416ms)
+✔ [P4-C04] unified 구인웹도우미 is client-only with exact local content (2.2961ms)
+✔ [P4-C05] every V1 PUBLIC alias is classified by the unified phone with at most one send (49.2362ms)
+✔ [P4-C06] malformed slash, URL and middle-slash inputs never enter public transport (12.0864ms)
+✔ [P4-I01] V2도움말 never enters public V4 transport (3.9738ms)
+✔ [P4-I02] V2진단 never enters public V4 transport (1.8953ms)
+✔ [P4-I03] V2연동확인 never enters public V4 transport (1.8552ms)
+✔ [P4-I04] 연동확인 never enters public V4 transport (5.0401ms)
+✔ [P4-I05] V2모집 never enters public V4 transport (2.4691ms)
+✔ [P4-I06] V2시즌 never enters public V4 transport (2.0589ms)
+✔ [P4-I07] V2양식 never enters public V4 transport (4.2474ms)
+✔ [P4-I08] V2사진세션 never enters public V4 transport (1.8599ms)
+✔ [P4-I09] V2사진취소 never enters public V4 transport (2.0597ms)
+✔ [P4-A01] final unified phone artifact is synchronized ES5, under 40k and Rhino-static clean (35.1638ms)
+✔ [P4-C01] every public V1 alias passes the correct phone profile with zero-or-one slash (20.9014ms)
+✔ [P4-C02] local public replies are exact and never include V2 operator commands (2.1107ms)
+✔ [P4-C02A] all actual V41 public command samples pass the matching V4 phone profile (5.7568ms)
+✔ [P4-C03] photo and retired preview commands reply locally with no server transmission (2.1362ms)
+✔ [P4-C04] internal, unknown, and malformed inputs are rejected before transport (1.6264ms)
+✔ [P4-C05] unified entry preserves one send site, five-second timeout, and dynamic family split (0.8751ms)
+✔ [P4-C02B] member shortcuts tolerate mobile normalization and reject ambiguous mutations (2.7998ms)
+✔ V4 private generator creates one ignored paste-ready file without printing secrets (734.8179ms)
+✔ [R01] V4 durable receipt and nonce schema is present in the ordered migration ledger (2.1852ms)
+✔ [R02] installation, canonical room, key and capability migrations match the runtime schema (1.008ms)
+✔ [R03] V3 and V4 server intake coexist while one V4 entry binds profile-specific installation identity (0.9036ms)
+✔ [RESOLVED R04] V4 uses deterministic installation scope without a pairing command (0.8138ms)
+✔ [R05] documented Vercel variable names cover the V4 runtime without reading values (0.4649ms)
+✔ contract fixture has traceable V1 evidence and all required domains (1.5594ms)
+✔ zero or exactly one leading slash routes to the same command (0.3138ms)
+✔ double slash, URL slash, separated slash, and middle slash are not commands (0.135ms)
+✔ same installation scope members can edit and finish across sender identities (0.1831ms)
+✔ initial party form exposes the three activation fields without participant rows (0.2709ms)
+✔ full party forms are authoritative snapshots and allow A→B→A (0.2945ms)
+✔ party member shortcuts retain the full-form workflow and current-scope mutation boundary (0.1852ms)
+✔ Rift, ARAM, and Augment ARAM preserve their V1 field policies (0.7344ms)
+✔ scrim keeps full-form editing and V1 disabled manual lifecycle replies (0.251ms)
+✔ operation forms retain V1 labels, wrappers, missing-field reply, and echo guard (0.1959ms)
+✔ registration and warning guidance preserve exact V1 headings and destinations (0.2104ms)
+✔ user-facing help excludes V2 diagnostics and raw JSON commands (0.1482ms)
+✔ representative record, recent, and ranking replies remain exact V1 fixtures (0.2002ms)
+✔ V40 구인도움말 문구와 줄바꿈을 그대로 유지한다 (9.3336ms)
+✔ V40 5인파티 생성 응답에 모집번호가 있는 편집 가능한 전체 양식을 유지한다 (5.7971ms)
+✔ V40 구인현황 제목과 상세 명령 CTA를 포함한 정확한 응답을 유지한다 (4.2733ms)
+✔ V40 bare 멸망전스크림 입력을 스크림 명령으로 분류한다 (2.1087ms)
+✔ V40 일반 도움말의 제목·항목·줄바꿈을 모든 별칭에서 그대로 유지한다 (19.8111ms)
+✔ V40 구인 웹 도우미와 구인 도움말을 서로 다른 응답으로 유지한다 (18.6392ms)
+✔ V40 등록 센터의 설명과 기존 링크를 모든 별칭에서 그대로 유지한다 (10.2178ms)
+▶ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다
+  ✔ 내전등록 (15.353ms)
+  ✔ 경고등록 (8.5238ms)
+  ✔ 인증 (12.2606ms)
+  ✔ 경고현황 (4.3811ms)
+  ✔ 결과현황 (13.0405ms)
+✔ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다 (54.6958ms)
+▶ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다
+  ✔ 전적 (6.6564ms)
+  ✔ 최근 (10.6267ms)
+  ✔ 랭킹 (8.3734ms)
+✔ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다 (26.6424ms)
+✔ V40처럼 오픈채팅봇이 출력한 운영 양식은 재접수하지 않는다 (2.3582ms)
+✔ V40 운영 양식은 서버가 만든 접수 문구를 그대로 전달한다 (4.9923ms)
+✔ V40 사진취소 별칭의 사이트 우선 안내 동작을 그대로 유지한다 (4.7607ms)
+✔ V40 입장·퇴장·초대·서버 echo 동작을 유지한다 (2.3945ms)
+✔ V40 스크림구인은 자동배정 번호와 원래 줄바꿈을 가진 전체 양식을 반환한다 (16.3784ms)
+✔ V40 스크림현황은 파티 현황과 섞지 않고 한글 상태와 상세 명령을 표시한다 (5.2795ms)
+✔ V40 스크림현황 빈 상태 문구를 정확히 유지한다 (2.8048ms)
+✔ V40 스크림상세는 복사 가능한 전체 양식과 수정 안내를 그대로 반환한다 (2.9981ms)
+✔ V40 스크림 전체 양식 신규 제출은 즉시 한 번 저장하고 등록 완료만 응답한다 (13.9519ms)
+✔ V40 원본 양식은 멸망전번호 없이 서버의 단일 활성 대회 자동 판별을 사용한다 (7.5137ms)
+✔ V40 스크림 전체 양식 수정 제출은 별도 확인 없이 같은 번호를 교체 반영한다 (7.7975ms)
+✔ V40에서 사용 중단된 참가·확정·취소·수동 종료는 원래 안내만 하고 변경하지 않는다 (8.4453ms)
+✔ paste-ready V41 bot routes major commands only through the signed V2 transport (11.3963ms)
+✔ mobile installer has no Rhino CODE_HAS_NO_SIDE_EFFECTS statement candidates (77.8151ms)
+✔ phone transport renders actionable HTTP failure categories (3.6589ms)
+✔ Kakao pending slot lookup is lifecycle-neutral and only cancels ACTIVE rows (1.8615ms)
+✔ 자동 수집한 전체 명령 계약은 slash/무슬래시를 하나의 canonical command로 만든다 (15.167ms)
+✔ V1 호환 파서는 모든 공개 V1 명령에서 slash/무슬래시 분류를 동일하게 유지한다 (13.4757ms)
+✔ canonical command 경계는 본문과 Riot ID를 보존하고 slash 오인식을 막는다 (2.0778ms)
+✔ 휴대폰 압축본의 V1 무통신 명령은 읽기 쉬운 전체본과 동일하게 응답한다 (14.1398ms)
+✔ room and channel callback fields are not used for installation scope (11.4269ms)
+✔ installation scope is stable across signing-key rotation and differs across installations (2.8561ms)
+✔ delivery identity ignores raw room and channel while binding installation, sender, log, and message (2.3991ms)
+✔ opaque sender uses userHash when available and display-name fallback is labeled (1.5326ms)
+✔ field diagnostics explicitly use installation scope and retain opaque sender (1.0819ms)
+✔ response stores a season preview and only the matching one-time code performs SYNC (17.0698ms)
+✔ response requires a complete authoritative snapshot scope and supports preview cancellation (3.7382ms)
+✔ response ignores server echoes and restores legacy guide aliases after full-width normalization (2.3564ms)
+✔ response preserves V40 room events, missing-number guidance, and parameterized managed shortcuts (5.0437ms)
+✔ response keeps an active image session when MessengerBot only exposes a placeholder (4.3718ms)
+✔ response routes legacy record, recent, and ranking commands through V2 data while preserving V1 replies (2.5272ms)
+✔ response formats scheduled notice aliases as read-only previews (4.1512ms)
+✔ response accepts bitmap fallback, reports image progress, and clears terminal or cancelled sessions (4.2994ms)
+✔ response exposes a secret-free V2 transport diagnostic (3.3664ms)
+✔ response scopes different senders to one installation and ignores broken room parser fields (2.8791ms)
+✔ response suppresses a duplicate callback with the same Kakao log identity (1.5246ms)
+✔ response entry point keeps representative V1 and V2 replies identical with or without slash (27.2367ms)
+✔ raw V2 recruiting JSON is explicitly marked for the server-side operator gate (2.1466ms)
+✔ response entry point does not treat slash-only, URL, middle slash, double slash, or slash-space as commands (3.4277ms)
+✔ V41 season output uses the site application fields and round-trips as bot input (7.5731ms)
+✔ V41 season input accepts the labeled site form and rejects invalid sub positions (2.0013ms)
+✔ V41 authoritative sync response reports create, update, cancel and review counts (1.9772ms)
+✔ V1 compatibility parser stays ES5, transport-free, and rejects unsafe input (24.3045ms)
+✔ all V40 party creation, finish, help, status, and detail aliases are classified (3.9365ms)
+✔ party form parser preserves metadata, positions, numbered members, and substitutes (6.4456ms)
+✔ party form metadata accepts line endings and colon variants without rewriting values (2.0584ms)
+✔ party form tolerates clipped headers, Markdown escapes, attached values, and controlled line wraps (1.4875ms)
+✔ inhouse aliases parse mode, date, time, recruit number, and capacity (3.5887ms)
+✔ scrim aliases and legacy full form are converted without a transport call (4.2163ms)
+✔ four operation forms become exact V2 payload shapes with sender fallbacks (4.9557ms)
+✔ four legacy 외출 wrappers parse identically and missing fields are explicit (2.7557ms)
+✔ registration, warning, result, evidence, status, and photo-cancel aliases are classified (2.109ms)
+✔ V1: 내전구인만 입력하면 종목 선택 안내를 정확히 보낸다 (14.669ms)
+✔ V1: 알 수 없는 내전 종목에만 입력값을 포함한 오류와 선택 안내를 보낸다 (6.4182ms)
+✔ V1: 협곡 내전구인은 티어·라인과 빈 칸을 포함한 전체 양식을 정확히 보낸다 (4.1841ms)
+✔ V1: 칼바람 내전구인은 이름 전용 전체 양식을 정확히 보낸다 (2.7352ms)
+✔ V1: 번호 없는 내전현황은 모든 회차 요약과 내전상세 명령을 정확히 보낸다 (2.604ms)
+✔ V1: 내전상세 번호는 참여자와 빈 칸을 포함한 편집 가능한 전체 양식을 정확히 보낸다 (2.2007ms)
+✔ V1: 작성한 전체 신청 양식은 확인 단계 없이 한 번 동기화하고 서버 답변을 그대로 보낸다 (5.5775ms)
+✔ V1: 같은 전체 신청 양식이 연속 수신되면 첫 반영 뒤 중복 요청과 중복 답변을 내지 않는다 (3.7844ms)
+✔ V1: 빈 전체 양식은 일반·ASCII slash·전각 slash 모두 0명 authoritative sync로 처리한다 (7.395ms)
+✔ V1: 불완전한 빈 양식과 double·URL·중간 slash는 authoritative sync를 실행하지 않는다 (11.0948ms)
+✔ 외출 필수값 누락은 항목별 안내만 보내고 서버 제출을 실행하지 않는다 (4.5959ms)
+✔ 오류 제목이 이미 포함된 서버 상세는 K-LOL.GG 요청 실패 제목을 중복하지 않는다 (2.7241ms)
+✔ legacy party create suppresses a duplicate callback before a second V2 mutation (15.9163ms)
+✔ legacy full party form maps positions to slots and synchronizes the existing V2 party (8.5934ms)
+✔ slash and plain temporary/form flows share server-first metadata fallback and preserve free text (11.9961ms)
+✔ 99 재현, 지오, 97 기용 fixtures complete public create, form, and finish flows with or without slash (24.797ms)
+✔ legacy party candidates stay separate from primary capacity (5.8354ms)
+✔ legacy finish suppresses a duplicate callback after the party leaves active status (5.375ms)
+✔ same-room users can clear and finish another user's two-digit party while repeated forms stay idempotent (11.2452ms)
+✔ failed party mutations return the cause without fetching or appending status (2.4301ms)
+✔ successful sync, blank deletion, and finish explain a failed status refresh (5.5334ms)
+✔ legacy operation form, inhouse template, and scrim template stay available (6.0215ms)
+✔ legacy scrim full form is stored through the typed V2 mutation and replays safely (7.1823ms)
+✔ 숫자형 플레이어·미디어 상세는 존재 확인 뒤 canonical UUID로 이동한다 (1.8632ms)
+✔ 숫자형 이벤트전·멸망전은 존재 확인 뒤 canonical UUID로 이동한다 (1.6103ms)
+✔ 관리자 직접 가져오기는 파일·붙여넣기·비공개 미리보기·재시도 복구를 제공한다 (7.6318ms)
+✔ 관리자 로그아웃은 가져오기 복구 namespace만 best-effort로 지운다 (1.1877ms)
+✔ 직접 가져오기 API는 예약→bounded body→work gate→private finalize 순서를 지킨다 (0.8896ms)
+✔ 검토 UI는 fuzzy 자동 연결 없이 구조화 행별 사람 확인을 요구한다 (1.7309ms)
+✔ admin import cancellation is authorized only for ADMIN-source rows (1.2648ms)
+✔ match editor exposes only the structured form and traps the void confirmation dialog (6.2306ms)
+✔ picker status copy is outside the listbox and visual active row matches aria active descendant (0.9353ms)
+✔ submission reject dialog shares the accessible modal behavior (1.4565ms)
+✔ submission conflict keeps component identity and adopts only a verified latest revision (0.9661ms)
+✔ match editor conflict preserves local input and adopts only a verified latest aggregate (1.2101ms)
+✔ match editor save action stays readable in enabled and disabled states (0.9411ms)
+✔ OCR route reserves before the process gate and all external work (5.3881ms)
+✔ OCR reservation is durable, single-image and replay-first (1.3035ms)
+✔ submission approval durably transfers team-balance provenance into the match aggregate (0.9102ms)
+✔ ordinary match amendments cannot clear immutable team-balance provenance (0.166ms)
+✔ web submission linkage revalidates draft ownership, lifecycle and selected layout in its transaction (0.2444ms)
+✔ match changed outbox carries team-balance provenance in its typed row and payload (0.1594ms)
+✔ public match detail returns a not-found contract instead of a blank success (2.5709ms)
+✔ match submission accepts only an owner-verified selected team-balance draft (0.6949ms)
+✔ successful server selection remounts both draft workspaces without resetting local edits (0.1392ms)
+✔ 홈과 이미지 상세은 같은 접근 가능한 수동 캐러셀을 사용한다 (1.6571ms)
+✔ 캐러셀은 빈 상태를 안전하게 닫고 한 장에는 이동 컨트롤을 숨기며 여러 장에는 직접 이동을 제공한다 (1.0546ms)
+✔ 캐러셀은 모바일 비율·44px 조작 영역·모션 감소 설정을 유지한다 (0.4288ms)
+✔ 홈 우승 사진은 FK 연결을 우선하고 엄격한 레거시 후보만 보강하며 실제 자산 URL을 사용한다 (0.5801ms)
+✔ gallery image load failures keep a clear, accessible fallback in the reserved card area (4.2381ms)
+✔ migration journal has contiguous indices, increasing timestamps, and matching SQL tags (2.2123ms)
+✔ public MMR page exposes canonical allowlisted filters and bounded projection summaries (0.9094ms)
+✔ admin MMR workspace connects protected recalculate, adjustment, players and review states (0.4776ms)
+✔ team balance provider selects READY MMR before statistics fallback (0.8299ms)
+✔ signed operation-form submit retains raw-body HMAC and durable replay boundaries (5.435ms)
+✔ admin mutation requires ADMIN session, same-origin, If-Match and idempotency (1.2985ms)
+✔ admin pages expose filtered empty/error/unavailable states and compatibility routes (2.0819ms)
+✔ public operations endpoints expose bounded settings and minimum health only (5.1229ms)
+✔ admin mutations and downloads retain strong server authorization boundaries (1.1853ms)
+✔ internal maintenance requires a signed job and never accepts session authorization (2.0534ms)
+✔ Vercel invokes only the daily Kakao close GET through an exact Bearer boundary (1.5348ms)
+✔ route groups are removed while concrete and dynamic segments become canonical URLs (28.5205ms)
+✔ route fixtures override parameter fixtures and every missing dynamic fixture fails immediately (1.1403ms)
+✔ recommendation query variants reject a malformed transcribed draft fixture (0.4819ms)
+✔ capture sessions are isolated by authentication boundary (0.2024ms)
+[capture-plan] 1 page files -> 4 capture targets at C:\Users\sjh11\AppData\Local\Temp\klol-capture-cli-eJZfji\nested\capture-plan.json
+✔ the CLI contract reads a fixtures JSON file and creates its output directory (18.6039ms)
+✔ the repository plan covers every page once, resolves IDs and adds reviewed variants (125.8332ms)
+✔ 사용자·관리자 상세 화면은 저장소 오류 상태에서도 페이지 제목과 상태 의미를 유지한다 (2.0869ms)
+✔ 공용 미디어 편집 화면도 저장소 오류 상태에서 페이지 제목을 유지한다 (0.3437ms)
+✔ 챔피언 이미지 projection은 0025 적용 전에도 공개 통계·목록 조회를 유지한다 (1.562ms)
+✔ 플레이어 공개 프로필은 실제 경기 KDA와 신청 포지션 배치·팀 밸런스 점수를 함께 설명한다 (1.2989ms)
+✔ 공개 Riot 읽기는 API·RSO 비밀 구성과 분리되고 UI가 미연동·대기·오류를 구분한다 (0.5588ms)
+✔ 플레이어 검색어는 문자열·배열·미입력을 하나의 안전한 문자열로 정규화한다 (0.7802ms)
+✔ 중복 q 파라미터 배열은 첫 값으로 정규화되어 trim 오류를 만들지 않는다 (0.206ms)
+✔ 검색 유스케이스는 PlayerRepository 포트를 통해 주입된 구현만 호출한다 (0.7362ms)
+✔ PWA manifest and layout publish the expected install contract (5.9602ms)
+✔ service worker caches static public assets only (1.3999ms)
+✔ install icons exist and are not empty (1.0504ms)
+✔ 공개 구인 카드와 API DTO는 참여자 표시 정보만 노출한다 (4.0163ms)
+✔ 내전 등록·상세 UI는 경기 시간을 입력하거나 표시하지 않는다 (0.7766ms)
+✔ 이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름을 독립 경로로 유지한다 (0.809ms)
+✔ Kakao pending API splits ADMIN reads from SUPER TOTP mutations (5.8663ms)
+✔ pending operator UI uses bounded filters, a player picker and revision-safe commands (2.1671ms)
+✔ public season applications expose Kakao-started recruit rounds without leaking pending identities (1.7206ms)
+✔ feature-gated site assistant is mounted globally and uses protected AI contracts (1.4145ms)
+✔ site feature access fails closed for missing or unreadable settings (2.0955ms)
+✔ registration feature protects both its page and mutation before credential work (0.6147ms)
+✔ match submission feature keeps reads available but guards every owner mutation (2.8083ms)
+✔ Kakao help feature controls its public guide without exposing configuration (0.2962ms)
+✔ recommendation APIs keep owner/admin scope and the team-balance feature boundary (4.3865ms)
+✔ team-balance pages expose recommendation views and fail closed with the site switch (2.0094ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (0.9893ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (1.8139ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (0.7703ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (2.0507ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (0.4503ms)
+✔ 시작 페이지는 익명·계정 상태·승인 계정·관리자 진입을 구분한다 (1.0027ms)
+✔ Riot 도움말은 운영 연동 제한과 공개·비공개 범위를 안내한다 (0.3622ms)
+✔ 설치 화면은 install prompt와 iOS·Android PWA·개인 캐시 금지를 구분한다 (0.7215ms)
+✔ 사용자 shell은 skip target, landmark, modal search, 모바일 5개 진입점을 제공한다 (5.7925ms)
+✔ 전체 메뉴는 로그인 상태에 맞지 않는 계정·인증 경로를 숨긴다 (0.8384ms)
+✔ 일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다 (1.1184ms)
+✔ V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다 (0.8332ms)
+✔ 사용자와 관리자 로그아웃 UI는 세션 폐기 성공 뒤에만 로그인 화면으로 이동한다 (1.0124ms)
+✔ 관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 축소하지 않는다 (0.722ms)
+✔ 모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아웃을 제공한다 (0.5549ms)
+✔ 관리자 로그인 1단계는 존재하지 않는 TOTP 필드를 null로 보내지 않는다 (0.4714ms)
+✔ 계정 작업 UI는 stale revision에서 최신 projection을 읽고 안내를 유지한다 (0.9235ms)
+✔ 일회성 비밀번호는 숨김·BFCache 복귀·명시적 닫기에서 메모리와 안내를 함께 종료한다 (0.6831ms)
+✔ 내 계정 플레이어 탭은 대기 claim과 거절 claim을 구분한다 (0.4076ms)
+✔ 내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기본 문구를 구분한다 (0.4629ms)
+✔ 계정 시각은 공통 Asia/Seoul 24시간 포맷터를 사용한다 (1.5739ms)
+✔ 가입·본인 비밀번호 변경 UI는 성공과 pagehide에서 비밀번호 fingerprint ref를 즉시 비운다 (0.761ms)
+✔ 정적 마감 대상의 native button은 submit 여부를 명시한다 (190.2824ms)
+✔ 이벤트 운영 폼은 내부 UUID나 JSON 복사를 요구하지 않는다 (0.8065ms)
+✔ 완성된 메뉴와 관리자 검색은 과거 단계 문구를 노출하지 않는다 (0.3238ms)
+✔ Riot ID의 게임 이름과 태그는 각각 이름을 가진다 (0.2025ms)
+✔ 전체 화면 효과는 공개·관리자 범위를 구분하고 동적 화면에도 재사용된다 (0.8916ms)
+✔ 전역 효과 CSS는 감속 모드·정밀 포인터·강제 색상 경계를 유지한다 (0.3645ms)
+ℹ tests 406
+ℹ suites 0
+ℹ pass 406
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1692.8492
+
+> klol-gg-v2@0.1.0 test:unit
+> tsx --test tests/*.test.ts
+
+✔ KST date-time formatting is deterministic and never uses AM/PM (1.1246ms)
+✔ one-time secret response is discarded after any hidden-page boundary (0.2304ms)
+✔ initial pageshow does not invalidate a request, while history restoration does (0.1628ms)
+✔ every account conflict reason has an explicit safe actionable HTTP problem (0.8306ms)
+✔ recovery response timing applies the same bounded floor with injectable time (0.2959ms)
+✔ signup is an exact agreement-bound contract with NFKC lowercase identities (2.0072ms)
+✔ login and password change reject extra keys, controls, reuse, and weak passwords (0.3823ms)
+✔ own player edit accepts only Riot ID and supported tier fields (0.7553ms)
+✔ claim approval requires an exact explicit manual-review acknowledgement shape (0.3093ms)
+✔ sensitive administrator mutations require an exact typed target login id (0.3855ms)
+✔ admin account list query is canonical, bounded, and rejects duplicates or controls (0.4428ms)
+✔ password verification identifies legacy bcrypt and new scrypt with dummy work for unusable hashes (167.9148ms)
+✔ safe next accepts only normalized same-origin paths (1.4154ms)
+✔ account next rejects ambiguity, browser normalization tricks, and administrator paths (0.1894ms)
+✔ login limiter caps attempts by normalized login and resets after its window (0.79ms)
+✔ login work gate releases capacity exactly once (0.1239ms)
+✔ rate-limit IP keys trust only Vercel's anti-spoofing header on Vercel (26.6986ms)
+✔ mutation guard requires an exact same origin (1.961ms)
+✔ body guard stops reading after the byte limit (4.3407ms)
+✔ invalid gallery files do not consume the five valid upload slots (1.7644ms)
+✔ gallery file planning applies remaining capacity after validation (0.1683ms)
+✔ short-lived gallery upload reports are bounded before display (0.284ms)
+✔ administrator parity ledger accounts for all 81 V1 pages exactly once (1.3112ms)
+✔ administrator transition decisions preserve the approved totals (0.1904ms)
+✔ runtime parity ledger cannot drift from the reviewed route map (1.1046ms)
+✔ every destination stays inside the reviewed administrator or operations-doc boundary (0.4351ms)
+✔ legacy administrator routes resolve only to reviewed same-origin destinations (0.6794ms)
+✔ target interpolation rejects missing parameters and non-local destinations (0.3781ms)
+✔ 관리자 대상 선택기 검색은 bounded query와 선택 유지 ID만 허용한다 (1.5754ms)
+✔ 관리자 대상 선택기는 짧은·중복·미허용·bidi·잘못된 include를 거부한다 (0.3706ms)
+✔ TOTP lifecycle payloads are self-only and accept exactly one six-digit code (1.71ms)
+✔ generated TOTP secrets contain 160 random bits in canonical base32 form (0.8303ms)
+✔ TOTP credential fingerprint binds every encrypted envelope field (3.3031ms)
+✔ fixture authentication requires a live short-lived verifier proof on loopback (12.953ms)
+✔ production session cookies are Secure even when transport inference is false (0.2001ms)
+✔ account and administrator elevation cookies coexist with purpose-bound lifetimes (0.1495ms)
+✔ JWT decode rejects oversized attacker input before JOSE parsing (0.3633ms)
+✔ administrator IA exposes exactly ten unique protected workspaces (1.0306ms)
+✔ every administrator workspace has a canonical App Router page (1.032ms)
+✔ active workspace matching does not make the dashboard match every route (0.1918ms)
+✔ dashboard leaves a real work destination available (0.1459ms)
+✔ versioned keyrings require explicit current 32-byte keys (1.6511ms)
+✔ database authentication fails closed when any required runtime value is missing (0.5305ms)
+✔ AES-256-GCM TOTP envelope binds ciphertext to account and key version (1.0738ms)
+✔ session signing keyring writes current kid and still verifies retained prior keys (10.3982ms)
+✔ session codec round-trips only the minimal signed claims (11.8123ms)
+✔ session codec generates a unique required jti for every issuance (2.3707ms)
+✔ session codec rejects tampering, expiry, and a different secret (3.3106ms)
+✔ session codec requires iat and enforces the 30 minute lifetime contract (4.0157ms)
+✔ session codec pins issuer, audience, algorithm, and rejects future issuance (2.0344ms)
+✔ authorization distinguishes missing role and missing admin TOTP (0.2189ms)
+✔ account sessions are limited by status and never become administrator elevation (0.1426ms)
+✔ codec accepts seven-day ACCOUNT sessions but rejects seven-day ADMIN sessions (2.0286ms)
+✔ session is revoked when account state, role, or authVersion changes (0.2068ms)
+✔ admin login requires password, TOTP, and rejects code replay (209.3026ms)
+✔ non-admin and pending accounts cannot obtain an admin session (121.463ms)
+✔ missing TOTP decryption key is exposed only after the password is verified (122.3876ms)
+✔ canonical selector parser preserves one reviewed value (1.2828ms)
+✔ canonical selector parser rejects duplicates, unknown keys, and unreviewed values (0.1813ms)
+✔ legacy application and season review destinations render distinct canonical states (0.5412ms)
+✔ champion identity and public DTO are canonical and allowlisted (1.5248ms)
+✔ ADMIN TOTP create, update and deactivate preserve history (3.1048ms)
+✔ exact receipt replay returns before aggregate lock (0.461ms)
+✔ authorization and immutable body tampering fail closed (0.5581ms)
+✔ outbox failure rolls aggregate, audit and receipt back together (0.3174ms)
+✔ champion HTTP boundary binds exact input, session, revision and idempotency (24.8121ms)
+✔ 173-row V1 fixture maps every NULL portrait to a unique official URL (2.6971ms)
+✔ backfill blocks duplicate identities and unmatched rows (0.8502ms)
+✔ pinned Data Dragon catalog contains 173 unique official champions (0.993ms)
+✔ home splash chain keeps high-resolution artwork ahead of icon and stored fallback (1.4424ms)
+✔ resolver uses official ids for canonical, legacy, numeric and Korean lookups (0.2212ms)
+✔ all generated portrait URLs use the pinned official version (0.2827ms)
+✔ candidate chain prefers official identity, then validated stored URL, then text fallback (0.25ms)
+✔ champion list query is strict, bounded, and public status cannot be overridden (1.7469ms)
+✔ admin DTO exposes revision and status but no hidden account or storage fields (1.2934ms)
+✔ event lifecycle follows its explicit path and restores only its recorded cancelled state (2.017ms)
+✔ event lifecycle cannot complete without a confirmed final or leave a terminal state (0.1617ms)
+✔ destruction lifecycle gates auction, preliminary, four-team tournament, and final (0.2327ms)
+✔ rosters enforce five unique players, positional coverage, ARAM semantics, and one captain (0.4902ms)
+✔ best-of results require an exact clinching score and a consistent winner (0.2806ms)
+✔ single elimination seeding is canonical and creates replayable bye/source-fixture structure (1.7104ms)
+✔ bracket advancement is deterministic, idempotent, and rejects overwrites or premature results (0.593ms)
+✔ round robin schedules each pair exactly once without same-round double booking (0.5661ms)
+✔ group round robin is group-key canonical and prevents cross-group duplicates (0.3708ms)
+✔ standings rebuild from the full confirmed fixture set with V1-compatible canonical ties (0.6179ms)
+✔ command envelope and receipt validators bind actor purpose, optimistic revision, and digests (2.09ms)
+✔ audit and outbox contracts reject secret-bearing or incoherent records (0.3912ms)
+✔ competition display projections prefer human labels and never fall back to raw identifiers (0.7648ms)
+✔ event result gallery can be linked only during or after play (3.4603ms)
+✔ POSITION applications upsert, retain identity, cancel, and reactivate only inside recruitment (1.489ms)
+✔ ARAM applications reject position claims and accept positionless entries (0.3034ms)
+✔ admin import is atomic at the aggregate boundary and recruitment closes with exactly ten active entries (0.5307ms)
+✔ event consumes the S06 balance port shape and validates two complete five-person rosters (1.3797ms)
+✔ seeded bracket derives the champion, supports correction, and completes with an event participant MVP (1.5277ms)
+✔ correcting an upstream result preserves the other branch and explicitly invalidates downstream results (0.8125ms)
+✔ cancellation recovery restores only the recorded phase and public DTOs omit private ownership data (0.8853ms)
+✔ command handler rechecks authorization in-transaction and commits aggregate, audit, outbox, then receipt (2.2026ms)
+✔ authorized idempotency replay skips aggregate work and a mismatched fingerprint fails closed (0.721ms)
+✔ command handler rejects stale expected revisions before any aggregate write (0.43ms)
+✔ command metadata cannot downgrade admin commands or detach owner intent from the player (0.5641ms)
+✔ competition saved views only accept one allowlisted type (0.7662ms)
+✔ event application deep link rejects unrelated and repeated values (0.212ms)
+✔ destruction detail deep links retain only valid section-bound values (0.9737ms)
+✔ administrator live auction view requires the complete exact pair (0.197ms)
+✔ requires the exact destructive cutover acknowledgement and PostgreSQL URL (1.0825ms)
+✔ orders read-only preflight, migration, and one repeatable-read import transaction (2.3382ms)
+✔ rolls back the import transaction and closes the pool on phase failure (1.0525ms)
+✔ rolls back read-only preflight before migration when the source check fails (0.6147ms)
+✔ V1 events preserve participant ownership, team membership and a canonical import revision (3.9918ms)
+✔ V1 event winners are replayed through the deterministic V2 bracket (1.019ms)
+✔ V1 destruction preserves four validated rosters, applications and auction balances (1.8003ms)
+✔ lossy cancellation and in-flight auction states fail closed while gallery linking is deferred (1.8174ms)
+✔ empty source imports are rerunnable and never control the caller transaction (1.0066ms)
+✔ core record import is externally transactional and idempotent (4.1376ms)
+✔ core record import uses qualified V1 sources and the shared legacy UUID mapping (0.3627ms)
+✔ core integrity sends an escaped Data Dragon allowlist to PostgreSQL (0.5629ms)
+✔ integrity failure stops before the first write (0.589ms)
+✔ imports supported discipline and public Riot projections (3.4479ms)
+✔ a clean rerun inserts no rows and still reconciles (0.2684ms)
+✔ rejects an actor that cannot own imported discipline records before writes (0.5391ms)
+✔ does not silently drop discipline task states that need evidence migration (0.1851ms)
+✔ rejects Riot summaries that cannot be represented without a safe link (0.2284ms)
+✔ throws when imported extension rows fail reconciliation (0.2144ms)
+✔ imports V1 accounts and players through deterministic legacy mappings (1.7988ms)
+✔ a clean rerun inserts nothing and still reconciles (0.2129ms)
+✔ fails before writes when source identity data is unsafe (0.4649ms)
+✔ throws on missing relationships so the caller transaction can roll back (1.3181ms)
+✔ throws when target legacy IDs or core relationships do not reconcile (0.27ms)
+✔ imports public media URLs and inhouse private-asset metadata without secret blobs (2.6634ms)
+✔ legacy public URLs remain visible through the V2 media projection (0.3181ms)
+✔ a clean rerun inserts or relinks nothing and still reconciles (0.2773ms)
+✔ rejects unsafe gallery URLs before the first write (0.4554ms)
+✔ throws when imported metadata does not reconcile (0.2573ms)
+✔ projects only bounded Kakao feature settings and records excluded operational row counts (2.1854ms)
+✔ a clean rerun does not rewrite the already reconciled settings projection (0.8471ms)
+✔ rejects invalid_actor before any target mutation (0.4875ms)
+✔ rejects invalid_settings_root before any target mutation (0.1415ms)
+✔ rejects invalid_boolean_settings before any target mutation (0.1431ms)
+✔ rejects invalid_max_message_length before any target mutation (0.1245ms)
+✔ fails closed when the target does not exactly reconcile (0.2631ms)
+✔ the preservation policy explicitly excludes logs, secrets, transient jobs and caches (0.1685ms)
+✔ imports parties and normalized operation forms idempotently in the caller transaction (4.3204ms)
+✔ uses qualified V1 sources, full target UUID kinds, and parameterized reviewer identity (0.7803ms)
+✔ blocks malformed dates and members before any target write (0.6524ms)
+✔ rejects invalid or non-SUPER cutover actors (0.3768ms)
+✔ reconciliation failure asks the caller to roll back (0.4222ms)
+✔ documents V1 party, operation-form, and scrim schema gaps (0.2026ms)
+✔ season applications, saved drafts, and MMR projections import idempotently (3.4304ms)
+✔ uses fully-qualified source tables and deterministic full target UUID kinds (0.4005ms)
+✔ unrepresentable source data fails before the first target write (0.5957ms)
+✔ preflight explicitly covers missing draft owners, nullable legacy game IDs, and review provenance (0.2665ms)
+✔ source/target count mismatch requests caller rollback (0.4078ms)
+✔ complete uses ADMIN intent, expectedRevision, one atomic audit/outbox/receipt commit, and replay (5.423ms)
+✔ idempotency conflicts, stale revisions, account sessions, and scope drift fail closed (1.3612ms)
+✔ cancel and restore retain only the recorded lifecycle recovery state (0.78ms)
+✔ public DTO is an explicit allowlist without cancellation reason, raw votes, audit, or session material (0.3265ms)
+✔ application port types retain JSON-safe public response material (0.2248ms)
+✔ the eight preliminary configurations derive BO1/BO3 and enforce viable lane capacity (4.0633ms)
+✔ captain points use the versioned arithmetic boundary: subtract, round to ten, clamp (0.2898ms)
+✔ owner/admin cancellation intent is explicit and cannot cancel another user's application (0.566ms)
+✔ captain confirmation and seeded auction preserve draw, balance, roster, and position invariants (5.4086ms)
+✔ preliminary standings always rebuild from the full fixture set and seed four finalists (2.0826ms)
+✔ a replacement changes only the current roster and cannot rewrite an existing fixture snapshot (2.3513ms)
+✔ match-wide MVP voting bans self votes, requires ten voters, and limits tie revotes (3.349ms)
+✔ the common bracket can finish semifinal and final fixtures for destruction completion (0.9454ms)
+✔ destruction list query is an explicit single-value allowlist (1.7019ms)
+✔ admin parser covers lifecycle commands and rejects unknown or extra material (1.0032ms)
+✔ service binds owner identity, request fingerprint and SUPER-sensitive intent server-side (2.7935ms)
+✔ HTTP mutation boundary requires same origin, If-Match and Idempotency-Key (24.9828ms)
+✔ owner submission rechecks authorization and binds a READY private asset atomically (6.0015ms)
+✔ exact replay returns the durable body without touching the task or asset (0.5555ms)
+✔ missing private asset and failed authorization use existence-masked errors (0.7381ms)
+✔ outbox failure rolls task, audit, outbox and receipt back together (0.3503ms)
+✔ review requires an ADMIN-purpose TOTP recheck and approves the exact evidence batch (1.8457ms)
+✔ tampered immutable request body fails before the transaction (0.3137ms)
+✔ identity prioritizes account then player and normalizes direct identity (0.7892ms)
+✔ warning policy preserves V1 counts and deterministic oldest-first conversion (0.7663ms)
+✔ three active warnings create one review and an existing pending review suppresses duplicates (0.1942ms)
+✔ owner evidence submission reaches review only at the exact required count (0.4547ms)
+✔ rejection creates a batch boundary and requires a complete fresh batch (0.1756ms)
+✔ stale, non-owner, duplicate, expired and invalid review operations fail closed (0.5794ms)
+✔ public discipline DTO contains aggregate counts only (1.339ms)
+✔ discipline admin input parsers keep a closed field allowlist (1.5756ms)
+✔ review and cancellation bodies reject ambiguous shapes (0.1941ms)
+✔ event public query rejects duplicate and unknown filters (1.3475ms)
+✔ event service creates a server-fingerprinted command and rejects unstable identifiers or even BO (2.2962ms)
+✔ own application requires a stable participant UUID so retry fingerprints cannot drift (0.5996ms)
+✔ event gallery command accepts only an exact nullable gallery identifier (0.743ms)
+✔ 익명 전역 검색은 공개 canonical 기능만 반환한다 (1.7259ms)
+✔ 팔레트 바로 가기는 실제 canonical 사용자 페이지 안에서만 구성된다 (0.752ms)
+✔ 로그인 전역 검색은 페이지·도구·콘텐츠·계정 키워드를 정규화해 찾는다 (1.3825ms)
+✔ 플레이어 검색은 공백을 정리하고 URL 구성요소를 안전하게 인코딩한다 (0.3989ms)
+✔ 홈의 서로 다른 공개 피드는 시간 역순과 ID tie-break로 결정적으로 합쳐진다 (11.9936ms)
+✔ 홈 피드 제한은 음수와 비정수 값을 거부하고 0은 빈 피드를 만든다 (0.5225ms)
+✔ 홈 멸망전 우승 갤러리는 FK 연결을 우선해 중복 제거하고 게시일 역순과 최대 개수를 지킨다 (0.3238ms)
+✔ 오늘의 챔피언은 KST 날짜·활성 목록에 대해 SSR에서도 결정적이고 다음 날 변경된다 (10.6623ms)
+✔ 오늘의 챔피언 문구와 챔피언별 개별 재구성 이미지를 연결한다 (0.467ms)
+✔ 홈 안내 허용 목록은 공식 매핑을 통과한 여성 챔피언 68명과 고유 문구를 갖는다 (0.7324ms)
+✔ 특례 네 챔피언은 포함하고 Kindred와 남성·미확인 후보는 기본 거부한다 (0.2266ms)
+✔ 레거시 키는 표시 이름으로 canonicalize하며 같은 공식 챔피언을 한 번만 선택한다 (0.2421ms)
+✔ trace IDs accept only non-zero 32-digit hexadecimal values (1.0895ms)
+✔ traceparent parsing pins version 00 and rejects ambiguous or zero identifiers (0.5282ms)
+✔ validated trace extraction does not fall back around a malformed traceparent (19.7481ms)
+✔ public problem definitions reject unsafe public fields (0.5548ms)
+✔ problem responses expose only the fixed public contract and validated trace ID (5.2628ms)
+✔ forged problem objects fall back without leaking stack, SQL, or extra fields (0.8585ms)
+✔ no-store response helpers enforce API security headers over caller overrides (0.9499ms)
+✔ JSON content types allow UTF-8 JSON and structured +json only (0.7063ms)
+✔ JSON body reader preserves split UTF-8 code points and reports actual bytes (3.7312ms)
+✔ JSON body reader separates media type, empty body, UTF-8, and JSON errors (1.566ms)
+✔ JSON body reader rejects duplicate decoded object keys at every nesting level (1.3036ms)
+✔ JSON body reader enforces declared and streamed byte limits (0.6985ms)
+✔ JSON body reader rejects malformed and mismatched Content-Length (0.4439ms)
+✔ JSON body reader reports stream failures and rejects unsafe limit configuration (0.535ms)
+✔ JSON body reader cancels a rejected unread stream without exposing its data (0.188ms)
+✔ problem mappings keep parser failures on the reviewed public catalog (0.1387ms)
+✔ Idempotency-Key parsing is strict, bounded, and case preserving (0.2191ms)
+✔ idempotency hash material is deterministic and domain separated (0.3512ms)
+✔ revision parsing accepts canonical non-negative safe integers including schema default 0 (0.2607ms)
+✔ If-Match parsing requires one strong integer revision ETag (0.3182ms)
+✔ pagination parsing applies defaults and explicit upper bounds (0.2746ms)
+✔ pagination rejects duplicate, ambiguous, oversized, and attack-shaped values (0.2392ms)
+✔ pagination rejects unsafe parser configuration (0.1324ms)
+✔ Kakao operation settings accept only bounded secret-free fields (1.3009ms)
+✔ Kakao runtime configuration exposes booleans, never secret values (0.2583ms)
+✔ Kakao message policy normalizes before applying the stored length limit (0.1418ms)
+✔ Kakao admin tab query accepts only allowlisted keys for the selected tab (0.1751ms)
+✔ sensitive Kakao admin tabs require SUPER_ADMIN while operating tabs remain ADMIN (0.143ms)
+✔ party member statistics search is normalized and bounded (0.3354ms)
+✔ Kakao assistant accepts only exact bounded search and read commands (1.9184ms)
+✔ Kakao season snapshots require exact bounded participant slots and positions (2.2221ms)
+✔ Kakao season command access keeps submit and status member-safe while force cancel stays trusted (0.2417ms)
+✔ managed forms route only the explicit operation-form command (0.2335ms)
+✔ Kakao image receive requires an owner-created opaque session and exact bounded fields (1.8604ms)
+✔ player search DTO is an explicit public allowlist (0.2165ms)
+✔ the full party detail can be copied, edited, and synchronized with its saved identity (10.0176ms)
+✔ copyable forms retain literal metadata, sparse reserve slots, and reserve display names (0.8826ms)
+✔ resubmitting the current unchanged full form preserves the aggregate and revision (1.4903ms)
+✔ line-party copies preserve stored slot names when old position metadata is missing or inconsistent (2.2527ms)
+✔ metadata mentioning another recruitment title does not become a second form title (1.4489ms)
+✔ custom stored titles remain visible in status while copy forms use the stored party type and capacity (2.567ms)
+✔ detail header and summary identity conflicts are ambiguous and never canonicalize (7.5397ms)
+✔ out-of-range detail identifiers and capacities are rejected (1.9619ms)
+✔ party parser keeps raw slot intent across Kakao punctuation variants (5.1816ms)
+✔ party parser accepts clipped headers and an adjacent wrapped slot value (0.6771ms)
+✔ metadata is order independent, multiline, and keeps absent separate from empty (1.0958ms)
+✔ V1 line-party position fixtures keep canonical positions (0.3464ms)
+✔ duplicate, merged, missing, and multiple-number structures are diagnosed without last-wins parsing (1.5196ms)
+✔ recoverable, rejected, and ordinary text decisions remain distinct (5.0108ms)
+✔ only EXACT party forms become SYNC while parsed title and slot states reach canonical payload (4.9916ms)
+✔ metadata-only party activation forms accept slash and keep organizer separate from members (0.6761ms)
+✔ the reported #11 party template classifies as one metadata activation snapshot (1.2365ms)
+✔ generated operating day wins across the 06:00 boundary while legacy forms keep fallback behavior (0.9201ms)
+✔ 내전/스크림 번호ㅉ 명령은 slash 유무와 관계없이 현재 운영일 FINISH로 canonicalize된다 (9.2493ms)
+✔ 다른 sender도 같은 installation/room의 내전 번호를 마감하고 최신 내전현황을 받는다 (0.8677ms)
+✔ 다른 sender도 같은 installation/room의 스크림 번호를 마감하고 최신 스크림현황을 받는다 (1.1529ms)
+✔ 동일 event replay는 내전 마감 한 번과 스크림 종료 안내를 재사용한다 (0.9718ms)
+✔ room capability profiles are exclusive and exposed as authorization policies (1.2311ms)
+✔ V1 strict record always shows season/tier and the canonical multi-game recent line (0.9328ms)
+✔ V1 strict recent, missing player, and empty ranking preserve the canonical copy (0.1964ms)
+✔ V1 strict operation and season empty replies keep public V1 labels (0.946ms)
+✔ V1 strict season STATUS keeps canonical zero, one, and multiple-round results (0.1842ms)
+✔ V1 strict season DETAIL keeps the full existing form and empty missing result (0.1261ms)
+✔ V1 strict scrim time keeps an explicit M/D instead of forcing the operation date (5.4005ms)
+✔ V1 strict scrim time accepts 오전/오후 and H시 forms (1.3427ms)
+✔ V1 strict scrim time preserves free text without exposing its internal memo carrier (0.7525ms)
+✔ strict V1 and ordinary V4 reserve full copyable drafts and return one current form after saving (5.2121ms)
+✔ strict V1 detail is the full copyable form without repeated command guidance (0.3154ms)
+✔ strict V1 status renders recruiting, waiting, playing, and large-party groups (1.0901ms)
+✔ strict V1 missing detail uses the canonical not-found reply (0.2203ms)
+✔ strict V1 missing scrim detail uses the canonical success reply while ordinary V4 stays not-found (0.9696ms)
+✔ strict V1 scrim status and detail preserve a free-text legacy start time (0.686ms)
+✔ Kakao HTTP verification reports allowlisted internal reasons without weakening the generic boundary (33.8021ms)
+✔ V2 installation fingerprint is inside the HMAC material (1.0189ms)
+✔ V3 binds installation key id, delivery id, and bot version inside the HMAC material (1.7566ms)
+✔ legacy party and scrim mutations fail closed with an explicit V2 successor and no redirect (1.4821ms)
+✔ 내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백과 제한된 오타를 허용한다 (10.3598ms)
+✔ 협곡 내전 빠른 추가는 이름만 또는 티어·라인 전체 입력을 모두 허용한다 (3.7632ms)
+✔ 내전 전체 양식은 일반 명단과 예비 명단을 함께 동기화한다 (5.6724ms)
+✔ 빠른 추가·삭제는 명확한 번호와 한 명의 안전한 이름만 허용한다 (4.7501ms)
+✔ 내전 명령도 파티·스크림과 같은 오전 6시 운영일을 사용한다 (0.4771ms)
+✔ 내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번호가 든 양식만 응답한다 (2.5498ms)
+✔ 내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은 활성화 명령이 되지 않는다 (4.0938ms)
+✔ 내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고 최신 명단을 함께 응답한다 (2.1212ms)
+✔ classifier exposes a complete canonical/profile matrix (3.1269ms)
+✔ all 101 V41 parity samples classify with zero-or-one slash equivalence (40.2377ms)
+✔ the V1 compatibility fixture routes all classify into the six canonical families (7.7659ms)
+✔ double slash, URL slash, separated slash, and middle slash stay UNKNOWN (0.3328ms)
+✔ profile matrix routes recruit, features, and local commands explicitly (1.1567ms)
+✔ diagnostic and raw JSON commands are classified as internal, not user help (0.3495ms)
+✔ party, inhouse, and scrim full forms win over command parsing as SNAPSHOT (1.5766ms)
+✔ party snapshot accepts metadata-only activation fields and legacy participant rows (1.1774ms)
+✔ R23 scrim retirement is structural and does not capture ordinary party names or game information (0.6281ms)
+✔ party member mutations require an explicit detail prefix and one safe single-line name (1.7591ms)
+✔ Kakao copy/paste party row variants still canonicalize to one SYNC member (3.2983ms)
+✔ full-width empty reserve punctuation and clock text never become party members (0.4347ms)
+✔ flexible party row parsing does not classify ordinary chat or generic number lists (0.7173ms)
+✔ party snapshot rejects truncated numeric and position templates (0.7284ms)
+✔ A→B→A identical text is reclassified without state or content-hash suppression (0.598ms)
+✔ operation forms classify on FEATURES and reject the RECRUIT profile (0.9229ms)
+✔ V4 schema preserves the seven-field client and accepts only the exact V1 strict extension (1.7905ms)
+✔ slash boundary preserves zero-or-one leading slash parity (0.6672ms)
+✔ V4 signature covers the exact raw envelope and timestamp (0.8745ms)
+✔ profile authorization does not receive sender role or allowlist inputs (4.7906ms)
+✔ health, contract probes, and classified commands return deterministic replies without a runtime dispatcher (2.1156ms)
+✔ event ID is the idempotency boundary and mismatched reuse conflicts (0.6588ms)
+✔ hot replay cache binds the verified raw request digest (0.4332ms)
+✔ R23 retires every old-phone scrim command and form without dispatching or writing (16.6459ms)
+✔ R23 help leads with copy-paste saving and contains no scrim instructions (0.7679ms)
+✔ public error responses keep stable status and code contracts (26.2335ms)
+✔ V4 application errors normalize idempotency conflicts to public 409 only (0.9772ms)
+✔ 내전 빠른 명단 응답은 결과를 한 줄로 요약하고 본명과 닉네임을 표시한다 (2.2024ms)
+✔ 내전 빠른 추가 대상이 미등록이면 회원가입 주소만 안내한다 (0.2828ms)
+✔ player record, recent matches, and ranking preserve exact V1-visible fields (0.9801ms)
+✔ player and ranking boundary replies preserve V1 wording and percent formatting (0.3537ms)
+✔ V4 event key is shared by recruiting and assistant durable receipts (0.9254ms)
+✔ party create reserves an invisible draft and returns all blank slots with its copy reference (2.5804ms)
+✔ the exact generated V1 party form activates with only organizer populated and applies metadata defaults (7.589ms)
+✔ the reported metadata-only #11 form reaches one idempotent party activation (1.7408ms)
+✔ first completed automatic party form creates the party once (0.595ms)
+✔ explicit missing party number never falls back to creating a new party (0.6323ms)
+✔ existing party snapshots forward slot states without forwarding submitted type or capacity (0.7046ms)
+✔ party status and detail use one server status receipt and return the latest aggregate (0.594ms)
+✔ party member shortcut classifications canonicalize to the current operating day (1.8579ms)
+✔ party member shortcut outcomes return confirmation followed by the latest full form (1.5224ms)
+✔ missing, ambiguous, and member-limit shortcut results stay concrete successful replies (0.5314ms)
+✔ party mutation and latest full form keep the signed instant across the 06:00 KST boundary (1.1071ms)
+✔ replayed sync, blank deletion, and finish disclose a failed post-mutation status refresh (0.414ms)
+✔ party snapshot and finish resolve latest revision without owner or role inputs (0.3796ms)
+✔ missing current-operating-day party finish is a V1 success reply with the latest status and no mutation (0.8259ms)
+✔ scrim status requests only the scrim projection (0.609ms)
+✔ season authoritative zero-person snapshot stays one transactional assistant call (0.5521ms)
+✔ season SYNC exposes the latest copy reply to both ordinary and strict clients (0.2193ms)
+✔ V1 strict season STATUS maps no active season to the canonical empty reply only (0.3143ms)
+✔ scrim create and snapshot each issue one recruiting mutation (0.6984ms)
+✔ season status and detail each return one authoritative assistant result (0.2009ms)
+✔ scrim deprecated lifecycle commands use a static receipt without domain status queries (0.1909ms)
+✔ dispatcher fails closed when command domain and static profile differ (0.1617ms)
+✔ structural operation candidates with one empty value reach exact missingFields (16.4875ms)
+✔ colonless prose and label-only lists remain UNKNOWN (3.9095ms)
+✔ party members are canonical by primary/reserve and slot number, independent of row order (1.9557ms)
+✔ inhouse copy accepts names-only main/reserve rows and preserves save reference separately from notices (6.7804ms)
+✔ inhouse copy rejects malformed/duplicate save references and marks old forms as legacy (1.3855ms)
+✔ inhouse copy still accepts optional lanes and routes malformed lane input to review (0.4518ms)
+✔ inhouse stale forms return the latest copy without retrying the mutation, and old days show today's rounds (1.7651ms)
+✔ real RIFT input recovers one missing position slash and accepts empty flexible rows (8.2878ms)
+✔ recovery is limited to two valid position aliases and records the failed field (0.3042ms)
+✔ legacy empty sub-position markers are accepted only in the sub-position field (0.3029ms)
+✔ mixed real-world rows keep valid entries, route partial rows to review, and use the last duplicate slot (0.6868ms)
+✔ a final empty duplicate row means cancellation while a missing numbered row is preserved (0.5002ms)
+✔ an incomplete duplicate footer cannot replace a valid slot while valid edits stay last-write-wins (0.5063ms)
+✔ numbered footer text after a complete empty roster cannot create a pending participant (0.4688ms)
+✔ valid edits and explicit cancellation after a complete roster remain last-write-wins (0.7202ms)
+✔ the former canonical failure maps to the exact public HTTP 400 document (23.6793ms)
+✔ [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle (1.6715ms)
+✔ [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member (15.0044ms)
+✔ [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot (6.564ms)
+✔ [P0-PARTY-03] slash and comma in one reserve row stay in one display name (0.5499ms)
+✔ [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target (1.7877ms)
+✔ [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot (0.6779ms)
+✔ [P0-PARTY-06] member order is canonical and independent of pasted row order (0.7311ms)
+✔ [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved (1.264ms)
+✔ [P0-PARTY-08] multiline metadata values match their single-line semantic values (1.0023ms)
+✔ [P0-PARTY-09] an automatic-number empty draft never creates a recruit (1.1864ms)
+✔ [P0-OPS-01] all four forms preserve values continued on the following line (4.6264ms)
+✔ [P0-OPS-02] all four forms expose exact missing-field contracts without submission (0.9202ms)
+✔ [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter (0.26ms)
+✔ [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN (1.2643ms)
+✔ [P0-OPS-05:friends] field order does not alter the canonical payload (0.9738ms)
+✔ [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form (0.3916ms)
+✔ [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field (0.4583ms)
+✔ [P0-OPS-05:suggestions] field order does not alter the canonical payload (0.2921ms)
+✔ [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form (0.2328ms)
+✔ [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field (0.3671ms)
+✔ [P0-OPS-05:meetups] field order does not alter the canonical payload (0.4709ms)
+✔ [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form (1.2112ms)
+✔ [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field (0.3906ms)
+✔ [P0-OPS-05:leaves] field order does not alter the canonical payload (0.3972ms)
+✔ [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form (0.2518ms)
+✔ [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field (4.2418ms)
+✔ [P0-OPS-08] prose mentioning every label is not classified as a form (0.3575ms)
+✔ [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed (1.0667ms)
+✔ [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched (0.9509ms)
+✔ [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch (0.812ms)
+✔ [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server (0.1783ms)
+✔ [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker (0.2844ms)
+﹣ [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role (0.0635ms) # isolated PostgreSQL harness required
+✔ V4 installation identity exactly mirrors the phone HMAC contract (1.3966ms)
+✔ one unified phone script shares one identity secret while RECRUIT and FEATURES keep distinct stable installation scopes (0.4547ms)
+✔ the server rejects cross-family commands before dispatch for both unified-script profiles (12.279ms)
+✔ arbitrary installation IDs and cross-profile IDs fail closed (0.308ms)
+✔ current and previous signing keys authenticate only their exact HMAC (0.9989ms)
+✔ two senders share one installation scope for create, cross-edit and finish (4.301ms)
+✔ runtime identity configuration is bounded without inspecting real environment values (0.5073ms)
+✔ V4 signing keyring is isolated from V1 and rejects unsafe reuse (0.344ms)
+✔ V4 route is registry-free and keeps the seven-field identity-free boundary (0.7592ms)
+✔ the unified V4 phone callback ignores room and channel values while routing both families (1.7899ms)
+✔ admin and architecture copy distinguish V4 installation scope from the legacy room registry (3.8109ms)
+✔ [P0-INHOUSE-LIVE-01] 동휘/김동휘 실양식은 Mid all을 복구해 같은 semantic payload로 dispatch한다 (15.2153ms)
+✔ [P0-INHOUSE-LIVE-02] slash 계약에 맞춘 MID 또는 ALL 입력은 이름과 무관하게 정상 payload를 만든다 (1.8163ms)
+✔ [P0-INHOUSE-LIVE-03] Mid all 복구는 mainPosition MID를 유지하고 ALL 부라인을 저장하지 않는다 (0.1973ms)
+✔ [P0-INHOUSE-METADATA-01] 독립 공지와 20시 시작을 전체 스냅샷 메타로 보존한다 (0.7114ms)
+✔ [P0-INHOUSE-METADATA-02] 시작 줄 tail 공지는 수용하고 슬롯 뒤 문장은 공지로 오인하지 않는다 (0.7353ms)
+✔ [P0-INHOUSE-METADATA-03] 공지가 없는 전체 스냅샷은 명시적인 null을 만든다 (0.3658ms)
+✔ [P0-INHOUSE-METADATA-04] 시작 줄 다음과 인원 줄 사이의 공지도 구조 필드와 분리해 저장한다 (0.4194ms)
+✔ operation field map is order independent and tolerates Kakao paste punctuation (3.0167ms)
+✔ person punctuation remains intact unless slash or pipe is explicit (0.4957ms)
+✔ same duplicate fields dedupe while conflicting duplicates block submission with diagnostics (0.3633ms)
+✔ leave scope reads only its selected field value, not room names in the footer (0.8334ms)
+✔ candidate detection is structural and does not require complete values (1.0661ms)
+✔ operation wrappers are candidates only when they occupy a title line (0.2094ms)
+✔ person fields are required and never fall back to an opaque sender identity (0.9296ms)
+✔ [P3-I01] FEATURES INHOUSE 내전구인 keeps exact V1 reply parity (8.5724ms)
+✔ [P3-I02] FEATURES INHOUSE 내전구인 양식 keeps exact V1 reply parity (1.8745ms)
+✔ [P3-I03] FEATURES INHOUSE 내전구인 협곡 2026-09-09 21:30 #2 10명 keeps exact V1 reply parity (1.3811ms)
+✔ [P3-I04] FEATURES INHOUSE 내전구인 칼바람 2026-09-09 21:30 #3 10명 keeps exact V1 reply parity (0.7231ms)
+✔ [P3-I05] FEATURES INHOUSE 내전구인 증바람 2026-09-09 21:30 #3 10명 keeps exact V1 reply parity (0.4599ms)
+✔ [P3-I06] FEATURES INHOUSE 내전현황 keeps exact V1 reply parity (0.3701ms)
+✔ [P3-I07] FEATURES INHOUSE 내전상세 2 keeps exact V1 reply parity (0.2783ms)
+✔ [P3-I07] INHOUSE authoritative snapshots preserve delete, zero and A→B→A revisions (7.8409ms)
+✔ [P3-I08] ARAM and AUGMENT_ARAM snapshots keep name-only authoritative arrays (1.0277ms)
+✔ [P3-S01] R23 SCRIM create returns retirement guidance without dispatch (1.3845ms)
+✔ [P3-S02] R23 SCRIM new full form cannot reach its former dispatcher (0.293ms)
+✔ [P3-S03] R23 SCRIM edit full form cannot reach its former dispatcher (1.2834ms)
+✔ [P3-S04] R23 SCRIM retirement does not depend on active tournament state NO_ACTIVE_TOURNAMENT (0.2302ms)
+✔ [P3-S05] R23 SCRIM retirement does not depend on active tournament state AMBIGUOUS_ACTIVE_TOURNAMENT (0.1457ms)
+✔ [P3-O01] OPERATIONS friends complete form dispatches once and passes through exact server reply (2.2152ms)
+✔ [P3-O02] OPERATIONS suggestions complete form dispatches once and passes through exact server reply (0.3258ms)
+✔ [P3-O03] OPERATIONS meetups complete form dispatches once and passes through exact server reply (0.5945ms)
+✔ [P3-O04] OPERATIONS leaves complete form dispatches once and passes through exact server reply (0.5836ms)
+✔ [P3-O05] OPERATIONS friends missing required values returns an explicit V1 error without dispatch (0.403ms)
+✔ [P3-O06] OPERATIONS suggestions missing required values returns an explicit V1 error without dispatch (0.2196ms)
+✔ [P3-O07] OPERATIONS meetups missing required values returns an explicit V1 error without dispatch (0.2931ms)
+✔ [P3-O08] OPERATIONS leaves missing required values returns an explicit V1 error without dispatch (0.2845ms)
+✔ [P3-M01] OPERATIONS 등록 keeps exact V1 reply parity (1.1288ms)
+✔ [P3-M02] OPERATIONS 내전등록 keeps exact V1 reply parity (0.3315ms)
+✔ [P3-M03] OPERATIONS 경고등록 keeps exact V1 reply parity (0.2914ms)
+✔ [P3-M04] OPERATIONS 인증 keeps exact V1 reply parity (0.2755ms)
+✔ [P3-M05] OPERATIONS 경고현황 keeps exact V1 reply parity (0.2694ms)
+✔ [P3-M06] OPERATIONS 결과현황 keeps exact V1 reply parity (0.1894ms)
+✔ [P3-M07] OPERATIONS 사진취소 keeps exact V1 reply parity (0.1868ms)
+✔ [P3-M08] OPERATIONS 자동공지 20 keeps exact V1 reply parity (0.1948ms)
+✔ [P3-A01] Phase 3 authorization is installation/profile based and never receives room, sender or role (0.6419ms)
+✔ [P3-A02] two ordinary senders can use the same Phase 3 command without a sender allowlist (0.3645ms)
+✔ [P3-R01] identical eventId replays one successful Phase 3 mutation without a second dispatch (0.4176ms)
+✔ [P3-R02] same eventId with a conflicting body maps to public HTTP 409 REPLAY_CONFLICT (19.1851ms)
+✔ Phase 3-A: 내전 모드 선택과 협곡·칼바람 복사 양식을 출력한다 (11.9028ms)
+✔ Phase 3-A: 내전 전체 현황과 회차 상세는 정확히 한 번 authoritative assistant를 호출한다 (2.0553ms)
+✔ Phase 3-A: 협곡 명단 A→B→A와 0명은 각 입력당 한 번의 authoritative snapshot이다 (8.2389ms)
+✔ R23: 스크림 양식·현황·상세는 종료 안내만 반환한다 (2.3567ms)
+✔ R23: 구형 스크림 신규 양식과 재전송은 저장 없이 종료 안내만 반환한다 (0.3467ms)
+✔ R23: 구형 스크림 수정 양식은 기존 데이터와 대회 바인딩을 변경하지 않는다 (1.0296ms)
+✔ Phase 3-A: 번호 행 하나가 빠진 양식은 그 슬롯을 보존하고 나머지 행을 동기화한다 (0.5426ms)
+✔ four V1 operation forms become exact typed payloads (18.7186ms)
+✔ all four forms report their exact missing fields as INVALID_FORM commands (1.1315ms)
+✔ registration, result, warning, evidence, status and photo-cancel preserve V1 replies (4.5561ms)
+✔ scheduled notice uses one durable assistant request and preserves the V41 formatter (0.4812ms)
+✔ valid form submits one typed mutation in the shared V4 event scope (0.4318ms)
+✔ invalid form claims a durable receipt before exposing field-specific INVALID_FORM (19.2681ms)
+✔ operation forms reuse the same durable event identity as recruiting and assistant (0.4247ms)
+✔ fresh service instances replay the durable form result and reject a changed body (1.6298ms)
+✔ internal raw JSON and phone-local session commands do not become public canonical operations (0.7572ms)
+✔ [P4-S01] every V1 PUBLIC alias succeeds on its actual profile with exact zero/one slash parity (35.6974ms)
+✔ [P4-S02] every single-profile PUBLIC alias maps its opposite profile to HTTP 403 WRONG_PROFILE (43.1636ms)
+✔ [P4-S03] authorization never receives room, sender, role or member allowlist fields (0.4662ms)
+✔ [P4-S04] unknown public input is INVALID_FORM instead of 501 ROUTER_NOT_ENABLED (1.4546ms)
+✔ [P4-S05] 사진상태 gives a site check path without claiming a nonexistent phone session is healthy (0.2692ms)
+✔ [P4-S06] 내전미리보기취소 returns a no-mutation discard notice (0.2755ms)
+✔ [P4-S07] 내전확인 ABCD1234 returns a no-mutation discard notice (0.2209ms)
+✔ [P4-S01] every public fixture alias has a local reply or canonical dispatcher route (25.5068ms)
+✔ [P4-S02] server fallback gives exact local help, photo guidance, and no-mutation preview notices (1.1882ms)
+✔ [P4-S01A] every actual V41 public sample has a local reply or canonical dispatcher route (6.6611ms)
+✔ [P4-S03] unknown and internal direct API inputs normalize to explicit HTTP 400 (37.6ms)
+✔ [P4-S04] V4 command HTTP surface contains no 501 or router-not-enabled response (3.8208ms)
+✔ [S01] zero or one leading slash is equivalent for the complete V1 route fixture (9.2097ms)
+✔ [S02] malformed slash, URL and middle slash canonicalize to no command (0.2394ms)
+✔ [S03] two unregistered general users can create, cross-edit and cross-finish one recruit (14.9981ms)
+✔ [S04] full recruit snapshots delete names, accept zero people and preserve A→B→A (2.23ms)
+✔ [S05] FEATURES ranking, record and recent commands return successful replies (2.7775ms)
+✔ [S06] a retired scrim command returns the R23 notice after authorization (0.3174ms)
+✔ [S07] duplicate mutation callback is applied once and replayed once (0.2709ms)
+✔ [S08] an event ID body conflict maps to public REPLAY_CONFLICT with HTTP 409 (23.7559ms)
+✔ [S09:NORMAL] normal V4 status returns a successful reply (0.3842ms)
+✔ [S09:WRONG_PROFILE] wrong profile has an exact public code (0.2088ms)
+✔ [S09:INVALID_SIGNATURE] invalid signature has an exact public code (0.434ms)
+✔ [S09:REPLAY_CONFLICT] replay conflict has an exact public code (0.3416ms)
+✔ [S09:SERVER_UNAVAILABLE] server failure has an exact public code (0.284ms)
+✔ [S09:INVALID_FORM] invalid V1 form has an exact public code (0.1209ms)
+✔ [S10] V1 golden regression inventory remains present for the release run (1.1124ms)
+✔ legacy participation redirects preserve only reviewed query values (1.1453ms)
+✔ legacy 정수 ID는 양의 PostgreSQL int32 canonical 형식만 허용한다 (1.0266ms)
+✔ 대회 legacy UUID는 승인된 PostgreSQL cutover recipe와 일치한다 (0.205ms)
+✔ 미디어 legacy resolver는 유효한 숫자만 공개 매핑 port로 전달한다 (0.7943ms)
+✔ legacy proxy는 GET/HEAD만 308로 이동하고 query allowlist를 적용한다 (5.3188ms)
+✔ UUID mapping이 없는 legacy player detail은 영구 redirect하지 않는다 (0.4443ms)
+✔ legacy account adapters preserve only reviewed canonical intent (4.3434ms)
+✔ legacy statistics routes use one allowlisted canonical ranking destination (5.0002ms)
+✔ reviewed administrator aliases resolve to their canonical integrated views (1.1425ms)
+✔ legacy 앱 로그인은 내부 next만 보존하고 중복·외부 주소는 계정으로 축소한다 (1.0827ms)
+✔ legacy 경기 목록은 canonical 공개 필터만 단일 값으로 보존한다 (0.4702ms)
+✔ 동적 legacy ID와 밸런스 추천 query는 path traversal과 미검토 값을 버린다 (0.2785ms)
+✔ 멸망전 참가자와 이미지 legacy deep link는 검증한 ID와 ordinal만 보존한다 (0.2626ms)
+✔ 멸망전 V1 이미지 route는 1-based 번호를 canonical 0-based query로 308 이동한다 (26.7431ms)
+✔ legacy redirect 응답은 상대 Location과 no-store를 사용한다 (0.4709ms)
+✔ USER_ROUTE_MAP의 redirect 32개와 통합 20개는 모두 한 버전 호환 진입점을 가진다 (4.3351ms)
+✔ admin match conflict parser accepts only a complete canonical aggregate (3.6351ms)
+✔ stored instant conversion is explicit and bounded by the recorded offset (0.1313ms)
+✔ admin import recovery stores only minimal expiring non-secret metadata (2.4002ms)
+✔ admin import recovery is best-effort when session storage is unavailable (0.2742ms)
+✔ admin import recovery rejects expired, corrupt and expanded state (0.2551ms)
+✔ ambiguous admin import failures preserve the exact upload key (1.1113ms)
+✔ a verified latest projection is the only conflict path that changes revision or opens review (0.1608ms)
+✔ latest projection parser rejects malformed or unknown state (0.1666ms)
+✔ definitive client rejection retains replay while allowing an explicit file reselection (0.0868ms)
+✔ picker keyboard navigation skips inactive and duplicate-disabled rows (0.7348ms)
+✔ match client retries preserve one key for exact body and revision (0.8101ms)
+✔ submission continuation code is strict uppercase and canonical (0.8756ms)
+✔ offline legacy match ids use the exact PostgreSQL int32 compatibility range (0.143ms)
+✔ MVP v1 formula is the only versioned score source (1.1207ms)
+✔ MVP V1 compatibility tie-break is score, kills, deaths, assists, player id (0.3874ms)
+✔ participant display identity is server-captured and retained across unrelated amendments (0.7946ms)
+✔ KST date and explicit started-at offset are strict (0.1335ms)
+✔ complete match input rejects unknown keys, bidi text and incomplete rosters (0.6481ms)
+✔ submission input has a bounded image/game count (0.8129ms)
+✔ private image validator fully decodes, checks bounds/container end and SHA (12.2719ms)
+✔ fake private adapters are exact development and non-Vercel only (0.4748ms)
+✔ deterministic match review passes a structurally consistent series (1.0713ms)
+✔ deterministic match review blocks stale aggregates and duplicate roster entries (0.2234ms)
+✔ match participant schema requires immutable display identity snapshots (2.8399ms)
+✔ match series and each recalculation event carry nullable team-balance provenance (2.7867ms)
+✔ submission audit snapshots retain a public rejection reason before reopen clears the live row (1.345ms)
+✔ public match player DTO is an exact safe allowlist including inactive profile policy (1.1654ms)
+✔ match submit page accepts one canonical continuation or owned draft reference (2.3219ms)
+✔ public match query is exact, duplicate-safe and date bounded (0.9372ms)
+✔ admin match query separates match and submission filters (0.3669ms)
+✔ admin player picker query is bounded, canonical and duplicate-safe (0.4393ms)
+✔ literal substring filters escape SQL LIKE metacharacters (0.1426ms)
+✔ admin player picker uses indexed prefix or exact combined Riot ID strategy (3.2045ms)
+✔ public match cursor is opaque, exact and coupled to sort/order (2.4682ms)
+✔ own submission history cursor is status-bound and reaches beyond the first page (1.578ms)
+✔ mutation and source hashes use a domain-separated HMAC pepper (13.6318ms)
+✔ admin direct import stays in the private submission saga and only produces review candidates (18.3677ms)
+✔ storage object is compensation-deleted when the DB attach fails (4.3002ms)
+✔ OCR timeout becomes a bounded FAILED candidate and manual review remains possible (3.903ms)
+✔ a finalize replay never deletes the deterministic canonical storage object (4.5019ms)
+✔ a completed receipt replay returns before decode, storage and OCR work (2.5508ms)
+✔ delete failure leaves a durable DELETE_PENDING cleanup request (4.2464ms)
+✔ missing fake object after process restart fails closed instead of returning corrupt bytes (0.344ms)
+✔ image decode/OCR work is admitted through a bounded FIFO gate (0.4437ms)
+✔ image work queue times out without leaking an active lease (25.4003ms)
+✔ private storage keys bind the idempotency key while same-key retries remain stable (2.8944ms)
+✔ an abort-aware never-resolving storage stage times out and reaches durable cleanup (27.5823ms)
+✔ a late stage completion remains visibly DELETE_PENDING for the cleanup worker (91.8315ms)
+✔ an abort-aware OCR timeout becomes review-first FAILED without holding the request (30.9033ms)
+✔ OCR retry commits its durable preflight before storage and provider work (1.2912ms)
+✔ OCR receipt replay returns before private storage work (0.2533ms)
+✔ OCR retry deadline aborts the provider and durably finalizes a review-first failure (31.5654ms)
+✔ selected team-balance provenance requires the exact ten-player two-team layout (1.256ms)
+✔ stalled upload body reaches an idle deadline and cancels its stream (36.9196ms)
+✔ exact upload body still joins chunks under the deadline (0.715ms)
+✔ 빈 캐러셀과 한 장 캐러셀은 첫 위치를 유지한다 (1.8527ms)
+✔ 여러 장 캐러셀은 이전·다음 이동과 양 끝 순환을 결정적으로 계산한다 (0.123ms)
+✔ 캐러셀 장수는 음수나 비정수일 수 없다 (1.2175ms)
+✔ 휠 이동은 양 끝에서 페이지 세로 스크롤로 빠져나갈 수 있도록 순환하지 않는다 (0.1594ms)
+✔ YouTube inputs canonicalize only supported HTTPS origins and paths (1.3802ms)
+✔ highlight uses canonical video data and explicit public DTO (0.881ms)
+✔ gallery validates one to five distinct storage assets (2.0219ms)
+✔ publication FSM archives without hard delete and restore returns to draft (0.2619ms)
+✔ home display is limited to published gallery and clears on unpublish (0.2236ms)
+✔ public gallery DTO resolves only reviewed asset identifiers (1.7361ms)
+✔ gallery keeps one explicit display order across private and migrated external images (0.9351ms)
+✔ metadata edits preserve publication status, increment revision, and reject archived content (0.4313ms)
+✔ admin private asset query is bounded and rejects duplicate or unknown parameters (1.4835ms)
+✔ raw media upload preflight requires same origin, If-Match, bounded image MIME/size, SHA and safe name (24.5112ms)
+✔ unconfigured upload storage returns the specific fail-closed problem (2.255ms)
+✔ media editor and private asset administration expose the complete safe workflow (1.5261ms)
+✔ gallery editor accepts only bounded bulk upload result counts (0.4222ms)
+✔ media list parsers are bounded and reject unknown query keys (1.9211ms)
+✔ media commands use the existing strict YouTube parser, exact bodies, If-Match revision, and deterministic fingerprints (12.6622ms)
+✔ gallery input permits only one to five distinct READY asset identifiers at the application boundary (4.7365ms)
+✔ gallery input accepts an explicit mixed image order without exposing arbitrary fields (0.7024ms)
+✔ published asset delivery checks publication/READY via its port and never returns the storage locator (1.0433ms)
+✔ V2 deterministic formula transition truthfully requires explicit admin recalculation (0.6565ms)
+✔ MMR public query accepts only singular canonical allowlisted filters (1.64ms)
+✔ MMR integrated admin redirects drop unsafe and unknown query values (0.4518ms)
+✔ MMR rebuild is deterministic and ignores source array order (3.654ms)
+✔ voided and draft matches never affect profiles (0.1547ms)
+✔ winner and position performance update profiles within bounded scores (0.2592ms)
+✔ manual adjustments are immutable ordered events and clamp at profile bounds (0.2415ms)
+✔ public and team-balance DTOs expose only bounded score summaries (0.3889ms)
+✔ malformed rosters, duplicate sources and unsafe adjustments fail closed (0.619ms)
+✔ r1에서 발급한 own r2 응답은 최신 projection과 일회성 비밀번호를 함께 유지한다 (0.6615ms)
+✔ r2 비밀번호 표시 중 외부 r3 projection이 도착하면 r2 비밀번호를 폐기한다 (0.1191ms)
+✔ r3 prop이 선반영된 뒤 도착한 늦은 r2 응답은 projection과 비밀번호 모두 거부한다 (0.1142ms)
+✔ OpenAI runtime configuration is explicit, bounded and all-or-nothing (1.0479ms)
+✔ Responses adapter uses the fixed official endpoint and aggregates output text safely (27.1646ms)
+✔ Responses adapter fails closed for budget, authorization, rate limit and malformed output (3.9653ms)
+✔ operation form payloads accept only their bounded allowlist (1.969ms)
+✔ review transitions are monotonic and revision checked (1.5511ms)
+✔ delete is soft and the admin DTO excludes source, reviewer identity, and deletion metadata (0.2514ms)
+✔ Kakao operation form failures distinguish integration, room and capability without exposing identifiers (0.2935ms)
+✔ site settings update is revision-bound and public DTO is allowlisted (1.8002ms)
+✔ AI is hard-disabled first, then checks approval, role, rate and prompt (0.2928ms)
+✔ CSV backup quotes fields and neutralizes spreadsheet formulas (0.3679ms)
+✔ operations HTTP input allowlists reject extra or privileged-looking fields (0.3402ms)
+✔ internal job signature is scoped, expiring and nonce replay aware (0.8245ms)
+✔ player write DTO is an allowlist with normalized validated values (2.1527ms)
+✔ legacy numeric ids accept only the positive PostgreSQL integer range (0.2135ms)
+✔ administrator player query rejects duplicates, unknown keys, and oversized values (0.6017ms)
+✔ mutation fingerprint is canonical and changes with revision or allowlisted input (0.2412ms)
+✔ legacy detail mapping remains outside proxy and administrator APIs use the shared HTTP contract (0.9782ms)
+✔ administrator player pages present operational labels in Korean (0.4173ms)
+✔ 공개 Riot 플레이어 ID는 canonical UUID만 받는다 (1.1103ms)
+✔ 공개 Riot 조회는 없는 플레이어·미연동·동기화 대기·준비 완료를 구분한다 (3.8293ms)
+✔ 플레이어 목록 query는 검색어·페이지 길이와 범위를 제한한다 (1.494ms)
+✔ 티어 query는 허용 목록만 받고 영문·한글 티어 표기를 같은 계열로 묶는다 (0.178ms)
+✔ 내정보 티어 선택값은 10개 티어와 다이아 이하 4단계 및 마스터 이상 점수 계약을 보존한다 (0.5904ms)
+✔ 목록·상세 유스케이스는 repository port를 통해 pagination과 404 계약을 지킨다 (0.3566ms)
+✔ fixture 목록도 회원명 검색과 티어 필터를 함께 적용하되 회원명은 반환하지 않는다 (0.3029ms)
+✔ 공개 플레이어 projection에는 금지된 회원·계정·Discord·내부 보정 필드가 없다 (0.1494ms)
+✔ 두 legacy redirect는 route별 query allowlist만 보존한다 (0.2042ms)
+✔ upload validation binds declared MIME, decoded dimensions, exact container, SHA-256, and a safe name (1.7291ms)
+✔ lifecycle is explicit and cleanup plans are deterministic, bounded, and DELETE_PENDING-only (13.4673ms)
+✔ purpose/resource and actor authorization form a closed allowlist (0.278ms)
+✔ forbidden and absent are deliberately rendered with one outward problem (0.187ms)
+✔ public and private DTOs never expose storage keys, URL locators, creator IDs, or SHA-256 (0.3797ms)
+✔ application saga rechecks ownership, blocks duplicates, finalizes only verified bytes, and reads READY only (7.3723ms)
+✔ failed staging enters DELETE_PENDING; cleanup is retryable and keeps the tombstone (1.3309ms)
+✔ a bounded worker sweep turns crash-abandoned STAGED rows into cleanup tombstones (0.4998ms)
+✔ admin list is bounded and excludes SUPER-only purposes at the repository boundary (0.5894ms)
+✔ private storage mode is one fail-closed production policy (2.6828ms)
+✔ fake private storage can preload immutable local QA bytes without sharing caller buffers (128.5975ms)
+✔ official SDK seam uses private deterministic collision-safe put/get/delete options (4.2721ms)
+✔ connected private Blob credentials prefer OIDC and pass only the store-scoped SDK options (0.5725ms)
+✔ deterministic retries are idempotent only for the same digest and DELETE_PENDING cleanup is repeatable (1.0268ms)
+✔ adapter rejects traversal, mismatched digest, invalid containers and pre-aborted calls before SDK access (0.4778ms)
+✔ all application and Blob boundaries share the 4 MiB server upload ceiling (0.1916ms)
+✔ 공개 랭킹 세 분류는 명시된 동률 규칙으로 독립 정렬되고 원본을 바꾸지 않는다 (1.2283ms)
+✔ 홈 Top 3은 상세 탭과 같은 공개 정렬 계약을 사용한다 (0.203ms)
+✔ 표시 승률이 66.7%로 같아도 667/1000은 2/3보다 정확히 앞선다 (0.2799ms)
+✔ 랭킹 분류 파서는 허용된 공개 뷰만 통과시킨다 (0.1638ms)
+✔ 랭킹 화면은 세 분류, 상태 안내, MMR 진입과 모바일 44px 계약을 제공한다 (0.6106ms)
+✔ R23 party copy reference rejects stale, reused-number identity and prior-day forms without mutations (11.1409ms)
+✔ R23 latest copy permits deliberate deletion and duplicate names fail atomically (1.0356ms)
+✔ R23 legacy copies are append-only for both member rows and metadata (2.0323ms)
+✔ R23 unchanged full copy preserves revision, metadata and scheduled timestamp (0.6487ms)
+✔ R23 blank draft activates with participant name only and no organizer (0.8727ms)
+✔ BOT idempotency fingerprints bind the signed room, sender, and command source (0.5001ms)
+✔ party create, sync, status and finish use the domain while mutations commit in atomic order (1.1561ms)
+✔ V4 slot patches preserve absent rows, delete explicit empty rows, and use stored party shape (0.9503ms)
+✔ atomic party member commands compose on the locked latest revision and persist stable outcomes (2.2295ms)
+✔ scrim participant shortcuts compose on the locked latest revision across room members (2.1677ms)
+✔ party member command validation and ambiguous removal fail closed before persistence (1.9117ms)
+✔ party cancel and SUPER-only reset are distinct terminal commands (0.7961ms)
+✔ scrim create, join, reopen, confirm, complete and cancel enforce the state machine (1.9069ms)
+✔ legacy scrim form fields remain durable in the typed aggregate (0.7701ms)
+✔ signed V1 scrim forms infer exactly one active destruction tournament inside the transaction (0.6554ms)
+✔ signed V1 scrim inference rejects zero or multiple active destruction tournaments atomically (0.4301ms)
+✔ full scrim sync is revision-bound, audited and idempotently replayed (1.4988ms)
+✔ durable receipt replay returns before load and same request key with another body conflicts (0.5991ms)
+✔ one signed Kakao delivery received by two installations mutates canonical room state once (0.4932ms)
+✔ server-clock party metadata fallback is identical on durable replay (0.3547ms)
+✔ signed V1 creates allocate the party number inside the mutation transaction (0.6207ms)
+✔ a malformed replay receipt is rejected even when its request hash matches (0.4831ms)
+✔ outbox failure rolls repository, audit, outbox, and receipt back together (0.9184ms)
+✔ BOT body binding, JOB restriction, stale revision, and authorization failures happen before mutation (1.2705ms)
+✔ public party and scrim DTOs expose only reviewed fields (0.2421ms)
+✔ V4 room scope allows cross-sender snapshots and finish while preserving durable event receipts (2.3423ms)
+✔ V4 automatic scrim number is allocated after receipt claim and replays before a second allocation (0.4982ms)
+✔ V4 scrim draft activates with one inferred tournament and a server-time fallback (0.4285ms)
+✔ V4 request fingerprint is stable across server-resolved revisions but changes with the signed body (0.1691ms)
+✔ KST recruit date is stable across the UTC day boundary (0.9958ms)
+✔ KST recruit display time is stable across midnight (0.1776ms)
+✔ party metadata distinguishes absent preservation from explicit empty defaults (0.7261ms)
+✔ a Kakao V4 number reservation stays draft until the completed V1 form activates it (1.7651ms)
+✔ party slot patches use stored type and capacity while preserving absent and deleting explicit empty slots (0.3341ms)
+✔ canonical party sync returns the stored aggregate without increasing revision (0.139ms)
+✔ party member mutation requires an active party and fills the first primary hole before reserve (0.3567ms)
+✔ party member no-ops preserve revision and removal preserves every remaining slot (0.2622ms)
+✔ request fingerprint is canonical and binds actor, action, key and body (0.2183ms)
+✔ party sync enforces capacity, positions, slots and optimistic revision (0.3159ms)
+✔ Kakao recruit aggregates are visible and mutable only from their signed source room (0.1339ms)
+✔ party primary capacity excludes candidates while the total list remains bounded (0.206ms)
+✔ party terminal transitions do not permit mutation or replay with a new command (0.1493ms)
+✔ auto finish respects scheduled protection and idle window (0.1212ms)
+✔ scrim follows recruiting, matched, confirmed and completed states (0.2623ms)
+✔ scrim opponent can be reopened but requester cannot join itself (0.153ms)
+✔ full scrim sync replaces V1 form fields but binds date, number, tournament and revision (0.4316ms)
+✔ public party DTO excludes room, sender, notes and request keys by construction (0.1792ms)
+✔ Kakao command access separates public create/read/join from controller lifecycle changes (0.1535ms)
+✔ V1 room members may update and close shared forms without weakening raw V2 (0.0909ms)
+✔ Kakao creator, joined opponent leader, or trusted operator controls lifecycle commands (0.1296ms)
+✔ public scrim join binds the opponent leader and reopen clears that controller (0.0879ms)
+✔ recruiting JSON boundary accepts only reviewed create fields (1.6537ms)
+✔ raw V2 recruit commands require an operator or explicit non-production development mode (0.1896ms)
+✔ signed V1 compatibility targets are exact while raw V2 cannot smuggle extra fields (0.9326ms)
+✔ party member command boundary accepts exactly one bounded name (0.5055ms)
+✔ scrim boundary validates UUID seams and command allowlists (0.3841ms)
+✔ command scope is bound to both actor and action (0.1681ms)
+✔ recruiting operating day changes exactly at 06:00 KST (2.8174ms)
+✔ signed party targets use the envelope instant and the 06:00 KST operating boundary (7.9422ms)
+✔ signed scrim templates and targets use the same 06:00 KST operating boundary (6.5655ms)
+✔ Kakao webhook binds HMAC to timestamp, nonce, room, sender, and raw body with key rotation (1.9991ms)
+✔ Kakao webhook rejects stale/replayed, forbidden room/sender, and bot-self requests (0.4434ms)
+✔ same allowed room accepts arbitrary members A/B/C without granting operator capabilities (0.3756ms)
+✔ malformed signatures and unsafe request structure fail closed (0.2218ms)
+✔ S12 schema exposes durable ledgers without OAuth token/code/request-log columns (1.7624ms)
+✔ 0014 migration and snapshot add only the S12 Riot schema (6.3248ms)
+✔ Riot production feature flag is exact and fail-closed by default (0.1437ms)
+✔ explicit fake runtime adapter connects application mutations to safe query DTOs (4.2321ms)
+✔ admin Riot query is bounded and rejects duplicate or unknown HTTP parameters (0.6219ms)
+✔ public, owner, admin HTTP routes and responsive UI states are present (1.6552ms)
+✔ approved owner direct link/unlink is transactional, idempotent, and never leaks PUUID (5.8796ms)
+✔ direct and RSO links must match the player's canonical registry Riot ID (3.7553ms)
+✔ feature flag fails closed and outbox failure rolls link, audit, and receipt back together (0.8572ms)
+✔ RSO callback is internal-return, expiring, one-time and exchange-idempotent across response replay (1.4932ms)
+✔ only SUPER_ADMIN can bulk/sync-all while owner is restricted to the owned link (1.9022ms)
+✔ SUPER bulk-link derives registry Riot IDs and atomically records exact replay (1.4861ms)
+✔ bulk-link rolls every successful link back when durable event recording fails (1.1591ms)
+✔ sync enforces cooldown, Retry-After, stale lease recovery and partial completion (2.6385ms)
+✔ Riot IDs normalize NFKC and reject separators or oversized tags (1.5596ms)
+✔ RSO return path cannot escape origin (0.2185ms)
+✔ RSO state is owner-bound, expiring and one-time (0.473ms)
+✔ disconnect clears encrypted PUUID and hides existence from another owner (0.3574ms)
+✔ sync jobs retry rate limits and transient failures with bounded backoff (0.4038ms)
+✔ last allowed transient attempt becomes terminal failure (0.1634ms)
+✔ stale RUNNING lease is recoverable and the old worker cannot finish it (0.5654ms)
+✔ invalid upstream Retry-After is rejected rather than creating an invalid schedule (0.1927ms)
+✔ permanent upstream failure never retries (8.7355ms)
+✔ public Riot DTO excludes PUUID, owner and request-log provenance (0.3352ms)
+✔ PUUID encryption is authenticated, opaque and rotation-ready (2.639ms)
+✔ Riot gateway resolves Riot ID and reads the SOLO queue through bounded official endpoints (19.4359ms)
+✔ Riot gateway classifies 429, 404, 5xx and malformed responses without exposing credentials (1.1138ms)
+✔ production runtime configuration is all-or-nothing and binds the exact callback (0.3965ms)
+✔ RSO state is HMAC-bound and authorization URL never includes the client secret (1.2819ms)
+✔ 0020 adds only the protected exchange cache and signed sync consumer route (0.8761ms)
+✔ public Riot profile separates unlinked, connected, stale, temporary and rate-limited states (1.322ms)
+✔ season domain normalizes names and produces stable canonical JSON (0.923ms)
+✔ KST application date is independent of server timezone (28.7529ms)
+✔ only an active season inside its application window accepts applications (0.1649ms)
+✔ admin datetime-local values are converted to and from explicit KST instants (0.6491ms)
+✔ client idempotency keys stay stable until success and follow the payload fingerprint (0.2842ms)
+✔ application position UI never offers or preserves an ALL mixture (0.7564ms)
+✔ season commands require exact JSON keys, safe text and zoned ISO dates (1.18ms)
+✔ admin season query parser rejects unknown, duplicate, noncanonical and unsafe values (0.5399ms)
+✔ SITE and completed administrator decisions deterministically win Kakao merges (0.2134ms)
+✔ Kakao pending filters are bounded and canonical (0.5581ms)
+✔ Kakao pending mutations carry SUPER intent, revision and deterministic fingerprint (0.6411ms)
+✔ statistics public queries accept only singular canonical allowlisted values (1.08ms)
+✔ statistics recalculate command binds exact body, projection revision and idempotency identity (0.9194ms)
+✔ bounded statistics drain stops on idle, failure and hard event limit (0.6976ms)
+✔ season projection deterministically counts games, distinct series, stored MVP and dimensions (1.5632ms)
+✔ participation counts a multi-game series once and S05 never derives a missing MVP (0.3747ms)
+✔ canonical ranking uses exact rational win rate, stable identity and sequential rank (0.2422ms)
+✔ public ranking DTO is an exact allowlist (0.1347ms)
+✔ affected seasons dedupe and lock in canonical order for every S04 action scope (1.2047ms)
+✔ application passes old/new season rebuild scope to one atomic repository operation (0.2362ms)
+✔ application reports idle and releases a failed exact lease without touching READY data (0.2498ms)
+✔ team balance vocabulary and neutral provider defaults are explicit (127.2249ms)
+✔ input rejects oversized, duplicate, missing-position, and invalid-score cases (3.4473ms)
+✔ the V1 global recommendation is one lossless 5:5 layout with every position exactly once (98.8204ms)
+✔ V1 global recommendation is deterministic regardless of request order (185.6126ms)
+✔ mixed legacy and new player ids keep a total order across forward, reverse and rotate (1156.5702ms)
+✔ V1 search evaluates 126 anchored team splits and each team's best permutation (36.6097ms)
+✔ automatic and manual paths return the exact same scoring-kernel breakdown (37.3516ms)
+✔ position rating overrides overall and confidence shrinks unknown data toward 50 (49.3562ms)
+✔ positions omitted from the request remain legal V1 AUTO assignments (35.2433ms)
+✔ [V1 blueblack golden] score uses tier, inhouse, position experience and the data-missing path (0.9764ms)
+✔ share text keeps the V1 line order and excludes draft ids, account ids and links (53.2933ms)
+✔ manual evaluation rejects duplicate players and incomplete team-position coverage (0.3385ms)
+✔ 팀 밸런스 초안 목록 query는 단일·제한된 페이지 값만 허용한다 (2.007ms)
+✔ 팀 밸런스 후보 query는 플레이어 검색과 최근 신청 출처만 허용한다 (0.5453ms)
+✔ recommendation list and detail queries use exact draft/team allowlists (1.6681ms)
+✔ recommendation API requires one explicit RED or BLUE team (0.2458ms)
+✔ team recommendations are deterministic, position ordered, and ban champions are unique (1.9809ms)
+✔ team recommendations keep selected lineup for an unavailable projection (0.2208ms)
+✔ team recommendations do not infer an unselected candidate (0.1324ms)
+✔ 랜덤 팀 legacy redirect는 mode와 PWA source allowlist만 보존한다 (0.7622ms)
+✔ 팀 밸런스 legacy redirect는 검토한 PWA source만 보존한다 (1.725ms)
+✔ 코인 토스 legacy redirect는 PWA source만 보존한다 (0.1684ms)
+✔ random-team parser accepts common numbered and bullet list forms (1.7271ms)
+✔ random-team parser reports exact participant counts (0.1888ms)
+✔ duplicate display names remain distinct slots and are disclosed (0.8264ms)
+✔ seeded Fisher-Yates is replayable, non-mutating, and preserves every slot (0.3133ms)
+✔ uniform index rejects the modulo-bias tail (0.1379ms)
+✔ random teams remain a lossless 5:5 partition across seeds (1.8198ms)
+✔ simple tier mapping is the V2 1-to-10 contract (0.1763ms)
+✔ tier balance is deterministic and reaches the exhaustive minimum (6.6307ms)
+✔ tier balance rejects forged scores and duplicate slots (0.7953ms)
+✔ coin toss follows idle-playing-revealed and blocks illegal transitions (0.432ms)
+✔ seeded coin toss reaches both sides and replays each seed (0.7041ms)
+✔ RFC 6238 SHA-1 vector produces the expected six digit suffix (1.1273ms)
+✔ TOTP verifier accepts only the configured time window (0.8517ms)
+✔ USER_ROUTE_MAP canonical 사용자 경로 39개가 중복 없이 분류된다 (1.3142ms)
+✔ page-contract로 표시한 사용자 경로는 실제 App Router 페이지가 있다 (3.2806ms)
+✔ 공지·뉴스·패치노트는 현재 V1 기능 계약에 없으므로 V2 canonical을 꾸며내지 않는다 (0.1999ms)
+✔ 현재 경로 표시는 홈을 하위 경로 전체에 오인 적용하지 않는다 (0.1261ms)
+✔ 전역 명령 팔레트는 검색 dialog·단축키·방향키 탐색 계약을 제공한다 (0.6715ms)
+✔ Vercel cron accepts only the exact timing-safe Bearer secret (1.6228ms)
+✔ daily close identity changes at 06:00 KST and remains stable for delayed retries (3.3064ms)
+✔ invalid cron clocks fail closed before any repository input is made (0.2808ms)
+ℹ tests 801
+ℹ suites 0
+ℹ pass 800
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 4873.3217
+
+> klol-gg-v2@0.1.0 verify:home-guide-art
+> tsx scripts/home/verify-female-guide-art.ts
+
+여성 챔피언 68명 · 개별 이미지 68개 · 1672x940 · SHA-256 중복 0건
+
+> klol-gg-v2@0.1.0 build
+> next build
+
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 22ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.2s
+  Running TypeScript ...
+  Finished TypeScript in 2.8s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/93) ...
+  Generating static pages using 15 workers (23/93) 
+  Generating static pages using 15 workers (46/93) 
+  Generating static pages using 15 workers (69/93) 
+✓ Generating static pages using 15 workers (93/93) in 217ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /account
+├ ƒ /account/discipline
+├ ƒ /account/password
+├ ƒ /account/riot
+├ ƒ /account/tier
+├ ƒ /admin
+├ ƒ /admin/ai-requests
+├ ƒ /admin/balance
+├ ƒ /admin/balance-ai
+├ ƒ /admin/balance-ai/players
+├ ƒ /admin/balance-ai/recalculate
+├ ƒ /admin/balance-ai/reviews
+├ ƒ /admin/balance-ai/reviews/[reviewId]
+├ ƒ /admin/balance/drafts
+├ ƒ /admin/balance/drafts/[draftId]
+├ ƒ /admin/balance/drafts/[draftId]/recommendations
+├ ƒ /admin/balance/recommendations
+├ ƒ /admin/champions
+├ ƒ /admin/champions/[championId]/edit
+├ ƒ /admin/champions/new
+├ ƒ /admin/discipline
+├ ƒ /admin/discipline/[recordId]
+├ ƒ /admin/discipline/new
+├ ƒ /admin/highlights
+├ ƒ /admin/highlights/[highlightId]/edit
+├ ƒ /admin/highlights/new
+├ ƒ /admin/images
+├ ƒ /admin/images/[imageId]/edit
+├ ƒ /admin/images/new
+├ ƒ /admin/kakao
+├ ƒ /admin/kakao/operation-forms
+├ ƒ /admin/kakao/operation-forms/[formType]
+├ ƒ /admin/kakao/recruits
+├ ƒ /admin/kakao/recruits/logs
+├ ƒ /admin/kakao/recruits/settings
+├ ƒ /admin/kakao/rooms
+├ ƒ /admin/kakao/scrims
+├ ƒ /admin/kakao/season-apply
+├ ƒ /admin/kakao/settings
+├ ƒ /admin/kakao/stats
+├ ƒ /admin/login
+├ ƒ /admin/logs
+├ ƒ /admin/logs/kakao
+├ ƒ /admin/matches
+├ ƒ /admin/matches/[matchId]
+├ ƒ /admin/matches/[matchId]/ai-review
+├ ƒ /admin/matches/[matchId]/edit
+├ ƒ /admin/matches/new
+├ ƒ /admin/matches/submissions/[submissionId]
+├ ƒ /admin/operation-forms
+├ ƒ /admin/operation-forms/[formType]
+├ ƒ /admin/operation-forms/[formType]/[id]
+├ ƒ /admin/operation-forms/warnings
+├ ƒ /admin/players
+├ ƒ /admin/players/[playerId]
+├ ƒ /admin/players/[playerId]/balance
+├ ƒ /admin/players/[playerId]/edit
+├ ƒ /admin/players/[playerId]/riot
+├ ƒ /admin/players/new
+├ ƒ /admin/private-assets
+├ ƒ /admin/private-assets/[assetId]
+├ ƒ /admin/progress
+├ ƒ /admin/progress/destruction
+├ ƒ /admin/progress/destruction/[tournamentId]
+├ ƒ /admin/progress/destruction/new
+├ ƒ /admin/progress/event
+├ ƒ /admin/progress/event/[eventId]
+├ ƒ /admin/progress/event/new
+├ ƒ /admin/recruits
+├ ƒ /admin/riot
+├ ƒ /admin/search
+├ ƒ /admin/seasons
+├ ƒ /admin/seasons/kakao-pending
+├ ƒ /admin/seasons/kakao-pending/[pendingId]
+├ ƒ /admin/security
+├ ƒ /admin/site-settings
+├ ƒ /admin/users
+├ ƒ /admin/users/[userAccountId]
+├ ƒ /ai-balance
+├ ƒ /ai-balance/players
+├ ƒ /api/admin/ai-requests
+├ ƒ /api/admin/backups/[kind]
+├ ƒ /api/admin/balance-ai/adjustments
+├ ƒ /api/admin/balance-ai/players
+├ ƒ /api/admin/balance-ai/recalculate
+├ ƒ /api/admin/balance-ai/reviews
+├ ƒ /api/admin/balance-ai/summary
+├ ƒ /api/admin/champions
+├ ƒ /api/admin/champions/[championId]
+├ ƒ /api/admin/competitions/destruction
+├ ƒ /api/admin/competitions/destruction/[tournamentId]
+├ ƒ /api/admin/competitions/events
+├ ƒ /api/admin/competitions/events/[eventId]
+├ ƒ /api/admin/dashboard
+├ ƒ /api/admin/discipline-records
+├ ƒ /api/admin/discipline-records/[recordId]
+├ ƒ /api/admin/discipline-records/target-options
+├ ƒ /api/admin/discipline-tasks/[taskId]/review
+├ ƒ /api/admin/discipline/assets/[assetId]
+├ ƒ /api/admin/highlights
+├ ƒ /api/admin/highlights/[highlightId]
+├ ƒ /api/admin/highlights/[highlightId]/assets
+├ ƒ /api/admin/images
+├ ƒ /api/admin/images/[imageId]
+├ ƒ /api/admin/images/[imageId]/assets
+├ ƒ /api/admin/images/[imageId]/home-display
+├ ƒ /api/admin/kakao/recruit-health
+├ ƒ /api/admin/kakao/rooms
+├ ƒ /api/admin/kakao/settings
+├ ƒ /api/admin/kakao/stats
+├ ƒ /api/admin/login
+├ ƒ /api/admin/logout
+├ ƒ /api/admin/logs
+├ ƒ /api/admin/logs/stats
+├ ƒ /api/admin/maintenance/admin-log-cleanup
+├ ƒ /api/admin/maintenance/rate-limit-cleanup
+├ ƒ /api/admin/matches
+├ ƒ /api/admin/matches/[matchId]
+├ ƒ /api/admin/matches/[matchId]/publish
+├ ƒ /api/admin/matches/[matchId]/restore
+├ ƒ /api/admin/matches/[matchId]/void
+├ ƒ /api/admin/matches/editor-options/players
+├ ƒ /api/admin/matches/import
+├ ƒ /api/admin/matches/integrity
+├ ƒ /api/admin/matches/submissions
+├ ƒ /api/admin/matches/submissions/[submissionId]
+├ ƒ /api/admin/matches/submissions/[submissionId]/approve
+├ ƒ /api/admin/matches/submissions/[submissionId]/cancel-import
+├ ƒ /api/admin/matches/submissions/[submissionId]/images/[imageId]
+├ ƒ /api/admin/matches/submissions/[submissionId]/images/[imageId]/ocr
+├ ƒ /api/admin/matches/submissions/[submissionId]/reject
+├ ƒ /api/admin/matches/submissions/[submissionId]/reopen
+├ ƒ /api/admin/matches/submissions/[submissionId]/review-draft
+├ ƒ /api/admin/operation-forms
+├ ƒ /api/admin/operation-forms/[formType]/[id]
+├ ƒ /api/admin/players
+├ ƒ /api/admin/players/[playerId]
+├ ƒ /api/admin/players/[playerId]/balance-profile
+├ ƒ /api/admin/players/[playerId]/password-reset
+├ ƒ /api/admin/players/[playerId]/reactivate
+├ ƒ /api/admin/private-assets
+├ ƒ /api/admin/private-assets/[assetId]
+├ ƒ /api/admin/private-assets/[assetId]/metadata
+├ ƒ /api/admin/recruits
+├ ƒ /api/admin/recruits/[recruitId]
+├ ƒ /api/admin/riot
+├ ƒ /api/admin/riot/bulk
+├ ƒ /api/admin/riot/bulk-link
+├ ƒ /api/admin/riot/link
+├ ƒ /api/admin/riot/retry
+├ ƒ /api/admin/riot/sync
+├ ƒ /api/admin/season-applications
+├ ƒ /api/admin/season-applications/[applicationId]/review
+├ ƒ /api/admin/season-kakao-pending
+├ ƒ /api/admin/season-kakao-pending/[pendingId]
+├ ƒ /api/admin/season-kakao-pending/[pendingId]/cancel
+├ ƒ /api/admin/season-kakao-pending/[pendingId]/resolve
+├ ƒ /api/admin/seasons
+├ ƒ /api/admin/seasons/[seasonId]
+├ ƒ /api/admin/seasons/[seasonId]/activate
+├ ƒ /api/admin/seasons/[seasonId]/clone
+├ ƒ /api/admin/seasons/[seasonId]/end
+├ ƒ /api/admin/security/totp
+├ ƒ /api/admin/security/totp/disable
+├ ƒ /api/admin/security/totp/enable
+├ ƒ /api/admin/security/totp/setup
+├ ƒ /api/admin/session
+├ ƒ /api/admin/site-settings
+├ ƒ /api/admin/stats/consistency
+├ ƒ /api/admin/stats/recalculate
+├ ƒ /api/admin/team-tools/drafts/[draftId]
+├ ƒ /api/admin/team-tools/drafts/[draftId]/archive
+├ ƒ /api/admin/team-tools/drafts/[draftId]/recommendations
+├ ƒ /api/admin/team-tools/drafts/[draftId]/reevaluate
+├ ƒ /api/admin/team-tools/drafts/[draftId]/restore
+├ ƒ /api/admin/team-tools/drafts/[draftId]/save
+├ ƒ /api/admin/team-tools/drafts/[draftId]/select
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[userAccountId]
+├ ƒ /api/admin/users/[userAccountId]/2fa-reset
+├ ƒ /api/admin/users/[userAccountId]/approve
+├ ƒ /api/admin/users/[userAccountId]/delete
+├ ƒ /api/admin/users/[userAccountId]/details
+├ ƒ /api/admin/users/[userAccountId]/password-reset
+├ ƒ /api/admin/users/[userAccountId]/reject
+├ ƒ /api/admin/users/[userAccountId]/reset
+├ ƒ /api/admin/users/[userAccountId]/reset-pending
+├ ƒ /api/admin/users/[userAccountId]/restore
+├ ƒ /api/admin/users/[userAccountId]/role
+├ ƒ /api/admin/users/[userAccountId]/suspend
+├ ƒ /api/ai/chat
+├ ƒ /api/applications/available
+├ ƒ /api/applications/season
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/me/player
+├ ƒ /api/auth/password
+├ ƒ /api/auth/password/forgot
+├ ƒ /api/auth/reset-requests
+├ ƒ /api/auth/signup
+├ ƒ /api/champions
+├ ƒ /api/champions/[championId]
+├ ƒ /api/competitions/destruction
+├ ƒ /api/competitions/destruction/[tournamentId]
+├ ƒ /api/competitions/destruction/[tournamentId]/application
+├ ƒ /api/competitions/destruction/[tournamentId]/mvp-vote
+├ ƒ /api/competitions/events
+├ ƒ /api/competitions/events/[eventId]
+├ ƒ /api/competitions/events/[eventId]/application
+├ ƒ /api/cron/kakao-daily-close
+├ ƒ /api/discipline/stats
+├ ƒ /api/health
+├ ƒ /api/highlights
+├ ƒ /api/highlights/[highlightId]
+├ ƒ /api/images
+├ ƒ /api/images/[imageId]
+├ ƒ /api/integrations/kakao/image-receive
+├ ƒ /api/integrations/kakao/managed-forms
+├ ƒ /api/integrations/kakao/openchat
+├ ƒ /api/integrations/kakao/operation-forms
+├ ƒ /api/integrations/kakao/pair-room
+├ ƒ /api/integrations/kakao/recruits
+├ ƒ /api/integrations/kakao/scheduled-notice
+├ ƒ /api/integrations/kakao/search-player
+├ ƒ /api/integrations/kakao/season-applications
+├ ƒ /api/integrations/kakao/v4/commands
+├ ƒ /api/internal/jobs/discipline-assets-cleanup
+├ ƒ /api/internal/jobs/discipline-assets-recover
+├ ƒ /api/internal/jobs/kakao-daily-close
+├ ƒ /api/internal/jobs/maintenance
+├ ƒ /api/internal/jobs/riot-sync
+├ ƒ /api/kakao/destruction-scrim-recruits/[action]
+├ ƒ /api/kakao/image-receive
+├ ƒ /api/kakao/managed-forms
+├ ƒ /api/kakao/openchat
+├ ƒ /api/kakao/operation-forms
+├ ƒ /api/kakao/party-recruits/[action]
+├ ƒ /api/kakao/recruit/season-apply
+├ ƒ /api/kakao/recruit/season-apply/status
+├ ƒ /api/kakao/scheduled-notice
+├ ƒ /api/kakao/search-player
+├ ƒ /api/matches
+├ ƒ /api/matches/[matchId]
+├ ƒ /api/me/discipline/assets/[assetId]
+├ ƒ /api/me/discipline/tasks
+├ ƒ /api/me/discipline/tasks/[taskId]
+├ ƒ /api/me/discipline/tasks/[taskId]/evidence
+├ ƒ /api/me/discipline/tasks/[taskId]/evidence/[assetId]/submit
+├ ƒ /api/me/discipline/tasks/[taskId]/kakao-session
+├ ƒ /api/me/match-submissions
+├ ƒ /api/me/match-submissions/[code]
+├ ƒ /api/me/match-submissions/[code]/cancel
+├ ƒ /api/me/match-submissions/[code]/images
+├ ƒ /api/me/match-submissions/[code]/images/[imageId]
+├ ƒ /api/me/match-submissions/[code]/kakao-session
+├ ƒ /api/me/riot
+├ ƒ /api/me/riot/rso/callback
+├ ƒ /api/me/riot/rso/start
+├ ƒ /api/me/riot/sync
+├ ƒ /api/media/assets/[assetId]
+├ ƒ /api/rankings
+├ ƒ /api/rankings/mmr
+├ ƒ /api/recruits
+├ ƒ /api/riot/player/[playerId]/summary
+├ ƒ /api/seasons
+├ ƒ /api/seasons/current
+├ ƒ /api/site-settings
+├ ƒ /api/stats/player/[playerId]/recent
+├ ƒ /api/stats/player/[playerId]/summary
+├ ƒ /api/stats/top
+├ ƒ /api/team-tools/candidates
+├ ƒ /api/team-tools/drafts
+├ ƒ /api/team-tools/drafts/[draftId]
+├ ƒ /api/team-tools/drafts/[draftId]/recommendations
+├ ƒ /api/team-tools/drafts/[draftId]/reevaluate
+├ ƒ /api/team-tools/drafts/[draftId]/save
+├ ƒ /api/team-tools/drafts/[draftId]/select
+├ ƒ /app
+├ ƒ /app/account
+├ ƒ /app/coin-toss
+├ ƒ /app/install
+├ ƒ /app/login
+├ ƒ /app/matches
+├ ƒ /app/matches/[matchId]
+├ ƒ /app/me
+├ ƒ /app/me/riot
+├ ƒ /app/players
+├ ƒ /app/players/[legacyId]
+├ ƒ /app/progress/destruction/[tournamentId]
+├ ƒ /app/progress/destruction/[tournamentId]/mvp-vote
+├ ƒ /app/progress/event/[eventId]
+├ ƒ /app/random-team
+├ ƒ /app/rankings
+├ ƒ /app/recruits
+├ ƒ /applications
+├ ƒ /balance
+├ ƒ /coin-toss
+├ ƒ /competitions
+├ ƒ /competitions/destruction
+├ ƒ /competitions/destruction/[tournamentId]
+├ ƒ /competitions/events
+├ ƒ /competitions/events/[eventId]
+├ ƒ /destruction-auction-live/[tournamentId]
+├ ƒ /discipline
+├ ƒ /discipline/evidence
+├ ƒ /forbidden
+├ ƒ /forgot-password
+├ ƒ /help/kakao
+├ ƒ /help/recruits
+├ ƒ /help/riot
+├ ƒ /highlights
+├ ƒ /highlights/[highlightId]
+├ ○ /icon.svg
+├ ƒ /images
+├ ƒ /images/[imageId]
+├ ƒ /install
+├ ƒ /kakao
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /matches
+├ ƒ /matches/[matchId]
+├ ƒ /matches/submissions
+├ ƒ /matches/submit
+├ ƒ /me/player
+├ ƒ /me/riot
+├ ƒ /participation
+├ ƒ /participation/destruction/[tournamentId]
+├ ƒ /participation/destruction/[tournamentId]/captain-points
+├ ƒ /participation/destruction/[tournamentId]/participants
+├ ƒ /participation/destruction/[tournamentId]/participants/[playerId]
+├ ƒ /participation/event/[eventId]
+├ ƒ /participation/season
+├ ƒ /players
+├ ƒ /players/[playerId]
+├ ƒ /players/[playerId]/riot
+├ ƒ /players/balance
+├ ƒ /players/balance/drafts
+├ ƒ /players/balance/drafts/[draftId]
+├ ƒ /players/balance/drafts/[draftId]/recommendations
+├ ƒ /players/balance/recommendations
+├ ƒ /privacy
+├ ƒ /progress
+├ ƒ /progress/destruction
+├ ƒ /progress/destruction/[tournamentId]
+├ ƒ /progress/destruction/[tournamentId]/images
+├ ƒ /progress/destruction/[tournamentId]/images/[imageIndex]
+├ ƒ /progress/destruction/[tournamentId]/mvp-vote
+├ ƒ /progress/event
+├ ƒ /progress/event/[eventId]
+├ ƒ /random-team
+├ ƒ /rankings
+├ ƒ /rankings/mmr
+├ ƒ /recruit
+├ ƒ /recruit-helper
+├ ƒ /recruits
+├ ƒ /riot-api
+├ ƒ /signup
+├ ƒ /start
+├ ƒ /team-balance
+├ ƒ /team-balance/drafts/[draftId]
+├ ƒ /terms
+├ ƒ /tools/coin-toss
+├ ƒ /tools/random-team
+├ ƒ /tools/team-balance
+├ ƒ /tools/team-balance/drafts
+└ ƒ /tools/team-balance/drafts/[draftId]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

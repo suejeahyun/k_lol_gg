@@ -1,0 +1,108 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomically with owner/session checks (908.9541ms)
+✔ party member statistics are bounded and count distinct parties and primary companions (64.9747ms)
+✔ S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity (78.7853ms)
+✔ Kakao aggregate controllers block confused-deputy lifecycle mutations (120.7981ms)
+✔ V4 scrim finish completes only the active same-room target and replays without duplicate writes (80.8368ms)
+✔ concurrent V4 party member commands serialize on the locked latest aggregate (196.5128ms)
+✔ concurrent V4 scrim participant commands compose after the database row lock (140.3955ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2292.6697
+✔ S09 operation forms persist signed submissions and ADMIN TOTP mutations atomically (135.1537ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 776.8092
+✔ signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room (150.2085ms)
+✔ in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room (265.4751ms)
+✔ authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes (171.2635ms)
+✔ signed Kakao season snapshots match exact players and preserve unresolved entries for review (252.0895ms)
+✔ recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks (102.7838ms)
+✔ in-house shortcuts and full snapshots enforce integrated SITE capacity while preserving confirmed decisions (168.1242ms)
+✔ in-house finish cancels only mutable same-room rows, hides the round, and replays without writes (102.7073ms)
+✔ in-house copy codes merge concurrent additions, preserve site-linked lanes, block destructive edits and never revive cancelled originals (324.5633ms)
+✖ in-house copy forms reopen a vacated reserve slot and preserve the remaining roster (135.4462ms)
+✔ owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke (117.4564ms)
+✔ Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox (144.1797ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 10
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2801.8791
+
+✖ failing tests:
+
+test at tests\database\kakao-assistant.contract.test.ts:1496:1
+✖ in-house copy forms reopen a vacated reserve slot and preserve the remaining roster (135.4462ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^예비 1\.$/mu. Input:
+  
+  '[내전 #1] 1/10명\n' +
+    '》모드: 협곡\n' +
+    '》시작: 미정\n' +
+    '\n' +
+    '전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송\n' +
+    '라인 선택: 이름/주라인/부라인\n' +
+    '\n' +
+    '1. 예비공석0-5b08dfff\n' +
+    '2.\n' +
+    '3.\n' +
+    '4.\n' +
+    '5.\n' +
+    '6.\n' +
+    '7.\n' +
+    '8.\n' +
+    '9.\n' +
+    '10.\n' +
+    '\n' +
+    '예비 2. 예비공석2-5b08dfff\n' +
+    '예비 3. 예비공석3-5b08dfff\n' +
+    '예비 4. 예비공석4-5b08dfff\n' +
+    '예비 5. 예비공석5-5b08dfff\n' +
+    '예비 6. 예비공석6-5b08dfff\n' +
+    '예비 7. 예비공석7-5b08dfff\n' +
+    '예비 8. 예비공석8-5b08dfff\n' +
+    '예비 9. 예비공석9-5b08dfff\n' +
+    '예비 10. 예비공석10-5b08dfff\n' +
+    '\n' +
+    '양식코드: 2LMHB-NDX5A'
+  
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\kakao-v4-gateway\tests\database\kakao-assistant.contract.test.ts:1534:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '[내전 #1] 1/10명\n》모드: 협곡\n》시작: 미정\n\n전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송\n라인 선택: 이름/주라인/부라인\n\n1. 예비공석0-5b08dfff\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n예비 2. 예비공석2-5b08dfff\n예비 3. 예비공석3-5b08dfff\n예비 4. 예비공석4-5b08dfff\n예비 5. 예비공석5-5b08dfff\n예비 6. 예비공석6-5b08dfff\n예비 7. 예비공석7-5b08dfff\n예비 8. 예비공석8-5b08dfff\n예비 9. 예비공석9-5b08dfff\n예비 10. 예비공석10-5b08dfff\n\n양식코드: 2LMHB-NDX5A',
+    expected: /^예비 1\.$/mu,
+    operator: 'match',
+    diff: 'simple'
+  }
+[db-contract] cluster stopped and disposable workspace path removed
+E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:494
+      throw new Error(`${relativeTestFile} failed with exit code ${exitCode}.`);
+            ^
+
+Error: tests/database/kakao-assistant.contract.test.ts failed with exit code 1.
+    at runContractTests (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:494:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async main (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:1236:7)
+    at async <anonymous> (E:\k-LOL.GG\worktrees\kakao-v4-gateway\scripts\test-db\run-data-contracts.ts:1261:1)
+
+Node.js v24.14.1

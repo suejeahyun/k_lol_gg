@@ -12,6 +12,8 @@ export type KakaoV4InhouseParticipant = Readonly<{
   mainPosition: SeasonApplicationPosition;
   subPositions: readonly SeasonApplicationPosition[];
   reserve: boolean;
+  /** A name-only copy keeps any positions already saved for this member. */
+  nameOnly?: true;
   /** Internal V4 hint: preserve the row for manual review instead of auto-matching it. */
   reviewRequired?: true;
 }>;
@@ -146,6 +148,13 @@ export function parseKakaoV4InhouseParticipantRow(
       valid: true,
       slotNo,
       participant: Object.freeze({ slotNo, name, riotId: null, mainPosition: "ALL", subPositions: Object.freeze([]), reserve }),
+      diagnostics: Object.freeze([]),
+    });
+  }
+  if (fields.length === 1) {
+    return Object.freeze({
+      matched: true, valid: true, slotNo,
+      participant: Object.freeze({ slotNo, name, riotId: null, mainPosition: "ALL", subPositions: Object.freeze([]), reserve, nameOnly: true }),
       diagnostics: Object.freeze([]),
     });
   }

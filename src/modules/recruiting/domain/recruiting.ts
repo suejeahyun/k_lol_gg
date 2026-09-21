@@ -325,6 +325,8 @@ export function mergeRecruitPartySlotPatches(
       continue;
     }
     if (patch.state !== "PRESENT_VALUE" || patch.value === null) throw new Error("INVALID_RECRUIT_MEMBER");
+    // A copied unchanged row must not rewrite legacy position metadata.
+    if (members.get(key)?.name === patch.value) continue;
     members.set(key, {
       slotNo: patch.slotNo,
       name: patch.value,

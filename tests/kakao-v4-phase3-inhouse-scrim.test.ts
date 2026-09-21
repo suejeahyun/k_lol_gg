@@ -4,7 +4,7 @@ import test from "node:test";
 
 import type { RecruitingCommand, RecruitingCommandResult } from "../src/modules/recruiting";
 import type { KakaoOpenChatStatusDto, KakaoSeasonSnapshotDto } from "../src/modules/recruiting/kakao-assistant/domain";
-import { KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
+import { KAKAO_V4_SCRIM_RETIRED_REPLY, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import {
   KakaoV4CommandDispatcher,
   type KakaoV4AssistantPort,
@@ -123,6 +123,8 @@ function harness(statusBody: KakaoOpenChatStatusDto = openStatus()) {
         confirmedCount: 0,
         pendingCount: 0,
         cancelledCount: 0,
+        operatingDate: "2026-09-09",
+        saveReference: `S${"a".repeat(32)}`,
         legacyReply: input.command.action === "STATUS" ? contract.inhouse.multiRoundStatusReply : `[K-LOL.GG 내전 #${input.command.recruitNo} 명단 업데이트]`,
       };
       return { body, replayed: false };
@@ -147,12 +149,19 @@ async function reply(service: KakaoV4CommandService, input: KakaoV4CommandEnvelo
   return result;
 }
 
-test("Phase 3-A: 내전 모드 선택과 협곡·칼바람 전체 양식을 정확히 보존한다", async () => {
+test("Phase 3-A: 내전 모드 선택과 협곡·칼바람 복사 양식을 출력한다", async () => {
   const state = harness();
   assert.equal((await reply(state.service, envelope("FEATURES", "내전구인", 1))).reply, contract.inhouse.modeSelectorReply);
   assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 양식", 2))).reply, contract.inhouse.invalidModeSelectorReply);
-  assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 협곡 2026-09-09 21:30 #2 10명", 3))).reply, contract.inhouse.riftTemplate);
-  assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 칼바람 2026-09-09 21:30 #3 10명", 4))).reply, contract.inhouse.aramTemplate);
+  for (const [mode, number, sequence] of [["협곡", 2, 3], ["칼바람", 3, 4]] as const) {
+    const result = await reply(state.service, envelope("FEATURES", `내전구인 ${mode} 2026-09-09 21:30 #${number} 10명`, sequence));
+    assert.equal(result.reply, [
+      `[내전 #${number}] 0/10명`, `》모드: ${mode}`, "》시작: 21:30", "", "전체 복사 → 빈칸에 사이트 등록 이름 → 전체 전송",
+      ...(mode === "협곡" ? ["라인 선택: 이름/주라인/부라인"] : []), "",
+      ...Array.from({ length: 10 }, (_, index) => `${index + 1}.`), "", "예비 1.",
+      "", `저장기준: 2026-09-09 / S${"a".repeat(32)}`,
+    ].join("\n"));
+  }
   assert.deepEqual(state.seasonCalls.map(({ command }) => command.action), ["RESERVE", "RESERVE"]);
   assert.equal(state.handled.length, 0);
 });
@@ -182,39 +191,31 @@ test("Phase 3-A: 협곡 명단 A→B→A와 0명은 각 입력당 한 번의 aut
   assert.equal(state.handled.length, 0);
 });
 
-test("Phase 3-A: 스크림 양식·현황·상세 답변은 V40/V41 golden과 정확히 같다", async () => {
+test("R23: 스크림 양식·현황·상세는 종료 안내만 반환한다", async () => {
   const empty = harness(openStatus());
-  assert.equal((await reply(empty.service, envelope("RECRUIT", "스크림구인", 10))).reply, contract.scrim.initialTemplate);
-  assert.equal((await reply(empty.service, envelope("RECRUIT", "스크림현황", 11))).reply, contract.scrim.emptyStatusReply);
+  assert.equal((await reply(empty.service, envelope("RECRUIT", "스크림구인", 10))).reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
+  assert.equal((await reply(empty.service, envelope("RECRUIT", "스크림현황", 11))).reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
   const populated = harness(openStatus([scrimFixture], 8));
-  assert.equal((await reply(populated.service, envelope("RECRUIT", "스크림현황", 12))).reply, contract.scrim.statusReply);
-  assert.equal((await reply(populated.service, envelope("RECRUIT", "스크림상세 7", 13))).reply, contract.scrim.detailReply);
+  assert.equal((await reply(populated.service, envelope("RECRUIT", "스크림현황", 12))).reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
+  assert.equal((await reply(populated.service, envelope("RECRUIT", "스크림상세 7", 13))).reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
+  assert.equal(empty.handled.length + empty.statusCalls.length + populated.handled.length + populated.statusCalls.length, 0);
 });
 
-test("Phase 3-A: 신규 스크림은 서버 번호와 기존 단일 활성 대회 추론만 사용하고 중복 eventId를 한 번 적용한다", async () => {
+test("R23: 구형 스크림 신규 양식과 재전송은 저장 없이 종료 안내만 반환한다", async () => {
   const state = harness(openStatus([], 8));
   const form = contract.scrim.initialTemplate.replace("우리팀: ", "우리팀: 하늘단");
   const input = envelope("RECRUIT", form, 14);
   const first = await reply(state.service, input);
   const replay = await reply(state.service, input);
-  assert.equal(first.reply, contract.scrim.newFormReply);
+  assert.equal(first.reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
   assert.equal(first.replayed, false);
   assert.equal(replay.reply, first.reply);
   assert.equal(replay.replayed, true);
   assert.equal(state.statusCalls.length, 0);
-  assert.equal(state.handled.length, 1);
-  const command = state.handled[0];
-  assert.equal(command?.type, "CREATE_SCRIM");
-  if (command?.type === "CREATE_SCRIM") {
-    assert.equal(command.payload.scrimNumber, 7, "초안에서 예약된 실제 번호를 제출해야 한다");
-    assert.equal(command.payload.tournamentId, null);
-    assert.equal(command.payload.legacyTournamentNumber, null);
-  }
-  assert.equal(JSON.stringify(command).includes("role"), false);
-  assert.equal(JSON.stringify(command).includes("owner"), false);
+  assert.equal(state.handled.length, 0);
 });
 
-test("Phase 3-A: 기존 번호 전체 양식은 대회 바인딩을 보존하고 수정된 전체 양식을 반환한다", async () => {
+test("R23: 구형 스크림 수정 양식은 기존 데이터와 대회 바인딩을 변경하지 않는다", async () => {
   const state = harness(openStatus([scrimFixture], 8));
   const changed = contract.scrim.detailReply
     .split("\n")
@@ -223,17 +224,8 @@ test("Phase 3-A: 기존 번호 전체 양식은 대회 바인딩을 보존하고
     .replace("SUP: 꽃잎서폿", "SUP: 새꽃잎서폿");
   const result = await reply(state.service, envelope("RECRUIT", `[K-LOL.GG 스크림 구인 양식]\n\n${changed}`, 15));
   assert.equal(state.statusCalls.length, 0);
-  assert.equal(state.handled.length, 1);
-  const command = state.handled[0];
-  assert.equal(command?.type, "SYNC_SCRIM");
-  if (command?.type === "SYNC_SCRIM") {
-    assert.equal(command.aggregateId, scrimFixture.id);
-    assert.equal(command.metadata.expectedRevision, scrimFixture.revision);
-    assert.equal(command.payload.tournamentId, scrimFixture.tournamentId);
-    assert.equal(command.payload.legacyTournamentNumber, scrimFixture.legacyTournamentNumber);
-  }
-  assert.match(result.reply, /^\[스크림 #7 반영\]\n상태: 매칭완료\n\n/u);
-  assert.match(result.reply, /SUP: 새꽃잎서폿$/u);
+  assert.equal(state.handled.length, 0);
+  assert.equal(result.reply, KAKAO_V4_SCRIM_RETIRED_REPLY);
 });
 
 test("Phase 3-A: 번호 행 하나가 빠진 양식은 그 슬롯을 보존하고 나머지 행을 동기화한다", async () => {

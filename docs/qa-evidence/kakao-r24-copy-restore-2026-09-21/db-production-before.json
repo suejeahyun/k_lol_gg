@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-09-21T02:08:16.456Z",
+  "targetFingerprint": "c5918218dd171001",
+  "status": "PASS",
+  "state": {
+    "count": 40,
+    "head": {
+      "id": 43,
+      "hash": "dc1d06a6b835ae7bca24b868ac075df59e4a909b8f5733889fea480efbd18774",
+      "created_at": "1789296503535"
+    },
+    "snapshotExists": false
+  },
+  "plannedMigration": "0040_kakao_form_snapshot_codes",
+  "migrationHash": "0552156eb090652242d5124b2b0a8141654b02e70777f4bb5e72f6e7c527ccd2"
+}

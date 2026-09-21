@@ -60,7 +60,8 @@ if ((output.match(/function\s+response\s*\(/gu) ?? []).length !== 1) throw new E
 if (!version) throw new Error("Private V1 strict output must expose BOT_CODE_VERSION");
 if (outputComments.length !== 0) throw new Error("Private V1 strict output must not contain JavaScript comments");
 if (!output.includes("function isPartyMetadataActivationForm(text)")) throw new Error("Private V1 strict output must include party metadata activation routing");
-if (!output.includes("msg.indexOf(\"내전\") >= 0 ? \"FEATURES\" : \"RECRUIT\"")) throw new Error("Private V1 strict output must include scoped finish routing");
+if (!output.includes("if (isRetiredScrimInput(localText))")) throw new Error("Private R24 output must retire scrim before the legacy router");
+if (!output.includes("if (handleCopyRosterForm(msg, room, sender, guardedReplier)) return;")) throw new Error("Private R24 output must route compact copy forms");
 if (output.length >= 65_535 || crlfLength >= 65_535) {
   throw new Error("Private V1 strict output exceeds MessengerBot R's LF/CRLF 65,535-character limit");
 }

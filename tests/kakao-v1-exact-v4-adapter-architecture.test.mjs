@@ -49,9 +49,9 @@ test("the V1 strict phone installer uses the current private artifact and omits 
   assert.match(builder, /const phoneSource = publicSource\.slice\(executableSourceIndex\);/u);
   assert.match(builder, /const output = `\$\{preamble\}\$\{phoneSource\}`;/u);
   assert.match(builder, /function isPartyMetadataActivationForm\(text\)/u);
-  assert.match(builder, /msg\.indexOf\(\\"내전\\"\) >= 0 \? \\"FEATURES\\" : \\"RECRUIT\\"/u);
+  assert.match(builder, /if \(isRetiredScrimInput\(localText\)\)/u);
   assert.match(installGuide, /\.private\/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R\.js/u);
-  assert.match(installGuide, /KLOL_KAKAO_BOT_V40_R22_2026_09_18/u);
+  assert.match(installGuide, /KLOL_KAKAO_BOT_V40_R24_2026_09_20/u);
   assert.match(installGuide, /공개 검토·생성 기준, 설치 금지/u);
   assert.doesNotMatch(installGuide, /현재 설치본[\s\S]*R9_2026_09_13_MEMBER_COMMANDS/u);
 });

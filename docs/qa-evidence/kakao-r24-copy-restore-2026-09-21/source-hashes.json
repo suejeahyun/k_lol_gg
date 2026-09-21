@@ -1,0 +1,46 @@
+[
+  {
+    "path": "src/modules/recruiting/kakao-assistant/postgres-kakao-assistant.ts",
+    "sha256": "9b54c68b8fc0228e616caea4160ec132f9743e4153e9d04a35527701845a5b60"
+  },
+  {
+    "path": "src/modules/recruiting/kakao-assistant/inhouse-copy-form.ts",
+    "sha256": "617c7e6c2a7634f95c416f6bf83727dfafc7ef867e155a3108d7192893b59aae"
+  },
+  {
+    "path": "src/modules/recruiting/application/party-copy-snapshot.ts",
+    "sha256": "d0d381f97d8877cae0d688d24206c2b07a90ca4250070d04efc60c85030dff9b"
+  },
+  {
+    "path": "src/modules/recruiting/application/party-copy-reference.ts",
+    "sha256": "a31065d7e6e319ce34f5da1bf3e7b753cd8da021f24a96b34c11543d8d22fa43"
+  },
+  {
+    "path": "src/modules/recruiting/application/command-handler.ts",
+    "sha256": "da47c8f07c343ac327f6a6cb2e80e74280b1f27d33cc4c9869afb924f2292b1a"
+  },
+  {
+    "path": "src/modules/recruiting/infrastructure/kakao-form-snapshots.ts",
+    "sha256": "e7aa7f0d652f38cce356f8d11d02bbabcaf4b145cc12c2a8b3b683dfb7b7652c"
+  },
+  {
+    "path": "src/modules/recruiting/kakao-v4/v1-strict-party-replies.ts",
+    "sha256": "b6aa6263afc58dba8214cb7e96aae9e4ec2246c61dbb9adbd3e03985dc491745"
+  },
+  {
+    "path": "src/modules/recruiting/kakao-v4/dispatcher.ts",
+    "sha256": "f8c6c0e8b9ec3e680e5fcfe734fcb73c6e28427d72b89cb419a713f72ad07164"
+  },
+  {
+    "path": "src/modules/recruiting/kakao-v4/application.ts",
+    "sha256": "3f5accb4d0376a0f3fd95c08472fda065aadb2c9b9494cff74db622ad36e7b0a"
+  },
+  {
+    "path": "drizzle/0040_kakao_form_snapshot_codes.sql",
+    "sha256": "0552156eb090652242d5124b2b0a8141654b02e70777f4bb5e72f6e7c527ccd2"
+  },
+  {
+    "path": "tests/database/kakao-assistant.contract.test.ts",
+    "sha256": "428f2ed84b67079f0b03a68b5dd3e3c7e8e268362e68bf0b57a3c23171a3a538"
+  }
+]

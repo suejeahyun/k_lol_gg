@@ -58,6 +58,7 @@ export type KakaoV4SeasonParticipant = Readonly<{
   subPositions: readonly SeasonApplicationPosition[];
   reserve: boolean;
   reviewRequired?: true;
+  nameOnly?: true;
 }>;
 
 export type KakaoV4InhouseMode = "RIFT" | "ARAM" | "AUGMENT_ARAM";
@@ -139,6 +140,7 @@ export type CanonicalKakaoV4Command =
       participants: readonly KakaoV4SeasonParticipant[];
       preserveSlotNos?: readonly number[];
       reserveSectionObserved?: boolean;
+      copyGuard?: Readonly<{ operatingDate: string | null; saveReference: string | null; formCode?: string | null }>;
     }>
   | Readonly<{ domain: "PLAYER"; action: "RECORD" | "RECENT"; query: string }>
   | Readonly<{ domain: "PLAYER"; action: "RANKING" }>
@@ -230,7 +232,7 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
     applyDate,
     recruitNumber: recruitValue ? Number(recruitValue) : null,
     capacity: capacityValue ? Math.min(Math.max(Number(capacityValue), 2), 20) : 10,
-    time: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+    time: clock || koreanClock ? `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` : "미정",
     mode,
   });
 }
@@ -238,11 +240,21 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
 function inhouseSnapshot(text: string, fallbackDate: string) {
   const normalized = text.replace(/\r\n?/gu, "\n").trim();
   const lines = normalized.split("\n");
-  const recruitNumber = Number(/^\s*📢\s*내전하실분\s*#\s*(\d{1,3})\s*$/mu.exec(normalized)?.[1] ?? 0);
+  const modernHeader = /^\s*\[내전\s*#\s*(\d{1,3})\]\s*\d{1,2}\s*\/\s*(\d{1,2})명\s*$/mu.exec(normalized);
+  const recruitNumber = Number(modernHeader?.[1] ?? /^\s*📢\s*내전하실분\s*#\s*(\d{1,3})\s*$/mu.exec(normalized)?.[1] ?? 0);
   const dateValue = /^\s*》\s*(20\d{2}-\d{2}-\d{2})(?:\s|$)/mu.exec(normalized)?.[1] ?? null;
   const applyDate = validDateKey(dateValue, fallbackDate);
-  const capacity = Number(/^\s*👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명\s*$/mu.exec(normalized)?.[1] ?? 0);
-  const modeLabel = /^\s*》\s*(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(normalized)?.[1] ?? null;
+  const saveLines = lines.filter((line) => /^\s*》?\s*저장기준\s*[:：]/u.test(line));
+  const saveMatch = saveLines.length === 1
+    ? /^\s*》?\s*저장기준\s*[:：]\s*(20\d{2}-\d{2}-\d{2})\s*\/\s*(S[a-f0-9]{32})\s*$/u.exec(saveLines[0]!)
+    : null;
+  if (saveLines.length > 0 && !saveMatch) return null;
+  const codeLines = lines.filter((line) => /^\s*양식코드\s*[:：]/u.test(line));
+  const codeMatch = codeLines.length === 1 ? /^\s*양식코드\s*[:：]\s*([A-Z0-9]{5}-[A-Z0-9]{5})\s*$/u.exec(codeLines[0]!) : null;
+  if ((codeLines.length > 0 && !codeMatch) || (codeMatch && saveMatch)) return null;
+  if (modernHeader && !codeMatch) return null;
+  const capacity = Number(modernHeader?.[2] ?? /^\s*👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명\s*$/mu.exec(normalized)?.[1] ?? 0);
+  const modeLabel = /^\s*》\s*(?:모드\s*[:：]\s*)?(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(normalized)?.[1] ?? null;
   const mode: KakaoV4InhouseMode | null = modeLabel === "협곡"
     ? "RIFT"
     : modeLabel === "칼바람"
@@ -255,7 +267,9 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const schedulePattern = /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+([01]?\d|2[0-3])\s*:\s*([0-5]\d)\s*시작(?:\s+(.*?))?\s*$/u;
   const scheduleIndex = lines.findIndex((line) => schedulePattern.test(line));
   const scheduleLine = scheduleIndex < 0 ? null : schedulePattern.exec(lines[scheduleIndex]!) ?? null;
-  const startTimeText = scheduleLine
+  const modernTime = modernHeader ? /^\s*》\s*시작\s*[:：]\s*((?:[01]?\d|2[0-3]):[0-5]\d|미정)\s*$/mu.exec(normalized) : null;
+  if (modernHeader && !modernTime) return null;
+  const startTimeText = modernTime && modernTime[1] !== "미정" ? modernTime[1]!.padStart(5, "0") : scheduleLine
     ? `${String(Number(scheduleLine[1])).padStart(2, "0")}:${scheduleLine[2]}`
     : null;
   const scheduledStartAt = startTimeText
@@ -290,7 +304,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       /^📢\s*내전하실분\s*#\s*\d{1,3}$/u.test(candidate) ||
       /^》\s*(?:협곡|칼바람|증바람|증강칼바람)$/u.test(candidate) ||
       /^》\s*20\d{2}-\d{2}-\d{2}\s+/u.test(candidate) ||
-      /^》?\s*(?:게임정보|주최자)\s*[:：]/u.test(candidate) ||
+      /^》?\s*(?:게임정보|주최자|저장기준)\s*[:：]/u.test(candidate) ||
       /^👥\s*\d{1,3}\s*\/\s*\d{1,3}\s*명$/u.test(candidate) ||
       /^\[K-LOL\.GG 내전 구인 양식\]$/u.test(candidate) ||
       /^같이 내전할 사람~$/u.test(candidate) ||
@@ -303,6 +317,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       /^\*참가 신청 양식\*$/u.test(candidate) ||
       /^이름(?:\/현티어\/최고티어\/주라인\/부라인)?$/u.test(candidate) ||
       /^EX\)\s*/iu.test(candidate) ||
+      /^라인 선택:/u.test(candidate) ||
       /^(?:예비\s*)?\d{1,3}\s*(?:[.)．）]|\\\.)/u.test(candidate)
     ) continue;
     noticeCandidates.push(candidate);
@@ -310,7 +325,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const noticeLines = [...new Set(noticeCandidates)]
     .slice(0, 6)
     .map((line) => line.slice(0, 160));
-  const noticeText = noticeLines.join("\n").slice(0, 600) || null;
+  const noticeText = modernHeader ? metadataValue("공지") : noticeLines.join("\n").slice(0, 600) || null;
 
   type SlotValue =
     | Readonly<{ state: "EMPTY" }>
@@ -324,14 +339,18 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   });
   let reserveSectionObserved = false;
   for (const line of normalized.split("\n")) {
-    const reserveRow = /^\s*(?:예비|대기)\s*\d{1,2}(?:(?:\s*\\?\s*[.)])|\s+)/u.test(line.normalize("NFKC"));
-    const row = parseKakaoV4InhouseParticipantRow(line, mode);
+    const pendingRow = /^\s*확인\s+(.*)$/u.exec(line);
+    const participantLine = pendingRow?.[1] ?? line;
+    if (modernHeader && /^\s*\d{1,2}\.\s*\(회원 확인 중\)\s*$/u.test(participantLine)) continue;
+    const reserveRow = /^\s*(?:예비|대기)\s*\d{1,2}(?:(?:\s*\\?\s*[.)])|\s+)/u.test(participantLine.normalize("NFKC"));
+    const row = parseKakaoV4InhouseParticipantRow(participantLine, mode);
     if (!row.matched) continue;
     if (reserveRow) reserveSectionObserved = true;
     const slotNo = reserveRow ? capacity + row.slotNo : row.slotNo;
     if (row.slotNo < 1 || row.slotNo > capacity) continue;
+    if (modernHeader && slots.has(slotNo)) return null;
     const participant = row.participant
-      ? Object.freeze({ ...row.participant, slotNo, reserve: reserveRow || row.participant.reserve })
+      ? Object.freeze({ ...row.participant, slotNo, reserve: reserveRow || row.participant.reserve, ...(pendingRow ? { reviewRequired: true as const } : {}) })
       : null;
     const next: SlotValue = row.participant
       ? Object.freeze({ state: "PARTICIPANT", participant: participant! })
@@ -340,8 +359,8 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
         : Object.freeze({ state: "PRESERVE" });
     const current = slots.get(slotNo);
     if (
-      observedSlotNos.size === capacity &&
-      next.state === "PARTICIPANT" && next.participant.reviewRequired
+      !modernHeader && observedSlotNos.size >= capacity && !reserveRow &&
+      next.state === "PARTICIPANT" && (next.participant.reviewRequired || next.participant.nameOnly)
     ) {
       // After a complete roster, a weaker numbered fragment is a copied
       // footer/comment. Still accept a later valid edit or explicit empty row
@@ -351,7 +370,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     observedSlotNos.add(slotNo);
     if (
       current?.state === "PARTICIPANT" && !current.participant.reviewRequired &&
-      next.state === "PARTICIPANT" && next.participant.reviewRequired
+      next.state === "PARTICIPANT" && (next.participant.reviewRequired || next.participant.nameOnly)
     ) {
       // A copied footer such as `1. 공지...` can look like an incomplete
       // participant row. Never let that weaker row replace an already valid
@@ -386,6 +405,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     applyDate,
     recruitNumber,
     mode,
+    copyGuard: Object.freeze({ operatingDate: saveMatch?.[1] ?? null, saveReference: saveMatch?.[2] ?? null, ...(codeMatch ? { formCode: codeMatch[1] } : {}) }),
     roundMetadata: Object.freeze({ capacity, startTimeText, scheduledStartAt, gameInfo, organizerText, noticeText }),
     participants: Object.freeze(participants),
     ...(preserveSlotNos.length > 0 ? { preserveSlotNos: Object.freeze(preserveSlotNos) } : {}),

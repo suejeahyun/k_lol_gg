@@ -1,5 +1,35 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-21 카카오 R24 복사·붙여넣기 복귀 재확인
+
+- 사용자 확인: 파티·내전 **양식 전체 복사 → 빈칸에 이름 추가 → 전체 전송**, 사이트 연동 유지.
+- 기존 R23/R24 미커밋 구현을 보존했다. 이번 보완은 내전 예비 앞번호 취소 후 빈칸이 출력되지 않던 문제로, 첫 빈 예비 번호를 다시 표시한다.
+- 실제 출력 양식 복사·파싱·재신청 및 기존 참가자 보존을 격리 DB 회귀 검사로 추가했다. 수정 전 실패와 수정 후 통과 로그를 모두 보존했다.
+- 검증: `npm run check` exit 0, 계약 410/410, 단위 862 PASS·DB 전용 1 skip, 격리 PostgreSQL 60/60, typecheck·ERD·프로덕션 빌드 PASS, lint 오류 0·기존 경고 319. 공개/private 산출물은 이전 R24 해시와 일치하며 ES5/Rhino 통과.
+- 상태: 소스·로컬 검증 완료. 이번 작업에서 운영 DB migration·서버 배포·휴대폰 설치·Git push/tag는 하지 않았다. 적용 순서는 migration 0040 → 서버 → 휴대폰이다.
+- [QA·산출물 해시·남은 위험·다음 패치 추천 4개](./qa-evidence/kakao-r24-copy-restore-2026-09-21/README.md), [디스코드 공지 초안](./qa-evidence/kakao-r24-copy-restore-2026-09-21/DISCORD_NOTICE.md), [패치 기록](./patch-notes/2026-09-21-kakao-r24-copy-restore.md)
+
+## 2026-09-20 카카오 R24 사이트 연동 복사 참가
+
+- 상태: 소스·공개/private 생성물 및 로컬 검증 완료. 운영 배포·운영 DB migration·휴대폰 설치·커밋·태그 없음.
+- 파티·내전 양식: 전체 복사 → 빈칸에 이름 → 전체 전송 → 결과와 최신 명단. 참가와 새 모집 안내를 분리.
+- 내전은 사이트 회원·시즌 신청·기존 라인과 연동. SITE 출처·확정 상태 보존, 회원 확인 필요는 인원·예비와 구분.
+- 짧은 원본 코드와 추가 전용 병합: 동시 신청 보존, 삭제·교체·기존 정보 덮어쓰기·탈퇴자 재등장 차단.
+- 카카오 스크림 종료 유지, 과거 DB·웹·관리자 기록 보존.
+- **배포 전 migration 0040 필수**. 새 snapshot 테이블·인덱스만 추가. 운영에는 적용하지 않았음.
+- 검증: `npm run check` exit 0, 단위 862 PASS·DB 전용 1 skip, 계약 410/410, 격리 PostgreSQL 59/59, production build 93 pages, ES5/Rhino 경고 후보 0. lint 오류 0·경고 319.
+- [QA·해시·남은 위험](./qa-evidence/kakao-r24-site-linked-copy-2026-09-20/README.md), [디스코드 공지 초안](./qa-evidence/kakao-r24-site-linked-copy-2026-09-20/DISCORD_NOTICE.md), [다음 패치 추천](./patch-notes/2026-09-20-kakao-r24-site-linked-copy.md)
+
+## 2026-09-20 카카오 R23 파티·내전 복붙 우선
+
+- 상태: 소스·공개/private 생성물 준비 및 로컬 검증 완료. 운영 서버 배포·휴대폰 설치·커밋·태그 없음.
+- 파티·내전은 전체 양식 복사 → 이름 입력 → 전체 전송 → 최신 전체 양식. 주최자 입력 필수 아님.
+- 운영일·저장기준으로 오래된 양식 덮어쓰기 방지, 구형 양식은 기존 정보 보존 추가만 허용.
+- 카카오 스크림 명령·양식·도움말 종료. 과거 기록·웹 조회·관리자 대회 데이터 보존.
+- DB migration·운영 데이터 직접 수정·삭제 없음. 기존 R22 private 백업 보존.
+- 검증: 단위 800 PASS·DB 전용 1 skip, 계약 406/406, 격리 PostgreSQL 52/52, production build 93 pages, 공개/private ES5/Rhino 경고 0. 전체 lint 오류 0·경고 292.
+- [버전별 QA·해시·남은 위험](./qa-evidence/kakao-r23-copy-first-rosters-2026-09-20/README.md), [공지 초안](./qa-evidence/kakao-r23-copy-first-rosters-2026-09-20/DISCORD_NOTICE.md)
+
 ## 2026-09-18 사이트 시각 효과·전체 화면 검수
 
 - 기능 커밋: `9235bbbfd767b2775311c7b9a1dd77ac3584d97d`

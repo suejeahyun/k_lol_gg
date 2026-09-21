@@ -25,6 +25,8 @@ export interface RecruitingUnitOfWork {
 }
 
 export interface RecruitingRepository {
+  issuePartyCopySnapshot?(transaction: RecruitingTransactionContext, party: RecruitParty, now: Date): Promise<string | null>;
+  loadPartyCopySnapshot?(transaction: RecruitingTransactionContext, party: RecruitParty, code: string, now: Date): Promise<JsonObject | null>;
   /** Allocates the next V1 party number under a transaction advisory lock. */
   allocateNextPartyIdentityForUpdate(transaction: RecruitingTransactionContext, input: Readonly<{
     sourceRoomId: string;

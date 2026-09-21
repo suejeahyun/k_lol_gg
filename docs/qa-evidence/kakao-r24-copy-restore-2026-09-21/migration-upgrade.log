@@ -1,0 +1,4 @@
+[r24-migration] isolated PostgreSQL 18; safe sanitized environment; loopback generated klol_v2_test database; no production credentials loaded
+{"scenario":"0039-to-0040-upgrade-and-rerun","result":"PASS","journalBefore":40,"journalAfter":41,"existingTablesPreserved":102,"existingRowCountsHashesColumnsConstraintsIndexesUnchanged":true,"syntheticPartyAndMemberPreserved":true,"newSnapshotRows":0,"newConstraintsIncludingPK":8,"newIndexesIncludingPK":3,"migrationHash":"0552156eb090652242d5124b2b0a8141654b02e70777f4bb5e72f6e7c527ccd2"}
+{"scenario":"empty-fresh-0000-through-0040-and-rerun","result":"PASS","journalCount":41,"applicationTables":103,"secondApplyNoOp":true,"allMigrationHashesMatchSource":true}
+[r24-migration] disposable cluster stopped and verified workspace directory removed
