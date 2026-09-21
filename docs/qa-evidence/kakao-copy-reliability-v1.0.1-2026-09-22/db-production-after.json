@@ -1,0 +1,73 @@
+{
+  "checkedAt": "2026-09-21T15:57:03.446Z",
+  "targetFingerprint": "c5918218dd171001",
+  "status": "PASS",
+  "state": {
+    "count": 42,
+    "head": {
+      "id": 45,
+      "hash": "07f5b26458e2c792152826d9defd8839660c338b745c5795d9113e1f83219ebd",
+      "created_at": "1789982580113"
+    },
+    "closed": true,
+    "columns": [
+      {
+        "table_name": "season_applications",
+        "column_name": "source_display_name",
+        "is_nullable": "YES"
+      },
+      {
+        "table_name": "season_kakao_pending_applications",
+        "column_name": "link_reason",
+        "is_nullable": "YES"
+      }
+    ],
+    "indexes": [
+      {
+        "indexname": "season_kakao_pending_active_slot_uidx",
+        "indexdef": "CREATE UNIQUE INDEX season_kakao_pending_active_slot_uidx ON competition.season_kakao_pending_applications USING btree (season_id, apply_date, recruit_no, slot_no, source_room_id_hash, source_mode) WHERE (status = 'ACTIVE'::competition.season_kakao_pending_status)",
+        "valid": true
+      }
+    ],
+    "constraint": {
+      "convalidated": true,
+      "definition": "CHECK ((((status = ANY (ARRAY['REJECTED'::competition.season_application_status, 'RESERVE'::competition.season_application_status, 'CONFIRMED'::competition.season_application_status])) AND (reviewed_at IS NOT NULL) AND (reviewed_by_user_account_id IS NOT NULL)) OR ((status = ANY (ARRAY['APPLIED'::competition.season_application_status, 'CANCELLED'::competition.season_application_status, 'RESERVE'::competition.season_application_status])) AND (review_note IS NULL) AND (reviewed_at IS NULL) AND (reviewed_by_user_account_id IS NULL))))"
+    },
+    "aggregates": {
+      "season_applications": [
+        {
+          "status": "APPLIED",
+          "count": 464
+        },
+        {
+          "status": "CANCELLED",
+          "count": 64
+        }
+      ],
+      "season_kakao_pending_applications": [
+        {
+          "status": "ACTIVE",
+          "count": 69
+        },
+        {
+          "status": "CANCELLED",
+          "count": 30
+        },
+        {
+          "status": "RESOLVED",
+          "count": 4
+        }
+      ],
+      "season_inhouse_rounds": [
+        {
+          "status": "CANCELED",
+          "count": 26
+        },
+        {
+          "status": "IN_PROGRESS",
+          "count": 3
+        }
+      ]
+    }
+  }
+}

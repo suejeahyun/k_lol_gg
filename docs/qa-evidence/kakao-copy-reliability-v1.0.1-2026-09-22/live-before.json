@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-09-21T15:52:14.850Z",
+  "baseUrl": "https://k-lol-gg.vercel.app",
+  "stage": "before",
+  "status": "PASS",
+  "rosterMutationsSent": false,
+  "externalMessagesSent": false,
+  "rawMemberNamesRecorded": false,
+  "responseBodiesRecorded": false,
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "passed": true,
+      "ready": true,
+      "traceId": null
+    },
+    {
+      "check": "/help/kakao",
+      "status": 200,
+      "passed": true,
+      "responseCharacters": 56751,
+      "traceId": null
+    },
+    {
+      "check": "/help/recruits",
+      "status": 200,
+      "passed": true,
+      "responseCharacters": 57340,
+      "traceId": null
+    },
+    {
+      "check": "/recruits",
+      "status": 200,
+      "passed": true,
+      "responseCharacters": 67629,
+      "traceId": null
+    }
+  ]
+}

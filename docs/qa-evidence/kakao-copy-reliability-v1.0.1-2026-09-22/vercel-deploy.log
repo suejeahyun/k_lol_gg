@@ -1,0 +1,459 @@
+Vercel CLI 59.23.2 (Node.js 24.14.1)
+Deploying k-lol-gg
+Uploading [--------------------] (0.0B/3.1MB)
+Uploading [=====---------------] (804.0KB/3.1MB)
+Uploading [==========----------] (1.6MB/3.1MB)
+Uploading [===============-----] (2.3MB/3.1MB)
+Uploading [====================] (3.1MB/3.1MB)
+  Inspect         https://vercel.com/tjdmswo11-3715s-projects/k-lol-gg/Enu7zPFs7kr4pqUpiveAhB7BKXDJ
+▲ Production      https://k-lol-lnp08nrkv-tjdmswo11-3715s-projects.vercel.app
+Building…
+Building…
+Running build in Cleveland, USA (East) – cle1
+Build machine configuration: 4 cores, 8 GB
+Retrieving list of deployment files...
+Downloading 2466 deployment files...
+Restored build cache from previous deployment (FmnnD2FtSWmTm7Ks6zrZ8it78jF7)
+Running "vercel build"
+Vercel CLI 59.23.2
+Installing dependencies...
+up to date in 2s
+241 packages are looking for funding
+run `npm fund` for details
+npm warn allow-scripts 4 packages have install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.18.20 (postinstall: node install.js)
+npm warn allow-scripts   esbuild@0.25.12 (postinstall: node install.js)
+npm warn allow-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn allow-scripts   unrs-resolver@1.12.2 (postinstall: node postinstall.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+Detected Next.js version: 16.3.4
+Running "npm run build"
+> klol-gg-v2@0.1.0 build
+> next build
+▲ Next.js 16.3.4 (Turbopack)
+Applying modifyConfig from Vercel
+✓ Running next.config.ts took 259ms
+Creating an optimized production build ...
+✓ Compiled successfully in 6.4s
+Running TypeScript ...
+Finished TypeScript in 32.2s ...
+Collecting page data using 3 workers ...
+Generating static pages using 3 workers (0/93) ...
+Generating static pages using 3 workers (23/93)
+Generating static pages using 3 workers (46/93)
+Generating static pages using 3 workers (69/93)
+✓ Generating static pages using 3 workers (93/93) in 614ms
+Finalizing page optimization ...
+Running onBuildComplete from Vercel
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /account
+├ ƒ /account/discipline
+├ ƒ /account/password
+├ ƒ /account/riot
+├ ƒ /account/tier
+├ ƒ /admin
+├ ƒ /admin/ai-requests
+├ ƒ /admin/balance
+├ ƒ /admin/balance-ai
+├ ƒ /admin/balance-ai/players
+├ ƒ /admin/balance-ai/recalculate
+├ ƒ /admin/balance-ai/reviews
+├ ƒ /admin/balance-ai/reviews/[reviewId]
+├ ƒ /admin/balance/drafts
+├ ƒ /admin/balance/drafts/[draftId]
+├ ƒ /admin/balance/drafts/[draftId]/recommendations
+├ ƒ /admin/balance/recommendations
+├ ƒ /admin/champions
+├ ƒ /admin/champions/[championId]/edit
+├ ƒ /admin/champions/new
+├ ƒ /admin/discipline
+├ ƒ /admin/discipline/[recordId]
+├ ƒ /admin/discipline/new
+├ ƒ /admin/highlights
+├ ƒ /admin/highlights/[highlightId]/edit
+├ ƒ /admin/highlights/new
+├ ƒ /admin/images
+├ ƒ /admin/images/[imageId]/edit
+├ ƒ /admin/images/new
+├ ƒ /admin/kakao
+├ ƒ /admin/kakao/operation-forms
+├ ƒ /admin/kakao/operation-forms/[formType]
+├ ƒ /admin/kakao/recruits
+├ ƒ /admin/kakao/recruits/logs
+├ ƒ /admin/kakao/recruits/settings
+├ ƒ /admin/kakao/rooms
+├ ƒ /admin/kakao/scrims
+├ ƒ /admin/kakao/season-apply
+├ ƒ /admin/kakao/settings
+├ ƒ /admin/kakao/stats
+├ ƒ /admin/login
+├ ƒ /admin/logs
+├ ƒ /admin/logs/kakao
+├ ƒ /admin/matches
+├ ƒ /admin/matches/[matchId]
+├ ƒ /admin/matches/[matchId]/ai-review
+├ ƒ /admin/matches/[matchId]/edit
+├ ƒ /admin/matches/new
+├ ƒ /admin/matches/submissions/[submissionId]
+├ ƒ /admin/operation-forms
+├ ƒ /admin/operation-forms/[formType]
+├ ƒ /admin/operation-forms/[formType]/[id]
+├ ƒ /admin/operation-forms/warnings
+├ ƒ /admin/players
+├ ƒ /admin/players/[playerId]
+├ ƒ /admin/players/[playerId]/balance
+├ ƒ /admin/players/[playerId]/edit
+├ ƒ /admin/players/[playerId]/riot
+├ ƒ /admin/players/new
+├ ƒ /admin/private-assets
+├ ƒ /admin/private-assets/[assetId]
+├ ƒ /admin/progress
+├ ƒ /admin/progress/destruction
+├ ƒ /admin/progress/destruction/[tournamentId]
+├ ƒ /admin/progress/destruction/new
+├ ƒ /admin/progress/event
+├ ƒ /admin/progress/event/[eventId]
+├ ƒ /admin/progress/event/new
+├ ƒ /admin/recruits
+├ ƒ /admin/riot
+├ ƒ /admin/search
+├ ƒ /admin/seasons
+├ ƒ /admin/seasons/kakao-pending
+├ ƒ /admin/seasons/kakao-pending/[pendingId]
+├ ƒ /admin/security
+├ ƒ /admin/site-settings
+├ ƒ /admin/users
+├ ƒ /admin/users/[userAccountId]
+├ ƒ /ai-balance
+├ ƒ /ai-balance/players
+├ ƒ /api/admin/ai-requests
+├ ƒ /api/admin/backups/[kind]
+├ ƒ /api/admin/balance-ai/adjustments
+├ ƒ /api/admin/balance-ai/players
+├ ƒ /api/admin/balance-ai/recalculate
+├ ƒ /api/admin/balance-ai/reviews
+├ ƒ /api/admin/balance-ai/summary
+├ ƒ /api/admin/champions
+├ ƒ /api/admin/champions/[championId]
+├ ƒ /api/admin/competitions/destruction
+├ ƒ /api/admin/competitions/destruction/[tournamentId]
+├ ƒ /api/admin/competitions/events
+├ ƒ /api/admin/competitions/events/[eventId]
+├ ƒ /api/admin/dashboard
+├ ƒ /api/admin/discipline-records
+├ ƒ /api/admin/discipline-records/[recordId]
+├ ƒ /api/admin/discipline-records/target-options
+├ ƒ /api/admin/discipline-tasks/[taskId]/review
+├ ƒ /api/admin/discipline/assets/[assetId]
+├ ƒ /api/admin/highlights
+├ ƒ /api/admin/highlights/[highlightId]
+├ ƒ /api/admin/highlights/[highlightId]/assets
+├ ƒ /api/admin/images
+├ ƒ /api/admin/images/[imageId]
+├ ƒ /api/admin/images/[imageId]/assets
+├ ƒ /api/admin/images/[imageId]/home-display
+├ ƒ /api/admin/kakao/recruit-health
+├ ƒ /api/admin/kakao/rooms
+├ ƒ /api/admin/kakao/settings
+├ ƒ /api/admin/kakao/stats
+├ ƒ /api/admin/login
+├ ƒ /api/admin/logout
+├ ƒ /api/admin/logs
+├ ƒ /api/admin/logs/stats
+├ ƒ /api/admin/maintenance/admin-log-cleanup
+├ ƒ /api/admin/maintenance/rate-limit-cleanup
+├ ƒ /api/admin/matches
+├ ƒ /api/admin/matches/[matchId]
+├ ƒ /api/admin/matches/[matchId]/publish
+├ ƒ /api/admin/matches/[matchId]/restore
+├ ƒ /api/admin/matches/[matchId]/void
+├ ƒ /api/admin/matches/editor-options/players
+├ ƒ /api/admin/matches/import
+├ ƒ /api/admin/matches/integrity
+├ ƒ /api/admin/matches/submissions
+├ ƒ /api/admin/matches/submissions/[submissionId]
+├ ƒ /api/admin/matches/submissions/[submissionId]/approve
+├ ƒ /api/admin/matches/submissions/[submissionId]/cancel-import
+├ ƒ /api/admin/matches/submissions/[submissionId]/images/[imageId]
+├ ƒ /api/admin/matches/submissions/[submissionId]/images/[imageId]/ocr
+├ ƒ /api/admin/matches/submissions/[submissionId]/reject
+├ ƒ /api/admin/matches/submissions/[submissionId]/reopen
+├ ƒ /api/admin/matches/submissions/[submissionId]/review-draft
+├ ƒ /api/admin/operation-forms
+├ ƒ /api/admin/operation-forms/[formType]/[id]
+├ ƒ /api/admin/players
+├ ƒ /api/admin/players/[playerId]
+├ ƒ /api/admin/players/[playerId]/balance-profile
+├ ƒ /api/admin/players/[playerId]/password-reset
+├ ƒ /api/admin/players/[playerId]/reactivate
+├ ƒ /api/admin/private-assets
+├ ƒ /api/admin/private-assets/[assetId]
+├ ƒ /api/admin/private-assets/[assetId]/metadata
+├ ƒ /api/admin/recruits
+├ ƒ /api/admin/recruits/[recruitId]
+├ ƒ /api/admin/riot
+├ ƒ /api/admin/riot/bulk
+├ ƒ /api/admin/riot/bulk-link
+├ ƒ /api/admin/riot/link
+├ ƒ /api/admin/riot/retry
+├ ƒ /api/admin/riot/sync
+├ ƒ /api/admin/season-applications
+├ ƒ /api/admin/season-applications/[applicationId]/review
+├ ƒ /api/admin/season-kakao-pending
+├ ƒ /api/admin/season-kakao-pending/[pendingId]
+├ ƒ /api/admin/season-kakao-pending/[pendingId]/cancel
+├ ƒ /api/admin/season-kakao-pending/[pendingId]/resolve
+├ ƒ /api/admin/seasons
+├ ƒ /api/admin/seasons/[seasonId]
+├ ƒ /api/admin/seasons/[seasonId]/activate
+├ ƒ /api/admin/seasons/[seasonId]/clone
+├ ƒ /api/admin/seasons/[seasonId]/end
+├ ƒ /api/admin/security/totp
+├ ƒ /api/admin/security/totp/disable
+├ ƒ /api/admin/security/totp/enable
+├ ƒ /api/admin/security/totp/setup
+├ ƒ /api/admin/session
+├ ƒ /api/admin/site-settings
+├ ƒ /api/admin/stats/consistency
+├ ƒ /api/admin/stats/recalculate
+├ ƒ /api/admin/team-tools/drafts/[draftId]
+├ ƒ /api/admin/team-tools/drafts/[draftId]/archive
+├ ƒ /api/admin/team-tools/drafts/[draftId]/recommendations
+├ ƒ /api/admin/team-tools/drafts/[draftId]/reevaluate
+├ ƒ /api/admin/team-tools/drafts/[draftId]/restore
+├ ƒ /api/admin/team-tools/drafts/[draftId]/save
+├ ƒ /api/admin/team-tools/drafts/[draftId]/select
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[userAccountId]
+├ ƒ /api/admin/users/[userAccountId]/2fa-reset
+├ ƒ /api/admin/users/[userAccountId]/approve
+├ ƒ /api/admin/users/[userAccountId]/delete
+├ ƒ /api/admin/users/[userAccountId]/details
+├ ƒ /api/admin/users/[userAccountId]/password-reset
+├ ƒ /api/admin/users/[userAccountId]/reject
+├ ƒ /api/admin/users/[userAccountId]/reset
+├ ƒ /api/admin/users/[userAccountId]/reset-pending
+├ ƒ /api/admin/users/[userAccountId]/restore
+├ ƒ /api/admin/users/[userAccountId]/role
+├ ƒ /api/admin/users/[userAccountId]/suspend
+├ ƒ /api/ai/chat
+├ ƒ /api/applications/available
+├ ƒ /api/applications/season
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/me/player
+├ ƒ /api/auth/password
+├ ƒ /api/auth/password/forgot
+├ ƒ /api/auth/reset-requests
+├ ƒ /api/auth/signup
+├ ƒ /api/champions
+├ ƒ /api/champions/[championId]
+├ ƒ /api/competitions/destruction
+├ ƒ /api/competitions/destruction/[tournamentId]
+├ ƒ /api/competitions/destruction/[tournamentId]/application
+├ ƒ /api/competitions/destruction/[tournamentId]/mvp-vote
+├ ƒ /api/competitions/events
+├ ƒ /api/competitions/events/[eventId]
+├ ƒ /api/competitions/events/[eventId]/application
+├ ƒ /api/cron/kakao-daily-close
+├ ƒ /api/discipline/stats
+├ ƒ /api/health
+├ ƒ /api/highlights
+├ ƒ /api/highlights/[highlightId]
+├ ƒ /api/images
+├ ƒ /api/images/[imageId]
+├ ƒ /api/integrations/kakao/image-receive
+├ ƒ /api/integrations/kakao/managed-forms
+├ ƒ /api/integrations/kakao/openchat
+├ ƒ /api/integrations/kakao/operation-forms
+├ ƒ /api/integrations/kakao/pair-room
+├ ƒ /api/integrations/kakao/recruits
+├ ƒ /api/integrations/kakao/scheduled-notice
+├ ƒ /api/integrations/kakao/search-player
+├ ƒ /api/integrations/kakao/season-applications
+├ ƒ /api/integrations/kakao/v4/commands
+├ ƒ /api/internal/jobs/discipline-assets-cleanup
+├ ƒ /api/internal/jobs/discipline-assets-recover
+├ ƒ /api/internal/jobs/kakao-daily-close
+├ ƒ /api/internal/jobs/maintenance
+├ ƒ /api/internal/jobs/riot-sync
+├ ƒ /api/kakao/destruction-scrim-recruits/[action]
+├ ƒ /api/kakao/image-receive
+├ ƒ /api/kakao/managed-forms
+├ ƒ /api/kakao/openchat
+├ ƒ /api/kakao/operation-forms
+├ ƒ /api/kakao/party-recruits/[action]
+├ ƒ /api/kakao/recruit/season-apply
+├ ƒ /api/kakao/recruit/season-apply/status
+├ ƒ /api/kakao/scheduled-notice
+├ ƒ /api/kakao/search-player
+├ ƒ /api/matches
+├ ƒ /api/matches/[matchId]
+├ ƒ /api/me/discipline/assets/[assetId]
+├ ƒ /api/me/discipline/tasks
+├ ƒ /api/me/discipline/tasks/[taskId]
+├ ƒ /api/me/discipline/tasks/[taskId]/evidence
+├ ƒ /api/me/discipline/tasks/[taskId]/evidence/[assetId]/submit
+├ ƒ /api/me/discipline/tasks/[taskId]/kakao-session
+├ ƒ /api/me/match-submissions
+├ ƒ /api/me/match-submissions/[code]
+├ ƒ /api/me/match-submissions/[code]/cancel
+├ ƒ /api/me/match-submissions/[code]/images
+├ ƒ /api/me/match-submissions/[code]/images/[imageId]
+├ ƒ /api/me/match-submissions/[code]/kakao-session
+├ ƒ /api/me/riot
+├ ƒ /api/me/riot/rso/callback
+├ ƒ /api/me/riot/rso/start
+├ ƒ /api/me/riot/sync
+├ ƒ /api/media/assets/[assetId]
+├ ƒ /api/rankings
+├ ƒ /api/rankings/mmr
+├ ƒ /api/recruits
+├ ƒ /api/riot/player/[playerId]/summary
+├ ƒ /api/seasons
+├ ƒ /api/seasons/current
+├ ƒ /api/site-settings
+├ ƒ /api/stats/player/[playerId]/recent
+├ ƒ /api/stats/player/[playerId]/summary
+├ ƒ /api/stats/top
+├ ƒ /api/team-tools/candidates
+├ ƒ /api/team-tools/drafts
+├ ƒ /api/team-tools/drafts/[draftId]
+├ ƒ /api/team-tools/drafts/[draftId]/recommendations
+├ ƒ /api/team-tools/drafts/[draftId]/reevaluate
+├ ƒ /api/team-tools/drafts/[draftId]/save
+├ ƒ /api/team-tools/drafts/[draftId]/select
+├ ƒ /app
+├ ƒ /app/account
+├ ƒ /app/coin-toss
+├ ƒ /app/install
+├ ƒ /app/login
+├ ƒ /app/matches
+├ ƒ /app/matches/[matchId]
+├ ƒ /app/me
+├ ƒ /app/me/riot
+├ ƒ /app/players
+├ ƒ /app/players/[legacyId]
+├ ƒ /app/progress/destruction/[tournamentId]
+├ ƒ /app/progress/destruction/[tournamentId]/mvp-vote
+├ ƒ /app/progress/event/[eventId]
+├ ƒ /app/random-team
+├ ƒ /app/rankings
+├ ƒ /app/recruits
+├ ƒ /applications
+├ ƒ /balance
+├ ƒ /coin-toss
+├ ƒ /competitions
+├ ƒ /competitions/destruction
+├ ƒ /competitions/destruction/[tournamentId]
+├ ƒ /competitions/events
+├ ƒ /competitions/events/[eventId]
+├ ƒ /destruction-auction-live/[tournamentId]
+├ ƒ /discipline
+├ ƒ /discipline/evidence
+├ ƒ /forbidden
+├ ƒ /forgot-password
+├ ƒ /help/kakao
+├ ƒ /help/recruits
+├ ƒ /help/riot
+├ ƒ /highlights
+├ ƒ /highlights/[highlightId]
+├ ○ /icon.svg
+├ ƒ /images
+├ ƒ /images/[imageId]
+├ ƒ /install
+├ ƒ /kakao
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /matches
+├ ƒ /matches/[matchId]
+├ ƒ /matches/submissions
+├ ƒ /matches/submit
+├ ƒ /me/player
+├ ƒ /me/riot
+├ ƒ /participation
+├ ƒ /participation/destruction/[tournamentId]
+├ ƒ /participation/destruction/[tournamentId]/captain-points
+├ ƒ /participation/destruction/[tournamentId]/participants
+├ ƒ /participation/destruction/[tournamentId]/participants/[playerId]
+├ ƒ /participation/event/[eventId]
+├ ƒ /participation/season
+├ ƒ /players
+├ ƒ /players/[playerId]
+├ ƒ /players/[playerId]/riot
+├ ƒ /players/balance
+├ ƒ /players/balance/drafts
+├ ƒ /players/balance/drafts/[draftId]
+├ ƒ /players/balance/drafts/[draftId]/recommendations
+├ ƒ /players/balance/recommendations
+├ ƒ /privacy
+├ ƒ /progress
+├ ƒ /progress/destruction
+├ ƒ /progress/destruction/[tournamentId]
+├ ƒ /progress/destruction/[tournamentId]/images
+├ ƒ /progress/destruction/[tournamentId]/images/[imageIndex]
+├ ƒ /progress/destruction/[tournamentId]/mvp-vote
+├ ƒ /progress/event
+├ ƒ /progress/event/[eventId]
+├ ƒ /random-team
+├ ƒ /rankings
+├ ƒ /rankings/mmr
+├ ƒ /recruit
+├ ƒ /recruit-helper
+├ ƒ /recruits
+├ ƒ /riot-api
+├ ƒ /signup
+├ ƒ /start
+├ ƒ /team-balance
+├ ƒ /team-balance/drafts/[draftId]
+├ ƒ /terms
+├ ƒ /tools/coin-toss
+├ ƒ /tools/random-team
+├ ƒ /tools/team-balance
+├ ƒ /tools/team-balance/drafts
+└ ƒ /tools/team-balance/drafts/[draftId]
+ƒ Proxy (Middleware)
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+Build Completed in /vercel/output [49s]
+Deploying outputs...
+[2K[1A[2K[G▲ Production      https://k-lol-lnp08nrkv-tjdmswo11-3715s-projects.vercel.app
+Completing…
+▲ Aliased         https://k-lol-gg-tjdmswo11-3715s-projects.vercel.app
+{
+  "status": "ok",
+  "deployment": {
+    "id": "dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ",
+    "url": "https://k-lol-lnp08nrkv-tjdmswo11-3715s-projects.vercel.app",
+    "inspectorUrl": "https://vercel.com/tjdmswo11-3715s-projects/k-lol-gg/Enu7zPFs7kr4pqUpiveAhB7BKXDJ",
+    "readyState": "READY",
+    "target": "production",
+    "deploymentApiUrl": "https://api.vercel.com/v13/deployments/dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ",
+    "buildMachine": {
+      "cores": 4,
+      "memory": 8192,
+      "machine": "standard",
+      "selectionType": "fixed",
+      "selectionSource": "project-setting"
+    }
+  },
+  "message": "Deployment k-lol-lnp08nrkv-tjdmswo11-3715s-projects.vercel.app ready.",
+  "next": [
+    {
+      "command": "vercel curl https://k-lol-lnp08nrkv-tjdmswo11-3715s-projects.vercel.app",
+      "when": "Verify deployment, including when Deployment Protection is enabled"
+    },
+    {
+      "command": "vercel inspect k-lol-lnp08nrkv-tjdmswo11-3715s-projects.vercel.app",
+      "when": "Inspect deployment"
+    },
+    {
+      "command": "vercel deploy --prod",
+      "when": "Promote to production"
+    }
+  ]
+}

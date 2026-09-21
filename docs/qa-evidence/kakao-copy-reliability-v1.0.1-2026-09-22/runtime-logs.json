@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-09-21T15:59:28.432Z",
+  "deploymentId": "dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ",
+  "since": "2026-09-21T15:58:40Z",
+  "recordCount": 15,
+  "statusCounts": {
+    "200": 15
+  },
+  "errorOrFatalRecords": 0,
+  "nestedErrorOrFatalRecords": 0,
+  "truncated": false,
+  "rawMessagesRecorded": false,
+  "status": "PASS"
+}

@@ -1,5 +1,14 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-22 복사 양식 안정화 1.0.1 — 운영 적용
+
+- source `b7798363f9b0caee847a654afe2dde07afbcb2f9`, tag `kakao-copy-reliability-v1.0.1`, Vercel `dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ` READY·production. 00:58 KST 운영 alias·소스 metadata 확인.
+- 앞선 복사 양식 안정화와 내전 패치를 함께 적용하고 공개 도움말 드리프트를 수정했다. 백업 후 운영 DB0041 적용·재실행 no-op·제약 유효·주요 상태별 건수 불변을 확인했다.
+- 최종 전체 검사 계약410·단위902 PASS(+DB전용1skip), 빌드PASS. 동일 서버 소스의 격리DB86 PASS. 후보·운영 읽기21/21 각각PASS, 현재 파티3·내전3 상세 구조 확인. 운영로그15건 모두200·error/fatal0.
+- R24 호환 VM70 PASS로 이번 서버패치의 필수 폰 교체는 없다. 실제 기기버전·카카오 송수신은 별도 미확인이다. 운영 명단의 테스트 생성·삭제와 외부 메시지 발송은 하지 않았다.
+- [QA·백업·배포·복구·다음추천](./qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/README.md), [디스코드 공지](./qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/DISCORD_NOTICE.md), [패치기록](./patch-notes/2026-09-22-kakao-copy-reliability-production.md). 아래 미배포 기록은 각 과거 검증 시점의 상태이다.
+
+
 ## 2026-09-22 복사 양식 안정화 1.0.0 — 운영 미배포·R25 미설치
 
 - `kakao-copy-reliability@1.0.0`: 코드가 있는 N인파티의 이름 삭제·교체·예비 이동·시작/게임 수정을 원본·현재·제출 비교로 병합한다. 같은 항목의 충돌은 전체 거절하고, 취소자 재등장·명단 행 누락·정원/종목 변조·코드의 자동생성 재사용을 차단한다.

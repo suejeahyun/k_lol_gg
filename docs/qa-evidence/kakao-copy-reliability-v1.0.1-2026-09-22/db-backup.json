@@ -1,0 +1,66 @@
+{
+  "checkedAt": "2026-09-21T15:53:28.667Z",
+  "targetFingerprint": "c5918218dd171001",
+  "status": "PASS",
+  "migrationBefore": {
+    "count": 41,
+    "head": {
+      "id": 44,
+      "hash": "0552156eb090652242d5124b2b0a8141654b02e70777f4bb5e72f6e7c527ccd2",
+      "created_at": "1789854667439"
+    },
+    "closed": false,
+    "columns": [],
+    "indexes": [
+      {
+        "indexname": "season_kakao_pending_slot_uidx",
+        "indexdef": "CREATE UNIQUE INDEX season_kakao_pending_slot_uidx ON competition.season_kakao_pending_applications USING btree (season_id, apply_date, recruit_no, slot_no, source_room_id_hash, source_mode)"
+      }
+    ],
+    "constraint": {
+      "convalidated": true,
+      "definition": "CHECK ((((status = ANY (ARRAY['REJECTED'::competition.season_application_status, 'RESERVE'::competition.season_application_status, 'CONFIRMED'::competition.season_application_status])) AND (reviewed_at IS NOT NULL) AND (reviewed_by_user_account_id IS NOT NULL)) OR ((status = ANY (ARRAY['APPLIED'::competition.season_application_status, 'CANCELLED'::competition.season_application_status])) AND (review_note IS NULL) AND (reviewed_at IS NULL) AND (reviewed_by_user_account_id IS NULL))))"
+    },
+    "aggregates": {
+      "season_applications": [
+        {
+          "status": "APPLIED",
+          "count": 464
+        },
+        {
+          "status": "CANCELLED",
+          "count": 64
+        }
+      ],
+      "season_kakao_pending_applications": [
+        {
+          "status": "ACTIVE",
+          "count": 69
+        },
+        {
+          "status": "CANCELLED",
+          "count": 30
+        },
+        {
+          "status": "RESOLVED",
+          "count": 4
+        }
+      ],
+      "season_inhouse_rounds": [
+        {
+          "status": "CANCELED",
+          "count": 26
+        },
+        {
+          "status": "IN_PROGRESS",
+          "count": 3
+        }
+      ]
+    }
+  },
+  "archive": ".private/backups/copy-production-20260922/before-0041.dump",
+  "bytes": 5409724,
+  "sha256": "6942b8b78ee8bc884ca7ef17a286b023b21f42e0b2d3064c082444a190752a99",
+  "archiveCatalogReadable": true,
+  "note": "Logical archive created and catalog checked; this production archive has not been restored."
+}

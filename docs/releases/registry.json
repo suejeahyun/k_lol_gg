@@ -895,6 +895,25 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "kakao-copy-reliability",
+      "version": "1.0.1",
+      "gitTag": "kakao-copy-reliability-v1.0.1",
+      "commit": "b7798363f9b0caee847a654afe2dde07afbcb2f9",
+      "releasedAt": "2026-09-21T15:58:58.896Z",
+      "migrationHead": "0041_clever_skullbuster",
+      "qaEvidence": "docs/qa-evidence/kakao-copy-reliability-v1.0.1-2026-09-22/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-22-kakao-copy-reliability-production.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_Enu7zPFs7kr4pqUpiveAhB7BKXDJ",
+        "url": "https://k-lol-lnp08nrkv-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-21T15:58:58.896Z",
+        "healthStatus": "ready"
+      }
     }
   ]
 }

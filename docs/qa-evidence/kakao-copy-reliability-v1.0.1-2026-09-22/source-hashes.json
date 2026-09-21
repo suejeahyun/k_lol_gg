@@ -1,0 +1,33 @@
+{
+  "sourceCommit": "b7798363f9b0caee847a654afe2dde07afbcb2f9",
+  "files": [
+    {
+      "path": "src/modules/recruiting/application/party-copy-snapshot.ts",
+      "sha256": "75cbbfbab8f669530ae7e2038fd95ac532b9db8016fcdb747bfb243f1c28e99d"
+    },
+    {
+      "path": "src/modules/recruiting/kakao-v4/dispatcher.ts",
+      "sha256": "275b8337ab656c63051a8c43e9650be1a585c1a76a48ba8370d2081384e5abfe"
+    },
+    {
+      "path": "src/modules/recruiting/kakao-v4/party-snapshot-parser.ts",
+      "sha256": "14b66529a863e688fa3a74b454c5eccb7b99241b59b80114120c4317f2f70d4c"
+    },
+    {
+      "path": "src/modules/recruiting/kakao-assistant/inhouse-copy-form.ts",
+      "sha256": "eb414e26b1afdd03da9cb6474dcf7be5928326bde0c77d002de9e8053975dfe9"
+    },
+    {
+      "path": "src/app/(public)/(recruiting)/help/kakao/page.tsx",
+      "sha256": "5f57b22a6e4cb12f3f3f9e6731f00395f35fe4610d516041333b3b24159a4b5a"
+    },
+    {
+      "path": "src/app/(public)/(recruiting)/help/recruits/page.tsx",
+      "sha256": "3e10f31f20d89912a0be1d1d8e9bbaa8f71225e589f75315abe7e6c37415d99f"
+    },
+    {
+      "path": "drizzle/0041_clever_skullbuster.sql",
+      "sha256": "07f5b26458e2c792152826d9defd8839660c338b745c5795d9113e1f83219ebd"
+    }
+  ]
+}

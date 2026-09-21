@@ -1,0 +1,211 @@
+{
+  "checkedAt": "2026-09-21T15:58:58.896Z",
+  "baseUrl": "https://k-lol-gg.vercel.app",
+  "stage": "production",
+  "status": "PASS",
+  "rosterMutationsSent": false,
+  "externalMessagesSent": false,
+  "rawMemberNamesRecorded": false,
+  "responseBodiesRecorded": false,
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "passed": true,
+      "ready": true,
+      "traceId": null
+    },
+    {
+      "check": "current copy-edit help",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 216,
+      "replyCharacters": 683,
+      "traceId": null
+    },
+    {
+      "check": "current inhouse participation guide",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 216,
+      "replyCharacters": 324,
+      "traceId": null
+    },
+    {
+      "check": "missing inhouse number guidance",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 213,
+      "replyCharacters": 52,
+      "traceId": null
+    },
+    {
+      "check": "party status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 260,
+      "replyCharacters": 243,
+      "traceId": null
+    },
+    {
+      "check": "inhouse status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 253,
+      "replyCharacters": 139,
+      "traceId": null
+    },
+    {
+      "check": "party detail selection",
+      "selectedCount": 3,
+      "inspectedCount": 3,
+      "skipped": false,
+      "readLimitApplied": false
+    },
+    {
+      "check": "party detail #4",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 254,
+      "replyCharacters": 77,
+      "traceId": null
+    },
+    {
+      "check": "party detail structure #4",
+      "passed": true,
+      "displayedCount": 1,
+      "capacity": 2,
+      "visibleSlots": 1,
+      "mainRows": 2,
+      "reserveRows": 1,
+      "visibleReserveSlots": 0,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "party detail #10",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 256,
+      "replyCharacters": 85,
+      "traceId": null
+    },
+    {
+      "check": "party detail structure #10",
+      "passed": true,
+      "displayedCount": 1,
+      "capacity": 2,
+      "visibleSlots": 1,
+      "mainRows": 2,
+      "reserveRows": 1,
+      "visibleReserveSlots": 0,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "party detail #11",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 254,
+      "replyCharacters": 96,
+      "traceId": null
+    },
+    {
+      "check": "party detail structure #11",
+      "passed": true,
+      "displayedCount": 5,
+      "capacity": 5,
+      "visibleSlots": 5,
+      "mainRows": 5,
+      "reserveRows": 1,
+      "visibleReserveSlots": 0,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "inhouse detail selection",
+      "selectedCount": 3,
+      "inspectedCount": 3,
+      "skipped": false,
+      "readLimitApplied": false
+    },
+    {
+      "check": "inhouse detail #1",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 275,
+      "replyCharacters": 106,
+      "traceId": null
+    },
+    {
+      "check": "inhouse detail structure #1",
+      "passed": true,
+      "displayedCount": 1,
+      "capacity": 10,
+      "visibleSlots": 1,
+      "mainRows": 10,
+      "reserveRows": 1,
+      "visibleReserveSlots": 0,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "inhouse detail #2",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 266,
+      "replyCharacters": 202,
+      "traceId": null
+    },
+    {
+      "check": "inhouse detail structure #2",
+      "passed": true,
+      "displayedCount": 10,
+      "capacity": 10,
+      "visibleSlots": 10,
+      "mainRows": 10,
+      "reserveRows": 3,
+      "visibleReserveSlots": 1,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "inhouse detail #3",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 324,
+      "replyCharacters": 186,
+      "traceId": null
+    },
+    {
+      "check": "inhouse detail structure #3",
+      "passed": true,
+      "displayedCount": 10,
+      "capacity": 10,
+      "visibleSlots": 10,
+      "mainRows": 10,
+      "reserveRows": 1,
+      "visibleReserveSlots": 0,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "/help/kakao",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "responseCharacters": 57561,
+      "traceId": null
+    },
+    {
+      "check": "/help/recruits",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "responseCharacters": 58100,
+      "traceId": null
+    },
+    {
+      "check": "/recruits",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "responseCharacters": 67629,
+      "traceId": null
+    }
+  ]
+}

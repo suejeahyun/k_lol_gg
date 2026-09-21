@@ -1,0 +1,80 @@
+{
+  "verificationDate": "2026-09-22",
+  "result": "PASS",
+  "baseline": {
+    "sourceCommit": "0c188785315cd781a0e828ba1acc69f96acdbf28",
+    "version": "KLOL_KAKAO_BOT_V40_R24_2026_09_20",
+    "publicArtifact": "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js",
+    "publicSha256Lf": "b1ee39b0c48f925d2d3b39831bd720c4e82356fef999eb168b785d29fb7e85fe"
+  },
+  "current": {
+    "version": "KLOL_KAKAO_BOT_V40_R25_2026_09_22",
+    "publicSha256Lf": "e18ea983d2125ffb2c187d1e330f4e1671f56f1878c7ce9b99e9a272b03b2886"
+  },
+  "astComparison": {
+    "unchangedExceptVersionAndLocalHelp": true,
+    "excludedVariable": "BOT_CODE_VERSION",
+    "excludedHelpAssignments": [
+      "getPartyRecruitHelpNotice",
+      "getUnifiedHelpNotice",
+      "getParticipationGuideNotice"
+    ],
+    "method": "Parse both LF-normalized public artifacts with Acorn ES5; omit the version declaration and the three named help assignments; assert equality of every remaining top-level node's source text."
+  },
+  "vmChecks": {
+    "passed": 70,
+    "failed": 0,
+    "formChecks": {
+      "passed": 66,
+      "scenarioCount": 11,
+      "prefixes": ["none", "ASCII slash", "full-width slash"],
+      "lineEndings": ["LF", "CRLF"],
+      "scenarios": [
+        "party-current",
+        "party-delete",
+        "party-replace",
+        "party-metadata",
+        "party-empty",
+        "inhouse-current",
+        "inhouse-lanes",
+        "inhouse-new",
+        "inhouse-delete",
+        "inhouse-old-name-only",
+        "inhouse-old-with-add"
+      ],
+      "assertions": [
+        "The R24 VM forwards the complete original message unchanged.",
+        "Each request uses the expected RECRUIT or FEATURES profile.",
+        "Each request makes one simulated HTTP call with a 5000 ms timeout.",
+        "The current server classifier and canonicalizer accept the forwarded form as SYNC.",
+        "The phone returns the simulated server reply unchanged."
+      ]
+    },
+    "commandChecks": {
+      "passed": 4,
+      "commands": ["상세 4", "4ㅉ", "내전상세 6", "내전 6ㅉ"],
+      "assertions": [
+        "Each command makes one simulated HTTP call using the expected profile.",
+        "The phone returns the simulated server reply unchanged."
+      ]
+    }
+  },
+  "phoneReplacementRequiredForR24": false,
+  "conclusion": "An already-installed R24 client can use the core server patch without replacement. R25 updates local help text and the displayed version; it is optional for this server patch.",
+  "limits": {
+    "actualPhoneInstallationVerified": false,
+    "actualChatRoomRoundTripVerified": false,
+    "databasePersistenceVerifiedByThisCheck": false,
+    "productionAccessPerformed": false,
+    "realNetworkRequestsPerformed": false,
+    "syntheticDataOnly": true,
+    "privateInstallerReadOrPrinted": false
+  },
+  "reproduction": [
+    "Run an in-memory Node module with node --import tsx --input-type=module from the repository root; no temporary source or artifact files are required.",
+    "Read the baseline public artifact with git show 0c188785:integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js and read the current public artifact; compare their non-help/non-version Acorn nodes as described above.",
+    "Extract only makeRuntime, evaluate and replyFor from tests/kakao-v1-strict-messengerbot.test.mjs. Do not execute the test file's builder test. Instantiate its simulated Java/Jsoup VM with the baseline R24 source.",
+    "Generate synthetic current forms using v1StrictPartyDetailReply and inhouseCopyFormReply, add the two old name-only inhouse scenarios, apply the listed prefixes and line endings, then assert forwarding, profile, timeout, reply and current canonical SYNC behavior. Check the four detail/finish commands separately."
+  ],
+  "recordingNote": "Recorded from the already-completed 70-case run without rerunning the checks."
+}
