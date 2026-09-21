@@ -1,1 +1,12 @@
-.private/
+.private
+.private/**
+.tmp
+.tmp/**
+.env*
+!.env.example
+.git
+.git/**
+.next
+.next/**
+node_modules
+node_modules/**
