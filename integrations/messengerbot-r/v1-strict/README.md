@@ -2,7 +2,7 @@
 
 이 디렉터리는 사용자가 제공한 V1/V40 원본을 기준으로 전송 경계를 V4 HMAC 명령 API에 연결한다. 원본 fixture는 불변이며, 승인된 [ADR0011 파티 편집](../../../docs/architecture/0011-kakao-party-editable-copy-flow.md)·[ADR0012 내전 편집](../../../docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)의 제품 동작을 현재 생성본에 반영한다. 승인 범위 밖의 `response()` 순서, 로컬 명령, 무응답과 echo 방지는 원본 계약을 유지한다.
 
-현재 공개·비공개 생성본은 `KLOL_KAKAO_BOT_V40_R26_2026_09_22`다. 서버의 R24 호환과 실제 휴대폰 설치는 별개다. 사용자 확인 앱 버전 **MessengerBot R 0.7.29a**는 봇 JS 버전과 다르며 사용자 로그에서 R25는 확인했고 R26 교체·체감 속도는 아직 미확인이다. 사이트 충원 알림은 일반 봇과 분리된 [기본 OFF companion](../site-notices/README.md)으로 설치한다.
+현재 공개·비공개 생성본은 `KLOL_KAKAO_BOT_V40_R27_2026_09_22`다. 서버의 R24 호환과 실제 휴대폰 설치는 별개다. 사용자 확인 앱 버전 **MessengerBot R 0.7.29a**는 봇 JS 버전과 다르며 19:47 사용자 로그로 R26 설치를 확인했지만 봇속도 무응답을 보고했다. R27 설치·체감 속도는 미확인이다. 사이트 충원 알림은 일반 봇과 분리된 [기본 OFF companion](../site-notices/README.md)으로 설치한다.
 
 - 원본: Git `4f84e84aa0a4ee986c2aad2c7377d8e3bcf2e097:KLOL_KAKAO_BOT_V40_GUIDED_HUB.js`
 - Git LF blob SHA-256: `0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2`
@@ -19,3 +19,5 @@
 V40 R2의 실제 활성 흐름은 관리 명령을 `handleSiteFirstManagedWorkflow`에서 사이트 링크로 끝낸다. `handleManagedWorkflowMessage`와 `rememberManagedUploadCode`는 해당 `response()`에서 호출되지 않으므로 새 사진 세션이 생성되지 않는다. 정상 설치 설정이 있고 저장된 사진 세션이 없는 clean 상태에서 `imageDB` 입력은 응답과 HTTP 요청 없이 끝난다. V1 exact 범위에서는 이를 그대로 유지하며, V1에 없던 UUID 사진 세션 명령이나 image API 확장을 추가하지 않는다.
 
 R26은 글자 알림에서 이미지 API 호출을 생략한다. V1 원본 함수는 보존하고 진입부에서 사진·빈 메시지에만 imageDB를 전달한다. 봇속도는 최근 서버 요청의 처리/왕복 ms만 표시하며 비밀값·메시지·회원정보를 출력하지 않는다. 휴대폰 65,535자 제한을 지키기 위해 전송 모듈의 내부 변수명을 축약했다.
+
+R27 진단 명령은 원래 Replier로 직접 응답하며 서버 요청 상태를 읽거나 초기화하지 않는다. 봇버전에도 마지막 측정을 표시한다. 고정 진단 로그로 SDK 호출 결과를 확인하며 서버·명단·사이트 알림 코드는 바꾸지 않는다.

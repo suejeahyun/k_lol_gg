@@ -4,8 +4,8 @@
  * This is the V4 HMAC command contract, kept ES5-compatible for MessengerBot R.
  */
 var KLOL_V1_GATEWAY = (function () {
-  var CONTRACT = "KLOL_KAKAO_COMMAND_V4";
-  var PROTOCOL = "KLOL_KAKAO_V1_STRICT";
+  var CON = "KLOL_KAKAO_COMMAND_V4";
+  var PROTO = "KLOL_KAKAO_V1_STRICT";
   var FORMAT = "V1_SERVER_EXACT";
   var ENDPOINT = "/api/integrations/kakao/v4/commands";
   var URL_KEY = "KLOL_V2_BASE_URL";
@@ -13,17 +13,17 @@ var KLOL_V1_GATEWAY = (function () {
   var KEY_ID = "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT";
   var ID_KEY = "KLOL_V4_KAKAO_IDENTITY_SECRET";
   var BOOT_ID = String(java.util.UUID.randomUUID().toString()).replace(/-/g, "").substring(0, 16);
-  var eventSeq = 0;
+  var seq = 0;
   var settings = {};
-  var installCache = {};
-  var originCache = null;
+  var inst = {};
+  var origin = null;
   var logKey = "";
   var userKey = "";
-  var senderValue = "";
+  var who = "";
   var active = null;
-  var deliveryCache = {};
-  var deliveryOrder = [];
-  var CACHE_LIMIT = 256;
+  var sent = {};
+  var order = [];
+  var LIMIT = 256;
   var startMs = 0;
   var netMs = 0;
   var timing = null;
@@ -68,7 +68,7 @@ var KLOL_V1_GATEWAY = (function () {
     return hex(mac.doFinal(utf8(value)));
   }
 
-  function requiredSecret(key, label) {
+  function secret(key, label) {
     var value = setting(key);
     if (utf8(value).length < 32) throw new Error(label + " 비공개 설정을 확인해 주세요.");
     return value;
@@ -81,24 +81,24 @@ var KLOL_V1_GATEWAY = (function () {
 
   function baseUrl() {
     var value = "";
-    if (originCache !== null) return originCache;
+    if (origin !== null) return origin;
     value = setting(URL_KEY).replace(/\/+$/, "");
     if (!/^https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::443)?$/.test(value)) {
       throw new Error("HTTPS 서버 주소 설정을 확인해 주세요.");
     }
-    originCache = value;
-    return originCache;
+    origin = value;
+    return origin;
   }
 
   function beginRequest(logId, userHash, sender) {
     startMs = new Date().getTime();
     netMs = -1;
     settings = {};
-    installCache = {};
-    originCache = null;
+    inst = {};
+    origin = null;
     logKey = clean(logId);
     userKey = clean(userHash);
-    senderValue = clean(sender);
+    who = clean(sender);
     active = null;
   }
 
@@ -111,36 +111,36 @@ var KLOL_V1_GATEWAY = (function () {
     return (timing || "내전상세 1을 보낸 뒤 다시 입력해주세요.") + "\n수신 전 대기는 제외";
   }
 
-  function installationId(profileId) {
-    var selected = profile(profileId);
-    if (!installCache[selected]) {
-      installCache[selected] = "install-" + hmac(
-        requiredSecret(ID_KEY, "익명 식별 키"),
-        "installation-id\nKLOL_V4\n" + selected
+  function installationId(pid) {
+    var sel = profile(pid);
+    if (!inst[sel]) {
+      inst[sel] = "install-" + hmac(
+        secret(ID_KEY, "익명 식별 키"),
+        "installation-id\nKLOL_V4\n" + sel
       ).substring(0, 32);
     }
-    return installCache[selected];
+    return inst[sel];
   }
 
   function senderId(sender) {
     var stable = userKey;
     var prefix = stable ? "sender-user-" : "sender-display-";
-    if (!stable) stable = clean(sender) || senderValue;
+    if (!stable) stable = clean(sender) || who;
     return prefix + hmac(
-      requiredSecret(ID_KEY, "익명 식별 키"),
+      secret(ID_KEY, "익명 식별 키"),
       "sender-id\n" + stable
     ).substring(0, 32);
   }
 
-  function nextEventId(profileId) {
+  function nextId(pid) {
     if (logKey) {
-      return "event-log-" + sha256(profile(profileId) + "\n" + BOOT_ID + "\n" + logKey).substring(0, 32);
+      return "event-log-" + sha256(profile(pid) + "\n" + BOOT_ID + "\n" + logKey).substring(0, 32);
     }
-    eventSeq += 1;
-    return "event-boot-" + BOOT_ID + "-" + String(eventSeq);
+    seq += 1;
+    return "event-boot-" + BOOT_ID + "-" + String(seq);
   }
 
-  function parseJson(value) {
+  function json(value) {
     try {
       return JSON.parse(String(value || ""));
     } catch (ignored) {
@@ -148,39 +148,39 @@ var KLOL_V1_GATEWAY = (function () {
     }
   }
 
-  function delivery(profileId, text, sender) {
-    var cacheKey = logKey ? profile(profileId) + "\n" + logKey : "";
-    var cached = cacheKey ? deliveryCache[cacheKey] : null;
+  function delivery(pid, text, sender) {
+    var key = logKey ? profile(pid) + "\n" + logKey : "";
+    var cached = key ? sent[key] : null;
     var eventId = "";
     var body = "";
     if (cached) return cached;
-    eventId = nextEventId(profileId);
+    eventId = nextId(pid);
     body = JSON.stringify({
-      profileId: profile(profileId),
-      installationId: installationId(profileId),
+      profileId: profile(pid),
+      installationId: installationId(pid),
       senderId: senderId(sender),
       eventId: eventId,
       timestamp: Math.floor(new Date().getTime() / 1000),
       nonce: String(java.util.UUID.randomUUID().toString()).replace(/-/g, ""),
       text: String(text),
-      protocol: PROTOCOL,
+      protocol: PROTO,
       responseFormat: FORMAT
     });
     cached = { eventId: eventId, body: body };
-    if (cacheKey) {
-      deliveryCache[cacheKey] = cached;
-      deliveryOrder.push(cacheKey);
-      if (deliveryOrder.length > CACHE_LIMIT) delete deliveryCache[deliveryOrder.shift()];
+    if (key) {
+      sent[key] = cached;
+      order.push(key);
+      if (order.length > LIMIT) delete sent[order.shift()];
     }
     return cached;
   }
 
-  function send(profileId, text, sender) {
+  function send(pid, text, sender) {
     var keyId = setting(KEY_ID) || "current";
-    var item = delivery(profileId, text, sender);
+    var item = delivery(pid, text, sender);
     active = item;
-    var material = CONTRACT + "\n" + keyId + "\n" + sha256(item.body);
-    var netStart = new Date().getTime();
+    var material = CON + "\n" + keyId + "\n" + sha256(item.body);
+    var netAt = new Date().getTime();
     var response = null;
     try {
       response = org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT)
@@ -190,13 +190,13 @@ var KLOL_V1_GATEWAY = (function () {
       .header("Content-Type", "application/json; charset=utf-8")
       .header("Accept", "application/json")
       .header("x-klol-key-id", keyId)
-      .header("x-klol-signature", "v4=" + hmac(requiredSecret(SIGN_KEY, "서명 키"), material))
+      .header("x-klol-signature", "v4=" + hmac(secret(SIGN_KEY, "서명 키"), material))
       .header("Idempotency-Key", item.eventId)
       .timeout(5000)
       .requestBody(item.body)
       .execute();
     } finally {
-      netMs = Math.max(0, new Date().getTime() - netStart);
+      netMs = Math.max(0, new Date().getTime() - netAt);
     }
     var raw = String(response.body() || "");
     var status = response.statusCode();
@@ -204,7 +204,7 @@ var KLOL_V1_GATEWAY = (function () {
     return {
       ok: status >= 200 && status < 300,
       status: status,
-      body: parseJson(raw),
+      body: json(raw),
       traceId: clean(response.header("X-Trace-Id")),
       replayed: replayed
     };

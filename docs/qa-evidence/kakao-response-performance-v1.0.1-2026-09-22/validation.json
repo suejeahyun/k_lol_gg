@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-09-22T10:56:25.155Z",
+  "fullCheck": "PASS",
+  "phoneTests": 38,
+  "contractTests": 435,
+  "unitPassed": 951,
+  "unitSkipped": 1,
+  "secretScan": "PASS",
+  "deviceRootCause": "NOT_ESTABLISHED",
+  "phoneR26": "INSTALLED_USER_VERSION_REPLY_19_47_KST",
+  "phoneR27": "PENDING_USER_INSTALL",
+  "serverRuntimeChanged": false
+}

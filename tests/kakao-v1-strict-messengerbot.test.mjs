@@ -585,7 +585,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R26_2026_09_22"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R27_2026_09_22\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
   );
 });
 
@@ -1151,4 +1151,38 @@ test("R26 speed diagnostic keeps the previous request timing across ordinary cha
   replyFor(strict, "[내전 #1] 협곡 · 0/10명", { sender: "K-LOL 구인구직 도우미" });
   assert.equal(replyFor(strict, "봇속도")[0], timing);
   assert.equal(strict.http.calls, 1, "diagnostic and chat must not send extra requests");
+});
+
+test("R27 local diagnostics bypass request state, deduplication and notification image reads", async () => {
+  const runtime = evaluate(await readFile(artifactPath, "utf8"));
+  const logs = [];
+  runtime.Log = { i: (code) => logs.push(code) };
+  runtime.KLOL_V1_GATEWAY.beginRequest = () => { throw new Error("must not initialize a server request"); };
+  runtime.KLOL_V1_GATEWAY.shouldSuppressReply = () => true;
+  runtime.DataBase.getDataBase = () => { throw new Error("must not read settings"); };
+  const imageDB = { getImage() { throw new Error("must not probe images"); } };
+  for (const message of ["봇속도", "/봇속도", " 봇 속도 ", "\u200B봇속도\u2060", "／봇속도", "봇진단", "봇버전", "/봇버전"]) {
+    logs.length = 0;
+    const replies = replyFor(runtime, message, { imageDB });
+    assert.equal(replies.length, 1, message);
+    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R27_2026_09_22/u);
+    assert.match(replies[0], /내전상세 1/u);
+    assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] RETURNED"]);
+  }
+  assert.deepEqual(replyFor(runtime, "봇속도", { sender: "K-LOL 구인구직 도우미" }), []);
+  assert.equal(runtime.http.calls, 0);
+});
+
+test("R27 diagnostic distinguishes reply failure and tolerates unavailable logging", async () => {
+  const runtime = evaluate(await readFile(artifactPath, "utf8"));
+  const logs = [];
+  runtime.Log = { i: (code) => logs.push(code) };
+  runtime.response("room", "봇속도", "sender", false, { reply() { throw new Error("private transport error"); } });
+  assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] REPLY_ERROR"]);
+  logs.length = 0;
+  runtime.response("room", "봇속도", "sender", false, { reply() { return false; } });
+  assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] REJECTED"]);
+  runtime.Log.i = () => { throw new Error("logger unavailable"); };
+  assert.equal(replyFor(runtime, "봇속도").length, 1);
+  assert.equal(runtime.http.calls, 0);
 });

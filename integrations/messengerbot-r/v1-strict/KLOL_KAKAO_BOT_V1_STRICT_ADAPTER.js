@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R26_2026_09_22";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R27_2026_09_22";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -24,6 +24,10 @@ var lastRecruitHash = "";
 var OPERATION_FORM_SAVE_KEY = "KLOL_OPERATION_FORM_LAST_HASH_V1";
 var lastOperationFormHash = "";
 var KLOL_V1_OPERATION_RAW_TEXT = "";
+
+function botDiagLog(code) {
+  try { Log.i("[KLOL_DIAG] " + code); } catch (ignored) {}
+}
 
 function isOpenChatBotInhouseLoadingNotice(text, sender) {
   var normalizedSender = trimText(normalizeText(String(sender || "")));
