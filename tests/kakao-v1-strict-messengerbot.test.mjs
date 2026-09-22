@@ -585,7 +585,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R25_2026_09_22"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R26_2026_09_22"],
   );
 });
 
@@ -1117,4 +1117,38 @@ test("both V40 R2 image seams stay inactive for every transport outcome", async 
     assert.deepEqual(replies, []);
     assert.equal(runtime.http.calls, 0);
   }
+});
+
+test("R26 text commands never probe notification images before their response", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const message of ["내전상세1", "내전상세 1", "내전현황", "구인현황", "/봇버전", "평범한 대화"]) {
+    const strict = evaluate(artifact);
+    let probes = 0;
+    const imageDB = Object.fromEntries(["getImage", "getImageBase64", "getImageBitmap"].map((name) => [name, () => {
+      probes += 1;
+      throw new Error("A slow SDK image read must not be reached for text");
+    }]));
+    const replies = replyFor(strict, message, { imageDB });
+    assert.equal(probes, 0, message);
+    if (message.startsWith("내전상세")) {
+      assert.equal(strict.http.calls, 1);
+      assert.deepEqual(replies, ["[V1 server reply]"]);
+    }
+  }
+});
+
+test("R26 speed diagnostic keeps the previous request timing across ordinary chat and bot echo", async () => {
+  const strict = evaluate(await readFile(artifactPath, "utf8"));
+  assert.match(replyFor(strict, "봇속도")[0], /내전상세 1/u);
+  assert.equal(strict.http.calls, 0);
+  let now = 1_800_000_000_000;
+  strict.Date = class extends Date { constructor() { super(now += 5); } };
+  replyFor(strict, "내전상세 1");
+  const [timing] = replyFor(strict, "/봇속도");
+  assert.match(timing, /처리: \d+ms\n서버 왕복: \d+ms/u);
+  assert.match(timing, /수신 전 대기는 제외/u);
+  replyFor(strict, "일반 대화");
+  replyFor(strict, "[내전 #1] 협곡 · 0/10명", { sender: "K-LOL 구인구직 도우미" });
+  assert.equal(replyFor(strict, "봇속도")[0], timing);
+  assert.equal(strict.http.calls, 1, "diagnostic and chat must not send extra requests");
 });

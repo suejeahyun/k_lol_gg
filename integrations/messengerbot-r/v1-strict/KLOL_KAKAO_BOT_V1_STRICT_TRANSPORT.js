@@ -6,37 +6,40 @@
 var KLOL_V1_GATEWAY = (function () {
   var CONTRACT = "KLOL_KAKAO_COMMAND_V4";
   var PROTOCOL = "KLOL_KAKAO_V1_STRICT";
-  var RESPONSE_FORMAT = "V1_SERVER_EXACT";
+  var FORMAT = "V1_SERVER_EXACT";
   var ENDPOINT = "/api/integrations/kakao/v4/commands";
-  var BASE_URL_KEY = "KLOL_V2_BASE_URL";
-  var SIGNING_SECRET_KEY = "KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT";
-  var SIGNING_KEY_ID_KEY = "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT";
-  var IDENTITY_SECRET_KEY = "KLOL_V4_KAKAO_IDENTITY_SECRET";
+  var URL_KEY = "KLOL_V2_BASE_URL";
+  var SIGN_KEY = "KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT";
+  var KEY_ID = "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT";
+  var ID_KEY = "KLOL_V4_KAKAO_IDENTITY_SECRET";
   var BOOT_ID = String(java.util.UUID.randomUUID().toString()).replace(/-/g, "").substring(0, 16);
-  var eventCounter = 0;
-  var settingCache = {};
-  var installationIdCache = {};
-  var baseUrlCache = null;
-  var currentLogId = "";
-  var currentUserHash = "";
-  var currentSender = "";
-  var currentDelivery = null;
+  var eventSeq = 0;
+  var settings = {};
+  var installCache = {};
+  var originCache = null;
+  var logKey = "";
+  var userKey = "";
+  var senderValue = "";
+  var active = null;
   var deliveryCache = {};
-  var deliveryCacheOrder = [];
-  var DELIVERY_CACHE_LIMIT = 256;
+  var deliveryOrder = [];
+  var CACHE_LIMIT = 256;
+  var startMs = 0;
+  var netMs = 0;
+  var timing = null;
 
   function clean(value) {
     return String(value == null ? "" : value).replace(/^\s+|\s+$/g, "");
   }
 
   function setting(key) {
-    if (Object.prototype.hasOwnProperty.call(settingCache, key)) return settingCache[key];
+    if (Object.prototype.hasOwnProperty.call(settings, key)) return settings[key];
     try {
-      settingCache[key] = clean(String(DataBase.getDataBase(key) || ""));
+      settings[key] = clean(String(DataBase.getDataBase(key) || ""));
     } catch (ignored) {
-      settingCache[key] = "";
+      settings[key] = "";
     }
-    return settingCache[key];
+    return settings[key];
   }
 
   function utf8(value) {
@@ -78,52 +81,63 @@ var KLOL_V1_GATEWAY = (function () {
 
   function baseUrl() {
     var value = "";
-    if (baseUrlCache !== null) return baseUrlCache;
-    value = setting(BASE_URL_KEY).replace(/\/+$/, "");
+    if (originCache !== null) return originCache;
+    value = setting(URL_KEY).replace(/\/+$/, "");
     if (!/^https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::443)?$/.test(value)) {
       throw new Error("HTTPS 서버 주소 설정을 확인해 주세요.");
     }
-    baseUrlCache = value;
-    return baseUrlCache;
+    originCache = value;
+    return originCache;
   }
 
   function beginRequest(logId, userHash, sender) {
-    settingCache = {};
-    installationIdCache = {};
-    baseUrlCache = null;
-    currentLogId = clean(logId);
-    currentUserHash = clean(userHash);
-    currentSender = clean(sender);
-    currentDelivery = null;
+    startMs = new Date().getTime();
+    netMs = -1;
+    settings = {};
+    installCache = {};
+    originCache = null;
+    logKey = clean(logId);
+    userKey = clean(userHash);
+    senderValue = clean(sender);
+    active = null;
+  }
+
+  function finish() {
+    if (netMs < 0) return;
+    timing = "[봇 속도]\n처리: " + (new Date().getTime() - startMs) + "ms\n서버 왕복: " + netMs + "ms";
+  }
+
+  function speed() {
+    return (timing || "내전상세 1을 보낸 뒤 다시 입력해주세요.") + "\n수신 전 대기는 제외";
   }
 
   function installationId(profileId) {
-    var canonicalProfile = profile(profileId);
-    if (!installationIdCache[canonicalProfile]) {
-      installationIdCache[canonicalProfile] = "install-" + hmac(
-        requiredSecret(IDENTITY_SECRET_KEY, "익명 식별 키"),
-        "installation-id\nKLOL_V4\n" + canonicalProfile
+    var selected = profile(profileId);
+    if (!installCache[selected]) {
+      installCache[selected] = "install-" + hmac(
+        requiredSecret(ID_KEY, "익명 식별 키"),
+        "installation-id\nKLOL_V4\n" + selected
       ).substring(0, 32);
     }
-    return installationIdCache[canonicalProfile];
+    return installCache[selected];
   }
 
   function senderId(sender) {
-    var stable = currentUserHash;
+    var stable = userKey;
     var prefix = stable ? "sender-user-" : "sender-display-";
-    if (!stable) stable = clean(sender) || currentSender;
+    if (!stable) stable = clean(sender) || senderValue;
     return prefix + hmac(
-      requiredSecret(IDENTITY_SECRET_KEY, "익명 식별 키"),
+      requiredSecret(ID_KEY, "익명 식별 키"),
       "sender-id\n" + stable
     ).substring(0, 32);
   }
 
   function nextEventId(profileId) {
-    if (currentLogId) {
-      return "event-log-" + sha256(profile(profileId) + "\n" + BOOT_ID + "\n" + currentLogId).substring(0, 32);
+    if (logKey) {
+      return "event-log-" + sha256(profile(profileId) + "\n" + BOOT_ID + "\n" + logKey).substring(0, 32);
     }
-    eventCounter += 1;
-    return "event-boot-" + BOOT_ID + "-" + String(eventCounter);
+    eventSeq += 1;
+    return "event-boot-" + BOOT_ID + "-" + String(eventSeq);
   }
 
   function parseJson(value) {
@@ -135,7 +149,7 @@ var KLOL_V1_GATEWAY = (function () {
   }
 
   function delivery(profileId, text, sender) {
-    var cacheKey = currentLogId ? profile(profileId) + "\n" + currentLogId : "";
+    var cacheKey = logKey ? profile(profileId) + "\n" + logKey : "";
     var cached = cacheKey ? deliveryCache[cacheKey] : null;
     var eventId = "";
     var body = "";
@@ -150,52 +164,58 @@ var KLOL_V1_GATEWAY = (function () {
       nonce: String(java.util.UUID.randomUUID().toString()).replace(/-/g, ""),
       text: String(text),
       protocol: PROTOCOL,
-      responseFormat: RESPONSE_FORMAT
+      responseFormat: FORMAT
     });
     cached = { eventId: eventId, body: body };
     if (cacheKey) {
       deliveryCache[cacheKey] = cached;
-      deliveryCacheOrder.push(cacheKey);
-      if (deliveryCacheOrder.length > DELIVERY_CACHE_LIMIT) delete deliveryCache[deliveryCacheOrder.shift()];
+      deliveryOrder.push(cacheKey);
+      if (deliveryOrder.length > CACHE_LIMIT) delete deliveryCache[deliveryOrder.shift()];
     }
     return cached;
   }
 
   function send(profileId, text, sender) {
-    var keyId = setting(SIGNING_KEY_ID_KEY) || "current";
+    var keyId = setting(KEY_ID) || "current";
     var item = delivery(profileId, text, sender);
-    currentDelivery = item;
+    active = item;
     var material = CONTRACT + "\n" + keyId + "\n" + sha256(item.body);
-    var responseValue = org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT)
+    var netStart = new Date().getTime();
+    var response = null;
+    try {
+      response = org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT)
       .ignoreContentType(true)
       .ignoreHttpErrors(true)
       .method(org.jsoup.Connection.Method.POST)
       .header("Content-Type", "application/json; charset=utf-8")
       .header("Accept", "application/json")
       .header("x-klol-key-id", keyId)
-      .header("x-klol-signature", "v4=" + hmac(requiredSecret(SIGNING_SECRET_KEY, "서명 키"), material))
+      .header("x-klol-signature", "v4=" + hmac(requiredSecret(SIGN_KEY, "서명 키"), material))
       .header("Idempotency-Key", item.eventId)
       .timeout(5000)
       .requestBody(item.body)
       .execute();
-    var responseText = String(responseValue.body() || "");
-    var responseStatus = responseValue.statusCode();
-    var replayed = clean(responseValue.header("Idempotency-Replayed")) === "true";
+    } finally {
+      netMs = Math.max(0, new Date().getTime() - netStart);
+    }
+    var raw = String(response.body() || "");
+    var status = response.statusCode();
+    var replayed = clean(response.header("Idempotency-Replayed")) === "true";
     return {
-      ok: responseStatus >= 200 && responseStatus < 300,
-      status: responseStatus,
-      body: parseJson(responseText),
-      traceId: clean(responseValue.header("X-Trace-Id")),
+      ok: status >= 200 && status < 300,
+      status: status,
+      body: parseJson(raw),
+      traceId: clean(response.header("X-Trace-Id")),
       replayed: replayed
     };
   }
 
   function shouldSuppressReply() {
-    return Boolean(currentDelivery && currentDelivery.replySent);
+    return Boolean(active && active.replySent);
   }
 
   function markReplySent() {
-    if (currentDelivery) currentDelivery.replySent = true;
+    if (active) active.replySent = true;
   }
 
   function replyText(result) {
@@ -207,6 +227,8 @@ var KLOL_V1_GATEWAY = (function () {
 
   return {
     beginRequest: beginRequest,
+    finish: finish,
+    speed: speed,
     replyText: replyText,
     send: send,
     shouldSuppressReply: shouldSuppressReply,

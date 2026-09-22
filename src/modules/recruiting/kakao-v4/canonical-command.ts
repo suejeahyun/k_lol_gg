@@ -67,7 +67,7 @@ export type KakaoV4InhouseRoundMetadata = Readonly<{
   capacity: number;
   startTimeText: string | null;
   scheduledStartAt: string | null;
-  gameInfo: string | null;
+  gameInfo?: string | null;
   organizerText: string | null;
   noticeText: string | null;
 }>;
@@ -288,7 +288,14 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       ? cleanScrimValue(match.replace(new RegExp(`^\\s*》?\\s*${escaped}\\s*[:：]\\s*`, "u"), ""))
       : null;
   };
-  const gameInfo = metadataValue("게임정보");
+  const infoPattern = /^\s*》?\s*(?:내전|게임)\s*정보\s*[:：]\s*(.*)$/u;
+  const infoLines = lines.filter((line) => infoPattern.test(line));
+  if (infoLines.length > 1) return null;
+  const infoText = infoLines[0] === undefined ? undefined : infoPattern.exec(infoLines[0])![1]!
+    .replace(/&(?:#x20|#32|nbsp);/giu, " ").trim();
+  if (infoText !== undefined && (infoText.length > 500 || /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u2028\u2029\u202A-\u202E\u2066-\u2069]/u.test(infoText))) return null;
+  // An older copy without this field must not erase a newer saved description.
+  const gameInfo = infoText === undefined ? modernHeader ? undefined : null : cleanScrimValue(infoText);
   const organizerText = metadataValue("주최자");
   const safeNoticeLine = (value: string) => value.normalize("NFKC").trim()
     .replace(/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, "");
@@ -310,7 +317,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       /^📢\s*내전하실분\s*#\s*\d{1,3}$/u.test(candidate) ||
       /^》\s*(?:협곡|칼바람|증바람|증강칼바람)$/u.test(candidate) ||
       /^》\s*20\d{2}-\d{2}-\d{2}\s+/u.test(candidate) ||
-      /^》?\s*(?:게임정보|주최자|저장기준)\s*[:：]/u.test(candidate) ||
+      /^》?\s*(?:(?:내전|게임)\s*정보|주최자|저장기준)\s*[:：]/u.test(candidate) ||
       /^👥\s*\d{1,3}\s*\/\s*\d{1,3}\s*명$/u.test(candidate) ||
       /^\[K-LOL\.GG 내전 구인 양식\]$/u.test(candidate) ||
       /^같이 내전할 사람~$/u.test(candidate) ||

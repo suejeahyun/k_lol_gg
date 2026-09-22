@@ -157,7 +157,7 @@ test("Phase 3-A: 내전 모드 선택과 협곡·칼바람 복사 양식을 출�
     const result = await reply(state.service, envelope("FEATURES", `내전구인 ${mode} 2026-09-09 21:30 #${number} 10명`, sequence));
     assert.equal(result.reply, [
       `[내전 #${number}] ${mode} · 0/10명`, `저장기준: 2026-09-09 / S${"a".repeat(32)}`,
-      "──────────────", "시작 시간: 21:30", "",
+      "──────────────", "시작 시간: 21:30", "내전 정보: ", "",
       ...Array.from({ length: 10 }, (_, index) => `${index + 1}.`), "", "예비 1.",
     ].join("\n"));
   }

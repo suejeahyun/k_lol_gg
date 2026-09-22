@@ -149,3 +149,22 @@ test("line errors are actionable without calling storage; saved result survives 
   assert.match(valid.reply, /양식코드: ABCDE-FGHJK/u);
   assert.equal(writes, 1);
 });
+
+test("inhouse description accepts editable labels, preserves omission and rejects conflicting metadata", () => {
+  const form = inhouseCopyFormReply(snapshot()).replace("\n1.\n", "\n1. 가온/all\n");
+  assert.match(form, /\n내전 정보: \n/u);
+  for (const label of ["내전 정보", "내전정보", "게임 정보", "게임정보"]) {
+    const command = parse(form.replace("내전 정보: ", `${label}: 저티어 내전 / 일반내전&#x20;`));
+    if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail(label);
+    assert.equal(command.roundMetadata?.gameInfo, "저티어 내전 / 일반내전");
+    assert.equal(command.participants.length, 1);
+  }
+  const absent = parse(form.replace("내전 정보: \n", ""));
+  if (absent?.domain !== "SEASON" || absent.action !== "SYNC") assert.fail("old form");
+  assert.equal(absent.roundMetadata?.gameInfo, undefined);
+  const blank = parse(form);
+  if (blank?.domain !== "SEASON" || blank.action !== "SYNC") assert.fail("blank description");
+  assert.equal(blank.roundMetadata?.gameInfo, null);
+  assert.equal(parse(form.replace("내전 정보: ", "내전 정보: A\n게임정보: B")), null);
+  assert.equal(parse(form.replace("내전 정보: ", `내전 정보: ${"가".repeat(501)}`)), null);
+});

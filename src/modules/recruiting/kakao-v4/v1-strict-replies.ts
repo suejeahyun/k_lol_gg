@@ -139,6 +139,7 @@ export function inhouseCopyFormReply(body: KakaoSeasonSnapshotDto) {
     if (protectedSlots.length > 0) lines.push(`${label}: ${protectedSlots.join(", ")}`);
   }
   lines.push("──────────────", `시작 시간: ${metadata?.startTimeText ?? ""}`);
+  lines.push(`내전 정보: ${metadata?.gameInfo && metadata.gameInfo !== "미입력" ? metadata.gameInfo.replace(/[\r\n]+/gu, " ") : ""}`);
   if (metadata?.noticeText) lines.push(`안내: ${metadata.noticeText.replace(/[\r\n]+/gu, " ")}`);
   lines.push("");
   for (let slot = 1; slot <= capacity; slot += 1) {

@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-22 카카오 응답 속도·내전 정보 — 검증 완료, 배포 확인 전
+
+- 일반 R26: 글자 명령 이미지 조회 생략, 봇속도 진단. 설치본 준비, 실기기 교체·30초 지연 해소는 미확인. 사이트 알림 1.0.3 유지.
+- 명단 회원 조회 일괄 처리, 10명 등록 SQL 58→40회. 내전 정보 자유 설명 추가/수정/삭제, 예전 양식 누락 시 유지, 충돌 보호.
+- npm run check 및 DB/경계 97건 PASS. [QA](./qa-evidence/kakao-response-performance-v1.0.0-2026-09-22/README.md), [패치 안내](./patch-notes/2026-09-22-kakao-response-performance.md). migration 0044 유지.
+
 ## 2026-09-22 내전 자동 회원 연결·최신 양식 1.0.0 — 운영 적용
 
 - source `4ed4f5f1bdfc17d5d6e0faad78889a1bf6de6435`, tag `kakao-inhouse-auto-link-v1.0.0`, Vercel `dpl_ArFdxfuNKAcJMJap6mmBF5kB1G89` READY·운영 alias SHA 일치, 09:49 KST health/조회 smoke PASS. DB head `0044` 유지.

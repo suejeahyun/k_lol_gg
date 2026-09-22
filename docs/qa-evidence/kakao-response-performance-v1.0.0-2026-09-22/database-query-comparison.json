@@ -1,0 +1,68 @@
+{
+  "method": "Identical isolated PostgreSQL contract scenarios; no production mutations. Single local samples are not a phone latency benchmark.",
+  "beforeSource": "00e4ffa90178cd1d084f66635816b9a5d5f9bad7",
+  "before": [
+    {
+      "label": "1-members-save",
+      "queries": 31,
+      "elapsedMs": 12
+    },
+    {
+      "label": "1-members-unchanged",
+      "queries": 26,
+      "elapsedMs": 9
+    },
+    {
+      "label": "10-members-save",
+      "queries": 58,
+      "elapsedMs": 26
+    },
+    {
+      "label": "10-members-unchanged",
+      "queries": 26,
+      "elapsedMs": 11
+    },
+    {
+      "label": "10-guests-save",
+      "queries": 48,
+      "elapsedMs": 19
+    },
+    {
+      "label": "10-guests-unchanged",
+      "queries": 36,
+      "elapsedMs": 12
+    }
+  ],
+  "after": [
+    {
+      "label": "1-members-save",
+      "queries": 31,
+      "elapsedMs": 16
+    },
+    {
+      "label": "1-members-unchanged",
+      "queries": 26,
+      "elapsedMs": 11
+    },
+    {
+      "label": "10-members-save",
+      "queries": 40,
+      "elapsedMs": 20
+    },
+    {
+      "label": "10-members-unchanged",
+      "queries": 26,
+      "elapsedMs": 12
+    },
+    {
+      "label": "10-guests-save",
+      "queries": 39,
+      "elapsedMs": 17
+    },
+    {
+      "label": "10-guests-unchanged",
+      "queries": 27,
+      "elapsedMs": 12
+    }
+  ]
+}

@@ -249,6 +249,10 @@ const entry = [
   "    }",
   "  };",
   "  var localText = String(msg || \"\");",
+  "  if (/^\\/?봇속도$/.test(localText.replace(/^\\s+|\\s+$/g, \"\"))) {",
+  "    guardedReplier.reply(KLOL_V1_GATEWAY.speed());",
+  "    return;",
+  "  }",
   "  if (isRetiredScrimInput(localText)) {",
   "    if (!isKlolBotEchoSender(sender)) guardedReplier.reply(\"[K-LOL.GG 스크림 기능 종료]\\n카카오톡 스크림 기능은 종료되었습니다.\\n파티는 5인파티, 내전은 내전구인을 입력해 주세요.\");",
   "    return;",
@@ -267,9 +271,14 @@ const entry = [
   "      return;",
   "    }",
   "    if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;",
-  "    v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, imageDB, packageName);",
+  // The legacy response probes images synchronously before routing commands.
+  // Text notifications do not need image extraction; retain actual image input.
+  "    var messageText = trimText(normalizeText(localText));",
+  "    var messageImage = messageText === \"\" || isImagePlaceholderMessage(messageText) ? imageDB : null;",
+  "    v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, messageImage, packageName);",
   "  } finally {",
   "    KLOL_V1_OPERATION_RAW_TEXT = \"\";",
+  "    KLOL_V1_GATEWAY.finish();",
   "  }",
   "}",
 ].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");

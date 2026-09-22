@@ -4,6 +4,8 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
 import { and, eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import * as schema from "../../src/platform/db/schema/index";
 import sharp from "sharp";
 
 import { KakaoAssistantError, type KakaoSeasonSnapshotCommand, type KakaoSeasonSnapshotDto } from "../../src/modules/recruiting/kakao-assistant/domain";
@@ -1533,6 +1535,23 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
       ? { ...entry, mainPosition: "JGL" as const } : entry));
     assert.equal(afterLinkEdit.body.entries.find((entry) => entry.slotNo === 2)?.mainPosition, "JGL");
     assert.equal(afterLinkEdit.body.entries.find((entry) => entry.slotNo === 2)?.player?.playerId, latePlayerId);
+    const syncInfo = (body: KakaoSeasonSnapshotDto, gameInfo: string | null | undefined) => send({
+      action: "SYNC", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", participants: roster(body),
+      roundMetadata: { ...metadata, gameInfo }, observedSlotNos: Array.from({ length: 20 }, (_, i) => i + 1), reserveSectionObserved: true,
+      copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
+    });
+    const withInfo = await syncInfo(afterLinkEdit.body, "저티어 내전 / 일반내전");
+    assert.equal(withInfo.body.roundMetadata?.gameInfo, "저티어 내전 / 일반내전");
+    assert.match(inhouseCopyFormReply(withInfo.body), /내전 정보: 저티어 내전 \/ 일반내전/u);
+    const omitted = await syncInfo(afterLinkEdit.body, undefined);
+    assert.equal(omitted.body.roundMetadata?.gameInfo, "저티어 내전 / 일반내전", "old forms without a description preserve the stored value");
+    await assert.rejects(syncInfo(afterLinkEdit.body, "충돌하는 정보"),
+      (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
+    const changedInfo = await syncInfo(withInfo.body, "일반내전");
+    assert.equal(changedInfo.body.roundMetadata?.gameInfo, "일반내전");
+    const clearedInfo = await syncInfo(changedInfo.body, null);
+    assert.equal(clearedInfo.body.roundMetadata?.gameInfo, null);
+    assert.equal(clearedInfo.body.entries.length, 3);
   } finally {
     await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();
@@ -1784,4 +1803,75 @@ test("Kakao admin settings and health repair require SUPER TOTP and persist rece
     assert.equal(status.incompleteReceiptCount, 0);
     assert.ok(status.recentRequests.some((item) => item.scope === "admin:kakao:settings:update"));
   } finally { await pool.end(); }
+});
+
+test("inhouse roster matching uses bounded lookups for ten members and guests", async (t) => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const queries: string[] = [];
+  const database = drizzle(pool, { schema, logger: { logQuery(query) { queries.push(query); } } });
+  const assistant = new PostgresKakaoAssistant(database);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const now = new Date();
+  const applyDate = recruitingOperatingDateKey(now);
+  let sequence = 0;
+  const send = (command: KakaoSeasonSnapshotCommand) => {
+    const key = `batch-${suffix}-${++sequence}`;
+    return assistant.syncSeasonSnapshot({ actorPrincipalId: principalId, intent: intent(`nonce-${key}`, key, `room-${suffix}`),
+      requestKey: key, scope: "kakao:batch-match-contract", command, requestId: randomUUID(), now });
+  };
+  const roundMetadata = { capacity: 10, startTimeText: "21:00", scheduledStartAt: null, gameInfo: null, organizerText: null, noticeText: null };
+  const member = (slotNo: number, name: string) => ({ slotNo, name, riotId: null, mainPosition: "MID" as const, subPositions: [], reserve: false });
+  const sync = (recruitNo: number, body: KakaoSeasonSnapshotDto, participants: Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }>["participants"]) => send({
+    action: "SYNC", seasonId, applyDate, recruitNo, mode: "RIFT", participants, roundMetadata,
+    observedSlotNos: Array.from({ length: 20 }, (_, index) => index + 1), reserveSectionObserved: true,
+    copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
+  });
+  const measured = async (label: string, operation: () => ReturnType<typeof send>) => {
+    const start = queries.length;
+    const startedAt = performance.now();
+    const result = await operation();
+    const issued = queries.slice(start);
+    const memberLookups = issued.filter((query) => /^select /u.test(query) && query.includes(' from "registry"."players" ')).length;
+    const applicationLookups = issued.filter((query) => /^select /u.test(query) && query.includes(' from "competition"."season_applications" ') &&
+      !query.includes(' join ') && query.includes('"player_id"')).length;
+    t.diagnostic(JSON.stringify({ label, queries: issued.length, memberLookups, applicationLookups, elapsedMs: Math.round(performance.now() - startedAt) }));
+    assert.equal(memberLookups, label.includes("members-unchanged") ? 0 : 1, "matching query count must not grow with roster size");
+    assert.equal(applicationLookups, label.includes("members-save") ? 1 : 0, "existing memberships are checked once for the whole roster");
+    return result;
+  };
+  try {
+    await applyMigrations(database);
+    await database.insert(seasons).values({ id: seasonId, name: `Batch ${suffix}`, nameNormalized: `batch ${suffix}`, status: "ACTIVE", activatedAt: now });
+    const names = Array.from({ length: 10 }, (_, index) => `batch${index}-${suffix}`);
+    await database.insert(players).values(names.map((name) => ({ id: randomUUID(), memberName: name, memberNameNormalized: name,
+      nickname: `${name}nick`, nicknameNormalized: `${name}nick`, tagLine: "QA", tagLineNormalized: "qa" })));
+    for (const [recruitNo, count, registered] of [[1, 1, true], [2, 10, true], [3, 10, false]] as const) {
+      const draft = await send({ action: "RESERVE", seasonId, applyDate, recruitNo, mode: "RIFT", participants: [], roundMetadata });
+      const rows = names.slice(0, count).map((name, index) => member(index + 1, registered ? name : `guest-${name}`));
+      const saved = await measured(`${count}-${registered ? "members" : "guests"}-save`, () => sync(recruitNo, draft.body, rows));
+      assert.equal(saved.body.entries.length, count);
+      assert.equal(saved.body.appliedCount, registered ? count : 0);
+      assert.equal(saved.body.pendingCount, registered ? 0 : count);
+      const unchanged = await measured(`${count}-${registered ? "members" : "guests"}-unchanged`, () => sync(recruitNo, saved.body, rows));
+      assert.equal(unchanged.body.updatedCount, 0);
+      assert.equal(unchanged.body.entries.length, count);
+    }
+    const duplicateDraft = await send({ action: "RESERVE", seasonId, applyDate, recruitNo: 4, mode: "RIFT", participants: [], roundMetadata });
+    await assert.rejects(sync(4, duplicateDraft.body, [member(1, names[0]!), member(2, `${names[0]}nick`)]),
+      (error: unknown) => error instanceof KakaoAssistantError && error.code === "CONFLICT");
+    const afterDuplicate = await send({ action: "STATUS", seasonId, applyDate, recruitNo: 4, participants: [] });
+    assert.equal(afterDuplicate.body.entries.length, 0, "two aliases in one batch roll back the entire save");
+    // A cancelled membership can be reused after a delete in the same save.
+    const single = await sync(4, duplicateDraft.body, [member(1, names[0]!)]);
+    const renamed = await sync(4, single.body, [member(2, `${names[0]}nick`)]);
+    assert.equal(renamed.body.entries.length, 1);
+    assert.equal(renamed.body.entries[0]?.slotNo, 2);
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
 });

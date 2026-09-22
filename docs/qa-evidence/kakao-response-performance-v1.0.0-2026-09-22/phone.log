@@ -1,0 +1,44 @@
+✔ builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact (180.1439ms)
+✔ Rhino audit detects functions that mix value and bare returns (0.4412ms)
+✔ V1 strict routes organizer-only metadata activation forms with or without one slash (10.4392ms)
+✔ V1 strict routes scoped in-house finish commands as unchanged raw text (7.7374ms)
+✔ R23 retired scrim commands and forms reply locally without an HTTP request (12.4805ms)
+✔ R25 local help matches optional member linking, Rift lanes, protected editing and detail rereads (3.5534ms)
+✔ R24 compact copy forms keep complete success and pending envelopes in one signed request (25.8942ms)
+✔ R24 compact form routing leaves malformed references to the server and ignores prose (7.6792ms)
+✔ R24 actual server-rendered party and inhouse templates accept one name through the phone (165.4752ms)
+✔ R23 copy-paste party and inhouse forms forward names and saved references unchanged (6.6266ms)
+✔ V1 strict routes the full organizer-only template returned by the production server (2.4251ms)
+✔ artifact excludes legacy HTTP, bearer, and embedded secret material (0.6928ms)
+✔ all response-reachable non-transport V1 executable lines are preserved without comments or blank spacers (24.1227ms)
+✔ strict adapter reuses the canonical V1 local dedupe storage keys (0.519ms)
+✔ local replies, echo rules, events, and no-reply behavior equal the canonical V1 (5.996ms)
+✔ R19 chooses one complete tone when the OpenChat entry guide appears (4.3837ms)
+✔ R19 consumes the raw join event and accepts only the OpenChat entry heading (1.4671ms)
+✔ approved party member mutations parse safely and use one RECRUIT gateway request (6.2961ms)
+✔ inhouse member shortcuts reach the matching profile gateway (10.2449ms)
+✔ reported inhouse loading echo is ignored while user commands and explicit member edits keep one reply (2.2173ms)
+✔ same MessengerBot logId replay suppresses only the duplicate visible reply (2.8651ms)
+✔ ambiguous party member text never reaches the mutation gateway (8.9239ms)
+✔ local recruit help documents member commands and keeps full-form guidance (1.8964ms)
+✔ command and form predicates are byte-derived and behaviorally equal to V1 (6.7802ms)
+✔ one public command performs one five-second signed gateway request without room binding (3.3457ms)
+✔ recoverable season rows reach the gateway once even with whitespace numbering and partial fields (1.542ms)
+✔ completed augment-ARAM in-house forms reach the FEATURES gateway and always reply (1.5091ms)
+✔ completed augment-ARAM metadata with ten empty name rows activates through FEATURES (1.6229ms)
+✔ a complete empty season snapshot reaches the gateway once for authoritative cancellation (4.3487ms)
+✔ empty-snapshot gate rejects incomplete forms and ordinary conversation (5.9467ms)
+✔ clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior (1.9384ms)
+✔ all seven active text seams preserve V1 success and empty replies while failures use safe common notices (29.1754ms)
+✔ literal transport failures distinguish settings, input, and connection errors without exposing values (12.567ms)
+✔ both V40 R2 image seams stay inactive for every transport outcome (4.0311ms)
+✔ R26 text commands never probe notification images before their response (6.676ms)
+✔ R26 speed diagnostic keeps the previous request timing across ordinary chat and bot echo (1.9657ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 645.8721
