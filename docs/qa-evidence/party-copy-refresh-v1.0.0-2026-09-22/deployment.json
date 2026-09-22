@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "c51ad7dcd40df9c06a7acd34bb5df5a4637b5c9d",
+  "deployment": {
+    "status": "PRODUCTION",
+    "provider": "vercel",
+    "deploymentId": "dpl_EAQV1oPbFKuE7xB9EJVggj3Htp2u",
+    "url": "https://k-lol-ofoy0o0kh-tjdmswo11-3715s-projects.vercel.app",
+    "alias": "https://k-lol-gg.vercel.app",
+    "verifiedAt": "2026-09-22T10:26:57.326Z",
+    "healthStatus": "ready"
+  },
+  "phoneReinstallRequired": false,
+  "schemaChanged": false
+}

@@ -1,0 +1,153 @@
+{
+  "checkedAt": "2026-09-22T10:26:57.326Z",
+  "baseUrl": "https://k-lol-gg.vercel.app",
+  "stage": "production",
+  "status": "PASS",
+  "rosterMutationsSent": false,
+  "externalMessagesSent": false,
+  "rawMemberNamesRecorded": false,
+  "responseBodiesRecorded": false,
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "passed": true,
+      "ready": true,
+      "traceId": null
+    },
+    {
+      "check": "current copy-edit help",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 291,
+      "replyCharacters": 683,
+      "traceId": "16eb28e7695d414eb2e4e74cafb878cb"
+    },
+    {
+      "check": "current inhouse participation guide",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 210,
+      "replyCharacters": 339,
+      "traceId": "cb79ab89018346b983464a309960d218"
+    },
+    {
+      "check": "missing inhouse number guidance",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 218,
+      "replyCharacters": 52,
+      "traceId": "3ab3513c49a84521b4ebd7180114dfaf"
+    },
+    {
+      "check": "party status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 251,
+      "replyCharacters": 51,
+      "traceId": "e8338eee43f6408d8ce852d210079277"
+    },
+    {
+      "check": "inhouse status",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 272,
+      "replyCharacters": 45,
+      "traceId": "b65c0a17b99741218297f78eeb49ebc2"
+    },
+    {
+      "check": "party detail selection",
+      "selectedCount": 1,
+      "inspectedCount": 1,
+      "skipped": false,
+      "readLimitApplied": false
+    },
+    {
+      "check": "party detail #2",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 247,
+      "replyCharacters": 109,
+      "traceId": "bf75c310dc0d4c3095c95910481e656e"
+    },
+    {
+      "check": "party detail structure #2",
+      "passed": true,
+      "displayedCount": 3,
+      "capacity": 5,
+      "visibleSlots": 3,
+      "mainRows": 5,
+      "reserveRows": 1,
+      "visibleReserveSlots": 0,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "inhouse detail selection",
+      "selectedCount": 1,
+      "inspectedCount": 1,
+      "skipped": false,
+      "readLimitApplied": false
+    },
+    {
+      "check": "inhouse detail #1",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 277,
+      "replyCharacters": 141,
+      "traceId": "b4fff1175aa647d497eb72fa44ac4c06"
+    },
+    {
+      "check": "inhouse detail structure #1",
+      "passed": true,
+      "displayedCount": 3,
+      "capacity": 10,
+      "visibleSlots": 3,
+      "mainRows": 10,
+      "reserveRows": 1,
+      "visibleReserveSlots": 0,
+      "reserveNumbersSorted": true
+    },
+    {
+      "check": "compact inhouse detail spelling",
+      "status": 200,
+      "passed": true,
+      "elapsedMs": 519,
+      "replyCharacters": 141,
+      "traceId": "aa54383e4bb24edc9a90a091a996ea7d"
+    },
+    {
+      "check": "editable inhouse description",
+      "passed": true
+    },
+    {
+      "check": "/help/kakao",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "elapsedMs": 715,
+      "ttfbMs": 529,
+      "responseCharacters": 58237,
+      "traceId": null
+    },
+    {
+      "check": "/help/recruits",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "elapsedMs": 662,
+      "ttfbMs": 483,
+      "responseCharacters": 58875,
+      "traceId": null
+    },
+    {
+      "check": "/recruits",
+      "status": 200,
+      "passed": true,
+      "currentGuide": true,
+      "elapsedMs": 448,
+      "ttfbMs": 263,
+      "responseCharacters": 65738,
+      "traceId": null
+    }
+  ]
+}

@@ -1,5 +1,12 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-22 파티 최신 양식 1.0.0 — 운영 적용
+
+- source `c51ad7dcd40df9c06a7acd34bb5df5a4637b5c9d`, Vercel `dpl_EAQV1oPbFKuE7xB9EJVggj3Htp2u` READY, 운영 alias SHA 일치. 19:26 KST health·구인/내전 현황·상세 읽기 검증 PASS. 실제 명단 변경 없이 조회만 수행.
+- 짧은 양식코드로 파티 저장 후 최신 편집 명단을 반환한다. 무변경이면 예전 빈칸이 이후 참가자 취소가 아님을 설명하고 명시 삭제 명령을 안내한다. 동시 참가 보존 정책은 유지.
+- 전체 검사 433 계약·951 단위(+1 DB skip), DB/경계 97건 PASS. [QA](./qa-evidence/party-copy-refresh-v1.0.0-2026-09-22/README.md). 서버 변경, 휴대폰 재설치 불필요. R26 실제 설치·휴대폰 지연은 별도 미확인.
+
+
 ## 2026-09-22 카카오 응답 속도·내전 정보 — 서버 운영 적용, R26 설치 확인 대기
 
 - source `6484547030678061324558b5a4759d76b2ce068b`, Vercel `dpl_37qaRw4iFUEym3CTifacBDhrbeYW` READY, 운영 alias 일치. 10:06 KST health·서명 조회 PASS, 띄어쓰기 유무 양쪽 상세에서 내전 정보 항목 확인.

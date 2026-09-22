@@ -12,5 +12,8 @@
   "secretTreePassed": true,
   "productionRosterMutations": false,
   "externalMessagesSent": false,
-  "phoneSourceChanged": false
+  "phoneSourceChanged": false,
+  "githubMainCiPassed": true,
+  "authHttpCiPassed": true,
+  "githubRunId": 35715853724
 }
