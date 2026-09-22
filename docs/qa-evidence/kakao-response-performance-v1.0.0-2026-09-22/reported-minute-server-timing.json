@@ -1,0 +1,17 @@
+{
+  "scope": "Production Vercel command request logs in the user-reported 09:53 KST minute; message bodies were not examined so these are not definitively attributed to the two commands.",
+  "requests": [
+    {
+      "at": "2026-09-22T00:53:56.810Z",
+      "status": 200,
+      "path": "/api/integrations/kakao/v4/commands",
+      "durationMs": 167
+    },
+    {
+      "at": "2026-09-22T00:53:33.421Z",
+      "status": 200,
+      "path": "/api/integrations/kakao/v4/commands",
+      "durationMs": 221
+    }
+  ]
+}

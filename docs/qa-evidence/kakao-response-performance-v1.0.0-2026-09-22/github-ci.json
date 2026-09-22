@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-09-22T01:10:45.485Z",
+  "sha": "6484547030678061324558b5a4759d76b2ce068b",
+  "runs": [
+    {
+      "id": 35674495735,
+      "name": "V2 CI",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/suejeahyun/k_lol_gg/actions/runs/35674495735",
+      "event": "push",
+      "branch": "main"
+    }
+  ]
+}

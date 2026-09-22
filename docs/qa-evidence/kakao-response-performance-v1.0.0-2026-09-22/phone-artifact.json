@@ -1,0 +1,24 @@
+{
+  "version": "KLOL_KAKAO_BOT_V40_R26_2026_09_22",
+  "status": "PENDING_USER_INSTALL",
+  "files": [
+    {
+      "file": ".private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js",
+      "sha256": "a876e91309c5d715c168319eceb0dd1c017be427e57d5afcf8039e469b4768ce",
+      "lfCharacters": 61903,
+      "crlfCharacters": 63772
+    },
+    {
+      "file": ".private/deliveries/general-R26/KLOL_일반봇_R26.js",
+      "sha256": "a876e91309c5d715c168319eceb0dd1c017be427e57d5afcf8039e469b4768ce",
+      "lfCharacters": 61903,
+      "crlfCharacters": 63772
+    },
+    {
+      "file": ".private/deliveries/general-R26/KLOL_일반봇_R26.txt",
+      "sha256": "a876e91309c5d715c168319eceb0dd1c017be427e57d5afcf8039e469b4768ce",
+      "lfCharacters": 61903,
+      "crlfCharacters": 63772
+    }
+  ]
+}

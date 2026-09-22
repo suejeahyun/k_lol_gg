@@ -11,3 +11,9 @@ Roster matching batches active member candidates and existing memberships under 
 내전 정보 uses the existing round gameInfo field: modern forms emit a blank editable line; aliases 게임정보/게임 정보/내전정보 work; explicit blank clears; omitted old field preserves; duplicate labels, length >500 and control characters fail closed. 3-way metadata merge prevents stale overwrite. No schema migration.
 
 Run npm run check and V2_DB_CONTRACT_SCOPE=recruiting npm run test:db. Release/deployment and final validation evidence are recorded separately. Production smoke sends only read commands and never sends Kakao chat messages or edits real rosters.
+
+Production verified 2026-09-22T01:06:42.430Z: source 6484547030678061324558b5a4759d76b2ce068b, deployment dpl_37qaRw4iFUEym3CTifacBDhrbeYW, both detail spellings return 내전 정보. Read latency samples 505/410 ms exclude phone delivery; no claim of measured end-to-end improvement. Local full check: 433 contract +950 unit PASS (one DB skip), focused DB/boundaries 97 PASS, phone 36 PASS, lint zero errors (55 existing warnings), secret scan PASS. R26 private artifact LF 61903 / CRLF 63772, SHA-256 a876e91309c5d715c168319eceb0dd1c017be427e57d5afcf8039e469b4768ce.
+
+Historical Vercel logs for 09:53 KST contain two HTTP 200 command requests with internal durations 167 ms and 221 ms. Route logging is duration/status/trace only, so raw command identity is unavailable and these cannot be definitively attributed to the user transcript. Internal duration excludes SDK notification delivery, DNS/TLS, platform startup before handler invocation and Kakao reply delivery. See reported-minute-server-timing.json.
+
+GitHub main CI 35674495735 succeeded at the recorded check time, including npm run check and administrator HTTP authentication matrix. Source 6484547030678061324558b5a4759d76b2ce068b.
