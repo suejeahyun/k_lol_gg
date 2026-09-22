@@ -1,5 +1,14 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-22 내전 자동 회원 연결·최신 양식 1.0.0 — 운영 적용
+
+- source `4ed4f5f1bdfc17d5d6e0faad78889a1bf6de6435`, tag `kakao-inhouse-auto-link-v1.0.0`, Vercel `dpl_ArFdxfuNKAcJMJap6mmBF5kB1G89` READY·운영 alias SHA 일치, 09:49 KST health/조회 smoke PASS. DB head `0044` 유지.
+- 정확히 일치하는 활성 회원 한 명을 참가 명단에 자동 연결한다. 이름(사이트 닉네임) 동명이인 구분, 기존 미연결 항목 다음 저장 시 연결, SITE/운영진 보호·중복 계정·정원 유지. 계정 인증·권한은 변경하지 않는다.
+- 저장 후 최신 양식코드와 명단을 바로 반환한다. 오래된 빈 양식으로 기존 참가자를 수정하면 중복 이름 대신 최신 양식 필요 사유를 안내한다. 실제 동시 수정 충돌은 덮어쓰지 않는다.
+- 계약 431·단위 949(+DB 1 skip)·DB/경계 집중 96·인증 HTTP PASS. [QA](./qa-evidence/inhouse-auto-link-v1.0.0-2026-09-22/README.md), [패치 안내](./patch-notes/2026-09-22-inhouse-auto-link.md). 일반 R25와 사이트 알림 1.0.3 재설치 불필요. 실제 충원 알림 수신 확인은 별도로 남아 있다.
+
+아래는 각 단계 당시의 기록이다.
+
 ## 2026-09-22 사이트 알림 1.0.3 — 오픈채팅 호환 수정 후보
 
 - 1.0.2 설치 후 실기기 로그에서 INIT_READY → CALLBACK_RECEIVED → GROUP_REQUIRED를 확인했다. 사용자가 실제 내전 구인 오픈채팅방에서 실행한 것이라고 확인하여 그룹 표시 값의 falsey 판정이 무응답을 일으킨 지점으로 확정했다.

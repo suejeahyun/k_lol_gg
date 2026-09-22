@@ -1,6 +1,6 @@
 # kakao-inhouse-auto-link 1.0.0
 
-현재 단계: 소스·로컬 검사. 운영 배포·태그는 완료 후 별도 근거로 연결한다. migration 변경 없음 (`0044_vengeful_trauma`).
+운영 반영: source `4ed4f5f1bdfc17d5d6e0faad78889a1bf6de6435`, tag `kakao-inhouse-auto-link-v1.0.0`, Vercel `dpl_ArFdxfuNKAcJMJap6mmBF5kB1G89`, immutable URL `https://k-lol-es5u8debf-tjdmswo11-3715s-projects.vercel.app`. 2026-09-22 09:49 KST 운영 alias SHA 일치·READY·health 확인. migration 변경 없음 (`0044_vengeful_trauma`). 상세는 `deployment.json`, `general-live-production.json` 참조.
 
 ## 범위
 
@@ -12,6 +12,11 @@
 - 사이트 도움말과 서버 응답을 수정했다. 기존 R25·사이트 알림 1.0.3 재설치는 필요 없다.
 
 ## 검증 근거
+
+- 전체 검사 통과: 계약 431, 단위 949 PASS(+DB 전용 1 skip), DB/경계 집중 96 PASS, 인증 HTTP PASS, lint 오류 0·기존 경고 55. `validation-summary.json`, `database.log`, `auth-http.log` 참조.
+- GitHub main CI run `35673452643` SUCCESS, 2026-09-22 09:52 KST 확인. `github-ci.json` 참조.
+- 운영 health·일반 봇 조회·내전 #1 상세 구조·공개 도움말 2종·구인 화면 PASS. 운영 당시 본 참가 2명·10개 번호 행·예비 1행 확인. 파티 모집은 없어 상세 검사를 생략했다. 운영 명단에 참가자를 추가하거나 실제 알림을 발송하지 않았다.
+- 직접 CLI 업로드는 제공자 Not authorized로 실패하여 Git main 연동으로 정상 배포했다. 실패한 업로드를 배포 근거로 사용하지 않았다.
 
 - `.tmp/inhouse-auto-link-focused.log`: 집중 단위 검사.
 - `.tmp/inhouse-auto-link-db.log`: `V2_DB_CONTRACT_SCOPE=recruiting npm run test:db`, 일회성 PostgreSQL. 기존 명단·SITE 보호·경합 검사 및 신규 본 참가/예비 자동 연결, 동명이인 구분, 같은 계정의 별칭 중복 롤백, 기존 미연결 접수 자동 연결과 이전 항목 ID를 통한 라인 수정 검증.

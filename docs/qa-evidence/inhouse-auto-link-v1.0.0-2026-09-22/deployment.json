@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "4ed4f5f1bdfc17d5d6e0faad78889a1bf6de6435",
+  "deployment": {
+    "status": "PRODUCTION",
+    "provider": "vercel",
+    "deploymentId": "dpl_ArFdxfuNKAcJMJap6mmBF5kB1G89",
+    "url": "https://k-lol-es5u8debf-tjdmswo11-3715s-projects.vercel.app",
+    "alias": "https://k-lol-gg.vercel.app",
+    "verifiedAt": "2026-09-22T00:49:35.558Z",
+    "healthStatus": "ready"
+  },
+  "route": "Git main integration",
+  "schemaChanged": false,
+  "phoneReinstallRequired": false
+}

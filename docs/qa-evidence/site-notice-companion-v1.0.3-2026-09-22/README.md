@@ -1,6 +1,6 @@
 # kakao-site-notices 1.0.3 오픈채팅 호환 후보
 
-상태: 로컬 후보, Git tag/게시/서버 배포 없음. 사용자 제공 로그로 1.0.3 실기기 버전·진단 응답 확인. 수신 등록·실제 충원 수신 미확인.
+상태: 사용자 제공 로그로 1.0.3 실기기 버전·진단 응답 확인. tag `kakao-site-notices-v1.0.3`, source `4ed4f5f1bdfc17d5d6e0faad78889a1bf6de6435`로 릴리스 근거를 연결했다. 서버 계약은 동일하며 동반 배포는 `dpl_ArFdxfuNKAcJMJap6mmBF5kB1G89`다. 수신 등록·실제 충원 수신은 여전히 미확인이다. 서버 배포 세부 근거는 `../inhouse-auto-link-v1.0.0-2026-09-22/deployment.json` 참조.
 
 ## 실기기 원인 근거
 

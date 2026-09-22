@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-09-22T00:50:28.832Z",
+  "fullCheckPassed": true,
+  "contractAndUnitPasses": [
+    431,
+    949
+  ],
+  "focusedDatabaseAndBoundaryPasses": 96,
+  "authHttpPassed": true,
+  "secretTreePassed": true,
+  "lintErrors": 0,
+  "existingLintWarnings": 55,
+  "unitDbSkip": 1
+}
