@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-09-22T10:19:52.780Z",
+  "requests": [
+    {
+      "at": "2026-09-22T10:17:45.304Z",
+      "status": 200,
+      "durationMs": 56
+    },
+    {
+      "at": "2026-09-22T10:00:13.195Z",
+      "status": 200,
+      "durationMs": 91
+    }
+  ],
+  "scope": "Only available returned Vercel command logs are recorded; queried 08:15–10:19 UTC, not a complete event timeline. Command text is not logged, so matching user messages is not definitive."
+}

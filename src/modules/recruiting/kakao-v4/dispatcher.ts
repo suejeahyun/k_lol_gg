@@ -10,6 +10,7 @@ import {
   type RecruitingCommand,
 } from "../application/commands";
 import type { RecruitingCommandResult, RecruitingCompatTargetInput } from "../application/ports";
+import { isPartyFormCode } from "../application/party-copy-snapshot";
 import { decodeV1StrictScrimTimeText } from "../domain/v1-strict-scrim-time";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
 import {
@@ -1060,12 +1061,17 @@ export class KakaoV4CommandDispatcher {
       const characters = [...name.trim().replace(/\s+/gu, " ")];
       return characters.length > 40 ? characters.slice(0, 39).join("") + "…" : characters.join("");
     }).join(", ") + (addedNames.length > 3 ? ` 외 ${addedNames.length - 3}명` : "");
+    const editableCopy = command.action === "SYNC" && isPartyFormCode(command.payload.parsedForm?.saveReference);
     const saveReply = command.action === "FINISH"
       ? `✅ 파티 #${recruitNumber} ${result.body.status === "CANCELED" ? "초안 취소" : "마감"} 완료`
       : data.copyChanged === false
-        ? "이미 같은 내용으로 저장되어 있어요."
+        ? editableCopy
+          ? `이번 요청으로 변경된 내용은 없어요.\n예전 양식의 빈칸으로는 이후 참가자를 삭제하지 않아요. 아래 최신 양식에서 이름을 지우거나 '구인상세 ${recruitNumber} 삭제 이름'을 입력해 주세요.`
+          : "이미 같은 내용으로 저장되어 있어요."
         : `✅ 파티${registered ? "등록" : "수정"} 완료 · #${recruitNumber}${registeredNames ? ` · ${registeredNames}` : ""}`;
-    const legacyReply = await this.appendLatestPartyStatus(context, saveReply);
+    const legacyReply = editableCopy
+      ? await this.latestPartyForm(context, recruitNumber, saveReply)
+      : await this.appendLatestPartyStatus(context, saveReply);
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
   }
 

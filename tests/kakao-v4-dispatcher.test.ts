@@ -446,7 +446,7 @@ test("R24 party creation shows empty metadata, all slots and the code below the 
   }
 });
 
-test("R24 copying the latest party form preserves names and returns a non-editable overview", async () => {
+test("copying a party form returns the current editable roster and explains unchanged stale copies", async () => {
   for (const unchanged of [false, true]) {
     const state = harness({ partyFormCode: "ABCDE-23456", partyCopyAddedNames: unchanged ? [] : ["민규"], partyCopyChanged: !unchanged });
     const detail = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
@@ -460,11 +460,22 @@ test("R24 copying the latest party form preserves names and returns a non-editab
     assert.equal(saved.payload.copyGuard?.saveReference, "ABCDE-23456");
     assert.equal(saved.payload.members[0]?.name, "A");
     assert.equal(saved.payload.members.length, unchanged ? 1 : 2);
-    assert.match(result.legacyReply, unchanged ? /^이미 같은 내용으로 저장되어 있어요\.\n\n📋 현재 구인/u : /^✅ 파티수정 완료 · #7\n\n📋 현재 구인/u);
+    assert.match(result.legacyReply, unchanged ? /^이번 요청으로 변경된 내용은 없어요\./u : /^✅ 파티수정 완료 · #7\n\n\[파티 #7\]/u);
+    if (unchanged) assert.match(result.legacyReply, /예전 양식의 빈칸.*구인상세 7 삭제 이름/u);
+    assert.match(result.legacyReply, /양식코드: ABCDE-23456/u);
+    const lookup = state.statusCalls.at(-1) as { projection: string; afterMutation: boolean; partyTarget: unknown };
+    assert.equal(lookup.projection, "PARTY");
+    assert.equal(lookup.afterMutation, true);
+    assert.deepEqual(lookup.partyTarget, { recruitDate: "2026-09-10", recruitNumber: 7 });
     assert.equal(result.legacyReply.match(/\[파티 #7\]/gu)?.length, 1);
     assert.doesNotMatch(result.legacyReply, /운영일|저장기준|주최자/u);
     const copiedAgain = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text: result.legacyReply }), { ...submittedEnvelope, text: result.legacyReply });
-    assert.notEqual(copiedAgain?.action, "SYNC", "an overview must never be accepted as an editable roster");
+    assert.equal(copiedAgain?.action, "SYNC", "the entire saved reply must remain usable as the next editable roster");
+    const unavailable = harness({ statusFailure: true });
+    const savedWithoutRead = await unavailable.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, canonical);
+    assert.match(savedWithoutRead.legacyReply, /^✅ 파티수정 완료 · #7/u);
+    assert.match(savedWithoutRead.legacyReply, /최신 양식 조회 실패.*상세 7/u);
+    assert.equal(unavailable.handled.length, 1, "a failed detail refresh must never retry the saved mutation");
   }
 });
 

@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-09-22T10:24:58.336Z",
+  "fullCheckPassed": true,
+  "contractAndUnitPasses": [
+    433,
+    951
+  ],
+  "focusedDatabaseAndBoundaryPasses": 97,
+  "focusedUnitPasses": 94,
+  "lintErrors": 0,
+  "unitDbSkip": 1,
+  "secretTreePassed": true,
+  "productionRosterMutations": false,
+  "externalMessagesSent": false,
+  "phoneSourceChanged": false
+}

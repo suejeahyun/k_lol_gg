@@ -245,3 +245,11 @@ test("malformed snapshot envelopes cannot become a merge baseline", async (t) =>
     await t.test(label, () => assert.throws(() => readPartyCopySnapshot(state, current), /PARTY_COPY_CONFLICT/));
   }
 });
+
+test("a reused empty draft cannot cancel a later join, but the returned current form can", () => {
+  const base = party({ revision: 0, status: "DRAFT", members: [], startTimeText: "미정", gameInfo: "미정" });
+  const current = party({ revision: 3, startTimeText: "모이면", gameInfo: "합성게임", members: [member("합성첫째", 1), member("합성둘째", 2), member("합성셋째", 3)] });
+  const attempt = { ...current, members: current.members.slice(0, 2) };
+  assert.deepEqual(mergePartyCopyEdits(base, current, attempt).members, current.members);
+  assert.deepEqual(mergePartyCopyEdits(current, current, attempt).members, attempt.members);
+});
