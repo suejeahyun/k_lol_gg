@@ -1230,6 +1230,32 @@
         "verifiedAt": "2026-09-22T10:26:57.326Z",
         "healthStatus": "ready"
       }
+    },
+    {
+      "featureId": "kakao-response-performance",
+      "version": "1.0.1",
+      "gitTag": "kakao-response-performance-v1.0.1",
+      "commit": "2148184130f102ccc20ed6691d977d9ef952e115",
+      "releasedAt": "2026-09-22T10:56:44.079Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/kakao-response-performance-v1.0.1-2026-09-22/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-22-kakao-local-diagnostic.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED",
+        "reason": "Phone-only diagnostic artifact; no server runtime change. Device installation pending."
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R 0.7.29a general bot (19:47 user version reply; speed command silent)",
+          "version": "KLOL_KAKAO_BOT_V40_R26_2026_09_22",
+          "status": "INSTALLED"
+        },
+        {
+          "name": "MessengerBot R 0.7.29a general bot replacement",
+          "version": "KLOL_KAKAO_BOT_V40_R27_2026_09_22",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
