@@ -36,10 +36,13 @@ const source = await readFile(resolve(root, "integrations/messengerbot-r/site-no
 const allSettings = { ...settings, KLOL_SITE_NOTICE_ENABLED: String(enabled), KLOL_SITE_NOTICE_TARGET_ID: targetId,
   KLOL_SITE_NOTICE_REGISTRATION_CODE: registrationCode };
 const preamble = [
+  "var KLOL_SITE_NOTICE_SETUP_FAILED = false;",
+  "try {",
   `if (String(DataBase.getDataBase("KLOL_SITE_NOTICE_SETUP_REVISION") || "") !== ${JSON.stringify(setupRevision)}) {`,
   ...Object.entries(allSettings).map(([key, value]) => `DataBase.setDataBase(${JSON.stringify(key)}, ${JSON.stringify(value)});`),
   `DataBase.setDataBase("KLOL_SITE_NOTICE_SETUP_REVISION", ${JSON.stringify(setupRevision)});`,
   "}",
+  "} catch (ignoredSetupFailure) { KLOL_SITE_NOTICE_SETUP_FAILED = true; }",
 ].join("\n");
 const artifact = preamble + "\n" + source;
 const acorn = createRequire(import.meta.url)("next/dist/compiled/acorn");

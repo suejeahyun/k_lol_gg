@@ -430,7 +430,7 @@ function participationGuide(publicOrigin: string) {
     "이름/all = 모든 라인 가능",
     "칼바람·증바람은 이름만 작성하면 돼요.",
     "",
-    "미가입자도 접수할 수 있어요. 회원 연결은 나중에 운영진이 도와드려요.",
+    "미가입자도 접수할 수 있어요. 정확히 일치하는 활성 회원이 한 명이면 참가 명단에 자동 연결돼요.",
     "동명이인은 이름(닉네임)으로 구분해주세요.",
     `${publicOrigin}/signup`,
   ].join("\n");
@@ -712,6 +712,9 @@ export class KakaoV4CommandDispatcher {
   }
 
   private async appendLatestInhouseStatus(context: KakaoV4DispatchContext, body: KakaoSeasonSnapshotDto, reply: string) {
+    if (body.formCode && body.roundMetadata && body.roundMetadata.status !== "CLOSED") {
+      return `${reply}\n\n${inhouseCopyFormReply(body)}`;
+    }
     try {
       const result = await this.dependencies.assistant.syncSeasonSnapshot({
         ...signedInput(context), requestId: context.requestId, afterMutation: true,

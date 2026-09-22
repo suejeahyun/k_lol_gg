@@ -42,7 +42,7 @@ test("exact status/version commands are local and preserve OFF, settings and the
     assert.equal(s.worker.handleMessage(message, true, s.replier, "com.kakao.talk"), true);
   }
   assert.match(s.replies[0], /휴대폰 알림: 꺼짐\n수신 세션: 등록 필요/);
-  assert.match(s.replies[1], /KLOL_SITE_NOTICE_COMPANION_1\.0\.1$/);
+  assert.match(s.replies[1], /KLOL_SITE_NOTICE_COMPANION_1\.0\.3$/);
   assert.equal(s.worker.status(), "DISABLED"); assert.equal(s.calls.length, 0); assert.deepEqual(s.store, storeBefore);
   s.register(); const afterRegistration = { ...s.store }; const callsBefore = s.calls.length;
   const otherReplies = []; const other = { reply: (text) => otherReplies.push(text) };
@@ -53,13 +53,12 @@ test("exact status/version commands are local and preserve OFF, settings and the
   assert.equal(s.replies.at(-1), "합성 내전 안내"); assert.equal(otherReplies.length, 2, "status reply session never becomes the notice target");
 });
 
-test("diagnostics ignore ordinary messages, slash variants and untrusted app or private callbacks", () => {
+test("diagnostics ignore ordinary messages, slash variants and untrusted app callbacks", () => {
   const s = setup();
   for (const message of ["/사이트알림상태", " 사이트알림상태", "사이트알림버전 extra", "봇버전", "내전현황", "사이트알림연동 invalid"]) {
     assert.equal(s.worker.handleMessage(message, true, s.replier, "com.kakao.talk"), false);
   }
   for (const message of ["사이트알림상태", "사이트알림버전"]) {
-    assert.equal(s.worker.handleMessage(message, false, s.replier, "com.kakao.talk"), false);
     assert.equal(s.worker.handleMessage(message, true, s.replier, "other.app"), false);
     assert.equal(s.worker.handleMessage(message, true, {}, "com.kakao.talk"), false);
   }
@@ -133,4 +132,120 @@ test("ledger write failure, wrong target and stale lease fail closed before send
 test("explicit SDK rejection is retryable after manual session renewal", () => {
   const s = setup({}, { accepted: false }); s.register(); s.worker.poll(); assert.equal(s.calls.at(-1).data.outcome, "RETRY");
   assert.equal(s.worker.status(), "REGISTRATION_REQUIRED"); assert.deepEqual(JSON.parse(s.store.KLOL_SITE_NOTICE_LEDGER_V1), {});
+});
+
+function runtime(options = {}) {
+  const logs = [], replies = [], timers = [];
+  const store = { KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_REGISTRATION_CODE: "c".repeat(32) };
+  const context = vm.createContext({
+    KLOL_SITE_NOTICE_SETUP_FAILED: options.setupFails === true,
+    Log: { i: (value) => logs.push(value) },
+    DataBase: {
+      getDataBase: (key) => { if (options.storageFails) throw Error("synthetic-private-value"); return store[key]; },
+      setDataBase: (key, value) => { store[key] = value; },
+    },
+    java: { util: { concurrent: { locks: { ReentrantLock: function () {
+      if (options.lockFails) throw Error("synthetic-private-value");
+      this.tryLock = () => true; this.unlock = () => {};
+    } } } } },
+    setInterval: (callback) => { if (options.timerFails) throw Error("synthetic-private-value"); timers.push(callback); return 1; },
+    clearInterval: () => {},
+  });
+  vm.runInContext(source, context);
+  const replier = { reply(text) {
+    assert.equal(this, replier, "SDK method retains its original receiver");
+    if (options.replyFails) throw Error("synthetic-private-value");
+    replies.push(text); return options.accepted;
+  } };
+  return { context, store, logs, replies, timers, replier,
+    send: (message, group = true, app = "com.kakao.talk") => context.response("private-room", message, "private-sender", group, replier, null, app) };
+}
+
+test("whole installed runtime answers local diagnostics without credentials, network or registration", () => {
+  const s = runtime(); const before = { ...s.store };
+  s.send("사이트알림버전"); s.send("사이트알림진단"); s.send("사이트알림상태");
+  assert.match(s.replies[0], /COMPANION_1\.0\.3$/);
+  assert.match(s.replies[1], /초기화: READY/);
+  assert.match(s.replies[2], /등록 필요/);
+  assert.deepEqual(s.store, before); assert.equal(s.timers.length, 1);
+  assert.ok(s.logs.includes("[KLOL_SITE_NOTICE] CALLBACK_RECEIVED"));
+  assert.ok(s.logs.includes("[KLOL_SITE_NOTICE] REPLY_ACCEPTED"));
+  assert.doesNotMatch(s.logs.join("\n"), /private-room|private-sender|c{32}/);
+});
+
+test("initialization failures leave version and fixed failure-stage diagnostics available", () => {
+  for (const [flag, stage] of [["setupFails", "SETUP"], ["lockFails", "LOCK"], ["storageFails", "STORAGE"], ["timerFails", "TIMER"]]) {
+    const s = runtime({ [flag]: true });
+    assert.equal(s.context.KLOL_SITE_NOTICE, null);
+    s.send("사이트알림버전"); s.send("사이트알림진단"); s.send("사이트알림상태");
+    assert.match(s.replies[0], /COMPANION_1\.0\.3$/);
+    assert.ok(s.replies[1].includes("초기화: " + stage));
+    assert.ok(s.replies[2].includes("초기화 실패: " + stage));
+    assert.doesNotThrow(() => s.context.onStartCompile());
+    assert.doesNotMatch([...s.logs, ...s.replies].join("\n"), /synthetic-private-value/);
+    assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "c".repeat(32));
+  }
+});
+
+test("rejected callback contexts stay silent and record only fixed local diagnostic codes", () => {
+  const s = runtime(); const before = { ...s.store };
+  s.send("사이트알림진단", false, "other.private.app"); s.send("사이트알림진단", true, "other.private.app");
+  s.context.response("room", "사이트알림진단", "sender", true, {}, null, "com.kakao.talk");
+  assert.deepEqual(s.replies, []); assert.deepEqual(s.store, before);
+  for (const code of ["GROUP_FLAG_COMPAT", "PACKAGE_REJECTED", "REPLIER_MISSING"]) assert.ok(s.logs.includes("[KLOL_SITE_NOTICE] " + code));
+  const count = s.logs.length;
+  for (const text of ["내전현황", "/사이트알림진단", " 사이트알림진단", "사이트알림연동 invalid"]) s.send(text);
+  assert.equal(s.logs.length, count);
+  assert.doesNotMatch(s.logs.join("\n"), /other.private.app|invalid|sender/);
+});
+
+test("reply failure and SDK rejection produce fixed local evidence without leaking exceptions", () => {
+  for (const options of [{ replyFails: true }, { accepted: false }]) {
+    const s = runtime(options); assert.doesNotThrow(() => s.send("사이트알림버전"));
+    assert.ok(s.logs.includes("[KLOL_SITE_NOTICE] " + (options.replyFails ? "REPLY_FAILED" : "REPLY_REJECTED")));
+    assert.doesNotMatch(s.logs.join("\n"), /synthetic-private-value/);
+    assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "c".repeat(32));
+  }
+});
+
+test("reported open-chat false group flag still answers version, diagnostics and status locally", () => {
+  for (const flag of [false, undefined, null, 0]) {
+    const s = runtime(); const before = { ...s.store };
+    for (const message of ["사이트알림버전", "사이트알림진단", "사이트알림상태"]) {
+      s.context.response("room", message, "sender", flag, s.replier, null, "com.kakao.talk");
+    }
+    assert.match(s.replies[0], /COMPANION_1\.0\.3$/);
+    assert.match(s.replies[1], /그룹 표시: 꺼짐\/미제공 \(호환 처리\)/);
+    assert.match(s.replies[1], /초기화: READY/);
+    assert.match(s.replies[2], /등록 필요/);
+    assert.deepEqual(s.store, before);
+    assert.ok(s.logs.includes("[KLOL_SITE_NOTICE] GROUP_FLAG_COMPAT"));
+    assert.ok(s.logs.includes("[KLOL_SITE_NOTICE] REPLY_ACCEPTED"));
+  }
+});
+
+test("false group flag requires exact one-use code and retains only explicitly registered session", () => {
+  const s = setup({ KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_REGISTRATION_CODE: "c".repeat(32) });
+  s.response("room", "사이트알림연동 " + "d".repeat(32), "sender", false, s.replier, null, "com.kakao.talk");
+  s.worker.poll(); assert.equal(s.calls.length, 0);
+  assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "c".repeat(32));
+  s.response("room", "사이트알림연동 " + "c".repeat(32), "sender", false, s.replier, null, "com.kakao.talk");
+  assert.equal(s.worker.status(), "REGISTERED");
+  assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "");
+  const otherReplies = []; const other = { reply: (text) => otherReplies.push(text) };
+  s.response("other-room", "사이트알림진단", "sender", false, other, null, "com.kakao.talk");
+  s.response("other-room", "사이트알림연동 " + "c".repeat(32), "sender", false, other, null, "com.kakao.talk");
+  s.worker.poll(); s.worker.poll();
+  assert.equal(s.replies.filter((text) => text === "합성 내전 안내").length, 1);
+  assert.equal(otherReplies.filter((text) => text === "합성 내전 안내").length, 0);
+  assert.equal(s.calls.filter((call) => call.action === "REGISTER").length, 1);
+});
+
+test("false group flag never permits debug, missing-package or other-app registration", () => {
+  for (const app of ["", undefined, "debug", "other.app"]) {
+    const s = setup({ KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_REGISTRATION_CODE: "c".repeat(32) });
+    s.response("room", "사이트알림연동 " + "c".repeat(32), "sender", false, s.replier, null, app);
+    s.worker.poll(); assert.deepEqual(s.calls, []); assert.deepEqual(s.replies, []);
+    assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "c".repeat(32));
+  }
 });

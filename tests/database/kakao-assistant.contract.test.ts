@@ -1418,11 +1418,11 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
   };
   const knownName = `회원-${suffix}`;
   const duplicateName = `동명-${suffix}`;
-  const playerIds = Array.from({ length: 3 }, () => randomUUID());
+  const playerIds = Array.from({ length: 4 }, () => randomUUID());
   try {
     await applyMigrations(database);
     await database.insert(seasons).values({ id: seasonId, name: `Editable ${suffix}`, nameNormalized: `editable ${suffix}`, status: "ACTIVE", activatedAt: now });
-    await database.insert(players).values(playerIds.map((id, i) => ({ id, memberName: i === 0 ? knownName : duplicateName, memberNameNormalized: i === 0 ? knownName : duplicateName,
+    await database.insert(players).values(playerIds.map((id, i) => ({ id, memberName: i === 0 ? knownName : i === 3 ? `사이트-${suffix}` : duplicateName, memberNameNormalized: i === 0 ? knownName : i === 3 ? `사이트-${suffix}` : duplicateName,
       nickname: `Editable${i}${suffix}`, nicknameNormalized: `editable${i}${suffix}`, tagLine: "QA", tagLineNormalized: "qa" })));
     const draft = await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 1, mode: "RIFT", roundMetadata: metadata, participants: [] });
     const nine = [row(1, knownName), row(2, duplicateName), ...Array.from({ length: 7 }, (_, i) => row(i + 3, `손님${i}-${suffix}`))];
@@ -1433,14 +1433,14 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
     assert.equal(first.body.updatedCount, 0);
     assert.deepEqual(first.body.entries[0]?.subPositions, ["TOP"]);
     assert.equal(first.body.entries[0]?.mainPosition, "MID", "legacy omission must not replace saved lanes with ALL");
-    assert.equal(first.body.pendingCount, 9);
-    assert.equal(first.body.appliedCount, 0);
-    assert.equal(first.body.entries[0]?.memberLinkStatus, "UNVERIFIED");
+    assert.equal(first.body.pendingCount, 8);
+    assert.equal(first.body.appliedCount, 1);
+    assert.equal(first.body.entries[0]?.memberLinkStatus, undefined);
     assert.equal(first.body.entries[1]?.memberLinkStatus, "AMBIGUOUS");
     assert.equal(first.body.entries[2]?.memberLinkStatus, "UNMATCHED");
     assert.equal(first.body.rosterFilled, false);
     assert.match(inhouseSaveReply(first.body), /가입했다면 사이트 등록 이름/u);
-    assert.match(inhouseSaveReply(first.body), /이름\(닉네임\)/u);
+    assert.match(inhouseSaveReply(first.body), /이름\(사이트 닉네임\)/u);
     await assert.rejects(sync(first.body, [...legacyRoster(first.body), { ...row(10, `라인누락-${suffix}`), nameOnly: true }],
       { ...metadata, startTimeText: "22:00", scheduledStartAt: new Date(`${today}T22:00:00+09:00`).toISOString() }),
     (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED" && /10번.*협곡 라인/u.test(error.publicMessage ?? ""));
@@ -1466,7 +1466,7 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
     const renamed = await sync(full.body, renamedRoster, { ...metadata, startTimeText: "모이면", scheduledStartAt: null as unknown as string });
     assert.equal(renamed.body.entries.length, 10);
     assert.equal(renamed.body.roundMetadata?.startTimeText, "모이면");
-    assert.equal(renamed.body.entries[1]?.player, null, "a label is not proof of account ownership");
+    assert.equal(renamed.body.entries[1]?.player?.playerId, playerIds[1], "qualified exact match links roster membership without authenticating sender identity");
     await assert.rejects(sync(full.body, roster(full.body).map((entry) => entry.slotNo === 2 ? { ...entry, name: "충돌" } : entry)),
       (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
     const removed = await sync(renamed.body, roster(renamed.body).filter((entry) => entry.slotNo !== 9));
@@ -1482,14 +1482,14 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
     assert.equal(stale.body.createdCount, 0);
     assert.equal(stale.body.updatedCount, 0);
     assert.match(inhouseSaveReply(stale.body), /이번 요청으로 변경된 내용은 없어요/u);
-    await database.insert(seasonApplications).values({ id: randomUUID(), seasonId, playerId: playerIds[0]!, applyDate: today, recruitNo: 1,
+    await database.insert(seasonApplications).values({ id: randomUUID(), seasonId, playerId: playerIds[3]!, applyDate: today, recruitNo: 1,
       source: "SITE", sourceSlotNo: null, mainPosition: "TOP", subPositions: [], status: "APPLIED" });
     const mixed = await detail();
     assert.equal(mixed.body.entries.length, 10);
     const site = mixed.body.entries.find((entry) => entry.source === "SITE");
     assert.ok(site);
     assert.equal(site.protectedReason, "SITE");
-    // The separate pending label remains until an operator explicitly links it.
+    // The independent SITE participant remains protected from copied edits.
     const protectedRoster = roster(mixed.body);
     await assert.rejects(sync(mixed.body, protectedRoster.filter((entry) => entry.slotNo !== site.slotNo)),
       (error: unknown) => error instanceof KakaoAssistantError && error.code === "PRECONDITION_FAILED");
@@ -1503,6 +1503,36 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
     assert.doesNotMatch(v1StrictSeasonReply(closed.body, "STATUS"), /\[내전 #1\]/u);
     await assert.rejects(sync(mixed.body, protectedRoster), (error: unknown) => error instanceof KakaoAssistantError && error.code === "INVALID_STATE");
     assert.equal((await database.select().from(seasonApplications).where(eq(seasonApplications.seasonId, seasonId)))[0]?.status, "APPLIED");
+
+    // Explicit user-approved roster matching: exact active member or qualified
+    // homonym joins automatically; this is not sender/account authentication.
+    const secondDraft = await send({ action: "RESERVE", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", roundMetadata: metadata, participants: [] });
+    const syncSecond = (body: KakaoSeasonSnapshotDto, participants: Extract<KakaoSeasonSnapshotCommand, { action: "SYNC" }>["participants"]) => send({
+      action: "SYNC", seasonId, applyDate: today, recruitNo: 2, mode: "RIFT", participants, roundMetadata: metadata,
+      observedSlotNos: Array.from({ length: 20 }, (_, i) => i + 1), reserveSectionObserved: true,
+      copyGuard: { operatingDate: null, saveReference: null, formCode: body.formCode },
+    });
+    const lateName = `나중가입-${suffix}`;
+    const second = await syncSecond(secondDraft.body, [row(1, knownName), row(2, lateName), row(11, `${duplicateName}(Editable1${suffix})`)]);
+    assert.equal(second.body.entries.find((entry) => entry.slotNo === 1)?.player?.playerId, playerIds[0]);
+    assert.equal(second.body.entries.find((entry) => entry.slotNo === 11)?.player?.playerId, playerIds[1]);
+    assert.equal(second.body.entries.find((entry) => entry.slotNo === 11)?.reserve, true);
+    assert.doesNotMatch(inhouseSaveReply(second.body), /회원 연결 확인|운영진.*연결/u);
+    await assert.rejects(syncSecond(second.body, [...roster(second.body), row(3, `Editable0${suffix}`)]),
+      (error: unknown) => error instanceof KakaoAssistantError && error.code === "CONFLICT");
+    const latePlayerId = randomUUID();
+    await database.insert(players).values({ id: latePlayerId, memberName: lateName, memberNameNormalized: lateName,
+      nickname: `late${suffix}`, nicknameNormalized: `late${suffix}`, tagLine: "QA", tagLineNormalized: "qa" });
+    const autoLinked = await syncSecond(second.body, roster(second.body));
+    assert.equal(autoLinked.body.entries.find((entry) => entry.slotNo === 2)?.player?.playerId, latePlayerId);
+    assert.equal(autoLinked.body.entries.length, 3);
+    assert.equal(autoLinked.body.updatedCount, 1);
+    // A previously issued pending-row ID still identifies the same application
+    // after automatic linking, so legitimate field edits need no account review.
+    const afterLinkEdit = await syncSecond(second.body, roster(second.body).map((entry) => entry.slotNo === 2
+      ? { ...entry, mainPosition: "JGL" as const } : entry));
+    assert.equal(afterLinkEdit.body.entries.find((entry) => entry.slotNo === 2)?.mainPosition, "JGL");
+    assert.equal(afterLinkEdit.body.entries.find((entry) => entry.slotNo === 2)?.player?.playerId, latePlayerId);
   } finally {
     await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();

@@ -494,8 +494,11 @@ async function saveEditableInhouseCopy(transaction: V2Transaction, input: Readon
       revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
     }).where(eq(seasonKakaoPendingApplications.id, row.id!));
   }
-  for (const row of changed) {
+  let automaticallyLinkedUnchangedCount = 0;
+  for (const row of rows) {
+    const edited = changed.includes(row);
     if (row.kind === "APPLICATION") {
+      if (!edited) continue;
       await transaction.update(seasonApplications).set({
         sourceSlotNo: row.slotNo, sourceDisplayName: row.name, mainPosition: row.mainPosition,
         subPositions: [...row.subPositions], status: row.reserve ? "RESERVE" : "APPLIED",
@@ -504,35 +507,48 @@ async function saveEditableInhouseCopy(transaction: V2Transaction, input: Readon
       continue;
     }
     const previous = state.pending.find((item) => item.id === row.id);
-    const knownPlayerId = previous?.matchedPlayerId ?? null;
     const identity = normalizedIdentity(row.name);
-    const candidates = knownPlayerId ? [] : await transaction.select({ id: players.id }).from(players).where(and(
-      eq(players.status, "ACTIVE"), or(eq(players.memberNameNormalized, identity), eq(players.nicknameNormalized, identity)),
+    const qualifiedName = /^(.+?)\s*\(([^()]+)\)$/u.exec(identity);
+    const candidates = previous?.matchedPlayerId ? [] : await transaction.select({ id: players.id }).from(players).where(and(
+      eq(players.status, "ACTIVE"), qualifiedName
+        ? and(eq(players.memberNameNormalized, qualifiedName[1]!.trim()), eq(players.nicknameNormalized, qualifiedName[2]!.trim()))
+        : or(eq(players.memberNameNormalized, identity), eq(players.nicknameNormalized, identity)),
     )).limit(2);
+    // Match roster membership only. This does not authenticate a Kakao sender
+    // or grant access to a site account. Ambiguous/inactive names stay guests.
+    const knownPlayerId = previous?.matchedPlayerId ?? (candidates.length === 1 ? candidates[0]!.id : null);
+    const newlyLinked = !previous?.matchedPlayerId && knownPlayerId !== null;
+    if (!edited && !newlyLinked) continue;
+    if (!edited && newlyLinked) automaticallyLinkedUnchangedCount += 1;
+    if (knownPlayerId && state.pending.some((item) => item.id !== row.id && item.matchedPlayerId === knownPlayerId &&
+        rows.some((kept) => kept.id === item.id))) {
+      throw new KakaoAssistantError("CONFLICT", "같은 회원이 이미 다른 참가 칸에 있어요. 최신 양식에서 한 칸만 남겨 주세요.");
+    }
     const matchState = knownPlayerId && row.reserve ? "MATCHED_RESERVE" as const
       : candidates.length > 1 ? "AMBIGUOUS" as const : "UNMATCHED" as const;
-    if (knownPlayerId && !row.reserve) {
-      // A confirmed reserve mapping can move to main without proving identity again.
+    if (knownPlayerId) {
       const existing = (await transaction.select().from(seasonApplications).where(and(
         eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.applyDate, command.applyDate),
         eq(seasonApplications.recruitNo, command.recruitNo), eq(seasonApplications.playerId, knownPlayerId),
       )).for("update").limit(1))[0];
-      if (existing && existing.status !== "CANCELLED") throw new KakaoAssistantError("CONFLICT", "이미 연결된 회원의 다른 신청이 있어요. 운영진에게 중복 확인을 요청해 주세요.");
+      if (existing && existing.status !== "CANCELLED") throw new KakaoAssistantError("CONFLICT", "같은 회원이 이미 참가 중이에요. 최신 양식에서 기존 참가 칸을 수정해 주세요.");
+      // Newly linked reserves also use the ordinary application table so its
+      // unique player/round key prevents two aliases from claiming two seats.
       const values = { sourceSlotNo: row.slotNo, sourceDisplayName: row.name, mainPosition: row.mainPosition,
-        subPositions: [...row.subPositions], status: "APPLIED" as const, source: "KAKAO" as const,
+        subPositions: [...row.subPositions], status: row.reserve ? "RESERVE" as const : "APPLIED" as const, source: "KAKAO" as const,
         sourceRoomIdHash, sourceMode: command.mode, sourceReferenceHash: sourceHash, cancelledAt: null,
         reviewNote: null, reviewedAt: null, reviewedByUserAccountId: null, updatedAt: now };
       if (existing) await transaction.update(seasonApplications).set({ ...values, revision: sql`${seasonApplications.revision} + 1` }).where(eq(seasonApplications.id, existing.id));
-      else await transaction.insert(seasonApplications).values({ ...values, id: randomUUID(), seasonId: command.seasonId,
+      else await transaction.insert(seasonApplications).values({ ...values, id: row.id ?? randomUUID(), seasonId: command.seasonId,
         applyDate: command.applyDate, recruitNo: command.recruitNo, playerId: knownPlayerId, createdAt: now });
-      await transaction.update(seasonKakaoPendingApplications).set({ status: "RESOLVED", cancelledAt: null,
+      if (previous) await transaction.update(seasonKakaoPendingApplications).set({ status: "RESOLVED", linkReason: null, cancelledAt: null,
         resolvedAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
       }).where(eq(seasonKakaoPendingApplications.id, row.id!));
       continue;
     }
     const values = { slotNo: row.slotNo, suppliedName: row.name, suppliedRiotId: previous?.suppliedRiotId ?? null,
       mainPosition: row.mainPosition, subPositions: [...row.subPositions], reserve: row.reserve,
-      matchedPlayerId: knownPlayerId, matchState, linkReason: !knownPlayerId && candidates.length === 1 ? "UNVERIFIED" : null,
+      matchedPlayerId: knownPlayerId, matchState, linkReason: null,
       status: "ACTIVE" as const, sourceReferenceHash: sourceHash, sourceRoomIdHash, sourceMode: command.mode,
       cancelledAt: null, resolvedAt: null, updatedAt: now };
     if (previous) await transaction.update(seasonKakaoPendingApplications).set({ ...values, revision: sql`${seasonKakaoPendingApplications.revision} + 1` }).where(eq(seasonKakaoPendingApplications.id, previous.id));
@@ -544,7 +560,7 @@ async function saveEditableInhouseCopy(transaction: V2Transaction, input: Readon
     scheduledStartAt: startTimeText === round.startTimeText ? round.scheduledStartAt : metadata?.scheduledStartAt ? new Date(metadata.scheduledStartAt) : null,
     sourceReferenceHash: sourceHash, revision: sql`${seasonInhouseRounds.revision} + 1`, updatedAt: now,
   }).where(eq(seasonInhouseRounds.id, round.id));
-  return { createdCount: changed.filter((row) => !row.id).length, updatedCount: changed.filter((row) => row.id).length,
+  return { createdCount: changed.filter((row) => !row.id).length, updatedCount: changed.filter((row) => row.id).length + automaticallyLinkedUnchangedCount,
     cancelledCount: deleted.length, metadataUpdated, registrationCreated: round.status === "DRAFT",
     rosterFilled: state.rows.filter((row) => !row.reserve).length < 10 && rows.filter((row) => !row.reserve).length === 10 };
 }

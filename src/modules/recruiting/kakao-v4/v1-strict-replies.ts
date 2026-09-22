@@ -162,13 +162,11 @@ export function inhouseMemberLinkNotice(body: KakaoSeasonSnapshotDto, publicOrig
   ).map(inhouseDisplayName))].join(", ");
   const unmatched = names("UNMATCHED");
   const ambiguous = names("AMBIGUOUS");
-  const unverified = names("UNVERIFIED");
-  if (!unmatched && !ambiguous && !unverified) return "";
-  const lines = ["🔎 회원 연결 안내", "참가 접수는 완료됐어요. 아래 이름을 확인해주세요."];
+  if (!unmatched && !ambiguous) return "";
+  const lines = ["참가 접수는 완료됐어요."];
   if (unmatched) lines.push("", `이름 확인: ${unmatched}`, "가입했다면 사이트 등록 이름으로 수정해주세요.",
-    "아직 미가입이면 가입 후 운영진에게 회원 연결을 요청해주세요.", `${publicOrigin.replace(/\/$/u, "")}/signup`);
-  if (ambiguous) lines.push("", `동명이인 확인: ${ambiguous}`, "이름(닉네임)으로 구분하고 운영진에게 정확한 계정 연결을 요청해주세요.");
-  if (unverified) lines.push("", `회원 연결 확인: ${unverified}`, "일치하는 회원이 있어요. 운영진 확인 후 연결됩니다.");
+    "일치하는 활성 회원이 한 명이면 자동 연결돼요. 미가입자도 이름으로 참가할 수 있어요.", `${publicOrigin.replace(/\/$/u, "")}/signup`);
+  if (ambiguous) lines.push("", `동명이인 확인: ${ambiguous}`, "이름(사이트 닉네임)으로 구분하면 정확히 일치하는 회원에게 자동 연결돼요.");
   return lines.join("\n");
 }
 

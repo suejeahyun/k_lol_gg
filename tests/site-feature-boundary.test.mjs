@@ -55,7 +55,7 @@ test("Kakao help feature controls its public guide without exposing configuratio
   assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
   assert.match(page, /신규·교체 참가자는 라인이 필요/);
   assert.match(page, /이름\/all/);
-  assert.match(page, /같아도 자동으로 계정을 연결하지 않아요/);
+  assert.match(page, /정확히 일치하는 활성 회원이 한 명이면 참가 명단에 자동 연결/);
   assert.match(page, /사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정/);
   assert.match(page, /번호 행을 남기고 이름만 비운/);
   assert.doesNotMatch(page, /시간·게임은 복사한 명단에서 수정할 수 없어요|전체 전송은 이름 추가용/);
@@ -82,7 +82,7 @@ test("recruit guide teaches participation and guarded edits before optional crea
   assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
   assert.match(page, /신규·교체 참가자는 라인이 필요/);
   assert.match(page, /이름\/all/);
-  assert.match(page, /같아도 자동으로 계정을 연결하지 않아요/);
+  assert.match(page, /정확히 일치하는 활성 회원이 한 명이면 참가 명단에 자동 연결/);
   assert.match(page, /사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정/);
   assert.doesNotMatch(page, /시간·게임은 복사한 명단에서 수정할 수 없어요|이름을 지워 전송하지 마세요/);
 });

@@ -87,7 +87,7 @@ export function planInhouseCopyEdits(input: Readonly<{
     if (handled.has(next.slotNo) || input.original.some((row) => row.slotNo === next.slotNo)) continue;
     const saved = result.find((row) => identity(row.name) === identity(next.name));
     if (saved) {
-      if (!rowSame(saved, { ...next, pending: saved.pending })) return { error: "같은 이름이 두 번 있어요. 동명이인은 이름(구분 닉네임)으로 작성해 주세요." };
+      if (!rowSame(saved, { ...next, pending: saved.pending })) return { error: "이 양식이 발급된 뒤 해당 참가자가 등록되었어요. 아래 최신 양식에서 라인이나 참가 위치를 수정해 주세요." };
       continue;
     }
     let slotNo = next.slotNo;

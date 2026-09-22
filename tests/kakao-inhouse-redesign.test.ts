@@ -82,9 +82,9 @@ test("member guidance distinguishes no match, many matches and unverified match 
   const reply = inhouseMemberLinkNotice({ ...body, entries }, "https://example.invalid");
   assert.match(reply, /참가 접수는 완료/u);
   assert.match(reply, /가입했다면 사이트 등록 이름/u);
-  assert.match(reply, /아직 미가입이면/u);
+  assert.match(reply, /미가입자도 이름으로 참가/u);
   assert.match(reply, /동명이인 확인: 가상1/u);
-  assert.match(reply, /회원 연결 확인: 가상2/u);
+  assert.doesNotMatch(reply, /회원 연결 확인|운영진.*연결/u);
   assert.match(reply, /https:\/\/example.invalid\/signup/u);
   assert.doesNotMatch(reply, /가상0.*미가입자입니다/u);
 });
@@ -116,6 +116,22 @@ test("copy merge preserves concurrent additions, applies deletion and field edit
   assert.ok(planInhouseCopyEdits({ original: [original], current: [{ ...original, name: "먼저수정" }], observedSlotNos: [1], capacity: 10, submitted: [participant({ ...original, name: "다르게수정" })] }).error);
 });
 
+test("editing a participant added after an empty form reports stale form, while latest form edits preserve other people", () => {
+  const current: InhouseCopyRow[] = [
+    { id: "entry-a", kind: "PENDING", slotNo: 1, name: "합성가온", pending: true, reserve: false, mainPosition: "MID", subPositions: ["TOP"] },
+    { id: "entry-b", kind: "PENDING", slotNo: 2, name: "합성나래", pending: true, reserve: false, mainPosition: "ADC", subPositions: ["SUP"] },
+  ];
+  const submitted = current.map((row) => ({ ...row, riotId: null,
+    ...(row.slotNo === 1 ? { mainPosition: "ADC" as const, subPositions: ["MID" as const] } : {}) }));
+  const stale = planInhouseCopyEdits({ original: [], current, submitted, observedSlotNos: [1, 2], capacity: 10 });
+  assert.match(stale.error ?? "", /양식이 발급된 뒤.*최신 양식/u);
+  assert.doesNotMatch(stale.error ?? "", /이름이 두 번/u);
+  const latest = planInhouseCopyEdits({ original: current, current, submitted, observedSlotNos: [1, 2], capacity: 10 });
+  assert.equal(latest.rows?.[0]?.id, "entry-a");
+  assert.equal(latest.rows?.[0]?.mainPosition, "ADC");
+  assert.deepEqual(latest.rows?.[1], current[1]);
+});
+
 test("line errors are actionable without calling storage; saved result survives overview read failure", async () => {
   let writes = 0;
   const dispatcher = new KakaoV4CommandDispatcher({ recruiting: {
@@ -130,6 +146,6 @@ test("line errors are actionable without calling storage; saved result survives 
   assert.equal(writes, 0);
   const valid = await service.execute({ ...envelope(form.replace("\n1.\n", "\n1. 가온/all\n")), eventId: "valid-submit" }, "key");
   assert.match(valid.reply, /내전등록 완료/u);
-  assert.match(valid.reply, /현재 목록을 불러오지 못/u);
+  assert.match(valid.reply, /양식코드: ABCDE-FGHJK/u);
   assert.equal(writes, 1);
 });
