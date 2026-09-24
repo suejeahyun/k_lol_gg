@@ -1,5 +1,8 @@
 export const OPERATION_FORM_TYPES = ["friends", "leaves", "meetups", "suggestions"] as const;
 export type OperationFormType = (typeof OPERATION_FORM_TYPES)[number];
+export const operationFormTypeLabels: Readonly<Record<OperationFormType, string>> = Object.freeze({
+  friends: "디스코드 초대", leaves: "외출", meetups: "모임", suggestions: "건의사항",
+});
 
 export const OPERATION_FORM_STATUSES = ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "CANCELLED"] as const;
 export type OperationFormStatus = (typeof OPERATION_FORM_STATUSES)[number];

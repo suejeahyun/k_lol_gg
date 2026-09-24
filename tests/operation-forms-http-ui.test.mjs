@@ -37,4 +37,7 @@ test("admin pages expose filtered empty/error/unavailable states and compatibili
   assert.match(list, /관리자 · 운영 신청서/u); assert.match(detail, /operationFormStatusLabels\[form\.status\]/u);
   assert.doesNotMatch(`${list}\n${detail}`, /ADMIN · OPERATION FORMS|ADMIN · DETAIL|revision \{form\.revision\}/u);
   assert.match(legacy, /permanentRedirect/u); assert.match(legacy, /\/admin\/operation-forms\?type=/u);
+  assert.match(list, /operationFormTypeLabels as typeLabels/u);
+  assert.match(list, /href="\/admin\/discipline">운영·감사/u);
+  assert.doesNotMatch(list, /친구 신청|탈퇴·휴식/u);
 });

@@ -3,13 +3,13 @@ import Link from "next/link";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import {
   isOperationFormStatus, isOperationFormType, OPERATION_FORM_STATUSES, OPERATION_FORM_TYPES,
-  type OperationFormType,
+  operationFormTypeLabels as typeLabels,
 } from "@/modules/recruiting/operation-forms/domain";
 import { loadRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 
 import styles from "./operation-forms.module.css";
 
-export const typeLabels: Readonly<Record<OperationFormType, string>> = Object.freeze({ friends: "친구 신청", leaves: "탈퇴·휴식", meetups: "모임 신청", suggestions: "건의" });
+export { operationFormTypeLabels as typeLabels } from "@/modules/recruiting/operation-forms/domain";
 export const operationFormStatusLabels = Object.freeze({ PENDING: "대기", IN_REVIEW: "검토 중", COMPLETED: "완료", REJECTED: "반려", CANCELLED: "취소" });
 
 export async function AdminOperationFormList({ selectedType, selectedStatus }: { selectedType?: string; selectedStatus?: string }) {
@@ -18,7 +18,7 @@ export async function AdminOperationFormList({ selectedType, selectedStatus }: {
   const status = isOperationFormStatus(selectedStatus) ? selectedStatus : undefined;
   const result = await loadRuntimeOperationForms((service) => service.list({ formType, status }));
   return <main className={styles.page}>
-    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>운영 신청서</h1><p>카카오에서 접수된 네 가지 신청을 분류하고 상태와 관리 메모를 처리합니다.</p></div><Link className={styles.link} href="/admin/kakao">카카오 관리</Link></header>
+    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>{formType ? typeLabels[formType] : "운영 신청서"}</h1><p>카카오에서 접수된 모임, 외출, 건의사항과 디스코드 초대를 확인하고 처리합니다.</p></div><Link className={styles.link} href="/admin/discipline">운영·감사</Link></header>
     <nav className={styles.typeNav} aria-label="운영 신청 유형">
       <Link href="/admin/operation-forms" aria-current={!formType ? "page" : undefined}>전체</Link>
       {OPERATION_FORM_TYPES.map((type) => <Link key={type} href={`/admin/operation-forms/${type}`} aria-current={formType === type ? "page" : undefined}>{typeLabels[type]}{result.state === "ready" ? ` ${result.data.counts[type]}` : ""}</Link>)}

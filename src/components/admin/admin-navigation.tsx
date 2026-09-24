@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   BookOpenCheck,
   Bot,
@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import {
   ADMIN_WORKSPACES,
+  ADMIN_OPERATION_FORM_LINKS,
+  getAdminOperationFormType,
   isAdminWorkspaceActive,
   type AdminWorkspaceIconKey,
 } from "@/modules/admin/domain/admin-workspaces";
@@ -62,6 +64,33 @@ export function AdminWorkspaceNavigation() {
   return <nav aria-label="관리자 작업 공간" className={styles.nav}><WorkspaceLinks /></nav>;
 }
 
+export function AdminBreadcrumb() {
+  const pathname = usePathname();
+  const search = useSearchParams();
+  const operationFormType = getAdminOperationFormType(pathname, search.get("type"));
+  const formLink = ADMIN_OPERATION_FORM_LINKS.find((link) => link.formType === operationFormType);
+  const operations = isAdminWorkspaceActive(pathname, "/admin/discipline");
+  return <nav className={styles.breadcrumb} aria-label="관리자 위치" data-workspace={operations ? "operations" : undefined}>
+    <Link href="/admin">관리자</Link><span aria-hidden="true">/</span>
+    {operations ? <>
+      <Link href="/admin/discipline">운영·감사</Link>
+      {pathname.startsWith("/admin/operation-forms") ? <><span aria-hidden="true">/</span><span aria-current="page">{formLink?.label ?? "운영 신청서"}</span></> : null}
+    </> : <span>보호된 작업 공간</span>}
+  </nav>;
+}
+
+export function AdminOperationsNavigation() {
+  const pathname = usePathname();
+  const search = useSearchParams();
+  if (!isAdminWorkspaceActive(pathname, "/admin/discipline")) return null;
+  const formType = getAdminOperationFormType(pathname, search.get("type"));
+  return <nav className={styles.operationsNav} aria-label="운영·감사 메뉴">
+    <Link href="/admin/discipline" aria-current={pathname.startsWith("/admin/discipline") ? "page" : undefined}>징계</Link>
+    <Link href="/admin/operation-forms" aria-current={pathname === "/admin/operation-forms" && !formType ? "page" : undefined}>전체 신청</Link>
+    {ADMIN_OPERATION_FORM_LINKS.map((link) => <Link key={link.formType} href={link.href} aria-current={link.formType === formType ? "page" : undefined}>{link.label}</Link>)}
+  </nav>;
+}
+
 export function MobileAdminNavigation({ roleLabel }: { roleLabel: string }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -82,7 +111,7 @@ export function MobileAdminNavigation({ roleLabel }: { roleLabel: string }) {
       ) : null}
       <nav className={styles.mobileBottom} aria-label="모바일 관리자 바로가기">
         <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined}><LayoutDashboard aria-hidden="true" /><span>홈</span></Link>
-        <Link href={workHref}><Scale aria-hidden="true" /><span>작업</span></Link>
+        <Link href={workHref} aria-current={current && current.id !== "home" ? "page" : undefined}><Scale aria-hidden="true" /><span>{current?.id === "operations" ? "운영" : "작업"}</span></Link>
         <Link href="/admin/search" aria-current={pathname === "/admin/search" ? "page" : undefined}><Search aria-hidden="true" /><span>검색</span></Link>
         <button type="button" aria-controls="admin-mobile-menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Menu aria-hidden="true" /><span>메뉴</span></button>
       </nav>

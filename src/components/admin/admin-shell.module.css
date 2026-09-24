@@ -92,6 +92,7 @@
 .nav a:focus-visible,
 .brand:focus-visible,
 .breadcrumb a:focus-visible,
+.operationsNav a:focus-visible,
 .topActions a:focus-visible,
 .account button:focus-visible,
 .mobileBottom a:focus-visible,
@@ -153,7 +154,7 @@
 }
 
 .breadcrumb, .topActions, .topActions a { display: flex; align-items: center; }
-.breadcrumb { gap: .5rem; color: var(--admin-muted); font-size: .8125rem; }
+.breadcrumb { min-width: 0; flex-wrap: wrap; gap: .35rem .5rem; color: var(--admin-muted); font-size: .8125rem; }
 .breadcrumb a { min-width: 2.75rem; min-height: 2.75rem; display: flex; align-items: center; justify-content: center; color: #25344a; font-weight: 850; text-decoration: none; }
 .topActions { gap: .5rem; }
 .topActions a { gap: .35rem; min-height: 2.75rem; border-radius: .75rem; color: #40526b; padding: 0 .65rem; font-size: .8125rem; font-weight: 780; text-decoration: none; }
@@ -162,12 +163,19 @@
 .environment { border: 1px solid #b9d0ec; border-radius: 999px; background: #edf5ff; color: #285a9e; padding: .35rem .6rem; font-size: .75rem; font-weight: 900; letter-spacing: .04em; }
 .mobileBottom, .mobileMenu { display: none; }
 
+.operationsNav { display: flex; flex-wrap: wrap; gap: .4rem; border-bottom: 1px solid var(--admin-border); padding: .6rem 1.25rem; background: var(--admin-surface); }
+.operationsNav a { display: inline-flex; align-items: center; min-height: 2.75rem; border: 1px solid var(--admin-border); border-radius: .75rem; color: var(--admin-text); padding: .45rem .75rem; font-size: .8125rem; font-weight: 750; text-decoration: none; }
+.operationsNav a:hover, .operationsNav a[aria-current="page"] { background: var(--admin-accent-soft); border-color: var(--admin-accent); color: var(--admin-accent); }
+
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { display: none; }
   .content { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
   .topbar { min-height: 3.5rem; padding: 0 .85rem; }
-  .breadcrumb > span:last-child, .topActions a span { display: none; }
+  .breadcrumb > span:last-child:not([aria-current]), .topActions a span { display: none; }
+  .breadcrumb[data-workspace="operations"] > a:first-child,
+  .breadcrumb[data-workspace="operations"] > span:nth-child(2) { display: none; }
+  .operationsNav { padding-inline: .85rem; }
   .topActions a { width: 2.75rem; justify-content: center; padding: 0; }
   .mobileBottom {
     min-height: calc(4.15rem + env(safe-area-inset-bottom));

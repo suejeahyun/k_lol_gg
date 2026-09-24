@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import type { AuthSession } from "@/modules/auth/domain/auth-session";
 import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
-import { AdminWorkspaceNavigation, MobileAdminNavigation } from "./admin-navigation";
+import { AdminBreadcrumb, AdminOperationsNavigation, AdminWorkspaceNavigation, MobileAdminNavigation } from "./admin-navigation";
 import { AdminLogoutButton } from "./admin-logout-button";
 import styles from "./admin-shell.module.css";
 
@@ -38,13 +38,14 @@ export function AdminShell({ session, children }: { session: AuthSession; childr
       </aside>
       <div className={styles.content}>
         <header className={styles.topbar}>
-          <div className={styles.breadcrumb}><Link href="/admin">관리자</Link><span aria-hidden="true">/</span><span>보호된 작업 공간</span></div>
+          <AdminBreadcrumb />
           <div className={styles.topActions}>
             <span className={styles.environment}>{environmentLabel()}</span>
             <Link href="/admin/search" aria-label="전체 검색"><Search aria-hidden="true" /><span>전체 검색</span></Link>
             <Link href="/admin/security" aria-label="보안 설정"><ShieldCheck aria-hidden="true" /><span>보안</span></Link>
           </div>
         </header>
+        <AdminOperationsNavigation />
         {children}
         <MobileAdminNavigation roleLabel={accountRoleLabel(session.role)} />
       </div>
