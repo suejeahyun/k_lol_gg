@@ -1,0 +1,39 @@
+{
+  "commit": "39677494087e044a03fa8f3af86e73770a7e3993",
+  "fullCheck": {
+    "command": "npm run check",
+    "status": "PASS",
+    "contracts": 435,
+    "unitPassed": 958,
+    "unitSkipped": 1,
+    "lintErrors": 0,
+    "existingLintWarnings": 57,
+    "typecheck": "PASS",
+    "erd": "PASS",
+    "guideArt": "PASS",
+    "build": "PASS"
+  },
+  "focused": {
+    "mmrUnitPassed": 13,
+    "postgresMajor": 18,
+    "mmrDatabaseContractsPassed": 1,
+    "disposableClusterRemoved": true,
+    "handlerAuthentication": "PASS",
+    "concurrencyAndLockTimeout": "PASS",
+    "legacyFormulaPreservation": "PASS",
+    "explicitAdminTransition": "PASS"
+  },
+  "productionBrowser": {
+    "normalRankingTimestamp": "PASS",
+    "allParticipantsLink": "PASS",
+    "allParticipantsCount": 93,
+    "mmrTimestampAndTransitionNotice": "PASS",
+    "profileTimestamp": "PASS",
+    "mobileViewportWidth": 360,
+    "mobileDocumentWidth": 345
+  },
+  "secrets": "PASS",
+  "diffCheck": "PASS",
+  "productionMmrRecalculation": "NOT_EXECUTED_PENDING_CONFIRMATION",
+  "specificMissingPlayer": "AWAITING_NAME_OR_LINK"
+}

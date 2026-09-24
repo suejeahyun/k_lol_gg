@@ -1,0 +1,62 @@
+{
+  "commit": "39677494087e044a03fa8f3af86e73770a7e3993",
+  "status": "PRODUCTION",
+  "provider": "vercel",
+  "deploymentId": "dpl_3zvcSXir3SpHRVrMYWX1WhiB2SYB",
+  "url": "https://k-lol-kmfq3qhoi-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://k-lol-gg.vercel.app",
+  "verifiedAt": "2026-09-24T21:33:56.689Z",
+  "healthStatus": "ready",
+  "smoke": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "health": "ready"
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "status": 401,
+      "code": "JOB_AUTH_FAILED"
+    },
+    {
+      "path": "/api/rankings?minParticipation=0",
+      "status": 200,
+      "players": 93,
+      "projection": {
+        "generation": 6,
+        "sourceMatchCount": 47,
+        "sourceGameCount": 104
+      }
+    },
+    {
+      "path": "/api/rankings/mmr",
+      "status": 200,
+      "summary": {
+        "status": "READY",
+        "generation": 1,
+        "formulaVersion": "V1_INTERNAL_MMR_1",
+        "formulaTransition": "ADMIN_RECALCULATION_REQUIRED",
+        "sourceMatchCount": 42,
+        "sourceGameCount": 91,
+        "sourceAdjustmentCount": 0,
+        "pendingSourceCount": 11,
+        "calculatedAt": "2026-09-07T15:36:32.075Z"
+      }
+    }
+  ],
+  "ci": {
+    "checkedAt": "2026-09-24T21:36:12.564Z",
+    "sha": "39677494087e044a03fa8f3af86e73770a7e3993",
+    "runs": [
+      {
+        "id": 36062024531,
+        "name": "V2 CI",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/suejeahyun/k_lol_gg/actions/runs/36062024531",
+        "event": "push",
+        "branch": "main"
+      }
+    ]
+  }
+}
