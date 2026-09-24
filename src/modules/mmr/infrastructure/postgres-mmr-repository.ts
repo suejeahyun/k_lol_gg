@@ -625,8 +625,13 @@ export class PostgresMmrRepository implements MmrRepository {
 
   async catchUp(now: Date): Promise<MmrCatchUpResult> {
     return withTransaction(this.database, async (transaction) => {
+      await transaction.execute(sql`SET LOCAL statement_timeout = '10s'`);
+      await transaction.execute(sql`SET LOCAL lock_timeout = '2s'`);
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended('mmr:projection:global', 0))`);
       const state = await currentState(transaction);
+      if (state.status === "READY" && mmrFormulaTransitionState(state.formulaVersion)) {
+        return { kind: "ADMIN_RECALCULATION_REQUIRED", generation: state.generation };
+      }
       const pending = await pendingSourceRows(transaction);
       if (state.status === "READY" && pending.length === 0) return { kind: "IDLE", generation: state.generation };
       const result = await publishProjection(transaction, {

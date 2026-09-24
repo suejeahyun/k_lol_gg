@@ -6,6 +6,7 @@ import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session
 import { isStatisticsUuid } from "@/modules/statistics/application/statistics-query";
 import { buildPublicRankingView, isPublicRankingView, publicRankingViewDefinition, publicRankingViewDefinitions } from "@/modules/statistics/domain/public-ranking-view";
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
+import { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date-time";
 
 import styles from "./rankings.module.css";
 
@@ -70,6 +71,12 @@ export default async function RankingsPage({
             <Link className={styles.mmrLink} href="/rankings/mmr">MMR 랭킹 <ArrowRight size={16} aria-hidden="true" /></Link>
           </form>
 
+          <section className={styles.explanation} aria-label="랭킹 반영 기준">
+            <span>참여 횟수는 게임 수가 아닌 내전 회차 기준입니다. 현재는 {minimumParticipation > 0 ? `시즌 참여 ${minimumParticipation}회 이상인 플레이어` : "모든 참가자"}를 표시합니다.</span>
+            {minimumParticipation > 0 ? <Link href={{ pathname: "/rankings", query: { ...(result.data.ranking.season ? { seasonId: result.data.ranking.season.id } : {}), minParticipation: "0", view: requestedView } }}>전체 참가자 보기 · 참여 제한 없음</Link> : null}
+            <span>마지막 집계: {formatOptionalKoreanDateTime(result.data.ranking.projection?.calculatedAt ?? null)} · 공개된 경기 결과가 반영됩니다.</span>
+          </section>
+
           {result.data.ranking.season === null ? (
             <section className={styles.state}><Sparkles /><h2>공개할 시즌이 아직 없어요.</h2><p>활성 또는 종료 시즌이 준비되면 랭킹을 확인할 수 있습니다.</p></section>
           ) : result.data.ranking.projection?.status !== "READY" ? (
@@ -90,7 +97,7 @@ export default async function RankingsPage({
                   return <Link key={view.id} href={`/rankings?${params}`} aria-current={view.id === requestedView ? "page" : undefined}>{view.label}</Link>;
                 })}
               </nav>
-              <section className={styles.explanation} aria-label="랭킹 기준 안내"><strong>{selectedView.label}</strong><span>{selectedView.description}입니다. 최소 참여 {minimumParticipation}회인 공개 경기만 반영합니다. {selectedView.tieBreakDescription}.</span></section>
+              <section className={styles.explanation} aria-label="랭킹 기준 안내"><strong>{selectedView.label}</strong><span>{selectedView.description}입니다. {selectedView.tieBreakDescription}.</span></section>
               <section className={styles.podium} aria-label={`상위 ${selectedView.label} 랭킹`}>
                 {rankedRows.slice(0, 3).map((row, index) => (
                   <Link key={row.playerId} href={`/players/${row.playerId}`} data-rank={index + 1}>

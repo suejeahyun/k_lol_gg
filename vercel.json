@@ -7,6 +7,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/mmr-projection",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/kakao-daily-close",
       "schedule": "0 21 * * *"
     },

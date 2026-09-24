@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 import type { TransactionSessionActor } from "../../src/modules/auth/domain/transaction-session";
 import { MmrService, MmrServiceError, type MmrCommandContext } from "../../src/modules/mmr";
 import { PostgresMmrRepository } from "../../src/modules/mmr/infrastructure/postgres-mmr-repository";
+import { handleMmrProjectionCron } from "../../src/modules/mmr/infrastructure/mmr-projection-cron";
 import { PostgresTeamBalanceRatingProvider } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-rating-provider";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
@@ -65,6 +66,13 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
   const expiresAt = new Date(now.getTime() + 60 * 60 * 1_000);
   const superActor = { userAccountId: superId, sessionId: superSessionId, role: "SUPER_ADMIN", authVersion: 0 } as const;
   const adminActor = { userAccountId: adminId, sessionId: adminSessionId, role: "ADMIN", authVersion: 0 } as const;
+
+  function runCron(at = now) {
+    const secret = "synthetic-mmr-cron-secret-00000000";
+    return handleMmrProjectionCron(new Request("https://v2.example/api/cron/mmr-projection", {
+      headers: { authorization: `Bearer ${secret}` },
+    }), { secret, getService: () => service, now: () => at });
+  }
 
   async function enqueue(matchId: string, revision: number, action: "PUBLISHED" | "AMENDED", eventNow: Date) {
     const id = randomUUID();
@@ -141,9 +149,23 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     await enqueue(matchIds[0], 0, "PUBLISHED", now);
     await enqueue(matchIds[1], 0, "PUBLISHED", new Date(now.getTime() + 1));
 
-    const first = await repository.catchUp(now);
-    assert.deepEqual(first, { kind: "REBUILT", generation: 1, consumedEventCount: priorUnconsumedEventCount + 2 });
-    assert.deepEqual(await repository.catchUp(now), { kind: "IDLE", generation: 1 });
+    const lockHolder = await pool.connect();
+    try {
+      await lockHolder.query("BEGIN");
+      await lockHolder.query("select pg_advisory_xact_lock(hashtextextended('mmr:projection:global', 0))");
+      const lockedResponse = await runCron();
+      assert.equal(lockedResponse.status, 503, "a competing projection lock must time out instead of exhausting the function duration");
+      assert.equal((await lockedResponse.json()).code, "MMR_JOB_UNAVAILABLE");
+      assert.equal((await database.select().from(mmrConsumerReceipts)).length, 0);
+      assert.equal((await database.select().from(mmrProjectionRuns)).length, 0);
+    } finally {
+      await lockHolder.query("ROLLBACK");
+      lockHolder.release();
+    }
+    const first = await runCron();
+    assert.equal(first.status, 200);
+    assert.deepEqual(await first.json(), { job: "mmr-projection", kind: "REBUILT", generation: 1, consumedEventCount: priorUnconsumedEventCount + 2 });
+    assert.deepEqual(await (await runCron()).json(), { job: "mmr-projection", kind: "IDLE", generation: 1, consumedEventCount: 0 });
     assert.equal((await database.select().from(mmrPlayerProfiles)).length, 10);
     assert.equal((await database.select().from(mmrPlayerPositionProfiles)).length, 50);
     assert.equal((await database.select().from(mmrMatchResultEvents)).length, 20);
@@ -161,7 +183,13 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
       eq(matchParticipants.gameId, gameIds[0]), eq(matchParticipants.playerId, playerIds[0]!),
     ));
     await enqueue(matchIds[0], 1, "AMENDED", new Date(now.getTime() + 2));
-    assert.deepEqual(await repository.catchUp(new Date(now.getTime() + 2)), { kind: "REBUILT", generation: 2, consumedEventCount: 1 });
+    const simultaneous = await Promise.all([runCron(new Date(now.getTime() + 2)), runCron(new Date(now.getTime() + 2))]);
+    assert.ok(simultaneous.every((response) => response.status === 200));
+    const simultaneousBodies = await Promise.all(simultaneous.map((response) => response.json()));
+    assert.deepEqual(simultaneousBodies.sort((left, right) => left.kind.localeCompare(right.kind)), [
+      { job: "mmr-projection", kind: "IDLE", generation: 2, consumedEventCount: 0 },
+      { job: "mmr-projection", kind: "REBUILT", generation: 2, consumedEventCount: 1 },
+    ]);
     const afterSecond = (
       await database.select().from(mmrMatchResultEvents).where(and(
         eq(mmrMatchResultEvents.generation, 2), eq(mmrMatchResultEvents.gameId, gameIds[1]), eq(mmrMatchResultEvents.playerId, playerIds[0]!),
@@ -169,11 +197,28 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     )[0]!;
     assert.notEqual(afterSecond.expectedWinRateBp, beforeSecond.expectedWinRateBp, "earlier corrections must affect later replay");
 
+    await database.update(mmrProjectionStates).set({ formulaVersion: "V1_INTERNAL_MMR_1" }).where(eq(mmrProjectionStates.key, "GLOBAL"));
+    const transitionBefore = (await database.select().from(mmrProjectionStates))[0]!;
+    const receiptsBefore = (await database.select().from(mmrConsumerReceipts)).length;
+    const profilesBefore = (await database.select().from(mmrPlayerProfiles)).length;
+    for (const pending of [false, true]) {
+      if (pending) await enqueue(matchIds[0], 2, "AMENDED", new Date(now.getTime() + 3));
+      const blocked = await runCron(new Date(now.getTime() + 3));
+      assert.equal(blocked.status, 409, "legacy formula requires an administrator even when the event queue is empty");
+      assert.equal((await blocked.json()).code, "MMR_FORMULA_TRANSITION_REQUIRED");
+      assert.deepEqual((await database.select().from(mmrProjectionStates))[0], transitionBefore);
+      assert.equal((await database.select().from(mmrConsumerReceipts)).length, receiptsBefore);
+      assert.equal((await database.select().from(mmrPlayerProfiles)).length, profilesBefore);
+      assert.equal((await database.select().from(mmrProjectionRuns)).length, 2);
+    }
+
     const recalculateContext = commandContext(superActor, "recalculate-1");
     const recalculated = await service.recalculate(recalculateContext, 2, {}, now);
     assert.equal(recalculated.revision, 3);
     assert.equal((await service.recalculate(recalculateContext, 2, {}, now)).replayed, true);
     assert.equal((await database.select().from(mmrProjectionRuns)).length, 3);
+    assert.equal((await database.select().from(mmrProjectionStates))[0]?.formulaVersion, "V2_DETERMINISTIC_1");
+    assert.deepEqual(await (await runCron()).json(), { job: "mmr-projection", kind: "IDLE", generation: 3, consumedEventCount: 0 });
     await assert.rejects(service.recalculate(recalculateContext, 1, {}, now), serviceError("IDEMPOTENCY_MISMATCH"));
     await assert.rejects(service.recalculate(commandContext(adminActor, "admin-denied"), 3, {}, now), serviceError("FORBIDDEN"));
 

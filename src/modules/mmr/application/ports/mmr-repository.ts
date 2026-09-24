@@ -76,6 +76,7 @@ export type MmrAdjustmentInput = Readonly<{
 
 export type MmrCatchUpResult =
   | Readonly<{ kind: "IDLE"; generation: number }>
+  | Readonly<{ kind: "ADMIN_RECALCULATION_REQUIRED"; generation: number }>
   | Readonly<{ kind: "REBUILT"; generation: number; consumedEventCount: number }>;
 
 export interface MmrRepository {

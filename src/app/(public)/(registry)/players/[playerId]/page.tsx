@@ -13,6 +13,7 @@ import { resolveRuntimePublicPlayerLegacyMapping } from "@/modules/players/infra
 import type { PublicRiotSummaryDto } from "@/modules/riot/domain/riot-integration";
 import { loadRuntimePublicRiotProfile } from "@/modules/riot/infrastructure/runtime-riot";
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
+import { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date-time";
 
 import championStyles from "./player-champions.module.css";
 
@@ -161,7 +162,7 @@ export default async function PlayerDetailPage({
           <section className="profile-records" aria-labelledby="profile-records-title">
             <div className="section-heading">
               <div><p>RECORDS</p><h2 id="profile-records-title">시즌·포지션·챔피언 기록</h2></div>
-              <span>{statisticsResult.state === "ready" && statisticsResult.data?.season ? statisticsResult.data.season.name : "공개 통계"}</span>
+              <span>{statisticsResult.state === "ready" && statisticsResult.data?.season ? `${statisticsResult.data.season.name} · 마지막 집계: ${formatOptionalKoreanDateTime(statisticsResult.data.projection?.calculatedAt ?? null)}` : "공개 통계"}</span>
             </div>
             {statisticsResult.state === "unavailable" ? (
               <div className="profile-records__state" role="status">통계를 확인할 수 없어요. 잠시 후 다시 확인해 주세요.</div>
