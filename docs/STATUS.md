@@ -3,9 +3,10 @@
 ## 2026-09-25 Riot 플레이어 상세 — 운영 배포, 전체 수집 대기
 
 - 종합·챔피언·리포트, 모스트·라인/날짜별 통계·관측 LP·복수 필터·참가자 스코어보드·성장·룬/빌드·포탑 방패 관측 평균·기기 분석 저장. [기능 대응표](./parity/RIOT_PLAYER_DETAIL_PARITY.md).
-- source `63568981e3aab41ba18424075b1b7b239078481e`, tag `riot-player-detail-v1.0.0`, Vercel `dpl_KyLuZt71CnB4iGbXie8dUkBZPUHV` READY·운영 alias 일치. CI36069966400 success, health200. [QA](./qa-evidence/riot-player-detail-v1.0.0-2026-09-25/README.md).
-- 계약441·단위995(+DB skip1)·격리 Riot DB6·타입/lint/빌드·전체 Git 비밀정보 검사 PASS. 백업 복원 후 additive0045 적용·재실행 no-op PASS.
+- 후속 source `3327a585f421eb6a1feec049c4af1884b50c2b07`, tag `riot-player-detail-v1.0.1`, Vercel `dpl_7zAeH4K1doePKpu84btjQAYZvLgq` READY·운영 alias 일치·health200. 모바일 중첩 표/밴 목록 넘침과 SVG title·시간 locale의 SSR 불일치 수정. 실제 운영 320/360px 3개 경기 상세 탭 넘침 없음, 종합/챔피언/리포트 직접 재진입 새 console 오류0. [최신 QA](./qa-evidence/riot-player-detail-v1.0.1-2026-09-25/README.md).
+- 계약445·단위995(+DB skip1)·타입/lint/빌드·비밀정보 검사 PASS. 기반1.0.0의 격리 Riot DB6, 백업 복원 후 additive0045 적용·재실행 no-op PASS. 후속 UI 패치는 DB 변경 없음. CI 결과는 최신 QA의 ci.json에 보존.
 - 활성142명 검토: 연결106명, 연결해제24·미연결12는 등록ID 확인 필요. 비활성56명 새연결 제외. 브라우저 관리자 세션 초기화로 전체 동기화 요청 재로그인 대기. 정기 수집은 계속되며 실제 상세 수집 수는 QA의 시각별 집계를 따른다.
+- 2026-09-25 08:14 KST 읽기 전용 집계: 연결 후 랭크 갱신15명, 새 상세 수집3명·82경기·타임라인12개. 180일 이력 완료0명. ALL106 완료로 표시하지 않는다. 확인 필요36명의 이름·등록ID·확인 사유는 저장소 밖 private CSV로 별도 전달한다.
 - 180일/timeline은 순차 수집, 과거 LP 복원 없음. lol.ps 독자 점수·AI·지역 전체 모집단·로밍/갱 판정과 동일하지 않으며 미완료 차이를 대응표에 유지한다.
 
 ## 2026-09-25 운영·감사 UI와 하이라이트 재생 — 운영 적용

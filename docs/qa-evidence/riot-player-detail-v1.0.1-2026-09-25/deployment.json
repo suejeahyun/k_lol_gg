@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-09-24T23:14:56.186Z",
+  "expectedSha": "3327a585f421eb6a1feec049c4af1884b50c2b07",
+  "alias": {
+    "id": "dpl_7zAeH4K1doePKpu84btjQAYZvLgq",
+    "url": "k-lol-8b1m9b9ut-tjdmswo11-3715s-projects.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "sha": "3327a585f421eb6a1feec049c4af1884b50c2b07",
+    "created": 1790291612068
+  },
+  "deployments": [
+    {
+      "id": "dpl_EQNbwdG74tKFQbXk7xXtTPCYm189",
+      "url": "k-lol-desv8pwen-tjdmswo11-3715s-projects.vercel.app",
+      "state": "READY",
+      "target": null,
+      "sha": "3327a585f421eb6a1feec049c4af1884b50c2b07",
+      "created": 1790291614106
+    },
+    {
+      "id": "dpl_7zAeH4K1doePKpu84btjQAYZvLgq",
+      "url": "k-lol-8b1m9b9ut-tjdmswo11-3715s-projects.vercel.app",
+      "state": "READY",
+      "target": "production",
+      "sha": "3327a585f421eb6a1feec049c4af1884b50c2b07",
+      "created": 1790291612068
+    }
+  ]
+}

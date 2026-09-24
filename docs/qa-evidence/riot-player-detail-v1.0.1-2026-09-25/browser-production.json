@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-09-24T23:15:25Z",
+  "source": "3327a585f421eb6a1feec049c4af1884b50c2b07",
+  "status": "PASS",
+  "method": "Codex in-app browser, actual public profile and stored match data",
+  "rawOperationalDataCommitted": false,
+  "initialRender": {
+    "overview": "PASS",
+    "championsDirectReload": "PASS",
+    "reportDirectReload": "PASS",
+    "newConsoleErrorsOrWarnings": 0,
+    "oldBeforeFixConsoleEntriesExcluded": true,
+    "matchClockFormat": "YYYY. M. D. HH:mm, Korean time"
+  },
+  "responsive": [
+    { "viewport": 320, "documentWidth": 305, "scoreboardScrollWidth": 305, "analysisScrollWidth": 305, "timelineScrollWidth": 305 },
+    { "viewport": 360, "documentWidth": 345, "scoreboardScrollWidth": 345, "analysisScrollWidth": 345, "timelineScrollWidth": 345 }
+  ],
+  "wideTablesScrollWithinTheirRegion": true,
+  "fiveChampionBanListWraps": true,
+  "viewportReset": true,
+  "syntheticSsr": {
+    "before": ["SVG title empty on server", "server PM versus browser Korean day period"],
+    "after": "overview/champions/report: no new hydration errors"
+  },
+  "limitations": [
+    "Admin ALL106 queue still awaits legitimate administrator login after browser session reset",
+    "Public sample has 31 matches: no nonempty second page available for live pagination verification",
+    "Full lol.ps parity exclusions remain in RIOT_PLAYER_DETAIL_PARITY.md"
+  ]
+}

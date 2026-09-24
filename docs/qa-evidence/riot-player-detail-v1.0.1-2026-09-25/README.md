@@ -8,4 +8,6 @@ React 초기 렌더링 오류도 재현했다. SVG title의 여러 JSX 자식은
 
 실제 컴포넌트 SSR 회귀 4개와 기존 UI 테스트 17개 통과. 수정 전 두 오류를 개발모드 브라우저에서 확인했고 수정 후 종합·챔피언·분석 리포트에 새 오류가 없다. 최종 전체 check 및 운영 배포 후 검증은 이 폴더의 checks/deployment/browser-production 근거에 기록한다. 데이터·DB·API 동작은 변경하지 않으며 기존1.0.0 tag를 이동하지 않는다.
 
+운영 source `3327a585f421eb6a1feec049c4af1884b50c2b07`, Vercel `dpl_7zAeH4K1doePKpu84btjQAYZvLgq` READY·운영 alias 일치. 계약445·단위995(+skip1)·타입/lint/빌드·비밀정보 검사 PASS. 실제 운영 320/360px의 참가자·분석·타임라인 모두 문서 폭과 scroll 폭 일치. 3개 분석 탭 재진입에서 새 console 오류/경고0. 공개 API health200·31경기·10인26프레임 상세 PASS. [배포](deployment.json), [검사](checks.json), [운영 브라우저](browser-production.json), [API](public-smoke.json), [CI](ci.json).
+
 전체회원 동기화/외부 데이터 한계는 [1.0.0 QA](../riot-player-detail-v1.0.0-2026-09-25/README.md)와 이 폴더의 production-sync.json 시점별 집계를 따른다. 활성142명 중 연결106명, ID 확인 필요36명이며 ALL106 실행은 관리자 재로그인 대기다. 자동 수집의 일부 성공을 전체 수집 완료로 표시하지 않는다.
