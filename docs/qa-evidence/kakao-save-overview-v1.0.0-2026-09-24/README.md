@@ -7,3 +7,7 @@
 검증과 배포 결과는 완료 후 기록한다.
 
 로컬 검증 PASS: 집중 단위 46건, 전체 계약 435건·단위 953건(별도 DB 의존 1건 skip), 격리 PostgreSQL recruiting DB/경계 98건. lint·typecheck·ERD·전체 빌드·비밀정보 검사·diff 검사 통과. 기존 lint 경고 57건, 오류 0건. 세 종목 각각 저장 후 전체 목록, 정원 충족 표시, 조회 실패 시 저장 결과 유지와 재저장 방지, 기존 파티 무변경 복구를 검증했다.
+
+운영 검증: 2026-09-24 12:20 KST, source 91524771bb5d1838a01bc17427660e5545e0b71d, Vercel dpl_FU8uB7whrUvgNaJqJxtCApXvS7pu READY 및 운영 alias 동일 SHA. health·서명 현황·파티 상세·도움말 페이지 읽기 PASS. 현재 운영 파티 #1은 5/5로 목록과 상세 모두 표시됐다. 진행 중 내전은 없어 운영에서 세 종목 동시 화면을 만들지 않았고 격리 DB와 서비스 테스트로 검증했다. 실제 명단 쓰기나 카카오 발송은 수행하지 않았다.
+
+GitHub main CI 35950911861 SUCCESS: 전체 검사·빌드 및 관리자 HTTP 인증 매트릭스 통과. 태그 kakao-save-overview-v1.0.0은 위 운영 소스 SHA를 가리킨다.

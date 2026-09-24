@@ -2,7 +2,7 @@
 
 V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 독립 V2 프로젝트입니다.
 
-최근 검증한 서버 운영은 **파티 최신 양식 1.0.0**, source `c51ad7dc`, Vercel `dpl_EAQV1oPbFKuE7xB9EJVggj3Htp2u`입니다. [검증·배포 근거](docs/qa-evidence/party-copy-refresh-v1.0.0-2026-09-22/README.md)를 확인하세요. 휴대폰 R26 설치 후 봇속도 무응답이 보고되어 [R27 진단 보강](docs/qa-evidence/kakao-response-performance-v1.0.1-2026-09-22/README.md)을 준비했으며 실기기 교체 확인은 별도입니다.
+최근 검증한 서버 운영은 **파티·내전 저장 후 전체 현황 1.0.0**, source `91524771`, Vercel `dpl_FU8uB7whrUvgNaJqJxtCApXvS7pu`입니다. 파티 저장 후 전체 구인, 내전 저장 후 협곡·칼바람·증바람 전체 현황을 표시합니다. [검증·배포 근거](docs/qa-evidence/kakao-save-overview-v1.0.0-2026-09-24/README.md)를 확인하세요. 휴대폰 R27 재설치는 필요하지 않습니다.
 
 ## 현재 범위
 
@@ -16,7 +16,7 @@ V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 
 
 사이트 충원 별도 봇은 실제 내전 구인 오픈채팅에서 그룹 표시 값이 꺼져 응답이 차단된 것을 확인했습니다. [1.0.3 호환 수정 후보](docs/qa-evidence/site-notice-companion-v1.0.3-2026-09-22/README.md)의 실기기 버전·진단 응답과 초기화 READY를 확인했으며 실제 등록·충원 수신은 미확인입니다. 사용자가 명시 연결한 Riot 계정의 실제 전적 확인과 별도 RSO 승인도 남아 있습니다. 운영 API 키만으로 Riot 로그인 소유권 인증 상태를 만들지 않습니다. 소스·서버·DB·외부 기기 상태는 [STATUS](docs/STATUS.md)를 확인합니다.
 
-카카오 편집·보호 정책은 승인된 [파티 ADR0011](docs/architecture/0011-kakao-party-editable-copy-flow.md)과 [내전 ADR0012](docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따릅니다. 사용자 확인 앱 버전은 MessengerBot R **0.7.29a**, 일반 봇은 **R26** 설치가 확인됐습니다. 사이트 충원 알림용 [별도 companion](integrations/messengerbot-r/site-notices/README.md)은 일반 봇과 분리해 설치하고 그룹 세션을 명시 등록합니다. 서버 ON과 실제 수신 완료는 구분합니다.
+카카오 편집·보호 정책은 승인된 [파티 ADR0011](docs/architecture/0011-kakao-party-editable-copy-flow.md)과 [내전 ADR0012](docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따릅니다. 사용자 확인 앱 버전은 MessengerBot R **0.7.29a**, 일반 봇은 **R27** 설치가 확인됐습니다. 사이트 충원 알림용 [별도 companion](integrations/messengerbot-r/site-notices/README.md)은 일반 봇과 분리해 설치하고 그룹 세션을 명시 등록합니다. 서버 ON과 실제 수신 완료는 구분합니다.
 
 ## 로컬 실행
 

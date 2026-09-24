@@ -1256,6 +1256,32 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "kakao-save-overview",
+      "version": "1.0.0",
+      "gitTag": "kakao-save-overview-v1.0.0",
+      "commit": "91524771bb5d1838a01bc17427660e5545e0b71d",
+      "releasedAt": "2026-09-24T03:20:15.118Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/kakao-save-overview-v1.0.0-2026-09-24/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-24-kakao-save-overview.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_FU8uB7whrUvgNaJqJxtCApXvS7pu",
+        "url": "https://k-lol-b2m2cj4tm-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-24T03:20:15.118Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R 0.7.29a general bot (user version and local logs; no reinstall needed)",
+          "version": "KLOL_KAKAO_BOT_V40_R27_2026_09_22",
+          "status": "INSTALLED"
+        }
+      ]
     }
   ]
 }
