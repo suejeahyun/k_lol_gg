@@ -1282,6 +1282,25 @@
           "status": "INSTALLED"
         }
       ]
+    },
+    {
+      "featureId": "account-member-name",
+      "version": "1.0.0",
+      "gitTag": "account-member-name-v1.0.0",
+      "commit": "b1d5344c4fae15e60f91e4c638885b556dbbb9f9",
+      "releasedAt": "2026-09-24T21:07:04.126Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/account-member-name-v1.0.0-2026-09-25/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-25-account-member-name.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_4v74zLHHdbzh5nUZjjL8qc6GkStf",
+        "url": "https://k-lol-9jghbizk4-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-24T21:07:04.126Z",
+        "healthStatus": "ready"
+      }
     }
   ]
 }

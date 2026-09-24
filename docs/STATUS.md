@@ -1,5 +1,12 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-25 본인 이름 변경 — 운영 적용
+
+- 내 계정에서 이름 확인과 수정 링크를 제공하며 기존 본인 정보 폼·API에서 이름을 저장한다. 승인된 활성 플레이어, 본인 세션, 안전 입력·revision·멱등성·변경 감사 적용.
+- 이름만 변경하면 Riot 연결과 기존 플레이어·활동 연결을 유지한다. 공개 DTO와 DB 스키마·휴대폰 코드는 변경하지 않는다.
+- source `b1d5344c4fae15e60f91e4c638885b556dbbb9f9`, Vercel `dpl_4v74zLHHdbzh5nUZjjL8qc6GkStf` READY·운영 alias SHA 일치. 06:07 KST health·로그인 경계 PASS.
+- 전체 검사(계약 435·단위 954), 계정 PG/HTTP·실제 Chromium 저장·412·360px/1280px PASS. [QA](./qa-evidence/account-member-name-v1.0.0-2026-09-25/README.md).
+
 ## 2026-09-24 파티·내전 저장 후 전체 현황 — 운영 적용
 
 - 파티 양식 저장 성공 후 전체 현재 구인, 내전 저장 성공 후 세 종목 전체 현재 내전을 표시한다. 정원 충족 모집도 마감 전이면 표시한다.

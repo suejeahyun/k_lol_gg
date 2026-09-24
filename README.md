@@ -2,7 +2,7 @@
 
 V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 독립 V2 프로젝트입니다.
 
-최근 검증한 서버 운영은 **파티·내전 저장 후 전체 현황 1.0.0**, source `91524771`, Vercel `dpl_FU8uB7whrUvgNaJqJxtCApXvS7pu`입니다. 파티 저장 후 전체 구인, 내전 저장 후 협곡·칼바람·증바람 전체 현황을 표시합니다. [검증·배포 근거](docs/qa-evidence/kakao-save-overview-v1.0.0-2026-09-24/README.md)를 확인하세요. 휴대폰 R27 재설치는 필요하지 않습니다.
+최근 검증한 서버 운영은 **본인 이름 변경 1.0.0**, source `b1d5344c`, Vercel `dpl_4v74zLHHdbzh5nUZjjL8qc6GkStf`입니다. 내 계정에서 이름·Riot ID·티어를 수정할 수 있습니다. [검증·배포 근거](docs/qa-evidence/account-member-name-v1.0.0-2026-09-25/README.md)를 확인하세요. 기존 카카오 저장 후 전체 현황 기능은 유지됩니다.
 
 ## 현재 범위
 

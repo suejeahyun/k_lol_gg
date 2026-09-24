@@ -1,0 +1,43 @@
+{
+  "commit": "b1d5344c4fae15e60f91e4c638885b556dbbb9f9",
+  "checkedAt": "2026-09-24T21:07:04.126Z",
+  "fullCheck": {
+    "command": "npm run check",
+    "status": "PASS",
+    "lint": {
+      "errors": 0,
+      "warnings": 57
+    },
+    "contracts": {
+      "passed": 435
+    },
+    "unit": {
+      "passed": 954,
+      "skipped": 1
+    },
+    "typecheck": "PASS",
+    "erd": "PASS",
+    "guideArt": "PASS",
+    "build": "PASS"
+  },
+  "focusedDatabase": {
+    "command": "V2_DB_CONTRACT_SCOPE=accounts npm run test:db",
+    "status": "PASS",
+    "postgresMajor": 18,
+    "lifecycleContracts": 1,
+    "accountHttp": "PASS",
+    "chromium": "PASS",
+    "viewportWidths": [
+      1280,
+      360
+    ],
+    "syntheticDataOnly": true,
+    "disposableClusterRemoved": true
+  },
+  "changedTestScripts": {
+    "lint": "PASS",
+    "typecheck": "PASS"
+  },
+  "secrets": "PASS",
+  "diffCheck": "PASS"
+}
