@@ -1320,6 +1320,25 @@
         "verifiedAt": "2026-09-24T21:33:56.689Z",
         "healthStatus": "ready"
       }
+    },
+    {
+      "featureId": "operations-forms-menu",
+      "version": "1.0.0",
+      "gitTag": "operations-forms-menu-v1.0.0",
+      "commit": "a669aaff5c5cd3d7c1b81e23e71284f35ea054c9",
+      "releasedAt": "2026-09-24T21:38:46.398Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/operations-forms-menu-v1.0.0-2026-09-25/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-25-operations-forms-menu.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_F5DzqsztXpL4bDSt9KvLqLdqxARt",
+        "url": "https://k-lol-ngxnk7tr0-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-24T21:38:46.398Z",
+        "healthStatus": "ready"
+      }
     }
   ]
 }

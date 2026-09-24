@@ -1,0 +1,31 @@
+{
+  "commit": "a669aaff5c5cd3d7c1b81e23e71284f35ea054c9",
+  "fullCheck": {
+    "command": "npm run check",
+    "status": "PASS",
+    "contracts": 435,
+    "unitPassed": 959,
+    "unitSkipped": 1,
+    "lintErrors": 0,
+    "existingLintWarnings": 57,
+    "typecheck": "PASS",
+    "erd": "PASS",
+    "guideArt": "PASS",
+    "build": "PASS"
+  },
+  "focused": {
+    "navigationUnitPassed": 15,
+    "existingUiShellContractsPassed": 17
+  },
+  "productionReadOnlyPayloadAudit": {
+    "checkedAt": "2026-09-24T21:37:07.481Z",
+    "readOnly": true,
+    "rows": 113,
+    "invalid": 0,
+    "valid": 113
+  },
+  "productionAuthenticatedBrowser": "NOT_EXECUTED_NO_ADMIN_SESSION",
+  "secrets": "PASS",
+  "diffCheck": "PASS",
+  "productionWrites": false
+}
