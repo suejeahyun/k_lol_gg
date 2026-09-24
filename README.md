@@ -2,7 +2,7 @@
 
 V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 독립 V2 프로젝트입니다.
 
-최근 서버 패치는 **운영·감사 UI 1.0.1·하이라이트 재생 1.0.0**, source `dce23db8`입니다. 징계와 네 운영 신청의 화면·고정 상단 메뉴를 통일하고 모바일을 검증했습니다. YouTube 재생창 차단을 해결하여 운영 영상 실제 재생도 확인했습니다. [UI 검증](docs/qa-evidence/operations-forms-menu-v1.0.1-2026-09-25/README.md), [영상 검증·배포](docs/qa-evidence/highlight-playback-v1.0.0-2026-09-25/README.md). 앞선 랭킹 갱신 예약·전체 참가자 보기, 본인 이름 변경, 카카오 저장 후 전체 현황 기능은 유지됩니다. 기존 MMR 공식 전환은 최고 관리자 확인 대기이며 아직 점수를 재계산하지 않았습니다.
+최근 서버 패치는 **Riot 플레이어 상세 1.0.0**, source `63568981`입니다. 모스트·라인별 통계, 날짜별 성적/관측 LP, 참가자 경기 상세·성장 차트, 개인 빌드와 분석 저장을 추가했습니다. 최종 검사·DB 0045·운영 배포 확인 완료. 활성 142명 중 Riot 연결106명, 등록 ID 확인 필요36명입니다. 전체 동기화 실행은 관리자 재로그인 대기이며 연결 성공과 전적 수집 완료를 구별합니다. [검증·배포·수집 상태](docs/qa-evidence/riot-player-detail-v1.0.0-2026-09-25/README.md), [참고 기능과의 차이](docs/parity/RIOT_PLAYER_DETAIL_PARITY.md). 앞선 운영·감사 UI, 하이라이트, 랭킹·이름 변경·카카오 전체 현황 기능은 유지됩니다. 기존 MMR 공식 전환은 최고 관리자 확인 대기이며 아직 점수를 재계산하지 않았습니다.
 
 ## 현재 범위
 
@@ -14,7 +14,7 @@ V1 코드를 복사하지 않고 사용자 기능 계약부터 다시 구현한 
 
 이전 통합 활성화 기준은 **사이트 알림·Riot API·운영 진단 1.0.0**, source `c3442ace`, Vercel `dpl_BdpAWrcHPKAchNU9K644dHfajNxu`, DB `0044`입니다. API 직접 연결·주기 갱신, 관리자 연동 진단과 사이트 충원 서버 알림을 활성화했습니다. 계약·단위·격리 DB·339개 화면·운영 경계와 실제 Riot 상태 API 결과는 [릴리스 QA](docs/qa-evidence/integrations-activation-v1.0.0-2026-09-22/README.md)에 기록했습니다. 이전 파티·통계·마감·Blob 검증은 [운영 준비 QA](docs/qa-evidence/operational-readiness-v1.0.0-2026-09-22/README.md)를 따릅니다.
 
-사이트 충원 별도 봇은 실제 내전 구인 오픈채팅에서 그룹 표시 값이 꺼져 응답이 차단된 것을 확인했습니다. [1.0.3 호환 수정 후보](docs/qa-evidence/site-notice-companion-v1.0.3-2026-09-22/README.md)의 실기기 버전·진단 응답과 초기화 READY를 확인했으며 실제 등록·충원 수신은 미확인입니다. 사용자가 명시 연결한 Riot 계정의 실제 전적 확인과 별도 RSO 승인도 남아 있습니다. 운영 API 키만으로 Riot 로그인 소유권 인증 상태를 만들지 않습니다. 소스·서버·DB·외부 기기 상태는 [STATUS](docs/STATUS.md)를 확인합니다.
+사이트 충원 별도 봇은 실제 내전 구인 오픈채팅에서 그룹 표시 값이 꺼져 응답이 차단된 것을 확인했습니다. [1.0.3 호환 수정 후보](docs/qa-evidence/site-notice-companion-v1.0.3-2026-09-22/README.md)의 실기기 버전·진단 응답과 초기화 READY를 확인했으며 실제 등록·충원 수신은 미확인입니다. Riot 상세 이력은 연결된 계정에서 순차 수집 중이며 전체 요청 상태는 최신 QA를 따릅니다. 별도 RSO 승인은 남아 있습니다. 운영 API 키만으로 Riot 로그인 소유권 인증 상태를 만들지 않습니다. 소스·서버·DB·외부 기기 상태는 [STATUS](docs/STATUS.md)를 확인합니다.
 
 카카오 편집·보호 정책은 승인된 [파티 ADR0011](docs/architecture/0011-kakao-party-editable-copy-flow.md)과 [내전 ADR0012](docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)를 따릅니다. 사용자 확인 앱 버전은 MessengerBot R **0.7.29a**, 일반 봇은 **R27** 설치가 확인됐습니다. 사이트 충원 알림용 [별도 companion](integrations/messengerbot-r/site-notices/README.md)은 일반 봇과 분리해 설치하고 그룹 세션을 명시 등록합니다. 서버 ON과 실제 수신 완료는 구분합니다.
 

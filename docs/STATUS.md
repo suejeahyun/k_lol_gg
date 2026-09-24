@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-25 Riot 플레이어 상세 — 운영 배포, 전체 수집 대기
+
+- 종합·챔피언·리포트, 모스트·라인/날짜별 통계·관측 LP·복수 필터·참가자 스코어보드·성장·룬/빌드·포탑 방패 관측 평균·기기 분석 저장. [기능 대응표](./parity/RIOT_PLAYER_DETAIL_PARITY.md).
+- source `63568981e3aab41ba18424075b1b7b239078481e`, tag `riot-player-detail-v1.0.0`, Vercel `dpl_KyLuZt71CnB4iGbXie8dUkBZPUHV` READY·운영 alias 일치. CI36069966400 success, health200. [QA](./qa-evidence/riot-player-detail-v1.0.0-2026-09-25/README.md).
+- 계약441·단위995(+DB skip1)·격리 Riot DB6·타입/lint/빌드·전체 Git 비밀정보 검사 PASS. 백업 복원 후 additive0045 적용·재실행 no-op PASS.
+- 활성142명 검토: 연결106명, 연결해제24·미연결12는 등록ID 확인 필요. 비활성56명 새연결 제외. 브라우저 관리자 세션 초기화로 전체 동기화 요청 재로그인 대기. 정기 수집은 계속되며 실제 상세 수집 수는 QA의 시각별 집계를 따른다.
+- 180일/timeline은 순차 수집, 과거 LP 복원 없음. lol.ps 독자 점수·AI·지역 전체 모집단·로밍/갱 판정과 동일하지 않으며 미완료 차이를 대응표에 유지한다.
+
 ## 2026-09-25 운영·감사 UI와 하이라이트 재생 — 운영 적용
 
 - 징계·모임·외출·건의사항·디스코드 초대의 목록·상세·처리 폼을 같은 admin 스타일로 통합했다. 상단 위치·유형 메뉴 고정, 중복 탭 제거, 모바일 선택 메뉴 노출과 가로 넘침을 개선했다. 합성 ADMIN 브라우저 1440·320·390px, 키보드 이동 검증 PASS. [UI QA](./qa-evidence/operations-forms-menu-v1.0.1-2026-09-25/README.md).

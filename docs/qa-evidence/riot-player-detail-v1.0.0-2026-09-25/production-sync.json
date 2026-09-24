@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-24T22:52:45.845Z",
+  "checkedAt": "2026-09-24T23:01:51.761Z",
   "readOnly": true,
   "population": [
     {
@@ -27,35 +27,35 @@
     {
       "status": "SUCCEEDED",
       "failure_code": null,
-      "count": 11,
-      "latest_completed": "2026-09-24T22:50:48.896Z",
+      "count": 13,
+      "latest_completed": "2026-09-24T23:00:55.697Z",
       "next_available": "2026-09-24T22:03:46.821Z"
     }
   ],
   "current": [
     {
       "connected": 106,
-      "rank_current": 11,
-      "analytics_current": 0,
-      "recent_page_verified": 0,
+      "rank_current": 13,
+      "analytics_current": 1,
+      "recent_page_verified": 1,
       "history_complete": 0
     }
   ],
   "archive": [
     {
-      "rows": 0,
-      "players": 0,
-      "distinct_games": 0,
-      "timeline_ready": 0,
-      "oldest": null,
-      "newest": null,
-      "latest_collected": null
+      "rows": 31,
+      "players": 1,
+      "distinct_games": 31,
+      "timeline_ready": 4,
+      "oldest": "2026-04-05T06:23:49.112Z",
+      "newest": "2026-09-09T09:23:32.564Z",
+      "latest_collected": "2026-09-24T23:00:55.709Z"
     }
   ],
   "ranks": [
     {
-      "rows": 0,
-      "players": 0
+      "rows": 1,
+      "players": 1
     }
   ]
 }

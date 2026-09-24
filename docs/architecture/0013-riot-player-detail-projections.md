@@ -1,6 +1,6 @@
 # 0013: Riot 플레이어 상세 projection 확장
 
-상태: 2026-09-25 구현 대조 초안. Drizzle `0045_simple_reptil`과 현재 소스를 기준으로 정리했다. 최종 전체 검사·운영 migration·배포·전체 회원 동기화는 별도 근거가 연결될 때까지 대기다.
+상태: 2026-09-25 운영 적용. Drizzle `0045_simple_reptil`, 최종 전체 검사와 배포는 [릴리스 QA](../qa-evidence/riot-player-detail-v1.0.0-2026-09-25/README.md)에서 확인한다. 전체 회원 연결과 상세 이력 수집은 별도 진행 상태로 기록한다.
 
 관련 범위: [플레이어 상세 기능 대응표](../parity/RIOT_PLAYER_DETAIL_PARITY.md).
 

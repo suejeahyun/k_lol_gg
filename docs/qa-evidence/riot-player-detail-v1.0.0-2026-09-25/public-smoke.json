@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-09-24T23:01:36.719Z",
+  "checks": [
+    {
+      "name": "health",
+      "http": 200,
+      "ms": 362
+    },
+    {
+      "name": "invalid-player",
+      "http": 400
+    },
+    {
+      "name": "first-page",
+      "http": 200,
+      "ms": 637,
+      "games": 31,
+      "collectedGames": 31,
+      "rankDays": 1,
+      "privateIdentifiersAbsent": true,
+      "noStore": true
+    },
+    {
+      "name": "invalid-cursor",
+      "http": 400
+    },
+    {
+      "name": "lazy-match",
+      "http": 200,
+      "ms": 422,
+      "participants": 10,
+      "timelineStatus": "AVAILABLE",
+      "frames": 26,
+      "privateIdentifiersAbsent": true
+    }
+  ],
+  "status": "PASS"
+}

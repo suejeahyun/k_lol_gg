@@ -91,7 +91,8 @@
 .encounters li { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: .77rem; }
 .encounters li span { overflow-wrap: anywhere; }
 .encounters li strong { white-space: nowrap; font-size: .72rem; }
-.stack { display: grid; gap: 12px; min-width: 0; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
+.stack > * { min-width: 0; }
 .match { min-width: 0; border: 1px solid var(--border); border-left: 4px solid var(--muted-foreground); border-radius: 12px; background: var(--card); }
 .match[data-result="win"] { border-left-color: var(--primary); background: color-mix(in srgb, var(--primary) 4%, var(--card)); }
 .match[data-result="loss"] { border-left-color: var(--destructive); background: color-mix(in srgb, var(--destructive) 4%, var(--card)); }

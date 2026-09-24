@@ -25,5 +25,6 @@
   "notes": [
     "The skipped unit case requires the separately executed database harness.",
     "Final optional turret-plate field and its stored projection compatibility are included."
-  ]
+  ],
+  "secretTreeAndCompleteHistory": "PASS"
 }

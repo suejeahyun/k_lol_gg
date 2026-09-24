@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-24T23:04:17.505Z",
+  "source": "63568981e3aab41ba18424075b1b7b239078481e",
+  "status": "PASS_WITH_MOBILE_ISSUE",
+  "checks": [
+    "Initial unsynced public state renders correctly",
+    "Real collected 31 games: 30 non-remake, 17 wins, 13 losses, 56.67%",
+    "Most champions, position totals, observed LP, turret plate observed sample labels",
+    "Champion tab URL and Naafiri filter: six games",
+    "Analysis report tab uses the selected six-game sample",
+    "Lazy match detail loads: 10 participants and 26 timeline frames",
+    "Actual gold/CS/XP timeline charts and purchase/skill/objective events"
+  ],
+  "issue": {
+    "id": "MOBILE_TIMELINE_OVERFLOW",
+    "viewport": 360,
+    "documentClientWidth": 345,
+    "documentScrollWidth": 593,
+    "cause": "Nested grid auto track inherited the 540px minimum of a scrollable timeline table.",
+    "forwardFix": "riot-player-detail-v1.0.1"
+  },
+  "notes": [
+    "Production sample contains 31 games, so an actual nonempty second page was not available; cursor guards are covered by HTTP tests."
+  ]
+}
