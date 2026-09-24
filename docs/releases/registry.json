@@ -1339,6 +1339,44 @@
         "verifiedAt": "2026-09-24T21:38:46.398Z",
         "healthStatus": "ready"
       }
+    },
+    {
+      "featureId": "highlight-playback",
+      "version": "1.0.0",
+      "gitTag": "highlight-playback-v1.0.0",
+      "commit": "dce23db8bbe684f4bbce26b128ad05b011339b0f",
+      "releasedAt": "2026-09-24T21:55:08.605Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/highlight-playback-v1.0.0-2026-09-25/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-25-highlight-playback.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_85zMgkbYY9gu5nzyDNXkgsVLFkfc",
+        "url": "https://k-lol-obouug2tm-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-24T21:55:08.605Z",
+        "healthStatus": "ready"
+      }
+    },
+    {
+      "featureId": "operations-forms-menu",
+      "version": "1.0.1",
+      "gitTag": "operations-forms-menu-v1.0.1",
+      "commit": "dce23db8bbe684f4bbce26b128ad05b011339b0f",
+      "releasedAt": "2026-09-24T21:55:08.605Z",
+      "migrationHead": "0044_vengeful_trauma",
+      "qaEvidence": "docs/qa-evidence/operations-forms-menu-v1.0.1-2026-09-25/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-25-operations-ui.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_85zMgkbYY9gu5nzyDNXkgsVLFkfc",
+        "url": "https://k-lol-obouug2tm-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-24T21:55:08.605Z",
+        "healthStatus": "ready"
+      }
     }
   ]
 }

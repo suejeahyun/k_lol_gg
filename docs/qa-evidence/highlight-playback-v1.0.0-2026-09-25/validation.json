@@ -1,0 +1,120 @@
+{
+  "commit": "dce23db8bbe684f4bbce26b128ad05b011339b0f",
+  "fullCheck": {
+    "command": "npm run check",
+    "status": "PASS",
+    "contracts": 435,
+    "unitPassed": 960,
+    "unitSkipped": 1,
+    "lintErrors": 0,
+    "existingLintWarnings": 57,
+    "typecheck": "PASS",
+    "erd": "PASS",
+    "guideArt": "PASS",
+    "build": "PASS"
+  },
+  "focused": {
+    "mediaUnitPassed": 9,
+    "navigationUnitPassed": 15,
+    "operationsUiAndShellContractsPassed": 23
+  },
+  "adminSyntheticHttp": {
+    "fixture": true,
+    "databaseConnected": false,
+    "results": [
+      {
+        "pathname": "/admin/discipline",
+        "status": 200,
+        "oneMenu": true,
+        "noDuplicateTypeNavigation": true
+      },
+      {
+        "pathname": "/admin/operation-forms",
+        "status": 200,
+        "oneMenu": true,
+        "noDuplicateTypeNavigation": true
+      },
+      {
+        "pathname": "/admin/operation-forms?type=meetups",
+        "status": 200,
+        "oneMenu": true,
+        "noDuplicateTypeNavigation": true
+      },
+      {
+        "pathname": "/admin/operation-forms?type=leaves",
+        "status": 200,
+        "oneMenu": true,
+        "noDuplicateTypeNavigation": true
+      },
+      {
+        "pathname": "/admin/operation-forms?type=suggestions",
+        "status": 200,
+        "oneMenu": true,
+        "noDuplicateTypeNavigation": true
+      },
+      {
+        "pathname": "/admin/operation-forms?type=friends",
+        "status": 200,
+        "oneMenu": true,
+        "noDuplicateTypeNavigation": true
+      }
+    ]
+  },
+  "browser": {
+    "adminSynthetic": {
+      "desktop": {
+        "width": 1440,
+        "height": 900,
+        "page": "discipline",
+        "status": "PASS"
+      },
+      "mobile": [
+        {
+          "width": 320,
+          "height": 800,
+          "documentWidth": 305,
+          "allFourOperationTypesSelectedAndVisible": true
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "documentWidth": 375,
+          "allFormsTypeAndStatusFiltersPresent": true
+        }
+      ],
+      "keyboard": "Tab from Discord invitations to all requests and Enter navigation passed",
+      "databaseConnected": false,
+      "temporaryServerStopped": true,
+      "syntheticProofInvalidated": true
+    },
+    "productionHighlight": {
+      "path": "/highlights/4453384e-da27-4b59-a5fb-9742f648f160",
+      "directLoad": {
+        "currentTime": 41.499905,
+        "duration": 97.261,
+        "paused": false,
+        "readyState": 4,
+        "errorCode": null,
+        "gameFootageVisible": true
+      },
+      "clientNavigationFromList": {
+        "playerLoaded": true,
+        "elapsedSecondsAtLeast": 2,
+        "pauseControlPresent": true
+      },
+      "errorConsole": []
+    },
+    "localHighlightMobile": {
+      "width": 360,
+      "documentWidth": 345,
+      "playerWidth": 319,
+      "playerHeight": 200,
+      "horizontalOverflow": false
+    },
+    "productionAuthenticatedAdmin": "NOT_EXECUTED_NO_ADMIN_SESSION"
+  },
+  "currentTreeSecrets": "PASS",
+  "diffCheck": "PASS",
+  "productionDataWrites": false,
+  "schemaChanged": false
+}

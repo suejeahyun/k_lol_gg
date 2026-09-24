@@ -1,0 +1,93 @@
+{
+  "commit": "dce23db8bbe684f4bbce26b128ad05b011339b0f",
+  "status": "PRODUCTION",
+  "provider": "vercel",
+  "deploymentId": "dpl_85zMgkbYY9gu5nzyDNXkgsVLFkfc",
+  "url": "https://k-lol-obouug2tm-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://k-lol-gg.vercel.app",
+  "verifiedAt": "2026-09-24T21:55:08.605Z",
+  "healthStatus": "ready",
+  "smoke": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "health": "ready"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "privacyYouTubeFrameAllowed": true,
+      "defaultAndAncestorBoundariesPreserved": true
+    },
+    {
+      "path": "/highlights",
+      "status": 200,
+      "privacyYouTubeFrameAllowed": true,
+      "defaultAndAncestorBoundariesPreserved": true
+    },
+    {
+      "path": "/highlights/4453384e-da27-4b59-a5fb-9742f648f160",
+      "status": 200,
+      "privacyYouTubeFrameAllowed": true,
+      "defaultAndAncestorBoundariesPreserved": true,
+      "directWatchLink": true
+    },
+    {
+      "path": "/admin/discipline",
+      "status": 307,
+      "requiresAdminLogin": true
+    },
+    {
+      "path": "/admin/operation-forms",
+      "status": 307,
+      "requiresAdminLogin": true
+    },
+    {
+      "path": "/admin/operation-forms/meetups",
+      "canonicalRedirect": "/admin/operation-forms?type=meetups",
+      "status": 307,
+      "requiresAdminLogin": true
+    },
+    {
+      "path": "/admin/operation-forms/leaves",
+      "canonicalRedirect": "/admin/operation-forms?type=leaves",
+      "status": 307,
+      "requiresAdminLogin": true
+    },
+    {
+      "path": "/admin/operation-forms/suggestions",
+      "canonicalRedirect": "/admin/operation-forms?type=suggestions",
+      "status": 307,
+      "requiresAdminLogin": true
+    },
+    {
+      "path": "/admin/operation-forms/friends",
+      "canonicalRedirect": "/admin/operation-forms?type=friends",
+      "status": 307,
+      "requiresAdminLogin": true
+    },
+    {
+      "path": "/api/admin/discipline-records",
+      "status": 401
+    },
+    {
+      "path": "/api/admin/operation-forms",
+      "status": 401
+    }
+  ],
+  "ci": {
+    "checkedAt": "2026-09-24T21:57:28.790Z",
+    "sha": "dce23db8bbe684f4bbce26b128ad05b011339b0f",
+    "runs": [
+      {
+        "id": 36064234975,
+        "name": "V2 CI",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/suejeahyun/k_lol_gg/actions/runs/36064234975",
+        "event": "push",
+        "branch": "main"
+      }
+    ]
+  }
+}
