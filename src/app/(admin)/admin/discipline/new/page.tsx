@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { AdminDisciplineCreateForm } from "@/components/discipline/admin-discipline-create-form";
-import styles from "@/components/discipline/discipline.module.css";
+import styles from "@/components/admin/admin-operations.module.css";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 
 export default async function AdminDisciplineNewPage() {

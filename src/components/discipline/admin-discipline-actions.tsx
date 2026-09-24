@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { AdminDisciplineRecordDto } from "@/modules/discipline/application/ports";
-import styles from "./discipline.module.css";
+import styles from "@/components/admin/admin-operations.module.css";
 
 export function AdminDisciplineActions({ record, canManage }: { record: AdminDisciplineRecordDto; canManage: boolean }) {
   const router = useRouter(); const [busy, setBusy] = useState(false); const [error, setError] = useState(false); const [note, setNote] = useState(record.internalNote ?? ""); const [reason, setReason] = useState(record.reason); const [reviewNote, setReviewNote] = useState("");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
@@ -74,7 +74,7 @@ export function AdminBreadcrumb() {
     <Link href="/admin">관리자</Link><span aria-hidden="true">/</span>
     {operations ? <>
       <Link href="/admin/discipline">운영·감사</Link>
-      {pathname.startsWith("/admin/operation-forms") ? <><span aria-hidden="true">/</span><span aria-current="page">{formLink?.label ?? "운영 신청서"}</span></> : null}
+      <span aria-hidden="true">/</span><span aria-current="page">{pathname.startsWith("/admin/operation-forms") ? formLink?.label ?? "운영 신청서" : "징계"}</span>
     </> : <span>보호된 작업 공간</span>}
   </nav>;
 }
@@ -82,12 +82,20 @@ export function AdminBreadcrumb() {
 export function AdminOperationsNavigation() {
   const pathname = usePathname();
   const search = useSearchParams();
-  if (!isAdminWorkspaceActive(pathname, "/admin/discipline")) return null;
+  const navigation = useRef<HTMLElement>(null);
   const formType = getAdminOperationFormType(pathname, search.get("type"));
-  return <nav className={styles.operationsNav} aria-label="운영·감사 메뉴">
+  useEffect(() => {
+    const nav = navigation.current;
+    const current = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !current || nav.scrollWidth <= nav.clientWidth) return;
+    const offset = current.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+    nav.scrollLeft = Math.max(0, offset - (nav.clientWidth - current.offsetWidth) / 2);
+  }, [pathname, formType]);
+  if (!isAdminWorkspaceActive(pathname, "/admin/discipline")) return null;
+  return <nav ref={navigation} className={styles.operationsNav} aria-label="운영·감사 메뉴">
     <Link href="/admin/discipline" aria-current={pathname.startsWith("/admin/discipline") ? "page" : undefined}>징계</Link>
-    <Link href="/admin/operation-forms" aria-current={pathname === "/admin/operation-forms" && !formType ? "page" : undefined}>전체 신청</Link>
     {ADMIN_OPERATION_FORM_LINKS.map((link) => <Link key={link.formType} href={link.href} aria-current={link.formType === formType ? "page" : undefined}>{link.label}</Link>)}
+    <Link className={styles.operationsAll} href="/admin/operation-forms" aria-current={pathname === "/admin/operation-forms" && !formType ? "page" : undefined}>전체 신청</Link>
   </nav>;
 }
 

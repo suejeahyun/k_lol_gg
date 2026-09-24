@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { BoundedPicker, type BoundedPickerOption } from "@/app/(admin)/admin/matches/bounded-picker";
 
-import styles from "./discipline.module.css";
+import styles from "@/components/admin/admin-operations.module.css";
 
 export function AdminDisciplineCreateForm() {
   const router = useRouter();

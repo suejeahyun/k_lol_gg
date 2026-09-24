@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { AdminDisciplineActions } from "@/components/discipline/admin-discipline-actions";
-import styles from "@/components/discipline/discipline.module.css";
+import styles from "@/components/admin/admin-operations.module.css";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";
 

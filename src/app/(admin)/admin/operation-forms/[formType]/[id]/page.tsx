@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AdminOperationFormActions } from "@/components/operation-forms/admin-operation-form-actions";
 import { operationFormStatusLabels, typeLabels } from "@/components/operation-forms/admin-operation-form-list";
-import styles from "@/components/operation-forms/operation-forms.module.css";
+import styles from "@/components/admin/admin-operations.module.css";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { isOperationFormType } from "@/modules/recruiting/operation-forms/domain";
 import { loadRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
