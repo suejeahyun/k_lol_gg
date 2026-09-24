@@ -1,15 +1,15 @@
 {
-  "checkedAt": "2026-09-24T23:33:29.654Z",
+  "checkedAt": "2026-09-24T23:41:02.988Z",
   "command": "npm run check",
   "exitCode": 0,
   "contracts": 445,
-  "unitPass": 995,
+  "unitPass": 996,
   "unitSkip": 1,
   "fail": 0,
   "build": "PASS",
   "typecheck": "PASS",
   "secretTree": "PASS",
-  "logSha256": "79f8a83b2840748d16d165c1b193c1c901481111ca92ab13c91bb165f462d534",
+  "logSha256": "a4d0d74831f72c79d2fc97f7c4a3e957bee3901eccfe719d8992881da1870d69",
   "dbRerun": "Not needed: layout and default presentation only, no API or DB change",
-  "focused": "4 SSR regressions and 17 existing UI tests passed"
+  "focused": "4 SSR regressions and 18 UI tests including mixed-language name ordering passed"
 }

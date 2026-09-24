@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-09-24T23:39:09.968Z",
+  "initialSource": "d54a0d2396ad9172dedd7a8d963333cc8f4a57af",
+  "observedProduction": "React #418 on named encounters",
+  "reproduction": "en-US server default vs ko-KR client default; names with equal games and win rate",
+  "red": "synthetic locale regression failed before fix",
+  "fix": "explicit ko-KR locale for encounter name tie ordering",
+  "green": "18 focused unit tests passed; observed-data development SSR has zero fresh console warnings/errors after fix",
+  "privateData": "Raw production sample remains ignored and is not stored in QA"
+}

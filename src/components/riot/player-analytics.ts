@@ -98,7 +98,7 @@ export function playerEncounters(matches: readonly RiotMatchDto[], kind: "ally" 
       groups.set(key, { ...previous, games: previous.games + 1, wins: previous.wins + Number(self.win), laneGames: previous.laneGames + Number(laneGold !== null), goldDelta: previous.goldDelta + (laneGold ?? 0) });
     }
   }
-  return [...groups.values()].map((row) => ({ ...row, winRate: roundPlayerStat(row.wins / row.games * 100), goldDiffAt15: row.laneGames ? roundPlayerStat(row.goldDelta / row.laneGames) : null })).sort((a, b) => b.games - a.games || b.winRate - a.winRate || a.label.localeCompare(b.label));
+  return [...groups.values()].map((row) => ({ ...row, winRate: roundPlayerStat(row.wins / row.games * 100), goldDiffAt15: row.laneGames ? roundPlayerStat(row.goldDelta / row.laneGames) : null })).sort((a, b) => b.games - a.games || b.winRate - a.winRate || a.label.localeCompare(b.label, "ko-KR"));
 }
 export function playerBuildAggregates(matches: readonly RiotMatchDto[], kind: "items" | "runes" | "spells") {
   const groups = new Map<string, { ids: readonly number[]; games: number; wins: number; queueId: number; mapId: number }>();

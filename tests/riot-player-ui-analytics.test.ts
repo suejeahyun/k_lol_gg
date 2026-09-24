@@ -70,6 +70,19 @@ test("Encounter summaries distinguish repeated same-team players from same-role 
   assert.equal(playerEncounters([match({}, { position: null })], "opponent").length, 0);
 });
 
+test("Encounter names keep the same order when server and browser default locales differ", () => {
+  const rows = [match({ participants: [participant(), participant({ participantId: 2, riotId: "Alpha#TEST" }), participant({ participantId: 3, riotId: "가상소환사#TEST" })] })];
+  const original = String.prototype.localeCompare;
+  const orderedFor = (defaultLocale: string) => {
+    String.prototype.localeCompare = function (other: string, locales?: Intl.LocalesArgument, options?: Intl.CollatorOptions) { return original.call(this, other, locales ?? defaultLocale, options); };
+    return playerEncounters(rows, "ally").map((row) => row.label);
+  };
+  try {
+    assert.deepEqual(orderedFor("en-US"), orderedFor("ko-KR"));
+    assert.deepEqual(orderedFor("en-US"), ["가상소환사#TEST", "Alpha#TEST"]);
+  } finally { String.prototype.localeCompare = original; }
+});
+
 test("Build aggregation treats reordered slots as one combination and excludes empty slots and trinkets", () => {
   const rows = [match(), match({ matchId: "KR_SYNTHETIC_2" }, { items: [2003, 1001, 0, 0, 0, 0, 3364], win: false })];
   const builds = playerBuildAggregates(rows, "items");
