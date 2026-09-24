@@ -8,6 +8,8 @@ const contentSecurityPolicy = [
   "img-src 'self' blob: data: https:",
   "font-src 'self' data:",
   `connect-src 'self'${isDevelopment ? " ws: wss:" : ""}`,
+  // Public navigation can reach a highlight without replacing the document CSP.
+  "frame-src 'self' https://www.youtube-nocookie.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

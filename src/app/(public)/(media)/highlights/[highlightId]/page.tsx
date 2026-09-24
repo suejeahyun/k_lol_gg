@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, ExternalLink, Sparkles } from "lucide-react";
+import { toPublicHighlightDto } from "@/modules/media";
 import { buildLegacyCanonicalIdDestination } from "@/modules/navigation/application/legacy-user-redirects";
 import { parseLegacyIntegerId } from "@/platform/legacy-identifiers";
 import { loadRuntimeMedia } from "@/modules/media/infrastructure/runtime-media";
@@ -24,6 +25,6 @@ export default async function HighlightDetail({ params }: { params: Promise<{ hi
   const result = await loadRuntimeMedia((service) => service.getPublicHighlight(highlightId));
   if (result.state === "ready" && !result.data) notFound();
   if (result.state !== "ready") return <div className={`page-wrap ${styles.detail}`}><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Sparkles /><h2>영상을 불러오지 못했어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section></div>;
-  const item = result.data!;
-  return <article className={`page-wrap ${styles.detail}`}><header className={styles.detailHeader}><span className={styles.tag}>HIGHLIGHT</span><h1>{item.title}</h1><p>{item.description}</p></header><div className={styles.player}><YouTubePlayer youtubeId={item.youtubeId} title={item.title} /></div><div><Link className={styles.back} href="/highlights"><ArrowLeft size={17} /> 목록으로</Link></div></article>;
+  const item = toPublicHighlightDto(result.data!, (id) => `/api/media/assets/${id}`);
+  return <article className={`page-wrap ${styles.detail}`}><header className={styles.detailHeader}><span className={styles.tag}>HIGHLIGHT</span><h1>{item.title}</h1><p>{item.description}</p></header><div className={styles.player}><YouTubePlayer youtubeId={item.youtubeId} title={item.title} /></div><div className={styles.detailActions}><Link className={styles.back} href="/highlights"><ArrowLeft size={17} /> 목록으로</Link><a className={styles.back} href={item.youtubeWatchUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={17} aria-hidden="true" /> YouTube에서 보기<span className="sr-only"> (새 탭)</span></a></div></article>;
 }
