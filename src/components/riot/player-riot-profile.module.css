@@ -2,6 +2,30 @@
 .workspace h3, .workspace h4, .workspace p { margin: 0; }
 .workspace h3 { font-size: 1.08rem; font-weight: 800; letter-spacing: -.025em; }
 .workspace h4 { font-size: .92rem; margin-bottom: 12px; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.overviewLayout { display: grid; grid-template-columns: minmax(270px, 310px) minmax(0, 1fr); align-items: start; gap: 20px; min-width: 0; }
+.analysisLayout, .insightColumn, .matchColumn { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 16px; min-width: 0; }
+.matchColumn { container-type: inline-size; }
+.matchList { min-width: 0; }
+.matchList > .panelHeading { padding: 6px 0 12px; }
+.textAction { border: 0; background: transparent; color: var(--primary); font: inherit; font-size: .75rem; cursor: pointer; padding: 5px 0; text-align: left; }
+.coverageDetails { color: var(--muted-foreground); font-size: .75rem; }
+.coverageDetails > summary { cursor: pointer; width: fit-content; padding: 2px 0; }
+.coverageDetails[open] > summary { margin-bottom: 10px; }
+.coverageDetails label { display: flex; gap: 7px; align-items: center; }
+.coverageDetails input { accent-color: var(--primary); }
+.secondaryPanel { min-width: 0; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+.secondaryPanel > summary { cursor: pointer; padding: 16px; font-size: .85rem; font-weight: 700; }
+.secondaryPanel > .panel, .secondaryPanel > .twoColumns { border: 0; padding-top: 0; }
+.championSummary { display: grid; min-width: 0; }
+.championSummary > button { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-bottom: 1px solid var(--border); padding: 12px 0; color: var(--foreground); background: transparent; text-align: left; cursor: pointer; min-width: 0; }
+.championSummary > button:last-child { border-bottom: 0; }
+.championSummary > button:hover { color: var(--primary); }
+.championSummary > button > img { width: 36px; min-width: 36px; height: 36px; border-radius: 9px; }
+.championSummary > button > span { display: grid; gap: 3px; min-width: 0; font-size: .85rem; }
+.championSummary small { font-variant-numeric: tabular-nums; }
+.championWinRate { margin-left: auto; text-align: right; flex-shrink: 0; }
+.mobileSummaryToggle { display: none; }
 .workspace button, .workspace input, .workspace select, .workspace summary { touch-action: manipulation; }
 .workspace :is(button, input, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 .rankHeader { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding: 22px; background: linear-gradient(120deg, color-mix(in srgb, var(--primary) 10%, var(--card)), var(--card)); border: 1px solid var(--border); border-radius: 18px; }
@@ -91,6 +115,10 @@
 .encounters li { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: .77rem; }
 .encounters li span { overflow-wrap: anywhere; }
 .encounters li strong { white-space: nowrap; font-size: .72rem; }
+.insightColumn .encounters li { display: grid; gap: 4px; font-size: .84rem; }
+.insightColumn .encounters li a { color: var(--foreground); font-weight: 650; text-decoration: none; }
+.insightColumn .encounters li a:hover { color: var(--primary); text-decoration: underline; }
+.insightColumn .encounters li strong { color: var(--muted-foreground); font-weight: 500; }
 .stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
 .stack > * { min-width: 0; }
 .match { min-width: 0; border: 1px solid var(--border); border-left: 4px solid var(--muted-foreground); border-radius: 12px; background: var(--card); }
@@ -130,3 +158,28 @@
 @media (max-width: 1080px) { .filters { grid-template-columns: repeat(3,minmax(0,1fr)); } .twoColumns { grid-template-columns: minmax(0,1fr); } .matchSummary { grid-template-columns: 1fr 1fr 1fr; } .matchSummary > :nth-child(4) { grid-column: 2 / 4; } .expandHint { grid-column: 1; grid-row: 2; } }
 @media (max-width: 640px) { .filters { grid-template-columns: repeat(2,minmax(0,1fr)); padding: 12px; gap: 10px; } .metricGrid, .reportGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .threeColumns { grid-template-columns: minmax(0,1fr); } .rankHeader, .panel { padding: 15px; } .metricGrid article { padding: 13px; } .metricGrid strong { font-size: 1rem; } .matchSummary { grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; } .matchSummary > :nth-child(3) { grid-column: 1; grid-row: 2; } .matchSummary > :nth-child(4) { grid-column: 2; grid-row: 2 / 4; } .expandHint { grid-row: 3; } .matchBody { padding: 12px; } .championCell > :first-child { flex-basis: 34px; width: 34px; height: 34px; } .asset { width: 22px; height: 22px; flex-basis: 22px; } .selectionInfo { line-height: 1.7; } .coverage { padding: 12px; gap: 7px; } .workspace { gap: 16px; } }
 @media (prefers-reduced-motion: reduce) { .workspace * { scroll-behavior: auto; transition: none; } }
+@container (max-width: 800px) {
+  .matchSummary { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .matchSummary > :nth-child(4) { grid-column: 2 / 4; }
+  .expandHint { grid-column: 1; grid-row: 2; }
+}
+@container (max-width: 480px) {
+  .matchSummary { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .matchSummary > :nth-child(3) { grid-column: 1; grid-row: 2; }
+  .matchSummary > :nth-child(4) { grid-column: 2; grid-row: 2 / 4; }
+  .expandHint { grid-row: 3; }
+}
+@media (max-width: 900px) {
+  .overviewLayout { grid-template-columns: minmax(0, 1fr); }
+  .mobileSummaryToggle { display: flex; justify-content: space-between; width: 100%; padding: 13px 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--foreground); font: inherit; font-size: .85rem; cursor: pointer; }
+  .overviewLayout > .insightColumn[data-expanded="false"] { display: none; }
+  .overviewLayout > .insightColumn[data-expanded="true"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .overviewLayout > .insightColumn[data-expanded="true"] { grid-template-columns: minmax(0, 1fr); }
+  .toolbar { gap: 10px; }
+  .topTabs { gap: 5px; }
+  .topTabs button { padding-inline: 10px; }
+  .rankHeader h3 { font-size: 1.45rem; }
+  .workspace { gap: 14px; }
+}

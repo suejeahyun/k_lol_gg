@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-09-24T23:33:29.656Z",
+  "fixture": "synthetic real-component SSR + client hydration",
+  "desktop": {
+    "viewport": 1280,
+    "clientWidth": 1265,
+    "scrollWidth": 1265,
+    "sidebarWidth": 310,
+    "matchColumnWidth": 790,
+    "sideBySide": true
+  },
+  "mobile": {
+    "viewports": [
+      320,
+      360
+    ],
+    "at320": {
+      "clientWidth": 305,
+      "scrollWidth": 305
+    },
+    "panels": [
+      "scoreboard",
+      "analysis",
+      "timeline",
+      "champions",
+      "report"
+    ],
+    "summaryToggle": "PASS"
+  },
+  "filters": {
+    "champion": "PASS 24 to 8 games",
+    "reset": "PASS"
+  },
+  "names": {
+    "default": "actual Riot ID plus tag",
+    "maskToggle": "PASS",
+    "scoreboard": "PASS"
+  },
+  "consoleErrors": 0,
+  "consoleWarnings": 0
+}

@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-09-24T23:33:29.654Z",
+  "command": "npm run check",
+  "exitCode": 0,
+  "contracts": 445,
+  "unitPass": 995,
+  "unitSkip": 1,
+  "fail": 0,
+  "build": "PASS",
+  "typecheck": "PASS",
+  "secretTree": "PASS",
+  "logSha256": "79f8a83b2840748d16d165c1b193c1c901481111ca92ab13c91bb165f462d534",
+  "dbRerun": "Not needed: layout and default presentation only, no API or DB change",
+  "focused": "4 SSR regressions and 17 existing UI tests passed"
+}

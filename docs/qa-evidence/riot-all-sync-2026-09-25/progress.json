@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-09-24T23:31:58.911Z",
+  "requestedAt": "2026-09-24T23:21:53.362Z",
+  "readOnly": true,
+  "uiReceipt": {
+    "scope": "ALL_CONNECTED",
+    "total": 106,
+    "newRequests": 106,
+    "alreadyPending": 0,
+    "deferred": 1
+  },
+  "jobs": [
+    {
+      "status": "QUEUED",
+      "failure_code": null,
+      "count": 87,
+      "next_available": "2026-09-24T23:21:53.362Z",
+      "latest_completed": null,
+      "max_attempt": 0
+    },
+    {
+      "status": "RETRY_WAIT",
+      "failure_code": "RATE_LIMITED",
+      "count": 6,
+      "next_available": "2026-09-24T23:22:46.714Z",
+      "latest_completed": null,
+      "max_attempt": 1
+    },
+    {
+      "status": "SUCCEEDED",
+      "failure_code": null,
+      "count": 13,
+      "next_available": "2026-09-24T23:21:53.362Z",
+      "latest_completed": "2026-09-24T23:31:18.121Z",
+      "max_attempt": 1
+    }
+  ],
+  "data": {
+    "targeted": 106,
+    "rank_refreshed": 19,
+    "analytics_initialized": 23,
+    "recent_page_refreshed": 14,
+    "history_complete": 0
+  },
+  "archive": {
+    "rows": 572,
+    "players": 23,
+    "distinct_games": 570,
+    "timelines": 72
+  },
+  "remainingUnconnected": 36
+}
