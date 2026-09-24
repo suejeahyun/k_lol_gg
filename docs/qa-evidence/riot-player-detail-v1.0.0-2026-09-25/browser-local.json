@@ -1,0 +1,26 @@
+{
+  "checkedOn": "2026-09-25",
+  "environment": "Actual React components bundled with synthetic data at localhost:3317; CUA browser",
+  "status": "PASS",
+  "fixture": {
+    "games": 24,
+    "nonRemakeGames": 23,
+    "champions": 3,
+    "observedLpDays": 8
+  },
+  "checks": [
+    "Overview/champions/report navigation and URL changes",
+    "Champion filter: 8 games, 7 non-remake; loss intersection empty; reset restores 24",
+    "Multiple patches: 16.18 gives 12; 16.18+16.17 gives 24",
+    "Champion metric sorting and personal item/rune/spell/core/skill samples",
+    "Report formulas, charts and exact snapshot retention after current filter changes",
+    "Save/reload/open browser report: 23 games and 65.22% win rate preserved",
+    "Keyboard Enter expands scoreboard and timeline; actual timestamp XP chart",
+    "360px viewport: document clientWidth=345 and scrollWidth=345, readable screenshot"
+  ],
+  "limitations": [
+    "This is synthetic component QA, not a real production API test.",
+    "Preview-only process environment shim error was fixed before the above checks.",
+    "Final turret plate UI has separate focused regression tests; real production verification follows deployment."
+  ]
+}

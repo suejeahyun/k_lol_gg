@@ -138,6 +138,11 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
           assertTransaction(transaction);
           return [...this.state.links.values()].filter((link) => link.status === "CONNECTED" && (!linkIds || linkIds.includes(link.id)));
         },
+        findPendingSyncJob: async (transaction, linkId, requestedSince) => {
+          assertTransaction(transaction);
+          return [...this.state.jobs.values()].filter((job) => job.linkId === linkId && job.requestedAt >= requestedSince && ["QUEUED", "RUNNING", "RETRY_WAIT"].includes(job.status))
+            .sort((left, right) => right.requestedAt.getTime() - left.requestedAt.getTime())[0] ?? null;
+        },
         loadNextScheduledSyncLinkForUpdate: async (transaction, now, requestedBefore) => {
           assertTransaction(transaction);
           const jobs = [...this.state.jobs.values()];

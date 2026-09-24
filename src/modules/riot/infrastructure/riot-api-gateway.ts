@@ -6,6 +6,8 @@ import {
 } from "../application/ports";
 import { canonicalRiotId } from "../domain/riot-integration";
 import { recentSoloSample, summarizeRecentSolo } from "../domain/recent-solo-summary";
+import { excludedRiotMatchStartedAt, normalizeRiotMatch, normalizeRiotTimeline, RIOT_MATCH_ID_PATTERN } from "../domain/riot-match-normalizer";
+import { riotHistoryStart, type RiotAnalyticsCollection, type RiotMatchDto } from "../domain/riot-player-analytics";
 
 type Fetch = typeof fetch;
 
@@ -188,6 +190,133 @@ export class RiotApiGateway implements RiotGatewayPort {
       }
     }
     return { kind: "SUCCESS", summary: summarizeRecentSolo(samples) };
+  }
+
+  /** One bounded sync increment. Cache hits never call Match V5 again. */
+  async fetchPlayerAnalytics(input: Parameters<NonNullable<RiotGatewayPort["fetchPlayerAnalytics"]>>[0]): Promise<RiotAnalyticsCollection> {
+    const clock = this.configuration.monotonicNow ?? (() => performance.now());
+    const deadline = clock() + 25_000;
+    const cutoff = riotHistoryStart(input.now);
+    const cache = new Map(input.cachedMatches.map((match) => [match.matchId, match]));
+    const completedStarts = new Map(input.cachedMatches.map((match) => [match.matchId, Date.parse(match.startedAt)]));
+    const changed = new Map<string, RiotMatchDto>();
+    let historyBefore = input.historyBefore, historyComplete = input.historyComplete, partial = false;
+    let retryAfterSeconds: number | undefined;
+    const read = async (url: URL, maximumBytes: number): Promise<FetchResult> => {
+      const remaining = Math.floor(deadline - clock());
+      if (remaining <= 0 || retryAfterSeconds !== undefined) return { kind: "TRANSIENT", code: "TIMEOUT" };
+      const result = await this.fetchJson(url, maximumBytes, Math.min(this.timeoutMilliseconds, remaining));
+      if (result.kind === "RATE_LIMITED") retryAfterSeconds = Math.max(retryAfterSeconds ?? 0, result.retryAfterSeconds);
+      return result;
+    };
+    const list = async (scope: "solo" | "recent" | "history"): Promise<readonly string[] | null> => {
+      const url = new URL(`/lol/match/v5/matches/by-puuid/${encodeURIComponent(input.puuid)}/ids`, this.configuration.regionalBaseUrl);
+      url.searchParams.set("start", "0"); url.searchParams.set("count", scope === "history" ? "10" : "20");
+      if (scope === "solo") url.searchParams.set("queue", "420");
+      else url.searchParams.set("startTime", String(Math.floor(cutoff.getTime() / 1_000)));
+      if (scope === "history" && historyBefore !== null) url.searchParams.set("endTime", String(historyBefore));
+      const result = await read(url, 8 * 1_024);
+      if (result.kind !== "SUCCESS" || !Array.isArray(result.value) || result.value.length > (scope === "history" ? 10 : 20) || result.value.some((id) => typeof id !== "string" || !RIOT_MATCH_ID_PATTERN.test(id)) || new Set(result.value).size !== result.value.length) { partial = true; return null; }
+      return result.value as string[];
+    };
+    if (!boundedString(input.puuid, 128) || /\s/u.test(input.puuid)) return { matches: [], historyBefore, historyComplete, partial: true, recentPageComplete: false };
+    const soloIds = await list("solo");
+    const recentIds = retryAfterSeconds === undefined ? await list("recent") : null;
+    let restartHistory = recentIds?.length === 20 && !recentIds.some((id) => cache.has(id)) &&
+      (input.historyBefore !== null || input.historyComplete || input.cachedMatches.length > 0);
+    if (restartHistory) {
+      // A full page without overlap can hide games between that page and the old
+      // archive. Persist a safe high-water cursor even if this run fails halfway;
+      // retaining the old cursor would make the new gap invisible on the retry.
+      historyBefore = Math.floor(input.now.getTime() / 1_000);
+      historyComplete = false;
+    }
+    const soloSamples = new Map<string, Exclude<ReturnType<typeof recentSoloSample>, null>>();
+    const rememberSolo = (match: RiotMatchDto) => {
+      if (match.queueId !== 420 || match.mapId !== 11 || match.participants.length !== 10) return;
+      if (match.remake) { soloSamples.set(match.matchId, "REMAKE"); return; }
+      const self = match.participants.find((row) => row.participantId === match.selfParticipantId);
+      if (self && self.damageToChampions !== null && self.visionScore !== null) soloSamples.set(match.matchId, {
+        win: self.win, kills: self.kills, deaths: self.deaths, assists: self.assists, damage: self.damageToChampions, vision: self.visionScore, position: self.position,
+      });
+    };
+    for (const match of cache.values()) rememberSolo(match);
+    const collect = async (ids: readonly string[]) => {
+      const missing = [...new Set(ids)].filter((id) => !completedStarts.has(id));
+      for (let index = 0; index < missing.length && retryAfterSeconds === undefined; index += 2) {
+        const chunk = missing.slice(index, index + 2);
+        const results = await Promise.all(chunk.map((id) => read(new URL(`/lol/match/v5/matches/${encodeURIComponent(id)}`, this.configuration.regionalBaseUrl), 512 * 1_024)));
+        for (const [offset, result] of results.entries()) {
+          if (result.kind !== "SUCCESS") { partial = true; continue; }
+          const id = chunk[offset]!;
+          const excludedAt = excludedRiotMatchStartedAt(result.value, id, input.puuid);
+          if (excludedAt !== null) {
+            completedStarts.set(id, excludedAt);
+            if (soloIds?.includes(id)) soloSamples.set(id, "REMAKE");
+            continue;
+          }
+          const match = normalizeRiotMatch(result.value, id, input.puuid);
+          if (match) {
+            const sample = recentSoloSample(result.value, id, input.puuid);
+            if (sample) soloSamples.set(id, sample);
+            cache.set(id, match); completedStarts.set(id, Date.parse(match.startedAt)); if (new Date(match.startedAt) >= cutoff) changed.set(id, match);
+          }
+          else partial = true;
+        }
+        if (results.some((result) => result.kind !== "SUCCESS") || clock() >= deadline) { partial = true; break; }
+      }
+    };
+    await collect([...(soloIds ?? []), ...(recentIds ?? [])]);
+    const recentComplete = recentIds !== null && recentIds.every((id) => completedStarts.has(id));
+    if (restartHistory && recentComplete && input.lastCollectedAt && recentIds.every((id) =>
+      !cache.has(id) && completedStarts.get(id)! <= input.lastCollectedAt!.getTime())) {
+      // Excluded games are deliberately never cached. Only a successfully
+      // validated prior latest-page watermark can prove that this all-excluded
+      // page is not a new gap; failed/partial runs must not advance that watermark.
+      restartHistory = false;
+      historyBefore = input.historyBefore;
+      historyComplete = input.historyComplete;
+    }
+    const historyIds = !restartHistory && !historyComplete && historyBefore !== null && retryAfterSeconds === undefined ? await list("history") : null;
+    if (historyIds) await collect(historyIds);
+    const historyBatchComplete = historyIds !== null && historyIds.every((id) => completedStarts.has(id));
+    if (historyBatchComplete && historyIds.length < 10) historyComplete = true;
+    if (recentComplete && recentIds.length < 20 && historyBefore === null) historyComplete = true;
+    const progressIds = historyBatchComplete ? historyIds : (historyBefore === null || restartHistory) && recentComplete ? recentIds : [];
+    if (progressIds.length) {
+      const oldest = Math.min(...progressIds.map((id) => completedStarts.get(id)!));
+      const nextBefore = Math.floor(oldest / 1_000) - 1;
+      historyBefore = historyBefore === null ? nextBefore : Math.min(historyBefore, nextBefore);
+      if (historyBefore <= Math.floor(cutoff.getTime() / 1_000)) historyComplete = true;
+    }
+    // Timelines are larger. Collect up to four pending games per run; completed timelines are immutable.
+    const timelines = [...cache.values()].filter((match) => match.timelineStatus === "PENDING" && new Date(match.startedAt) >= cutoff)
+      .sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 4);
+    for (let index = 0; index < timelines.length && clock() < deadline && retryAfterSeconds === undefined; index += 2) {
+      const chunk = timelines.slice(index, index + 2);
+      const results = await Promise.all(chunk.map((match) => read(new URL(`/lol/match/v5/matches/${encodeURIComponent(match.matchId)}/timeline`, this.configuration.regionalBaseUrl), 2 * 1_024 * 1_024)));
+      for (const [offset, result] of results.entries()) {
+        const match = chunk[offset]!;
+        if (result.kind === "SUCCESS") {
+          const timeline = normalizeRiotTimeline(result.value, match);
+          if (timeline) { const enriched = { ...match, timeline, timelineStatus: "AVAILABLE" as const }; cache.set(match.matchId, enriched); changed.set(match.matchId, enriched); }
+          else {
+            // A structurally unsupported successful payload is deterministic;
+            // retrying the newest four forever would starve all older timelines.
+            changed.set(match.matchId, { ...match, timelineStatus: "UNAVAILABLE" });
+            partial = true;
+          }
+        } else if (result.kind === "NOT_FOUND") changed.set(match.matchId, { ...match, timelineStatus: "UNAVAILABLE" });
+        else partial = true;
+      }
+      if (results.some((result) => !["SUCCESS", "NOT_FOUND"].includes(result.kind))) break;
+    }
+    const soloComplete = soloIds !== null && soloIds.every((id) => soloSamples.has(id));
+    return { matches: [...changed.values()], historyBefore, historyComplete,
+      partial: partial || !soloComplete || !recentComplete, recentPageComplete: recentComplete,
+      ...(soloComplete ? { recentSolo: summarizeRecentSolo(soloIds.map((id) => soloSamples.get(id)!).filter((sample): sample is Exclude<typeof sample, "REMAKE"> => sample !== "REMAKE")) } : {}),
+      ...(retryAfterSeconds !== undefined ? { retryAfterSeconds } : {}),
+    };
   }
 
   private syncFailure(result: FetchResult): Awaited<ReturnType<RiotGatewayPort["fetchRank"]>> | null {

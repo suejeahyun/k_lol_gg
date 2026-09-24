@@ -103,3 +103,19 @@ export async function loadRuntimePublicRiotProfile(playerId: string) {
     return { state: "error" as const };
   }
 }
+
+export async function loadRuntimePublicRiotAnalytics(playerId: string, cursor?: string) {
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) return { state: "unavailable" as const };
+  try {
+    const repository = new PostgresPublicRiotQueryRepository(getDatabase());
+    return { state: "ready" as const, data: await repository.getPublicAnalytics(playerId, cursor) };
+  } catch { return { state: "error" as const }; }
+}
+
+export async function loadRuntimePublicRiotMatch(playerId: string, matchId: string) {
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) return { state: "unavailable" as const };
+  try {
+    const repository = new PostgresPublicRiotQueryRepository(getDatabase());
+    return { state: "ready" as const, data: await repository.getPublicMatch(playerId, matchId) };
+  } catch { return { state: "error" as const }; }
+}

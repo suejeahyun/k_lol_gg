@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, count, desc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, isNull, lt, lte, ne, or, sql } from "drizzle-orm";
 
 import {
   ADMIN_MUTATION_SESSION_POLICY,
@@ -18,6 +18,9 @@ import {
   riotRsoStates,
   riotSummaries,
   riotSyncJobs,
+  riotMatchArchive,
+  riotAnalyticsProgress,
+  riotRankHistory,
 } from "@/platform/db/schema/riot";
 import type { V2Database } from "@/platform/db/database";
 import type { V2Transaction } from "@/platform/db/transaction";
@@ -33,6 +36,8 @@ import type {
 import type { RiotApplicationDependencies } from "../application/riot-application";
 import type { AdminRiotPageDto, AdminRiotQuery, RiotQueryRepository } from "../application/riot-query";
 import type { RiotAccountLink, RiotRsoState, RiotSyncJob } from "../domain/riot-integration";
+import { parseStoredRiotMatch } from "../domain/riot-match-normalizer";
+import { riotHistoryStart } from "../domain/riot-player-analytics";
 
 type LinkRow = typeof riotAccountLinks.$inferSelect;
 type StateRow = typeof riotRsoStates.$inferSelect;
@@ -340,6 +345,12 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
           });
         },
         latestSyncRequestedAt: async (context, linkId) => (await this.tx(context).select({ value: riotSyncJobs.requestedAt }).from(riotSyncJobs).where(eq(riotSyncJobs.linkId, linkId)).orderBy(desc(riotSyncJobs.requestedAt)).limit(1))[0]?.value ?? null,
+        findPendingSyncJob: async (context, linkId, requestedSince) => {
+          const row = (await this.tx(context).select().from(riotSyncJobs).where(and(eq(riotSyncJobs.linkId, linkId),
+            gte(riotSyncJobs.requestedAt, requestedSince), inArray(riotSyncJobs.status, ["QUEUED", "RUNNING", "RETRY_WAIT"])))
+            .orderBy(desc(riotSyncJobs.requestedAt), desc(riotSyncJobs.id)).limit(1))[0];
+          return row ? jobFromRow(row) : null;
+        },
         listConnectedLinksForUpdate: async (context, linkIds) => {
           const rows = await this.tx(context).select().from(riotAccountLinks).where(and(
             eq(riotAccountLinks.status, "CONNECTED"),
@@ -402,8 +413,18 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
           const row = (await this.tx(context).select().from(riotSyncJobs).where(eq(riotSyncJobs.id, jobId)).for("update").limit(1))[0];
           return row ? jobFromRow(row) : null;
         },
+        loadAnalyticsCollectionState: async (context, link) => {
+          const scope = and(eq(riotMatchArchive.linkId, link.id), eq(riotMatchArchive.linkRevision, link.revision), gte(riotMatchArchive.startedAt, riotHistoryStart(new Date())));
+          const recent = await this.tx(context).select({ value: riotMatchArchive.matchJson }).from(riotMatchArchive).where(scope).orderBy(desc(riotMatchArchive.startedAt), desc(riotMatchArchive.matchId)).limit(120);
+          const pending = await this.tx(context).select({ value: riotMatchArchive.matchJson }).from(riotMatchArchive)
+            .where(and(scope, sql`${riotMatchArchive.matchJson}->>'timelineStatus' = 'PENDING'`)).orderBy(riotMatchArchive.startedAt, riotMatchArchive.matchId).limit(20);
+          const progress = (await this.tx(context).select().from(riotAnalyticsProgress).where(and(eq(riotAnalyticsProgress.linkId, link.id), eq(riotAnalyticsProgress.linkRevision, link.revision))).limit(1))[0];
+          const matches = new Map([...recent, ...pending].flatMap((row) => { const match = parseStoredRiotMatch(row.value); return match ? [[match.matchId, match] as const] : []; }));
+          return { matches: [...matches.values()], historyBefore: progress?.historyBefore ?? null, historyComplete: progress?.historyComplete ?? false,
+            lastCollectedAt: progress && progress.updatedAt.getTime() > 0 ? progress.updatedAt : undefined };
+        },
         saveProjection: async (context, projection) => {
-          const link = (await this.tx(context).select({ id: riotAccountLinks.id }).from(riotAccountLinks).where(eq(riotAccountLinks.playerId, projection.playerId)).limit(1))[0];
+          const link = (await this.tx(context).select({ id: riotAccountLinks.id, revision: riotAccountLinks.revision }).from(riotAccountLinks).where(eq(riotAccountLinks.playerId, projection.playerId)).limit(1))[0];
           if (!link) throw new Error("RIOT_LINK_NOT_FOUND");
           await this.tx(context).insert(riotSummaries).values({
             playerId: projection.playerId,
@@ -433,6 +454,31 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
             }),
             updatedAt: new Date(),
           } });
+          const cutoff = riotHistoryStart(projection.syncedAt);
+          // Bound retention and discard other connection generations; changed accounts never inherit history.
+          await this.tx(context).delete(riotMatchArchive).where(and(eq(riotMatchArchive.linkId, link.id), or(ne(riotMatchArchive.linkRevision, link.revision), lt(riotMatchArchive.startedAt, cutoff))));
+          await this.tx(context).delete(riotRankHistory).where(and(eq(riotRankHistory.linkId, link.id), or(ne(riotRankHistory.linkRevision, link.revision), lt(riotRankHistory.recordedAt, cutoff))));
+          const rank = { linkId: link.id, linkRevision: link.revision, day: new Date(projection.syncedAt.getTime() + 9 * 60 * 60_000).toISOString().slice(0, 10),
+            tier: projection.soloTier, rank: projection.soloRank, leaguePoints: projection.leaguePoints, wins: projection.wins, losses: projection.losses, recordedAt: projection.syncedAt };
+          await this.tx(context).insert(riotRankHistory).values(rank).onConflictDoUpdate({ target: [riotRankHistory.linkId, riotRankHistory.linkRevision, riotRankHistory.day], set: rank });
+          if (projection.analytics) {
+            for (const candidate of projection.analytics.matches) {
+              const match = parseStoredRiotMatch(candidate);
+              if (!match || new Date(match.startedAt) < cutoff) continue;
+              const row = { linkId: link.id, linkRevision: link.revision, matchId: match.matchId, startedAt: new Date(match.startedAt), matchJson: match, collectedAt: projection.syncedAt };
+              await this.tx(context).insert(riotMatchArchive).values(row).onConflictDoUpdate({ target: [riotMatchArchive.linkId, riotMatchArchive.linkRevision, riotMatchArchive.matchId], set: {
+                matchJson: sql`CASE WHEN ${riotMatchArchive.matchJson}->>'timelineStatus' = 'AVAILABLE' AND ${match.timelineStatus} <> 'AVAILABLE' THEN ${riotMatchArchive.matchJson} ELSE ${JSON.stringify(match)}::jsonb END`,
+                collectedAt: projection.syncedAt,
+              } });
+            }
+            const progress = { linkId: link.id, linkRevision: link.revision, historyBefore: projection.analytics.historyBefore,
+              historyComplete: projection.analytics.historyComplete,
+              updatedAt: projection.analytics.recentPageComplete === false ? new Date(0) : projection.syncedAt };
+            await this.tx(context).insert(riotAnalyticsProgress).values(progress).onConflictDoUpdate({ target: riotAnalyticsProgress.linkId,
+              set: { ...progress, updatedAt: projection.analytics.recentPageComplete === false
+                ? sql`CASE WHEN ${riotAnalyticsProgress.linkRevision} = ${link.revision} THEN ${riotAnalyticsProgress.updatedAt} ELSE '1970-01-01T00:00:00.000Z'::timestamptz END`
+                : projection.syncedAt } });
+          }
         },
       },
       audit: {
@@ -489,7 +535,10 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
     const row = (await this.database.select().from(riotSummaries).innerJoin(riotAccountLinks, and(
       eq(riotAccountLinks.id, riotSummaries.linkId),
       eq(riotAccountLinks.status, "CONNECTED"),
-    )).where(eq(riotSummaries.playerId, playerId)).limit(1))[0];
+      gte(riotSummaries.lastSyncedAt, riotAccountLinks.linkedAt),
+    )).innerJoin(players, and(eq(players.id, riotAccountLinks.playerId), eq(players.status, "ACTIVE"), eq(players.userAccountId, riotAccountLinks.ownerUserAccountId),
+      sql`${riotAccountLinks.normalizedKey} = ${players.nicknameNormalized} || '#' || ${players.tagLineNormalized}`))
+      .where(eq(riotSummaries.playerId, playerId)).limit(1))[0];
     if (!row) return null;
     const summary = row.summaries;
     return {

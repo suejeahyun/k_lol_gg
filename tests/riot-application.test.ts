@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { RiotGatewayPort } from "../src/modules/riot/application/ports";
+import type { RiotAnalyticsCollection } from "../src/modules/riot/domain/riot-player-analytics";
+import { normalizeRiotMatch } from "../src/modules/riot/domain/riot-match-normalizer";
+import { analyticsMatch, analyticsPuuid } from "./fixtures/riot-analytics";
 
 import {
   FakeRiotGateway,
@@ -51,6 +54,8 @@ class Harness {
 
   readonly gateway = new FakeRiotGateway();
   recentSoloResult: Awaited<ReturnType<NonNullable<RiotGatewayPort["fetchRecentSolo"]>>> | null = null;
+  analyticsResult: RiotAnalyticsCollection | null = null;
+  analyticsHook: ((input: Parameters<NonNullable<RiotGatewayPort["fetchPlayerAnalytics"]>>[0]) => void) | null = null;
   readonly rso = new FakeRsoAdapter();
   readonly protector = new FakeRiotIdentityProtector();
 
@@ -152,6 +157,11 @@ class Harness {
         },
       },
       repository: {
+        loadAnalyticsCollectionState: async () => {
+          assertTransaction();
+          const data = this.snapshot.projections.at(-1)?.analytics;
+          return { matches: data?.matches ?? [], historyBefore: data?.historyBefore ?? null, historyComplete: data?.historyComplete ?? false };
+        },
         loadPlayerOwnerAccountIdForUpdate: async (_transaction, playerId) => {
           assertTransaction();
           const owner = [...this.actors.values()].find(
@@ -192,6 +202,11 @@ class Harness {
         listConnectedLinksForUpdate: async (_transaction, linkIds) => {
           assertTransaction();
           return [...this.snapshot.links.values()].filter((link) => link.status === "CONNECTED" && (!linkIds || linkIds.includes(link.id)));
+        },
+        findPendingSyncJob: async (_transaction, linkId, requestedSince) => {
+          assertTransaction();
+          return [...this.snapshot.jobs.values()].filter((job) => job.linkId === linkId && job.requestedAt >= requestedSince && ["QUEUED", "RUNNING", "RETRY_WAIT"].includes(job.status))
+            .sort((left, right) => right.requestedAt.getTime() - left.requestedAt.getTime())[0] ?? null;
         },
         loadNextScheduledSyncLinkForUpdate: async (_transaction, now, requestedBefore) => {
           assertTransaction();
@@ -242,6 +257,9 @@ class Harness {
         resolveRiotId: checkedExternal((input) => this.gateway.resolveRiotId(input)),
         fetchRank: checkedExternal((input) => this.gateway.fetchRank(input)),
         fetchRecentSolo: checkedExternal(async () => this.recentSoloResult ?? { kind: "UNAVAILABLE" as const }),
+        ...(this.analyticsResult ? { fetchPlayerAnalytics: checkedExternal(async (input: Parameters<NonNullable<RiotGatewayPort["fetchPlayerAnalytics"]>>[0]) => {
+          this.analyticsHook?.(input); return this.analyticsResult!;
+        }) } : {}),
       },
       rso: {
         issueState: (stateId) => this.rso.issueState(stateId),
@@ -553,5 +571,61 @@ test("recent solo summary persists only when complete; missing data preserves ra
   assert.equal(job.status, "RETRY_WAIT");
   assert.equal(job.availableAt.getTime(), harness.now.getTime() + 120_000);
   assert.equal(harness.snapshot.projections.length, 3, "successful rank remains available while the optional source retries");
+  assert.equal(harness.externalInsideTransaction, false);
+});
+
+test("sync-all reuses active work and schedules cooling accounts without blocking the whole population", async () => {
+  const { harness, service } = setup();
+  await service.connectDirect({ context: harness.ownerContext("all-cooldown-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+  const link = [...harness.snapshot.links.values()][0]!;
+  harness.gateway.registerRank("private-puuid-1", { tier: "GOLD", rank: "I", leaguePoints: 50, wins: 10, losses: 5, partial: false });
+  await service.requestSync({ context: harness.ownerContext("all-before"), mode: "SINGLE", linkIds: [link.id] });
+  const reused = await service.requestSync({ context: harness.adminContext("all-pending", true), mode: "ALL" });
+  assert.equal(reused.body.queuedCount, 0);
+  assert.equal(reused.body.existingCount, 1);
+  assert.equal(harness.snapshot.jobs.size, 1);
+  await service.runNextSync(harness.jobAuthorization());
+  const context = harness.adminContext("all-deferred", true);
+  const deferred = await service.requestSync({ context, mode: "ALL" });
+  assert.equal(deferred.body.queuedCount, 1);
+  assert.equal(deferred.body.deferredCount, 1);
+  assert.equal(deferred.body.targetCount, 1);
+  const scheduled = [...harness.snapshot.jobs.values()].at(-1)!;
+  assert.equal(scheduled.availableAt.getTime(), harness.now.getTime() + 300_000);
+  assert.equal((await service.runNextSync(harness.jobAuthorization())).status, "IDLE");
+  const replay = await service.requestSync({ context, mode: "ALL" });
+  assert.equal(replay.replayed, true);
+  assert.equal(harness.snapshot.jobs.size, 2);
+  const repeated = await service.requestSync({ context: harness.adminContext("all-again", true), mode: "ALL" });
+  assert.equal(repeated.body.existingCount, 1);
+  assert.equal(harness.snapshot.jobs.size, 2);
+  harness.now = new Date(scheduled.availableAt);
+  assert.equal((await service.runNextSync(harness.jobAuthorization())).status, "PROCESSED");
+});
+
+test("analytics persists useful partial facts during backoff, reuses its cache, and discards data after a concurrent identity change", async () => {
+  const { harness } = setup();
+  const match = normalizeRiotMatch(analyticsMatch("KR_100", harness.now.getTime()), "KR_100", analyticsPuuid)!;
+  harness.analyticsResult = { matches: [match], historyBefore: 1234, historyComplete: false, partial: true, retryAfterSeconds: 120 };
+  const service = harness.service();
+  await service.connectDirect({ context: harness.ownerContext("analytics-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+  const linkId = [...harness.snapshot.links.keys()][0]!;
+  harness.gateway.registerRank("private-puuid-1", { tier: "GOLD", rank: "II", leaguePoints: 25, wins: 10, losses: 5, partial: false });
+  await service.requestSync({ context: harness.ownerContext("analytics-request"), mode: "SINGLE", linkIds: [linkId] });
+  await service.runNextSync(harness.jobAuthorization());
+  assert.equal(harness.snapshot.projections.at(-1)?.analytics?.matches.length, 1);
+  assert.equal([...harness.snapshot.jobs.values()].at(-1)?.status, "RETRY_WAIT");
+  harness.now = new Date(harness.now.getTime() + 120_000);
+  harness.analyticsResult = { matches: [], historyBefore: 1234, historyComplete: true, partial: false };
+  harness.analyticsHook = (input) => { assert.equal(input.cachedMatches.length, 1); assert.equal(input.historyBefore, 1234); };
+  await service.runNextSync(harness.jobAuthorization());
+  assert.equal([...harness.snapshot.jobs.values()].at(-1)?.status, "SUCCEEDED");
+  harness.now = new Date(harness.now.getTime() + 301_000);
+  await service.requestSync({ context: harness.ownerContext("analytics-identity-change"), mode: "SINGLE", linkIds: [linkId] });
+  const projectionCount = harness.snapshot.projections.length;
+  harness.analyticsHook = () => { const link = harness.snapshot.links.get(linkId)!; harness.snapshot.links.set(linkId, { ...link, revision: link.revision + 1 }); };
+  await service.runNextSync(harness.jobAuthorization());
+  assert.equal(harness.snapshot.projections.length, projectionCount);
+  assert.equal([...harness.snapshot.jobs.values()].at(-1)?.status, "CANCELLED");
   assert.equal(harness.externalInsideTransaction, false);
 });

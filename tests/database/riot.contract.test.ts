@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { join, relative, resolve } from "node:path";
 import test from "node:test";
+import { Pool } from "pg";
 
 import { eq } from "drizzle-orm";
 
@@ -17,7 +19,7 @@ import {
 import { PostgresRiotAdapter } from "../../src/modules/riot/infrastructure/postgres-riot-adapter";
 import { PostgresPublicRiotQueryRepository } from "../../src/modules/riot/infrastructure/postgres-public-riot-query";
 import { createDatabaseHandle } from "../../src/platform/db/database";
-import { applyMigrations } from "../../src/platform/db/migrate";
+import { applyMigrations, defaultMigrationsFolder } from "../../src/platform/db/migrate";
 import {
   auditEvents,
   authSessions,
@@ -28,11 +30,145 @@ import {
   riotRsoStates,
   riotSummaries,
   riotSyncJobs,
+  riotMatchArchive,
+  riotAnalyticsProgress,
+  riotRankHistory,
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
+import { normalizeRiotMatch, normalizeRiotTimeline } from "../../src/modules/riot/domain/riot-match-normalizer";
+import { analyticsMatch, analyticsPuuid, analyticsTimeline } from "../fixtures/riot-analytics";
 
 const digest = "ab".repeat(32);
+
+test("0045 fresh, populated 0044 upgrade and replay preserve existing Riot links and summaries", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const admin = new Pool({ connectionString, max: 1 });
+  const temporaryRoot = resolve(".tmp");
+  await mkdir(temporaryRoot, { recursive: true });
+  const folder = await mkdtemp(join(temporaryRoot, "riot-analytics-migration-"));
+  const journal = JSON.parse(await readFile(join(defaultMigrationsFolder, "meta/_journal.json"), "utf8")) as { entries: { tag: string }[] };
+  const index = journal.entries.findIndex((entry) => entry.tag === "0045_simple_reptil");
+  assert.ok(index > 0);
+  try {
+    await mkdir(join(folder, "meta"));
+    await writeFile(join(folder, "meta/_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, index) }));
+    for (const entry of journal.entries.slice(0, index)) await copyFile(join(defaultMigrationsFolder, `${entry.tag}.sql`), join(folder, `${entry.tag}.sql`));
+    for (const upgrade of [false, true]) {
+      const databaseName = `klol_v2_test_riot_${randomBytes(8).toString("hex")}`;
+      assert.match(databaseName, /^klol_v2_test_riot_[a-f0-9]{16}$/u);
+      await admin.query(`CREATE DATABASE "${databaseName}"`);
+      const url = new URL(connectionString); url.pathname = `/${databaseName}`;
+      assertSafeTestDatabase({ connectionString: url.toString(), nodeEnv: "test", testMode: "true" });
+      const { database, pool } = createDatabaseHandle(url.toString(), { max: 1 });
+      const ownerId = randomUUID(), playerId = randomUUID(), linkId = randomUUID();
+      try {
+        if (upgrade) {
+          await applyMigrations(database, folder);
+          await database.insert(userAccounts).values({ id: ownerId, loginId: "upgrade-analytics", loginIdNormalized: "upgrade-analytics", status: "APPROVED" });
+          await database.insert(players).values({ id: playerId, userAccountId: ownerId, memberName: "합성 이관", memberNameNormalized: "합성 이관", nickname: "UpgradeStats", nicknameNormalized: "upgradestats", tagLine: "TEST", tagLineNormalized: "test" });
+          await database.insert(riotAccountLinks).values({ id: linkId, revision: 1, playerId, ownerUserAccountId: ownerId, gameName: "UpgradeStats", tagLine: "TEST", normalizedKey: "upgradestats#test", protectedPuuid: "synthetic-encrypted", method: "ADMIN", status: "CONNECTED", linkedAt: new Date() });
+          await database.insert(riotSummaries).values({ playerId, linkId, gameName: "UpgradeStats", tagLine: "TEST", soloTier: "GOLD", soloRank: "II", leaguePoints: 42, wins: 7, losses: 3, lastSyncedAt: new Date() });
+        }
+        await applyMigrations(database); await applyMigrations(database);
+        assert.equal(Number((await pool.query("select count(*) from drizzle.__drizzle_migrations")).rows[0].count), journal.entries.length);
+        assert.equal(Number((await pool.query("select count(*) from information_schema.tables where table_schema='riot' and table_name in ('match_archive','analytics_progress','rank_history')")).rows[0].count), 3);
+        if (upgrade) {
+          assert.equal((await database.select().from(riotSummaries))[0]?.leaguePoints, 42);
+          assert.equal((await database.select().from(riotAccountLinks))[0]?.revision, 1);
+        }
+      } finally { await pool.end(); await admin.query(`DROP DATABASE "${databaseName}"`); }
+    }
+  } finally {
+    await admin.end();
+    const location = relative(temporaryRoot, resolve(folder));
+    assert.ok(location.startsWith("riot-analytics-migration-") && !location.includes(".."));
+    await rm(folder, { recursive: true, force: true });
+  }
+});
+
+test("Riot analytics archive deduplicates, pages without upstream access, retains daily observations and hides changed connections", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const adapter = new PostgresRiotAdapter(database, { featureEnabled: true, jobVerifier: { verifyAndConsume: async () => true } });
+  const query = new PostgresPublicRiotQueryRepository(database);
+  const ownerId = randomUUID(), playerId = randomUUID(), linkId = randomUUID(), now = new Date(Math.floor(Date.now() / 60_000) * 60_000);
+  const loadCollectionState = () => adapter.dependencies.unitOfWork.transaction(async (tx) => {
+    const link = await adapter.dependencies.repository.loadLinkForUpdate(tx, linkId);
+    assert.ok(link);
+    return adapter.dependencies.repository.loadAnalyticsCollectionState!(tx, link);
+  });
+  try {
+    await applyMigrations(database);
+    const key = `analytics-${ownerId}`;
+    await database.insert(userAccounts).values({ id: ownerId, loginId: key, loginIdNormalized: key, status: "APPROVED" });
+    await database.insert(players).values({ id: playerId, userAccountId: ownerId, memberName: "합성 분석", memberNameNormalized: "합성 분석", nickname: "SyntheticStats", nicknameNormalized: "syntheticstats", tagLine: "TEST", tagLineNormalized: "test" });
+    await database.insert(riotAccountLinks).values({ id: linkId, revision: 1, playerId, ownerUserAccountId: ownerId, gameName: "SyntheticStats", tagLine: "TEST", normalizedKey: "syntheticstats#test", protectedPuuid: "synthetic-encrypted-only", method: "ADMIN", status: "CONNECTED", linkedAt: new Date(now.getTime() - 1_000) });
+    const matches = Array.from({ length: 45 }, (_, index) => normalizeRiotMatch(analyticsMatch(`KR_${1000 + index}`, now.getTime() - index * 3_600_000), `KR_${1000 + index}`, analyticsPuuid)!);
+    const first = matches[0]!;
+    matches[0] = { ...first, timeline: normalizeRiotTimeline(analyticsTimeline(first.matchId), first), timelineStatus: "AVAILABLE" };
+    const projection = { playerId, gameName: "SyntheticStats", tagLine: "TEST", soloTier: "GOLD", soloRank: "II", leaguePoints: 25, wins: 20, losses: 10, syncedAt: now,
+      analytics: { matches, historyBefore: Math.floor(now.getTime() / 1_000) - 45 * 3_600, historyComplete: false, partial: false, recentPageComplete: true } };
+    await adapter.dependencies.unitOfWork.transaction(async (tx) => { await adapter.dependencies.repository.saveProjection(tx, {
+      ...projection, analytics: { ...projection.analytics, matches: [], recentPageComplete: false, partial: true },
+    }); });
+    assert.equal((await database.select().from(riotAnalyticsProgress).where(eq(riotAnalyticsProgress.linkId, linkId)))[0]?.updatedAt.getTime(), 0,
+      "an initial partial collection cannot claim a completed recent-page observation");
+    assert.equal((await loadCollectionState()).lastCollectedAt, undefined);
+    assert.equal(await query.getPublicAnalytics(playerId), null, "the private epoch sentinel is never exposed as a public 1970 update");
+    await adapter.dependencies.unitOfWork.transaction(async (tx) => { await adapter.dependencies.repository.saveProjection(tx, projection); });
+    assert.equal((await loadCollectionState()).lastCollectedAt?.toISOString(), now.toISOString());
+    const partialAt = new Date(now.getTime() + 500);
+    await adapter.dependencies.unitOfWork.transaction(async (tx) => { await adapter.dependencies.repository.saveProjection(tx, {
+      ...projection, syncedAt: partialAt, leaguePoints: 30,
+      analytics: { ...projection.analytics, matches: [{ ...first, timeline: null, timelineStatus: "PENDING" }], recentPageComplete: false, partial: true },
+    }); });
+    assert.equal((await database.select().from(riotAnalyticsProgress).where(eq(riotAnalyticsProgress.linkId, linkId)))[0]?.updatedAt.toISOString(), now.toISOString(),
+      "a partial refresh preserves the last fully observed recent-page watermark");
+    assert.equal((await loadCollectionState()).lastCollectedAt?.toISOString(), now.toISOString());
+    assert.equal((await database.select().from(riotMatchArchive).where(eq(riotMatchArchive.linkId, linkId))).length, 45);
+    assert.equal((await database.select().from(riotRankHistory).where(eq(riotRankHistory.linkId, linkId))).length, 1);
+    const page = await query.getPublicAnalytics(playerId);
+    assert.ok(page); assert.equal(page.matches.length, 40); assert.equal(page.coverage.collectedGames, 45); assert.ok(page.nextCursor);
+    assert.equal(page.updatedAt, partialAt.toISOString(), "public freshness still reflects newly persisted partial match data");
+    assert.equal(page.matches[0]!.timeline, null); assert.equal(page.matches[0]!.timelineDeferred, true);
+    assert.equal((await query.getPublicMatch(playerId, first.matchId))?.timeline?.frames.length, 3, "a stale partial refresh cannot erase a collected timeline");
+    assert.equal(page.rankHistory[0]!.leaguePoints, 30); assert.equal(page.rankHistory[0]!.recordedAt, partialAt.toISOString());
+    const secondPage = await query.getPublicAnalytics(playerId, page.nextCursor);
+    assert.ok(secondPage); assert.equal(secondPage.matches.length, 5); assert.equal(secondPage.nextCursor, null);
+    assert.equal(new Set([...page.matches, ...secondPage.matches].map((match) => match.matchId)).size, 45);
+    assert.doesNotMatch(JSON.stringify(page), /puuid|ownerUserAccountId|synthetic-encrypted/iu);
+    assert.equal(await query.getPublicAnalytics(playerId, "invalid"), null);
+    const nextLinkedAt = new Date(now.getTime() + 1_000);
+    await database.update(riotAccountLinks).set({ revision: 2, linkedAt: nextLinkedAt }).where(eq(riotAccountLinks.id, linkId));
+    assert.equal(await query.getPublicAnalytics(playerId), null);
+    assert.equal(await query.getPublicMatch(playerId, first.matchId), null);
+    assert.equal(await adapter.getPublicSummary(playerId), null);
+    assert.equal((await query.getPublicProfileState(playerId)).kind, "PENDING_SYNC");
+    await adapter.dependencies.unitOfWork.transaction(async (tx) => { await adapter.dependencies.repository.saveProjection(tx, {
+      ...projection, syncedAt: nextLinkedAt, analytics: { ...projection.analytics, matches: [], recentPageComplete: false, partial: true },
+    }); });
+    assert.equal((await database.select().from(riotAnalyticsProgress).where(eq(riotAnalyticsProgress.linkId, linkId)))[0]?.updatedAt.getTime(), 0,
+      "a changed connection cannot inherit its previous revision's completed observation");
+    assert.equal((await loadCollectionState()).lastCollectedAt, undefined);
+    assert.equal(await query.getPublicAnalytics(playerId), null);
+    await adapter.dependencies.unitOfWork.transaction(async (tx) => { await adapter.dependencies.repository.saveProjection(tx, { ...projection, syncedAt: nextLinkedAt, analytics: { ...projection.analytics, matches: [first] } }); });
+    assert.equal((await loadCollectionState()).lastCollectedAt?.toISOString(), nextLinkedAt.toISOString());
+    assert.equal((await query.getPublicAnalytics(playerId))?.coverage.collectedGames, 1);
+    assert.equal((await database.select().from(riotMatchArchive).where(eq(riotMatchArchive.linkId, linkId))).length, 1, "old connection generations are retired on the next projection");
+    await assert.rejects(adapter.dependencies.unitOfWork.transaction(async (tx) => { await adapter.dependencies.repository.saveProjection(tx, { ...projection, syncedAt: nextLinkedAt, leaguePoints: 999 }); throw new Error("synthetic-rollback"); }), /synthetic-rollback/u);
+    assert.equal((await query.getPublicAnalytics(playerId))?.rankHistory[0]?.leaguePoints, 25);
+    await database.update(players).set({ nickname: "ChangedStats", nicknameNormalized: "changedstats" }).where(eq(players.id, playerId));
+    assert.equal(await query.getPublicAnalytics(playerId), null); assert.equal(await query.getPublicMatch(playerId, first.matchId), null);
+    assert.equal(await adapter.getPublicSummary(playerId), null);
+    assert.equal((await query.getPublicProfileState(playerId)).kind, "UNLINKED");
+    assert.equal((await database.select().from(riotAnalyticsProgress).where(eq(riotAnalyticsProgress.linkId, linkId)))[0]?.linkRevision, 2);
+  } finally { await pool.end(); }
+});
 
 function postgresConstraint(code: string, constraint: string) {
   return (error: unknown) => {
@@ -117,7 +253,7 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     );
     assert.deepEqual(
       riotTables.rows.map((row) => row.table_name),
-      ["account_links", "command_receipts", "outbox", "rso_exchange_results", "rso_states", "summaries", "sync_jobs"],
+      ["account_links", "analytics_progress", "command_receipts", "match_archive", "outbox", "rank_history", "rso_exchange_results", "rso_states", "summaries", "sync_jobs"],
     );
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='operations' and table_name='site_settings'")).rowCount, 1);
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='competition' and table_name='destruction_competitions'")).rowCount, 1);
@@ -236,6 +372,11 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
         cooldownMilliseconds: 1_000,
       });
       const jobId = String((requested.body.jobIds as readonly string[])[0]);
+      await adapter.dependencies.unitOfWork.transaction(async (transaction) => {
+        const pending = await adapter.dependencies.repository.findPendingSyncJob(transaction, linkId, new Date(0));
+        assert.equal(pending?.id, jobId);
+        assert.equal(await adapter.dependencies.repository.findPendingSyncJob(transaction, linkId, new Date(applicationNow.getTime() + 1_000)), null);
+      });
       const processed = await service.runNextSync({ principalId: "job:s12-contract", authorizationIntent: jobIntent });
       assert.equal(processed.status, "PROCESSED");
       applicationNow = new Date(applicationNow.getTime() + 1_000);

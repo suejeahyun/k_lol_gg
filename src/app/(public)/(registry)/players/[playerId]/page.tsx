@@ -6,6 +6,7 @@ import { ArrowLeft, CalendarDays, Gamepad2, Hash, ShieldCheck, Sparkles, Trophy 
 import { Badge } from "@/components/ui/badge";
 import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import riotStyles from "@/components/riot/riot-workspace.module.css";
+import { PlayerRiotProfile } from "@/components/riot/player-riot-profile";
 import { buildLegacyCanonicalIdDestination } from "@/modules/navigation/application/legacy-user-redirects";
 import { parseLegacyPlayerId } from "@/modules/players/domain/admin-player";
 import { loadRuntimePlayerProfile } from "@/modules/players/infrastructure/runtime-player-data";
@@ -31,18 +32,18 @@ function formatJoinedAt(value: Date) {
   }).format(value);
 }
 
-function RiotSummaryCards({ summary }: { summary: PublicRiotSummaryDto }) {
-  return <div className="profile-summary__grid">
-    <article><span>Riot ID</span><strong>{summary.riotId}</strong></article>
-    <article><span>솔로 랭크</span><strong>{summary.soloTier ?? "Unranked"} {summary.soloRank ?? ""}</strong></article>
-    <article><span>LP · 전적</span><strong>{summary.leaguePoints ?? 0} LP · {summary.wins ?? 0}승 {summary.losses ?? 0}패</strong></article>
-  </div>;
+type RiotAnalysisTab = "overview" | "champions" | "report";
+
+function RiotSummaryCards({ summary, analysisTab }: { summary: PublicRiotSummaryDto; analysisTab: RiotAnalysisTab }) {
+  return <PlayerRiotProfile key={`${summary.playerId}:${summary.lastSyncedAt}:${summary.analytics?.updatedAt ?? "pending"}`} summary={summary} initialTab={analysisTab} />;
 }
 
 function PublicRiotProfileState({
   result,
+  analysisTab,
 }: {
   result: Awaited<ReturnType<typeof loadRuntimePublicRiotProfile>>;
+  analysisTab: RiotAnalysisTab;
 }) {
   if (result.state === "unavailable") {
     return <div className="profile-records__state" role="status">Riot 전적 조회를 준비하고 있어요.</div>;
@@ -60,16 +61,16 @@ function PublicRiotProfileState({
     return <div className="profile-records__state profile-records__state--error" role="alert">플레이어 정보를 다시 확인해 주세요.</div>;
   }
   if (result.data.kind === "RATE_LIMITED") {
-    return <><div className="profile-records__state" role="status">Riot API 요청 한도에 도달했어요.{result.data.retryAfterSeconds ? ` 약 ${result.data.retryAfterSeconds}초 후 다시 동기화합니다.` : " 잠시 후 다시 동기화합니다."}</div>{result.data.summary ? <RiotSummaryCards summary={result.data.summary} /> : null}</>;
+    return <><div className="profile-records__state" role="status">Riot API 요청 한도에 도달했어요.{result.data.retryAfterSeconds ? ` 약 ${result.data.retryAfterSeconds}초 후 다시 동기화합니다.` : " 잠시 후 다시 동기화합니다."}</div>{result.data.summary ? <RiotSummaryCards summary={result.data.summary} analysisTab={analysisTab} /> : null}</>;
   }
   if (result.data.kind === "TEMPORARY_ERROR") {
-    return <><div className="profile-records__state profile-records__state--error" role="alert">Riot 동기화 중 일시 오류가 발생했어요. 잠시 후 다시 시도합니다.</div>{result.data.summary ? <RiotSummaryCards summary={result.data.summary} /> : null}</>;
+    return <><div className="profile-records__state profile-records__state--error" role="alert">Riot 동기화 중 일시 오류가 발생했어요. 잠시 후 다시 시도합니다.</div>{result.data.summary ? <RiotSummaryCards summary={result.data.summary} analysisTab={analysisTab} /> : null}</>;
   }
   if (result.data.kind === "STALE_SNAPSHOT") {
-    return <><div className="profile-records__state" role="status">표시 중인 전적은 최근 24시간보다 오래된 스냅샷이에요. 최신 동기화를 기다리고 있습니다.</div><RiotSummaryCards summary={result.data.summary} /></>;
+    return <><div className="profile-records__state" role="status">표시 중인 전적은 최근 24시간보다 오래된 스냅샷이에요. 최신 동기화를 기다리고 있습니다.</div><RiotSummaryCards summary={result.data.summary} analysisTab={analysisTab} /></>;
   }
   const summary = result.data.summary;
-  return <RiotSummaryCards summary={summary} />;
+  return <RiotSummaryCards summary={summary} analysisTab={analysisTab} />;
 }
 
 export default async function PlayerDetailPage({
@@ -80,7 +81,9 @@ export default async function PlayerDetailPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { playerId: rawPlayerId } = await params;
-  const rawTab = (await searchParams).tab;
+  const query = await searchParams;
+  const rawTab = query.tab;
+  const analysisTab: RiotAnalysisTab = query.analysis === "champions" || query.analysis === "report" ? query.analysis : "overview";
   const tab = rawTab === "riot" ? "riot" : "profile";
   let legacyMappingFailure: "unavailable" | "error" | null = null;
   if (parseLegacyPlayerId(rawPlayerId) !== null) {
@@ -143,8 +146,8 @@ export default async function PlayerDetailPage({
 
           {tab === "riot" ? (
             <section className="profile-summary" aria-labelledby="riot-summary-title">
-              <div className="section-heading"><div><p>RIOT</p><h2 id="riot-summary-title">공개 Riot 전적</h2></div><span>Riot ID와 솔로 랭크 요약을 확인할 수 있어요.</span></div>
-              {riotResult ? <PublicRiotProfileState result={riotResult} /> : null}
+              <div className="section-heading"><div><p>RIOT</p><h2 id="riot-summary-title">공개 Riot 전적</h2></div><span>챔피언 · 포지션 · 경기 분석 · 날짜별 변화를 확인하세요.</span></div>
+              {riotResult ? <PublicRiotProfileState result={riotResult} analysisTab={analysisTab} /> : null}
             </section>
           ) : <>
           <section className="profile-summary" aria-labelledby="profile-summary-title">

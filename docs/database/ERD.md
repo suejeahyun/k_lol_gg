@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `2fe6810527b1714f7c1555c39f7d6aa85e4d936424f757676f2a7488bd2f25ae`
-- Tables: 105
-- Foreign keys: 168
+- Schema SHA-256: `fef883e6b237361d4bffab51c3cd0a6dc61d2f30ebd3009a88407b2376593700`
+- Tables: 108
+- Foreign keys: 171
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -1430,6 +1430,13 @@ erDiagram
         timestamp_with_time_zone created_at "NOT NULL"
         timestamp_with_time_zone updated_at "NOT NULL"
     }
+    riot__analytics_progress {
+        uuid link_id PK, FK "NOT NULL"
+        bigint link_revision "NOT NULL"
+        bigint history_before "nullable"
+        boolean history_complete "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
     riot__command_receipts {
         uuid id PK "NOT NULL"
         uuid actor_user_account_id FK "NOT NULL"
@@ -1440,6 +1447,14 @@ erDiagram
         jsonb response_json "NOT NULL"
         timestamp_with_time_zone created_at "NOT NULL"
         timestamp_with_time_zone expires_at "NOT NULL"
+    }
+    riot__match_archive {
+        uuid link_id PK, FK "NOT NULL"
+        bigint link_revision PK "NOT NULL"
+        varchar_40 match_id PK "NOT NULL"
+        timestamp_with_time_zone started_at "NOT NULL"
+        jsonb match_json "NOT NULL"
+        timestamp_with_time_zone collected_at "NOT NULL"
     }
     riot__outbox {
         uuid id PK "NOT NULL"
@@ -1452,6 +1467,17 @@ erDiagram
         outbox_status status "NOT NULL"
         timestamp_with_time_zone created_at "NOT NULL"
         timestamp_with_time_zone delivered_at "nullable"
+    }
+    riot__rank_history {
+        uuid link_id PK, FK "NOT NULL"
+        bigint link_revision PK "NOT NULL"
+        varchar_10 day PK "NOT NULL"
+        varchar_16 tier "nullable"
+        varchar_8 rank "nullable"
+        integer league_points "nullable"
+        integer wins "nullable"
+        integer losses "nullable"
+        timestamp_with_time_zone recorded_at "NOT NULL"
     }
     riot__rso_exchange_results {
         uuid state_id PK, FK "NOT NULL"
@@ -1510,6 +1536,9 @@ erDiagram
     registry__players ||--o| riot__account_links : "player_id to id"
     registry__players ||--o{ riot__account_links : "player_id to id, owner_user_account_id to user_account_id"
     registry__players ||--o| riot__summaries : "player_id to id"
+    riot__account_links ||--o| riot__analytics_progress : "link_id to id"
+    riot__account_links ||--o{ riot__match_archive : "link_id to id"
+    riot__account_links ||--o{ riot__rank_history : "link_id to id"
     riot__account_links ||--o| riot__summaries : "link_id to id"
     riot__account_links ||--o{ riot__sync_jobs : "link_id to id"
     riot__rso_states ||--o| riot__rso_exchange_results : "state_id to id"

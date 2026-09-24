@@ -19,8 +19,14 @@ function repositoryReturning(row: unknown, latestSync: unknown = null) {
     orderBy() { return this; },
     async limit() { return latestSync ? [latestSync] : []; },
   };
+  const analyticsChain = {
+    from() { return this; },
+    innerJoin() { return this; },
+    where() { return this; },
+    async limit() { return []; },
+  };
   let selectCount = 0;
-  const database = { select: () => selectCount++ === 0 ? mainChain : syncChain };
+  const database = { select: () => { const index = selectCount++; return index === 0 ? mainChain : index === 1 ? syncChain : analyticsChain; } };
   return new PostgresPublicRiotQueryRepository(database as never);
 }
 
@@ -60,6 +66,7 @@ test("공개 Riot 조회는 없는 플레이어·미연동·동기화 대기·�
       wins: 12,
       losses: 9,
       lastSyncedAt: lastSyncedAt.toISOString(),
+      analytics: null,
     },
   });
   assert.equal(JSON.stringify(ready).includes("protectedPuuid"), false);

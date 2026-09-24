@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-09-24T22:51:52.4000112Z",
+  "baseEvidence": "db-contracts.json",
+  "baseFinishedAt": "2026-09-24T22:51:33.8819505Z",
+  "comparisonStatus": "CHANGED_AFTER_RUN",
+  "afterRunSourceChanges": [
+    {
+      "path": "src/modules/riot/domain/riot-match-normalizer.ts",
+      "testedHash": "75e74b953f390d082a3ec0fd2f8317a17173d3ab6a2b95e4714e2c9bb23f9ea8",
+      "observedHash": "15a83995362b98052579df0767074f178732647399014ee6c01afedf259dbddd"
+    }
+  ],
+  "sourceFilesUnchangedSinceRun": false,
+  "databaseSourceFilesUnchangedSinceRun": false,
+  "changeDescription": "The isolated database rerun includes the gateway fix and nullable turretPlatesTaken DTO with stored-parser backward compatibility. After the run, the normalizer return assertion changed from as RiotMatchDto to as unknown as RiotMatchDto solely to satisfy TypeScript TS2352; no runtime logic changed.",
+  "validation": {
+    "command": "V2_DB_CONTRACT_SCOPE=riot npm run test:db",
+    "passed": 6,
+    "failed": 0,
+    "sourceEvidence": "db-contracts.json and db-contracts.log",
+    "databaseRerun": "COMPLETED",
+    "productionDatabaseUsed": false
+  },
+  "followupAssessment": {
+    "typeAssertionOnly": true,
+    "runtimeLogicChanged": false,
+    "reportedTypecheck": "PASS",
+    "assessmentSource": "integrator /root confirmed exact type-cast-only change and tsc PASS",
+    "additionalDatabaseRerun": "NOT_REQUIRED_BY_INTEGRATOR"
+  }
+}

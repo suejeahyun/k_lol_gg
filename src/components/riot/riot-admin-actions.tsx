@@ -61,9 +61,14 @@ export function RiotAdminGlobalActions({ superAdmin, items }: Readonly<{ superAd
     });
   }
 
-  function run(operation: () => Promise<unknown>, success: string) {
+  function run(operation: () => Promise<unknown>, success: string | ((result: unknown) => string)) {
     setPending(true); setMessage(null);
-    void operation().then(() => setMessage(success)).catch((error: unknown) => setMessage(error instanceof Error ? error.message : "요청에 실패했습니다.")).finally(() => setPending(false));
+    void operation().then((result) => setMessage(typeof success === "function" ? success(result) : success)).catch((error: unknown) => setMessage(error instanceof Error ? error.message : "요청에 실패했습니다.")).finally(() => setPending(false));
+  }
+  function allSyncMessage(result: unknown) {
+    const value = result as Record<string, unknown> | null;
+    if (!value || !["targetCount", "queuedCount", "existingCount", "deferredCount"].every((key) => Number.isSafeInteger(value[key]) && Number(value[key]) >= 0)) return "전체 동기화를 요청했습니다. 동기화 탭에서 처리 상태를 확인해 주세요.";
+    return `전체 ${value.targetCount}명 · 새 요청 ${value.queuedCount}명 · 이미 진행 중 ${value.existingCount}명. 새 요청 중 ${value.deferredCount}명은 갱신 대기시간이 끝나면 처리됩니다. 완료 여부는 동기화 탭에서 확인해 주세요.`;
   }
   return <div>
     <form id="riot-single-link" className={styles.form} onSubmit={(event) => { event.preventDefault(); run(() => command("/api/admin/riot/link", { playerId, gameName, tagLine }, revision), "단일 연결을 반영했습니다."); }}>
@@ -72,7 +77,7 @@ export function RiotAdminGlobalActions({ superAdmin, items }: Readonly<{ superAd
       <p className={styles.selectionSummary} role="status">{selectedPlayer ? `${selectedPlayer.displayName} · 현재 revision ${revision} 자동 적용` : "현재 목록에서 미연결·연결 해제 플레이어를 선택해 주세요."}</p>
       <div className={styles.actions}><button type="submit" disabled={pending || !selectedPlayer || !gameName || !tagLine}>단일 연결</button></div>
     </form>
-    {superAdmin ? <form className={styles.form} onSubmit={(event) => { event.preventDefault(); setReviewingBulk(true); }}><fieldset className={styles.selectionList}><legend>현재 목록의 연결 계정 선택</legend>{connectedItems.length ? connectedItems.map((item) => <label key={item.linkId}><input type="checkbox" checked={selectedLinkIds.has(item.linkId)} onChange={() => toggleLink(item.linkId)} /><span><strong>{item.displayName}</strong><small>{item.riotId}</small></span></label>) : <p>현재 목록에 동기화할 연결 계정이 없습니다.</p>}</fieldset><p className={styles.selectionSummary} role="status">{selectedLinkIds.size}개 계정을 선택했습니다.</p><div className={styles.actions}><button type="submit" disabled={pending || selectedLinkIds.size === 0}>선택 일괄 동기화 미리보기</button><button type="button" data-tone="quiet" disabled={pending} onClick={() => run(() => command("/api/admin/riot/sync", { all: true }), "전체 동기화를 큐에 등록했습니다.")}>전체 동기화</button></div></form> : null}
+    {superAdmin ? <form className={styles.form} onSubmit={(event) => { event.preventDefault(); setReviewingBulk(true); }}><fieldset className={styles.selectionList}><legend>현재 목록의 연결 계정 선택</legend>{connectedItems.length ? connectedItems.map((item) => <label key={item.linkId}><input type="checkbox" checked={selectedLinkIds.has(item.linkId)} onChange={() => toggleLink(item.linkId)} /><span><strong>{item.displayName}</strong><small>{item.riotId}</small></span></label>) : <p>현재 목록에 동기화할 연결 계정이 없습니다.</p>}</fieldset><p className={styles.selectionSummary} role="status">{selectedLinkIds.size}개 계정을 선택했습니다.</p><div className={styles.actions}><button type="submit" disabled={pending || selectedLinkIds.size === 0}>선택 일괄 동기화 미리보기</button><button type="button" data-tone="quiet" disabled={pending} onClick={() => run(() => command("/api/admin/riot/sync", { all: true }), allSyncMessage)}>전체 동기화</button></div></form> : null}
     {reviewingBulk ? <div className={styles.dialogBackdrop}><div className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="riot-bulk-review-title" aria-describedby="riot-bulk-review-description" onKeyDown={(event) => { if (event.key === "Escape") setReviewingBulk(false); }}><h3 id="riot-bulk-review-title">일괄 동기화 확인</h3><p id="riot-bulk-review-description">선택한 {selectedLinkIds.size}개 계정을 동기화 큐에 등록합니다.</p><ul>{connectedItems.filter((item) => selectedLinkIds.has(item.linkId)).map((item) => <li key={item.linkId}><strong>{item.displayName}</strong><span>{item.riotId}</span></li>)}</ul><div className={styles.actions}><button type="button" data-tone="quiet" autoFocus onClick={() => setReviewingBulk(false)}>취소</button><button type="button" disabled={pending} onClick={() => { setReviewingBulk(false); run(() => command("/api/admin/riot/bulk", { linkIds: [...selectedLinkIds].sort() }), "일괄 동기화를 큐에 등록했습니다."); }}>등록 확인</button></div></div></div> : null}
     {message ? <p className={styles.notice} role="status">{message}</p> : null}
   </div>;

@@ -527,7 +527,14 @@ export class RiotApplicationService {
       }
       const now = this.now();
       const jobIds: string[] = [];
+      const existingJobIds: string[] = [];
+      let deferredCount = 0;
       for (const link of links) {
+        if (input.mode === "ALL") {
+          const pending = await this.dependencies.repository.findPendingSyncJob(transaction, link.id, link.linkedAt);
+          if (pending) { existingJobIds.push(pending.id); continue; }
+        }
+        let availableAt = now;
         try {
           assertRiotSyncCooldown({
             lastRequestedAt: await this.dependencies.repository.latestSyncRequestedAt(transaction, link.id),
@@ -536,20 +543,25 @@ export class RiotApplicationService {
           });
         } catch (error) {
           const match = error instanceof Error ? /^RIOT_SYNC_COOLDOWN:(\d+)$/u.exec(error.message) : null;
-          if (match) throw new RiotApplicationError("SYNC_COOLDOWN", "Riot sync is cooling down.", Number(match[1]));
-          throw error;
+          if (match && input.mode === "ALL") {
+            availableAt = new Date(now.getTime() + Number(match[1]) * 1_000);
+            deferredCount++;
+          } else if (match) throw new RiotApplicationError("SYNC_COOLDOWN", "Riot sync is cooling down.", Number(match[1]));
+          else throw error;
         }
         const job = createRiotSyncJob({
           id: this.dependencies.ids.next("SYNC_JOB"),
           linkId: link.id,
           requestedBy: actor.purpose === "ACCOUNT" ? "OWNER" : actor.purpose === "ADMIN" ? actor.role : "JOB",
           now,
+          availableAt,
         });
         await this.dependencies.repository.saveSyncJob(transaction, job);
         jobIds.push(job.id);
       }
-      const body: RiotSafeBody = { mode: input.mode, jobIds, queuedCount: jobIds.length };
-      await this.record(transaction, input.context, identity, actor, action, jobIds[0]!, 0, { status: "MISSING" }, body);
+      const body: RiotSafeBody = { mode: input.mode, jobIds, queuedCount: jobIds.length,
+        ...(input.mode === "ALL" ? { targetCount: links.length, existingCount: existingJobIds.length, deferredCount } : {}) };
+      await this.record(transaction, input.context, identity, actor, action, jobIds[0] ?? existingJobIds[0]!, 0, { status: "MISSING" }, body);
       return { body, replayed: false };
     });
   }
@@ -586,7 +598,9 @@ export class RiotApplicationService {
       const next = claimRiotSyncJob({ job, expectedRevision: job.revision, leaseId, now });
       await this.dependencies.repository.saveSyncJob(transaction, next);
       await this.recordJob(transaction, actor, "CLAIM_SYNC", jobSnapshot(job), jobSnapshot(next), next);
-      return { kind: "CLAIMED", job: next, link, leaseId } as const;
+      const analyticsState = this.dependencies.gateway.fetchPlayerAnalytics && this.dependencies.repository.loadAnalyticsCollectionState
+        ? await this.dependencies.repository.loadAnalyticsCollectionState(transaction, link) : null;
+      return { kind: "CLAIMED", job: next, link, leaseId, analyticsState } as const;
     });
     if (!claimed) return { status: "IDLE" };
     if (claimed.kind === "FINISHED") return { status: "PROCESSED", body: claimed.finished };
@@ -594,6 +608,7 @@ export class RiotApplicationService {
     let outcome: RiotSyncOutcome;
     let snapshot: RiotRankSnapshot | undefined;
     let recentSolo: import("../domain/recent-solo-summary").RiotRecentSoloSummary | undefined;
+    let analytics: import("../domain/riot-player-analytics").RiotAnalyticsCollection | undefined;
     let rankSucceeded = false;
     try {
       const puuid = await this.dependencies.identityProtector.reveal(claimed.link.puuidCiphertext!);
@@ -601,7 +616,17 @@ export class RiotApplicationService {
       outcome = result.outcome;
       snapshot = "snapshot" in result ? result.snapshot : undefined;
       rankSucceeded = outcome.kind === "SUCCESS";
-      if (outcome.kind === "SUCCESS" && this.dependencies.gateway.fetchRecentSolo) {
+      if (outcome.kind === "SUCCESS" && this.dependencies.gateway.fetchPlayerAnalytics) {
+        try {
+          analytics = await this.dependencies.gateway.fetchPlayerAnalytics({ puuid,
+            cachedMatches: claimed.analyticsState?.matches ?? [], historyBefore: claimed.analyticsState?.historyBefore ?? null,
+            historyComplete: claimed.analyticsState?.historyComplete ?? false,
+            lastCollectedAt: claimed.analyticsState?.lastCollectedAt, now: this.now() });
+          recentSolo = analytics.recentSolo;
+          outcome = analytics.retryAfterSeconds !== undefined ? { kind: "RATE_LIMITED", retryAfterSeconds: analytics.retryAfterSeconds }
+            : { kind: "SUCCESS", partial: snapshot?.partial === true || analytics.partial };
+        } catch { outcome = { kind: "SUCCESS", partial: true }; }
+      } else if (outcome.kind === "SUCCESS" && this.dependencies.gateway.fetchRecentSolo) {
         try {
           const recent = await this.dependencies.gateway.fetchRecentSolo({ puuid });
           if (recent.kind === "SUCCESS") recentSolo = recent.summary;
@@ -650,6 +675,7 @@ export class RiotApplicationService {
           losses: snapshot.losses,
           syncedAt: this.now(),
           ...(recentSolo ? { recentSolo } : {}),
+          ...(analytics ? { analytics } : {}),
         });
       }
       await this.dependencies.repository.saveSyncJob(transaction, next);

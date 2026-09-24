@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-09-24T22:53:59.624Z",
+  "command": "npm run check",
+  "exitCode": 0,
+  "status": "PASS",
+  "contracts": {
+    "pass": 441,
+    "fail": 0
+  },
+  "unit": {
+    "pass": 995,
+    "fail": 0,
+    "skip": 1
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 57
+  },
+  "typecheck": "PASS",
+  "erd": "PASS",
+  "homeGuideArt": "PASS",
+  "productionBuild": "PASS",
+  "logSha256": "e0c8bc6dcafbc587381f3191397cbb768c49ac22805c8552641b6e747f70b7f4",
+  "secretTree": "PASS",
+  "notes": [
+    "The skipped unit case requires the separately executed database harness.",
+    "Final optional turret-plate field and its stored projection compatibility are included."
+  ]
+}

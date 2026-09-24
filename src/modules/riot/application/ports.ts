@@ -133,6 +133,7 @@ export type RiotProjectionUpdate = Readonly<{
   losses: number | null;
   syncedAt: Date;
   recentSolo?: import("../domain/recent-solo-summary").RiotRecentSoloSummary;
+  analytics?: import("../domain/riot-player-analytics").RiotAnalyticsCollection;
 }>;
 
 export interface RiotRepository {
@@ -149,6 +150,7 @@ export interface RiotRepository {
   loadRsoStateForUpdate(transaction: RiotTransaction, stateDigestHex: string): Promise<RiotRsoState | null>;
   saveRsoState(transaction: RiotTransaction, state: RiotRsoState): Promise<void>;
   latestSyncRequestedAt(transaction: RiotTransaction, linkId: string): Promise<Date | null>;
+  findPendingSyncJob(transaction: RiotTransaction, linkId: string, requestedSince: Date): Promise<RiotSyncJob | null>;
   listConnectedLinksForUpdate(transaction: RiotTransaction, linkIds: readonly string[] | null): Promise<readonly RiotAccountLink[]>;
   /** One already connected, eligible link with no active job and no recent request. */
   loadNextScheduledSyncLinkForUpdate(transaction: RiotTransaction, now: Date, requestedBefore: Date): Promise<RiotAccountLink | null>;
@@ -156,6 +158,12 @@ export interface RiotRepository {
   loadNextClaimableSyncJobForUpdate(transaction: RiotTransaction, now: Date): Promise<RiotSyncJob | null>;
   loadSyncJobForUpdate(transaction: RiotTransaction, jobId: string): Promise<RiotSyncJob | null>;
   saveProjection(transaction: RiotTransaction, projection: RiotProjectionUpdate): Promise<void>;
+  loadAnalyticsCollectionState?(transaction: RiotTransaction, link: RiotAccountLink): Promise<Readonly<{
+    matches: readonly import("../domain/riot-player-analytics").RiotMatchDto[];
+    historyBefore: number | null;
+    historyComplete: boolean;
+    lastCollectedAt?: Date;
+  }>>;
 }
 
 export type RiotAuditEvent = Readonly<{
@@ -226,6 +234,14 @@ export interface RiotGatewayPort {
     | Readonly<{ kind: "SUCCESS"; summary: import("../domain/recent-solo-summary").RiotRecentSoloSummary }>
     | Readonly<{ kind: "UNAVAILABLE"; retryAfterSeconds?: number }>
   >;
+  fetchPlayerAnalytics?(input: Readonly<{
+    puuid: string;
+    cachedMatches: readonly import("../domain/riot-player-analytics").RiotMatchDto[];
+    historyBefore: number | null;
+    historyComplete: boolean;
+    lastCollectedAt?: Date;
+    now: Date;
+  }>): Promise<import("../domain/riot-player-analytics").RiotAnalyticsCollection>;
 }
 
 export class RiotGatewayError extends Error {

@@ -1,11 +1,13 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
   foreignKey,
   index,
   integer,
   jsonb,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -144,6 +146,50 @@ export const riotSummaries = riotSchema.table("summaries", {
   uniqueIndex("riot_summaries_link_uidx").on(table.linkId),
   check("riot_summaries_counts_nonnegative", sql`(${table.leaguePoints} IS NULL OR ${table.leaguePoints} >= 0) AND (${table.wins} IS NULL OR ${table.wins} >= 0) AND (${table.losses} IS NULL OR ${table.losses} >= 0)`),
   check("riot_summaries_recent_solo_pair", sql`(${table.recentSoloJson} IS NULL AND ${table.recentSoloSyncedAt} IS NULL) OR (${table.recentSoloJson} IS NOT NULL AND jsonb_typeof(${table.recentSoloJson}) = 'object' AND ${table.recentSoloSyncedAt} IS NOT NULL)`),
+]);
+
+/** Normalized public facts, scoped to one connection generation. Never stores a raw Riot payload. */
+export const riotMatchArchive = riotSchema.table("match_archive", {
+  linkId: uuid("link_id").notNull().references(() => riotAccountLinks.id, { onDelete: "cascade" }),
+  linkRevision: bigint("link_revision", { mode: "number" }).notNull(),
+  matchId: varchar("match_id", { length: 40 }).notNull(),
+  startedAt: timestamptz("started_at").notNull(),
+  matchJson: jsonb("match_json").$type<import("@/modules/riot/domain/riot-player-analytics").RiotMatchDto>().notNull(),
+  collectedAt: timestamptz("collected_at").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.linkId, table.linkRevision, table.matchId] }),
+  index("riot_archive_page_idx").on(table.linkId, table.linkRevision, table.startedAt.desc(), table.matchId.desc()),
+  check("riot_archive_revision_nonnegative", sql`${table.linkRevision} >= 0`),
+  check("riot_archive_match_id", sql`${table.matchId} ~ '^[A-Z0-9]{2,8}_[0-9]{1,20}$'`),
+  check("riot_archive_match_object", sql`jsonb_typeof(${table.matchJson}) = 'object'`),
+]);
+
+export const riotAnalyticsProgress = riotSchema.table("analytics_progress", {
+  linkId: uuid("link_id").primaryKey().references(() => riotAccountLinks.id, { onDelete: "cascade" }),
+  linkRevision: bigint("link_revision", { mode: "number" }).notNull(),
+  historyBefore: bigint("history_before", { mode: "number" }),
+  historyComplete: boolean("history_complete").default(false).notNull(),
+  updatedAt: timestamptz("updated_at").notNull(),
+}, (table) => [
+  check("riot_analytics_revision_nonnegative", sql`${table.linkRevision} >= 0`),
+  check("riot_analytics_history_before", sql`${table.historyBefore} IS NULL OR ${table.historyBefore} >= 0`),
+]);
+
+export const riotRankHistory = riotSchema.table("rank_history", {
+  linkId: uuid("link_id").notNull().references(() => riotAccountLinks.id, { onDelete: "cascade" }),
+  linkRevision: bigint("link_revision", { mode: "number" }).notNull(),
+  day: varchar("day", { length: 10 }).notNull(),
+  tier: varchar("tier", { length: 16 }),
+  rank: varchar("rank", { length: 8 }),
+  leaguePoints: integer("league_points"),
+  wins: integer("wins"),
+  losses: integer("losses"),
+  recordedAt: timestamptz("recorded_at").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.linkId, table.linkRevision, table.day] }),
+  check("riot_rank_history_revision_nonnegative", sql`${table.linkRevision} >= 0`),
+  check("riot_rank_history_day", sql`${table.day} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`),
+  check("riot_rank_history_counts", sql`(${table.leaguePoints} IS NULL OR ${table.leaguePoints} >= 0) AND (${table.wins} IS NULL OR ${table.wins} >= 0) AND (${table.losses} IS NULL OR ${table.losses} >= 0)`),
 ]);
 
 export const riotCommandReceipts = riotSchema.table("command_receipts", {

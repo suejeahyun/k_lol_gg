@@ -58,6 +58,7 @@ export type PublicRiotSummaryDto = Readonly<{
   wins: number | null;
   losses: number | null;
   lastSyncedAt: string | null;
+  analytics?: import("./riot-player-analytics").RiotPlayerAnalyticsDto | null;
 }>;
 
 export type RiotSummaryProjection = Readonly<{
@@ -284,8 +285,13 @@ export function createRiotSyncJob(input: Readonly<{
   requestedBy: RiotSyncJob["requestedBy"];
   now: Date;
   maximumAttempts?: number;
+  availableAt?: Date;
 }>): RiotSyncJob {
   finiteDate(input.now, "INVALID_RIOT_SYNC_TIME");
+  if (input.availableAt) {
+    finiteDate(input.availableAt, "INVALID_RIOT_SYNC_TIME");
+    if (input.availableAt < input.now) throw new Error("INVALID_RIOT_SYNC_TIME");
+  }
   const maximumAttempts = input.maximumAttempts ?? 5;
   if (!Number.isSafeInteger(maximumAttempts) || maximumAttempts < 1 || maximumAttempts > 10) throw new Error("INVALID_RIOT_SYNC_ATTEMPTS");
   return {
@@ -296,7 +302,7 @@ export function createRiotSyncJob(input: Readonly<{
     status: "QUEUED",
     attemptCount: 0,
     maximumAttempts,
-    availableAt: input.now,
+    availableAt: input.availableAt ?? input.now,
     requestedAt: input.now,
     lockedAt: null,
     leaseId: null,

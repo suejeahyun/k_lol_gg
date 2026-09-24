@@ -1,0 +1,91 @@
+{
+  "checkedAt": "2026-09-24T22:35:54.102Z",
+  "mode": "preflight",
+  "status": "PASS",
+  "databaseMutationIssued": false,
+  "targetFingerprint": "c5918218dd171001",
+  "reviewed": {
+    "0044_vengeful_trauma": "efb9fdaf4f880dac07656b051ccef20abb6c0fbf49c0ec9c5671747979b9c64d",
+    "0045_simple_reptil": "148e5d87c43830320c41b0c53c7ed1a29b7f6ce61bcfa7a6d3bffdec67b9594f"
+  },
+  "reviewedMetadata": {
+    "drizzle/meta/_journal.json": "a4887fb3b22bb9647a86f599799216e57dcc5097377dd3883b30943242baf498",
+    "drizzle/meta/0044_snapshot.json": "54b7e4a30e4a97339a7725949e83055faa484747a15958b37121d99f8dbf5d05",
+    "drizzle/meta/0045_snapshot.json": "3e0890df5004173ea58f7ec7cdce79264f097233bcadd6aa9dea5c7b63652e5a"
+  },
+  "backupSha256": "22c33abd435089d39d05986090d906e52d286fe0ecbbc146c654430075213078",
+  "backupVerified": true,
+  "before": {
+    "journalCount": 45,
+    "head": {
+      "hash": "efb9fdaf4f880dac07656b051ccef20abb6c0fbf49c0ec9c5671747979b9c64d",
+      "created_at": "1790025671009"
+    },
+    "journalHash": "19c3f1dd2f51e8b87708e6feef72e082c4b6a81e0f1bbabe54ecf16a80837cf9",
+    "newTables": [],
+    "columns": [],
+    "constraints": [],
+    "pageIndex": [],
+    "invalidConstraints": 0
+  },
+  "historicalSourceMismatchIndices": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    23,
+    24,
+    29,
+    30,
+    31,
+    32,
+    33
+  ],
+  "historicalSourceHashMismatches": [
+    {
+      "sourceIndex": -1,
+      "createdAt": "1788766788844"
+    },
+    {
+      "sourceIndex": -1,
+      "createdAt": "1788767221262"
+    },
+    {
+      "sourceIndex": -1,
+      "createdAt": "1788767976741"
+    },
+    {
+      "sourceIndex": 23,
+      "createdAt": "1788818889732"
+    },
+    {
+      "sourceIndex": 24,
+      "createdAt": "1788820100814"
+    },
+    {
+      "sourceIndex": 29,
+      "createdAt": "1788931641192"
+    },
+    {
+      "sourceIndex": 30,
+      "createdAt": "1788935583633"
+    },
+    {
+      "sourceIndex": 31,
+      "createdAt": "1788942447397"
+    },
+    {
+      "sourceIndex": 32,
+      "createdAt": "1788948034982"
+    },
+    {
+      "sourceIndex": 33,
+      "createdAt": "1788956743483"
+    }
+  ],
+  "historicalJournalPolicy": "Pin the complete production journal as observed and verified at 0044; apply only the reviewed 0045 input without replaying historical source files.",
+  "sourceReadOnly": true
+}

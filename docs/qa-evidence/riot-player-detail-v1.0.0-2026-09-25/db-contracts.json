@@ -1,0 +1,53 @@
+{
+  "startedAt": "2026-09-24T22:51:19.1920501Z",
+  "finishedAt": "2026-09-24T22:51:33.8819505Z",
+  "status": "PASS",
+  "command": "npm run test:db",
+  "environment": {
+    "V2_DB_CONTRACT_SCOPE": "riot",
+    "PG_BIN_DIR": "C:\\Program Files\\PostgreSQL\\18\\bin",
+    "CI": "false",
+    "V2_USE_CI_POSTGRES_SERVICE": "false"
+  },
+  "exitCode": 0,
+  "passed": 6,
+  "failed": 0,
+  "isolatedPostgres18": true,
+  "clusterStoppedAndRemoved": true,
+  "productionDatabaseUsed": false,
+  "sourceStableDuringRun": true,
+  "sourceHashes": {
+    "src/modules/riot/application/riot-application.ts": "be9bba6a7705a29dfd6eb3dc2a416f082073a34e419948a13956a0704e3278e4",
+    "src/modules/riot/application/ports.ts": "dbd7e17e742bf2ab0b2ab569b71d272d48b4276255961cb46abf4d420bfb3399",
+    "src/modules/riot/domain/riot-player-analytics.ts": "99fec5cc05b65405114c717c06b8aa682a759d9936346717a228243f91534d41",
+    "src/modules/riot/infrastructure/riot-api-gateway.ts": "c220987920bd3e36304b781397e4b8c7f0a7e277b7ad096e7e76f6fc00071c69",
+    "src/modules/riot/infrastructure/postgres-riot-adapter.ts": "4632732b2374a57b1ae026cec9ea93a95d9895c15da082ec112a2074a9e5c68e",
+    "src/modules/riot/infrastructure/postgres-public-riot-query.ts": "7d6a8044e06f0f96c11ef3338d06a1115d34b3723618e7b9066f908f07714978",
+    "src/modules/riot/domain/riot-match-normalizer.ts": "75e74b953f390d082a3ec0fd2f8317a17173d3ab6a2b95e4714e2c9bb23f9ea8",
+    "src/platform/db/schema/riot.ts": "31746a0fd32ec88d403d07897a51944b4fd1a7c64dfafb6f1aa37a6408fae328",
+    "tests/database/riot.contract.test.ts": "6f7b609cf491298de7e0af3a2b66e160de4451fa71ad237318b7b46d427f6d28",
+    "tests/database/riot-production.contract.test.ts": "950d96a0fceb9f23bdf99b8c1ffc8936356a503570d41704e7efbb4780b6b025",
+    "tests/fixtures/riot-analytics.ts": "0980c32aa96522825fa6645bfba5c5e880f3ec7c83665bae6f7621195944f5a2",
+    "scripts/test-db/run-data-contracts.ts": "5a3157ab6b61cb424d87b6f3a5b61dcf0beb9265a113771e3afa99fd0e2eb81f",
+    "drizzle/0045_simple_reptil.sql": "148e5d87c43830320c41b0c53c7ed1a29b7f6ce61bcfa7a6d3bffdec67b9594f",
+    "drizzle/meta/_journal.json": "a4887fb3b22bb9647a86f599799216e57dcc5097377dd3883b30943242baf498"
+  },
+  "sourceHashesAfter": {
+    "src/modules/riot/application/riot-application.ts": "be9bba6a7705a29dfd6eb3dc2a416f082073a34e419948a13956a0704e3278e4",
+    "src/modules/riot/application/ports.ts": "dbd7e17e742bf2ab0b2ab569b71d272d48b4276255961cb46abf4d420bfb3399",
+    "src/modules/riot/domain/riot-player-analytics.ts": "99fec5cc05b65405114c717c06b8aa682a759d9936346717a228243f91534d41",
+    "src/modules/riot/infrastructure/riot-api-gateway.ts": "c220987920bd3e36304b781397e4b8c7f0a7e277b7ad096e7e76f6fc00071c69",
+    "src/modules/riot/infrastructure/postgres-riot-adapter.ts": "4632732b2374a57b1ae026cec9ea93a95d9895c15da082ec112a2074a9e5c68e",
+    "src/modules/riot/infrastructure/postgres-public-riot-query.ts": "7d6a8044e06f0f96c11ef3338d06a1115d34b3723618e7b9066f908f07714978",
+    "src/modules/riot/domain/riot-match-normalizer.ts": "75e74b953f390d082a3ec0fd2f8317a17173d3ab6a2b95e4714e2c9bb23f9ea8",
+    "src/platform/db/schema/riot.ts": "31746a0fd32ec88d403d07897a51944b4fd1a7c64dfafb6f1aa37a6408fae328",
+    "tests/database/riot.contract.test.ts": "6f7b609cf491298de7e0af3a2b66e160de4451fa71ad237318b7b46d427f6d28",
+    "tests/database/riot-production.contract.test.ts": "950d96a0fceb9f23bdf99b8c1ffc8936356a503570d41704e7efbb4780b6b025",
+    "tests/fixtures/riot-analytics.ts": "0980c32aa96522825fa6645bfba5c5e880f3ec7c83665bae6f7621195944f5a2",
+    "scripts/test-db/run-data-contracts.ts": "5a3157ab6b61cb424d87b6f3a5b61dcf0beb9265a113771e3afa99fd0e2eb81f",
+    "drizzle/0045_simple_reptil.sql": "148e5d87c43830320c41b0c53c7ed1a29b7f6ce61bcfa7a6d3bffdec67b9594f",
+    "drizzle/meta/_journal.json": "a4887fb3b22bb9647a86f599799216e57dcc5097377dd3883b30943242baf498"
+  },
+  "log": "db-contracts.log",
+  "logSha256": "d0170031c22e1f7a55be78b0efbe72303d7da31449aa391cd8170c42b6a83ce0"
+}
