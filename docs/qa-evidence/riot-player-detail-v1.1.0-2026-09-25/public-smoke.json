@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-09-24T23:34:51.080Z",
+  "checkedAt": "2026-09-24T23:42:23.098Z",
   "checks": [
     {
       "name": "health",
       "http": 200,
-      "ms": 310
+      "ms": 1067
     },
     {
       "name": "invalid-player",
@@ -13,7 +13,7 @@
     {
       "name": "first-page",
       "http": 200,
-      "ms": 661,
+      "ms": 920,
       "games": 35,
       "collectedGames": 35,
       "rankDays": 1,
@@ -27,7 +27,7 @@
     {
       "name": "lazy-match",
       "http": 200,
-      "ms": 418,
+      "ms": 399,
       "participants": 10,
       "timelineStatus": "AVAILABLE",
       "frames": 26,

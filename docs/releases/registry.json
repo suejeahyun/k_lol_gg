@@ -1415,6 +1415,25 @@
         "verifiedAt": "2026-09-24T23:15:34.089Z",
         "healthStatus": "ready"
       }
+    },
+    {
+      "featureId": "riot-player-detail",
+      "version": "1.1.0",
+      "gitTag": "riot-player-detail-v1.1.0",
+      "commit": "49c8c2328cd740b9b823da0f22e13738ba973831",
+      "releasedAt": "2026-09-24T23:42:23.039Z",
+      "migrationHead": "0045_simple_reptil",
+      "qaEvidence": "docs/qa-evidence/riot-player-detail-v1.1.0-2026-09-25/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-25-riot-player-layout.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_8R2WULPcqMN8EtLWcapoXKrw8nuW",
+        "url": "https://k-lol-gj8phj3xl-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-24T23:42:23.039Z",
+        "healthStatus": "ready"
+      }
     }
   ]
 }

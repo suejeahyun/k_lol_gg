@@ -1,13 +1,13 @@
 # K-LOL.GG V2 상태
 
-## 2026-09-25 Riot 플레이어 상세 — 운영 배포, 전체 수집 대기
+## 2026-09-25 Riot 플레이어 상세 — 1.1.0 운영 배포, 전체106명 동기화 진행
 
-- 종합·챔피언·리포트, 모스트·라인/날짜별 통계·관측 LP·복수 필터·참가자 스코어보드·성장·룬/빌드·포탑 방패 관측 평균·기기 분석 저장. [기능 대응표](./parity/RIOT_PLAYER_DETAIL_PARITY.md).
-- 후속 source `3327a585f421eb6a1feec049c4af1884b50c2b07`, tag `riot-player-detail-v1.0.1`, Vercel `dpl_7zAeH4K1doePKpu84btjQAYZvLgq` READY·운영 alias 일치·health200. 모바일 중첩 표/밴 목록 넘침과 SVG title·시간 locale의 SSR 불일치 수정. 실제 운영 320/360px 3개 경기 상세 탭 넘침 없음, 종합/챔피언/리포트 직접 재진입 새 console 오류0. [최신 QA](./qa-evidence/riot-player-detail-v1.0.1-2026-09-25/README.md).
-- 계약445·단위995(+DB skip1)·타입/lint/빌드·비밀정보 검사 PASS. 기반1.0.0의 격리 Riot DB6, 백업 복원 후 additive0045 적용·재실행 no-op PASS. 후속 UI 패치는 DB 변경 없음. CI 결과는 최신 QA의 ci.json에 보존.
-- 활성142명 검토: 연결106명, 연결해제24·미연결12는 등록ID 확인 필요. 비활성56명 새연결 제외. 브라우저 관리자 세션 초기화로 전체 동기화 요청 재로그인 대기. 정기 수집은 계속되며 실제 상세 수집 수는 QA의 시각별 집계를 따른다.
-- 2026-09-25 08:14 KST 읽기 전용 집계: 연결 후 랭크 갱신15명, 새 상세 수집3명·82경기·타임라인12개. 180일 이력 완료0명. ALL106 완료로 표시하지 않는다. 확인 필요36명의 이름·등록ID·확인 사유는 저장소 밖 private CSV로 별도 전달한다.
-- 180일/timeline은 순차 수집, 과거 LP 복원 없음. lol.ps 독자 점수·AI·지역 전체 모집단·로밍/갱 판정과 동일하지 않으며 미완료 차이를 대응표에 유지한다.
+- PC의 요약/최근 경기 좌우 배치, 모바일 요약 토글, 고급 필터·보조 분석 접기. 실제 Riot ID 기본 표시, 기록 없는 라인·중복 카드 제외.
+- source `49c8c2328cd740b9b823da0f22e13738ba973831`, tag `riot-player-detail-v1.1.0`, Vercel `dpl_8R2WULPcqMN8EtLWcapoXKrw8nuW` READY·운영 alias 일치·health200. 한글/영문 이름의 동률 정렬을 ko-KR로 고정해 영어 서버/한국어 브라우저 hydration 오류를 해결했다. [최신 QA](./qa-evidence/riot-player-detail-v1.1.0-2026-09-25/README.md).
+- 계약445·단위996(+skip1)·타입/lint/빌드·현재 트리 비밀정보 검사 PASS. SSR4·UI18 및 운영 PC/320/360px 검증. DB0045 유지, 추가 DB/API 변경 없음.
+- 사용자 재로그인 후 08:21:53 KST 전체106명 새 요청 접수(기존 진행0·갱신 대기1). 2026-09-24T23:44:29.942Z 읽기 전용 확인: 작업 성공27명, 요청 후 랭크 갱신39명, 최근 경기 갱신29명. 나머지는 Riot429 재시도 시간을 지키며 순차 처리한다. [전체 실행·진행 근거](./qa-evidence/riot-all-sync-2026-09-25/README.md).
+- 활성142명 중 미연결/연결해제36명은 등록ID 확인 필요, 비활성56명 새연결 제외. 전체 요청 접수·작업 성공·180일 수집 완료는 서로 구분한다.
+- 과거 LP 복원·lol.ps 독자 점수·AI·지역 모집단·로밍/갱 판정 등 차이는 [기능 대응표](./parity/RIOT_PLAYER_DETAIL_PARITY.md)에 유지한다.
 
 ## 2026-09-25 운영·감사 UI와 하이라이트 재생 — 운영 적용
 

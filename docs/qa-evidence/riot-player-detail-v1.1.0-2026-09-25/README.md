@@ -9,3 +9,5 @@ PC 종합 화면은 왼쪽 모스트·라인·함께한 소환사, 오른쪽 최
 DB·API·Riot 호출량 변경 없음. 전체106명 동기화는 [별도 실행 기록](../riot-all-sync-2026-09-25/README.md)을 따른다.
 
 운영 1차 확인에서 소환사 이름의 한글/영문 동률 정렬이 서버 기본 영어와 브라우저 기본 한국어 사이에서 달라 React hydration 오류418이 발생했다. 공개 데이터의 로컬 개발 SSR로 재현했으며, 합성 회귀 테스트도 수정 전 실패를 확인했다. 이름 동률 비교에 ko-KR을 명시하고 회귀 테스트를 추가하여 수정 후 영어 서버·한국어 브라우저에서 새 오류0을 확인했다. 최종 소스의 전체 검사·배포 결과는 후속 근거 파일을 따른다.
+
+최종 운영 source `49c8c2328cd740b9b823da0f22e13738ba973831`, Vercel `dpl_8R2WULPcqMN8EtLWcapoXKrw8nuW` READY·운영 alias 일치. [전체 검사](checks.json), [배포](deployment.json), [CI](ci.json), [운영 브라우저](browser-production.json), [공개 API](public-smoke.json), [정렬 재현·수정](locale-regression.json)을 확인한다.

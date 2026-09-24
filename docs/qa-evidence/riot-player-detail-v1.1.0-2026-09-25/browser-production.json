@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-09-24T23:43:16.647Z",
+  "source": "49c8c2328cd740b9b823da0f22e13738ba973831",
+  "sample": "public player with 35 stored matches",
+  "desktop": {
+    "clientWidth": 1265,
+    "scrollWidth": 1265,
+    "sidebarLeft": 45,
+    "matchesLeft": 375,
+    "sideBySide": true
+  },
+  "mobile": {
+    "viewports": [
+      320,
+      360
+    ],
+    "at320": {
+      "clientWidth": 305,
+      "scrollWidth": 305
+    },
+    "at360": {
+      "clientWidth": 345,
+      "scrollWidth": 345
+    },
+    "summaryToggle": "PASS",
+    "namedEncounterLinks": 8,
+    "namedOtherScoreboardParticipants": 9,
+    "matchPanels": [
+      "scoreboard",
+      "analysis",
+      "timeline"
+    ],
+    "layoutCheck": "All panels checked on layout source d54a0d23; final locale-only change rechecked at320 overview/champions/report"
+  },
+  "directEntryTabs": [
+    "overview",
+    "champions",
+    "report"
+  ],
+  "consoleErrors": 0,
+  "consoleWarnings": 0,
+  "viewportReset": true,
+  "publicIdentifiers": "Riot ID displayed; no raw PUUID or private account IDs"
+}

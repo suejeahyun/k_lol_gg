@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-24T23:38:48.295Z",
+  "checkedAt": "2026-09-24T23:44:29.942Z",
   "requestedAt": "2026-09-24T23:21:53.362Z",
   "readOnly": true,
   "uiReceipt": {
@@ -13,7 +13,7 @@
     {
       "status": "QUEUED",
       "failure_code": null,
-      "count": 77,
+      "count": 67,
       "next_available": "2026-09-24T23:21:53.362Z",
       "latest_completed": null,
       "max_attempt": 0
@@ -21,7 +21,7 @@
     {
       "status": "RETRY_WAIT",
       "failure_code": "RATE_LIMITED",
-      "count": 9,
+      "count": 12,
       "next_available": "2026-09-24T23:22:46.714Z",
       "latest_completed": null,
       "max_attempt": 1
@@ -29,24 +29,24 @@
     {
       "status": "SUCCEEDED",
       "failure_code": null,
-      "count": 20,
+      "count": 27,
       "next_available": "2026-09-24T23:21:53.362Z",
-      "latest_completed": "2026-09-24T23:37:18.856Z",
+      "latest_completed": "2026-09-24T23:43:29.141Z",
       "max_attempt": 1
     }
   ],
   "data": {
     "targeted": 106,
-    "rank_refreshed": 29,
-    "analytics_initialized": 33,
-    "recent_page_refreshed": 21,
-    "history_complete": 0
+    "rank_refreshed": 39,
+    "analytics_initialized": 43,
+    "recent_page_refreshed": 29,
+    "history_complete": 1
   },
   "archive": {
-    "rows": 804,
-    "players": 32,
-    "distinct_games": 802,
-    "timelines": 100
+    "rows": 994,
+    "players": 42,
+    "distinct_games": 972,
+    "timelines": 128
   },
   "remainingUnconnected": 36
 }
