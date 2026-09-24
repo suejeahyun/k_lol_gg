@@ -49,6 +49,7 @@ export type AdminAccountListQuery = Readonly<{
 
 export type AccountPlayerDto = Readonly<{
   id: string;
+  memberName: string;
   nickname: string;
   tagLine: string;
   riotId: string;
@@ -59,6 +60,7 @@ export type AccountPlayerDto = Readonly<{
 }>;
 
 export type OwnPlayerInput = Readonly<{
+  memberName?: string;
   nickname: string;
   tagLine: string;
   peakTier: string | null;
@@ -88,7 +90,7 @@ export type AccountSelfDto = Readonly<{
 
 export type AdminAccountDto = Omit<AccountSelfDto, "player"> &
   Readonly<{
-    player: (AccountPlayerDto & Readonly<{ memberName: string }>) | null;
+    player: AccountPlayerDto | null;
     playerClaimReview: Readonly<{
       id: string;
       status: "PENDING" | "APPROVED" | "REJECTED";
@@ -342,8 +344,11 @@ function optionalTier(value: unknown): string | null | undefined {
 }
 
 export function parseOwnPlayerInput(value: unknown): ParseResult<OwnPlayerInput> {
-  const record = exactRecord(value, ["riotId", "peakTier", "currentTier"]);
+  const record = exactRecord(value, ["memberName", "riotId", "peakTier", "currentTier"])
+    ?? exactRecord(value, ["riotId", "peakTier", "currentTier"]);
   if (!record) return { ok: false };
+  const memberName = "memberName" in record ? safeText(record.memberName, 2, 100) : undefined;
+  if (memberName === null) return { ok: false };
   const riotId = safeText(record.riotId, 3, 22);
   if (!riotId) return { ok: false };
   const separator = riotId.lastIndexOf("#");
@@ -357,7 +362,10 @@ export function parseOwnPlayerInput(value: unknown): ParseResult<OwnPlayerInput>
   }
   try {
     const canonical = canonicalRiotId({ gameName: nickname, tagLine });
-    return { ok: true, value: { nickname: canonical.gameName, tagLine: canonical.tagLine, peakTier, currentTier } };
+    return { ok: true, value: {
+      ...(memberName !== undefined ? { memberName } : {}),
+      nickname: canonical.gameName, tagLine: canonical.tagLine, peakTier, currentTier,
+    } };
   } catch {
     return { ok: false };
   }

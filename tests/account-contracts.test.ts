@@ -203,7 +203,7 @@ test("login and password change reject extra keys, controls, reuse, and weak pas
   }).ok, false);
 });
 
-test("own player edit accepts only Riot ID and supported tier fields", () => {
+test("own player edit retains compatibility with Riot ID and supported tier fields", () => {
   const parsed = parseOwnPlayerInput({
     riotId: "Breeze#KR1",
     currentTier: "골드 2",
@@ -227,6 +227,20 @@ test("own player edit accepts only Riot ID and supported tier fields", () => {
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "MASTER 10000", peakTier: null }).ok, false);
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "GRANDMASTER -1", peakTier: null }).ok, false);
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: null, peakTier: null, status: "ACTIVE" }).ok, false);
+});
+
+test("own player names are normalized, bounded and cannot target another account", () => {
+  const base = { riotId: "Breeze#KR1", currentTier: null, peakTier: null };
+  const parsed = parseOwnPlayerInput({ ...base, memberName: "  ＫＬＯＬ 회원  " });
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) assert.equal(parsed.value.memberName, "KLOL 회원");
+  assert.equal(parseOwnPlayerInput({ ...base, memberName: "가".repeat(100) }).ok, true);
+  for (const memberName of [undefined, null, 123, "", " ", "가", "가".repeat(101), "회원\u200b", "회\n원", "회\u202e원"]) {
+    assert.equal(parseOwnPlayerInput({ ...base, memberName }).ok, false);
+  }
+  for (const field of ["id", "playerId", "userAccountId", "memberNameNormalized", "role", "status"]) {
+    assert.equal(parseOwnPlayerInput({ ...base, memberName: "변경 회원", [field]: "arbitrary" }).ok, false);
+  }
 });
 
 test("claim approval requires an exact explicit manual-review acknowledgement shape", () => {

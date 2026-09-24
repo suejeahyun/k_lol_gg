@@ -272,13 +272,14 @@ function recursivelyAssertPublicAccount(value: unknown) {
     "tokenhash",
     "playerclaimreview",
   ]);
-  const visit = (candidate: unknown): void => {
+  const visit = (candidate: unknown, path: string[] = []): void => {
     if (!candidate || typeof candidate !== "object") return;
-    if (Array.isArray(candidate)) return candidate.forEach(visit);
+    if (Array.isArray(candidate)) return candidate.forEach((child) => visit(child, path));
     for (const [keyName, child] of Object.entries(candidate)) {
       const normalized = keyName.replaceAll(/[^a-z]/gi, "").toLocaleLowerCase("en-US");
-      assert.equal(forbidden.has(normalized), false, `public DTO leaked ${keyName}`);
-      visit(child);
+      const ownName = normalized === "membername" && path.join(".") === "player";
+      assert.equal(forbidden.has(normalized) && !ownName, false, `public DTO leaked ${keyName}`);
+      visit(child, [...path, keyName]);
     }
   };
   visit(value);

@@ -119,6 +119,7 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
     setMessage("");
     const form = new FormData(event.currentTarget);
     const payload = {
+      memberName: form.get("memberName"),
       riotId: form.get("riotId"),
       peakTier: form.get("peakTier") || null,
       currentTier: form.get("currentTier") || null,
@@ -160,6 +161,10 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
 
   return (
     <form className={styles.form} onSubmit={submit} aria-busy={pending}>
+      <label className={styles.field}>이름
+        <input name="memberName" defaultValue={player.memberName} required minLength={2} maxLength={100} autoComplete="name" aria-describedby="account-player-name-help" />
+        <small id="account-player-name-help">사이트에서 사용할 이름을 2~100자로 입력하세요.</small>
+      </label>
       <label className={styles.field}>Riot ID
         <input name="riotId" defaultValue={player.riotId} required maxLength={22} autoComplete="off" aria-describedby="account-player-riot-id-help account-player-riot-id-warning" />
         <small id="account-player-riot-id-help">게임 이름은 최대 16자, 태그는 최대 5자이며 `닉네임#태그` 형식으로 입력합니다.</small>

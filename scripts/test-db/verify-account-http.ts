@@ -199,16 +199,17 @@ function recursivelyRejectSensitiveFields(value: unknown, admin = false): void {
     "tokenhash",
     ...(admin ? [] : ["membername", "playerclaimreview", "temporarypassword"]),
   ]);
-  const visit = (candidate: unknown): void => {
+  const visit = (candidate: unknown, path: string[] = []): void => {
     if (!candidate || typeof candidate !== "object") return;
     if (Array.isArray(candidate)) {
-      candidate.forEach(visit);
+      candidate.forEach((child) => visit(child, path));
       return;
     }
     for (const [key, child] of Object.entries(candidate)) {
       const normalized = key.replaceAll(/[^a-z]/gi, "").toLocaleLowerCase("en-US");
-      assert.equal(forbidden.has(normalized), false, `HTTP DTO leaked ${key}`);
-      visit(child);
+      const ownName = normalized === "membername" && ["player", "account.player", "user.player"].includes(path.join("."));
+      assert.equal(forbidden.has(normalized) && !ownName, false, `HTTP DTO leaked ${key}`);
+      visit(child, [...path, key]);
     }
   };
   visit(value);
@@ -583,12 +584,13 @@ try {
   assert.equal(initialSelfPlayer.status, 200);
   assert.equal(initialSelfPlayer.headers.get("etag"), '"0"');
   const initialSelfPlayerBody = await initialSelfPlayer.json() as {
-    player: { riotId: string; currentTier: string | null; peakTier: string | null; revision: number };
+    player: { memberName: string; riotId: string; currentTier: string | null; peakTier: string | null; revision: number };
   };
   assert.equal(initialSelfPlayerBody.player.riotId, `${selfProfileInitialGameName}#S01`);
   assert.equal(initialSelfPlayerBody.player.currentTier, "실버 2");
   assert.equal(initialSelfPlayerBody.player.peakTier, "골드 4");
   assert.equal(initialSelfPlayerBody.player.revision, 0);
+  assert.equal(initialSelfPlayerBody.player.memberName, "HTTP 관리자 회원 self_profile");
 
   const initialAccountOverview = await fetch(`${origin}/account`, {
     headers: { cookie: selfProfileLogin.cookie },
@@ -598,12 +600,13 @@ try {
   assert.equal(initialAccountOverviewHtml.includes(`${selfProfileInitialGameName}#S01`), true);
   assert.equal(initialAccountOverviewHtml.includes("실버 2"), true);
   assert.equal(initialAccountOverviewHtml.includes("골드 4"), true);
-  assert.equal(initialAccountOverviewHtml.includes("Riot ID·티어 변경"), true);
+  assert.equal(initialAccountOverviewHtml.includes("이름·Riot ID·티어 변경"), true);
   const selfProfileFormPage = await fetch(`${origin}/account?tab=player`, {
     headers: { cookie: selfProfileLogin.cookie },
   });
   assert.equal(selfProfileFormPage.status, 200);
   const selfProfileFormHtml = await selfProfileFormPage.text();
+  assert.equal(selfProfileFormHtml.includes('name="memberName"'), true);
   assert.equal(selfProfileFormHtml.includes('name="riotId"'), true);
   assert.equal(selfProfileFormHtml.includes('name="currentTier"'), true);
   assert.equal(selfProfileFormHtml.includes('name="peakTier"'), true);
@@ -643,29 +646,69 @@ try {
   });
   assert.equal(malformedSelfPatch.status, 400);
 
-  const tierOnlySelfProfileBody = {
+  for (const invalidName of ["", " ", "가", "가".repeat(101), "이름\u200b", null]) {
+    const rejectedName = await selfPlayerMutation({
+      origin, cookie: selfProfileLogin.cookie, revision: 0,
+      body: { ...selfProfileBody, memberName: invalidName },
+    });
+    assert.equal(rejectedName.status, 400);
+  }
+  const forgedPlayerTarget = await selfPlayerMutation({
+    origin, cookie: selfProfileLogin.cookie, revision: 0,
+    body: { ...selfProfileBody, memberName: "다른 이름", playerId: selfProfileDuplicate.playerId },
+  });
+  assert.equal(forgedPlayerTarget.status, 400);
+
+  const nameOnlySelfProfileBody = {
+    memberName: " ＫＬＯＬ 이름 변경 ",
     riotId: `${selfProfileInitialGameName}#S01`,
-    currentTier: "실버 1",
-    peakTier: "골드 3",
+    currentTier: "실버 2",
+    peakTier: "골드 4",
   };
-  const tierOnlySelfProfile = await selfPlayerMutation({
+  const nameOnlyKey = idempotencyKey("self-name");
+  const nameOnlySelfProfile = await selfPlayerMutation({
     origin,
     cookie: selfProfileLogin.cookie,
     revision: 0,
-    body: tierOnlySelfProfileBody,
+    key: nameOnlyKey,
+    body: nameOnlySelfProfileBody,
   });
-  assert.equal(tierOnlySelfProfile.status, 200);
-  assert.equal(tierOnlySelfProfile.headers.get("etag"), '"1"');
-  const tierOnlySelfProfileResponse = await tierOnlySelfProfile.json() as {
+  assert.equal(nameOnlySelfProfile.status, 200);
+  assert.equal(nameOnlySelfProfile.headers.get("etag"), '"1"');
+  const nameOnlySelfProfileResponse = await nameOnlySelfProfile.json() as {
     message: string;
     playerRevision: number;
-    account: { player: { riotId: string; currentTier: string | null; peakTier: string | null } };
+    account: { player: { memberName: string; riotId: string; currentTier: string | null; peakTier: string | null } };
   };
-  assert.equal(tierOnlySelfProfileResponse.message.includes("다시 연동"), false);
-  assert.equal(tierOnlySelfProfileResponse.playerRevision, 1);
-  assert.equal(tierOnlySelfProfileResponse.account.player.riotId, tierOnlySelfProfileBody.riotId);
-  assert.equal(tierOnlySelfProfileResponse.account.player.currentTier, tierOnlySelfProfileBody.currentTier);
-  assert.equal(tierOnlySelfProfileResponse.account.player.peakTier, tierOnlySelfProfileBody.peakTier);
+  assert.equal(nameOnlySelfProfileResponse.message.includes("다시 연동"), false);
+  assert.equal(nameOnlySelfProfileResponse.playerRevision, 1);
+  assert.equal(nameOnlySelfProfileResponse.account.player.memberName, "KLOL 이름 변경");
+  const [renamedPlayer] = await database.select().from(players).where(eq(players.id, selfProfileOwner.playerId));
+  assert.equal(renamedPlayer.memberName, "KLOL 이름 변경");
+  assert.equal(renamedPlayer.memberNameNormalized, "klol 이름 변경");
+  assert.equal(renamedPlayer.userAccountId, selfProfileOwner.id);
+  const [otherPlayer] = await database.select().from(players).where(eq(players.id, selfProfileDuplicate.playerId));
+  assert.equal(otherPlayer.memberName, "HTTP 관리자 회원 self_profile_duplicate");
+  const [nameAudit] = await database.select().from(auditEvents).where(and(
+    eq(auditEvents.targetId, selfProfileOwner.playerId), eq(auditEvents.action, "PLAYER_SELF_UPDATED"),
+  ));
+  assert.equal((nameAudit.beforeJson as { memberName: string }).memberName, initialSelfPlayerBody.player.memberName);
+  assert.equal((nameAudit.afterJson as { memberName: string }).memberName, "KLOL 이름 변경");
+  assert.equal(nameOnlySelfProfileResponse.account.player.riotId, nameOnlySelfProfileBody.riotId);
+  assert.equal(nameOnlySelfProfileResponse.account.player.currentTier, nameOnlySelfProfileBody.currentTier);
+  assert.equal(nameOnlySelfProfileResponse.account.player.peakTier, nameOnlySelfProfileBody.peakTier);
+  const replayedName = await selfPlayerMutation({
+    origin, cookie: selfProfileLogin.cookie, revision: 0, key: nameOnlyKey, body: nameOnlySelfProfileBody,
+  });
+  assert.equal(replayedName.status, 200);
+  assert.equal(replayedName.headers.get("idempotency-replayed"), "true");
+  assert.deepEqual(await replayedName.json(), nameOnlySelfProfileResponse);
+  const reusedNameKey = await selfPlayerMutation({
+    origin, cookie: selfProfileLogin.cookie, revision: 0, key: nameOnlyKey,
+    body: { ...nameOnlySelfProfileBody, memberName: "다른 이름" },
+  });
+  assert.equal(reusedNameKey.status, 409);
+  assert.equal(problemCode(await reusedNameKey.json()), "IDEMPOTENCY_KEY_REUSED");
   const preservedSelfLink = (
     await database.select().from(riotAccountLinks)
       .where(eq(riotAccountLinks.id, selfProfileLinkId)).limit(1)
@@ -864,6 +907,8 @@ try {
   });
   assert.equal(duplicateSelfRiotId.status, 409);
   assert.equal(problemCode(await duplicateSelfRiotId.json()), "RIOT_ID_ALREADY_LINKED");
+  const [nameAfterLegacyPayload] = await database.select().from(players).where(eq(players.id, selfProfileOwner.playerId));
+  assert.equal(nameAfterLegacyPayload.memberName, "KLOL 이름 변경", "omitting memberName must retain the saved name");
   await runPlayerProfileBrowserRegression(origin, selfProfileLogin.cookie);
 
   const visibleSignupBase = signupPayload("visible-identifiers");

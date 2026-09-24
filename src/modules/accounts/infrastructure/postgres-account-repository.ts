@@ -271,6 +271,7 @@ function selfDto(dto: AdminAccountDto): AccountSelfDto {
     player: player
       ? {
           id: player.id,
+          memberName: player.memberName,
           nickname: player.nickname,
           tagLine: player.tagLine,
           riotId: player.riotId,
@@ -916,6 +917,10 @@ export class PostgresAccountRepository implements AccountRepository {
           await transaction
             .update(players)
             .set({
+              memberName: input.memberName ?? before.memberName,
+              memberNameNormalized: input.memberName === undefined
+                ? before.memberNameNormalized
+                : normalizeAccountIdentity(input.memberName),
               nickname: input.nickname,
               nicknameNormalized: normalizeAccountIdentity(input.nickname),
               tagLine: input.tagLine,
@@ -941,12 +946,14 @@ export class PostgresAccountRepository implements AccountRepository {
           targetType: "PLAYER",
           targetId: before.id,
           beforeJson: {
+            memberName: before.memberName,
             riotId: `${before.nickname}#${before.tagLine}`,
             peakTier: before.peakTier,
             currentTier: before.currentTier,
             revision: before.revision,
           },
           afterJson: {
+            memberName: input.memberName ?? before.memberName,
             riotId: `${input.nickname}#${input.tagLine}`,
             peakTier: input.peakTier,
             currentTier: input.currentTier,
@@ -962,8 +969,8 @@ export class PostgresAccountRepository implements AccountRepository {
           status: 200,
           response: {
             message: riotIdentityChange.disconnected
-              ? "내 Riot ID와 티어 정보가 수정되었습니다. Riot ID가 변경되어 기존 Riot 연동이 해제되었습니다. 새 Riot ID를 다시 연동해 주세요."
-              : "내 Riot ID와 티어 정보가 수정되었습니다.",
+              ? "내 플레이어 정보가 수정되었습니다. Riot ID가 변경되어 기존 Riot 연동이 해제되었습니다. 새 Riot ID를 다시 연동해 주세요."
+              : "내 플레이어 정보가 수정되었습니다.",
             account: selfDto(dto),
             playerRevision: updated.revision,
           },

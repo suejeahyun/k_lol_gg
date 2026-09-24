@@ -18,6 +18,12 @@ V1 플레이어 상세 주소는 숫자 식별자를 사용하지만 V2 공개 c
    실제 404를 반환한다. `src/proxy.ts`에는 DB 접근을 추가하지 않는다.
 3. 공개 projection은 UUID, Riot ID, 허용된 티어만 가진다. 회원명, 로그인 ID, 계정 UUID와 상태는
    `AdminPlayerRepository`와 `/api/admin/players/**` 응답에서만 사용한다.
+   2026-09-25 사용자 요청으로 본인 회원명 확인·수정 예외를 추가했다. 인증된 계정의 self DTO는
+   연결된 본인 `player.memberName`을 포함하며 `/account?tab=player`에서 수정한다.
+   `PATCH /api/auth/me/player`는 승인된 활성 회원의 세션에서 대상을 결정하고 클라이언트의
+   계정/플레이어 ID를 받지 않는다. 이름은 2~100자 NFKC 정규화·안전 입력 검증을 적용하며,
+   생략한 기존 요청은 이름을 유지한다. revision·멱등성·감사는 기존 수정 transaction을 사용한다.
+   타인의 회원명과 공개 플레이어·경기 DTO의 회원명 비공개 계약은 유지한다.
 4. 관리자 생성·수정·비활성화·재활성화는 ADMIN 이상 세션, exact same-origin, allowlist JSON,
    `Idempotency-Key`, 수정·상태 변경의 strong `If-Match: "revision"`을 요구한다. 편집 DTO로
    상태를 암묵 변경하지 않고 재활성화 전용 endpoint와 2단계 확인 UI를 사용한다.

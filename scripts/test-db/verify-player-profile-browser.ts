@@ -9,6 +9,7 @@ import {
 import { IsolatedChromium } from "./isolated-chromium";
 
 type PlayerSnapshot = Readonly<{
+  memberName: string;
   riotId: string;
   currentTier: string | null;
   peakTier: string | null;
@@ -32,6 +33,7 @@ type RenderedTierField = Readonly<{
 }>;
 
 type RenderedProfile = Readonly<{
+  memberName: RenderedField | null;
   riotId: RenderedField | null;
   currentTier: RenderedTierField | null;
   peakTier: RenderedTierField | null;
@@ -170,6 +172,7 @@ async function readRenderedProfile(browser: IsolatedChromium) {
       row.querySelector('dd')?.textContent?.trim() ?? '',
     ]));
     return {
+      memberName: field('memberName'),
       riotId: field('riotId'),
       currentTier: tierField('currentTier'),
       peakTier: tierField('peakTier'),
@@ -196,6 +199,10 @@ try {
   );
 
   const initialRendered = await readRenderedProfile(browser);
+  assert.equal(initialRendered.memberName?.value, initialPlayer.memberName);
+  assert.equal(initialRendered.memberName?.maxLength, 100);
+  assert.match(initialRendered.memberName?.label ?? "", /이름/u);
+  assert.equal(initialRendered.facts["이름"], initialPlayer.memberName);
   assert.equal(initialRendered.riotId?.value, initialPlayer.riotId);
   for (const name of ["currentTier", "peakTier"] as const) {
     const persistedValue = initialPlayer[name];
@@ -214,12 +221,25 @@ try {
   assert.equal(initialRendered.peakTier?.optionCount, 11);
   assert.equal(initialRendered.saveButton, "내 플레이어 정보 저장");
 
+  for (const width of [1280, 360]) {
+    await browser.setViewport(width, 800);
+    await browser.waitFor(`innerWidth === ${width}`, "profile viewport resize");
+    assert.equal(await browser.evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, "profile must fit the viewport");
+    assert.equal(await browser.evaluate(`(() => {
+      const name = document.querySelector('input[name="memberName"]');
+      const bounds = name?.getBoundingClientRect();
+      return name instanceof HTMLInputElement && name.labels.length > 0 && bounds.left >= 0 && bounds.right <= innerWidth;
+    })()`), true, "name field must be labelled and fit desktop/mobile");
+  }
+
   const browserIdentity = `Browser${randomBytes(3).toString("hex")}`;
   const browserBody = {
+    memberName: "브라우저 변경 회원",
     riotId: `${browserIdentity}#B01`,
     currentTier: "DIAMOND II",
     peakTier: "MASTER 120",
   };
+  await replaceFieldWithKeyboard(browser, "memberName", browserBody.memberName);
   await replaceFieldWithKeyboard(browser, "riotId", browserBody.riotId);
   await selectTier(browser, "currentTier", "DIAMOND", "II");
   await selectTier(browser, "peakTier", "MASTER", "120");
@@ -230,7 +250,8 @@ try {
     `(() => {
       const values = Object.fromEntries([...document.querySelectorAll('input[name]')].map((input) => [input.name, input.value]));
       const text = document.body?.innerText ?? '';
-      return values.riotId === ${JSON.stringify(browserBody.riotId)} &&
+      return values.memberName === ${JSON.stringify(browserBody.memberName)} &&
+        values.riotId === ${JSON.stringify(browserBody.riotId)} &&
         values.currentTier === ${JSON.stringify(browserBody.currentTier)} &&
         values.peakTier === ${JSON.stringify(browserBody.peakTier)} &&
         text.includes(${JSON.stringify(browserBody.riotId)}) &&
@@ -243,6 +264,7 @@ try {
   assert.equal(afterBrowserSave.revision, initialPlayer.revision + 1);
   assert.deepEqual(
     {
+      memberName: afterBrowserSave.memberName,
       riotId: afterBrowserSave.riotId,
       currentTier: afterBrowserSave.currentTier,
       peakTier: afterBrowserSave.peakTier,
@@ -258,6 +280,7 @@ try {
   })()`), true);
   const externalIdentity = `External${randomBytes(3).toString("hex")}`;
   const externalBody = {
+    memberName: "다른 창에서 변경한 회원",
     riotId: `${externalIdentity}#E01`,
     currentTier: "EMERALD I",
     peakTier: "GRANDMASTER 450",
@@ -280,6 +303,7 @@ try {
       const peakTierScore = document.querySelector('input[data-tier-score="peakTier"]');
       return riotId instanceof HTMLInputElement && currentTier instanceof HTMLInputElement && peakTier instanceof HTMLInputElement &&
         currentTierSelect instanceof HTMLSelectElement && currentTierDivision instanceof HTMLSelectElement && peakTierSelect instanceof HTMLSelectElement && peakTierScore instanceof HTMLInputElement &&
+        document.querySelector('input[name="memberName"]')?.value === ${JSON.stringify(externalBody.memberName)} &&
         riotId.value === ${JSON.stringify(externalBody.riotId)} &&
         currentTier.value === ${JSON.stringify(externalBody.currentTier)} &&
         peakTier.value === ${JSON.stringify(externalBody.peakTier)} &&
@@ -295,6 +319,7 @@ try {
   assert.equal(afterStaleAttempt.revision, afterBrowserSave.revision + 1);
   assert.deepEqual(
     {
+      memberName: afterStaleAttempt.memberName,
       riotId: afterStaleAttempt.riotId,
       currentTier: afterStaleAttempt.currentTier,
       peakTier: afterStaleAttempt.peakTier,
@@ -303,7 +328,11 @@ try {
     "the stale browser submission must not overwrite the concurrent mutation",
   );
 
-  process.stdout.write("[db-account-browser] owner Riot ID/tier keyboard save, rendered refresh, and 412 remount passed\n");
+  await browser.navigate("/account");
+  const overview = await readRenderedProfile(browser);
+  assert.equal(overview.facts["이름"], externalBody.memberName);
+
+  process.stdout.write("[db-account-browser] owner name/Riot ID/tier keyboard save, rendered refresh, and 412 remount passed\n");
 } finally {
   await browser.close();
 }

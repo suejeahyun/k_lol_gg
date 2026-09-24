@@ -62,10 +62,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <section className={styles.panel}><h2>계정 상태</h2><dl className={styles.facts}><div><dt>상태</dt><dd>{statusLabels[account.status]}</dd></div><div><dt>역할</dt><dd>{accountRoleLabel(account.role)}</dd></div><div><dt>상태 변경</dt><dd>{formatOptionalKoreanDateTime(account.statusChangedAt)}</dd></div><div><dt>비밀번호 변경</dt><dd>{formatOptionalKoreanDateTime(account.passwordChangedAt)}</dd></div></dl><p className={styles.notice}>{account.statusReason ?? defaultStatusMessages[account.status]}</p></section>
           <section className={styles.panel} aria-labelledby="my-player-title">
             <div className={styles.panelHeading}>
-              <div><span className={styles.eyebrow}><Gamepad2 aria-hidden="true" /> 내 플레이어</span><h2 id="my-player-title">Riot ID·티어</h2></div>
-              <Link href="/account?tab=player">{account.status === "APPROVED" && account.player?.status === "ACTIVE" ? "Riot ID·티어 변경" : "플레이어 정보 확인"}</Link>
+              <div><span className={styles.eyebrow}><Gamepad2 aria-hidden="true" /> 내 플레이어</span><h2 id="my-player-title">이름·Riot ID·티어</h2></div>
+              <Link href="/account?tab=player">{account.status === "APPROVED" && account.player?.status === "ACTIVE" ? "이름·Riot ID·티어 변경" : "플레이어 정보 확인"}</Link>
             </div>
-            {account.player ? <dl className={styles.facts}><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl> : <p className={styles.notice}>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}
+            {account.player ? <dl className={styles.facts}><div><dt>이름</dt><dd>{account.player.memberName}</dd></div><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl> : <p className={styles.notice}>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}
           </section>
           <section className={styles.panel} aria-labelledby="my-participations-title"><div className={styles.panelHeading}><div><span className={styles.eyebrow}><CalendarCheck2 aria-hidden="true" /> 내 활동</span><h2 id="my-participations-title">내 이벤트·내전 기록</h2></div><Link href="/matches">전체 내전 보기</Link></div>
             {participations === null ? <p className={styles.notice} role="alert">참여 기록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p> : participations.length === 0 ? <p className={styles.empty}>연결된 플레이어의 공개 내전 또는 대회 참가 기록이 아직 없습니다.</p> : <div className={styles.activityGrid}>{participations.map((item) => {
@@ -79,7 +79,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </section>
         </>
       ) : (
-        <section className={styles.panel}><h2>연결 플레이어</h2>{account.player ? <><dl className={styles.facts}><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>플레이어 상태</dt><dd>{account.player.status === "ACTIVE" ? "활성" : "비활성"}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl>{account.status === "APPROVED" && account.player.status === "ACTIVE" ? <AccountPlayerForm key={account.player.revision} player={account.player} /> : <p className={styles.notice}>승인된 활성 플레이어만 본인 정보를 수정할 수 있습니다.</p>}</> : account.playerClaim ? <p className={styles.notice}>{playerClaimMessage(account.playerClaim)}</p> : <p>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}</section>
+        <section className={styles.panel}><h2>연결 플레이어</h2>{account.player ? <><dl className={styles.facts}><div><dt>이름</dt><dd>{account.player.memberName}</dd></div><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>플레이어 상태</dt><dd>{account.player.status === "ACTIVE" ? "활성" : "비활성"}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl>{account.status === "APPROVED" && account.player.status === "ACTIVE" ? <AccountPlayerForm key={account.player.revision} player={account.player} /> : <p className={styles.notice}>승인된 활성 플레이어만 본인 정보를 수정할 수 있습니다.</p>}</> : account.playerClaim ? <p className={styles.notice}>{playerClaimMessage(account.playerClaim)}</p> : <p>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}</section>
       )}
     </AccountShell>
   );

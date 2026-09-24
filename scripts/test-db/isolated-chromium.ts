@@ -206,6 +206,12 @@ export class IsolatedChromium {
     await this.client.call("Network.clearBrowserCookies");
   }
 
+  async setViewport(width: number, height: number) {
+    await this.client.call("Emulation.setDeviceMetricsOverride", {
+      width, height, deviceScaleFactor: 1, mobile: false,
+    });
+  }
+
   async setCookie(cookie: string) {
     const parsed = cookiePair(cookie);
     const result = await this.client.call<{ success?: boolean }>("Network.setCookie", {
