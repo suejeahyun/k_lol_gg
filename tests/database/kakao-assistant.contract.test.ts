@@ -1875,3 +1875,44 @@ test("inhouse roster matching uses bounded lookups for ten members and guests", 
     await pool.end();
   }
 });
+
+
+test("inhouse overview projects all three modes and excludes other rooms, closed rounds and drafts", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const now = new Date();
+  const today = recruitingOperatingDateKey(now);
+  const suffix = randomUUID();
+  const seasonId = randomUUID();
+  const room = "all-modes-" + suffix;
+  const roomHash = createHash("sha256").update(`klol-v2:kakao-season-room:v1\0${room}`).digest();
+  try {
+    await applyMigrations(database);
+    await database.insert(seasons).values({ id: seasonId, name: room, nameNormalized: room, status: "ACTIVE", activatedAt: now });
+    const rows = ["RIFT", "ARAM", "AUGMENT_ARAM"].map((mode, index) => ({ id: randomUUID(), seasonId,
+      applyDate: today, recruitNo: index + 1, sourceRoomIdHash: roomHash, mode, status: "IN_PROGRESS" as const,
+      capacity: 10, startTimeText: "21:00", sourceReferenceHash: randomBytes(32) }));
+    await database.insert(seasonInhouseRounds).values([...rows,
+      { ...rows[0]!, id: randomUUID(), recruitNo: 4, status: "CLOSED" },
+      { ...rows[0]!, id: randomUUID(), recruitNo: 5, status: "DRAFT" },
+      { ...rows[0]!, id: randomUUID(), recruitNo: 6, sourceRoomIdHash: randomBytes(32) },
+    ]);
+    const assistant = new PostgresKakaoAssistant(database);
+    const result = await assistant.syncSeasonSnapshot({ actorPrincipalId: principalId,
+      intent: intent("nonce-overview-" + suffix, "overview-" + suffix, room), requestKey: "overview-" + suffix,
+      scope: "kakao:season-applications:status", requestId: randomUUID(), now, afterMutation: true,
+      command: { action: "STATUS", seasonId, applyDate: today, recruitNo: null, participants: [] },
+    });
+    assert.deepEqual(result.body.rounds?.map((round) => [round.recruitNo, round.mode]), [[1, "RIFT"], [2, "ARAM"], [3, "AUGMENT_ARAM"]]);
+    const reply = v1StrictSeasonReply(result.body, "STATUS");
+    assert.match(reply, /협곡/u);
+    assert.match(reply, /칼바람/u);
+    assert.match(reply, /증바람/u);
+    assert.doesNotMatch(reply, /내전 #[456]|양식코드/u);
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: now }).where(eq(seasons.id, seasonId));
+    await pool.end();
+  }
+});

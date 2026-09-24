@@ -146,8 +146,45 @@ test("line errors are actionable without calling storage; saved result survives 
   assert.equal(writes, 0);
   const valid = await service.execute({ ...envelope(form.replace("\n1.\n", "\n1. 가온/all\n")), eventId: "valid-submit" }, "key");
   assert.match(valid.reply, /내전등록 완료/u);
-  assert.match(valid.reply, /양식코드: ABCDE-FGHJK/u);
+  assert.match(valid.reply, /현재 목록을 불러오지 못했어요. 내전현황/u);
   assert.equal(writes, 1);
+});
+
+test("each inhouse mode saves once then returns all active modes instead of its copy form", async () => {
+  const modes = ["RIFT", "ARAM", "AUGMENT_ARAM"] as const;
+  const rounds = modes.map((mode, index) => ({ ...snapshot().roundMetadata!, recruitNo: index + 1,
+    mode, status: "IN_PROGRESS" as const, mainCount: index === 0 ? 10 : index + 1,
+    reserveCount: 0, startTimeText: "21:00" }));
+  for (const mode of modes) {
+    const calls: string[] = [];
+    const saved = { ...snapshot(), updatedCount: 1, roundMetadata: { ...snapshot().roundMetadata!, mode, status: "IN_PROGRESS" as const } };
+    const dispatcher = new KakaoV4CommandDispatcher({ recruiting: {
+      async handle() { throw new Error("unexpected"); }, async resolveCompatTarget() { return null; }, async resolveScrimUpsert() { return null; },
+    }, assistant: { async getOpenChatStatus() { throw new Error("unexpected"); }, async recordV4StaticReply() { throw new Error("unexpected"); },
+      async syncSeasonSnapshot(input) {
+        calls.push(input.command.action);
+        if (input.command.action === "STATUS") {
+          assert.equal(input.command.recruitNo, null);
+          assert.equal(input.command.seasonId, saved.seasonId);
+          assert.equal(input.command.applyDate, saved.applyDate);
+          assert.equal(input.afterMutation, true);
+          return { body: { ...saved, recruitNo: null, rounds: [...rounds].reverse() }, replayed: false };
+        }
+        return { body: saved, replayed: false };
+      },
+    } });
+    const service = new KakaoV4CommandService({ async authorizeProfile() { return { roomId: "room-test", roomStatus: "ACTIVE", capabilityProfile: "FEATURES", installationId: "local-test" }; } }, dispatcher);
+    const form = inhouseCopyFormReply(saved).replace("\n1.\n", `\n1. 가온${mode === "RIFT" ? "/all" : ""}\n`);
+    const result = await service.execute(envelope(form), "key");
+    assert.deepEqual(calls, ["SYNC", "STATUS"]);
+    assert.match(result.reply, /^✅ 내전수정 완료 · #1\n\n📋 현재 내전/u);
+    assert.match(result.reply, /\[내전 #1\] 협곡 · 21:00 · 10\/10명\n└ 내전상세 1/u);
+    assert.match(result.reply, /\[내전 #2\] 칼바람 · 21:00 · 2\/10명\n└ 내전상세 2/u);
+    assert.match(result.reply, /\[내전 #3\] 증바람 · 21:00 · 3\/10명\n└ 내전상세 3/u);
+    assert.ok(result.reply.indexOf("[내전 #1]") < result.reply.indexOf("[내전 #2]"));
+    assert.ok(result.reply.indexOf("[내전 #2]") < result.reply.indexOf("[내전 #3]"));
+    assert.doesNotMatch(result.reply, /양식코드:|예비 1\./u);
+  }
 });
 
 test("inhouse description accepts editable labels, preserves omission and rejects conflicting metadata", () => {

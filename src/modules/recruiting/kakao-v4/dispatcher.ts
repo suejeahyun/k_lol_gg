@@ -713,9 +713,6 @@ export class KakaoV4CommandDispatcher {
   }
 
   private async appendLatestInhouseStatus(context: KakaoV4DispatchContext, body: KakaoSeasonSnapshotDto, reply: string) {
-    if (body.formCode && body.roundMetadata && body.roundMetadata.status !== "CLOSED") {
-      return `${reply}\n\n${inhouseCopyFormReply(body)}`;
-    }
     try {
       const result = await this.dependencies.assistant.syncSeasonSnapshot({
         ...signedInput(context), requestId: context.requestId, afterMutation: true,
@@ -1069,7 +1066,7 @@ export class KakaoV4CommandDispatcher {
           ? `이번 요청으로 변경된 내용은 없어요.\n예전 양식의 빈칸으로는 이후 참가자를 삭제하지 않아요. 아래 최신 양식에서 이름을 지우거나 '구인상세 ${recruitNumber} 삭제 이름'을 입력해 주세요.`
           : "이미 같은 내용으로 저장되어 있어요."
         : `✅ 파티${registered ? "등록" : "수정"} 완료 · #${recruitNumber}${registeredNames ? ` · ${registeredNames}` : ""}`;
-    const legacyReply = editableCopy
+    const legacyReply = editableCopy && data.copyChanged === false
       ? await this.latestPartyForm(context, recruitNumber, saveReply)
       : await this.appendLatestPartyStatus(context, saveReply);
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });

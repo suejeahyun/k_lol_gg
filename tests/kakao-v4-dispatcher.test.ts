@@ -191,6 +191,7 @@ function harness(options: Readonly<{
   partyCopyAddedNames?: readonly string[];
   partyRegistrationCreated?: boolean;
   partyCopyChanged?: boolean;
+  partyStatus?: KakaoOpenChatStatusDto["parties"];
 }> = {}) {
   const handled: RecruitingCommand[] = [];
   const resolved: unknown[] = [];
@@ -260,6 +261,7 @@ function harness(options: Readonly<{
         }] };
       }
       if (options.partyFormCode) body = { ...body, parties: body.parties.map((party) => ({ ...party, formCode: options.partyFormCode })) };
+      if (options.partyStatus) body = { ...body, parties: options.partyStatus };
       return { body: options.emptyPartyStatus ? { ...body, parties: [] } : body, replayed: false };
     },
     async recordV4StaticReply(input) {
@@ -446,7 +448,7 @@ test("R24 party creation shows empty metadata, all slots and the code below the 
   }
 });
 
-test("copying a party form returns the current editable roster and explains unchanged stale copies", async () => {
+test("party copy saves return the overview while unchanged stale copies retain editable recovery", async () => {
   for (const unchanged of [false, true]) {
     const state = harness({ partyFormCode: "ABCDE-23456", partyCopyAddedNames: unchanged ? [] : ["민규"], partyCopyChanged: !unchanged });
     const detail = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
@@ -460,23 +462,48 @@ test("copying a party form returns the current editable roster and explains unch
     assert.equal(saved.payload.copyGuard?.saveReference, "ABCDE-23456");
     assert.equal(saved.payload.members[0]?.name, "A");
     assert.equal(saved.payload.members.length, unchanged ? 1 : 2);
-    assert.match(result.legacyReply, unchanged ? /^이번 요청으로 변경된 내용은 없어요\./u : /^✅ 파티수정 완료 · #7\n\n\[파티 #7\]/u);
+    assert.match(result.legacyReply, unchanged ? /^이번 요청으로 변경된 내용은 없어요\./u : /^✅ 파티수정 완료 · #7\n\n📋 현재 구인/u);
     if (unchanged) assert.match(result.legacyReply, /예전 양식의 빈칸.*구인상세 7 삭제 이름/u);
-    assert.match(result.legacyReply, /양식코드: ABCDE-23456/u);
+    if (unchanged) assert.match(result.legacyReply, /양식코드: ABCDE-23456/u);
+    else assert.doesNotMatch(result.legacyReply, /양식코드:/u);
     const lookup = state.statusCalls.at(-1) as { projection: string; afterMutation: boolean; partyTarget: unknown };
     assert.equal(lookup.projection, "PARTY");
     assert.equal(lookup.afterMutation, true);
-    assert.deepEqual(lookup.partyTarget, { recruitDate: "2026-09-10", recruitNumber: 7 });
+    assert.deepEqual(lookup.partyTarget, unchanged ? { recruitDate: "2026-09-10", recruitNumber: 7 } : undefined);
     assert.equal(result.legacyReply.match(/\[파티 #7\]/gu)?.length, 1);
     assert.doesNotMatch(result.legacyReply, /운영일|저장기준|주최자/u);
     const copiedAgain = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text: result.legacyReply }), { ...submittedEnvelope, text: result.legacyReply });
-    assert.equal(copiedAgain?.action, "SYNC", "the entire saved reply must remain usable as the next editable roster");
+    if (unchanged) assert.equal(copiedAgain?.action, "SYNC", "recovery reply must remain editable");
+    else assert.notEqual(copiedAgain?.action, "SYNC", "overview must not be accepted as a roster edit");
     const unavailable = harness({ statusFailure: true });
     const savedWithoutRead = await unavailable.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, canonical);
     assert.match(savedWithoutRead.legacyReply, /^✅ 파티수정 완료 · #7/u);
-    assert.match(savedWithoutRead.legacyReply, /최신 양식 조회 실패.*상세 7/u);
+    assert.match(savedWithoutRead.legacyReply, /현재 구인 목록을 불러오지 못했어요.*\n구인현황/u);
     assert.equal(unavailable.handled.length, 1, "a failed detail refresh must never retry the saved mutation");
   }
+});
+
+test("party copy save overview includes every active party including full parties", async () => {
+  const base = openStatus().parties[0]!;
+  const parties = [3, 1, 2].map((number) => ({ ...base, id: `party-${number}`, recruitNumber: number,
+    startTimeText: "다음판", gameInfo: number === 1 ? "자랭" : number === 2 ? "증칼" : "솔랭",
+    members: Array.from({ length: number === 3 ? 1 : 5 }, (_, index) => ({ name: `합성${index}`, position: null, slotNo: index + 1, substitute: false })),
+    memberCount: number === 3 ? 1 : 5, maximumMembers: number === 3 ? 2 : 5 }));
+  const state = harness({ partyFormCode: "ABCDE-23456", partyCopyChanged: true });
+  const detail = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
+  const text = detail.legacyReply.replace("2.\n", "2. 합성참가자\n");
+  const submittedEnvelope = { ...context.envelope, text };
+  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), submittedEnvelope);
+  if (command?.domain !== "PARTY" || command.action !== "SYNC") assert.fail("party copy command required");
+  const multiple = harness({ partyFormCode: "ABCDE-23456", partyCopyChanged: true, partyStatus: parties });
+  const result = await multiple.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, command);
+  assert.match(result.legacyReply, /\[파티 #1\].*다음판 · 자랭 · 5\/5명/u);
+  assert.match(result.legacyReply, /\[파티 #2\].*다음판 · 증칼 · 5\/5명/u);
+  assert.match(result.legacyReply, /\[파티 #3\].*다음판 · 솔랭 · 1\/2명/u);
+  assert.ok(result.legacyReply.indexOf("[파티 #1]") < result.legacyReply.indexOf("[파티 #2]"));
+  assert.ok(result.legacyReply.indexOf("[파티 #2]") < result.legacyReply.indexOf("[파티 #3]"));
+  assert.equal(multiple.statusCalls.length, 1);
+  assert.equal(multiple.handled.length, 1);
 });
 
 test("ADR0011 first registration names stay brief before the complete overview", async () => {
