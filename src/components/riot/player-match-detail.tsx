@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import { DATA_DRAGON_VERSION } from "@/modules/champions/domain/data-dragon-catalog";
 import type { RiotMatchDto, RiotMatchParticipantDto } from "@/modules/riot/domain/riot-player-analytics";
+import { formatKoreanDateTime } from "@/platform/time/format-korean-date-time";
 import { PLAYER_ITEMS, PLAYER_RUNES, PLAYER_SPELLS } from "./player-asset-catalog";
 import { PlayerMatchChart } from "./player-match-chart";
 import { PLAYER_POSITION_LABELS, playerChampionName, playerLaneSnapshot, queueLabel, selfParticipant } from "./player-analytics";
@@ -97,7 +98,7 @@ export function PlayerMatchDetail({ match: initialMatch, anonymous, playerId }: 
   const killParticipation = teamKills > 0 ? `${Math.round((self.kills + self.assists) / teamKills * 100)}%` : "—";
   return <details className={styles.match} data-result={match.remake ? "remake" : self.win ? "win" : "loss"} onToggle={(event) => { setExpanded(event.currentTarget.open); if (event.currentTarget.open) void loadTimeline(); }}>
     <summary className={styles.matchSummary}>
-      <div className={styles.result}><strong>{match.remake ? "다시하기" : self.win ? "승리" : "패배"}</strong><span>{queueLabel(match.queueId)}</span><small>{new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(match.startedAt))} · {matchDuration(match.durationSeconds)}</small></div>
+      <div className={styles.result}><strong>{match.remake ? "다시하기" : self.win ? "승리" : "패배"}</strong><span>{queueLabel(match.queueId)}</span><small>{formatKoreanDateTime(match.startedAt)} · {matchDuration(match.durationSeconds)}</small></div>
       <div className={styles.championCell}><PlayerChampion participant={self} /><span><strong>{playerChampionName(self)}</strong><small>{PLAYER_POSITION_LABELS[self.position ?? "UNKNOWN"]} · Lv.{self.champLevel ?? "—"}</small></span></div>
       <div><strong>{self.kills} / {self.deaths} / {self.assists}</strong><small>{kda} · 킬 관여 {killParticipation}</small><small>CS {stat(self.cs)} · {self.cs !== null && match.durationSeconds > 0 ? (self.cs / (match.durationSeconds / 60)).toFixed(1) : "—"}/분</small></div>
       <div><div className={styles.assets}>{self.items.map((id, i) => <PlayerAsset key={i} id={id} kind="item" />)}</div><div className={styles.assets}>{self.summonerSpells.map((id, i) => <PlayerAsset key={`s-${i}`} id={id} kind="spell" />)}{self.runes.perkIds[0] ? <PlayerAsset id={self.runes.perkIds[0]} kind="rune" /> : null}</div></div>

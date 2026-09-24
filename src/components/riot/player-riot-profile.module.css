@@ -113,7 +113,7 @@
 .matchBody { display: grid; gap: 18px; padding: 16px; border-top: 1px solid var(--border); min-width: 0; background: var(--card); border-radius: 0 0 10px 10px; }
 .teamHeading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: .76rem; padding: 10px 0; }
 .teamHeading > span { color: var(--muted-foreground); font-size: .7rem; }
-.bans { display: flex; gap: 5px; align-items: center; padding: 10px; font-size: .7rem; }
+.bans { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 10px; font-size: .7rem; }
 .bans > :not(:first-child), .bans > img { width: 26px; height: 26px; border-radius: 5px; }
 .buildOrder, .skillOrder { display: flex; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; gap: 8px; }
 .buildOrder li { display: grid; justify-items: center; gap: 4px; font-size: .62rem; padding: 7px; border: 1px solid var(--border); border-radius: 8px; }

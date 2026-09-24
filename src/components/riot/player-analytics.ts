@@ -7,7 +7,11 @@ export type PlayerMatchFilters = Readonly<{ year: string; queue: string; patch: 
 export const DEFAULT_PLAYER_MATCH_FILTERS: PlayerMatchFilters = { year: "ALL", queue: "ALL", patch: "ALL", position: "ALL", champion: "ALL", result: "ALL", from: "", to: "", sort: "recent" };
 export function selfParticipant(match: RiotMatchDto) { return match.participants.find((row) => row.participantId === match.selfParticipantId) ?? null; }
 export function playerChampionName(row: Pick<RiotMatchParticipantDto, "championId" | "championName">) { return findDataDragonChampion(String(row.championId), row.championName)?.name ?? row.championName; }
-export function koreanMatchDate(value: string) { return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value)); }
+const matchDateFormatter = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" });
+export function koreanMatchDate(value: string) {
+  const parts = Object.fromEntries(matchDateFormatter.formatToParts(new Date(value)).map((part) => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
 export function matchPatch(match: RiotMatchDto) { return match.gameVersion.split(".").slice(0, 2).join("."); }
 export function queueLabel(id: number) { return ({ 420: "솔로 랭크", 440: "자유 랭크", 450: "칼바람", 400: "일반 교차", 430: "일반", 490: "빠른 대전", 700: "격전", 1700: "아레나", 1710: "아레나", 1900: "URF", 2300: "난투", 2400: "칼바람: 아수라장" } as Record<number, string>)[id] ?? `게임 모드 ${id}`; }
 export function roundPlayerStat(value: number) { return Math.round(value * 100) / 100; }

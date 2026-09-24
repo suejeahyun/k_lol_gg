@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-09-24T23:07:31.288Z",
+  "readOnly": true,
+  "population": [
+    {
+      "player_status": "ACTIVE",
+      "link_status": "CONNECTED",
+      "count": 106
+    },
+    {
+      "player_status": "ACTIVE",
+      "link_status": "DISCONNECTED",
+      "count": 24
+    },
+    {
+      "player_status": "ACTIVE",
+      "link_status": "UNLINKED",
+      "count": 12
+    },
+    {
+      "player_status": "INACTIVE",
+      "link_status": "UNLINKED",
+      "count": 56
+    }
+  ],
+  "jobs": [
+    {
+      "status": "SUCCEEDED",
+      "failure_code": null,
+      "count": 14,
+      "latest_completed": "2026-09-24T23:05:52.505Z",
+      "next_available": "2026-09-24T22:03:46.821Z"
+    }
+  ],
+  "current": [
+    {
+      "connected": 106,
+      "rank_current": 14,
+      "analytics_current": 2,
+      "recent_page_verified": 2,
+      "history_complete": 0
+    }
+  ],
+  "archive": [
+    {
+      "rows": 56,
+      "players": 2,
+      "distinct_games": 56,
+      "timeline_ready": 8,
+      "oldest": "2026-04-05T06:23:49.112Z",
+      "newest": "2026-09-09T09:23:32.564Z",
+      "latest_collected": "2026-09-24T23:05:52.516Z"
+    }
+  ],
+  "ranks": [
+    {
+      "rows": 2,
+      "players": 2
+    }
+  ]
+}

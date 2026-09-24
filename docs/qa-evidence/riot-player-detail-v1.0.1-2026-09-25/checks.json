@@ -1,14 +1,15 @@
 {
-  "checkedAt": "2026-09-24T23:04:28.824Z",
+  "checkedAt": "2026-09-24T23:13:27.7458686Z",
   "command": "npm run check",
   "exitCode": 0,
-  "contracts": 441,
+  "contracts": 445,
   "unitPass": 995,
   "unitSkip": 1,
   "fail": 0,
   "build": "PASS",
   "typecheck": "PASS",
   "secretTree": "PASS",
-  "logSha256": "7b5e52d2bc86b74f1c10878a214d991e90e16d14bb278211cefa645576398aec",
-  "dbRerun": "Not needed: CSS layout only; 0045 unchanged"
+  "logSha256": "8cf55d363894118b198aef540ab3eff2bd00bc4a0d49675e58d92464865e6bbf",
+  "dbRerun": "Not needed: UI rendering and layout only; 0045 unchanged",
+  "focused": "4 SSR regressions and 17 existing UI tests passed"
 }
