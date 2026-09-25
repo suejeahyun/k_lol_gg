@@ -1,5 +1,7 @@
 # 멸망전 3개 모드 1.0.0 검증
 
+**운영 반영 완료**: source `e1a64ce03fa99a053689df15210acc11fcb9bbf4`, tag `destruction-modes-v1.0.0`, Vercel `dpl_E455CkTwiJBT8FwEbAYNBMQvfXpU` READY. `2026-09-25T10:46:01.108Z` 운영 alias `https://k-lol-gg.vercel.app`가 이 배포를 가리키며 health ready·홈·로그인·멸망전 목록/상세·효과음 200, 비인증 관리자 API 401을 확인했다. [운영 증거](./production-smoke.json), [전환 전 점검](./candidate-smoke.json).
+
 최신 운영 기준 `230e204d5650e4f16c52b665b818fbebe265a3bb`에 멸망전 변경만 병합했다. 기존 작업 폴더의 다른 미배포 변경은 포함하지 않았다. DB migration head는 `0045_simple_reptil`이며 이번 기능에는 스키마 변경·운영 데이터 이관이 없다.
 
 ## 기능
@@ -21,7 +23,7 @@
 - `focused-lint.txt`: 변경 기능 lint PASS. `secrets.txt`: 현재 트리 비밀정보 검사 PASS.
 - Windows checkout의 CRLF 때문에 기존 원본 해시 검사와 ERD 비교가 달랐으며 해당 파일을 Git 원본 바이트로 복원/재생성해 내용 변경 없이 통과했다. UX 정적 계약은 기존 필드 순서 대신 실제 참가자 선택·낙찰·대타 선택 흐름을 검사한다.
 
-합성 DB/브라우저 검증과 실제 운영 검증은 구분한다. 실제 Riot API로 참가자 100판을 수집하는 검증은 실행하지 않았다. 증바람은 운영자 확인 입력으로 운영 가능하며 Riot 자동 조회는 제공하지 않는다. 운영 배포 ID·alias·health는 검증 후 별도 기록한다.
+합성 DB/브라우저 검증과 실제 운영 검증은 구분한다. 실제 Riot API로 참가자 100판을 수집하는 검증은 실행하지 않았다. 증바람은 운영자 확인 입력으로 운영 가능하며 Riot 자동 조회는 제공하지 않는다. 운영 관리자 로그인·실제 참가자 입력은 합성 검증과 별도로 미실행이다.
 
 ## 운영 순서
 
