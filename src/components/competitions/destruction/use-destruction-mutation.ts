@@ -23,7 +23,7 @@ export function useDestructionMutation(revision: number) {
     try {
       const response = await fetch(snapshot.path, {
         method: snapshot.method,
-        headers: { "Content-Type": "application/json", "If-Match": `"${snapshot.revision}"`, "Idempotency-Key": snapshot.key },
+        headers: { "Content-Type": "application/json", "X-Destruction-Revision": `"${snapshot.revision}"`, "Idempotency-Key": snapshot.key },
         body: snapshot.body,
         signal: AbortSignal.timeout(15_000),
       });

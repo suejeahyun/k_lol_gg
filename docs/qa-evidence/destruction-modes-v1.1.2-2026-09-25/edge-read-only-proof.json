@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-09-25T12:37:48.469Z",
+  "method": "GET",
+  "readOnly": true,
+  "results": [
+    {
+      "headers": {},
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "etag": "W/\"10\""
+    },
+    {
+      "headers": {
+        "If-Match": "\"9\""
+      },
+      "status": 412,
+      "contentType": "text/plain; charset=utf-8",
+      "etag": null,
+      "edgeError": [
+        "An error occurred",
+        "PRECONDITION_FAILED"
+      ]
+    },
+    {
+      "headers": {
+        "X-Destruction-Revision": "\"9\""
+      },
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "etag": "W/\"10\""
+    }
+  ]
+}

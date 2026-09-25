@@ -70,6 +70,24 @@ test("HTTP mutation boundary requires same origin, If-Match and Idempotency-Key"
     const valid = await prepareDestructionMutation(new Request("https://v2.example/api/competitions/destruction", { method: "PUT", headers: { Origin: "https://v2.example", "Content-Type": "application/json", "If-Match": '"3"', "Idempotency-Key": "destruction-application-12345678" }, body: JSON.stringify({ applicationId, position: "MID" }) }), session, "destruction:application:upsert");
     assert.equal(valid.ok, true);
     if (valid.ok) assert.equal(valid.value.expectedRevision, 3);
+    for (const [headers, expected, revision] of [
+      [{ "X-Destruction-Revision": '"3"' }, 200, 3],
+      [{ "X-Destruction-Revision": '"0"' }, 200, 0],
+      [{ "X-Destruction-Revision": '"3"', "If-Match": '"3"' }, 200, 3],
+      [{ "X-Destruction-Revision": '"3"', "If-Match": '"4"' }, 400, null],
+      [{ "X-Destruction-Revision": 'W/"3"' }, 400, null],
+      [{ "X-Destruction-Revision": '*' }, 400, null],
+      [{ "X-Destruction-Revision": '"3", "4"' }, 400, null],
+      [{ "X-Destruction-Revision": '"9007199254740992"' }, 400, null],
+      [{ "X-Destruction-Revision": '' }, 400, null],
+      [{}, 428, null],
+    ] as const) {
+      const result = await prepareDestructionMutation(new Request("https://v2.example/api/competitions/destruction", {
+        method: "PUT", headers: { Origin: "https://v2.example", "Content-Type": "application/json", "Idempotency-Key": "destruction-application-12345678", ...headers }, body: "{}",
+      }), session, "destruction:application:upsert");
+      if (result.ok) { assert.equal(expected, 200); assert.equal(result.value.expectedRevision, revision); }
+      else assert.equal(result.response.status, expected);
+    }
     const crossOrigin = await prepareDestructionMutation(new Request("https://v2.example/api/competitions/destruction", { method: "PUT", headers: { Origin: "https://evil.example", "Content-Type": "application/json", "If-Match": '"3"', "Idempotency-Key": "destruction-application-12345678" }, body: "{}" }), session, "destruction:application:upsert");
     assert.equal(crossOrigin.ok, false);
     if (!crossOrigin.ok) assert.equal(crossOrigin.response.status, 403);

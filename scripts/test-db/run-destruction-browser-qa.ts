@@ -3,6 +3,7 @@ import { execFile as execFileCallback, spawn } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
+import { createServer as createHttpServer } from "node:http";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { Pool } from "pg";
@@ -15,10 +16,11 @@ import { runDestructionBrowserInteractions } from "./destruction-browser-interac
 
 const execFile = promisify(execFileCallback);
 const root = resolve(import.meta.dirname, "../..");
-const output = resolve(root, "docs/qa/destruction-recruitment-review-2026-09-25");
+const output = resolve(root, "docs/qa/destruction-review-refresh-2026-09-25");
 const cluster = await startEphemeralCluster();
 const pool = new Pool({ connectionString: cluster.connectionString });
 let server: ReturnType<typeof spawn> | undefined;
+let edge: ReturnType<typeof createHttpServer> | undefined;
 try {
   await mkdir(output, { recursive: true });
   const tests = await execFile(process.execPath, ["--import", "tsx", "--test", "tests/database/destruction-competition.contract.test.ts"], { cwd: root, env: childTestEnvironment(cluster.connectionString), windowsHide: true });
@@ -85,7 +87,38 @@ try {
   if (!address || typeof address === "string") throw new Error("No loopback port");
   const port = address.port;
   await new Promise<void>((done) => reservation.close(() => done()));
-  const origin = `http://127.0.0.1:${port}`;
+  const backendOrigin = `http://127.0.0.1:${port}`;
+  const transport = { legacyMutationRequests: 0, applicationRevisionRequests: 0, rewrittenResponses: 0 };
+  // Reproduce the deployed edge's response-side conditional handling. A successful
+  // write can otherwise be replaced by a non-JSON 412 after the DB already committed.
+  edge = createHttpServer(async (request, response) => {
+    try {
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) chunks.push(Buffer.from(chunk));
+      const headers = new Headers();
+      for (const [key, value] of Object.entries(request.headers)) if (value !== undefined && !["connection", "content-length"].includes(key)) headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+      const mutation = !["GET", "HEAD"].includes(request.method ?? "GET");
+      if (mutation && headers.has("if-match")) transport.legacyMutationRequests += 1;
+      if (mutation && headers.has("x-destruction-revision")) transport.applicationRevisionRequests += 1;
+      const upstream = await fetch(backendOrigin + request.url, { method: request.method, headers, body: mutation ? Buffer.concat(chunks) : undefined, redirect: "manual" });
+      const bytes = Buffer.from(await upstream.arrayBuffer());
+      const expected = headers.get("if-match");
+      if (expected && expected !== upstream.headers.get("etag")?.replace(/^W\//, "")) {
+        transport.rewrittenResponses += 1;
+        response.writeHead(412, { "Content-Type": "text/plain; charset=utf-8" });
+        response.end("An error occurred\n\nPRECONDITION_FAILED\n");
+        return;
+      }
+      response.statusCode = upstream.status;
+      upstream.headers.forEach((value, key) => { if (!["content-encoding", "content-length", "transfer-encoding", "connection", "set-cookie"].includes(key)) response.setHeader(key, value); });
+      if (upstream.headers.getSetCookie().length) response.setHeader("set-cookie", upstream.headers.getSetCookie());
+      response.end(bytes);
+    } catch { response.writeHead(502); response.end("QA upstream unavailable"); }
+  });
+  await new Promise<void>((done) => edge!.listen(0, "127.0.0.1", done));
+  const edgeAddress = edge.address();
+  if (!edgeAddress || typeof edgeAddress === "string") throw new Error("No edge loopback port");
+  const origin = `http://127.0.0.1:${edgeAddress.port}`;
   server = spawn(process.execPath, [resolve(root, "node_modules/next/dist/bin/next"), "start", "--hostname", "127.0.0.1", "--port", String(port)], { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "pipe"], env: { ...childTestEnvironment(cluster.connectionString), NODE_ENV: "production", V2_PUBLIC_DATA_SOURCE: "postgres", V2_PUBLIC_ORIGIN: origin, NEXT_PUBLIC_SITE_URL: origin, SESSION_SIGNING_KEYS: signingKeys, TOTP_ENCRYPTION_KEYS: JSON.stringify({ current: 1, keys: { 1: randomBytes(32).toString("base64url") } }), V2_AUTH_RATE_LIMIT_PEPPER: randomBytes(32).toString("base64url") } });
   let serverLog = "";
   server.stdout?.on("data", (data) => { serverLog += data.toString(); }); server.stderr?.on("data", (data) => { serverLog += data.toString(); });
@@ -98,6 +131,7 @@ try {
   if (!ready) throw new Error(`QA server not ready: ${serverLog.slice(-1500)}`);
   const authCheck = await fetch(`${origin}/api/admin/competitions/destruction/${scenarios.auction}`, { headers: { Cookie: `klol_v2_session=${token}` } });
   if (!authCheck.ok) throw new Error(`QA admin session rejected: ${authCheck.status}`);
+  if (!process.argv.includes("--interactions-only")) {
   const routes = [390, 768, 1440].flatMap((width) => Object.entries(scenarios).flatMap(([name, id]) => [
     { path: `/competitions/destruction/${id}`, name: `${name}-public-${width}`, expectedRedirect: { destination: `/competitions/destruction/${id}` }, viewport: { width, height: 1000, mobile: width === 390 } },
     { path: `/admin/progress/destruction/${id}`, name: `${name}-admin-${width}`, session: "admin", expectedRedirect: { destination: `/admin/progress/destruction/${id}` }, viewport: { width, height: 1000, mobile: width === 390 } },
@@ -112,9 +146,13 @@ try {
   await writeFile(resolve(output, "server.log"), serverLog);
   console.log("[destruction-browser] captures complete");
   if (failures.length) throw new Error(`Browser QA failures: ${JSON.stringify(failures.map(({ name, issues }) => ({ name, issues })))}`);
+  }
   await runDestructionBrowserInteractions({ origin, tournamentId: scenarios.auction, mayhemId, accountToken, recruitingIds: [scenarios["aram-recruiting"], scenarios["mayhem-recruiting"]], adminToken: token, output, root });
+  await writeFile(resolve(output, "edge-transport.json"), JSON.stringify(transport, null, 2));
+  if (transport.legacyMutationRequests || transport.rewrittenResponses || !transport.applicationRevisionRequests) throw new Error("Browser mutations must preserve application revisions without triggering edge HTTP conditionals");
   console.log("[destruction-browser] interactions and accessibility passed");
 } finally {
+  if (edge) { edge.closeAllConnections(); await new Promise<void>((done) => edge!.close(() => done())); }
   if (server && server.exitCode === null) {
     server.kill();
     await Promise.race([new Promise((done) => server!.once("exit", done)), new Promise((done) => setTimeout(done, 5000))]);

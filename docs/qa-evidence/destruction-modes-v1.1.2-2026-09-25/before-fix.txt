@@ -1,0 +1,10 @@
+file:///E:/k-LOL.GG/worktrees/destruction-production-20260925/scripts/test-db/destruction-browser-interactions.mjs:46
+    const until = async (expression) => { for (let i = 0; i < 70; i += 1) { if (await evaluate(expression)) return; await new Promise((done) => setTimeout(done, 150)); } await writeFile(join(output, "interaction-failure.json"), JSON.stringify(await evaluate("({url: location.href, history: history.length, text: document.body.innerText, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, sounds: window.__auctionSounds, phase: document.querySelector('[data-auction-phase]')?.dataset.auctionPhase})"), null, 2)); throw new Error(`UI did not become ready: ${expression}`); };
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ^
+
+Error: UI did not become ready: [...document.querySelectorAll('button')].some(b => b.textContent === '경매 재개' && !b.disabled)
+    at until (file:///E:/k-LOL.GG/worktrees/destruction-production-20260925/scripts/test-db/destruction-browser-interactions.mjs:46:533)
+    at async runDestructionBrowserInteractions (file:///E:/k-LOL.GG/worktrees/destruction-production-20260925/scripts/test-db/destruction-browser-interactions.mjs:61:5)
+    at async <anonymous> (E:\k-LOL.GG\worktrees\destruction-production-20260925\scripts\test-db\run-destruction-browser-qa.ts:150:3)
+
+Node.js v24.14.1

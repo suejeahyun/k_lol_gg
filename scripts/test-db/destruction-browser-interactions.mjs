@@ -156,6 +156,10 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
       await until(mode === "CLASSIC" ? "document.querySelector('input[name=TOP]') !== null && !document.querySelector('input[name=recruitmentLimit]')" : "document.querySelector('input[name=recruitmentLimit]') !== null && !document.querySelector('input[name=TOP]')");
     }
     report.push("생성 화면: 칼바람·증바람은 총 모집 상한, 협곡은 포지션별 상한");
+    await evaluate("document.querySelector('input[name=title]').value = '중계 서버 revision 검증 대회'");
+    await click("멸망전 생성");
+    await until("document.querySelector('[data-selected-stage=PLANNED]') !== null && document.body.innerText.includes('중계 서버 revision 검증 대회')");
+    report.push("전용 revision 헤더로 대회 생성: 응답 중계 환경에서 201 성공·생성된 운영 화면 이동");
     await call("Network.setCookie", { name: "klol_v2_account_session", value: accountToken, url: origin, httpOnly: true, sameSite: "Strict" });
     for (const id of recruitingIds) {
       await call("Page.navigate", { url: origin + "/competitions/destruction/" + id });
@@ -184,6 +188,25 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
     const queueBefore = await recruitmentState(queueId);
     const candidates = queueBefore.applications.filter(a => a.status === "APPLIED");
     assert.equal(candidates.length, 3);
+    let heldRefresh;
+    events.set("Fetch.requestPaused", async (event) => {
+      if (!heldRefresh) heldRefresh = event.requestId;
+      else await call("Fetch.continueResponse", { requestId: event.requestId });
+    });
+    await call("Fetch.enable", { patterns: [{ urlPattern: origin + "/admin/progress/destruction/" + queueId + "*", requestStage: "Response" }] });
+    await evaluate(reviewButton(candidates[0].id) + ".click()");
+    for (let i = 0; i < 70 && !heldRefresh; i += 1) await new Promise(done => setTimeout(done, 100));
+    assert.ok(heldRefresh, "router refresh response held");
+    await writeFile(join(output, "refresh-pending.json"), JSON.stringify(await evaluate(`({ text: document.body.innerText, rows: [...document.querySelectorAll('[data-application-id]')].map(row=>({id:row.dataset.applicationId,busy:row.getAttribute('aria-busy'),buttons:[...row.querySelectorAll('button')].map(b=>({text:b.textContent,disabled:b.disabled}))}))})`), null, 2));
+    assert.equal(await evaluate(reviewButton(candidates[1].id) + ".disabled"), false, "other application remains clickable during RSC refresh");
+    await call("Fetch.continueResponse", { requestId: heldRefresh });
+    await call("Fetch.disable"); events.delete("Fetch.requestPaused");
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 0");
+    assert.equal(await evaluate(reviewButton(candidates[1].id) + ".disabled"), false, "other application remains clickable after refresh");
+    await evaluate(reviewButton(candidates[0].id, "예비 선수") + ".click()");
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 0");
+    queueBefore.revision += 2;
+    report.push("참가 확정 저장 직후 RSC 갱신 지연 중 및 갱신 완료 후 다른 행 활성 유지");
     let heldRequest;
     let writes = 0;
     events.set("Fetch.requestPaused", async (event) => {
@@ -261,7 +284,7 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
     for (const candidate of retryCandidates.slice(1)) await evaluate(reviewButton(candidate.id) + ".click()");
     await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 2");
     const concurrent = await fetch(origin + "/api/admin/competitions/destruction/" + retryId, {
-      method: "PATCH", headers: { Cookie: "klol_v2_session=" + adminToken, "Content-Type": "application/json", "If-Match": '"' + retryCommitted.revision + '"', "Idempotency-Key": "browser-review-conflict-" + crypto.randomUUID(), Origin: origin },
+      method: "PATCH", headers: { Cookie: "klol_v2_session=" + adminToken, "Content-Type": "application/json", "X-Destruction-Revision": '"' + retryCommitted.revision + '"', "Idempotency-Key": "browser-review-conflict-" + crypto.randomUUID(), Origin: origin },
       body: JSON.stringify({ type: "SET_APPLICATION_STATUS", payload: { applicationId: retryCandidates[2].id, status: "RESERVE" } }),
     });
     assert.equal(concurrent.status, 200);
@@ -289,7 +312,7 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
     const gapCommitted = await recruitmentState(retryId);
     assert.equal(gapCommitted.revision, conflictAfter.revision + 1);
     const intervening = await fetch(origin + "/api/admin/competitions/destruction/" + retryId, {
-      method: "PATCH", headers: { Cookie: "klol_v2_session=" + adminToken, "Content-Type": "application/json", "If-Match": '"' + gapCommitted.revision + '"', "Idempotency-Key": "browser-review-refresh-gap-" + crypto.randomUUID(), Origin: origin },
+      method: "PATCH", headers: { Cookie: "klol_v2_session=" + adminToken, "Content-Type": "application/json", "X-Destruction-Revision": '"' + gapCommitted.revision + '"', "Idempotency-Key": "browser-review-refresh-gap-" + crypto.randomUUID(), Origin: origin },
       body: JSON.stringify({ type: "SET_APPLICATION_STATUS", payload: { applicationId: retryCandidates[2].id, status: "CONFIRMED" } }),
     });
     assert.equal(intervening.status, 200);

@@ -30,7 +30,7 @@ export function DestructionCreateForm() {
       const recruitment = positional ? { laneLimits: Object.fromEntries(positions.map((position) => [position, Number(data.get(position))])) } : { recruitmentLimit: Number(data.get("recruitmentLimit")) };
       const tournamentId = pending.current?.tournamentId ?? crypto.randomUUID();
       pending.current ??= { tournamentId, key: `destruction-create-${crypto.randomUUID()}`, body: JSON.stringify({ tournamentId, title: data.get("title"), configuration: { gameMode: data.get("gameMode"), preliminaryFormat: data.get("preliminaryFormat"), preliminaryRoundCount: Number(data.get("preliminaryRoundCount")), teamCount, ...recruitment } }) };
-      const response = await fetch("/api/admin/competitions/destruction", { method: "POST", headers: { "Content-Type": "application/json", "If-Match": '"0"', "Idempotency-Key": pending.current.key }, body: pending.current.body, signal: AbortSignal.timeout(15_000) });
+      const response = await fetch("/api/admin/competitions/destruction", { method: "POST", headers: { "Content-Type": "application/json", "X-Destruction-Revision": '"0"', "Idempotency-Key": pending.current.key }, body: pending.current.body, signal: AbortSignal.timeout(15_000) });
       if (response.status >= 500) throw new Error("생성 결과를 확인하지 못했습니다. 다시 실행하면 이전 요청 결과를 확인합니다.");
       const body = await response.json() as { detail?: string };
       pending.current = null;

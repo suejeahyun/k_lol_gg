@@ -45,7 +45,14 @@ export async function prepareDestructionMutation(request: Request, session: Auth
   if (!body.ok) return { ok: false, response: problemResponse(problemForJsonBodyError(body.error), { traceId }) };
   const key = readIdempotencyKey(request.headers);
   if (!key.ok) return { ok: false, response: problemResponse(problemForIdempotencyKeyError(key.error), { traceId }) };
-  const revision = readIfMatchRevision(request.headers);
+  // Vercel applies HTTP If-Match to the outgoing response ETag, including after
+  // a committed mutation. Carry the same strict revision in an application header.
+  const applicationRevision = request.headers.get("X-Destruction-Revision");
+  const legacyRevision = request.headers.get("If-Match");
+  if (applicationRevision !== null && legacyRevision !== null && applicationRevision !== legacyRevision) {
+    return { ok: false, response: problemResponse(problemForIfMatchRevisionError("INVALID"), { traceId }) };
+  }
+  const revision = readIfMatchRevision(applicationRevision === null ? request.headers : new Headers({ "If-Match": applicationRevision }));
   if (!revision.ok) return { ok: false, response: problemResponse(problemForIfMatchRevisionError(revision.error), { traceId }) };
   return { ok: true, value: {
     body: body.value,

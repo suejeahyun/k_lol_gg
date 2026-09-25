@@ -20,7 +20,8 @@ test("public destruction detail keeps owner application, vote and explicit unava
   assert.match(actions, /UPSERT|application/);
   assert.match(actions, /mvp-vote/);
   assert.match(actions, /aria-live="polite"/);
-  assert.match(mutation, /If-Match/);
+  assert.match(mutation, /X-Destruction-Revision/);
+  assert.doesNotMatch(mutation, /"If-Match"\s*:/);
   assert.match(mutation, /Idempotency-Key/);
 });
 
