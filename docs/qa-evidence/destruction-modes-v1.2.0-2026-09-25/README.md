@@ -1,6 +1,6 @@
 # 멸망전 1.2.0 · 주장 지원 접수
 
-로컬 검증 완료. 운영 배포 근거는 확인 후 추가한다.
+**운영 반영 완료**: source `efbdb777a7a5af574de21403561af21cd3d19af7`, tag `destruction-modes-v1.2.0`, Vercel `dpl_EhLEUrZd3afJ1mVNakdnw2zUf8Gb` READY. 2026-09-25T13:02:48.284Z health ready·공개 조회·관리자 인증 경계·효과음 정상. [후보 확인](./candidate-smoke.json), [운영 확인](./production-smoke.json).
 
 ## 변경 계약
 

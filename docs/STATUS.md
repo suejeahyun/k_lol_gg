@@ -1,5 +1,12 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-25 멸망전 주장 지원 접수 — 1.2.0 운영 반영
+
+- 협곡·칼바람·증바람 신청서에서 일반 선수/주장 지원 선택. 모집 심사 역할 열과 주장 선정 목록에 표시하고, 최종 주장은 운영자가 확정한다. 확정 전 신청 수정으로 지원 여부 변경 가능.
+- source `efbdb777`, tag `destruction-modes-v1.2.0`, Vercel `dpl_EhLEUrZd3afJ1mVNakdnw2zUf8Gb` READY·운영 smoke PASS. aggregate JSON 필드 확장, DB0046 유지. 운영 신청·심사 상태 변경 없음.
+- 계약445·단위1010(+skip1), 세 모드 격리 DB·74화면·18상호작용·인증 HTTP PASS. 전용 revision 헤더 저장25건·중계 응답 치환0건. [검증·배포 근거](./qa-evidence/destruction-modes-v1.2.0-2026-09-25/README.md).
+
+
 ## 2026-09-25 멸망전 저장 응답 잠금 — 1.1.2 운영 반영
 
 - 1.1.1의 로컬 검증에 빠졌던 운영 중계 서버의 If-Match 응답 조건을 확인했다. DB 저장은 200 완료됐지만 응답이 412 plain text로 치환되어 결과 미확인 잠금이 발생했다.
