@@ -197,7 +197,8 @@ export class DestructionService {
 
   upsertOwnApplication(context: DestructionCommandContext, tournamentId: string, playerId: string, expectedRevision: number, body: unknown) {
     if (context.purpose !== "ACCOUNT") throw new TypeError("FORBIDDEN");
-    const input = record(body, ["applicationId", "position"]);
+    const input = record(body, ["applicationId", "position", "captainVolunteer"]);
+    if (input.captainVolunteer !== undefined && typeof input.captainVolunteer !== "boolean") throw new TypeError("INVALID_INPUT");
     const ownedPlayerId = uuid(playerId);
     const command = {
       type: "UPSERT_OWN_APPLICATION",
@@ -206,7 +207,7 @@ export class DestructionService {
         ...metadata(context, expectedRevision, "destruction:application:upsert"),
         authorizationIntent: { kind: "APPROVED_OWNER", ownerUserAccountId: context.actorSession.userAccountId, playerId: ownedPlayerId, requireApprovedAccount: true, requireOwnership: true, transactionRecheck: true },
       },
-      payload: { applicationId: uuid(input.applicationId), playerId: ownedPlayerId, position: position(input.position) },
+      payload: { applicationId: uuid(input.applicationId), playerId: ownedPlayerId, position: position(input.position), ...(input.captainVolunteer === undefined ? {} : { captainVolunteer: input.captainVolunteer }) },
     } as const satisfies DestructionOwnerCommand;
     return this.handler.handle(fingerprint(command));
   }

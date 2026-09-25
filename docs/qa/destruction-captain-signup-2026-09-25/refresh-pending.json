@@ -1,0 +1,365 @@
+{
+  "text": "관리자\n/\n멸망전 목록\n전체 풀리그 · 단판\n멸망전 재구축 검증 · RECRUITING\n\n칼바람 · 4팀 · 팀당 5명 · 포지션 구분 없음\n\n실시간 경매 화면\n공개 화면\n대회 준비\n참가 모집\n현재 진행\n주장·포인트 확정\n선수 경매\n예선\n본선\n종료\n현재 단계\n참가 모집\n참가자\n0/20\n팀\n0/4\n우승\n미정\n작업 반영 중\n최근 확인 오후 9:59:51\n지금 새로고침\n선택한 심사를 순서대로 반영하고 있습니다. 다른 선수도 계속 심사할 수 있습니다.\n참가 모집\n참가 모집 · 다음 작업\n전체 확정 17/20명: 정확히 20명이 필요합니다.\n모집 마감·참가자 확정 · 검토\n대회 일정 관리 · 한국 시간\n참가 신청 심사\n전체 인원\n17/20\n확정 / 필요 인원\n모집 20/40명\n신청 선수 검색\n신청 20건 · 검색 결과 20건\n선수\n참가 역할\n상태\n심사\nS08선수3#D3\n일반 선수\n심사 대기 · 처리 중…\n참가 확정\n예비 선수\n신청 거절\nS08선수4#D4\n일반 선수\n심사 대기\n참가 확정\n예비 선수\n신청 거절\nS08선수5#D5\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수6#D6\n주장 지원\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수7#D7\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수8#D8\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수9#D9\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수10#D10\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수11#D11\n주장 지원\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수12#D12\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수13#D13\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수14#D14\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수15#D15\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수16#D16\n주장 지원\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수17#D17\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수18#D18\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수19#D19\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수20#D20\n일반 선수\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수1#D1\n주장 지원\n참가 확정\n참가 확정\n예비 선수\n신청 거절\nS08선수2#D2\n일반 선수\n심사 대기\n참가 확정\n예비 선수\n신청 거절\n대회 취소\n팀·경매\n\n팀이 아직 확정되지 않았습니다.\n\n대진·MVP\n예선 경기\n0\n본선 경기\n0\nMVP 투표\n0\n교체 기록\n0\n홈\n작업\n검색\n메뉴",
+  "rows": [
+    {
+      "id": "fc2c9bff-7c24-44ce-b653-a90cb7e128c5",
+      "busy": "true",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": true
+        },
+        {
+          "text": "신청 거절",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "id": "a097ee94-0881-4146-927b-dd2b9be2200c",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": false
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "aee5477d-fa66-4416-897e-72f2e8fc0c10",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "24911892-ab2e-4402-a4cd-a2c882aeebff",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "abf26710-66a2-4e95-85a1-b5e4b97d81e6",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "cc2b877c-5f3f-47d7-bae5-c4ee8874cfa0",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "694244e0-6f48-4581-81fc-4fd5415de8e7",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "52afeeff-1e6a-47a2-b8f3-ddffdd1a58ff",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "e799b28f-fdea-446b-ba61-5a54045628c2",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "369bf8a3-d08a-4e2e-960f-2960454bcd75",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "9a715a1e-d8f7-4019-844c-625056c5bce5",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "b3606105-fac6-48fe-a9bf-919a9e6676ee",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "d6d779ee-4b91-4992-a1b5-f31fb9bd7e0c",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "7ab7c942-0fa1-4386-8a52-3f6c3ff64913",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "4be86679-b62d-4a3b-9bda-96695fb5c20f",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "b4eac348-5fbb-4328-ba7c-c5aebe67c1f1",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "6c0af335-b466-43fb-95e0-13e4b9ebb123",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "d4e0fe49-db25-4d88-ba08-2e7ca9d25327",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "d9d822b3-7d3d-4902-9e04-10ea4df413c3",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": true
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "id": "8efce078-29f4-43b2-a93c-be8eb5b2d22d",
+      "busy": "false",
+      "buttons": [
+        {
+          "text": "참가 확정",
+          "disabled": false
+        },
+        {
+          "text": "예비 선수",
+          "disabled": false
+        },
+        {
+          "text": "신청 거절",
+          "disabled": false
+        }
+      ]
+    }
+  ]
+}

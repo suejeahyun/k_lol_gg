@@ -178,7 +178,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       const occupied = current.applications.filter((entry) => entry !== existing && (!positional || entry.position === applicationPosition) && ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length;
       requireCompetition(occupied < (positional ? current.configuration.laneLimits[applicationPosition!] : destructionRecruitmentLimit(current.configuration)), "INVALID_ROSTER", "모집 정원이 가득 찼습니다.");
       requireCompetition(!current.applications.some((entry) => entry !== existing && (entry.id === command.payload.applicationId || entry.playerId === command.payload.playerId)), "DUPLICATE_ID", "The application or player already exists.");
-      const next = Object.freeze({ id: command.payload.applicationId, userAccountId: command.metadata.authorizationIntent.ownerUserAccountId, playerId: command.payload.playerId, position: applicationPosition, status: "APPLIED" as const });
+      const next = Object.freeze({ id: command.payload.applicationId, userAccountId: command.metadata.authorizationIntent.ownerUserAccountId, playerId: command.payload.playerId, position: applicationPosition, captainVolunteer: command.payload.captainVolunteer ?? existing?.captainVolunteer ?? false, status: "APPLIED" as const });
       return updated(current, now, { applications: Object.freeze([...current.applications.filter((entry) => entry !== existing), next]) });
     }
     case "CANCEL_OWN_APPLICATION": {

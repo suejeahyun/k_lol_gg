@@ -105,13 +105,16 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     const applicationIds: string[] = [];
     for (let index = 0; index < playerIds.length; index += 1) {
       const applicationId = randomUUID(); applicationIds.push(applicationId);
-      result = await service.upsertOwnApplication(context(ownerActors[index]!, "ACCOUNT", `apply-${index}`), tournamentId, playerIds[index]!, revision, { applicationId, position: positions[index % 5] });
+      result = await service.upsertOwnApplication(context(ownerActors[index]!, "ACCOUNT", `apply-${index}`), tournamentId, playerIds[index]!, revision, { applicationId, position: positions[index % 5], ...(index % 5 === 0 ? { captainVolunteer: true } : {}) });
       revision = result.revision;
     }
+    assert.equal((await adapter.getOwnApplication(tournamentId, ownerActors[0]!.userAccountId))?.captainVolunteer, true);
+    assert.equal((await adapter.getOwnApplication(tournamentId, ownerActors[1]!.userAccountId))?.captainVolunteer, false);
     await assert.rejects(service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "full-lane"), tournamentId, playerIds[0]!, revision, { applicationId: applicationIds[0], position: "JGL" }), /모집 정원/);
     result = await service.cancelOwnApplication(context(ownerActors[0]!, "ACCOUNT", "withdraw"), tournamentId, playerIds[0]!, revision); revision = result.revision;
     await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "review-withdrawn"), tournamentId, revision, { type: "SET_APPLICATION_STATUS", payload: { applicationId: applicationIds[0], status: "CONFIRMED" } }), /취소된 신청/);
     result = await service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "reapply"), tournamentId, playerIds[0]!, revision, { applicationId: applicationIds[0], position: "TOP" }); revision = result.revision;
+    assert.equal((await adapter.getOwnApplication(tournamentId, ownerActors[0]!.userAccountId))?.captainVolunteer, true, "legacy requests preserve a saved captain preference");
     for (let index = 0; index < applicationIds.length; index += 1) {
       result = await service.executeAdmin(context(adminActor, "ADMIN", `confirm-${index}`), tournamentId, revision, { type: "SET_APPLICATION_STATUS", payload: { applicationId: applicationIds[index], status: "CONFIRMED" } });
       revision = result.revision;
@@ -120,20 +123,27 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     await assert.rejects(service.upsertOwnApplication(context(ownerActors[1]!, "ACCOUNT", "other-owner"), tournamentId, playerIds[0]!, revision, { applicationId: applicationIds[0], position: "TOP" }), /FORBIDDEN/);
     result = await service.executeAdmin(context(adminActor, "ADMIN", "close"), tournamentId, revision, { type: "CLOSE_RECRUITMENT", payload: {} }); revision = result.revision;
 
+    assert.equal((await adapter.getAdmin(tournamentId))!.applications.filter((a) => a.captainVolunteer).length, 4);
+    assert.ok((await adapter.getAdmin(tournamentId))!.participants.every((p) => !p.isCaptain), "volunteering does not auto-assign captains");
+
     // A second isolated tournament exercises mode-specific valuations against real transactions.
     const aramId = randomUUID();
     async function recruitPositionless(id: string, gameMode: "ARAM" | "ARAM_MAYHEM") {
       let rev = (await service.create(context(adminActor, "ADMIN", "positionless-create"), { tournamentId: id, title: gameMode + " DB QA", configuration: { gameMode, teamCount: 4, recruitmentLimit: 20, preliminaryFormat: "FULL_ROUND_ROBIN_BO1" } })).revision;
       rev = (await service.executeAdmin(context(adminActor, "ADMIN", "positionless-start"), id, rev, { type: "START_RECRUITMENT", payload: {} })).revision;
       for (let i = 0; i < playerIds.length; i++) {
-        rev = (await service.upsertOwnApplication(context(ownerActors[i]!, "ACCOUNT", "no-position"), id, playerIds[i]!, rev, { applicationId: applicationIds[i], ...(i % 2 ? { position: null } : {}) })).revision;
+        rev = (await service.upsertOwnApplication(context(ownerActors[i]!, "ACCOUNT", "no-position"), id, playerIds[i]!, rev, { applicationId: applicationIds[i], captainVolunteer: i < 4, ...(i % 2 ? { position: null } : {}) })).revision;
       }
+      assert.equal((await adapter.getOwnApplication(id, ownerActors[0]!.userAccountId))?.captainVolunteer, true);
+      rev = (await service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "captain-opt-out"), id, playerIds[0]!, rev, { applicationId: applicationIds[0], captainVolunteer: false })).revision;
+      assert.equal((await adapter.getOwnApplication(id, ownerActors[0]!.userAccountId))?.captainVolunteer, false);
       assert.equal((await adapter.getPublic(id))!.recruitment.length, 1);
       assert.equal((await adapter.getPublic(id))!.recruitment[0]!.applied, 20);
       assert.equal((await pool.query("select count(*)::int as n from competition.destruction_application_index where tournament_id=$1 and position is null", [id])).rows[0].n, 20);
       for (const applicationId of applicationIds) rev = (await service.executeAdmin(context(adminActor, "ADMIN", "no-position-confirm"), id, rev, { type: "SET_APPLICATION_STATUS", payload: { applicationId, status: "CONFIRMED" } })).revision;
       rev = (await service.executeAdmin(context(adminActor, "ADMIN", "no-position-close"), id, rev, { type: "CLOSE_RECRUITMENT", payload: {} })).revision;
-      assert.ok((await adapter.getAdmin(id))!.participants.every((p) => p.position === null));
+      assert.ok((await adapter.getAdmin(id))!.participants.every((p) => p.position === null && !p.isCaptain));
+      assert.equal((await adapter.getAdmin(id))!.applications.filter((a) => a.captainVolunteer).length, 3);
       return rev;
     }
     let aramRevision = await recruitPositionless(aramId, "ARAM");

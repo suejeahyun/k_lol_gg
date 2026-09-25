@@ -1,0 +1,931 @@
+[
+  {
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "name": "completed-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "name": "completed-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5",
+    "name": "team_building-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5",
+    "name": "team_building-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20",
+    "name": "auction-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20",
+    "name": "auction-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7",
+    "name": "aram-completed-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7",
+    "name": "aram-completed-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/5e876c56-f491-4a14-8f46-fee6e256d328",
+    "name": "mayhem-pending-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/5e876c56-f491-4a14-8f46-fee6e256d328"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/5e876c56-f491-4a14-8f46-fee6e256d328",
+    "name": "mayhem-pending-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/5e876c56-f491-4a14-8f46-fee6e256d328"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/fb16e019-f737-4d2a-b151-e76021efdf47",
+    "name": "aram-auction-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fb16e019-f737-4d2a-b151-e76021efdf47"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/fb16e019-f737-4d2a-b151-e76021efdf47",
+    "name": "aram-auction-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/fb16e019-f737-4d2a-b151-e76021efdf47"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77",
+    "name": "mayhem-auction-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77",
+    "name": "mayhem-auction-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "name": "completed-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "name": "completed-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5",
+    "name": "team_building-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5",
+    "name": "team_building-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20",
+    "name": "auction-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20",
+    "name": "auction-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7",
+    "name": "aram-completed-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7",
+    "name": "aram-completed-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/5e876c56-f491-4a14-8f46-fee6e256d328",
+    "name": "mayhem-pending-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/5e876c56-f491-4a14-8f46-fee6e256d328"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/5e876c56-f491-4a14-8f46-fee6e256d328",
+    "name": "mayhem-pending-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/5e876c56-f491-4a14-8f46-fee6e256d328"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/fb16e019-f737-4d2a-b151-e76021efdf47",
+    "name": "aram-auction-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fb16e019-f737-4d2a-b151-e76021efdf47"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/fb16e019-f737-4d2a-b151-e76021efdf47",
+    "name": "aram-auction-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/fb16e019-f737-4d2a-b151-e76021efdf47"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77",
+    "name": "mayhem-auction-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77",
+    "name": "mayhem-auction-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-public-768",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-admin-768",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 768,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "name": "completed-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "name": "completed-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5",
+    "name": "team_building-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5",
+    "name": "team_building-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/f2e60064-e2d9-4a95-9e70-f6939b565fb5"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20",
+    "name": "auction-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20",
+    "name": "auction-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/396f42b9-388d-4d19-98a7-066a6a22ea20"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7",
+    "name": "aram-completed-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7",
+    "name": "aram-completed-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/ca8ea088-4357-448a-ad7e-400b6e2029c7"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/5e876c56-f491-4a14-8f46-fee6e256d328",
+    "name": "mayhem-pending-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/5e876c56-f491-4a14-8f46-fee6e256d328"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/5e876c56-f491-4a14-8f46-fee6e256d328",
+    "name": "mayhem-pending-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/5e876c56-f491-4a14-8f46-fee6e256d328"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/fb16e019-f737-4d2a-b151-e76021efdf47",
+    "name": "aram-auction-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fb16e019-f737-4d2a-b151-e76021efdf47"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/fb16e019-f737-4d2a-b151-e76021efdf47",
+    "name": "aram-auction-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/fb16e019-f737-4d2a-b151-e76021efdf47"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77",
+    "name": "mayhem-auction-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77",
+    "name": "mayhem-auction-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/a6bb25e1-41dd-499f-9c4e-75bfc7068b77"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-account-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-account-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-account-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-account-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6",
+    "name": "recruiting-account-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/9f2b2583-e8da-4651-96db-4977122d5cb6"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04",
+    "name": "preliminary-account-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d91878b7-0cba-4744-8474-b08b90e19c04"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659",
+    "name": "aram-recruiting-account-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/fe2171b4-079f-40dc-98e1-2848afb7c659"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3",
+    "name": "mayhem-recruiting-account-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/414c85e8-a11e-4160-942c-4e7ad3975ba3"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  }
+]

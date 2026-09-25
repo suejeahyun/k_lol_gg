@@ -8,6 +8,7 @@ export type DestructionApplication = Readonly<{
   playerId: string;
   position: CompetitionPosition | null;
   status: DestructionApplicationStatus;
+  captainVolunteer?: boolean;
 }>;
 
 export type DestructionApplicationIntent =

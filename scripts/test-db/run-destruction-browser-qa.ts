@@ -16,7 +16,7 @@ import { runDestructionBrowserInteractions } from "./destruction-browser-interac
 
 const execFile = promisify(execFileCallback);
 const root = resolve(import.meta.dirname, "../..");
-const output = resolve(root, "docs/qa/destruction-review-refresh-2026-09-25");
+const output = resolve(root, "docs/qa/destruction-captain-signup-2026-09-25");
 const cluster = await startEphemeralCluster();
 const pool = new Pool({ connectionString: cluster.connectionString });
 let server: ReturnType<typeof spawn> | undefined;
@@ -147,7 +147,7 @@ try {
   console.log("[destruction-browser] captures complete");
   if (failures.length) throw new Error(`Browser QA failures: ${JSON.stringify(failures.map(({ name, issues }) => ({ name, issues })))}`);
   }
-  await runDestructionBrowserInteractions({ origin, tournamentId: scenarios.auction, mayhemId, accountToken, recruitingIds: [scenarios["aram-recruiting"], scenarios["mayhem-recruiting"]], adminToken: token, output, root });
+  await runDestructionBrowserInteractions({ origin, tournamentId: scenarios.auction, mayhemId, accountToken, classicRecruitingId: scenarios.recruiting, recruitingIds: [scenarios["aram-recruiting"], scenarios["mayhem-recruiting"]], adminToken: token, output, root });
   await writeFile(resolve(output, "edge-transport.json"), JSON.stringify(transport, null, 2));
   if (transport.legacyMutationRequests || transport.rewrittenResponses || !transport.applicationRevisionRequests) throw new Error("Browser mutations must preserve application revisions without triggering edge HTTP conditionals");
   console.log("[destruction-browser] interactions and accessibility passed");

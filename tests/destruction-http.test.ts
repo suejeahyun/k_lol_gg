@@ -18,6 +18,19 @@ const applicationId = "10000000-0000-4000-8000-000000000002";
 const playerId = "10000000-0000-4000-8000-000000000003";
 const candidateId = "10000000-0000-4000-8000-000000000004";
 
+test("captain preference is boolean-only, optional for legacy callers, and part of idempotency", async () => {
+  const commands: DestructionHttpCommand[] = [];
+  const service = new DestructionService({ async handle(command) { commands.push(command); return { body: { tournamentId, revision: 4, status: "RECRUITING", commandType: command.type }, revision: 4, replayed: false } satisfies DestructionMutationResult; } });
+  for (const captainVolunteer of [undefined, true, false]) {
+    await service.upsertOwnApplication(context("ACCOUNT"), tournamentId, playerId, 3, { applicationId, position: "MID", ...(captainVolunteer === undefined ? {} : { captainVolunteer }) });
+    const command = commands.at(-1)!;
+    assert.equal(command.type === "UPSERT_OWN_APPLICATION" && command.payload.captainVolunteer, captainVolunteer);
+  }
+  assert.notDeepEqual(commands[1]!.metadata.idempotency.requestFingerprint, commands[2]!.metadata.idempotency.requestFingerprint);
+  for (const captainVolunteer of [null, "true", "false", 1, {}, []]) assert.throws(() => service.upsertOwnApplication(context("ACCOUNT"), tournamentId, playerId, 3, { applicationId, captainVolunteer }), /INVALID_INPUT/);
+  assert.equal(commands.length, 3);
+});
+
 test("destruction list query is an explicit single-value allowlist", () => {
   assert.deepEqual(parseDestructionListQuery("https://v2.invalid/competitions?q=%20%ED%95%9C%20%20%EA%B2%BD%EA%B8%B0%20&status=RECRUITING&format=SWISS_ROUND_BO3&page=2&pageSize=24"), {
     query: "한 경기", status: "RECRUITING", format: "SWISS_ROUND_BO3", page: 2, pageSize: 24,

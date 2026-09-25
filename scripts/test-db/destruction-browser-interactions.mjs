@@ -13,7 +13,7 @@ async function port() {
   return number;
 }
 
-export async function runDestructionBrowserInteractions({ origin, tournamentId, mayhemId, accountToken, recruitingIds, adminToken, output, root }) {
+export async function runDestructionBrowserInteractions({ origin, tournamentId, mayhemId, accountToken, recruitingIds, classicRecruitingId, adminToken, output, root }) {
   const debugPort = await port();
   const parent = resolve(tmpdir());
   const profile = await mkdtemp(join(parent, "klol-destruction-browser-"));
@@ -125,6 +125,7 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
     await click("확인 전적 저장");
     await until("document.body.innerText.includes('운영자 확인 · 합성 전적 클라이언트') && document.body.innerText.includes('작업을 반영했습니다.')");
     const verifiedResponse = await fetch(origin + "/api/admin/competitions/destruction/" + mayhemId, { headers: { Cookie: "klol_v2_session=" + adminToken } });
+    assert.equal(await evaluate("[...document.querySelectorAll('select[name=captainParticipantId]')][0].textContent.includes('주장 지원')"), true);
     const verifiedState = (await verifiedResponse.json()).destruction;
     const rated = verifiedState.participants.find(p => p.aramRecord);
     assert.equal(rated.aramRecord.mode, "ARAM_MAYHEM"); assert.equal(rated.aramRecord.source, "ADMIN_VERIFIED");
@@ -161,17 +162,34 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
     await until("document.querySelector('[data-selected-stage=PLANNED]') !== null && document.body.innerText.includes('중계 서버 revision 검증 대회')");
     report.push("전용 revision 헤더로 대회 생성: 응답 중계 환경에서 201 성공·생성된 운영 화면 이동");
     await call("Network.setCookie", { name: "klol_v2_account_session", value: accountToken, url: origin, httpOnly: true, sameSite: "Strict" });
-    for (const id of recruitingIds) {
+    for (const id of [...recruitingIds, classicRecruitingId]) {
       await call("Page.navigate", { url: origin + "/competitions/destruction/" + id });
-      await until("document.body.innerText.includes('포지션 구분 없이 참가 신청합니다.')");
-      assert.equal(await evaluate("document.querySelector('select[name=position]') === null"), true);
+      await until("document.querySelector('select[name=captainVolunteer]') !== null");
+      assert.equal(await evaluate("document.querySelector('select[name=position]') === null"), id !== classicRecruitingId);
+      await evaluate("document.querySelector('select[name=captainVolunteer]').value = 'true'");
       await click("신청 수정");
       await until("document.body.innerText.includes('작업을 반영했습니다.')");
       const response = await fetch(origin + "/api/admin/competitions/destruction/" + id, {headers:{Cookie:"klol_v2_session="+adminToken}});
       const state = (await response.json()).destruction;
-      assert.equal(state.revision, 2); assert.ok(state.applications.every(p => p.position === null));
+      assert.equal(state.revision, 2); assert.ok(state.applications.every(p => id === classicRecruitingId ? p.position !== null : p.position === null));
+      const ownResponse = await fetch(origin + "/api/competitions/destruction/" + id + "/application", {headers:{Cookie:"klol_v2_account_session="+accountToken}});
+      const ownBody = await ownResponse.json();
+      assert.equal(ownBody.application.captainVolunteer, true);
+      await evaluate("window.__captainBeforeReload = true");
+      await call("Page.reload");
+      await until("window.__captainBeforeReload === undefined && document.querySelector('select[name=captainVolunteer]')?.value === 'true'");
+      await call("Page.navigate", { url: origin + "/admin/progress/destruction/" + id });
+      await until("document.querySelector('[data-application-id]') !== null && document.body.innerText.includes('연결됨')");
+      assert.equal(await evaluate(`document.querySelector('[data-application-id="${ownBody.application.applicationId}"]').innerText.includes('주장 지원')`), true);
+      await call("Page.navigate", { url: origin + "/competitions/destruction/" + id });
+      await until("document.querySelector('select[name=captainVolunteer]')?.value === 'true'");
+      await evaluate("document.querySelector('select[name=captainVolunteer]').value = 'false'");
+      await click("신청 수정");
+      await until("document.body.innerText.includes('작업을 반영했습니다.')");
+      const optOut = await fetch(origin + "/api/competitions/destruction/" + id + "/application", {headers:{Cookie:"klol_v2_account_session="+accountToken}});
+      assert.equal((await optOut.json()).application.captainVolunteer, false);
     }
-    report.push("칼바람·증바람 로그인 신청 폼: 포지션 선택 없이 실제 HTTP 저장 성공");
+    report.push("세 모드 주장 지원: 저장·새로고침 유지·운영 심사 표시·일반 선수로 변경, 협곡만 포지션 선택");
     const recruitmentState = async (id) => {
       const response = await fetch(origin + "/api/admin/competitions/destruction/" + id, { headers: { Cookie: "klol_v2_session=" + adminToken } });
       assert.equal(response.status, 200);

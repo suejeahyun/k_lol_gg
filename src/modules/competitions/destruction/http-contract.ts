@@ -53,6 +53,7 @@ export type OwnDestructionApplicationDto = Readonly<{
   playerId: string;
   position: CompetitionPosition | null;
   status: DestructionApplicationStatus;
+  captainVolunteer: boolean;
 }>;
 
 export type OwnDestructionMvpBallotDto = Readonly<{
@@ -140,7 +141,7 @@ type AdminCommand<Type extends string, Payload> = Readonly<{
 }>;
 
 export type DestructionOwnerCommand =
-  | OwnerCommand<"UPSERT_OWN_APPLICATION", Readonly<{ applicationId: string; playerId: string; position: CompetitionPosition | null }>>
+  | OwnerCommand<"UPSERT_OWN_APPLICATION", Readonly<{ applicationId: string; playerId: string; position: CompetitionPosition | null; captainVolunteer?: boolean }>>
   | OwnerCommand<"CANCEL_OWN_APPLICATION", Readonly<{ playerId: string }>>
   | OwnerCommand<"CAST_MVP_VOTE", Readonly<{ fixtureId: string; voterPlayerId: string; candidatePlayerId: string }>>;
 
