@@ -1,0 +1,15 @@
+K-LOL.GG Auction Card Foley Sound Patch
+
+The WAV files in this folder are procedurally generated for this patch.
+They do not include external game audio, commercial sample packs, or third-party recordings.
+
+Design direction:
+- card fan spread: light playing-card flourish
+- player select: one card drawn from a spread
+- confirm: soft card placement
+- tier step: minimal game UI shimmer
+- diamond/master tension: non-percussive airy riser/pad
+- card flip: paper/card flip, no sci-fi whoosh
+- reveal: soft game-like shimmer, no drum impact
+
+Usage: safe to use inside the K-LOL.GG project.

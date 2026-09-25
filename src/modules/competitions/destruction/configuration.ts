@@ -21,6 +21,7 @@ export type DestructionPreliminaryMode = "FULL_ROUND_ROBIN" | "GROUP_ROUND_ROBIN
 export type DestructionLaneLimits = Readonly<Record<CompetitionPosition, number>>;
 
 export type DestructionConfiguration = Readonly<{
+  gameMode?: import("./aram-rating").DestructionGameMode;
   preliminaryFormat: DestructionPreliminaryFormat;
   preliminaryMode: DestructionPreliminaryMode;
   preliminaryBestOf: 1 | 3;
@@ -52,11 +53,13 @@ function parseFormat(format: string) {
   return { mode: MODE_BY_PREFIX[prefix as keyof typeof MODE_BY_PREFIX], bestOf } as const;
 }
 export function validateDestructionConfiguration(input: Readonly<{
+  gameMode?: import("./aram-rating").DestructionGameMode;
   preliminaryFormat: string;
   preliminaryRoundCount?: number;
   teamCount: number;
   laneLimits: Readonly<Record<CompetitionPosition, number>>;
 }>): DestructionConfiguration {
+  requireCompetition(input.gameMode === undefined || ["CLASSIC", "ARAM", "ARAM_MAYHEM"].includes(input.gameMode), "PRECONDITION_FAILED", "게임 모드를 확인해 주세요.");
   const parsed = parseFormat(input.preliminaryFormat);
   requireCompetition(
     Number.isSafeInteger(input.teamCount) && input.teamCount >= 4 && input.teamCount <= 99,
@@ -82,6 +85,7 @@ export function validateDestructionConfiguration(input: Readonly<{
   })) as Record<CompetitionPosition, number>;
 
   return Object.freeze({
+    ...(input.gameMode ? { gameMode: input.gameMode } : {}),
     preliminaryFormat: input.preliminaryFormat as DestructionPreliminaryFormat,
     preliminaryMode: parsed.mode,
     preliminaryBestOf: parsed.bestOf,

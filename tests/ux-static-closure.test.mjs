@@ -43,7 +43,7 @@ test("이벤트 운영 폼은 내부 UUID나 JSON 복사를 요구하지 않는�
     assert.doesNotMatch(content, /(?:UUID|주장 JSON|경기 ID|승리 팀 ID)[^<]*<(?:input|textarea)\b/u);
   }
   assert.match(event, /BoundedPicker[\s\S]*remoteEndpoint="\/api\/admin\/matches\/editor-options\/players"/u);
-  assert.match(destruction, /name="applicationId"[\s\S]*name="teamId"[\s\S]*name="participantId"/u);
+  assert.match(destruction, /SET_APPLICATION_STATUS[\s\S]*captainParticipantId[\s\S]*낙찰 팀[\s\S]*BoundedPicker/u);
   assert.match(owner, /mvpBallots[\s\S]*name="candidatePlayerId"/u);
 });
 

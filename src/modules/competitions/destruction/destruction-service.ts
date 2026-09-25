@@ -52,18 +52,21 @@ function position(value: unknown): CompetitionPosition {
 }
 
 function configuration(value: unknown) {
-  const body = record(value, ["preliminaryFormat", "preliminaryRoundCount", "teamCount", "laneLimits"]);
+  const body = record(value, ["gameMode", "preliminaryFormat", "preliminaryRoundCount", "teamCount", "laneLimits"]);
   if (!DESTRUCTION_PRELIMINARY_FORMATS.includes(body.preliminaryFormat as never)) throw new TypeError("INVALID_INPUT");
   const teamCount = integer(body.teamCount, 4, 99);
   const laneInput = record(body.laneLimits, [...COMPETITION_POSITIONS]);
   const laneLimits = Object.fromEntries(COMPETITION_POSITIONS.map((lane) => [lane, integer(laneInput[lane], teamCount, 99)])) as Record<CompetitionPosition, number>;
   return validateDestructionConfiguration({
+    gameMode: body.gameMode as import("./aram-rating").DestructionGameMode | undefined,
     preliminaryFormat: body.preliminaryFormat as string,
     preliminaryRoundCount: body.preliminaryRoundCount === undefined ? undefined : integer(body.preliminaryRoundCount, 1, 10),
     teamCount,
     laneLimits,
   });
 }
+
+import { validateDestructionSchedule } from "./schedule";
 
 function resultPayload(value: unknown) {
   const body = record(value, ["fixtureId", "teamAScore", "teamBScore", "winnerTeamId"]);
@@ -74,9 +77,21 @@ export function parseDestructionAdminAction(value: unknown): Pick<DestructionAdm
   const input = record(value, ["type", "payload"]);
   const payload = input.payload ?? {};
   switch (input.type) {
+    case "VERIFY_ARAM_RECORD": {
+      const body = record(payload, ["participantId", "mode", "wins", "losses", "evidence"]);
+      if (body.mode !== "ARAM" && body.mode !== "ARAM_MAYHEM") throw new TypeError("INVALID_INPUT");
+      const wins = integer(body.wins, 0, 100), losses = integer(body.losses, 0, 100);
+      if (wins + losses < 1 || wins + losses > 100) throw new TypeError("INVALID_INPUT");
+      return { type: input.type, payload: { participantId: uuid(body.participantId), mode: body.mode, wins, losses, evidence: text(body.evidence, 500, 10) } };
+    }
+    case "SYNC_ARAM_RECORD":
+    case "RESET_ARAM_RECORD": return { type: input.type, payload: { participantId: uuid(record(payload, ["participantId"]).participantId) } };
+    case "SET_SCHEDULE": return { type: "SET_SCHEDULE", payload: validateDestructionSchedule(payload) };
     case "START_RECRUITMENT":
     case "CLOSE_RECRUITMENT":
     case "START_AUCTION":
+    case "PAUSE_AUCTION":
+    case "RESUME_AUCTION":
     case "DRAW_AUCTION":
     case "PUBLISH_PRELIMINARY":
     case "PUBLISH_TOURNAMENT":

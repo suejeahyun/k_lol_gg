@@ -102,7 +102,7 @@ export function replaceDestructionParticipant(input: Readonly<{
     reason,
     effectiveAt: input.effectiveAt,
   });
-  const participants = Object.freeze(input.participants.map((entry) => entry.id === participant.id ? Object.freeze({ ...entry, playerId: input.incomingPlayerId, position: input.incomingPosition }) : entry));
+  const participants = Object.freeze(input.participants.map((entry) => entry.id === participant.id ? Object.freeze({ ...entry, playerId: input.incomingPlayerId, position: input.incomingPosition, aramRecord: undefined, aramCollection: undefined, minimumBid: undefined }) : entry));
   const teamMembers = participants.filter((entry) => entry.teamId === participant.teamId).map((entry) => ({
     participantId: entry.id,
     playerId: entry.playerId,

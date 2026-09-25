@@ -197,7 +197,11 @@ async function cleanupStoppedStaleClusters(
   const entries = await readdir(disposableRoot, { withFileTypes: true }).catch(() => []);
   for (const entry of entries) {
     if (!entry.isDirectory() || !entry.name.startsWith("klol-v2-pg-")) continue;
-    await removeVerifiedStoppedDirectory(pgCtl, resolve(disposableRoot, entry.name), environment);
+    const candidate = assertDisposableDirectory(resolve(disposableRoot, entry.name));
+    const status = await runQuietProcess(pgCtl, ["--pgdata", resolve(candidate, "data"), "status"], environment);
+    // An independent QA runner may still own this cluster. Never stop or remove it.
+    if (status === 0) continue;
+    await removeVerifiedStoppedDirectory(pgCtl, candidate, environment);
   }
 }
 
@@ -298,7 +302,7 @@ async function createSiblingTestDatabase(connectionString: string): Promise<Read
   };
 }
 
-async function startEphemeralCluster(): Promise<EphemeralCluster> {
+export async function startEphemeralCluster(): Promise<EphemeralCluster> {
   const toolEnvironment = safeProcessEnvironment();
   const initdb = postgresExecutable("initdb");
   const pgCtl = postgresExecutable("pg_ctl");
@@ -397,7 +401,7 @@ async function startEphemeralCluster(): Promise<EphemeralCluster> {
   }
 }
 
-async function stopAndRemoveCluster(cluster: EphemeralCluster): Promise<void> {
+export async function stopAndRemoveCluster(cluster: EphemeralCluster): Promise<void> {
   const stopExitCode = await runQuietProcess(
     cluster.pgCtl,
     ["--pgdata", cluster.dataDirectory, "--mode", "fast", "--wait", "stop"],
@@ -415,7 +419,7 @@ async function stopAndRemoveCluster(cluster: EphemeralCluster): Promise<void> {
   );
 }
 
-function childTestEnvironment(connectionString: string): NodeJS.ProcessEnv {
+export function childTestEnvironment(connectionString: string): NodeJS.ProcessEnv {
   return {
     ...safeProcessEnvironment(),
     DATABASE_URL: connectionString,
@@ -1267,4 +1271,4 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

@@ -177,9 +177,12 @@ test("public DTO is an explicit allowlist without cancellation reason, raw votes
   const dto = toDestructionPublicDto(aggregate());
   assert.deepEqual(Object.keys(dto).sort(), [
     "advanceTeamCount",
+    "auction",
+    "auctionRatings",
     "championTeamId",
     "championTeamName",
     "gallery",
+    "gameMode",
     "id",
     "mvpResults",
     "preliminaryBestOf",
@@ -187,11 +190,16 @@ test("public DTO is an explicit allowlist without cancellation reason, raw votes
     "preliminaryFormat",
     "preliminaryRoundCount",
     "qualifiedTeamIds",
+    "recruitment",
     "revision",
+    "schedule",
+    "standings",
     "status",
+    "teamCount",
     "teams",
     "title",
     "tournamentFixtures",
+    "unassignedPlayers",
   ]);
   assert.equal("cancellationReason" in dto, false);
   assert.equal("mvpBallots" in dto, false);

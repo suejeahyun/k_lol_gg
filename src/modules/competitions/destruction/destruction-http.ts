@@ -1,3 +1,4 @@
+import { AramSyncError } from "./aram-rating";
 import { randomUUID } from "node:crypto";
 
 import { hasSameOrigin } from "@/modules/auth/application/mutation-request-guard";
@@ -19,6 +20,7 @@ import {
 } from "@/platform/http";
 import { CompetitionCoreError } from "../core";
 import type { DestructionCommandContext, DestructionMutationResult } from "./http-contract";
+import { DestructionRevisionConflict } from "./revision-conflict";
 
 const problems = Object.freeze({
   forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "멸망전 작업 권한이 없습니다.", detail: "승인 계정 소유권 또는 관리자 2단계 인증과 역할을 확인해 주세요." }),
@@ -70,10 +72,14 @@ export function destructionMutationResponse(result: DestructionMutationResult, t
 }
 
 export function destructionErrorResponse(error: unknown, traceId?: string) {
+  if (error instanceof AramSyncError) {
+    const messages = { UNAVAILABLE: "Riot 연동 설정 또는 API 상태를 확인해 주세요. 수집한 전적은 보존됩니다.", MAYHEM_UNSUPPORTED: "Riot 공개 API는 증강 칼바람 전적 조회를 지원하지 않습니다.", NOT_CONNECTED: "해당 선수의 Riot 계정 연결이 필요합니다.", RATE_LIMITED: `호출 제한입니다. ${error.retryAfterSeconds}초 후 이어서 수집해 주세요.`, INVALID_RESPONSE: "Riot 응답을 검증하지 못했습니다. 수집한 전적은 보존됩니다.", NO_MATCHES: "평가 가능한 해당 모드 전적이 없습니다. 0승 0패를 임시 등급으로 환산하지 않습니다.", ACCOUNT_CHANGED: "연결 계정이 변경되었습니다. 기존 수집을 초기화한 뒤 다시 조회해 주세요." };
+    return problemResponse(definePublicProblem({ code: `ARAM_${error.code}`, status: error.code === "RATE_LIMITED" ? 429 : 409, title: "전적 수집을 계속할 수 없습니다.", detail: messages[error.code] }), { traceId });
+  }
   if (error instanceof CompetitionCoreError) {
     const problem = error.code === "INVALID_COMMAND_CONTRACT" ? problems.idempotency
-      : error.code === "PRECONDITION_FAILED" ? problems.precondition
-        : ["INVALID_TRANSITION", "INVALID_ROSTER", "INVALID_FIXTURE", "INVALID_RESULT", "DUPLICATE_ID"].includes(error.code) ? problems.conflict
+      : error instanceof DestructionRevisionConflict ? problems.precondition
+        : ["PRECONDITION_FAILED", "INVALID_TRANSITION", "INVALID_ROSTER", "INVALID_FIXTURE", "INVALID_RESULT", "DUPLICATE_ID"].includes(error.code) ? problems.conflict
           : problems.invalidInput;
     return problemResponse(problem, { traceId });
   }

@@ -15,6 +15,9 @@ export type DestructionParticipant = Readonly<{
   auctionStatus: "PENDING" | "DRAWN" | "HOLD" | "SOLD" | "ASSIGNED";
   purchasePoints: number | null;
   drawOrder: number | null;
+  aramRecord?: import("./aram-rating").AramRecord;
+  aramCollection?: import("./aram-rating").AramCollection;
+  minimumBid?: number;
 }>;
 
 export type DestructionTeam = Readonly<{

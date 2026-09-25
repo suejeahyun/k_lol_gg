@@ -1,3 +1,5 @@
+import { destructionAuctionCard } from "./auction-presentation";
+import { aramAuctionRating } from "./aram-rating";
 import {
   competitionPlayerLabel,
   competitionTeamLabel,
@@ -13,6 +15,8 @@ import type { DestructionMvpBallot } from "./mvp-voting";
 import type { DestructionApplication } from "./recruitment";
 import type { DestructionFixtureRosterSnapshot, DestructionReplacement } from "./roster-history";
 import type { DestructionParticipant, DestructionTeam } from "./teams";
+import { destructionRecruitment, destructionStandings } from "./workflow";
+import { EMPTY_DESTRUCTION_SCHEDULE, type DestructionSchedule } from "./schedule";
 
 export type DestructionAggregate = Readonly<{
   id: string;
@@ -24,6 +28,9 @@ export type DestructionAggregate = Readonly<{
   teams: readonly DestructionTeam[];
   participants: readonly DestructionParticipant[];
   auctionSeed: string | null;
+  /** Older stored snapshots without this field are running, not paused. */
+  auctionPaused?: boolean;
+  schedule?: DestructionSchedule;
   preliminaryFixtures: readonly StandingsFixture[];
   qualifiedTeamIds: readonly string[];
   tournamentBracket: SingleEliminationBracket | null;
@@ -104,6 +111,21 @@ export type DestructionPublicDto = Readonly<{
   preliminaryBestOf: number;
   preliminaryRoundCount: number;
   advanceTeamCount: number;
+  teamCount: number;
+  gameMode: import("./aram-rating").DestructionGameMode;
+  auctionRatings: readonly Readonly<{ playerName: string; tier: string; games: number; wins: number; losses: number; minimumBid: number; captainPoints: number; provisional: boolean; source: string; fetchedAt: string }>[];
+  unassignedPlayers: readonly Readonly<{ participantId: string; playerId: string; playerName: string; position: string; teamName: string; isCaptain: boolean; purchasePoints: number | null }>[];
+  schedule: DestructionSchedule;
+  recruitment: ReturnType<typeof destructionRecruitment>;
+  standings: ReturnType<typeof destructionStandings>;
+  auction: Readonly<{
+    paused: boolean;
+    pendingCount: number;
+    soldCount: number;
+    drawnPlayerName: string | null;
+    drawnPosition: string | null;
+    card: ReturnType<typeof destructionAuctionCard>;
+  }>;
   teams: readonly DestructionPublicTeamDto[];
   preliminaryFixtures: readonly DestructionPublicFixtureDto[];
   tournamentFixtures: readonly Readonly<{
@@ -146,6 +168,21 @@ export function toDestructionPublicDto(
     preliminaryBestOf: aggregate.configuration.preliminaryBestOf,
     preliminaryRoundCount: aggregate.configuration.preliminaryRoundCount,
     advanceTeamCount: aggregate.configuration.advanceTeamCount,
+    teamCount: aggregate.configuration.teamCount,
+    gameMode: aggregate.configuration.gameMode ?? "CLASSIC",
+    auctionRatings: aggregate.participants.flatMap((p) => p.aramRecord ? [{ playerName: competitionPlayerLabel(playerCatalog, p.playerId), ...aramAuctionRating(p.aramRecord), source: p.aramRecord.source, fetchedAt: p.aramRecord.fetchedAt }] : []),
+    schedule: aggregate.schedule ?? EMPTY_DESTRUCTION_SCHEDULE,
+    unassignedPlayers: aggregate.participants.filter((entry) => entry.teamId === null).map((entry) => ({ participantId: entry.id, playerId: entry.playerId, playerName: competitionPlayerLabel(playerCatalog, entry.playerId), position: entry.position, teamName: "팀 배정 대기", isCaptain: entry.isCaptain, purchasePoints: entry.purchasePoints })),
+    recruitment: destructionRecruitment(aggregate),
+    standings: destructionStandings(aggregate),
+    auction: {
+      card: destructionAuctionCard(aggregate, (id) => competitionPlayerLabel(playerCatalog, id)),
+      paused: aggregate.auctionPaused ?? false,
+      pendingCount: aggregate.participants.filter((entry) => ["PENDING", "HOLD", "DRAWN"].includes(entry.auctionStatus)).length,
+      soldCount: aggregate.participants.filter((entry) => entry.auctionStatus === "SOLD").length,
+      drawnPlayerName: (() => { const drawn = aggregate.participants.find((entry) => entry.auctionStatus === "DRAWN"); return drawn ? competitionPlayerLabel(playerCatalog, drawn.playerId) : null; })(),
+      drawnPosition: aggregate.participants.find((entry) => entry.auctionStatus === "DRAWN")?.position ?? null,
+    },
     teams: Object.freeze([...aggregate.teams].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0).map((team) => {
       const captain = aggregate.participants.find((participant) => participant.id === team.captainParticipantId) ?? null;
       return Object.freeze({

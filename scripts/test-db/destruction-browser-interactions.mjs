@@ -1,0 +1,148 @@
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createServer } from "node:net";
+import { tmpdir } from "node:os";
+import { join, resolve, sep } from "node:path";
+
+async function port() {
+  const listener = createServer();
+  await new Promise((done) => listener.listen(0, "127.0.0.1", done));
+  const number = listener.address().port;
+  await new Promise((done) => listener.close(done));
+  return number;
+}
+
+export async function runDestructionBrowserInteractions({ origin, tournamentId, mayhemId, adminToken, output, root }) {
+  const debugPort = await port();
+  const parent = resolve(tmpdir());
+  const profile = await mkdtemp(join(parent, "klol-destruction-browser-"));
+  const chrome = spawn(process.env.V2_CHROME_PATH ?? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", ["--headless=new", "--disable-gpu", "--no-first-run", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, "about:blank"], { windowsHide: true, stdio: "ignore" });
+  let socket;
+  const pending = new Map();
+  const events = new Map();
+  let nextId = 0;
+  const report = [];
+  const exceptions = [];
+  try {
+    let target;
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      try { target = (await (await fetch(`http://127.0.0.1:${debugPort}/json`)).json()).find((entry) => entry.type === "page"); if (target) break; } catch { /* startup */ }
+      await new Promise((done) => setTimeout(done, 100));
+    }
+    assert.ok(target);
+    socket = new WebSocket(target.webSocketDebuggerUrl);
+    await new Promise((done, reject) => { socket.addEventListener("open", done, { once: true }); socket.addEventListener("error", reject, { once: true }); });
+    socket.addEventListener("message", (event) => {
+      const message = JSON.parse(event.data);
+      if (message.id) { const request = pending.get(message.id); if (!request) return; clearTimeout(request.timer); pending.delete(message.id); if (message.error) request.reject(new Error(message.error.message)); else request.done(message.result); }
+      else { if (message.method === "Runtime.exceptionThrown") exceptions.push(message.params.exceptionDetails.text); events.get(message.method)?.(message.params); }
+    });
+    const call = (method, params = {}) => new Promise((done, reject) => {
+      const id = ++nextId; const timer = setTimeout(() => { pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, 15_000);
+      pending.set(id, { done, reject, timer }); socket.send(JSON.stringify({ id, method, params }));
+    });
+    const evaluate = async (expression) => { const response = await call("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true, userGesture: true }); if (response.exceptionDetails) throw new Error(response.exceptionDetails.text); return response.result.value; };
+    const until = async (expression) => { for (let i = 0; i < 70; i += 1) { if (await evaluate(expression)) return; await new Promise((done) => setTimeout(done, 150)); } await writeFile(join(output, "interaction-failure.json"), JSON.stringify(await evaluate("({text: document.body.innerText, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, sounds: window.__auctionSounds, phase: document.querySelector('[data-auction-phase]')?.dataset.auctionPhase})"), null, 2)); throw new Error(`UI did not become ready: ${expression}`); };
+    const click = (label) => evaluate(`(() => { const button = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(label)}); if (!button || button.disabled) throw Error('button unavailable'); button.click(); })()`);
+    const current = async () => { const response = await fetch(`${origin}/api/admin/competitions/destruction/${tournamentId}`, { headers: { Cookie: `klol_v2_session=${adminToken}` } }); assert.equal(response.status, 200); return (await response.json()).destruction; };
+    await call("Page.enable"); await call("Runtime.enable"); await call("Network.enable");
+    await call("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "no-preference" }] });
+    await call("Network.setCookie", { name: "klol_v2_session", value: adminToken, url: origin, httpOnly: true, sameSite: "Strict" });
+    await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await call("Page.navigate", { url: `${origin}/admin/progress/destruction/${tournamentId}` });
+    await until("document.body.innerText.includes('연결됨') && [...document.querySelectorAll('button')].some(b => b.textContent === '경매 일시 중단')");
+    await until("document.querySelector('[data-auction-phase]')?.dataset.auctionPhase === 'revealed'");
+    await evaluate("window.__auctionSounds = []; const originalStart = AudioBufferSourceNode.prototype.start; AudioBufferSourceNode.prototype.start = function(...args) { window.__auctionSounds.push(this.buffer?.duration ?? 0); return originalStart.apply(this,args); };");
+    await click("효과음 켜기");
+    await until("window.__auctionSounds.length >= 1");
+    const before = await current();
+    await evaluate("(() => { const button = [...document.querySelectorAll('button')].find(b => b.textContent === '경매 일시 중단'); button.click(); button.click(); })()");
+    await until("[...document.querySelectorAll('button')].some(b => b.textContent === '경매 재개' && !b.disabled)");
+    const paused = await current(); assert.equal(paused.auctionPaused, true); assert.equal(paused.revision, before.revision + 1);
+    report.push("빠른 중복 클릭: 경매 중단을 한 번만 반영");
+
+    // Drop a successful PATCH response after the server has committed it.
+    let lostResponse = false;
+    events.set("Fetch.requestPaused", async (event) => {
+      if (event.request.method === "PATCH" && !lostResponse) { lostResponse = true; await call("Fetch.failRequest", { requestId: event.requestId, errorReason: "ConnectionClosed" }); }
+      else await call("Fetch.continueResponse", { requestId: event.requestId });
+    });
+    await call("Fetch.enable", { patterns: [{ urlPattern: `${origin}/api/admin/competitions/destruction/${tournamentId}`, requestStage: "Response" }] });
+    await click("경매 재개");
+    await until("document.body.innerText.includes('요청 결과 다시 확인')");
+    await call("Fetch.disable"); events.delete("Fetch.requestPaused");
+    const committed = await current(); assert.equal(committed.auctionPaused, false); assert.equal(committed.revision, paused.revision + 1);
+    await click("요청 결과 다시 확인");
+    await until("[...document.querySelectorAll('button')].some(b => b.textContent === '경매 일시 중단' && !b.disabled)");
+    assert.equal((await current()).revision, committed.revision);
+    report.push("서버 저장 후 응답 유실: 같은 멱등성 키로 재확인, 중복 변경 없음");
+
+    await evaluate("(() => { const input = document.querySelector('input[name=purchasePoints]'); input.value = '1'; input.dispatchEvent(new Event('input', { bubbles: true })); })()");
+    await click("낙찰 확정");
+    await until("!document.querySelector('input[name=purchasePoints]') && [...document.querySelectorAll('button')].some(b => b.textContent === '다음 선수 추첨' && !b.disabled)");
+    const sold = await current(); const original = before.participants.find((entry) => entry.auctionStatus === "DRAWN");
+    assert.equal(sold.participants.find((entry) => entry.id === original.id).auctionStatus, "SOLD");
+    assert.equal(sold.teams.reduce((sum, team) => sum + team.remainingAuctionPoints, 0), before.teams.reduce((sum, team) => sum + team.remainingAuctionPoints, 0) - 1);
+    report.push("모바일 낙찰 폼: 선수 배정과 포인트 차감 확인");
+
+    await click("다음 선수 추첨");
+    await until("document.querySelector('[data-auction-phase]')?.dataset.auctionPhase === 'shuffle'");
+    await evaluate("document.querySelector('[data-auction-phase]').scrollIntoView({block:'center'})");
+    const cardBack = await call("Page.captureScreenshot", { format: "png" });
+    await writeFile(join(output, "auction-card-back.png"), Buffer.from(cardBack.data, "base64"));
+    await until("document.querySelector('[data-auction-phase]')?.dataset.auctionPhase === 'revealed'");
+    await until(`document.querySelector('[data-auction-points="1"]') !== null`);
+    assert.ok((await evaluate("window.__auctionSounds")).length >= 4, "unlock plus shuffle, flip and reveal audio sources started");
+    assert.ok((await evaluate("window.__auctionSounds")).every((duration) => duration > 0));
+    const cardFront = await call("Page.captureScreenshot", { format: "png" });
+    await writeFile(join(output, "auction-card-front.png"), Buffer.from(cardFront.data, "base64"));
+    const drawnRevision = (await current()).revision;
+    await click("효과음 켜짐");
+    assert.equal((await current()).revision, drawnRevision, "sound toggling never mutates the auction");
+    report.push("카드 뒷면 → 회전 → 선수 공개·1P 표시, V1 WAV 3종 디코딩 및 오디오 출력 시작 확인");
+
+    await call("Network.emulateNetworkConditions", { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 });
+    await until("document.body.innerText.includes('오프라인')");
+    await call("Network.emulateNetworkConditions", { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+    await until("document.body.innerText.includes('연결됨')");
+    report.push("오프라인 안내와 재연결 시 서버 상태 복구 확인");
+
+    await evaluate(await readFile(resolve(root, "node_modules/axe-core/axe.min.js"), "utf8"));
+    const accessibility = await evaluate("axe.run(document.querySelector('[aria-label=\"멸망전 운영 작업\"]'), { runOnly: { type: 'tag', values: ['wcag2a','wcag2aa','wcag21aa'] } }).then(r => r.violations.map(v => ({id:v.id,impact:v.impact,nodes:v.nodes.length})))");
+    assert.deepEqual(accessibility, []); assert.deepEqual(exceptions, []);
+    report.push("운영 작업 영역 axe 접근성 검사 및 브라우저 예외 없음");
+    await call("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+    await call("Page.navigate", { url: `${origin}/competitions/destruction/${tournamentId}` });
+    await until(`document.querySelector('[data-auction-phase="revealed"] [data-auction-points="1"]') !== null`);
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('[data-auction-phase] > div:nth-child(2)')).animationName"), "none");
+    assert.equal((await current()).revision, drawnRevision);
+    report.push("공개 화면도 동일한 선수·포인트 카드 사용, 동작 줄이기 설정에서는 즉시 공개, 조회로 경매 변경 없음");
+    await call("Page.navigate", { url: origin + "/admin/progress/destruction/" + mayhemId });
+    await until("document.body.innerText.includes('운영자 확인 입력') && document.body.innerText.includes('연결됨')");
+    await evaluate("(() => { const summary = [...document.querySelectorAll('summary')].find(s => s.textContent === '운영자 확인 입력'); summary.click(); const form = summary.parentElement.querySelector('form'); for (const [name, value] of [['wins','55'],['losses','45'],['evidence','합성 전적 클라이언트 최근 100판 · 2026-09-25']]) { const el = form.elements.namedItem(name); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el, value); el.dispatchEvent(new Event('input',{bubbles:true})); } form.elements.namedItem('verified').click(); })()");
+    await until("[...document.querySelectorAll('button')].some(b => b.textContent === '확인 전적 저장' && !b.disabled)");
+    await click("확인 전적 저장");
+    await until("document.body.innerText.includes('운영자 확인 · 합성 전적 클라이언트') && document.body.innerText.includes('작업을 반영했습니다.')");
+    const verifiedResponse = await fetch(origin + "/api/admin/competitions/destruction/" + mayhemId, { headers: { Cookie: "klol_v2_session=" + adminToken } });
+    const verifiedState = (await verifiedResponse.json()).destruction;
+    const rated = verifiedState.participants.find(p => p.aramRecord);
+    assert.equal(rated.aramRecord.mode, "ARAM_MAYHEM"); assert.equal(rated.aramRecord.source, "ADMIN_VERIFIED");
+    assert.equal(rated.aramRecord.wins, 55); assert.equal(rated.minimumBid, 250);
+    assert.equal(await evaluate("[...document.querySelectorAll('button')].find(b => b.textContent === '주장·팀 확정').disabled"), true);
+    report.push("증바람 모바일 확인 입력: 55승45패 → A등급·최소250P 저장, 미평가 선수 존재 시 주장 확정 차단");
+    await call("Page.navigate", { url: origin + "/competitions/destruction/" + mayhemId });
+    await until("document.body.innerText.includes('운영자 확인') && document.body.innerText.includes('100판 55승 45패')");
+    assert.equal(await evaluate("document.body.innerText.includes('합성 전적 클라이언트')"), false);
+    report.push("증바람 공개 화면: 운영자 확인 출처·등급 공개, 관리자 확인 근거 비공개");
+    await writeFile(join(output, "interactions.json"), JSON.stringify({ passed: report, accessibility, exceptions }, null, 2));
+    await call("Browser.close");
+  } finally {
+    socket?.close();
+    for (const item of pending.values()) clearTimeout(item.timer);
+    if (chrome.exitCode === null) { chrome.kill(); await new Promise((done) => setTimeout(done, 500)); }
+    const absolute = resolve(profile);
+    if (!absolute.startsWith(`${parent}${sep}`) || !absolute.includes("klol-destruction-browser-")) throw new Error("Unexpected browser profile path");
+    await rm(absolute, { recursive: true, force: true, maxRetries: 3, retryDelay: 300 });
+  }
+}

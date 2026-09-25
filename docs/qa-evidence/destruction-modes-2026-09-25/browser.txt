@@ -1,0 +1,3 @@
+[destruction-browser] capturing 58 pages at http://127.0.0.1:65187
+[destruction-browser] captures complete
+[destruction-browser] interactions and accessibility passed

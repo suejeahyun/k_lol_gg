@@ -1,3 +1,8 @@
+import { AramSyncError } from "./aram-rating";
+import { RiotAramRecords } from "./riot-aram-records";
+import { readRiotProductionConfiguration } from "@/modules/riot/infrastructure/riot-runtime-policy";
+import { RiotAesGcmIdentityProtector, parseRiotEncryptionKeyring } from "@/modules/riot/infrastructure/riot-identity-protector";
+import { riotAccountLinks, siteSettings } from "@/platform/db/schema";
 import { randomUUID } from "node:crypto";
 
 import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
@@ -37,6 +42,12 @@ function normalizeText(value: string) { return value.normalize("NFKC").trim().re
 function snapshot(aggregate: DestructionAggregate) { return JSON.parse(JSON.stringify(aggregate)) as Record<string, unknown>; }
 function same(left: Uint8Array, right: Uint8Array) { return Buffer.from(left).equals(Buffer.from(right)); }
 
+function serializationFailure(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const failure = error as { code?: string; cause?: unknown };
+  return failure.code === "40001" || failure.code === "40P01" || (failure.cause !== error && failure.cause !== undefined && serializationFailure(failure.cause));
+}
+
 function aggregateFromRow(row: DestructionRow): DestructionAggregate {
   const value = row.aggregateJson as unknown as DestructionAggregate;
   if (!value || value.id !== row.id || value.revision !== row.revision || value.lifecycle?.status !== row.status || value.configuration?.preliminaryFormat !== row.preliminaryFormat || !Array.isArray(value.applications) || !Array.isArray(value.participants) || !Array.isArray(value.teams)) throw new Error("DESTRUCTION_SNAPSHOT_INCONSISTENT");
@@ -67,12 +78,38 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
   private readonly actors = new WeakMap<DestructionTransactionContext, DestructionHttpCommand["metadata"]["actor"]>();
 
   readonly dependencies: DestructionCommandHandlerDependencies = {
+    aramRecords: { next: async (context, aggregate, participantId, now) => {
+      if (aggregate.configuration.gameMode === "ARAM_MAYHEM") throw new AramSyncError("MAYHEM_UNSUPPORTED");
+      const config = readRiotProductionConfiguration(process.env);
+      if (!config) throw new AramSyncError("UNAVAILABLE");
+      const tx = this.tx(context);
+      const settings = (await tx.select({ features: siteSettings.featuresJson }).from(siteSettings).where(eq(siteSettings.id, 1)).limit(1))[0];
+      if (settings?.features.riotIntegration !== true) throw new AramSyncError("UNAVAILABLE");
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended('destruction:aram:riot-budget', 0))`);
+      const latest = (await tx.select({ at: auditEvents.createdAt }).from(auditEvents).where(eq(auditEvents.action, "DESTRUCTION_SYNC_ARAM_RECORD")).orderBy(desc(auditEvents.createdAt)).limit(1))[0];
+      if (latest && Date.parse(now) - latest.at.getTime() < 8_000) throw new AramSyncError("RATE_LIMITED", 8);
+      const participant = aggregate.participants.find((p) => p.id === participantId)!;
+      const link = (await tx.select().from(riotAccountLinks).where(eq(riotAccountLinks.playerId, participant.playerId)).for("share").limit(1))[0];
+      if (!link || link.status !== "CONNECTED" || !link.protectedPuuid) throw new AramSyncError("NOT_CONNECTED");
+      const protector = new RiotAesGcmIdentityProtector(parseRiotEncryptionKeyring(config.encryptionKeys));
+      const puuid = await protector.reveal(link.protectedPuuid);
+      return new RiotAramRecords(config.apiKey, config.regionalBaseUrl).next({ puuid, linkId: link.id, linkRevision: link.revision, previous: participant.aramCollection, now });
+    } },
     unitOfWork: {
-      transaction: (operation) => this.database.transaction(async (transaction) => {
-        const context = Object.freeze({}) as DestructionTransactionContext;
-        this.contexts.set(context, transaction);
-        try { return await operation(context); } finally { this.contexts.delete(context); this.actors.delete(context); }
-      }, { isolationLevel: "serializable" }),
+      transaction: async (operation) => {
+        for (let attempt = 0; ; attempt += 1) {
+          try {
+            return await this.database.transaction(async (transaction) => {
+              const context = Object.freeze({}) as DestructionTransactionContext;
+              this.contexts.set(context, transaction);
+              try { return await operation(context); } finally { this.contexts.delete(context); this.actors.delete(context); }
+            }, { isolationLevel: "serializable" });
+          } catch (error) {
+            if (attempt >= 2 || !serializationFailure(error)) throw error;
+            await new Promise((resolve) => setTimeout(resolve, 20 * (attempt + 1)));
+          }
+        }
+      },
     },
     repository: {
       loadForUpdate: async (context, tournamentId) => {
@@ -117,6 +154,10 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
           : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY;
         const account = await lockTransactionSessionActor(this.tx(context), command.metadata.actor, new Date(), policy);
         if (!account) throw new TypeError("FORBIDDEN");
+        if (command.type === "REPLACE_PARTICIPANT") {
+          const incoming = (await this.tx(context).select({ id: players.id }).from(players).where(and(eq(players.id, command.payload.incomingPlayerId), eq(players.status, "ACTIVE"))).for("share").limit(1))[0];
+          if (!incoming) throw new TypeError("INVALID_INPUT");
+        }
         this.actors.set(context, command.metadata.actor);
         if (intent.kind === "APPROVED_OWNER") {
           const commandPlayerId = command.type === "CAST_MVP_VOTE"
@@ -227,7 +268,7 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
     if (!destruction) return null;
     const catalog = await loadCompetitionPlayerDisplayCatalog(
       this.database,
-      [...destruction.applications.map((entry) => entry.playerId), ...destruction.participants.map((entry) => entry.playerId)],
+      [...destruction.applications.map((entry) => entry.playerId), ...destruction.participants.map((entry) => entry.playerId), ...destruction.rosterSnapshots.flatMap((snapshot) => [...snapshot.teamA, ...snapshot.teamB].map((entry) => entry.playerId)), ...destruction.replacements.flatMap((entry) => [entry.outgoingPlayerId, entry.incomingPlayerId])],
       true,
     );
     const candidateGalleries = await this.database.select({ id: mediaGalleries.id, title: mediaGalleries.title }).from(mediaGalleries).where(eq(mediaGalleries.status, "PUBLISHED")).orderBy(desc(mediaGalleries.publishedAt), mediaGalleries.id).limit(50);
@@ -246,11 +287,11 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
   async getOwnMvpBallots(tournamentId: string, ownerUserAccountId: string) {
     const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0];
     if (!row) return [];
-    const application = await this.getOwnApplication(tournamentId, ownerUserAccountId);
-    if (!application) return [];
+      const playerId = await this.getOwnedPlayerId(ownerUserAccountId);
+      if (!playerId) return [];
     const aggregate = aggregateFromRow(row);
     const ballots = aggregate.mvpBallots.filter((ballot) =>
-      ballot.finalizedPlayerId === null && ballot.participantPlayerIds.includes(application.playerId));
+        ballot.finalizedPlayerId === null && ballot.participantPlayerIds.includes(playerId));
     const catalog = await loadCompetitionPlayerDisplayCatalog(this.database, ballots.flatMap((ballot) => ballot.candidatePlayerIds));
     const publicProjection = toDestructionPublicDto(aggregate, catalog.labels);
     const fixtureNames = new Map([
@@ -260,7 +301,7 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
     return ballots.map((ballot) => ({
       fixtureId: ballot.fixtureId,
       fixtureName: fixtureNames.get(ballot.fixtureId) ?? "알 수 없는 경기",
-      candidates: ballot.candidatePlayerIds.filter((playerId) => playerId !== application.playerId).map((playerId) => ({
+        candidates: ballot.candidatePlayerIds.filter((candidateId) => candidateId !== playerId).map((playerId) => ({
         playerId,
         playerName: catalog.labels.get(playerId) ?? "알 수 없는 선수",
       })),

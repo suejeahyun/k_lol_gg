@@ -6,6 +6,7 @@ import type { CompetitionPlayerOption } from "../core";
 import { DESTRUCTION_PRELIMINARY_FORMATS, type DestructionConfiguration, type DestructionPreliminaryFormat } from "./configuration";
 import type { DestructionApplicationStatus } from "./recruitment";
 import type { DestructionAggregate, DestructionPublicDto } from "./state";
+import type { DestructionSchedule } from "./schedule";
 
 export const DESTRUCTION_PUBLIC_STATUSES = [
   "PLANNED",
@@ -148,10 +149,16 @@ type ResultPayload = Readonly<{ fixtureId: string; teamAScore: number; teamBScor
 export type DestructionAdminCommand =
   | AdminCommand<"CREATE_DESTRUCTION", Readonly<{ title: string; configuration: DestructionConfiguration }>>
   | AdminCommand<"START_RECRUITMENT", Readonly<Record<string, never>>>
+  | AdminCommand<"SET_SCHEDULE", DestructionSchedule>
+  | AdminCommand<"SYNC_ARAM_RECORD", Readonly<{ participantId: string }>>
+  | AdminCommand<"VERIFY_ARAM_RECORD", Readonly<{ participantId: string; mode: "ARAM" | "ARAM_MAYHEM"; wins: number; losses: number; evidence: string }>>
+  | AdminCommand<"RESET_ARAM_RECORD", Readonly<{ participantId: string }>>
   | AdminCommand<"SET_APPLICATION_STATUS", Readonly<{ applicationId: string; status: Exclude<DestructionApplicationStatus, "APPLIED" | "CANCELLED"> }>>
   | AdminCommand<"CLOSE_RECRUITMENT", Readonly<Record<string, never>>>
   | AdminCommand<"CONFIRM_TEAMS", Readonly<{ seed: string; captains: readonly Readonly<{ teamId: string; name: string; participantId: string; baselineValue: number }>[] }>>
   | AdminCommand<"START_AUCTION", Readonly<Record<string, never>>>
+  | AdminCommand<"PAUSE_AUCTION", Readonly<Record<string, never>>>
+  | AdminCommand<"RESUME_AUCTION", Readonly<Record<string, never>>>
   | AdminCommand<"DRAW_AUCTION", Readonly<Record<string, never>>>
   | AdminCommand<"HOLD_AUCTION", Readonly<{ participantId: string }>>
   | AdminCommand<"SELL_AUCTION", Readonly<{ participantId: string; teamId: string; purchasePoints: number }>>
