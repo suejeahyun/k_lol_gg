@@ -1,6 +1,6 @@
 # 멸망전 참가 심사 1.1.1
 
-운영 배포 전 검증 기록. 배포 후 후보·운영 smoke와 registry에 배포 ID를 연결한다.
+**운영 반영 완료**: source `d7432dbb0b0a833c49fc30f142aeeddfdda3cded`, tag `destruction-modes-v1.1.1`, Vercel `dpl_8EaBdm5tfDU4hR6Pc4R7tjYTr48u` READY. 2026-09-25T12:09:31.136Z 운영 health ready, 기존 멸망전 조회·관리자 인증 경계·효과음 3종 정상. [후보 확인](./candidate-smoke.json), [운영 확인](./production-smoke.json).
 
 ## 변경과 범위
 
