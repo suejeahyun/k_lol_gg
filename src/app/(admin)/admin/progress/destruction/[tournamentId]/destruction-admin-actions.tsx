@@ -12,6 +12,7 @@ import { buildPreliminaryFixtures } from "@/modules/competitions/destruction/fix
 import { rebuildDestructionPreliminaryProjection } from "@/modules/competitions/destruction/standings";
 import { APPLICATION_STATUS_LABEL, destructionCorrectionImpact, destructionReadiness, destructionRecruitment, DESTRUCTION_STATUS_LABEL, DESTRUCTION_STEPS } from "@/modules/competitions/destruction/workflow";
 import { DestructionLiveStatus } from "@/components/competitions/destruction/live-status";
+import { useApplicationReviewQueue } from "@/components/competitions/destruction/use-application-review-queue";
 import { useDestructionMutation } from "@/components/competitions/destruction/use-destruction-mutation";
 import { BoundedPicker } from "../../../matches/bounded-picker";
 import styles from "@/components/competitions/destruction/workspace.module.css";
@@ -35,23 +36,25 @@ export function DestructionAdminActions({ destruction, playerOptions, playerLabe
   superAdmin?: boolean;
 }>) {
   const mutation = useDestructionMutation(destruction.revision);
+  const reviews = useApplicationReviewQueue(destruction.id, destruction.revision, mutation);
   const status = destruction.lifecycle.status;
   const stage = selectedStage ?? (status === "CANCELLED" ? destruction.lifecycle.cancelledFrom ?? "PLANNED" : status);
   const showOperations = stage === status || (status === "CANCELLED" && stage === destruction.lifecycle.cancelledFrom);
   const command: Command = (type, payload) => mutation.mutate(`/api/admin/competitions/destruction/${destruction.id}`, "PATCH", { type, payload });
   const playerLabel = (id: string) => playerLabels[id] ?? "알 수 없는 선수";
   const teamLabel = (id: string) => destruction.teams.find((team) => team.id === id)?.name ?? "알 수 없는 팀";
-  const context: Context = { destruction, busy: mutation.busy || mutation.retryAvailable, command, playerLabel, teamLabel, superAdmin };
-  return <section className={styles.workspace} aria-label="멸망전 운영 작업" aria-busy={mutation.busy}>
-    <DestructionLiveStatus tournamentId={destruction.id} revision={destruction.revision} busy={mutation.busy || mutation.retryAvailable} enabled={status !== "COMPLETED"} />
-    <div className={styles.notice} role="status" aria-live="polite">{mutation.busy ? "작업을 반영하고 최신 상태를 불러오고 있습니다…" : mutation.message || "현재 단계의 작업과 진행 조건을 확인해 주세요."}{mutation.retryAvailable ? <button type="button" onClick={() => void mutation.retry()}>요청 결과 다시 확인</button> : null}</div>
+  const context: Context = { destruction, busy: mutation.busy || mutation.retryAvailable || reviews.reviewing, command, playerLabel, teamLabel, superAdmin };
+  return <section className={styles.workspace} aria-label="멸망전 운영 작업" aria-busy={mutation.busy && !reviews.reviewing}>
+    <DestructionLiveStatus tournamentId={destruction.id} revision={destruction.revision} busy={mutation.busy || mutation.retryAvailable || reviews.reviewing} enabled={status !== "COMPLETED"} />
+    <div className={styles.notice} role="status" aria-live="polite">{mutation.retryAvailable ? mutation.message : reviews.reviewing && reviews.blocked ? "심사 결과를 확인하고 최신 상태를 불러오고 있습니다…" : reviews.reviewing ? "선택한 심사를 순서대로 반영하고 있습니다. 다른 선수도 계속 심사할 수 있습니다." : mutation.busy ? "작업을 반영하고 최신 상태를 불러오고 있습니다…" : mutation.message || "현재 단계의 작업과 진행 조건을 확인해 주세요."}{mutation.retryAvailable ? <button type="button" onClick={() => void mutation.retry()}>요청 결과 다시 확인</button> : null}</div>
+    {reviews.notice ? <p className={styles.notice} role="alert">{reviews.notice}</p> : null}
     <h2 data-selected-stage={stage}>{DESTRUCTION_STATUS_LABEL[stage]}</h2>
     {!showOperations ? <p className={styles.notice}>선택한 단계의 기록을 보고 있습니다. <Link href={`/admin/progress/destruction/${destruction.id}`}>현재 진행 단계로 돌아가기</Link></p> : null}
     {(!showOperations || status === "COMPLETED" || status === "CANCELLED" || (stage === "TEAM_BUILDING" && destruction.teams.length > 0)) ? <StageRecords {...context} stage={stage} /> : null}
     {showOperations ? <>
     <StageAdvance {...context} />
     {!["COMPLETED", "CANCELLED"].includes(status) && view !== "auction-live" ? <ScheduleForm {...context} /> : null}
-    {status === "RECRUITING" ? <Recruitment {...context} /> : null}
+    {status === "RECRUITING" ? <Recruitment {...context} busy={reviews.blocked} reviews={reviews} /> : null}
     {status === "TEAM_BUILDING" && !destruction.teams.length ? <><AramRecords {...context} /><CaptainForm {...context} /></> : null}
     {status === "AUCTION" ? <Auction {...context} /> : null}
     {view !== "auction-live" && ["PRELIMINARY", "TOURNAMENT"].includes(status) ? <><ResultForms {...context} /><div className={styles.grid}><ReplacementForm {...context} playerOptions={playerOptions} /><MvpAdminForm {...context} /></div></> : null}
@@ -108,10 +111,10 @@ function StageAdvance({ destruction, busy, command, teamLabel, superAdmin }: Con
   </section>;
 }
 
-function Recruitment({ destruction, busy, command, playerLabel, readOnly = false }: Context & { readOnly?: boolean }) {
+function Recruitment({ destruction, busy, command, playerLabel, readOnly = false, reviews }: Context & { readOnly?: boolean; reviews?: ReturnType<typeof useApplicationReviewQueue> }) {
   const [query, setQuery] = useState("");
   const applications = destruction.applications.filter((entry) => playerLabel(entry.playerId).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
-  return <section className={styles.panel}><h2>참가 신청 심사</h2><div className={styles.lanes}>{destructionRecruitment(destruction).map((lane) => <article key={lane.position ?? "ALL"}><span>{lane.position ? competitionPositionLabel(lane.position) : "전체 인원"}</span><strong>{lane.confirmed}/{lane.required}</strong><small>확정 / 필요 인원</small><small>모집 {lane.applied}/{lane.limit}명</small></article>)}</div><label className={styles.form}>신청 선수 검색<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="닉네임·태그" /></label><div className={`${styles.tableWrap} ${styles.applications}`}><table><caption>신청 {destruction.applications.length}건 · 검색 결과 {applications.length}건</caption><thead><tr><th>선수</th>{(destruction.configuration.gameMode ?? "CLASSIC") === "CLASSIC" ? <th>포지션</th> : null}<th>상태</th><th>심사</th></tr></thead><tbody>{applications.map((entry) => <tr key={entry.id}><th scope="row">{playerLabel(entry.playerId)}</th>{(destruction.configuration.gameMode ?? "CLASSIC") === "CLASSIC" ? <td>{competitionPositionLabel(entry.position)}</td> : null}<td>{APPLICATION_STATUS_LABEL[entry.status]}</td><td>{readOnly ? "심사 종료" : entry.status === "CANCELLED" ? "재신청 대기" : <div className={styles.buttons}>{(["CONFIRMED", "RESERVE", "REJECTED"] as const).map((status) => <button key={status} disabled={busy || status === entry.status || (status === "CONFIRMED" && destruction.applications.filter((other) => ((destruction.configuration.gameMode ?? "CLASSIC") !== "CLASSIC" || other.position === entry.position) && other.status === "CONFIRMED").length >= destruction.configuration.teamCount * ((destruction.configuration.gameMode ?? "CLASSIC") === "CLASSIC" ? 1 : 5))} onClick={() => void command("SET_APPLICATION_STATUS", { applicationId: entry.id, status })}>{APPLICATION_STATUS_LABEL[status]}</button>)}</div>}</td></tr>)}</tbody></table></div>{!applications.length ? <p>조건에 맞는 신청이 없습니다.</p> : null}</section>;
+  return <section className={styles.panel}><h2>참가 신청 심사</h2><div className={styles.lanes}>{destructionRecruitment(destruction).map((lane) => <article key={lane.position ?? "ALL"}><span>{lane.position ? competitionPositionLabel(lane.position) : "전체 인원"}</span><strong>{lane.confirmed}/{lane.required}</strong><small>확정 / 필요 인원</small><small>모집 {lane.applied}/{lane.limit}명</small></article>)}</div><label className={styles.form}>신청 선수 검색<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="닉네임·태그" /></label><div className={`${styles.tableWrap} ${styles.applications}`}><table><caption>신청 {destruction.applications.length}건 · 검색 결과 {applications.length}건</caption><thead><tr><th>선수</th>{(destruction.configuration.gameMode ?? "CLASSIC") === "CLASSIC" ? <th>포지션</th> : null}<th>상태</th><th>심사</th></tr></thead><tbody>{applications.map((entry) => <tr key={entry.id} data-application-id={entry.id} aria-busy={reviews?.pendingIds.includes(entry.id) ?? false}><th scope="row">{playerLabel(entry.playerId)}</th>{(destruction.configuration.gameMode ?? "CLASSIC") === "CLASSIC" ? <td>{competitionPositionLabel(entry.position)}</td> : null}<td>{APPLICATION_STATUS_LABEL[entry.status]}{reviews?.pendingIds.includes(entry.id) ? <small role="status"> · {reviews.activeId === entry.id ? "처리 중…" : "대기 중…"}</small> : null}</td><td>{readOnly ? "심사 종료" : entry.status === "CANCELLED" ? "재신청 대기" : <div className={styles.buttons}>{(["CONFIRMED", "RESERVE", "REJECTED"] as const).map((status) => <button key={status} disabled={busy || reviews?.pendingIds.includes(entry.id) || status === entry.status || (status === "CONFIRMED" && destruction.applications.filter((other) => ((destruction.configuration.gameMode ?? "CLASSIC") !== "CLASSIC" || other.position === entry.position) && other.status === "CONFIRMED").length >= destruction.configuration.teamCount * ((destruction.configuration.gameMode ?? "CLASSIC") === "CLASSIC" ? 1 : 5))} onClick={() => reviews ? reviews.enqueue({ applicationId: entry.id, status }) : void command("SET_APPLICATION_STATUS", { applicationId: entry.id, status })}>{APPLICATION_STATUS_LABEL[status]}</button>)}</div>}</td></tr>)}</tbody></table></div>{!applications.length ? <p>조건에 맞는 신청이 없습니다.</p> : null}</section>;
 }
 
 function AramRecords({ destruction, busy, command, playerLabel }: Context) {

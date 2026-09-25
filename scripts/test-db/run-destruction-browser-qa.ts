@@ -15,7 +15,7 @@ import { runDestructionBrowserInteractions } from "./destruction-browser-interac
 
 const execFile = promisify(execFileCallback);
 const root = resolve(import.meta.dirname, "../..");
-const output = resolve(root, "docs/qa/destruction-navigation-recruitment-2026-09-25");
+const output = resolve(root, "docs/qa/destruction-recruitment-review-2026-09-25");
 const cluster = await startEphemeralCluster();
 const pool = new Pool({ connectionString: cluster.connectionString });
 let server: ReturnType<typeof spawn> | undefined;

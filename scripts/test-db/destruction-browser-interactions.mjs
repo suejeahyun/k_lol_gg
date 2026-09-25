@@ -168,6 +168,138 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
       assert.equal(state.revision, 2); assert.ok(state.applications.every(p => p.position === null));
     }
     report.push("칼바람·증바람 로그인 신청 폼: 포지션 선택 없이 실제 HTTP 저장 성공");
+    const recruitmentState = async (id) => {
+      const response = await fetch(origin + "/api/admin/competitions/destruction/" + id, { headers: { Cookie: "klol_v2_session=" + adminToken } });
+      assert.equal(response.status, 200);
+      return (await response.json()).destruction;
+    };
+    const reviewButton = (id, label = "참가 확정") => `[...document.querySelector('[data-application-id="${id}"]').querySelectorAll('button')].find(b => b.textContent === ${JSON.stringify(label)})`;
+    const openRecruitment = async (id) => {
+      await call("Page.navigate", { url: origin + "/admin/progress/destruction/" + id });
+      await until("document.querySelector('[data-application-id]') !== null && document.body.innerText.includes('연결됨')");
+    };
+    // Hold the first HTTP write to check row isolation and ordering deterministically.
+    const queueId = recruitingIds[0];
+    await openRecruitment(queueId);
+    const queueBefore = await recruitmentState(queueId);
+    const candidates = queueBefore.applications.filter(a => a.status === "APPLIED");
+    assert.equal(candidates.length, 3);
+    let heldRequest;
+    let writes = 0;
+    events.set("Fetch.requestPaused", async (event) => {
+      if (event.request.method === "PATCH") {
+        writes += 1;
+        if (!heldRequest) { heldRequest = event.requestId; return; }
+      }
+      await call("Fetch.continueRequest", { requestId: event.requestId });
+    });
+    await call("Fetch.enable", { patterns: [{ urlPattern: origin + "/api/admin/competitions/destruction/" + queueId, requestStage: "Request" }] });
+    await evaluate(`(() => { const b = ${reviewButton(candidates[0].id)}; b.click(); b.click(); })()`);
+    await until(`document.querySelector('[data-application-id="${candidates[0].id}"]').getAttribute('aria-busy') === 'true'`);
+    for (const candidate of candidates.slice(1)) {
+      assert.equal(await evaluate(reviewButton(candidate.id) + ".disabled"), false);
+      await evaluate(reviewButton(candidate.id) + ".click()");
+    }
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 3");
+    assert.equal(await evaluate("document.querySelector('[aria-label=\"멸망전 운영 작업\"]').getAttribute('aria-busy')"), "false");
+    assert.equal(writes, 1);
+    await evaluate(`document.querySelector('[data-application-id="${candidates[0].id}"]').scrollIntoView({ block: 'center' })`);
+    const waitingShot = await call("Page.captureScreenshot", { format: "png" });
+    await writeFile(join(output, "recruitment-queued.png"), Buffer.from(waitingShot.data, "base64"));
+    await call("Fetch.continueRequest", { requestId: heldRequest });
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 0 && document.body.innerText.includes('20/20')");
+    await call("Fetch.disable"); events.delete("Fetch.requestPaused");
+    const queueAfter = await recruitmentState(queueId);
+    assert.equal(queueAfter.revision, queueBefore.revision + 3);
+    assert.equal(queueAfter.applications.filter(a => a.status === "CONFIRMED").length, 20);
+    assert.equal(writes, 3);
+    report.push("참가 심사: 첫 요청 지연 중 다른 두 선수 클릭 가능, 행별 대기 표시, 중복 클릭 무시, 3건 순차 저장·20명 확정");
+
+    const retryId = recruitingIds[1];
+    await openRecruitment(retryId);
+    const retryBefore = await recruitmentState(retryId);
+    const retryCandidates = retryBefore.applications.filter(a => a.status === "APPLIED");
+    let heldRetry;
+    let dropped = false;
+    events.set("Fetch.requestPaused", async (event) => {
+      if (event.responseStatusCode) {
+        if (event.request.method === "PATCH" && !dropped) { dropped = true; await call("Fetch.failRequest", { requestId: event.requestId, errorReason: "ConnectionClosed" }); }
+        else await call("Fetch.continueResponse", { requestId: event.requestId });
+      } else if (event.request.method === "PATCH" && !heldRetry) heldRetry = event.requestId;
+      else await call("Fetch.continueRequest", { requestId: event.requestId });
+    });
+    await call("Fetch.enable", { patterns: ["Request", "Response"].map(requestStage => ({ urlPattern: origin + "/api/admin/competitions/destruction/" + retryId, requestStage })) });
+    for (const candidate of retryCandidates) await evaluate(reviewButton(candidate.id) + ".click()");
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 3");
+    await call("Fetch.continueRequest", { requestId: heldRetry });
+    await until("document.body.innerText.includes('요청 결과 다시 확인') && document.body.innerText.includes('심사 2건을 취소했습니다')");
+    await call("Fetch.disable"); events.delete("Fetch.requestPaused");
+    const retryCommitted = await recruitmentState(retryId);
+    assert.equal(retryCommitted.revision, retryBefore.revision + 1);
+    let heldRecheck;
+    events.set("Fetch.requestPaused", async (event) => {
+      if (event.request.method === "PATCH") heldRecheck = event.requestId;
+      else await call("Fetch.continueRequest", { requestId: event.requestId });
+    });
+    await call("Fetch.enable", { patterns: [{ urlPattern: origin + "/api/admin/competitions/destruction/" + retryId, requestStage: "Request" }] });
+    await click("요청 결과 다시 확인");
+    await until("document.body.innerText.includes('심사 결과를 확인하고 최신 상태를 불러오고 있습니다')");
+    assert.equal(await evaluate(reviewButton(retryCandidates[1].id) + ".disabled"), true);
+    await call("Fetch.continueRequest", { requestId: heldRecheck });
+    await call("Fetch.disable"); events.delete("Fetch.requestPaused");
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 0 && !document.body.innerText.includes('요청 결과 다시 확인')");
+    assert.equal((await recruitmentState(retryId)).revision, retryCommitted.revision);
+    assert.equal(await evaluate(reviewButton(retryCandidates[1].id) + ".disabled"), false);
+    report.push("심사 응답 유실: 미전송 2건 취소 안내, 같은 키 재확인으로 중복 확정 없이 복구");
+
+    let conflictingRequest;
+    events.set("Fetch.requestPaused", async (event) => {
+      if (event.request.method === "PATCH" && !conflictingRequest) conflictingRequest = event.requestId;
+      else await call("Fetch.continueRequest", { requestId: event.requestId });
+    });
+    await call("Fetch.enable", { patterns: [{ urlPattern: origin + "/api/admin/competitions/destruction/" + retryId, requestStage: "Request" }] });
+    for (const candidate of retryCandidates.slice(1)) await evaluate(reviewButton(candidate.id) + ".click()");
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 2");
+    const concurrent = await fetch(origin + "/api/admin/competitions/destruction/" + retryId, {
+      method: "PATCH", headers: { Cookie: "klol_v2_session=" + adminToken, "Content-Type": "application/json", "If-Match": '"' + retryCommitted.revision + '"', "Idempotency-Key": "browser-review-conflict-" + crypto.randomUUID(), Origin: origin },
+      body: JSON.stringify({ type: "SET_APPLICATION_STATUS", payload: { applicationId: retryCandidates[2].id, status: "RESERVE" } }),
+    });
+    assert.equal(concurrent.status, 200);
+    await call("Fetch.continueRequest", { requestId: conflictingRequest });
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 0 && document.body.innerText.includes('심사 1건을 취소했습니다')");
+    await call("Fetch.disable"); events.delete("Fetch.requestPaused");
+    const conflictAfter = await recruitmentState(retryId);
+    assert.equal(conflictAfter.revision, retryCommitted.revision + 1);
+    assert.equal(conflictAfter.applications.find(a => a.id === retryCandidates[1].id).status, "APPLIED");
+    assert.equal(conflictAfter.applications.find(a => a.id === retryCandidates[2].id).status, "RESERVE");
+    assert.equal(await evaluate(reviewButton(retryCandidates[1].id) + ".disabled"), false);
+    report.push("다른 운영자와 revision 충돌: 현재 요청 거절·대기 요청 취소, 최신 목록 복구, 상대 심사 보존");
+    // Another operator can commit between our response and its router refresh.
+    // The next queued intent must keep the original revision chain, not overwrite that change.
+    let heldGap;
+    events.set("Fetch.requestPaused", async (event) => {
+      if (event.request.method === "PATCH" && !heldGap) heldGap = event.requestId;
+      else await call("Fetch.continueResponse", { requestId: event.requestId });
+    });
+    await call("Fetch.enable", { patterns: [{ urlPattern: origin + "/api/admin/competitions/destruction/" + retryId, requestStage: "Response" }] });
+    await evaluate(reviewButton(retryCandidates[1].id) + ".click()");
+    await evaluate(reviewButton(retryCandidates[2].id, "신청 거절") + ".click()");
+    for (let i = 0; i < 70 && !heldGap; i += 1) await new Promise(done => setTimeout(done, 100));
+    assert.ok(heldGap);
+    const gapCommitted = await recruitmentState(retryId);
+    assert.equal(gapCommitted.revision, conflictAfter.revision + 1);
+    const intervening = await fetch(origin + "/api/admin/competitions/destruction/" + retryId, {
+      method: "PATCH", headers: { Cookie: "klol_v2_session=" + adminToken, "Content-Type": "application/json", "If-Match": '"' + gapCommitted.revision + '"', "Idempotency-Key": "browser-review-refresh-gap-" + crypto.randomUUID(), Origin: origin },
+      body: JSON.stringify({ type: "SET_APPLICATION_STATUS", payload: { applicationId: retryCandidates[2].id, status: "CONFIRMED" } }),
+    });
+    assert.equal(intervening.status, 200);
+    await call("Fetch.continueResponse", { requestId: heldGap });
+    await until("document.querySelectorAll('[data-application-id][aria-busy=true]').length === 0 && document.body.innerText.includes('다른 작업으로 대회 정보가 변경됐습니다')");
+    await call("Fetch.disable"); events.delete("Fetch.requestPaused");
+    const gapAfter = await recruitmentState(retryId);
+    assert.equal(gapAfter.revision, gapCommitted.revision + 1);
+    assert.equal(gapAfter.applications.find(a => a.id === retryCandidates[2].id).status, "CONFIRMED");
+    report.push("저장 응답과 화면 갱신 사이의 외부 변경도 감지: 대기 심사의 원래 revision 유지, 다른 운영자의 확정 덮어쓰기 방지");
     assert.deepEqual(exceptions, []);
     await writeFile(join(output, "interactions.json"), JSON.stringify({ passed: report, accessibility, exceptions }, null, 2));
     await call("Browser.close");

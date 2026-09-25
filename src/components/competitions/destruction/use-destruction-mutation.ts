@@ -44,10 +44,10 @@ export function useDestructionMutation(revision: number) {
     } finally { lock.current = false; setSending(false); }
   }
 
-  async function mutate(path: string, method: string, payload: unknown) {
+  async function mutate(path: string, method: string, payload: unknown, expectedRevision = revision) {
     if (busy || lock.current) return;
     if (unresolved.current) { setMessage("이전 요청의 처리 결과부터 다시 확인해 주세요."); return; }
-    const snapshot = { path, method, body: JSON.stringify(payload), key: `destruction-${crypto.randomUUID()}`, revision };
+    const snapshot = { path, method, body: JSON.stringify(payload), key: `destruction-${crypto.randomUUID()}`, revision: expectedRevision };
     unresolved.current = snapshot;
     return await send(snapshot);
   }
