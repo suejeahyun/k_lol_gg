@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-09-25T12:45:03.490Z",
+  "readOnly": true,
+  "header": "X-Destruction-Revision",
+  "results": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "/api/admin/competitions/destruction",
+      "status": 401,
+      "contentType": "application/problem+json; charset=utf-8"
+    }
+  ]
+}

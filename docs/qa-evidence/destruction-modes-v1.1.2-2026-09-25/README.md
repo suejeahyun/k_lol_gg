@@ -1,6 +1,6 @@
 # 멸망전 1.1.2 · 운영 중계 서버와 revision 조건 충돌
 
-배포 전 검증 기록. 후보·운영 smoke 완료 후 배포 근거를 연결한다.
+**운영 반영 완료**: source `db1892ece901ce79c993bf5c063bcc660d8a89a8`, tag `destruction-modes-v1.1.2`, Vercel `dpl_EmiaKZbhgHmYocxourREEZ4kBkRK` READY. 2026-09-25T12:45:02.915Z health ready·공개 조회·관리자 인증 경계·효과음 정상. [후보 확인](./candidate-smoke.json), [운영 확인](./production-smoke.json), [전용 헤더 운영 응답 확인](./production-header-smoke.json).
 
 ## 원인과 변경
 

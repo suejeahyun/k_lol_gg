@@ -1,0 +1,55 @@
+{
+  "deploymentId": "dpl_EmiaKZbhgHmYocxourREEZ4kBkRK",
+  "url": "https://k-lol-myj6k6t63-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://k-lol-gg.vercel.app",
+  "source": "db1892ece901ce79c993bf5c063bcc660d8a89a8",
+  "checkedAt": "2026-09-25T12:45:02.915Z",
+  "results": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "bytes": 57,
+      "ready": true
+    },
+    {
+      "path": "/competitions/destruction",
+      "status": 200,
+      "bytes": 68700
+    },
+    {
+      "path": "/api/competitions/destruction/9dbf8006-8517-4066-ac92-8c5970e25234",
+      "status": 200,
+      "bytes": 15234
+    },
+    {
+      "path": "/competitions/destruction/9dbf8006-8517-4066-ac92-8c5970e25234",
+      "status": 200,
+      "bytes": 109860
+    },
+    {
+      "path": "/api/admin/competitions/destruction",
+      "status": 401,
+      "bytes": 186
+    },
+    {
+      "path": "/admin/progress/destruction/new",
+      "status": 307,
+      "bytes": 18164
+    },
+    {
+      "path": "/sounds/auction/auction-card-flip.wav",
+      "status": 200,
+      "bytes": 40364
+    },
+    {
+      "path": "/sounds/auction/auction-shuffle-whoosh.wav",
+      "status": 200,
+      "bytes": 117164
+    },
+    {
+      "path": "/sounds/auction/auction-reveal-impact.wav",
+      "status": 200,
+      "bytes": 100844
+    }
+  ]
+}

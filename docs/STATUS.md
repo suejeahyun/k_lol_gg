@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-25 멸망전 저장 응답 잠금 — 1.1.2 운영 반영
+
+- 1.1.1의 로컬 검증에 빠졌던 운영 중계 서버의 If-Match 응답 조건을 확인했다. DB 저장은 200 완료됐지만 응답이 412 plain text로 치환되어 결과 미확인 잠금이 발생했다.
+- 생성·공통 mutation을 X-Destruction-Revision 헤더로 전환하고 같은 서버 revision 검사·권한·멱등성·행별 큐를 유지했다. 운영 심사 데이터 변경 없음, DB0046 유지.
+- source `db1892ec`, tag `destruction-modes-v1.1.2`, Vercel `dpl_EmiaKZbhgHmYocxourREEZ4kBkRK` READY·운영 smoke PASS. 계약445·단위1009(+skip1), 격리 DB·중계 재현·74화면·18상호작용·인증 HTTP PASS. 전용 헤더 저장21건·응답 치환0건. [검증·배포 근거](./qa-evidence/destruction-modes-v1.1.2-2026-09-25/README.md).
+
 ## 2026-09-25 멸망전 참가 심사 — 1.1.1 운영 반영
 
 - 선택한 행만 처리/대기 표시, 다른 선수 연속 심사와 검색 가능. 클릭 순서대로 저장하며 같은 행 중복 클릭 차단. 오류 시 미전송 대기 취소·원래 키 재확인, 화면 갱신 사이의 다른 운영자 변경도 보호.
