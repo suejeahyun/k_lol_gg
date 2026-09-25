@@ -1,6 +1,6 @@
 # 멸망전 모집·단계 탐색 1.1.0
 
-소스·로컬 검증 완료, 운영 배포 대기. 기능 tag 예정: `destruction-modes-v1.1.0`. 이전 1.0.0 증거는 당시 기록으로 보존한다.
+**운영 반영 완료**: source `d76823e7da7893b11a98bcc7e255baaa27502b56`, tag `destruction-modes-v1.1.0`, Vercel `dpl_27ZTkVKoBKfFodPbKkyBzehAvCWy` READY. 2026-09-25T11:24:34.822Z 운영 health ready·기존 멸망전 조회·관리자 인증 경계·효과음 3종 정상. [운영 확인](./production-smoke.json), [후보 확인](./candidate-smoke.json). 이전 1.0.0 증거는 당시 기록으로 보존한다.
 
 ## 변경
 

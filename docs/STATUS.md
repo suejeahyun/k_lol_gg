@@ -1,5 +1,12 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-25 멸망전 모집·단계 탐색 — 1.1.0 운영 반영
+
+- 칼바람·증바람: 포지션 선택 없이 총인원 모집·확정, 경매·선수 교체는 포지션 제한 없이 팀당 5명. 협곡의 포지션별 규칙 유지.
+- 상단 7단계 클릭으로 설정·신청·주장/포인트·경매·예선·본선·종료 기록 조회. URL·새로고침·뒤로가기 지원, 현재 단계만 운영 작업 노출. 카드·포인트·효과음 유지.
+- source `d76823e7`, tag `destruction-modes-v1.1.0`, Vercel `dpl_27ZTkVKoBKfFodPbKkyBzehAvCWy` READY·운영 smoke PASS. DB0046 nullable position 적용, 백업·로컬 복원·upgrade·재실행 확인.
+- 계약445·단위1009(+skip1), 실제 DB 세 모드 전체 흐름, 74화면·12상호작용·접근성·HTTP 인증 PASS. [검증·배포 근거](./qa-evidence/destruction-modes-v1.1.0-2026-09-25/README.md).
+
 ## 2026-09-25 협곡·칼바람·증바람 멸망전 — 1.0.0 운영 반영
 
 - source `e1a64ce0`, tag `destruction-modes-v1.0.0`, Vercel `dpl_E455CkTwiJBT8FwEbAYNBMQvfXpU` READY·운영 alias 일치·health ready. DB0045 유지, 스키마/운영 데이터 이관 없음.

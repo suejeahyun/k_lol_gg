@@ -1592,9 +1592,9 @@ E:\k-LOL.GG\worktrees\destruction-production-20260925\integrations\messengerbot-
   Finished TypeScript in 6.3s ...
   Collecting page data using 15 workers ...
   Generating static pages using 15 workers (0/94) ...
-  Generating static pages using 15 workers (23/94) 
-  Generating static pages using 15 workers (46/94) 
-  Generating static pages using 15 workers (70/94) 
+  Generating static pages using 15 workers (23/94)
+  Generating static pages using 15 workers (46/94)
+  Generating static pages using 15 workers (70/94)
 ✓ Generating static pages using 15 workers (94/94) in 252ms
   Finalizing page optimization ...
 
@@ -1983,4 +1983,3 @@ Route (app)
 
 ○  (Static)   prerendered as static content
 ƒ  (Dynamic)  server-rendered on demand
-
