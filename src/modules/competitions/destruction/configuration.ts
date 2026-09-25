@@ -31,6 +31,7 @@ export type DestructionConfiguration = Readonly<{
   rosterSize: 5;
   advanceTeamCount: 4;
   laneLimits: DestructionLaneLimits;
+  recruitmentLimit?: number;
 }>;
 
 const MODE_BY_PREFIX = {
@@ -57,7 +58,8 @@ export function validateDestructionConfiguration(input: Readonly<{
   preliminaryFormat: string;
   preliminaryRoundCount?: number;
   teamCount: number;
-  laneLimits: Readonly<Record<CompetitionPosition, number>>;
+  laneLimits?: Readonly<Record<CompetitionPosition, number>>;
+  recruitmentLimit?: number;
 }>): DestructionConfiguration {
   requireCompetition(input.gameMode === undefined || ["CLASSIC", "ARAM", "ARAM_MAYHEM"].includes(input.gameMode), "PRECONDITION_FAILED", "게임 모드를 확인해 주세요.");
   const parsed = parseFormat(input.preliminaryFormat);
@@ -75,16 +77,19 @@ export function validateDestructionConfiguration(input: Readonly<{
   );
 
   const laneLimits = Object.fromEntries(COMPETITION_POSITIONS.map((position) => {
-    const limit = input.laneLimits[position];
+    const limit = destructionUsesPositions(input) ? input.laneLimits?.[position] : input.teamCount;
     requireCompetition(
-      Number.isSafeInteger(limit) && limit >= input.teamCount && limit <= 99,
+      Number.isSafeInteger(limit) && limit! >= input.teamCount && limit! <= 99,
       "PRECONDITION_FAILED",
       `The ${position} applicant limit must be between the team count and 99.`,
     );
     return [position, limit];
   })) as Record<CompetitionPosition, number>;
 
+  const recruitmentLimit = input.recruitmentLimit ?? input.teamCount * 5;
+  requireCompetition(Number.isSafeInteger(recruitmentLimit) && recruitmentLimit >= input.teamCount * 5 && recruitmentLimit <= 495, "PRECONDITION_FAILED", "총 모집 상한은 참가 확정 인원 이상, 495명 이하로 입력해 주세요.");
   return Object.freeze({
+    ...(!destructionUsesPositions(input) ? { recruitmentLimit } : {}),
     ...(input.gameMode ? { gameMode: input.gameMode } : {}),
     preliminaryFormat: input.preliminaryFormat as DestructionPreliminaryFormat,
     preliminaryMode: parsed.mode,
@@ -96,4 +101,13 @@ export function validateDestructionConfiguration(input: Readonly<{
     advanceTeamCount: 4,
     laneLimits: Object.freeze(laneLimits),
   });
+}
+
+/** Older competitions without a mode retain the Rift position rules. */
+export function destructionUsesPositions(configuration?: Pick<DestructionConfiguration, "gameMode">) {
+  return (configuration?.gameMode ?? "CLASSIC") === "CLASSIC";
+}
+
+export function destructionRecruitmentLimit(configuration: DestructionConfiguration) {
+  return configuration.recruitmentLimit ?? Object.values(configuration.laneLimits).reduce((sum, count) => sum + count, 0);
 }

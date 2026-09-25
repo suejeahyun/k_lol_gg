@@ -37,6 +37,9 @@ test("destruction detail deep links retain only valid section-bound values", () 
 
 test("administrator live auction view requires the complete exact pair", () => {
   assert.equal(parseDestructionAdminDetailView(new URLSearchParams()), "default");
+  for (const stage of ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT", "COMPLETED"]) assert.equal(parseDestructionAdminDetailView(new URLSearchParams({ stage })), "default");
+  assert.equal(parseDestructionAdminDetailView(new URLSearchParams("stage=INVALID")), null);
+  assert.equal(parseDestructionAdminDetailView(new URLSearchParams("stage=AUCTION&stage=PLANNED")), null);
   assert.equal(parseDestructionAdminDetailView(new URLSearchParams("tab=auction&mode=live")), "auction-live");
   assert.equal(parseDestructionAdminDetailView(new URLSearchParams("tab=auction")), null);
   assert.equal(parseDestructionAdminDetailView(new URLSearchParams("tab=auction&mode=live&next=/admin")), null);

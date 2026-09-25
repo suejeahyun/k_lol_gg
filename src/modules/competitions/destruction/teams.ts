@@ -1,3 +1,4 @@
+import { destructionUsesPositions } from "./configuration";
 import {
   COMPETITION_POSITIONS,
   canonicalIdentifier,
@@ -9,7 +10,7 @@ import { requireCompetition } from "../core/error";
 export type DestructionParticipant = Readonly<{
   id: string;
   playerId: string;
-  position: CompetitionPosition;
+  position: CompetitionPosition | null;
   isCaptain: boolean;
   teamId: string | null;
   auctionStatus: "PENDING" | "DRAWN" | "HOLD" | "SOLD" | "ASSIGNED";
@@ -39,6 +40,7 @@ export type CaptainSelection = Readonly<{
 export function confirmDestructionTeams(
   participants: readonly DestructionParticipant[],
   selections: readonly CaptainSelection[],
+  configuration?: Pick<import("./configuration").DestructionConfiguration, "gameMode">,
 ): Readonly<{ teams: readonly DestructionTeam[]; participants: readonly DestructionParticipant[] }> {
   requireCompetition(selections.length >= 4 && participants.length === selections.length * 5, "PRECONDITION_FAILED", "Confirmed teams require exactly five participants per team.");
   const participantById = new Map(participants.map((participant) => [participant.id, participant]));
@@ -73,7 +75,7 @@ export function confirmDestructionTeams(
   const assignedParticipants = participants.map((participant) => {
     canonicalIdentifier(participant.id, "participantId");
     canonicalIdentifier(participant.playerId, "playerId");
-    requireCompetition(COMPETITION_POSITIONS.includes(participant.position), "INVALID_ROSTER", "Every participant needs a competition position.");
+    requireCompetition(!destructionUsesPositions(configuration) || (participant.position !== null && COMPETITION_POSITIONS.includes(participant.position)), "INVALID_ROSTER", "Every participant needs a competition position.");
     requireCompetition(participant.teamId === null && participant.auctionStatus === "PENDING", "INVALID_TRANSITION", "Team confirmation starts from an unassigned participant pool.");
     const teamId = captainTeamByParticipantId.get(participant.id) ?? null;
     return Object.freeze({
@@ -92,10 +94,11 @@ export function confirmDestructionTeams(
 export function validateConfirmedDestructionRosters(
   teams: readonly DestructionTeam[],
   participants: readonly DestructionParticipant[],
+  configuration?: Pick<import("./configuration").DestructionConfiguration, "gameMode">,
 ) {
   for (const team of teams) {
     validateCompetitionRoster({
-      format: "POSITIONAL",
+      format: destructionUsesPositions(configuration) ? "POSITIONAL" : "ARAM",
       requireCaptain: true,
       members: participants.filter((participant) => participant.teamId === team.id).map((participant) => ({
         participantId: participant.id,

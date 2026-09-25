@@ -1,0 +1,1 @@
+ALTER TABLE "competition"."destruction_application_index" ALTER COLUMN "position" DROP NOT NULL;

@@ -86,3 +86,23 @@ test("optional schedule preserves old snapshots and rejects reversed or invalid 
   assert.throws(() => validateDestructionSchedule({ ...EMPTY_DESTRUCTION_SCHEDULE, auctionStartsAt: "not-a-date" }));
   assert.throws(() => validateDestructionSchedule({ ...EMPTY_DESTRUCTION_SCHEDULE, unexpected: true }));
 });
+
+test("positionless recruitment and auction preserve headcount and money without imposing roles", () => {
+  for (const gameMode of ["ARAM", "ARAM_MAYHEM"] as const) {
+    const base = aggregate();
+    const configuration = validateDestructionConfiguration({ gameMode, teamCount: 4, recruitmentLimit: 24, preliminaryFormat: "FULL_ROUND_ROBIN_BO1" });
+    const participants = base.participants.map((p) => ({ ...p, position: null }));
+    const current = { ...base, configuration, participants, applications: base.applications.map((p) => ({ ...p, position: null })) };
+    assert.deepEqual(destructionRecruitment(current), [{ position: null, applied: 20, confirmed: 20, limit: 24, required: 20 }]);
+    assert.equal(destructionReadiness(current).ready, true);
+    const state = { configuration, seed: base.auctionSeed!, teams: base.teams, participants: participants.map((p) => p.isCaptain ? p : { ...p, teamId: null, purchasePoints: null, minimumBid: 300, auctionStatus: p.id === "participant-1" ? "DRAWN" as const : "PENDING" as const }) };
+    const option = auctionTeamEligibility(state, "participant-1")[0]!;
+    assert.equal(option.reason, null); assert.equal(option.maximum, 600);
+    assert.throws(() => sellAuctionParticipant(state, { participantId: "participant-1", teamId: "team-0", purchasePoints: 601 }), /최소 입찰가/);
+    const sold = sellAuctionParticipant(state, { participantId: "participant-1", teamId: "team-0", purchasePoints: 600 });
+    assert.equal(sold.teams[0]!.remainingAuctionPoints, 900);
+    const full = { ...state, participants: state.participants.map((p, i) => i >= 2 && i <= 5 ? { ...p, teamId: "team-0", purchasePoints: 300, auctionStatus: "SOLD" as const } : p) };
+    assert.throws(() => sellAuctionParticipant(full, { participantId: "participant-1", teamId: "team-0", purchasePoints: 300 }), /already full|exceed five/);
+    assert.throws(() => validateDestructionConfiguration({ gameMode, teamCount: 4, recruitmentLimit: 19, preliminaryFormat: "FULL_ROUND_ROBIN_BO1" }));
+  }
+});

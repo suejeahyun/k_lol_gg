@@ -73,7 +73,7 @@ export type DestructionPublicTeamDto = Readonly<{
     participantId: string;
     playerId: string;
     playerName: string;
-    position: string;
+    position: string | null;
     isCaptain: boolean;
     auctionStatus: string;
     purchasePoints: number | null;
@@ -114,7 +114,7 @@ export type DestructionPublicDto = Readonly<{
   teamCount: number;
   gameMode: import("./aram-rating").DestructionGameMode;
   auctionRatings: readonly Readonly<{ playerName: string; tier: string; games: number; wins: number; losses: number; minimumBid: number; captainPoints: number; provisional: boolean; source: string; fetchedAt: string }>[];
-  unassignedPlayers: readonly Readonly<{ participantId: string; playerId: string; playerName: string; position: string; teamName: string; isCaptain: boolean; purchasePoints: number | null }>[];
+  unassignedPlayers: readonly Readonly<{ participantId: string; playerId: string; playerName: string; position: string | null; teamName: string; isCaptain: boolean; purchasePoints: number | null }>[];
   schedule: DestructionSchedule;
   recruitment: ReturnType<typeof destructionRecruitment>;
   standings: ReturnType<typeof destructionStandings>;
@@ -202,7 +202,7 @@ export function toDestructionPublicDto(
           isCaptain: participant.isCaptain,
           auctionStatus: participant.auctionStatus,
           purchasePoints: participant.purchasePoints,
-        })).sort((left, right) => left.position.localeCompare(right.position, "en-US") || left.playerName.localeCompare(right.playerName, "ko-KR"))),
+        })).sort((left, right) => (left.position ?? "").localeCompare(right.position ?? "", "en-US") || left.playerName.localeCompare(right.playerName, "ko-KR"))),
       });
     })),
     preliminaryFixtures: Object.freeze([...aggregate.preliminaryFixtures].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0).map((fixture) => Object.freeze({

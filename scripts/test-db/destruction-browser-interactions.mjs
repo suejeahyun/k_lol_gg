@@ -13,7 +13,7 @@ async function port() {
   return number;
 }
 
-export async function runDestructionBrowserInteractions({ origin, tournamentId, mayhemId, adminToken, output, root }) {
+export async function runDestructionBrowserInteractions({ origin, tournamentId, mayhemId, accountToken, recruitingIds, adminToken, output, root }) {
   const debugPort = await port();
   const parent = resolve(tmpdir());
   const profile = await mkdtemp(join(parent, "klol-destruction-browser-"));
@@ -43,7 +43,7 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
       pending.set(id, { done, reject, timer }); socket.send(JSON.stringify({ id, method, params }));
     });
     const evaluate = async (expression) => { const response = await call("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true, userGesture: true }); if (response.exceptionDetails) throw new Error(response.exceptionDetails.text); return response.result.value; };
-    const until = async (expression) => { for (let i = 0; i < 70; i += 1) { if (await evaluate(expression)) return; await new Promise((done) => setTimeout(done, 150)); } await writeFile(join(output, "interaction-failure.json"), JSON.stringify(await evaluate("({text: document.body.innerText, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, sounds: window.__auctionSounds, phase: document.querySelector('[data-auction-phase]')?.dataset.auctionPhase})"), null, 2)); throw new Error(`UI did not become ready: ${expression}`); };
+    const until = async (expression) => { for (let i = 0; i < 70; i += 1) { if (await evaluate(expression)) return; await new Promise((done) => setTimeout(done, 150)); } await writeFile(join(output, "interaction-failure.json"), JSON.stringify(await evaluate("({url: location.href, history: history.length, text: document.body.innerText, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, sounds: window.__auctionSounds, phase: document.querySelector('[data-auction-phase]')?.dataset.auctionPhase})"), null, 2)); throw new Error(`UI did not become ready: ${expression}`); };
     const click = (label) => evaluate(`(() => { const button = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(label)}); if (!button || button.disabled) throw Error('button unavailable'); button.click(); })()`);
     const current = async () => { const response = await fetch(`${origin}/api/admin/competitions/destruction/${tournamentId}`, { headers: { Cookie: `klol_v2_session=${adminToken}` } }); assert.equal(response.status, 200); return (await response.json()).destruction; };
     await call("Page.enable"); await call("Runtime.enable"); await call("Network.enable");
@@ -135,6 +135,40 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
     await until("document.body.innerText.includes('운영자 확인') && document.body.innerText.includes('100판 55승 45패')");
     assert.equal(await evaluate("document.body.innerText.includes('합성 전적 클라이언트')"), false);
     report.push("증바람 공개 화면: 운영자 확인 출처·등급 공개, 관리자 확인 근거 비공개");
+    await call("Page.navigate", { url: origin + "/admin/progress/destruction/" + tournamentId });
+    await until("document.querySelector('[data-selected-stage=AUCTION]') !== null && document.body.innerText.includes('연결됨')");
+    for (const stage of ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT", "COMPLETED"]) {
+      await evaluate("document.querySelector('nav[aria-label=\"멸망전 진행 단계\"] a[href=\"?stage=" + stage + "\"]').click()");
+      await until("document.querySelector('[data-selected-stage=" + stage + "]') !== null && new URL(location.href).searchParams.get('stage') === '" + stage + "'");
+      if (stage !== "AUCTION") assert.equal(await evaluate("document.querySelector('input[name=purchasePoints]') === null"), true);
+    }
+    await evaluate("window.__beforeStageReload = true");
+    await call("Page.reload");
+    await until("window.__beforeStageReload === undefined && document.querySelector('[data-selected-stage=COMPLETED]') !== null && document.body.innerText.includes('연결됨')");
+    await evaluate("history.back()");
+    await until("document.querySelector('[data-selected-stage=TOURNAMENT]') !== null");
+    assert.equal((await current()).revision, drawnRevision);
+    report.push("7단계 클릭·URL·새로고침·뒤로가기: 단계별 화면 조회, 경매 revision 변경 없음");
+    await call("Page.navigate", { url: origin + "/admin/progress/destruction/new" });
+    await until("document.querySelector('select[name=gameMode]') !== null");
+    for (const mode of ["ARAM", "ARAM_MAYHEM", "CLASSIC"]) {
+      await evaluate("(() => { const el = document.querySelector('select[name=gameMode]'); el.value = '" + mode + "'; el.dispatchEvent(new Event('change', {bubbles:true})); })()");
+      await until(mode === "CLASSIC" ? "document.querySelector('input[name=TOP]') !== null && !document.querySelector('input[name=recruitmentLimit]')" : "document.querySelector('input[name=recruitmentLimit]') !== null && !document.querySelector('input[name=TOP]')");
+    }
+    report.push("생성 화면: 칼바람·증바람은 총 모집 상한, 협곡은 포지션별 상한");
+    await call("Network.setCookie", { name: "klol_v2_account_session", value: accountToken, url: origin, httpOnly: true, sameSite: "Strict" });
+    for (const id of recruitingIds) {
+      await call("Page.navigate", { url: origin + "/competitions/destruction/" + id });
+      await until("document.body.innerText.includes('포지션 구분 없이 참가 신청합니다.')");
+      assert.equal(await evaluate("document.querySelector('select[name=position]') === null"), true);
+      await click("신청 수정");
+      await until("document.body.innerText.includes('작업을 반영했습니다.')");
+      const response = await fetch(origin + "/api/admin/competitions/destruction/" + id, {headers:{Cookie:"klol_v2_session="+adminToken}});
+      const state = (await response.json()).destruction;
+      assert.equal(state.revision, 2); assert.ok(state.applications.every(p => p.position === null));
+    }
+    report.push("칼바람·증바람 로그인 신청 폼: 포지션 선택 없이 실제 HTTP 저장 성공");
+    assert.deepEqual(exceptions, []);
     await writeFile(join(output, "interactions.json"), JSON.stringify({ passed: report, accessibility, exceptions }, null, 2));
     await call("Browser.close");
   } finally {

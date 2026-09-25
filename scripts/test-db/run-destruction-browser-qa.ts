@@ -15,7 +15,7 @@ import { runDestructionBrowserInteractions } from "./destruction-browser-interac
 
 const execFile = promisify(execFileCallback);
 const root = resolve(import.meta.dirname, "../..");
-const output = resolve(root, "docs/qa/destruction-rebuild-2026-09-25");
+const output = resolve(root, "docs/qa/destruction-navigation-recruitment-2026-09-25");
 const cluster = await startEphemeralCluster();
 const pool = new Pool({ connectionString: cluster.connectionString });
 let server: ReturnType<typeof spawn> | undefined;
@@ -49,7 +49,7 @@ try {
   scenarios["aram-completed"] = aramRow.id;
   const mayhemSource = (await pool.query<{ aggregate_json: DestructionAggregate }>("select aggregate_json from competition.destruction_competitions where id=$1", [scenarios.team_building])).rows[0]!.aggregate_json;
   const mayhemId = randomUUID();
-  const mayhemAggregate = { ...mayhemSource, id: mayhemId, title: "증바람 멸망전 · 전적 준비 대기", configuration: { ...mayhemSource.configuration, gameMode: "ARAM_MAYHEM" } };
+  const mayhemAggregate = { ...mayhemSource, participants: mayhemSource.participants.map((p) => ({ ...p, position: null })), id: mayhemId, title: "증바람 멸망전 · 전적 준비 대기", configuration: { ...mayhemSource.configuration, gameMode: "ARAM_MAYHEM" } };
   await pool.query("insert into competition.destruction_competitions (id,title,title_normalized,status,preliminary_format,team_count,participant_count,aggregate_json,revision,created_by_user_account_id,updated_by_user_account_id,created_at,updated_at) values ($1,$2,$2,'TEAM_BUILDING',$3,4,20,$4,1,$5,$5,now(),now())", [mayhemId, mayhemAggregate.title, mayhemAggregate.configuration.preliminaryFormat, JSON.stringify(mayhemAggregate), source.created_by_user_account_id]);
   scenarios["mayhem-pending"] = mayhemId;
   for (const mode of ["ARAM", "ARAM_MAYHEM"] as const) {
@@ -59,6 +59,14 @@ try {
     const snapshot = { ...completed, id, revision: 1, title: mode + " · 경매 연출 검증", lifecycle: { status: "AUCTION", cancelledFrom: null, cancellationReason: null }, tournamentBracket: null, preliminaryFixtures: [], mvpBallots: [], rosterSnapshots: [], qualifiedTeamIds: [], teams: completed.teams.map((t) => ({ ...t, confirmed: false, remainingAuctionPoints: t.initialAuctionPoints })), participants: completed.participants.map((p) => p.isCaptain ? p : { ...p, teamId: null, purchasePoints: null, drawOrder: p.id === first.id ? 1 : null, auctionStatus: p.id === first.id ? "DRAWN" : "PENDING" }) };
     await pool.query("insert into competition.destruction_competitions (id,title,title_normalized,status,preliminary_format,team_count,participant_count,aggregate_json,revision,created_by_user_account_id,updated_by_user_account_id,created_at,updated_at) values ($1,$2,$2,'AUCTION',$3,4,20,$4,1,$5,$5,now(),now())", [id, snapshot.title, snapshot.configuration.preliminaryFormat, JSON.stringify(snapshot), source.created_by_user_account_id]);
     scenarios[mode === "ARAM" ? "aram-auction" : "mayhem-auction"] = id;
+  }
+  for (const gameMode of ["ARAM", "ARAM_MAYHEM"] as const) {
+    const id = randomUUID();
+    const original = (await pool.query<{ aggregate_json: DestructionAggregate }>("select aggregate_json from competition.destruction_competitions where id=$1", [scenarios.recruiting])).rows[0]!.aggregate_json;
+    const snapshot = { ...original, id, configuration: { ...original.configuration, gameMode, recruitmentLimit: 40 }, applications: original.applications.map((p) => ({ ...p, position: null })) };
+    await pool.query("insert into competition.destruction_competitions (id,title,title_normalized,status,preliminary_format,team_count,participant_count,aggregate_json,revision,created_by_user_account_id,updated_by_user_account_id,created_at,updated_at) values ($1,$2,$2,'RECRUITING',$3,4,0,$4,1,$5,$5,now(),now())", [id, gameMode + " 모집 검증", snapshot.configuration.preliminaryFormat, JSON.stringify(snapshot), source.created_by_user_account_id]);
+    for (const app of snapshot.applications) await pool.query("insert into competition.destruction_application_index (tournament_id,application_id,owner_user_account_id,player_id,position,status,updated_at) values ($1,$2,$3,$4,null,$5,now())", [id, app.id, app.userAccountId, app.playerId, app.status]);
+    scenarios[gameMode === "ARAM" ? "aram-recruiting" : "mayhem-recruiting"] = id;
   }
   const signingKeys = JSON.stringify({ current: "qa", keys: { qa: randomBytes(32).toString("base64url") } });
   const codec = new JoseSessionCodec(parseSessionSigningKeyring(signingKeys));
@@ -94,7 +102,7 @@ try {
     { path: `/competitions/destruction/${id}`, name: `${name}-public-${width}`, expectedRedirect: { destination: `/competitions/destruction/${id}` }, viewport: { width, height: 1000, mobile: width === 390 } },
     { path: `/admin/progress/destruction/${id}`, name: `${name}-admin-${width}`, session: "admin", expectedRedirect: { destination: `/admin/progress/destruction/${id}` }, viewport: { width, height: 1000, mobile: width === 390 } },
   ]));
-  for (const width of [390, 1440]) for (const name of ["recruiting", "preliminary"]) routes.push({ path: `/competitions/destruction/${scenarios[name]}`, name: `${name}-account-${width}`, session: "account", expectedRedirect: { destination: `/competitions/destruction/${scenarios[name]}` }, viewport: { width, height: 1000, mobile: width === 390 } });
+  for (const width of [390, 1440]) for (const name of ["recruiting", "preliminary", "aram-recruiting", "mayhem-recruiting"]) routes.push({ path: `/competitions/destruction/${scenarios[name]}`, name: `${name}-account-${width}`, session: "account", expectedRedirect: { destination: `/competitions/destruction/${scenarios[name]}` }, viewport: { width, height: 1000, mobile: width === 390 } });
   const plan = resolve(output, "capture-plan.json");
   await writeFile(plan, JSON.stringify(routes, null, 2));
   console.log(`[destruction-browser] capturing ${routes.length} pages at ${origin}`);
@@ -104,7 +112,7 @@ try {
   await writeFile(resolve(output, "server.log"), serverLog);
   console.log("[destruction-browser] captures complete");
   if (failures.length) throw new Error(`Browser QA failures: ${JSON.stringify(failures.map(({ name, issues }) => ({ name, issues })))}`);
-  await runDestructionBrowserInteractions({ origin, tournamentId: scenarios.auction, mayhemId, adminToken: token, output, root });
+  await runDestructionBrowserInteractions({ origin, tournamentId: scenarios.auction, mayhemId, accountToken, recruitingIds: [scenarios["aram-recruiting"], scenarios["mayhem-recruiting"]], adminToken: token, output, root });
   console.log("[destruction-browser] interactions and accessibility passed");
 } finally {
   if (server && server.exitCode === null) {

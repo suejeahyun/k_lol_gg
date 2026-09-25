@@ -1,9 +1,11 @@
+import { destructionUsesPositions } from "./configuration";
 import { COMPETITION_POSITIONS } from "../core/roster";
 import { compareCanonicalIdentifiers, requireCompetition } from "../core/error";
 import type { DestructionParticipant, DestructionTeam } from "./teams";
 
 export type DestructionAuctionState = Readonly<{
   seed: string;
+  configuration?: Pick<import("./configuration").DestructionConfiguration, "gameMode">;
   teams: readonly DestructionTeam[];
   participants: readonly DestructionParticipant[];
 }>;
@@ -27,7 +29,7 @@ function assertAuctionState(state: DestructionAuctionState) {
     requireCompetition(Number.isSafeInteger(team.remainingAuctionPoints) && team.remainingAuctionPoints >= 0 && team.remainingAuctionPoints <= team.initialAuctionPoints, "PRECONDITION_FAILED", "Team auction balances must stay within their initial balance.");
     const roster = state.participants.filter((participant) => participant.teamId === team.id);
     requireCompetition(roster.length <= 5, "INVALID_ROSTER", "A team cannot exceed five participants.");
-    requireCompetition(new Set(roster.map((member) => member.position)).size === roster.length, "INVALID_ROSTER", "A team cannot contain duplicate positions.");
+    requireCompetition(!destructionUsesPositions(state.configuration) || new Set(roster.map((member) => member.position)).size === roster.length, "INVALID_ROSTER", "A team cannot contain duplicate positions.");
   }
   for (const participant of state.participants) {
     requireCompetition(!playerIds.has(participant.playerId), "DUPLICATE_ID", "A player cannot appear twice in the auction.");
@@ -44,6 +46,7 @@ function assertAuctionState(state: DestructionAuctionState) {
 function freezeAuction(state: DestructionAuctionState): DestructionAuctionState {
   const frozen = Object.freeze({
     seed: state.seed,
+    configuration: state.configuration,
     teams: Object.freeze(state.teams.map((team) => Object.freeze({ ...team })).sort((left, right) => compareCanonicalIdentifiers(left.id, right.id))),
     participants: Object.freeze(state.participants.map((participant) => Object.freeze({ ...participant })).sort((left, right) => compareCanonicalIdentifiers(left.id, right.id))),
   });
@@ -74,7 +77,12 @@ export function holdAuctionParticipant(state: DestructionAuctionState, participa
   return freezeAuction({ ...state, participants: state.participants.map((entry) => entry.id === participantId ? { ...entry, auctionStatus: "HOLD", teamId: null, purchasePoints: null } : entry) });
 }
 
-export function remainingRosterReserve(state: Pick<DestructionAuctionState, "participants">, teamId: string, selected: DestructionParticipant) {
+export function remainingRosterReserve(state: Pick<DestructionAuctionState, "participants" | "configuration">, teamId: string, selected: DestructionParticipant) {
+  if (!destructionUsesPositions(state.configuration)) {
+    const slots = Math.max(0, 4 - state.participants.filter((p) => p.teamId === teamId).length);
+    const bids = state.participants.filter((p) => p.teamId === null && p.id !== selected.id).map((p) => p.minimumBid ?? 1).sort((a, b) => b - a);
+    return Array.from({ length: slots }, (_, i) => bids[i] ?? 1).reduce((sum, bid) => sum + bid, 0);
+  }
   const occupied = new Set(state.participants.filter((p) => p.teamId === teamId).map((p) => p.position));
   occupied.add(selected.position);
   return COMPETITION_POSITIONS.filter((position) => !occupied.has(position)).reduce((sum, position) => {
@@ -95,8 +103,8 @@ export function sellAuctionParticipant(
   requireCompetition(Number.isSafeInteger(input.purchasePoints) && input.purchasePoints >= (participant.minimumBid ?? 1) && input.purchasePoints <= team.remainingAuctionPoints, "PRECONDITION_FAILED", "The purchase value must be positive and cannot exceed the team balance.");
   const roster = state.participants.filter((entry) => entry.teamId === team.id);
   requireCompetition(roster.length < 5, "INVALID_ROSTER", "The auction team is already full.");
-  requireCompetition(!roster.some((entry) => entry.position === participant.position), "INVALID_ROSTER", "The auction team already has this position.");
-  requireCompetition(input.purchasePoints <= team.remainingAuctionPoints - remainingRosterReserve(state, team.id, participant), "PRECONDITION_FAILED", "남은 포지션 선수의 최소 입찰가를 충당할 포인트를 남겨야 합니다.");
+  requireCompetition(!destructionUsesPositions(state.configuration) || !roster.some((entry) => entry.position === participant.position), "INVALID_ROSTER", "The auction team already has this position.");
+  requireCompetition(input.purchasePoints <= team.remainingAuctionPoints - remainingRosterReserve(state, team.id, participant), "PRECONDITION_FAILED", "남은 선수의 최소 입찰가를 충당할 포인트를 남겨야 합니다.");
   return freezeAuction({
     ...state,
     teams: state.teams.map((entry) => entry.id === team.id ? { ...entry, remainingAuctionPoints: entry.remainingAuctionPoints - input.purchasePoints } : entry),
@@ -104,14 +112,14 @@ export function sellAuctionParticipant(
   });
 }
 
-export function auctionTeamEligibility(state: Pick<DestructionAuctionState, "teams" | "participants">, participantId: string) {
+export function auctionTeamEligibility(state: Pick<DestructionAuctionState, "teams" | "participants" | "configuration">, participantId: string) {
   const participant = state.participants.find((entry) => entry.id === participantId);
   return state.teams.map((team) => {
     const roster = state.participants.filter((entry) => entry.teamId === team.id);
     const maximum = Math.max(0, team.remainingAuctionPoints - (participant ? remainingRosterReserve(state, team.id, participant) : 0));
     const reason = !participant || participant.auctionStatus !== "DRAWN" ? "추첨된 선수가 없습니다."
       : roster.length >= 5 ? "로스터가 가득 찼습니다."
-        : roster.some((entry) => entry.position === participant.position) ? "같은 포지션의 선수가 있습니다."
+        : destructionUsesPositions(state.configuration) && roster.some((entry) => entry.position === participant.position) ? "같은 포지션의 선수가 있습니다."
           : maximum < (participant.minimumBid ?? 1) ? "남은 선수를 충원할 포인트가 부족합니다." : null;
     return { teamId: team.id, maximum, reason };
   });

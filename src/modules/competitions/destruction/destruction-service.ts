@@ -1,3 +1,4 @@
+import { destructionUsesPositions } from "./configuration";
 import { createHash } from "node:crypto";
 
 import { COMPETITION_POSITIONS, type CompetitionPosition } from "../core";
@@ -46,16 +47,17 @@ function finite(value: unknown, minimum: number, maximum: number) {
   return value;
 }
 
-function position(value: unknown): CompetitionPosition {
+function position(value: unknown): CompetitionPosition | null {
+  if (value === null || value === undefined) return null;
   if (!COMPETITION_POSITIONS.includes(value as never)) throw new TypeError("INVALID_INPUT");
   return value as CompetitionPosition;
 }
 
 function configuration(value: unknown) {
-  const body = record(value, ["gameMode", "preliminaryFormat", "preliminaryRoundCount", "teamCount", "laneLimits"]);
+  const body = record(value, ["gameMode", "preliminaryFormat", "preliminaryRoundCount", "teamCount", "laneLimits", "recruitmentLimit"]);
   if (!DESTRUCTION_PRELIMINARY_FORMATS.includes(body.preliminaryFormat as never)) throw new TypeError("INVALID_INPUT");
   const teamCount = integer(body.teamCount, 4, 99);
-  const laneInput = record(body.laneLimits, [...COMPETITION_POSITIONS]);
+  const laneInput = destructionUsesPositions(body as { gameMode?: import("./aram-rating").DestructionGameMode }) ? record(body.laneLimits, [...COMPETITION_POSITIONS]) : Object.fromEntries(COMPETITION_POSITIONS.map((lane) => [lane, teamCount]));
   const laneLimits = Object.fromEntries(COMPETITION_POSITIONS.map((lane) => [lane, integer(laneInput[lane], teamCount, 99)])) as Record<CompetitionPosition, number>;
   return validateDestructionConfiguration({
     gameMode: body.gameMode as import("./aram-rating").DestructionGameMode | undefined,
@@ -63,6 +65,7 @@ function configuration(value: unknown) {
     preliminaryRoundCount: body.preliminaryRoundCount === undefined ? undefined : integer(body.preliminaryRoundCount, 1, 10),
     teamCount,
     laneLimits,
+    recruitmentLimit: body.recruitmentLimit === undefined ? undefined : integer(body.recruitmentLimit, teamCount * 5, 495),
   });
 }
 

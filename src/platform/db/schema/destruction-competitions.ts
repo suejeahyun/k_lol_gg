@@ -45,7 +45,7 @@ export const destructionApplicationIndex = competitionSchema.table("destruction_
   applicationId: uuid("application_id").notNull(),
   ownerUserAccountId: uuid("owner_user_account_id").notNull().references(() => userAccounts.id, { onDelete: "restrict" }),
   playerId: uuid("player_id").notNull().references(() => players.id, { onDelete: "restrict" }),
-  position: destructionPosition("position").notNull(),
+  position: destructionPosition("position"),
   status: destructionApplicationStatus("status").notNull(),
   updatedAt: timestamptz("updated_at").notNull(),
 }, (table) => [

@@ -1,3 +1,4 @@
+import { destructionUsesPositions, destructionRecruitmentLimit } from "./configuration";
 import { aramAuctionRating, type AramCollection, type AramRecord } from "./aram-rating";
 import { buildPreliminaryFixtures } from "./fixtures";
 import {
@@ -145,7 +146,7 @@ function ensureRosterSnapshotAndBallot(aggregate: DestructionAggregate, fixtureI
   let snapshot = snapshots.find((entry) => entry.fixtureId === fixtureId);
   if (!snapshot) {
     const teams = fixtureTeams(aggregate, fixtureId);
-    snapshot = captureFixtureRosterSnapshot({ fixtureId, ...teams, participants: aggregate.participants, capturedAt: now });
+    snapshot = captureFixtureRosterSnapshot({ configuration: aggregate.configuration, fixtureId, ...teams, participants: aggregate.participants, capturedAt: now });
     snapshots = Object.freeze([...snapshots, snapshot]);
   }
   const participantPlayerIds = [...snapshot.teamA, ...snapshot.teamB].map((member) => member.playerId);
@@ -161,6 +162,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
   }
   requireCompetition(current, "PRECONDITION_FAILED", "The destruction competition does not exist.");
 
+  const positional = destructionUsesPositions(current.configuration);
   switch (command.type) {
     case "SET_SCHEDULE": {
       requireCompetition(!["COMPLETED", "CANCELLED"].includes(current.lifecycle.status), "INVALID_TRANSITION", "진행 중인 대회만 일정을 변경할 수 있습니다.");
@@ -171,10 +173,12 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       const existing = current.applications.find((entry) => entry.userAccountId === command.metadata.authorizationIntent.ownerUserAccountId);
       requireCompetition(!existing || (existing.id === command.payload.applicationId && existing.playerId === command.payload.playerId), "DUPLICATE_ID", "Application identity cannot be moved to another player or ID.");
       requireCompetition(existing?.status !== "CONFIRMED", "INVALID_TRANSITION", "참가가 확정된 신청은 운영자에게 변경을 요청해 주세요.");
-      const occupied = current.applications.filter((entry) => entry !== existing && entry.position === command.payload.position && ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length;
-      requireCompetition(occupied < current.configuration.laneLimits[command.payload.position], "INVALID_ROSTER", "선택한 포지션의 모집 정원이 가득 찼습니다.");
+      const applicationPosition = positional ? command.payload.position : null;
+      requireCompetition(!positional || applicationPosition !== null, "INVALID_ROSTER", "협곡 참가 신청에는 포지션이 필요합니다.");
+      const occupied = current.applications.filter((entry) => entry !== existing && (!positional || entry.position === applicationPosition) && ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length;
+      requireCompetition(occupied < (positional ? current.configuration.laneLimits[applicationPosition!] : destructionRecruitmentLimit(current.configuration)), "INVALID_ROSTER", "모집 정원이 가득 찼습니다.");
       requireCompetition(!current.applications.some((entry) => entry !== existing && (entry.id === command.payload.applicationId || entry.playerId === command.payload.playerId)), "DUPLICATE_ID", "The application or player already exists.");
-      const next = Object.freeze({ id: command.payload.applicationId, userAccountId: command.metadata.authorizationIntent.ownerUserAccountId, playerId: command.payload.playerId, position: command.payload.position, status: "APPLIED" as const });
+      const next = Object.freeze({ id: command.payload.applicationId, userAccountId: command.metadata.authorizationIntent.ownerUserAccountId, playerId: command.payload.playerId, position: applicationPosition, status: "APPLIED" as const });
       return updated(current, now, { applications: Object.freeze([...current.applications.filter((entry) => entry !== existing), next]) });
     }
     case "CANCEL_OWN_APPLICATION": {
@@ -198,17 +202,17 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       requireCompetition(target, "PRECONDITION_FAILED", "The application does not exist.");
       requireCompetition(target.status !== "CANCELLED", "INVALID_TRANSITION", "취소된 신청은 심사할 수 없습니다. 선수가 다시 신청해야 합니다.");
       if (command.payload.status !== "REJECTED") {
-        const active = current.applications.filter((entry) => entry.id !== target.id && entry.position === target.position && ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length;
-        requireCompetition(active < current.configuration.laneLimits[target.position], "INVALID_ROSTER", "포지션 모집 상한을 초과할 수 없습니다.");
+        const active = current.applications.filter((entry) => entry.id !== target.id && (!positional || entry.position === target.position) && ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length;
+        requireCompetition(active < (positional ? current.configuration.laneLimits[target.position!] : destructionRecruitmentLimit(current.configuration)), "INVALID_ROSTER", "모집 상한을 초과할 수 없습니다.");
       }
-      if (command.payload.status === "CONFIRMED") requireCompetition(current.applications.filter((entry) => entry.id !== target.id && entry.position === target.position && entry.status === "CONFIRMED").length < current.configuration.teamCount, "INVALID_ROSTER", "포지션별 확정 인원은 팀 수를 초과할 수 없습니다.");
+      if (command.payload.status === "CONFIRMED") requireCompetition(current.applications.filter((entry) => entry.id !== target.id && (!positional || entry.position === target.position) && entry.status === "CONFIRMED").length < current.configuration.teamCount * (positional ? 1 : 5), "INVALID_ROSTER", "참가 확정 정원을 초과할 수 없습니다.");
       return updated(current, now, { applications: Object.freeze(current.applications.map((entry) => entry.id === target.id ? Object.freeze({ ...entry, status: command.payload.status }) : entry)) });
     }
     case "CLOSE_RECRUITMENT": {
       const confirmed = current.applications.filter((entry) => entry.status === "CONFIRMED");
       requireCompetition(confirmed.length === current.configuration.teamCount * 5, "PRECONDITION_FAILED", "Exactly five confirmed participants per team are required.");
-      for (const position of ["TOP", "JGL", "MID", "ADC", "SUP"] as const) requireCompetition(confirmed.filter((entry) => entry.position === position).length === current.configuration.teamCount, "INVALID_ROSTER", `Exactly one ${position} participant per team is required.`);
-      const participants = Object.freeze(confirmed.map((entry) => Object.freeze({ id: entry.id, playerId: entry.playerId, position: entry.position, isCaptain: false, teamId: null, auctionStatus: "PENDING" as const, purchasePoints: null, drawOrder: null })));
+      if (positional) for (const position of ["TOP", "JGL", "MID", "ADC", "SUP"] as const) requireCompetition(confirmed.filter((entry) => entry.position === position).length === current.configuration.teamCount, "INVALID_ROSTER", `Exactly one ${position} participant per team is required.`);
+      const participants = Object.freeze(confirmed.map((entry) => Object.freeze({ id: entry.id, playerId: entry.playerId, position: positional ? entry.position : null, isCaptain: false, teamId: null, auctionStatus: "PENDING" as const, purchasePoints: null, drawOrder: null })));
       return updated(current, now, { participants, lifecycle: transitionDestructionLifecycle(current.lifecycle, { type: "CLOSE_RECRUITMENT", participantsReady: true }) });
     }
     case "SYNC_ARAM_RECORD":
@@ -237,7 +241,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       requireCompetition(command.payload.captains.every((c) => current.participants.some((p) => p.id === c.participantId)), "PRECONDITION_FAILED", "주장 참가자를 확인해 주세요.");
       const captainPoints = (captain: (typeof command.payload.captains)[number]) => aram ? aramAuctionRating(current.participants.find((p) => p.id === captain.participantId)!.aramRecord!).captainPoints : calculateCaptainAuctionPoints(captain.baselineValue);
       requireCompetition(command.payload.captains.every((captain) => captainPoints(captain) >= 4), "PRECONDITION_FAILED", "각 팀은 선수 4명을 낙찰할 최소 4P가 필요합니다. 기준 가치를 확인해 주세요.");
-      const confirmed = confirmDestructionTeams(current.participants, command.payload.captains.map((captain) => ({ ...captain, initialAuctionPoints: captainPoints(captain) })));
+      const confirmed = confirmDestructionTeams(current.participants, command.payload.captains.map((captain) => ({ ...captain, initialAuctionPoints: captainPoints(captain) })), current.configuration);
       return updated(current, now, { ...confirmed, auctionSeed: command.payload.seed });
     }
     case "START_AUCTION": {
@@ -247,26 +251,26 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
     case "DRAW_AUCTION": {
       requireCompetition(!current.auctionPaused, "INVALID_TRANSITION", "경매를 재개한 뒤 추첨해 주세요.");
       requireCompetition(current.lifecycle.status === "AUCTION" && current.auctionSeed, "INVALID_TRANSITION", "The auction is not active.");
-      const state = drawAuctionParticipant({ seed: current.auctionSeed, teams: current.teams, participants: current.participants }).state;
+      const state = drawAuctionParticipant({ configuration: current.configuration, seed: current.auctionSeed, teams: current.teams, participants: current.participants }).state;
       return updated(current, now, { teams: state.teams, participants: state.participants });
     }
     case "HOLD_AUCTION": {
       requireCompetition(!current.auctionPaused, "INVALID_TRANSITION", "경매를 재개한 뒤 보류해 주세요.");
       requireCompetition(current.lifecycle.status === "AUCTION" && current.auctionSeed, "INVALID_TRANSITION", "The auction is not active.");
-      const state = holdAuctionParticipant({ seed: current.auctionSeed, teams: current.teams, participants: current.participants }, command.payload.participantId);
+      const state = holdAuctionParticipant({ configuration: current.configuration, seed: current.auctionSeed, teams: current.teams, participants: current.participants }, command.payload.participantId);
       return updated(current, now, { teams: state.teams, participants: state.participants });
     }
     case "SELL_AUCTION": {
       requireCompetition(!current.auctionPaused, "INVALID_TRANSITION", "경매를 재개한 뒤 낙찰해 주세요.");
       requireCompetition(current.lifecycle.status === "AUCTION" && current.auctionSeed, "INVALID_TRANSITION", "The auction is not active.");
-      const state = sellAuctionParticipant({ seed: current.auctionSeed, teams: current.teams, participants: current.participants }, command.payload);
+      const state = sellAuctionParticipant({ configuration: current.configuration, seed: current.auctionSeed, teams: current.teams, participants: current.participants }, command.payload);
       return updated(current, now, { teams: state.teams, participants: state.participants });
     }
     case "PUBLISH_PRELIMINARY": {
       requireCompetition(!current.auctionPaused, "INVALID_TRANSITION", "경매를 재개한 뒤 예선을 공개해 주세요.");
       requireCompetition(current.lifecycle.status === "AUCTION" && current.auctionSeed, "INVALID_TRANSITION", "Preliminaries publish after the auction.");
-      requireCompetition(isAuctionComplete({ seed: current.auctionSeed, teams: current.teams, participants: current.participants }), "PRECONDITION_FAILED", "The auction is not complete.");
-      validateConfirmedDestructionRosters(current.teams, current.participants);
+      requireCompetition(isAuctionComplete({ configuration: current.configuration, seed: current.auctionSeed, teams: current.teams, participants: current.participants }), "PRECONDITION_FAILED", "The auction is not complete.");
+      validateConfirmedDestructionRosters(current.teams, current.participants, current.configuration);
       const preliminaryFixtures = buildPreliminaryFixtures(current);
       return updated(current, now, { preliminaryFixtures, teams: current.teams.map((team) => ({ ...team, confirmed: true })), lifecycle: transitionDestructionLifecycle(current.lifecycle, { type: "PUBLISH_PRELIMINARY", auctionComplete: true, fixturesReady: preliminaryFixtures.length > 0 }) });
     }
@@ -299,7 +303,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
     }
     case "REPLACE_PARTICIPANT": {
       requireCompetition(current.lifecycle.status === "PRELIMINARY" || current.lifecycle.status === "TOURNAMENT", "INVALID_TRANSITION", "Roster replacements occur during active competition.");
-      const replacement = replaceDestructionParticipant({ ...command.payload, effectiveAt: now, participants: current.participants, replacements: current.replacements, fixtureSnapshots: current.rosterSnapshots });
+      const replacement = replaceDestructionParticipant({ ...command.payload, incomingPosition: positional ? command.payload.incomingPosition : null, configuration: current.configuration, effectiveAt: now, participants: current.participants, replacements: current.replacements, fixtureSnapshots: current.rosterSnapshots });
       return updated(current, now, { participants: replacement.participants, replacements: replacement.replacements });
     }
     case "RESET_MVP": {

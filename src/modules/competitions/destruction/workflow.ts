@@ -1,3 +1,4 @@
+import { destructionUsesPositions, destructionRecruitmentLimit } from "./configuration";
 import { COMPETITION_POSITIONS } from "../core/roster";
 import { recalculateStandings } from "../core/standings";
 import type { DestructionAggregate } from "./state";
@@ -7,7 +8,7 @@ export const DESTRUCTION_STATUS_LABEL = { PLANNED: "대회 준비", RECRUITING: 
 export const APPLICATION_STATUS_LABEL = { APPLIED: "심사 대기", CONFIRMED: "참가 확정", RESERVE: "예비 선수", REJECTED: "신청 거절", CANCELLED: "신청 취소" } as const;
 export const DESTRUCTION_STAGE_HELP = {
   PLANNED: "운영자가 모집을 시작하면 참가 신청을 할 수 있습니다.",
-  RECRUITING: "포지션별 모집 현황을 확인하고 참가 신청을 해 주세요.",
+  RECRUITING: "모집 현황을 확인하고 참가 신청을 해 주세요.",
   TEAM_BUILDING: "참가자가 확정되었습니다. 주장과 팀별 경매 포인트를 준비하고 있습니다.",
   AUCTION: "선수를 추첨하고 운영자가 낙찰 결과를 확정합니다. 팀별 포인트와 로스터를 확인하세요.",
   PRELIMINARY: "확정된 경기 결과로 예선 순위를 계산합니다. 경기 참가자는 MVP에 투표해 주세요.",
@@ -17,6 +18,13 @@ export const DESTRUCTION_STAGE_HELP = {
 } as const;
 
 export function destructionRecruitment(aggregate: Pick<DestructionAggregate, "applications" | "configuration">) {
+  if (!destructionUsesPositions(aggregate.configuration)) return [{
+    position: null,
+    applied: aggregate.applications.filter((entry) => ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length,
+    confirmed: aggregate.applications.filter((entry) => entry.status === "CONFIRMED").length,
+    limit: destructionRecruitmentLimit(aggregate.configuration),
+    required: aggregate.configuration.teamCount * 5,
+  }];
   return COMPETITION_POSITIONS.map((position) => ({
     position,
     applied: aggregate.applications.filter((entry) => entry.position === position && ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length,
@@ -48,7 +56,7 @@ export function destructionReadiness(aggregate: DestructionAggregate) {
   if (status === "PLANNED") { action = "START_RECRUITMENT"; label = "참가 모집 시작"; }
   if (status === "RECRUITING") {
     action = "CLOSE_RECRUITMENT"; label = "모집 마감·참가자 확정";
-    for (const lane of destructionRecruitment(aggregate)) if (lane.confirmed !== lane.required) blockers.push(`${lane.position} 확정 ${lane.confirmed}/${lane.required}명: 포지션별 정확히 ${lane.required}명이 필요합니다.`);
+    for (const lane of destructionRecruitment(aggregate)) if (lane.confirmed !== lane.required) blockers.push(`${lane.position ?? "전체"} 확정 ${lane.confirmed}/${lane.required}명: 정확히 ${lane.required}명이 필요합니다.`);
   }
   if (status === "TEAM_BUILDING") {
     action = "START_AUCTION"; label = "경매 시작";
@@ -63,7 +71,7 @@ export function destructionReadiness(aggregate: DestructionAggregate) {
     if (aggregate.teams.length !== aggregate.configuration.teamCount) blockers.push("설정된 팀 수와 편성된 팀 수가 다릅니다.");
     for (const team of aggregate.teams) {
       const roster = aggregate.participants.filter((entry) => entry.teamId === team.id);
-      if (roster.length !== 5 || new Set(roster.map((entry) => entry.position)).size !== 5) blockers.push(`${team.name}: 포지션별 1명씩 총 5명이 필요합니다.`);
+      if (roster.length !== 5 || (destructionUsesPositions(aggregate.configuration) && new Set(roster.map((entry) => entry.position)).size !== 5)) blockers.push(`${team.name}: ${destructionUsesPositions(aggregate.configuration) ? "포지션별 1명씩 " : ""}총 5명이 필요합니다.`);
     }
   }
   if (status === "PRELIMINARY") {

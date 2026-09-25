@@ -101,6 +101,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     result = await service.executeAdmin(context(adminActor, "ADMIN", "start"), tournamentId, revision, { type: "START_RECRUITMENT", payload: {} });
     revision = result.revision;
 
+    await assert.rejects(service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "rift-needs-position"), tournamentId, playerIds[0]!, revision, { applicationId: randomUUID(), position: null }), /포지션이 필요/);
     const applicationIds: string[] = [];
     for (let index = 0; index < playerIds.length; index += 1) {
       const applicationId = randomUUID(); applicationIds.push(applicationId);
@@ -121,10 +122,21 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
 
     // A second isolated tournament exercises mode-specific valuations against real transactions.
     const aramId = randomUUID();
-    const baseRow = (await database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)))[0]!;
-    const baseAggregate = (await adapter.getAdmin(tournamentId))!;
-    await database.insert(destructionCompetitions).values({ ...baseRow, id: aramId, title: "ARAM DB QA", titleNormalized: "aram db qa", aggregateJson: { ...baseAggregate, id: aramId, configuration: { ...baseAggregate.configuration, gameMode: "ARAM" } } });
-    let aramRevision = revision;
+    async function recruitPositionless(id: string, gameMode: "ARAM" | "ARAM_MAYHEM") {
+      let rev = (await service.create(context(adminActor, "ADMIN", "positionless-create"), { tournamentId: id, title: gameMode + " DB QA", configuration: { gameMode, teamCount: 4, recruitmentLimit: 20, preliminaryFormat: "FULL_ROUND_ROBIN_BO1" } })).revision;
+      rev = (await service.executeAdmin(context(adminActor, "ADMIN", "positionless-start"), id, rev, { type: "START_RECRUITMENT", payload: {} })).revision;
+      for (let i = 0; i < playerIds.length; i++) {
+        rev = (await service.upsertOwnApplication(context(ownerActors[i]!, "ACCOUNT", "no-position"), id, playerIds[i]!, rev, { applicationId: applicationIds[i], ...(i % 2 ? { position: null } : {}) })).revision;
+      }
+      assert.equal((await adapter.getPublic(id))!.recruitment.length, 1);
+      assert.equal((await adapter.getPublic(id))!.recruitment[0]!.applied, 20);
+      assert.equal((await pool.query("select count(*)::int as n from competition.destruction_application_index where tournament_id=$1 and position is null", [id])).rows[0].n, 20);
+      for (const applicationId of applicationIds) rev = (await service.executeAdmin(context(adminActor, "ADMIN", "no-position-confirm"), id, rev, { type: "SET_APPLICATION_STATUS", payload: { applicationId, status: "CONFIRMED" } })).revision;
+      rev = (await service.executeAdmin(context(adminActor, "ADMIN", "no-position-close"), id, rev, { type: "CLOSE_RECRUITMENT", payload: {} })).revision;
+      assert.ok((await adapter.getAdmin(id))!.participants.every((p) => p.position === null));
+      return rev;
+    }
+    let aramRevision = await recruitPositionless(aramId, "ARAM");
     const aramCaptains = [0, 6, 12, 18].map((index, i) => ({ teamId: randomUUID(), name: `칼바람 ${i + 1}팀`, participantId: applicationIds[index], baselineValue: 199 }));
     await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "aram-no-records"), aramId, aramRevision, { type: "CONFIRM_TEAMS", payload: { seed: "aram-qa-seed", captains: aramCaptains } }), /전적과 임시 등급/);
     let fetched = 0;
@@ -147,7 +159,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     aramRevision = (await aramService.executeAdmin(context(adminActor, "ADMIN", "aram-draw"), aramId, aramRevision, { type: "DRAW_AUCTION", payload: {} })).revision;
     const aramState = (await adapter.getAdmin(aramId))!;
     const aramDrawn = aramState.participants.find((p) => p.auctionStatus === "DRAWN")!;
-    const aramTeam = aramState.teams.find((t) => !aramState.participants.some((p) => p.teamId === t.id && p.position === aramDrawn.position))!;
+    const aramTeam = aramState.teams.find((t) => aramState.participants.filter((p) => p.teamId === t.id).length < 5)!;
     await assert.rejects(aramService.executeAdmin(context(adminActor, "ADMIN", "aram-cheap"), aramId, aramRevision, { type: "SELL_AUCTION", payload: { participantId: aramDrawn.id, teamId: aramTeam.id, purchasePoints: 249 } }));
     aramRevision = (await aramService.executeAdmin(context(adminActor, "ADMIN", "aram-sale"), aramId, aramRevision, { type: "SELL_AUCTION", payload: { participantId: aramDrawn.id, teamId: aramTeam.id, purchasePoints: 250 } })).revision;
     assert.equal((await adapter.getAdmin(aramId))!.teams.find((t) => t.id === aramTeam.id)!.remainingAuctionPoints, 1500);
@@ -155,8 +167,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     assert.equal(JSON.stringify(await adapter.getPublic(aramId)).includes("test-link"), false);
 
     const mayhemId = randomUUID();
-    await database.insert(destructionCompetitions).values({ ...baseRow, id: mayhemId, title: "Mayhem DB QA", titleNormalized: "mayhem db qa", aggregateJson: { ...baseAggregate, id: mayhemId, configuration: { ...baseAggregate.configuration, gameMode: "ARAM_MAYHEM" } } });
-    let mayhemRevision = revision;
+    let mayhemRevision = await recruitPositionless(mayhemId, "ARAM_MAYHEM");
     const verified = { participantId: applicationIds[0], mode: "ARAM_MAYHEM", wins: 55, losses: 45, evidence: "합성 전적 화면 최근 100판 · 2026-09-25 운영 확인" };
     assert.throws(() => service.executeAdmin(context(ownerActors[0]!, "ACCOUNT", "user-verification"), mayhemId, mayhemRevision, { type: "VERIFY_ARAM_RECORD", payload: verified }), /FORBIDDEN/);
     await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "wrong-mode"), mayhemId, mayhemRevision, { type: "VERIFY_ARAM_RECORD", payload: { ...verified, mode: "ARAM" } }), /모드가 일치/);
@@ -189,7 +200,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
         await run("DRAW_AUCTION");
         const drawnState = (await adapter.getAdmin(id))!;
         const drawn = drawnState.participants.find((p) => p.auctionStatus === "DRAWN")!;
-        const team = drawnState.teams.find((t) => !drawnState.participants.some((p) => p.teamId === t.id && p.position === drawn.position))!;
+        const team = drawnState.teams.find((t) => drawnState.participants.filter((p) => p.teamId === t.id).length < 5)!;
         assert.ok(drawn.minimumBid);
         await run("SELL_AUCTION", { participantId: drawn.id, teamId: team.id, purchasePoints: drawn.minimumBid });
       }
@@ -200,6 +211,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
         const ballot = (await adapter.getAdmin(id))!.mvpBallots.find((b) => b.fixtureId === f.id)!;
         await run("ASSIGN_MVP", { fixtureId: f.id, playerId: ballot.participantPlayerIds[0] });
       }
+      assert.ok((await adapter.getAdmin(id))!.rosterSnapshots.every((snapshot) => [...snapshot.teamA, ...snapshot.teamB].every((p) => p.position === null)));
       await run("PUBLISH_TOURNAMENT");
       for (;;) {
         const state = (await adapter.getAdmin(id))!;

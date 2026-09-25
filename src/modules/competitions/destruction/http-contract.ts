@@ -51,7 +51,7 @@ export type OwnDestructionApplicationDto = Readonly<{
   tournamentId: string;
   tournamentRevision: number;
   playerId: string;
-  position: CompetitionPosition;
+  position: CompetitionPosition | null;
   status: DestructionApplicationStatus;
 }>;
 
@@ -140,7 +140,7 @@ type AdminCommand<Type extends string, Payload> = Readonly<{
 }>;
 
 export type DestructionOwnerCommand =
-  | OwnerCommand<"UPSERT_OWN_APPLICATION", Readonly<{ applicationId: string; playerId: string; position: CompetitionPosition }>>
+  | OwnerCommand<"UPSERT_OWN_APPLICATION", Readonly<{ applicationId: string; playerId: string; position: CompetitionPosition | null }>>
   | OwnerCommand<"CANCEL_OWN_APPLICATION", Readonly<{ playerId: string }>>
   | OwnerCommand<"CAST_MVP_VOTE", Readonly<{ fixtureId: string; voterPlayerId: string; candidatePlayerId: string }>>;
 
@@ -168,7 +168,7 @@ export type DestructionAdminCommand =
   | AdminCommand<"PUBLISH_TOURNAMENT", Readonly<Record<string, never>>>
   | AdminCommand<"RECORD_TOURNAMENT_RESULT", ResultPayload>
   | AdminCommand<"CORRECT_TOURNAMENT_RESULT", ResultPayload>
-  | AdminCommand<"REPLACE_PARTICIPANT", Readonly<{ replacementId: string; participantId: string; incomingPlayerId: string; incomingPosition: CompetitionPosition; reason: string }>>
+  | AdminCommand<"REPLACE_PARTICIPANT", Readonly<{ replacementId: string; participantId: string; incomingPlayerId: string; incomingPosition: CompetitionPosition | null; reason: string }>>
   | AdminCommand<"RESET_MVP", Readonly<{ fixtureId: string }>>
   | AdminCommand<"ASSIGN_MVP", Readonly<{ fixtureId: string; playerId: string }>>
   | AdminCommand<"SET_MEDIA_GALLERY", Readonly<{ galleryId: string | null }>>

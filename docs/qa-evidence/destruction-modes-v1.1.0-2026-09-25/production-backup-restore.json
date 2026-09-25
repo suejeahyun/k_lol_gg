@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-09-25T11:16:08.916Z",
+  "targetFingerprint": "c5918218dd171001",
+  "sourceReadOnly": true,
+  "expectedSourceMigrationTag": "0045_simple_reptil",
+  "archive": ".private/recovery/positionless-20260925-f2b269dd-2df6-45aa-a4f4-46e34054548f/production-before.dump",
+  "privateRecoveryDirectory": ".private/recovery/positionless-20260925-f2b269dd-2df6-45aa-a4f4-46e34054548f",
+  "status": "PASS",
+  "sourceMigrationHeadConfirmed": true,
+  "backupMs": 102460,
+  "bytes": 16264088,
+  "sha256": "036355cec0c5f33fc7fb3037c33f5485d00ba83baef7d44841a7ed2bf847716e",
+  "archiveCatalogReadable": true,
+  "restoreMs": 7405,
+  "tables": 189,
+  "rowCountsMatch": true,
+  "columnsMatch": false,
+  "constraintsMatch": false,
+  "invalidConstraints": 0,
+  "migrationHead": {
+    "hash": "148e5d87c43830320c41b0c53c7ed1a29b7f6ce61bcfa7a6d3bffdec67b9594f",
+    "created_at": "1790288493617"
+  },
+  "migrationHeadMatches": true,
+  "providerPitrTested": false,
+  "retainedPrivateArchive": true,
+  "originalDatabaseChanged": false,
+  "clusterStopped": true,
+  "sourcePostgresVersion": "17.11 (8a81ecb)",
+  "restorePostgresVersion": "18.3",
+  "logicalColumnsMatch": true,
+  "sourceLogicalColumnsHash": "101c499550535c81af5ab1ace97c0577844845f0c883b7ce2fe71253de1157a4",
+  "restoredLogicalColumnsHash": "101c499550535c81af5ab1ace97c0577844845f0c883b7ce2fe71253de1157a4",
+  "logicalConstraintsMatch": true,
+  "constraintsCompared": 915,
+  "canonicalizedChecks": 23,
+  "unresolvedConstraintDifferences": 0,
+  "schemaComparisonNotes": [
+    "pg_dump compacts physical ordinal gaps left by dropped columns; logical column order/name/type/nullability/default are compared.",
+    "PostgreSQL 18 adds catalog NOT NULL constraints; nullability is verified in columns.",
+    "Source CHECK definitions are reparsed on the restored PostgreSQL version inside a rolled-back local transaction, then compared exactly."
+  ],
+  "schemaVerifiedAt": "2026-09-25T11:18:24.093Z",
+  "localUpgrade": {
+    "from": "0045_simple_reptil",
+    "to": "0046_overconfident_robbie_robertson",
+    "nullable": "YES",
+    "rowsPreserved": true,
+    "replayNoOp": true
+  }
+}

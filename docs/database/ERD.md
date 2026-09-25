@@ -6,7 +6,7 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `fef883e6b237361d4bffab51c3cd0a6dc61d2f30ebd3009a88407b2376593700`
+- Schema SHA-256: `daddcfc97d6c5c645de482052da21dc1818e52af3a116945e6e7099508c7d390`
 - Tables: 108
 - Foreign keys: 171
 - Regenerate: `npm run db:erd`
@@ -213,7 +213,7 @@ erDiagram
         uuid application_id PK "NOT NULL"
         uuid owner_user_account_id FK "NOT NULL"
         uuid player_id FK "NOT NULL"
-        destruction_position position "NOT NULL"
+        destruction_position position "nullable"
         destruction_application_status status "NOT NULL"
         timestamp_with_time_zone updated_at "NOT NULL"
     }

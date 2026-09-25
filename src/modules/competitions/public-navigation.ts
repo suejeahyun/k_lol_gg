@@ -1,3 +1,4 @@
+import { DESTRUCTION_STEPS } from "./destruction/workflow";
 export const COMPETITION_SAVED_VIEWS = ["event", "destruction"] as const;
 export type CompetitionSavedView = (typeof COMPETITION_SAVED_VIEWS)[number];
 
@@ -58,8 +59,9 @@ export function parseDestructionDetailView(input: URLSearchParams): DestructionD
 export type DestructionAdminDetailView = "default" | "auction-live";
 
 export function parseDestructionAdminDetailView(input: URLSearchParams): DestructionAdminDetailView | null {
-  if ([...input.keys()].some((key) => key !== "tab" && key !== "mode")) return null;
-  if (input.getAll("tab").length > 1 || input.getAll("mode").length > 1) return null;
+  if ([...input.keys()].some((key) => key !== "tab" && key !== "mode" && key !== "stage")) return null;
+  if (input.getAll("tab").length > 1 || input.getAll("mode").length > 1 || input.getAll("stage").length > 1) return null;
+  if (input.has("stage") && !DESTRUCTION_STEPS.includes(input.get("stage") as (typeof DESTRUCTION_STEPS)[number])) return null;
   const tab = input.get("tab");
   const mode = input.get("mode");
   if (tab === null && mode === null) return "default";

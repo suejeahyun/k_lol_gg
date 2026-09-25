@@ -1,3 +1,4 @@
+import { destructionUsesPositions } from "./configuration";
 import { canonicalIdentifier, validateCompetitionRoster, type CompetitionPosition } from "../core";
 import { requireCompetition } from "../core/error";
 import type { DestructionParticipant } from "./teams";
@@ -5,7 +6,7 @@ import type { DestructionParticipant } from "./teams";
 export type DestructionRosterSnapshotMember = Readonly<{
   participantId: string;
   playerId: string;
-  position: CompetitionPosition;
+  position: CompetitionPosition | null;
   isCaptain: boolean;
 }>;
 
@@ -24,8 +25,8 @@ export type DestructionReplacement = Readonly<{
   teamId: string;
   outgoingPlayerId: string;
   incomingPlayerId: string;
-  outgoingPosition: CompetitionPosition;
-  incomingPosition: CompetitionPosition;
+  outgoingPosition: CompetitionPosition | null;
+  incomingPosition: CompetitionPosition | null;
   reason: string;
   effectiveAt: string;
 }>;
@@ -40,6 +41,7 @@ export function captureFixtureRosterSnapshot(input: Readonly<{
   teamAId: string;
   teamBId: string;
   participants: readonly DestructionParticipant[];
+  configuration?: Pick<import("./configuration").DestructionConfiguration, "gameMode">;
   capturedAt: string;
 }>): DestructionFixtureRosterSnapshot {
   canonicalIdentifier(input.fixtureId, "fixtureId");
@@ -57,7 +59,7 @@ export function captureFixtureRosterSnapshot(input: Readonly<{
         position: participant.position,
         isCaptain: participant.isCaptain,
       }));
-    validateCompetitionRoster({ format: "POSITIONAL", members, requireCaptain: true });
+    validateCompetitionRoster({ format: destructionUsesPositions(input.configuration) ? "POSITIONAL" : "ARAM", members, requireCaptain: true });
     return Object.freeze(members);
   };
   return Object.freeze({
@@ -74,10 +76,11 @@ export function replaceDestructionParticipant(input: Readonly<{
   replacementId: string;
   participantId: string;
   incomingPlayerId: string;
-  incomingPosition: CompetitionPosition;
+  incomingPosition: CompetitionPosition | null;
   reason: string;
   effectiveAt: string;
   participants: readonly DestructionParticipant[];
+  configuration?: Pick<import("./configuration").DestructionConfiguration, "gameMode">;
   replacements: readonly DestructionReplacement[];
   fixtureSnapshots: readonly DestructionFixtureRosterSnapshot[];
 }>) {
@@ -109,7 +112,7 @@ export function replaceDestructionParticipant(input: Readonly<{
     position: entry.position,
     isCaptain: entry.isCaptain,
   }));
-  validateCompetitionRoster({ format: "POSITIONAL", members: teamMembers, requireCaptain: true });
+  validateCompetitionRoster({ format: destructionUsesPositions(input.configuration) ? "POSITIONAL" : "ARAM", members: teamMembers, requireCaptain: true });
   const replacements = Object.freeze([...input.replacements, replacement]);
   // Existing snapshots are deliberately returned by reference: replacements only affect fixtures captured later.
   return Object.freeze({ participants, replacements, fixtureSnapshots: input.fixtureSnapshots });

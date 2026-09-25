@@ -6,7 +6,7 @@ export type DestructionApplication = Readonly<{
   id: string;
   userAccountId: string;
   playerId: string;
-  position: CompetitionPosition;
+  position: CompetitionPosition | null;
   status: DestructionApplicationStatus;
 }>;
 
