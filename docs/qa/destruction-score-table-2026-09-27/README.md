@@ -1,6 +1,6 @@
 # 멸망전 점수표 · 로컬 검증
 
-2026-09-27. 운영 소스 작업 폴더 `destruction-production-20260925`에 반영. 운영 배포·Git push·release tag 생성은 수행하지 않았다.
+2026-09-27. 운영 소스 작업 폴더 `destruction-production-20260925`에서 로컬 검증했다. 이후 사용자 요청으로 1.3.0 운영 배포·Git push·release tag 생성을 완료했다. [운영 배포 근거](../../qa-evidence/destruction-modes-v1.3.0-2026-09-27/README.md).
 
 ## 변경
 

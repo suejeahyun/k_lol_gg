@@ -1534,6 +1534,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "destruction-modes",
+      "version": "1.3.0",
+      "gitTag": "destruction-modes-v1.3.0",
+      "commit": "88d70473ba77ac6b3cf7ee277534ba179901fa1e",
+      "releasedAt": "2026-09-27T06:16:01.641Z",
+      "migrationHead": "0046_overconfident_robbie_robertson",
+      "qaEvidence": "docs/qa-evidence/destruction-modes-v1.3.0-2026-09-27/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-27-destruction-score-table.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_69LMwdTyNQNQTb2JstSUGQaSAbfP",
+        "url": "https://k-lol-iuqllimdr-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-27T06:16:01.641Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

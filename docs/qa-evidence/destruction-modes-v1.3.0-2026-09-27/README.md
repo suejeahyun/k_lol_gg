@@ -1,6 +1,6 @@
 # 멸망전 1.3.0 · 공개 점수표
 
-상태: 운영 배포 후보. source와 배포 ID는 실제 배포 확인 후 기록한다.
+**운영 반영 완료**: source `88d70473ba77ac6b3cf7ee277534ba179901fa1e`, tag `destruction-modes-v1.3.0`, Vercel `dpl_69LMwdTyNQNQTb2JstSUGQaSAbfP` READY. 2026-09-27T06:16:01.641Z 운영 health ready, 협곡·증바람 점수표 본문 HTTP 200, 비로그인 관리자 API 401·관리자 생성 화면 307 확인. [후보 검증](candidate-smoke.json), [운영 검증](production-smoke.json). 일반 칼바람은 현재 운영 공개 목록에 없어 격리 브라우저 검증으로 확인했다.
 
 - 모든 모드의 공개 상세에 점수표 메뉴 추가.
 - 협곡: 기존 38개 티어·LP 구간과 5포지션의 기준값 및 지급 포인트 190개를 전체 대조하여 일치 확인. 팀별 저장된 경매 포인트와 선수별 낙찰가 표시.

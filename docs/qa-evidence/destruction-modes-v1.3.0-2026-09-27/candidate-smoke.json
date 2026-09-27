@@ -1,0 +1,56 @@
+{
+  "deploymentId": "dpl_69LMwdTyNQNQTb2JstSUGQaSAbfP",
+  "url": "https://k-lol-iuqllimdr-tjdmswo11-3715s-projects.vercel.app",
+  "source": "88d70473ba77ac6b3cf7ee277534ba179901fa1e",
+  "checkedAt": "2026-09-27T06:15:37.039Z",
+  "healthStatus": "ready",
+  "results": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "bytes": 57
+    },
+    {
+      "path": "/competitions/destruction",
+      "status": 200,
+      "bytes": 68714
+    },
+    {
+      "path": "/api/admin/competitions/destruction",
+      "status": 401,
+      "bytes": 186
+    },
+    {
+      "path": "/admin/progress/destruction/new",
+      "status": 307,
+      "bytes": 18164
+    },
+    {
+      "path": "/api/competitions/destruction?pageSize=48",
+      "status": 200,
+      "bytes": 20765
+    },
+    {
+      "path": "/competitions/destruction/54d8919b-b6ce-4ee3-ac50-1a95b01a295b?tab=score-table",
+      "status": 200,
+      "bytes": 77946
+    },
+    {
+      "path": "/competitions/destruction/9dbf8006-8517-4066-ac92-8c5970e25234?tab=score-table",
+      "status": 200,
+      "bytes": 121492
+    }
+  ],
+  "scoreTables": [
+    {
+      "path": "/competitions/destruction/54d8919b-b6ce-4ee3-ac50-1a95b01a295b?tab=score-table",
+      "gameMode": "ARAM_MAYHEM",
+      "checks": 3
+    },
+    {
+      "path": "/competitions/destruction/9dbf8006-8517-4066-ac92-8c5970e25234?tab=score-table",
+      "gameMode": "CLASSIC",
+      "checks": 5
+    }
+  ]
+}
