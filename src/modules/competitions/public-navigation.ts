@@ -12,13 +12,13 @@ export function parseCompetitionSavedView(input: URLSearchParams): CompetitionSa
 
 export type DestructionDetailView = Readonly<{
   action: "apply" | null;
-  tab: "overview" | "captain-points" | "participants" | "gallery" | "mvp";
+  tab: "overview" | "score-table" | "captain-points" | "participants" | "gallery" | "mvp";
   playerId: string | null;
   imageIndex: number | null;
 }>;
 
 const DETAIL_KEYS = new Set(["action", "tab", "participant", "player", "image", "imageIndex"]);
-const DETAIL_TABS = new Set(["captain-points", "participants", "gallery", "mvp"]);
+const DETAIL_TABS = new Set(["score-table", "captain-points", "participants", "gallery", "mvp"]);
 const SAFE_LEGACY_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
 const IMAGE_INDEX = /^(?:0|[1-9][0-9]{0,3})$/u;
 

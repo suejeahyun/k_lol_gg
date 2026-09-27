@@ -1,0 +1,146 @@
+[
+  {
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=score-table",
+    "name": "completed-score-table-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/ecd17a6b-e495-4370-a191-d78901887ed7?tab=score-table",
+    "name": "team_building-score-table-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/ecd17a6b-e495-4370-a191-d78901887ed7?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/d94b72b3-12b6-4ff9-8def-f92acc204015?tab=score-table",
+    "name": "recruiting-score-table-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d94b72b3-12b6-4ff9-8def-f92acc204015?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/14efda42-b9b4-4785-93a9-2e8c28c25450?tab=score-table",
+    "name": "aram-auction-score-table-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/14efda42-b9b4-4785-93a9-2e8c28c25450?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/054ca1bf-6b1f-4b14-8547-9415ae674e41?tab=score-table",
+    "name": "mayhem-auction-score-table-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/054ca1bf-6b1f-4b14-8547-9415ae674e41?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/ae8d69cd-712d-4096-9524-0b9617525d40?tab=score-table",
+    "name": "mayhem-pending-score-table-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/ae8d69cd-712d-4096-9524-0b9617525d40?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=score-table",
+    "name": "completed-score-table-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/ecd17a6b-e495-4370-a191-d78901887ed7?tab=score-table",
+    "name": "team_building-score-table-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/ecd17a6b-e495-4370-a191-d78901887ed7?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/d94b72b3-12b6-4ff9-8def-f92acc204015?tab=score-table",
+    "name": "recruiting-score-table-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d94b72b3-12b6-4ff9-8def-f92acc204015?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/14efda42-b9b4-4785-93a9-2e8c28c25450?tab=score-table",
+    "name": "aram-auction-score-table-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/14efda42-b9b4-4785-93a9-2e8c28c25450?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/054ca1bf-6b1f-4b14-8547-9415ae674e41?tab=score-table",
+    "name": "mayhem-auction-score-table-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/054ca1bf-6b1f-4b14-8547-9415ae674e41?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/ae8d69cd-712d-4096-9524-0b9617525d40?tab=score-table",
+    "name": "mayhem-pending-score-table-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/ae8d69cd-712d-4096-9524-0b9617525d40?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  }
+]

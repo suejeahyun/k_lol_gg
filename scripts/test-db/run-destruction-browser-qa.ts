@@ -16,7 +16,8 @@ import { runDestructionBrowserInteractions } from "./destruction-browser-interac
 
 const execFile = promisify(execFileCallback);
 const root = resolve(import.meta.dirname, "../..");
-const output = resolve(root, "docs/qa/destruction-captain-signup-2026-09-25");
+const scoreTablesOnly = process.argv.includes("--score-tables-only");
+const output = resolve(root, scoreTablesOnly ? "docs/qa/destruction-score-table-2026-09-27" : "docs/qa/destruction-captain-signup-2026-09-25");
 const cluster = await startEphemeralCluster();
 const pool = new Pool({ connectionString: cluster.connectionString });
 let server: ReturnType<typeof spawn> | undefined;
@@ -137,6 +138,13 @@ try {
     { path: `/admin/progress/destruction/${id}`, name: `${name}-admin-${width}`, session: "admin", expectedRedirect: { destination: `/admin/progress/destruction/${id}` }, viewport: { width, height: 1000, mobile: width === 390 } },
   ]));
   for (const width of [390, 1440]) for (const name of ["recruiting", "preliminary", "aram-recruiting", "mayhem-recruiting"]) routes.push({ path: `/competitions/destruction/${scenarios[name]}`, name: `${name}-account-${width}`, session: "account", expectedRedirect: { destination: `/competitions/destruction/${scenarios[name]}` }, viewport: { width, height: 1000, mobile: width === 390 } });
+  if (scoreTablesOnly) {
+    routes.length = 0;
+    for (const width of [390, 1440]) for (const name of ["completed", "team_building", "recruiting", "aram-auction", "mayhem-auction", "mayhem-pending"]) {
+      const path = `/competitions/destruction/${scenarios[name]}?tab=score-table`;
+      routes.push({ path, name: `${name}-score-table-${width}`, expectedRedirect: { destination: path }, viewport: { width, height: 1000, mobile: width === 390 } });
+    }
+  }
   const plan = resolve(output, "capture-plan.json");
   await writeFile(plan, JSON.stringify(routes, null, 2));
   console.log(`[destruction-browser] capturing ${routes.length} pages at ${origin}`);
@@ -147,10 +155,12 @@ try {
   console.log("[destruction-browser] captures complete");
   if (failures.length) throw new Error(`Browser QA failures: ${JSON.stringify(failures.map(({ name, issues }) => ({ name, issues })))}`);
   }
+  if (!scoreTablesOnly) {
   await runDestructionBrowserInteractions({ origin, tournamentId: scenarios.auction, mayhemId, accountToken, classicRecruitingId: scenarios.recruiting, recruitingIds: [scenarios["aram-recruiting"], scenarios["mayhem-recruiting"]], adminToken: token, output, root });
   await writeFile(resolve(output, "edge-transport.json"), JSON.stringify(transport, null, 2));
   if (transport.legacyMutationRequests || transport.rewrittenResponses || !transport.applicationRevisionRequests) throw new Error("Browser mutations must preserve application revisions without triggering edge HTTP conditionals");
   console.log("[destruction-browser] interactions and accessibility passed");
+  }
 } finally {
   if (edge) { edge.closeAllConnections(); await new Promise<void>((done) => edge!.close(() => done())); }
   if (server && server.exitCode === null) {
