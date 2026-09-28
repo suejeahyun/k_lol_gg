@@ -3,7 +3,7 @@ import { CLASSIC_CAPTAIN_POINT_TABLE } from "@/modules/competitions/destruction/
 import { COMPETITION_POSITIONS, competitionPositionLabel } from "@/modules/competitions/core";
 import type { DestructionPublicDto } from "@/modules/competitions/destruction/state";
 import styles from "./workspace.module.css";
-import { ABSOLUTE_TIER_FLOORS, RATING_KEYS, RATING_LABELS } from "@/modules/competitions/destruction/provisional-rating";
+import { ABSOLUTE_TIER_FLOORS, RATING_KEYS, ratingLabel } from "@/modules/competitions/destruction/provisional-rating";
 
 const tierRanges = { S: "60% 이상", A: "52.5% 이상 ~ 60% 미만", B: "47.5% 이상 ~ 52.5% 미만", C: "40% 이상 ~ 47.5% 미만", D: "40% 미만" } as const;
 
@@ -82,8 +82,8 @@ function AbsoluteScoreTable({ destruction }: { destruction: DestructionPublicDto
   const policy = destruction.ratingPolicy!;
   return <section className={styles.workspace} aria-labelledby="score-table-title"><section className={styles.panel}>
     <h2 id="score-table-title">{DESTRUCTION_GAME_MODES[destruction.gameMode]} 멸망전 절대평가 점수표</h2>
-    <p>총점 = {RATING_KEYS.map((key) => `${RATING_LABELS[key]} × ${(policy.weights[key] / 100).toFixed(2)}`).join(" + ")}</p>
-    <p>각 항목 0~100점 · 참가자 순위와 무관한 고정 기준 · {policy.version}. 증바람도 일반 칼바람 성과를 사용합니다. 주장 확정 후 평가가 고정됩니다.</p>
+    <p>총점 = {RATING_KEYS.map((key) => `${ratingLabel(key, policy)} × ${(policy.weights[key] / 100).toFixed(2)}`).join(" + ")}</p>
+    <p>각 항목 0~100점 · 참가자 순위와 무관한 고정 기준 · {policy.version}. {policy.version === "ABSOLUTE_V2" ? "신청한 모드의 누적 승패를 본인이 숫자로 기재합니다." : "증바람도 일반 칼바람 성과를 사용합니다."} 주장 확정 후 평가가 고정됩니다.</p>
     <p>초기 환산 기준이며 실력 예측력이 검증된 공식은 아닙니다. 누락 항목은 0점으로 처리하지 않고 평가 대기와 가능한 점수 범위를 표시합니다.</p>
     <div className={styles.tableWrap} role="region" aria-label="절대평가 등급별 경매 포인트" tabIndex={0}><table><caption>절대평가 등급과 경매 기준</caption>
       <thead><tr><th scope="col">등급</th><th scope="col">총점 하한</th><th scope="col">최소 입찰가</th><th scope="col">주장 시작 포인트</th></tr></thead>
@@ -91,9 +91,9 @@ function AbsoluteScoreTable({ destruction }: { destruction: DestructionPublicDto
     </table></div>
   </section><section className={styles.panel}><h2>선수별 항목 점수</h2>
     {destruction.absoluteRatings?.length ? <div className={styles.tableWrap} role="region" aria-label="선수별 절대평가 항목과 등급" tabIndex={0}><table>
-      <caption>반영 비중과 원점수 · 운영자 보완 자료는 별도 표시</caption>
-      <thead><tr><th scope="col">선수</th>{RATING_KEYS.map((key) => <th scope="col" key={key}>{RATING_LABELS[key]} {policy.weights[key]}%</th>)}<th scope="col">총점</th><th scope="col">등급</th><th scope="col">최소 입찰가</th><th scope="col">주장 시작 포인트</th></tr></thead>
-      <tbody>{destruction.absoluteRatings.map((rating, index) => <tr key={index}><th scope="row">{rating.playerName}</th>{rating.components.map((component) => <td key={component.key}>{policy.weights[component.key] === 0 ? "제외" : component.score === null ? component.status === "ERROR" ? "조회 오류" : "자료 대기" : `${component.score.toFixed(2)}${component.source === "ADMIN_VERIFIED" ? " (확인)" : ""}`}</td>)}<td>{rating.score === null ? `${rating.minimum.toFixed(2)}~${rating.maximum.toFixed(2)}` : rating.score.toFixed(2)}</td><td>{rating.tier ?? "평가 대기"}</td><td>{rating.minimumBid === null ? "—" : `${rating.minimumBid}P`}</td><td>{rating.captainPoints === null ? "—" : `${rating.captainPoints}P`}</td></tr>)}</tbody>
+      <caption>반영 비중과 원점수 · 본인 기재 및 운영자 보완 자료는 별도 표시</caption>
+      <thead><tr><th scope="col">선수</th>{RATING_KEYS.map((key) => <th scope="col" key={key}>{ratingLabel(key, policy)} {policy.weights[key]}%</th>)}<th scope="col">총점</th><th scope="col">등급</th><th scope="col">최소 입찰가</th><th scope="col">주장 시작 포인트</th></tr></thead>
+      <tbody>{destruction.absoluteRatings.map((rating, index) => <tr key={index}><th scope="row">{rating.playerName}</th>{rating.components.map((component) => <td key={component.key}>{policy.weights[component.key] === 0 ? "제외" : component.score === null ? component.status === "ERROR" ? "조회 오류" : "자료 대기" : `${component.score.toFixed(2)}${component.source === "SELF_REPORTED" ? " (본인 기재)" : component.source === "ADMIN_VERIFIED" ? " (확인)" : ""}`}</td>)}<td>{rating.score === null ? `${rating.minimum.toFixed(2)}~${rating.maximum.toFixed(2)}` : rating.score.toFixed(2)}</td><td>{rating.tier ?? "평가 대기"}</td><td>{rating.minimumBid === null ? "—" : `${rating.minimumBid}P`}</td><td>{rating.captainPoints === null ? "—" : `${rating.captainPoints}P`}</td></tr>)}</tbody>
     </table></div> : <p role="status">참가 확정 후 자동 평가를 시작합니다.</p>}
   </section></section>;
 }

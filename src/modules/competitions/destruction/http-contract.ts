@@ -54,6 +54,8 @@ export type OwnDestructionApplicationDto = Readonly<{
   position: CompetitionPosition | null;
   status: DestructionApplicationStatus;
   captainVolunteer: boolean;
+  selfReportedRecord?: import("./self-reported-rating").SelfReportedModeRecord;
+  canEditModeRecord?: boolean;
 }>;
 
 export type OwnDestructionMvpBallotDto = Readonly<{
@@ -141,7 +143,7 @@ type AdminCommand<Type extends string, Payload> = Readonly<{
 }>;
 
 export type DestructionOwnerCommand =
-  | OwnerCommand<"UPSERT_OWN_APPLICATION", Readonly<{ applicationId: string; playerId: string; position: CompetitionPosition | null; captainVolunteer?: boolean }>>
+  | OwnerCommand<"UPSERT_OWN_APPLICATION", Readonly<{ applicationId: string; playerId: string; position: CompetitionPosition | null; captainVolunteer?: boolean; modeRecord?: import("./self-reported-rating").ReportedWinsLosses }>>
   | OwnerCommand<"CANCEL_OWN_APPLICATION", Readonly<{ playerId: string }>>
   | OwnerCommand<"CAST_MVP_VOTE", Readonly<{ fixtureId: string; voterPlayerId: string; candidatePlayerId: string }>>;
 

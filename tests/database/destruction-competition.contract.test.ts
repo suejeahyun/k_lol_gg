@@ -139,12 +139,15 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     async function recruitPositionless(id: string, gameMode: "ARAM" | "ARAM_MAYHEM", legacy = true) {
       let rev = (await service.create(context(adminActor, "ADMIN", "positionless-create"), { tournamentId: id, title: gameMode + " DB QA", configuration: { gameMode, teamCount: 4, recruitmentLimit: 20, preliminaryFormat: "FULL_ROUND_ROBIN_BO1" } })).revision;
       rev = (await service.executeAdmin(context(adminActor, "ADMIN", "positionless-start"), id, rev, { type: "START_RECRUITMENT", payload: {} })).revision;
+      await assert.rejects(service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "missing-wins"), id, playerIds[0]!, rev, { applicationId: applicationIds[0] }), /승수·패수/);
+      assert.throws(() => service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "bad-wins"), id, playerIds[0]!, rev, { applicationId: applicationIds[0], modeRecord: { wins: -1, losses: 1 } }), /승수·패수/);
       for (let i = 0; i < playerIds.length; i++) {
-        rev = (await service.upsertOwnApplication(context(ownerActors[i]!, "ACCOUNT", "no-position"), id, playerIds[i]!, rev, { applicationId: applicationIds[i], captainVolunteer: i < 4, ...(i % 2 ? { position: null } : {}) })).revision;
+        rev = (await service.upsertOwnApplication(context(ownerActors[i]!, "ACCOUNT", "no-position"), id, playerIds[i]!, rev, { applicationId: applicationIds[i], captainVolunteer: i < 4, modeRecord: { wins: 60, losses: 40 }, ...(i % 2 ? { position: null } : {}) })).revision;
       }
       assert.equal((await adapter.getOwnApplication(id, ownerActors[0]!.userAccountId))?.captainVolunteer, true);
-      rev = (await service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "captain-opt-out"), id, playerIds[0]!, rev, { applicationId: applicationIds[0], captainVolunteer: false })).revision;
+      rev = (await service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "captain-opt-out"), id, playerIds[0]!, rev, { applicationId: applicationIds[0], captainVolunteer: false, modeRecord: { wins: 60, losses: 40 } })).revision;
       assert.equal((await adapter.getOwnApplication(id, ownerActors[0]!.userAccountId))?.captainVolunteer, false);
+      assert.equal((await adapter.getOwnApplication(id, ownerActors[0]!.userAccountId))?.selfReportedRecord?.mode, gameMode);
       assert.equal((await adapter.getPublic(id))!.recruitment.length, 1);
       assert.equal((await adapter.getPublic(id))!.recruitment[0]!.applied, 20);
       assert.equal((await pool.query("select count(*)::int as n from competition.destruction_application_index where tournament_id=$1 and position is null", [id])).rows[0].n, 20);
@@ -290,20 +293,34 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       const components = Object.fromEntries(RATING_KEYS.map((key) => [key, { score: 70, status: "READY", source: "RIOT", samples: 100, observedAt: now.toISOString(), evidence: "synthetic fixture" }]));
       const seeded = { ...pending, participants: pending.participants.map((p) => p.playerId === playerIds[0] ? (mode === "ARAM" ? { ...p, provisionalRating: undefined, aramCollection: { linkId, linkRevision: 1, matchIds: ["KR_99999"], processed: 1, wins: 1, losses: 0, excluded: 0, startedAt: now.toISOString() } } : p) : ({ ...p, provisionalRating: { policy: DEFAULT_RATING_POLICY, components, collectedAt: now.toISOString() }, minimumBid: 250, ratingCollection: { complete: true, retryAt: now.toISOString(), attempts: 0, error: null } })) };
       await database.update(destructionCompetitions).set({ aggregateJson: JSON.parse(JSON.stringify(seeded)) }).where(eq(destructionCompetitions.id, id));
-      for (let step = 0; step < 7; step++) { workerTime += 10_000; assert.equal((await runAutomaticRatingStep(database, new Date(workerTime), request, config)).kind, "UPDATED"); }
+      for (let step = 0; step < (mode === "ARAM" ? 5 : 4); step++) { workerTime += 10_000; assert.equal((await runAutomaticRatingStep(database, new Date(workerTime), request, config)).kind, "UPDATED"); }
       let state = (await adapter.getAdmin(id))!;
       const measured = state.participants.find((p) => p.playerId === playerIds[0])!;
       assert.equal(measured.ratingCollection?.complete, true);
       assert.ok(evaluateProvisionalRating(measured.provisionalRating!).tier, JSON.stringify(measured.provisionalRating?.components));
       assert.equal(measured.provisionalRating?.components.inhouse?.score, 70);
       assert.ok(measured.provisionalRating?.components.inhouse?.evidence.includes(mode === "ARAM_MAYHEM" ? "V1_INTERNAL_MMR_1" : MMR_FORMULA_VERSION));
-      assert.equal(measured.aramRecord?.mode, "ARAM", "Mayhem uses the agreed normal ARAM proxy");
-      assert.deepEqual(measured.aramCollection?.matchIds, ["KR_12345"], "legacy partial lists cannot bypass the 90-day collection window");
-      assert.equal(measured.aramCollection?.windowDays, 365);
+      assert.equal(measured.selfReportedRecord?.mode, mode, "self-reported records are bound to the tournament mode");
+      assert.equal(measured.provisionalRating?.components.aram?.source, "SELF_REPORTED");
+      assert.equal(measured.provisionalRating?.components.aram?.score, 70.83);
+      assert.equal(measured.aramCollection, undefined, "old Riot ARAM collections cannot enter the new formula");
+      assert.ok(calls.every((url) => !url.includes("/match/v5/")), "the 20% input never fetches Riot ARAM matches");
       assert.equal(JSON.stringify(await adapter.getPublic(id)).includes(puuid), false);
       assert.equal(JSON.stringify(await adapter.getPublic(id)).includes(linkId), false);
       assert.equal((await runAutomaticRatingStep(database, new Date(workerTime + 1000), request, config)).kind, "RATE_LIMITED");
-      const change = { version: "ABSOLUTE_V1", weights: { aram: 20, solo: 35, inhouse: 25, champions: 15, challenges: 5 } };
+      const body = { applicationId: applicationIds[0], position: null, captainVolunteer: false, modeRecord: { wins: 50, losses: 50 } };
+      await assert.rejects(service.upsertOwnApplication(context(ownerActors[1]!, "ACCOUNT", "foreign-wins"), id, playerIds[0]!, state.revision, body), /FORBIDDEN/);
+      await assert.rejects(service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "confirmed-role"), id, playerIds[0]!, state.revision, { ...body, captainVolunteer: true }), /승수·패수만/);
+      const editContext = context(ownerActors[0]!, "ACCOUNT", "edit-wins");
+      const edit = await service.upsertOwnApplication(editContext, id, playerIds[0]!, state.revision, body);
+      assert.equal((await service.upsertOwnApplication(editContext, id, playerIds[0]!, state.revision, body)).replayed, true);
+      state = (await adapter.getAdmin(id))!;
+      assert.equal(state.revision, edit.revision);
+      const edited = state.participants.find((p) => p.playerId === playerIds[0])!;
+      assert.equal(edited.provisionalRating?.components.aram?.score, 50);
+      assert.deepEqual(edited.provisionalRating?.components.solo, measured.provisionalRating?.components.solo);
+      assert.equal((await adapter.getOwnApplication(id, ownerActors[0]!.userAccountId))?.canEditModeRecord, true);
+      const change = { version: "ABSOLUTE_V2", weights: { aram: 20, solo: 35, inhouse: 25, champions: 15, challenges: 5 } };
       const changeContext = context(adminActor, "ADMIN", "policy-change");
       const changeRevision = state.revision;
       const changed = await service.executeAdmin(changeContext, id, changeRevision, { type: "SET_RATING_POLICY", payload: change });
@@ -316,6 +333,8 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       assert.equal((await adapter.getAdmin(id))!.revision, changed.revision);
       await database.update(riotAccountLinks).set({ revision: measured.provisionalRating!.linkRevision! }).where(eq(riotAccountLinks.id, linkId));
       const confirmed = await service.executeAdmin(context(adminActor, "ADMIN", "absolute-confirm"), id, changed.revision, { type: "CONFIRM_TEAMS", payload: { seed: "absolute-test-seed", captains } });
+      await assert.rejects(service.upsertOwnApplication(context(ownerActors[0]!, "ACCOUNT", "frozen-wins"), id, playerIds[0]!, confirmed.revision, body), /확정 후에는 승패/);
+      assert.equal((await adapter.getOwnApplication(id, ownerActors[0]!.userAccountId))?.canEditModeRecord, false);
       await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "frozen-policy"), id, confirmed.revision, { type: "SET_RATING_POLICY", payload: DEFAULT_RATING_POLICY }), /주장 확정/);
       await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "frozen-retry"), id, confirmed.revision, { type: "RETRY_RATING", payload: { participantId: applicationIds[0] } }), /주장 확정/);
       workerTime += 10_000;
@@ -448,7 +467,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     assert.equal((await database.select().from(destructionApplicationIndex).where(eq(destructionApplicationIndex.tournamentId, tournamentId))).length, 20);
     const receipts = await database.select().from(destructionCommandReceipts);
     const workerEvents = await database.select().from(auditEvents).where(eq(auditEvents.action, "DESTRUCTION_AUTO_RATING"));
-    assert.equal(workerEvents.length, 14);
+    assert.equal(workerEvents.length, 9);
     assert.equal((await database.select().from(destructionOutbox)).length, receipts.length + workerEvents.length);
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "DESTRUCTION"))).length, receipts.length + workerEvents.length);
     await assert.rejects(database.delete(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)));

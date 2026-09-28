@@ -11,6 +11,7 @@ import { DEFAULT_RATING_POLICY, boundedRatingScore, validateRatingPolicy, type R
 import { noRatingData, RiotRatingFacts } from "./riot-rating-facts";
 import { RiotAramRecords } from "./riot-aram-records";
 import type { DestructionAggregate } from "./state";
+import { upgradeSelfReportedRatings } from "./self-reported-rating";
 
 export type RatingWorkerResult = { kind: "UPDATED" | "IDLE" | "DISABLED" | "RATE_LIMITED"; retryAfterSeconds: number };
 
@@ -31,14 +32,16 @@ export async function runAutomaticRatingStep(database: V2Database, now = new Dat
       sql`${destructionCompetitions.aggregateJson}->'configuration'->>'gameMode' in ('ARAM', 'ARAM_MAYHEM')`,
       sql`jsonb_array_length(${destructionCompetitions.aggregateJson}->'teams') = 0`,
       sql`exists (select 1 from jsonb_array_elements(${destructionCompetitions.aggregateJson}->'participants') p
-        where coalesce(p->'ratingCollection'->>'complete', 'false') <> 'true'
-        and coalesce(p->'ratingCollection'->>'retryAt', '') <= ${now.toISOString()})`))
+        where (coalesce(p->'ratingCollection'->>'complete', 'false') <> 'true'
+        and coalesce(p->'ratingCollection'->>'retryAt', '') <= ${now.toISOString()})
+        or coalesce(${destructionCompetitions.aggregateJson}->'ratingPolicy'->>'version', '') <> 'ABSOLUTE_V2')`))
       .orderBy(asc(destructionCompetitions.updatedAt), asc(destructionCompetitions.id)).limit(1).for("update", { skipLocked: true }))[0];
     if (!row) return { kind: "IDLE", retryAfterSeconds: 0 };
-    const aggregate = row.aggregateJson as unknown as DestructionAggregate;
+    const stored = row.aggregateJson as unknown as DestructionAggregate;
+    const aggregate = upgradeSelfReportedRatings(stored, now.toISOString());
     if (aggregate.id !== row.id || aggregate.revision !== row.revision || aggregate.lifecycle.status !== row.status) throw new Error("DESTRUCTION_SNAPSHOT_INCONSISTENT");
     const policy = validateRatingPolicy(aggregate.ratingPolicy ?? DEFAULT_RATING_POLICY);
-    const target = aggregate.participants.find((p) => !p.ratingCollection?.complete && (!p.ratingCollection || Date.parse(p.ratingCollection.retryAt) <= now.getTime()));
+    const target = aggregate.participants.find((p) => !p.ratingCollection?.complete && (!p.ratingCollection || Date.parse(p.ratingCollection.retryAt) <= now.getTime())) ?? (aggregate !== stored ? aggregate.participants[0] : undefined);
     if (!target || aggregate.teams.length) return { kind: "IDLE", retryAfterSeconds: 0 };
     const link = (await tx.select().from(riotAccountLinks).where(eq(riotAccountLinks.playerId, target.playerId)).limit(1).for("share"))[0];
     const connected = link?.status === "CONNECTED" && Boolean(link.protectedPuuid);

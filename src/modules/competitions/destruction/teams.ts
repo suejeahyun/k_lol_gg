@@ -21,6 +21,7 @@ export type DestructionParticipant = Readonly<{
   minimumBid?: number;
   provisionalRating?: import("./provisional-rating").RatingSnapshot;
   ratingCollection?: import("./provisional-rating").RatingCollectionState;
+  selfReportedRecord?: import("./self-reported-rating").SelfReportedModeRecord;
 }>;
 
 export type DestructionTeam = Readonly<{

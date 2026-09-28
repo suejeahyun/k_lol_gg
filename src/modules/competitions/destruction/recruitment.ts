@@ -9,6 +9,7 @@ export type DestructionApplication = Readonly<{
   position: CompetitionPosition | null;
   status: DestructionApplicationStatus;
   captainVolunteer?: boolean;
+  selfReportedRecord?: import("./self-reported-rating").SelfReportedModeRecord;
 }>;
 
 export type DestructionApplicationIntent =

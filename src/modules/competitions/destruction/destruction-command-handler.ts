@@ -42,6 +42,7 @@ import { confirmDestructionTeams, validateConfirmedDestructionRosters } from "./
 import { DestructionRevisionConflict } from "./revision-conflict";
 import { destructionCorrectionImpact } from "./workflow";
 import { validateDestructionSchedule } from "./schedule";
+import { upgradeSelfReportedRatings, validateReportedWinsLosses, withSelfReportedRecord } from "./self-reported-rating";
 
 export interface DestructionTransactionContext { readonly destructionTransaction: unique symbol }
 
@@ -170,6 +171,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
     case "SET_RATING_POLICY": {
       requireCompetition(!positional && ["PLANNED", "RECRUITING", "TEAM_BUILDING"].includes(current.lifecycle.status) && !current.teams.length, "INVALID_TRANSITION", "칼바람·증바람 주장 확정 전에만 평가 비중을 변경할 수 있습니다.");
       const ratingPolicy = validateRatingPolicy(command.payload);
+      requireCompetition(ratingPolicy.version === (current.ratingPolicy ?? DEFAULT_RATING_POLICY).version, "PRECONDITION_FAILED", "평가 공식 버전은 비중 변경으로 바꿀 수 없습니다.");
       return updated(current, now, { ratingPolicy, participants: current.participants.map((p) => {
         const provisionalRating: RatingSnapshot = { ...(p.provisionalRating ?? { components: {}, collectedAt: now }), policy: ratingPolicy };
         return { ...p, ...(!p.provisionalRating ? { aramCollection: undefined, aramRecord: undefined } : {}), provisionalRating, ratingCollection: undefined, minimumBid: evaluateProvisionalRating(provisionalRating).minimumBid ?? undefined };
@@ -181,6 +183,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       return updated(current, now, { participants: current.participants.map((p) => p.id === command.payload.participantId ? { ...p, provisionalRating: { policy: current.ratingPolicy!, components: {}, collectedAt: now }, ratingCollection: undefined, aramCollection: undefined, aramRecord: undefined, minimumBid: undefined } : p) });
     }
     case "VERIFY_RATING_COMPONENT": {
+      requireCompetition(command.payload.key !== "aram" || current.ratingPolicy?.version !== "ABSOLUTE_V2", "PRECONDITION_FAILED", "해당 모드 승패는 신청자가 숫자로 입력해야 합니다.");
       requireCompetition(!positional && current.lifecycle.status === "TEAM_BUILDING" && !current.teams.length && current.ratingPolicy, "INVALID_TRANSITION", "주장 확정 전 누락 자료만 보완할 수 있습니다.");
       const participant = current.participants.find((p) => p.id === command.payload.participantId);
       requireCompetition(participant?.ratingCollection?.complete, "PRECONDITION_FAILED", "자동 수집이 끝난 참가자를 확인해 주세요.");
@@ -194,17 +197,27 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       return updated(current, now, { schedule: validateDestructionSchedule(command.payload) });
     }
     case "UPSERT_OWN_APPLICATION": {
-      requireCompetition(current.lifecycle.status === "RECRUITING", "INVALID_TRANSITION", "Applications are open only during recruitment.");
       const existing = current.applications.find((entry) => entry.userAccountId === command.metadata.authorizationIntent.ownerUserAccountId);
       requireCompetition(!existing || (existing.id === command.payload.applicationId && existing.playerId === command.payload.playerId), "DUPLICATE_ID", "Application identity cannot be moved to another player or ID.");
+      const mode = current.configuration.gameMode;
+      requireCompetition(!positional || command.payload.modeRecord === undefined, "PRECONDITION_FAILED", "협곡 신청에는 칼바람 승패를 입력할 수 없습니다.");
+      const selfReportedRecord = !positional && mode && mode !== "CLASSIC" ? { ...validateReportedWinsLosses(command.payload.modeRecord), mode, submittedAt: now } : undefined;
+      if (existing?.status === "CONFIRMED" && selfReportedRecord) {
+        requireCompetition(["RECRUITING", "TEAM_BUILDING"].includes(current.lifecycle.status) && !current.teams.length, "INVALID_TRANSITION", "주장·팀 확정 후에는 승패를 수정할 수 없습니다.");
+        requireCompetition(command.payload.position === existing.position && (command.payload.captainVolunteer === undefined || command.payload.captainVolunteer === (existing.captainVolunteer ?? false)), "INVALID_TRANSITION", "참가 확정 후에는 승수·패수만 수정할 수 있습니다.");
+        const upgraded = upgradeSelfReportedRatings(current, now);
+        return updated(upgraded, now, { applications: upgraded.applications.map((a) => a.id === existing.id ? { ...a, selfReportedRecord } : a),
+          participants: upgraded.participants.map((p) => p.id === existing.id ? withSelfReportedRecord(p, upgraded.ratingPolicy!, selfReportedRecord, now) : p) });
+      }
+      requireCompetition(current.lifecycle.status === "RECRUITING", "INVALID_TRANSITION", "Applications are open only during recruitment.");
       requireCompetition(existing?.status !== "CONFIRMED", "INVALID_TRANSITION", "참가가 확정된 신청은 운영자에게 변경을 요청해 주세요.");
       const applicationPosition = positional ? command.payload.position : null;
       requireCompetition(!positional || applicationPosition !== null, "INVALID_ROSTER", "협곡 참가 신청에는 포지션이 필요합니다.");
       const occupied = current.applications.filter((entry) => entry !== existing && (!positional || entry.position === applicationPosition) && ["APPLIED", "CONFIRMED", "RESERVE"].includes(entry.status)).length;
       requireCompetition(occupied < (positional ? current.configuration.laneLimits[applicationPosition!] : destructionRecruitmentLimit(current.configuration)), "INVALID_ROSTER", "모집 정원이 가득 찼습니다.");
       requireCompetition(!current.applications.some((entry) => entry !== existing && (entry.id === command.payload.applicationId || entry.playerId === command.payload.playerId)), "DUPLICATE_ID", "The application or player already exists.");
-      const next = Object.freeze({ id: command.payload.applicationId, userAccountId: command.metadata.authorizationIntent.ownerUserAccountId, playerId: command.payload.playerId, position: applicationPosition, captainVolunteer: command.payload.captainVolunteer ?? existing?.captainVolunteer ?? false, status: "APPLIED" as const });
-      return updated(current, now, { applications: Object.freeze([...current.applications.filter((entry) => entry !== existing), next]) });
+      const next = Object.freeze({ id: command.payload.applicationId, userAccountId: command.metadata.authorizationIntent.ownerUserAccountId, playerId: command.payload.playerId, position: applicationPosition, captainVolunteer: command.payload.captainVolunteer ?? existing?.captainVolunteer ?? false, status: "APPLIED" as const, ...(selfReportedRecord ? { selfReportedRecord } : {}) });
+      return updated(upgradeSelfReportedRatings(current, now), now, { applications: Object.freeze([...current.applications.filter((entry) => entry !== existing), next]) });
     }
     case "CANCEL_OWN_APPLICATION": {
       requireCompetition(current.lifecycle.status === "RECRUITING", "INVALID_TRANSITION", "Applications may be cancelled only during recruitment.");
@@ -234,12 +247,16 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       return updated(current, now, { applications: Object.freeze(current.applications.map((entry) => entry.id === target.id ? Object.freeze({ ...entry, status: command.payload.status }) : entry)) });
     }
     case "CLOSE_RECRUITMENT": {
+      const upgraded = upgradeSelfReportedRatings(current, now);
       const confirmed = current.applications.filter((entry) => entry.status === "CONFIRMED");
       requireCompetition(confirmed.length === current.configuration.teamCount * 5, "PRECONDITION_FAILED", "Exactly five confirmed participants per team are required.");
       if (positional) for (const position of ["TOP", "JGL", "MID", "ADC", "SUP"] as const) requireCompetition(confirmed.filter((entry) => entry.position === position).length === current.configuration.teamCount, "INVALID_ROSTER", `Exactly one ${position} participant per team is required.`);
-      const ratingPolicy = positional ? undefined : current.ratingPolicy ?? validateRatingPolicy(DEFAULT_RATING_POLICY);
-      const participants = Object.freeze(confirmed.map((entry) => Object.freeze({ id: entry.id, playerId: entry.playerId, position: positional ? entry.position : null, isCaptain: false, teamId: null, auctionStatus: "PENDING" as const, purchasePoints: null, drawOrder: null, ...(ratingPolicy ? { provisionalRating: { policy: ratingPolicy, components: {}, collectedAt: now } } : {}) })));
-      return updated(current, now, { participants, ...(ratingPolicy ? { ratingPolicy } : {}), lifecycle: transitionDestructionLifecycle(current.lifecycle, { type: "CLOSE_RECRUITMENT", participantsReady: true }) });
+      const ratingPolicy = positional ? undefined : upgraded.ratingPolicy ?? validateRatingPolicy(DEFAULT_RATING_POLICY);
+      const participants = Object.freeze(confirmed.map((entry) => {
+        const participant = { id: entry.id, playerId: entry.playerId, position: positional ? entry.position : null, isCaptain: false, teamId: null, auctionStatus: "PENDING" as const, purchasePoints: null, drawOrder: null };
+        return ratingPolicy ? withSelfReportedRecord(participant, ratingPolicy, entry.selfReportedRecord, now) : participant;
+      }));
+      return updated(upgraded, now, { participants, ...(ratingPolicy ? { ratingPolicy } : {}), lifecycle: transitionDestructionLifecycle(current.lifecycle, { type: "CLOSE_RECRUITMENT", participantsReady: true }) });
     }
     case "SYNC_ARAM_RECORD":
       requireCompetition(!current.ratingPolicy, "INVALID_TRANSITION", "다섯 항목 자동 평가를 사용 중입니다. 자동 평가 재시도를 사용해 주세요.");
@@ -268,7 +285,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       const aram = current.configuration.gameMode === "ARAM" || current.configuration.gameMode === "ARAM_MAYHEM";
       if (aram) requireCompetition(current.participants.every((p) => {
         const rating = participantAuctionRating(p);
-        return rating && p.minimumBid === rating.minimumBid && (current.ratingPolicy ? Boolean(p.provisionalRating) && RATING_KEYS.every((key) => p.provisionalRating!.policy.weights[key] === current.ratingPolicy!.weights[key]) : p.aramRecord?.mode === current.configuration.gameMode);
+        return rating && p.minimumBid === rating.minimumBid && (current.ratingPolicy ? p.provisionalRating?.policy.version === current.ratingPolicy.version && RATING_KEYS.every((key) => p.provisionalRating!.policy.weights[key] === current.ratingPolicy!.weights[key]) : p.aramRecord?.mode === current.configuration.gameMode);
       }), "PRECONDITION_FAILED", "모든 참가자의 평가 항목과 임시 등급을 먼저 준비해 주세요.");
       requireCompetition(command.payload.captains.every((c) => current.participants.some((p) => p.id === c.participantId)), "PRECONDITION_FAILED", "주장 참가자를 확인해 주세요.");
       const captainPoints = (captain: (typeof command.payload.captains)[number]) => aram ? participantAuctionRating(current.participants.find((p) => p.id === captain.participantId)!)!.captainPoints : calculateCaptainAuctionPoints(captain.baselineValue);

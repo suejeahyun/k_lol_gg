@@ -13,7 +13,7 @@ async function port() {
   return number;
 }
 
-export async function runDestructionBrowserInteractions({ origin, tournamentId, absoluteRatingsOnly = false, mayhemId, accountToken, recruitingIds, classicRecruitingId, adminToken, output, root }) {
+export async function runDestructionBrowserInteractions({ origin, tournamentId, absoluteRatingsOnly = false, selfReportedOnly = false, frozenId, mayhemId, accountToken, recruitingIds, classicRecruitingId, adminToken, output, root }) {
   const debugPort = await port();
   const parent = resolve(tmpdir());
   const profile = await mkdtemp(join(parent, "klol-destruction-browser-"));
@@ -71,6 +71,36 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
       const accessibility = await evaluate("axe.run(document.querySelector('[aria-label=\"멸망전 운영 작업\"]'), { runOnly: { type:'tag', values:['wcag2a','wcag2aa','wcag21aa'] } }).then(r => r.violations.map(v => ({id:v.id,impact:v.impact,nodes:v.nodes.length})))");
       assert.deepEqual(accessibility, []); assert.deepEqual(exceptions, []);
       report.push("자동 평가 운영 영역 axe 접근성·브라우저 예외 검사 통과");
+      if (selfReportedOnly) {
+        await call("Network.setCookie", { name: "klol_v2_account_session", value: accountToken, url: origin, httpOnly: true, sameSite: "Strict" });
+        const setNumber = (name, value) => evaluate(`(() => { const input = document.querySelector('input[name=${name}]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,${JSON.stringify(value)}); input.dispatchEvent(new Event('input',{bubbles:true})); })()`);
+        for (const id of [...recruitingIds, tournamentId]) {
+          await call("Page.navigate", { url: `${origin}/competitions/destruction/${id}?action=apply` });
+          await until("!!document.querySelector('input[name=wins]') && document.body.innerText.includes('연결됨')");
+          await setNumber("wins", "-1"); await setNumber("losses", "40");
+          assert.equal(await evaluate("document.querySelector('input[name=wins]').checkValidity()"), false);
+          await setNumber("wins", "1.5"); assert.equal(await evaluate("document.querySelector('input[name=wins]').checkValidity()"), false);
+          await setNumber("wins", "60");
+          await until("document.body.innerText.includes('승률 60.00% · 보정 점수 70.83')");
+          await click(id === tournamentId ? "승패 저장·점수 재계산" : "신청 수정");
+          await until("document.body.innerText.includes('작업을 반영했습니다.') && document.body.innerText.includes('연결됨')");
+          const response = await fetch(`${origin}/api/competitions/destruction/${id}/application`, { headers: { Cookie: `klol_v2_account_session=${accountToken}` } });
+          assert.equal(response.status, 200);
+          const application = (await response.json()).application;
+          assert.equal(application.selfReportedRecord.wins, 60); assert.equal(application.selfReportedRecord.losses, 40);
+          assert.equal(application.selfReportedRecord.mode, id === recruitingIds[0] ? "ARAM" : "ARAM_MAYHEM");
+          if (id === tournamentId) assert.equal((await current()).participants.find(p => p.playerId === application.playerId).provisionalRating.components.aram.source, "SELF_REPORTED");
+          await evaluate(await readFile(resolve(root, "node_modules/axe-core/axe.min.js"), "utf8"));
+          const violations = await evaluate("axe.run(document.querySelector('[aria-label=\"내 참가 신청과 MVP 투표\"]'), {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}).then(r=>r.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})))");
+          if (violations.length) await writeFile(join(output, "owner-accessibility-failure.json"), JSON.stringify(violations, null, 2));
+          assert.deepEqual(violations, []);
+          report.push(`${id === tournamentId ? "확정 참가자 승패 수정" : "모드별 신청"}: 정수 검증·승률 표시·저장·계정 본인 기재·axe 통과`);
+        }
+        await call("Page.navigate", { url: `${origin}/competitions/destruction/${frozenId}?action=apply` });
+        await until("document.body.innerText.includes('승패 수정 마감')");
+        assert.equal(await evaluate("document.querySelector('input[name=wins]') === null"), true);
+        report.push("주장·팀 확정 후 본인 승패 입력 잠금 확인");
+      }
       await writeFile(join(output, "interactions.json"), JSON.stringify({ passed: report, accessibility, exceptions }, null, 2));
       await call("Browser.close");
       return;

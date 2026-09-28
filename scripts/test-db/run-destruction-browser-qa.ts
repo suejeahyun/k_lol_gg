@@ -17,8 +17,9 @@ import { runDestructionBrowserInteractions } from "./destruction-browser-interac
 const execFile = promisify(execFileCallback);
 const root = resolve(import.meta.dirname, "../..");
 const scoreTablesOnly = process.argv.includes("--score-tables-only");
-const absoluteRatingsOnly = process.argv.includes("--absolute-ratings-only");
-const output = resolve(root, absoluteRatingsOnly ? "docs/qa/destruction-absolute-ratings-2026-09-28" : scoreTablesOnly ? "docs/qa/destruction-score-table-2026-09-27" : "docs/qa/destruction-captain-signup-2026-09-25");
+const selfReportedOnly = process.argv.includes("--self-reported-only");
+const absoluteRatingsOnly = process.argv.includes("--absolute-ratings-only") || selfReportedOnly;
+const output = resolve(root, selfReportedOnly ? "docs/qa/destruction-self-reported-2026-09-28" : absoluteRatingsOnly ? "docs/qa/destruction-absolute-ratings-2026-09-28" : scoreTablesOnly ? "docs/qa/destruction-score-table-2026-09-27" : "docs/qa/destruction-captain-signup-2026-09-25");
 const cluster = await startEphemeralCluster();
 const pool = new Pool({ connectionString: cluster.connectionString });
 let server: ReturnType<typeof spawn> | undefined;
@@ -80,6 +81,7 @@ try {
     const aggregate: DestructionAggregate = { ...row.aggregate_json, id, revision: 1, title: `${key} · 자동 절대평가 검증`, teams: [], participants: row.aggregate_json.participants.map((p, i) => ({ ...p, teamId: null, isCaptain: false, auctionStatus: "PENDING", minimumBid: i ? p.minimumBid : undefined, ratingCollection: { complete: true, retryAt: new Date().toISOString(), attempts: 0, error: null }, provisionalRating: { ...p.provisionalRating!, components: i ? p.provisionalRating!.components : { ...p.provisionalRating!.components, solo: { score: null, status: "NO_DATA", source: "RIOT", samples: 0, evidence: "현재 솔랭 미배치 · 합성 QA 자료", observedAt: new Date().toISOString() } } } })) };
     await pool.query("insert into competition.destruction_competitions (id,title,title_normalized,status,preliminary_format,team_count,participant_count,aggregate_json,revision,created_by_user_account_id,updated_by_user_account_id,created_at,updated_at) values ($1,$2,$2,'TEAM_BUILDING',$3,4,20,$4,1,$5,$5,now(),now())", [id, aggregate.title, aggregate.configuration.preliminaryFormat, JSON.stringify(aggregate), source.created_by_user_account_id]);
     scenarios[key + "-absolute-pending"] = id;
+    if (selfReportedOnly) for (const app of aggregate.applications) await pool.query("insert into competition.destruction_application_index (tournament_id,application_id,owner_user_account_id,player_id,position,status,updated_at) values ($1,$2,$3,$4,null,$5,now())", [id, app.id, app.userAccountId, app.playerId, app.status]);
   }
   const signingKeys = JSON.stringify({ current: "qa", keys: { qa: randomBytes(32).toString("base64url") } });
   const codec = new JoseSessionCodec(parseSessionSigningKeyring(signingKeys));
@@ -164,6 +166,10 @@ try {
       routes.push({ path: adminPath, name: `${name}-admin-${width}`, session: "admin", expectedRedirect: { destination: adminPath }, viewport: { width, height: 1000, mobile: width === 390 } });
     }
   }
+  if (selfReportedOnly) for (const width of [390, 1440]) for (const name of ["aram-recruiting", "mayhem-recruiting", "aram-absolute-pending", "mayhem-absolute-pending"]) {
+    const path = `/competitions/destruction/${scenarios[name]}?action=apply`;
+    routes.push({ path, name: `${name}-owner-${width}`, session: "account", expectedRedirect: { destination: path }, viewport: { width, height: 1000, mobile: width === 390 } });
+  }
   const plan = resolve(output, "capture-plan.json");
   await writeFile(plan, JSON.stringify(routes, null, 2));
   console.log(`[destruction-browser] capturing ${routes.length} pages at ${origin}`);
@@ -175,7 +181,7 @@ try {
   if (failures.length) throw new Error(`Browser QA failures: ${JSON.stringify(failures.map(({ name, issues }) => ({ name, issues })))}`);
   }
   if (!scoreTablesOnly) {
-  await runDestructionBrowserInteractions({ origin, tournamentId: absoluteRatingsOnly ? scenarios["mayhem-absolute-pending"] : scenarios.auction, absoluteRatingsOnly, mayhemId, accountToken, classicRecruitingId: scenarios.recruiting, recruitingIds: [scenarios["aram-recruiting"], scenarios["mayhem-recruiting"]], adminToken: token, output, root });
+  await runDestructionBrowserInteractions({ origin, tournamentId: absoluteRatingsOnly ? scenarios["mayhem-absolute-pending"] : scenarios.auction, absoluteRatingsOnly, selfReportedOnly, frozenId: scenarios["mayhem-absolute-frozen"], mayhemId, accountToken, classicRecruitingId: scenarios.recruiting, recruitingIds: [scenarios["aram-recruiting"], scenarios["mayhem-recruiting"]], adminToken: token, output, root });
   await writeFile(resolve(output, "edge-transport.json"), JSON.stringify(transport, null, 2));
   if (transport.legacyMutationRequests || transport.rewrittenResponses || !transport.applicationRevisionRequests) throw new Error("Browser mutations must preserve application revisions without triggering edge HTTP conditionals");
   console.log("[destruction-browser] interactions and accessibility passed");

@@ -1,6 +1,7 @@
 import { AramSyncError, type AramCollection, type AramRecord } from "./aram-rating";
 import { boundedRatingScore, evaluateProvisionalRating, RATING_KEYS, type RatingComponent, type RatingKey, type RatingPolicy, type RatingSnapshot } from "./provisional-rating";
 import type { DestructionParticipant } from "./teams";
+import { selfReportedRating } from "./self-reported-rating";
 
 export interface AutomaticRatingSources {
   component(key: Exclude<RatingKey, "aram">): Promise<RatingComponent>;
@@ -15,7 +16,8 @@ export async function advanceAutomaticRating(participant: DestructionParticipant
   let next = participant;
   let component: RatingComponent | undefined;
   try {
-    if (key === "aram") {
+    if (key === "aram" && policy.version === "ABSOLUTE_V2") component = selfReportedRating(participant.selfReportedRecord, now);
+    else if (key === "aram") {
       const result = await sources.aram(participant.aramCollection);
       next = { ...participant, aramCollection: result.collection };
       if (result.record) {

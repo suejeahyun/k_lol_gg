@@ -290,7 +290,12 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
   }
   async getOwnApplication(tournamentId: string, ownerUserAccountId: string) {
     const row = (await this.database.select({ applicationId: destructionApplicationIndex.applicationId, playerId: destructionApplicationIndex.playerId, position: destructionApplicationIndex.position, status: destructionApplicationIndex.status, aggregateJson: destructionCompetitions.aggregateJson, revision: destructionCompetitions.revision }).from(destructionApplicationIndex).innerJoin(destructionCompetitions, eq(destructionCompetitions.id, destructionApplicationIndex.tournamentId)).where(and(eq(destructionApplicationIndex.tournamentId, tournamentId), eq(destructionApplicationIndex.ownerUserAccountId, ownerUserAccountId))).limit(1))[0];
-    return row ? { applicationId: row.applicationId, tournamentId, tournamentRevision: row.revision, playerId: row.playerId, position: row.position, status: row.status, captainVolunteer: (row.aggregateJson as unknown as DestructionAggregate).applications.find((entry) => entry.id === row.applicationId && entry.userAccountId === ownerUserAccountId)?.captainVolunteer === true } : null;
+    if (!row) return null;
+    const aggregate = row.aggregateJson as unknown as DestructionAggregate;
+    const application = aggregate.applications.find((entry) => entry.id === row.applicationId && entry.userAccountId === ownerUserAccountId);
+    return { applicationId: row.applicationId, tournamentId, tournamentRevision: row.revision, playerId: row.playerId, position: row.position, status: row.status, captainVolunteer: application?.captainVolunteer === true,
+      ...(application?.selfReportedRecord ? { selfReportedRecord: application.selfReportedRecord } : {}),
+      canEditModeRecord: aggregate.configuration.gameMode !== undefined && aggregate.configuration.gameMode !== "CLASSIC" && !aggregate.teams.length && ["RECRUITING", "TEAM_BUILDING"].includes(aggregate.lifecycle.status) && row.status === "CONFIRMED" };
   }
   async getOwnMvpBallots(tournamentId: string, ownerUserAccountId: string) {
     const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0];

@@ -60,9 +60,10 @@ test("automatic step persists partial collection, rate limits, missing data, and
     const collection = { linkId: "test-link", linkRevision: 1, matchIds: ["KR_1", "KR_2"], processed: aramCalls, wins: aramCalls, losses: 0, excluded: 0, startedAt: now };
     return { collection, ...(aramCalls === 2 ? { record: { mode: "ARAM" as const, source: "RIOT" as const, wins: 2, losses: 0, performanceScore: 60, fetchedAt: now, evidence: "synthetic facts" } } : {}) };
   } };
-  for (let i = 0; i < 5; i++) participant = await advanceAutomaticRating(participant, DEFAULT_RATING_POLICY, now, sources);
+  const legacyPolicy = { ...DEFAULT_RATING_POLICY, version: "ABSOLUTE_V1" as const };
+  for (let i = 0; i < 5; i++) participant = await advanceAutomaticRating(participant, legacyPolicy, now, sources);
   assert.equal(participant.ratingCollection?.complete, false); assert.equal(participant.aramCollection?.processed, 1); assert.equal(participant.minimumBid, undefined);
-  participant = await advanceAutomaticRating(participant, DEFAULT_RATING_POLICY, now, sources);
+  participant = await advanceAutomaticRating(participant, legacyPolicy, now, sources);
   assert.equal(participant.ratingCollection?.complete, true); assert.equal(participant.aramRecord?.mode, "ARAM"); assert.ok(participant.minimumBid);
   const limited = await advanceAutomaticRating(player(), DEFAULT_RATING_POLICY, now, { ...sources, component: async () => { throw new AramSyncError("RATE_LIMITED", 180); } });
   assert.equal(limited.ratingCollection?.retryAt, "2026-09-28T00:03:00.000Z"); assert.equal(limited.provisionalRating?.components.solo, undefined);

@@ -1,0 +1,306 @@
+[
+  {
+    "path": "/competitions/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd?tab=score-table",
+    "name": "aram-absolute-frozen-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd",
+    "name": "aram-absolute-frozen-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?tab=score-table",
+    "name": "aram-absolute-pending-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943",
+    "name": "aram-absolute-pending-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c?tab=score-table",
+    "name": "mayhem-absolute-frozen-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c",
+    "name": "mayhem-absolute-frozen-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?tab=score-table",
+    "name": "mayhem-absolute-pending-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939",
+    "name": "mayhem-absolute-pending-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd?tab=score-table",
+    "name": "aram-absolute-frozen-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd",
+    "name": "aram-absolute-frozen-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/12a5e67a-dc4b-46a3-804c-deb9610630bd"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?tab=score-table",
+    "name": "aram-absolute-pending-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943",
+    "name": "aram-absolute-pending-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c?tab=score-table",
+    "name": "mayhem-absolute-frozen-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c",
+    "name": "mayhem-absolute-frozen-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/3b33a5b5-3e05-4ae1-aa18-161010d76f6c"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?tab=score-table",
+    "name": "mayhem-absolute-pending-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939",
+    "name": "mayhem-absolute-pending-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/dc724ab1-32b1-4d2d-970c-9c0d9b624db8?action=apply",
+    "name": "aram-recruiting-owner-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/dc724ab1-32b1-4d2d-970c-9c0d9b624db8?action=apply"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/b936cfb3-37cd-4650-9077-5b46a6a4a3d4?action=apply",
+    "name": "mayhem-recruiting-owner-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/b936cfb3-37cd-4650-9077-5b46a6a4a3d4?action=apply"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?action=apply",
+    "name": "aram-absolute-pending-owner-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?action=apply"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?action=apply",
+    "name": "mayhem-absolute-pending-owner-390",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?action=apply"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/dc724ab1-32b1-4d2d-970c-9c0d9b624db8?action=apply",
+    "name": "aram-recruiting-owner-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/dc724ab1-32b1-4d2d-970c-9c0d9b624db8?action=apply"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/b936cfb3-37cd-4650-9077-5b46a6a4a3d4?action=apply",
+    "name": "mayhem-recruiting-owner-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/b936cfb3-37cd-4650-9077-5b46a6a4a3d4?action=apply"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?action=apply",
+    "name": "aram-absolute-pending-owner-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/180dd1f6-a72b-493e-b6e0-ed833d6ca943?action=apply"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?action=apply",
+    "name": "mayhem-absolute-pending-owner-1440",
+    "session": "account",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/779ca9fc-53e7-4c61-ac2c-c3598c2f4939?action=apply"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  }
+]
