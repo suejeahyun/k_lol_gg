@@ -1,6 +1,6 @@
 # K-LOL.GG V2
 
-**멸망전 자동 절대평가 1.4.0 소스 구현·운영 미배포**: 칼바람·증바람 참가 확정 후 5개 항목 자동 수집과 경매 포인트 연결. [기준·검증 근거](docs/qa-evidence/destruction-modes-v1.4.0-2026-09-28/README.md).
+**멸망전 자동 절대평가 1.4.1 운영 반영**: 칼바람·증바람 참가 확정 후 5개 항목 자동 수집과 경매 포인트 연결. [운영 검증](docs/qa-evidence/destruction-modes-v1.4.1-2026-09-28/production.md).
 
 **멸망전 1.2.0 운영 반영**: 세 모드 참가 신청 시 일반 선수/주장 지원 선택, 모집 심사·주장 선정 목록 표시. 기존 심사 큐·경매 연출 유지. [검증·배포 근거](docs/qa-evidence/destruction-modes-v1.2.0-2026-09-25/README.md).
 

@@ -1,0 +1,53 @@
+{
+  "source": "78a90191051e1fac28603cf9f865b6100173a02b",
+  "deploymentId": "dpl_CpHDpYe5LusRLrXLmH2o4CgNafeN",
+  "url": "https://k-lol-5jbzvj7cb-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://k-lol-gg.vercel.app",
+  "state": "READY",
+  "healthStatus": "ready",
+  "crons": [
+    {
+      "path": "/api/cron/destruction-ratings",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/statistics-projection",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/kakao-daily-close",
+      "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/riot-sync",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+  "results": [
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/api/cron/destruction-ratings",
+      "status": 401
+    },
+    {
+      "path": "/api/admin/competitions/destruction",
+      "status": 401
+    },
+    {
+      "path": "/admin/progress/destruction/new",
+      "status": 307
+    },
+    {
+      "path": "/competitions/destruction/54d8919b-b6ce-4ee3-ac50-1a95b01a295b?tab=score-table",
+      "status": 200
+    }
+  ],
+  "checkedAt": "2026-09-28T12:38:53.603Z"
+}

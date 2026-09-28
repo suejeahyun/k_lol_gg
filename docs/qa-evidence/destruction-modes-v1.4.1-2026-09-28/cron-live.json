@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-09-28T12:39:54.885Z",
+  "revision": "28",
+  "policy": {
+    "version": "ABSOLUTE_V1",
+    "weights": {
+      "aram": 20,
+      "solo": 40,
+      "inhouse": 20,
+      "champions": 15,
+      "challenges": 5
+    }
+  },
+  "participantCount": 20,
+  "collectionStarted": 1,
+  "complete": 0,
+  "componentCount": 4,
+  "systemEvents": 4,
+  "lastSystemEvent": "2026-09-28T12:39:50.315Z"
+}
