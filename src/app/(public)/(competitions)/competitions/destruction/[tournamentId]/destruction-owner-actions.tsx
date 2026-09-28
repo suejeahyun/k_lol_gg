@@ -83,10 +83,10 @@ function ModeRecordFields({ gameMode, record }: { gameMode: string; record?: Sel
   const valid = wins !== "" && losses !== "" && [Number(wins), Number(losses)].every((n) => Number.isSafeInteger(n) && n >= 0) && total <= MAX_REPORTED_GAMES;
   const score = valid ? selfReportedRating({ mode: gameMode === "ARAM_MAYHEM" ? "ARAM_MAYHEM" : "ARAM", wins: Number(wins), losses: Number(losses), submittedAt: "" }, "").score : null;
   return <fieldset className={styles.modeRecord}><legend>{gameMode === "ARAM_MAYHEM" ? "증바람" : "일반 칼바람"} 누적 승패</legend>
-    <p>연결된 본인 계정의 해당 모드 누적 승수·패수를 숫자로 입력해 주세요. 본인 기재 자료로 평가에 반영됩니다.</p>
+    <p>연결된 본인 계정의 해당 모드 누적 승수·패수를 숫자로 입력해 주세요. 승수 + 패수를 총 판수로 평가하며 승률은 반영하지 않습니다. 300판에서 100점, 최대 100점입니다.</p>
     <label>승수<input name="wins" type="number" inputMode="numeric" min={0} max={MAX_REPORTED_GAMES} step={1} required value={wins} onChange={(event) => setWins(event.target.value)} /></label>
     <label>패수<input name="losses" type="number" inputMode="numeric" min={0} max={Math.max(0, MAX_REPORTED_GAMES - Number(wins || 0))} step={1} required value={losses} onChange={(event) => setLosses(event.target.value)} /></label>
-    <p role="status" aria-live="polite">{valid ? `총 ${total}판 · ${total ? `승률 ${(Number(wins) / total * 100).toFixed(2)}% · 보정 점수 ${score!.toFixed(2)}` : "0승 0패는 평가 대기"}` : "승수와 패수를 입력해 주세요."}</p>
-    <p>표본이 적으면 50점 쪽으로 보정합니다. 주장·팀 확정 후에는 입력값과 평가가 고정됩니다.</p>
+    <p role="status" aria-live="polite">{valid ? `총 ${total}판 · 판수 점수 ${score!.toFixed(2)}점 · 승률 미반영` : "승수와 패수를 입력해 주세요."}</p>
+    <p>입력한 0판은 0점, 미입력은 평가 대기입니다. 주장·팀 확정 후에는 입력값과 평가가 고정됩니다.</p>
   </fieldset>;
 }

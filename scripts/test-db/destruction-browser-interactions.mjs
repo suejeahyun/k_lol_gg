@@ -58,7 +58,7 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
       await evaluate("(() => { const input = [...document.querySelectorAll('label')].find(l => l.textContent === '솔랭 실력 (%)').querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'36'); input.dispatchEvent(new Event('input',{bubbles:true})); })()");
       await until("[...document.querySelectorAll('button')].some(b => b.textContent === '비중 저장·재계산' && b.disabled)");
       assert.equal((await current()).revision, before.revision);
-      await evaluate("(() => { const input = [...document.querySelectorAll('label')].find(l => l.textContent === '내전 통계 (%)').querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'24'); input.dispatchEvent(new Event('input',{bubbles:true})); })()");
+      await evaluate("(() => { const input = [...document.querySelectorAll('label')].find(l => l.textContent === '협곡 내전 (%)').querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'24'); input.dispatchEvent(new Event('input',{bubbles:true})); })()");
       await until("[...document.querySelectorAll('button')].some(b => b.textContent === '비중 저장·재계산' && !b.disabled)");
       await click("비중 저장·재계산");
       await until("document.body.innerText.includes('솔랭 실력 36%') && document.body.innerText.includes('연결됨')");
@@ -81,7 +81,7 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
           assert.equal(await evaluate("document.querySelector('input[name=wins]').checkValidity()"), false);
           await setNumber("wins", "1.5"); assert.equal(await evaluate("document.querySelector('input[name=wins]').checkValidity()"), false);
           await setNumber("wins", "60");
-          await until("document.body.innerText.includes('승률 60.00% · 보정 점수 70.83')");
+          await until("document.body.innerText.includes('판수 점수 33.33점 · 승률 미반영')");
           await click(id === tournamentId ? "승패 저장·점수 재계산" : "신청 수정");
           await until("document.body.innerText.includes('작업을 반영했습니다.') && document.body.innerText.includes('연결됨')");
           const response = await fetch(`${origin}/api/competitions/destruction/${id}/application`, { headers: { Cookie: `klol_v2_account_session=${accountToken}` } });
@@ -94,7 +94,7 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
           const violations = await evaluate("axe.run(document.querySelector('[aria-label=\"내 참가 신청과 MVP 투표\"]'), {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}).then(r=>r.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})))");
           if (violations.length) await writeFile(join(output, "owner-accessibility-failure.json"), JSON.stringify(violations, null, 2));
           assert.deepEqual(violations, []);
-          report.push(`${id === tournamentId ? "확정 참가자 승패 수정" : "모드별 신청"}: 정수 검증·승률 표시·저장·계정 본인 기재·axe 통과`);
+          report.push(`${id === tournamentId ? "확정 참가자 승패 수정" : "모드별 신청"}: 정수 검증·판수 점수 표시·저장·계정 본인 기재·axe 통과`);
         }
         await call("Page.navigate", { url: `${origin}/competitions/destruction/${frozenId}?action=apply` });
         await until("document.body.innerText.includes('승패 수정 마감')");

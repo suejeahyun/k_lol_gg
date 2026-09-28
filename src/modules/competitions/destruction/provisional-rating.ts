@@ -5,9 +5,12 @@ import type { DestructionParticipant } from "./teams";
 export const RATING_KEYS = ["aram", "solo", "inhouse", "champions", "challenges"] as const;
 export type RatingKey = typeof RATING_KEYS[number];
 export const RATING_LABELS: Record<RatingKey, string> = { aram: "일반 칼바람 성과", solo: "솔랭 실력", inhouse: "내전 통계", champions: "챔피언 대응력", challenges: "칼바람 도전과제" };
-export type RatingPolicy = Readonly<{ version: "ABSOLUTE_V1" | "ABSOLUTE_V2"; weights: Readonly<Record<RatingKey, number>> }>;
-export const DEFAULT_RATING_POLICY: RatingPolicy = { version: "ABSOLUTE_V2", weights: { aram: 20, solo: 40, inhouse: 20, champions: 15, challenges: 5 } };
-export function ratingLabel(key: RatingKey, policy: RatingPolicy) { return key === "aram" && policy.version === "ABSOLUTE_V2" ? "해당 모드 승패" : RATING_LABELS[key]; }
+export type RatingPolicy = Readonly<{ version: "ABSOLUTE_V1" | "ABSOLUTE_V2" | "ABSOLUTE_V3"; weights: Readonly<Record<RatingKey, number>> }>;
+export const DEFAULT_RATING_POLICY: RatingPolicy = { version: "ABSOLUTE_V3", weights: { aram: 30, solo: 50, inhouse: 10, champions: 5, challenges: 5 } };
+export function ratingLabel(key: RatingKey, policy: RatingPolicy) {
+  if (key === "aram" && policy.version !== "ABSOLUTE_V1") return policy.version === "ABSOLUTE_V3" ? "해당 모드 판수" : "해당 모드 승패";
+  return key === "inhouse" && policy.version === "ABSOLUTE_V3" ? "협곡 내전" : RATING_LABELS[key];
+}
 export const ABSOLUTE_TIER_FLOORS = { S: 80, A: 65, B: 50, C: 35, D: 0 } as const;
 export type RatingComponent = Readonly<{
   score: number | null;
@@ -28,7 +31,7 @@ export type RatingCollectionState = Readonly<{ attempts: number; retryAt: string
 
 export function validateRatingPolicy(value: unknown): RatingPolicy {
   const policy = value as RatingPolicy | null;
-  requireCompetition((policy?.version === "ABSOLUTE_V1" || policy?.version === "ABSOLUTE_V2") && typeof policy.weights === "object" && policy.weights !== null &&
+  requireCompetition((policy?.version === "ABSOLUTE_V1" || policy?.version === "ABSOLUTE_V2" || policy?.version === "ABSOLUTE_V3") && typeof policy.weights === "object" && policy.weights !== null &&
     Object.keys(policy).every((key) => ["version", "weights"].includes(key)) && Object.keys(policy.weights).length === RATING_KEYS.length &&
     RATING_KEYS.every((key) => Number.isSafeInteger(policy.weights[key]) && policy.weights[key] >= 0 && policy.weights[key] <= 100) &&
     RATING_KEYS.reduce((sum, key) => sum + policy.weights[key], 0) === 100,
@@ -68,7 +71,7 @@ export function participantAuctionRating(participant: DestructionParticipant) {
   if (participant.provisionalRating) {
     const result = evaluateProvisionalRating(participant.provisionalRating);
     if (result.tier === null || result.minimumBid === null || result.captainPoints === null) return null;
-    const record = participant.provisionalRating.policy.version === "ABSOLUTE_V2" ? participant.selfReportedRecord : participant.aramRecord;
+    const record = participant.provisionalRating.policy.version !== "ABSOLUTE_V1" ? participant.selfReportedRecord : participant.aramRecord;
     return { ...result, tier: result.tier, minimumBid: result.minimumBid, captainPoints: result.captainPoints,
       games: record ? record.wins + record.losses : 0, wins: record?.wins ?? 0, losses: record?.losses ?? 0,
       provisional: RATING_KEYS.some((key) => participant.provisionalRating!.policy.weights[key] > 0 && (participant.provisionalRating!.components[key]?.samples ?? 0) < (key === "aram" || key === "inhouse" ? 20 : 1)) };

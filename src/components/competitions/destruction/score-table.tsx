@@ -83,7 +83,7 @@ function AbsoluteScoreTable({ destruction }: { destruction: DestructionPublicDto
   return <section className={styles.workspace} aria-labelledby="score-table-title"><section className={styles.panel}>
     <h2 id="score-table-title">{DESTRUCTION_GAME_MODES[destruction.gameMode]} 멸망전 절대평가 점수표</h2>
     <p>총점 = {RATING_KEYS.map((key) => `${ratingLabel(key, policy)} × ${(policy.weights[key] / 100).toFixed(2)}`).join(" + ")}</p>
-    <p>각 항목 0~100점 · 참가자 순위와 무관한 고정 기준 · {policy.version}. {policy.version === "ABSOLUTE_V2" ? "신청한 모드의 누적 승패를 본인이 숫자로 기재합니다." : "증바람도 일반 칼바람 성과를 사용합니다."} 주장 확정 후 평가가 고정됩니다.</p>
+    <p>각 항목 0~100점 · 참가자 순위와 무관한 고정 기준 · {policy.version}. {policy.version === "ABSOLUTE_V3" ? "신청한 모드의 승수 + 패수를 총 판수로 평가합니다. 판수 / 300 × 100점, 최대 100점이며 승률은 미반영합니다. 입력한 0판은 0점, 미입력은 평가 대기입니다." : policy.version === "ABSOLUTE_V2" ? "신청한 모드의 누적 승패를 본인이 숫자로 기재합니다." : "증바람도 일반 칼바람 성과를 사용합니다."} 주장 확정 후 평가가 고정됩니다.</p>
     <p>초기 환산 기준이며 실력 예측력이 검증된 공식은 아닙니다. 누락 항목은 0점으로 처리하지 않고 평가 대기와 가능한 점수 범위를 표시합니다.</p>
     <div className={styles.tableWrap} role="region" aria-label="절대평가 등급별 경매 포인트" tabIndex={0}><table><caption>절대평가 등급과 경매 기준</caption>
       <thead><tr><th scope="col">등급</th><th scope="col">총점 하한</th><th scope="col">최소 입찰가</th><th scope="col">주장 시작 포인트</th></tr></thead>

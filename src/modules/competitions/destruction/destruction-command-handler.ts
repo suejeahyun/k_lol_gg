@@ -183,7 +183,7 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       return updated(current, now, { participants: current.participants.map((p) => p.id === command.payload.participantId ? { ...p, provisionalRating: { policy: current.ratingPolicy!, components: {}, collectedAt: now }, ratingCollection: undefined, aramCollection: undefined, aramRecord: undefined, minimumBid: undefined } : p) });
     }
     case "VERIFY_RATING_COMPONENT": {
-      requireCompetition(command.payload.key !== "aram" || current.ratingPolicy?.version !== "ABSOLUTE_V2", "PRECONDITION_FAILED", "해당 모드 승패는 신청자가 숫자로 입력해야 합니다.");
+      requireCompetition(command.payload.key !== "aram" || (current.ratingPolicy ?? DEFAULT_RATING_POLICY).version === "ABSOLUTE_V1", "PRECONDITION_FAILED", "해당 모드 승패는 신청자가 숫자로 입력해야 합니다.");
       requireCompetition(!positional && current.lifecycle.status === "TEAM_BUILDING" && !current.teams.length && current.ratingPolicy, "INVALID_TRANSITION", "주장 확정 전 누락 자료만 보완할 수 있습니다.");
       const participant = current.participants.find((p) => p.id === command.payload.participantId);
       requireCompetition(participant?.ratingCollection?.complete, "PRECONDITION_FAILED", "자동 수집이 끝난 참가자를 확인해 주세요.");

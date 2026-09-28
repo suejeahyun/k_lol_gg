@@ -5,6 +5,8 @@ import type { DestructionAggregate } from "./state";
 import type { DestructionParticipant } from "./teams";
 
 export const MAX_REPORTED_GAMES = 1_000_000;
+/** Initial absolute experience scale; independent of wins and entrant distribution. */
+export const FULL_SCORE_REPORTED_GAMES = 300;
 export type ReportedWinsLosses = Readonly<{ wins: number; losses: number }>;
 export type SelfReportedModeRecord = ReportedWinsLosses & Readonly<{ mode: "ARAM" | "ARAM_MAYHEM"; submittedAt: string }>;
 
@@ -16,10 +18,14 @@ export function validateReportedWinsLosses(value: unknown): ReportedWinsLosses {
   return { wins: record.wins, losses: record.losses };
 }
 
-export function selfReportedRating(record: SelfReportedModeRecord | undefined, now: string): RatingComponent {
+export function selfReportedRating(record: SelfReportedModeRecord | undefined, now: string, version: RatingPolicy["version"] = DEFAULT_RATING_POLICY.version): RatingComponent {
   if (!record) return { score: null, status: "NO_DATA", source: "SELF_REPORTED", samples: 0, observedAt: now, evidence: "신청자가 해당 모드의 누적 승수·패수를 입력해야 합니다." };
   const { wins, losses } = validateReportedWinsLosses({ wins: record.wins, losses: record.losses });
   const games = wins + losses;
+  if (version === "ABSOLUTE_V3") return {
+    score: boundedRatingScore(games / FULL_SCORE_REPORTED_GAMES * 100), status: "READY", source: "SELF_REPORTED", samples: games, observedAt: record.submittedAt,
+    evidence: `${DESTRUCTION_GAME_MODES[record.mode]} 누적 ${games}판 (${wins}승 ${losses}패) · 본인 기재 · ${FULL_SCORE_REPORTED_GAMES}판에서 100점, 상한 100점 · 승률 미반영`,
+  };
   return { score: games ? boundedRatingScore(((wins + 10) / (games + 20) - 0.3) / 0.4 * 100) : null,
     status: games ? "READY" : "NO_DATA", source: "SELF_REPORTED", samples: games, observedAt: record.submittedAt,
     evidence: `${DESTRUCTION_GAME_MODES[record.mode]} 누적 ${wins}승 ${losses}패 · 본인 기재 · ${games ? `승률 ${(wins / games * 100).toFixed(2)}% · 20판 중립 보정${games < 20 ? " · 표본 20판 미만" : ""}` : "0판은 미확인"}` };
@@ -27,7 +33,7 @@ export function selfReportedRating(record: SelfReportedModeRecord | undefined, n
 
 export function withSelfReportedRecord(participant: DestructionParticipant, policy: RatingPolicy, record: SelfReportedModeRecord | undefined, now: string): DestructionParticipant {
   const provisionalRating: RatingSnapshot = { ...(participant.provisionalRating ?? { components: {}, collectedAt: now }), policy, collectedAt: now,
-    components: { ...participant.provisionalRating?.components, aram: selfReportedRating(record, now) } };
+    components: { ...participant.provisionalRating?.components, aram: selfReportedRating(record, now, policy.version) } };
   return { ...participant, selfReportedRecord: record, aramRecord: undefined, aramCollection: undefined, provisionalRating,
     minimumBid: evaluateProvisionalRating(provisionalRating).minimumBid ?? undefined,
     ratingCollection: { attempts: 0, error: null, retryAt: now, complete: RATING_KEYS.every((key) => !policy.weights[key] || Boolean(provisionalRating.components[key])) } };
@@ -37,7 +43,10 @@ export function withSelfReportedRecord(participant: DestructionParticipant, poli
 export function upgradeSelfReportedRatings(current: DestructionAggregate, now: string): DestructionAggregate {
   const mode = current.configuration.gameMode;
   if (!mode || mode === "CLASSIC" || current.teams.length || !["PLANNED", "RECRUITING", "TEAM_BUILDING"].includes(current.lifecycle.status)) return current;
-  const policy: RatingPolicy = { ...(current.ratingPolicy ?? DEFAULT_RATING_POLICY), version: "ABSOLUTE_V2" };
+  const previous = current.ratingPolicy;
+  const oldDefaults = { aram: 20, solo: 40, inhouse: 20, champions: 15, challenges: 5 };
+  const policy: RatingPolicy = { version: DEFAULT_RATING_POLICY.version,
+    weights: previous && !RATING_KEYS.every((key) => previous.weights[key] === oldDefaults[key]) ? previous.weights : DEFAULT_RATING_POLICY.weights };
   if (current.ratingPolicy?.version === policy.version) return current;
   return { ...current, ratingPolicy: policy, participants: current.participants.map((p) => {
     const record = current.applications.find((a) => a.id === p.id && a.playerId === p.playerId)?.selfReportedRecord;

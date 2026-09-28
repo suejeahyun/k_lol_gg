@@ -14,19 +14,19 @@ const ready = (score: number): RatingComponent => ({ score, status: "READY", sou
 const snapshot = (scores: number[]): RatingSnapshot => ({ policy: structuredClone(DEFAULT_RATING_POLICY), components: Object.fromEntries(RATING_KEYS.map((key, i) => [key, ready(scores[i]!)])), collectedAt: now });
 const player = (): DestructionParticipant => ({ id: "11111111-1111-4111-8111-111111111111", playerId: "22222222-2222-4222-8222-222222222222", position: null, isCaptain: false, teamId: null, auctionStatus: "PENDING", purchasePoints: null, drawOrder: null });
 
-test("agreed 20/40/20/15/5 formula uses fixed absolute cutoffs and no participant percentiles", () => {
+test("agreed 30/50/10/5/5 formula uses fixed absolute cutoffs and no participant percentiles", () => {
   const result = evaluateProvisionalRating(snapshot([80, 60, 70, 90, 40]));
-  assert.equal(result.score, 69.5); assert.equal(result.tier, "A"); assert.equal(result.minimumBid, 250); assert.equal(result.captainPoints, 1750);
+  assert.equal(result.score, 67.5); assert.equal(result.tier, "A"); assert.equal(result.minimumBid, 250); assert.equal(result.captainPoints, 1750);
   for (const [score, tier] of [[0, "D"], [34.99, "D"], [35, "C"], [50, "B"], [65, "A"], [79.99, "A"], [80, "S"], [100, "S"]] as const) assert.equal(evaluateProvisionalRating(snapshot(RATING_KEYS.map(() => score))).tier, tier);
   const samePlayer = { ...player(), provisionalRating: snapshot([80, 60, 70, 90, 40]) };
-  assert.equal(participantAuctionRating(samePlayer)?.score, 69.5);
+  assert.equal(participantAuctionRating(samePlayer)?.score, 67.5);
 });
 
 test("unknown data is neither a zero nor a redistributed weight; zero-weight components are excluded", () => {
   const full = snapshot([80, 60, 70, 90, 40]);
   const partial = { ...full, components: { ...full.components, solo: { ...ready(0), score: null, status: "NO_DATA" as const } } };
   const result = evaluateProvisionalRating(partial);
-  assert.equal(result.score, null); assert.equal(result.tier, null); assert.equal(result.minimum, 45.5); assert.equal(result.maximum, 85.5);
+  assert.equal(result.score, null); assert.equal(result.tier, null); assert.equal(result.minimum, 37.5); assert.equal(result.maximum, 87.5);
   assert.deepEqual(result.missing, ["solo"]);
   const policy = { ...DEFAULT_RATING_POLICY, weights: { aram: 100, solo: 0, inhouse: 0, champions: 0, challenges: 0 } };
   assert.equal(evaluateProvisionalRating({ ...full, policy, components: { aram: ready(80) } }).score, 80);

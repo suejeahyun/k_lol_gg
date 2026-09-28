@@ -1,6 +1,7 @@
 # K-LOL.GG V2
 
 **멸망전 승패 직접 입력 평가 1.5.0 운영 반영**: 신청 시 승수·패수 숫자 입력, 자동 합산·본인 수정·확정 후 잠금. [운영 검증](docs/qa-evidence/destruction-modes-v1.5.0-2026-09-28/production.md).
+- **멸망전 판수 평가 1.6.0 소스 검증**: 판수 30·솔랭 50·협곡 내전 10·챔피언 5·도전과제 5, 승률 미반영. [검증 범위](docs/qa-evidence/destruction-modes-v1.6.0-2026-09-28/README.md).
 
 **멸망전 1.2.0 운영 반영**: 세 모드 참가 신청 시 일반 선수/주장 지원 선택, 모집 심사·주장 선정 목록 표시. 기존 심사 큐·경매 연출 유지. [검증·배포 근거](docs/qa-evidence/destruction-modes-v1.2.0-2026-09-25/README.md).
 

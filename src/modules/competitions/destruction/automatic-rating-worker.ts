@@ -34,7 +34,7 @@ export async function runAutomaticRatingStep(database: V2Database, now = new Dat
       sql`exists (select 1 from jsonb_array_elements(${destructionCompetitions.aggregateJson}->'participants') p
         where (coalesce(p->'ratingCollection'->>'complete', 'false') <> 'true'
         and coalesce(p->'ratingCollection'->>'retryAt', '') <= ${now.toISOString()})
-        or coalesce(${destructionCompetitions.aggregateJson}->'ratingPolicy'->>'version', '') <> 'ABSOLUTE_V2')`))
+        or coalesce(${destructionCompetitions.aggregateJson}->'ratingPolicy'->>'version', '') <> ${DEFAULT_RATING_POLICY.version})`))
       .orderBy(asc(destructionCompetitions.updatedAt), asc(destructionCompetitions.id)).limit(1).for("update", { skipLocked: true }))[0];
     if (!row) return { kind: "IDLE", retryAfterSeconds: 0 };
     const stored = row.aggregateJson as unknown as DestructionAggregate;

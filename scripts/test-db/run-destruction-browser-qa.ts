@@ -19,7 +19,7 @@ const root = resolve(import.meta.dirname, "../..");
 const scoreTablesOnly = process.argv.includes("--score-tables-only");
 const selfReportedOnly = process.argv.includes("--self-reported-only");
 const absoluteRatingsOnly = process.argv.includes("--absolute-ratings-only") || selfReportedOnly;
-const output = resolve(root, selfReportedOnly ? "docs/qa/destruction-self-reported-2026-09-28" : absoluteRatingsOnly ? "docs/qa/destruction-absolute-ratings-2026-09-28" : scoreTablesOnly ? "docs/qa/destruction-score-table-2026-09-27" : "docs/qa/destruction-captain-signup-2026-09-25");
+const output = resolve(root, selfReportedOnly ? "docs/qa/destruction-game-count-2026-09-28" : absoluteRatingsOnly ? "docs/qa/destruction-absolute-ratings-2026-09-28" : scoreTablesOnly ? "docs/qa/destruction-score-table-2026-09-27" : "docs/qa/destruction-captain-signup-2026-09-25");
 const cluster = await startEphemeralCluster();
 const pool = new Pool({ connectionString: cluster.connectionString });
 let server: ReturnType<typeof spawn> | undefined;

@@ -16,7 +16,7 @@ export async function advanceAutomaticRating(participant: DestructionParticipant
   let next = participant;
   let component: RatingComponent | undefined;
   try {
-    if (key === "aram" && policy.version === "ABSOLUTE_V2") component = selfReportedRating(participant.selfReportedRecord, now);
+    if (key === "aram" && policy.version !== "ABSOLUTE_V1") component = selfReportedRating(participant.selfReportedRecord, now, policy.version);
     else if (key === "aram") {
       const result = await sources.aram(participant.aramCollection);
       next = { ...participant, aramCollection: result.collection };
