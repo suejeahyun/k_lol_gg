@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-09-28T14:23:52.435Z",
+  "revision": 144,
+  "policy": {
+    "version": "ABSOLUTE_V3",
+    "weights": {
+      "aram": 30,
+      "solo": 50,
+      "inhouse": 10,
+      "champions": 5,
+      "challenges": 5
+    }
+  },
+  "mode": "ARAM_MAYHEM",
+  "applicationConfirmed": true,
+  "selfReportedNumbersPresent": true,
+  "reportedRecord": {
+    "wins": 100,
+    "losses": 55,
+    "games": 155
+  },
+  "canEditModeRecord": true,
+  "collectionComplete": true,
+  "components": {
+    "aram": {
+      "score": 51.67,
+      "status": "READY",
+      "source": "SELF_REPORTED"
+    },
+    "solo": {
+      "score": 78.46,
+      "status": "READY",
+      "source": "RIOT"
+    },
+    "inhouse": {
+      "score": 43.65,
+      "status": "READY",
+      "source": "INHOUSE"
+    },
+    "champions": {
+      "score": 100,
+      "status": "READY",
+      "source": "RIOT"
+    },
+    "challenges": {
+      "score": 72.93,
+      "status": "READY",
+      "source": "RIOT"
+    }
+  },
+  "result": {
+    "score": 67.74,
+    "minimum": 67.74,
+    "maximum": 67.74,
+    "tier": "A",
+    "minimumBid": 250,
+    "captainPoints": 1750,
+    "missing": [],
+    "formulaVersion": "ABSOLUTE_V3"
+  },
+  "manualScoreOverrides": 0
+}

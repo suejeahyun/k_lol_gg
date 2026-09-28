@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-28T14:24:10.364Z",
+  "url": "https://k-lol-gg.vercel.app/competitions/destruction/54d8919b-b6ce-4ee3-ac50-1a95b01a295b?tab=score-table",
+  "status": 200,
+  "checks": {
+    "policy": true,
+    "gameWeight": true,
+    "soloWeight": true,
+    "inhouseWeight": true,
+    "championWeight": true,
+    "challengeWeight": true,
+    "gameCountFormula": true,
+    "noWinRate": true,
+    "actualScore": true
+  },
+  "originalNumbersPreserved": true,
+  "fourOtherComponentsPreserved": true,
+  "scheduledRequests": [
+    {
+      "checkedAt": "2026-09-28T14:23:18.173Z",
+      "path": "/api/cron/destruction-ratings",
+      "status": 200
+    }
+  ]
+}
