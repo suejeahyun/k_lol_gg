@@ -31,7 +31,14 @@ export class RiotRatingFacts {
     const configs = await this.api.json("/lol/challenges/v1/challenges/config", this.platformBaseUrl);
     // Normalize locale casing/typography only; seasonal suffixes still cannot match.
     if (!Array.isArray(configs) || configs.length > 5000) throw new AramSyncError("INVALID_RESPONSE");
-    const names = ["All Random All Champions", "All Random All Flawless", "NA-RAM"];
+    // Live KR config (2026-09-28) omits tracking. Pin the three cumulative IDs,
+    // verify their names as well, and reject any explicitly seasonal/expiring row.
+    const definitions = [
+      { id: 101301, name: "All Random All Champions" },
+      { id: 101302, name: "All Random All Flawless" },
+      { id: 101307, name: "NA-RAM" },
+    ];
+    const names = definitions.map((definition) => definition.name);
     const normalize = (value: unknown) => typeof value === "string" ? value.normalize("NFKC").replace(/[‐‑–—]/gu, "-").replace(/\s+/gu, " ").trim().toLowerCase() : "";
     const candidates = configs.flatMap((raw) => {
       const cfg = object(raw); const locales = object(cfg?.localizedNames);
@@ -42,7 +49,10 @@ export class RiotRatingFacts {
     });
     const selected = candidates.flatMap(({ cfg, name }) => {
       const master = object(cfg.thresholds)?.MASTER;
-      return cfg.state === "ENABLED" && cfg.tracking === "LIFETIME" && count(cfg.id) && typeof master === "number" && Number.isFinite(master) && master > 0
+      const pinned = definitions.some((definition) => definition.id === cfg.id && definition.name === name);
+      const lifetime = cfg.tracking === "LIFETIME" || cfg.tracking === undefined;
+      const unexpired = cfg.endTimestamp === undefined || cfg.endTimestamp === 0;
+      return pinned && cfg.state === "ENABLED" && lifetime && unexpired && typeof master === "number" && Number.isFinite(master) && master > 0
         ? [{ id: cfg.id, name, target: master }] : [];
     });
     if (selected.length !== names.length || new Set(selected.map((item) => item.name)).size !== names.length || new Set(selected.map((item) => item.id)).size !== names.length) {
@@ -66,6 +76,6 @@ export class RiotRatingFacts {
     if (values.some((value) => value === null)) return noRatingData("일부 칼바람 도전과제 진행값 미제공", now);
     const found = values.filter((value) => value !== null);
     return { score: boundedRatingScore(found.reduce((total, item) => total + Math.min(item.value / item.target, 1) * 100, 0) / found.length), status: "READY", source: "RIOT", samples: found.length, observedAt: now,
-      evidence: found.map((item) => `${item.name}(${item.id}) ${item.value}/${item.target}`).join(" · ") + " · 누적 성취, 증바람 판수 아님" };
+      evidence: found.map((item) => `${item.name}(${item.id}) ${item.value}/${item.target}`).join(" · ") + " · 고정 누적 ID·이름 검증, 증바람 판수 아님" };
   }
 }

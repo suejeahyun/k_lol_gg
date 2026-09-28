@@ -266,12 +266,13 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     await database.insert(mmrPlayerProfiles).values({ generation: 1, playerId: playerIds[0]!, overallScoreBp: 7000, confidenceBp: 10000, sampleSize: 40, formulaVersion: MMR_FORMULA_VERSION, calculatedAt: now });
     const calls: string[] = [];
     const challengeNames = ["All Random All Champions", "All Random All Flawless", "NA-RAM"];
+    const challengeIds = [101301, 101302, 101307];
     const request: typeof fetch = async (input) => {
       const url = new URL(String(input)); calls.push(url.toString());
       if (url.pathname.includes("league/v4")) return Response.json([{ queueType: "RANKED_SOLO_5x5", tier: "DIAMOND", rank: "I", leaguePoints: 50, wins: 50, losses: 50 }]);
       if (url.pathname.includes("champion-mastery")) return Response.json(Array.from({ length: 40 }, (_, i) => ({ championId: i + 1, championPoints: 10000, lastPlayTime: now.getTime() })));
-      if (url.pathname.endsWith("challenges/config")) return Response.json(challengeNames.map((name, i) => ({ id: i + 1, state: "ENABLED", tracking: "LIFETIME", localizedNames: { en_US: { name } }, thresholds: { MASTER: 100 } })));
-      if (url.pathname.includes("player-data")) return Response.json({ challenges: challengeNames.map((_, i) => ({ challengeId: i + 1, value: 60 })) });
+      if (url.pathname.endsWith("challenges/config")) return Response.json(challengeNames.map((name, i) => ({ id: challengeIds[i], state: "ENABLED", localizedNames: { en_US: { name } }, thresholds: { MASTER: 100 } })));
+      if (url.pathname.includes("player-data")) return Response.json({ challenges: challengeIds.map((challengeId) => ({ challengeId, value: 60 })) });
       if (url.pathname.endsWith("/ids")) { assert.equal(url.searchParams.get("queue"), "450"); assert.ok(url.searchParams.has("startTime")); return Response.json(["KR_12345"]); }
       return Response.json({ metadata: { matchId: "KR_12345" }, info: { queueId: 450, gameDuration: 900, participants: Array.from({ length: 10 }, (_, i) => ({ puuid: i ? "other-" + i : puuid, win: i < 5, teamId: i < 5 ? 100 : 200, kills: 5, assists: 15, totalDamageDealtToChampions: 10000, totalHealsOnTeammates: 100, totalDamageShieldedOnTeammates: 100, timeCCingOthers: 10 })) } });
     };
