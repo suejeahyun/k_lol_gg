@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-09-28T13:22:43.784Z",
+  "collectionComplete": true,
+  "components": {
+    "aram": {
+      "score": null,
+      "status": "NO_DATA",
+      "samples": 0
+    },
+    "solo": {
+      "score": 78.46,
+      "status": "READY",
+      "samples": 475
+    },
+    "inhouse": {
+      "score": 43.65,
+      "status": "READY",
+      "samples": 45
+    },
+    "champions": {
+      "score": 100,
+      "status": "READY",
+      "samples": 154
+    },
+    "challenges": {
+      "score": 72.93,
+      "status": "READY",
+      "samples": 3
+    }
+  },
+  "result": {
+    "score": null,
+    "minimum": 58.76,
+    "maximum": 78.75999999999999,
+    "tier": null,
+    "minimumBid": null,
+    "captainPoints": null,
+    "missing": [
+      "aram"
+    ],
+    "formulaVersion": "ABSOLUTE_V1"
+  },
+  "manualScoreOverrides": 0,
+  "connectedChampionDistribution": {
+    "uniqueParticipants": 1,
+    "scores": [
+      100
+    ],
+    "formulaChanged": false
+  }
+}
