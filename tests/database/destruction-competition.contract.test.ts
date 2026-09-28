@@ -289,7 +289,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       const components = Object.fromEntries(RATING_KEYS.map((key) => [key, { score: 70, status: "READY", source: "RIOT", samples: 100, observedAt: now.toISOString(), evidence: "synthetic fixture" }]));
       const seeded = { ...pending, participants: pending.participants.map((p) => p.playerId === playerIds[0] ? (mode === "ARAM" ? { ...p, provisionalRating: undefined, aramCollection: { linkId, linkRevision: 1, matchIds: ["KR_99999"], processed: 1, wins: 1, losses: 0, excluded: 0, startedAt: now.toISOString() } } : p) : ({ ...p, provisionalRating: { policy: DEFAULT_RATING_POLICY, components, collectedAt: now.toISOString() }, minimumBid: 250, ratingCollection: { complete: true, retryAt: now.toISOString(), attempts: 0, error: null } })) };
       await database.update(destructionCompetitions).set({ aggregateJson: JSON.parse(JSON.stringify(seeded)) }).where(eq(destructionCompetitions.id, id));
-      for (let step = 0; step < 5; step++) { workerTime += 10_000; assert.equal((await runAutomaticRatingStep(database, new Date(workerTime), request, config)).kind, "UPDATED"); }
+      for (let step = 0; step < 7; step++) { workerTime += 10_000; assert.equal((await runAutomaticRatingStep(database, new Date(workerTime), request, config)).kind, "UPDATED"); }
       let state = (await adapter.getAdmin(id))!;
       const measured = state.participants.find((p) => p.playerId === playerIds[0])!;
       assert.equal(measured.ratingCollection?.complete, true);
@@ -298,6 +298,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       assert.ok(measured.provisionalRating?.components.inhouse?.evidence.includes(mode === "ARAM_MAYHEM" ? "V1_INTERNAL_MMR_1" : MMR_FORMULA_VERSION));
       assert.equal(measured.aramRecord?.mode, "ARAM", "Mayhem uses the agreed normal ARAM proxy");
       assert.deepEqual(measured.aramCollection?.matchIds, ["KR_12345"], "legacy partial lists cannot bypass the 90-day collection window");
+      assert.equal(measured.aramCollection?.windowDays, 365);
       assert.equal(JSON.stringify(await adapter.getPublic(id)).includes(puuid), false);
       assert.equal(JSON.stringify(await adapter.getPublic(id)).includes(linkId), false);
       assert.equal((await runAutomaticRatingStep(database, new Date(workerTime + 1000), request, config)).kind, "RATE_LIMITED");
@@ -446,7 +447,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     assert.equal((await database.select().from(destructionApplicationIndex).where(eq(destructionApplicationIndex.tournamentId, tournamentId))).length, 20);
     const receipts = await database.select().from(destructionCommandReceipts);
     const workerEvents = await database.select().from(auditEvents).where(eq(auditEvents.action, "DESTRUCTION_AUTO_RATING"));
-    assert.equal(workerEvents.length, 10);
+    assert.equal(workerEvents.length, 14);
     assert.equal((await database.select().from(destructionOutbox)).length, receipts.length + workerEvents.length);
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "DESTRUCTION"))).length, receipts.length + workerEvents.length);
     await assert.rejects(database.delete(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)));

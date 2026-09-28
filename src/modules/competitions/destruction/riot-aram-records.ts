@@ -27,18 +27,26 @@ export class RiotAramRecords {
   async next(input: { puuid: string; linkId: string; linkRevision: number; previous?: AramCollection; now: string; absolute?: boolean }): Promise<{ collection: AramCollection; record?: AramRecord }> {
     let collection = input.previous;
     if (collection && (collection.linkId !== input.linkId || collection.linkRevision !== input.linkRevision)) throw new AramSyncError("ACCOUNT_CHANGED");
-    if (!collection) {
-      const window = input.absolute ? `&startTime=${Math.floor(Date.parse(input.now) / 1000) - 90 * 86400}&endTime=${Math.floor(Date.parse(input.now) / 1000)}` : "";
+    // Expand only after processing the previous window, so the target counts valid games.
+    // Each step fetches at most one ID list and five details; retries keep persisted progress.
+    const expand = input.absolute && collection && collection.processed === collection.matchIds.length && collection.wins + collection.losses < 20 && collection.matchIds.length < 100 && (collection.windowDays ?? 90) < 365;
+    if (!collection || expand) {
+      const windowDays = !collection ? 90 : (collection.windowDays ?? 90) === 90 ? 180 : 365;
+      const end = Math.floor(Date.parse(collection?.startedAt ?? input.now) / 1000);
+      const window = input.absolute ? `&startTime=${end - windowDays * 86400}&endTime=${end}` : "";
       const list = await this.json(`/lol/match/v5/matches/by-puuid/${encodeURIComponent(input.puuid)}/ids?queue=450&start=0&count=100${window}`);
       if (!Array.isArray(list) || list.length > 100 || list.some((id) => typeof id !== "string" || !/^[A-Z0-9]+_\d+$/u.test(id)) || new Set(list).size !== list.length) throw new AramSyncError("INVALID_RESPONSE");
-      if (!list.length) throw new AramSyncError("NO_MATCHES");
-      collection = { linkId: input.linkId, linkRevision: input.linkRevision, matchIds: list, processed: 0, wins: 0, losses: 0, excluded: 0, startedAt: input.now };
+      if (!list.length && !input.absolute) throw new AramSyncError("NO_MATCHES");
+      collection = collection
+        ? { ...collection, windowDays, matchIds: [...collection.matchIds, ...list.filter((id) => !collection!.matchIds.includes(id))].slice(0, 100) }
+        : { linkId: input.linkId, linkRevision: input.linkRevision, matchIds: list, processed: 0, wins: 0, losses: 0, excluded: 0, startedAt: input.now, ...(input.absolute ? { windowDays } : {}) };
     }
     const batch = collection.matchIds.slice(collection.processed, collection.processed + 5);
     const outcomes = await Promise.all(batch.map(async (id) => {
       const raw = await this.json(`/lol/match/v5/matches/${encodeURIComponent(id)}`);
       const value = raw as { metadata?: { matchId?: unknown }; info?: { queueId?: unknown; gameDuration?: unknown; participants?: { puuid?: unknown; win?: unknown; gameEndedInEarlySurrender?: unknown }[] } } | null;
       if (value?.metadata?.matchId !== id || value.info?.queueId !== 450 || !Number.isSafeInteger(value.info.gameDuration) || !Array.isArray(value.info.participants) || value.info.participants.length !== 10) throw new AramSyncError("INVALID_RESPONSE");
+      if (value.info.participants.some((p) => !p || typeof p !== "object")) throw new AramSyncError("INVALID_RESPONSE");
       const players = value.info.participants.filter((p) => p.puuid === input.puuid);
       if (players.length !== 1 || typeof players[0]?.win !== "boolean") throw new AramSyncError("INVALID_RESPONSE");
       if (Number(value.info.gameDuration) < 300 || players[0].gameEndedInEarlySurrender === true) return { outcome: "EXCLUDED", performance: null };
@@ -48,10 +56,11 @@ export class RiotAramRecords {
     const next: AramCollection = { ...collection, processed: collection.processed + batch.length, wins: collection.wins + outcomes.filter((o) => o.outcome === "WIN").length, losses: collection.losses + outcomes.filter((o) => o.outcome === "LOSS").length, excluded: collection.excluded + outcomes.filter((o) => o.outcome === "EXCLUDED").length,
       performanceSum: (collection.performanceSum ?? 0) + performances.reduce((a, b) => a + b, 0), performanceGames: (collection.performanceGames ?? 0) + performances.length };
     if (next.processed !== next.matchIds.length) return { collection: next };
+    if (input.absolute && next.wins + next.losses < 20 && next.matchIds.length < 100 && (next.windowDays ?? 90) < 365) return { collection: next };
     if (next.wins + next.losses === 0) throw new AramSyncError("NO_MATCHES");
     return { collection: next, record: { mode: "ARAM", source: "RIOT", wins: next.wins, losses: next.losses, fetchedAt: input.now,
       ...(next.performanceGames === next.wins + next.losses ? { performanceScore: next.performanceSum! / next.performanceGames! } : {}),
-      evidence: `Match-V5 queue 450 · ${input.absolute ? "90일 이내 " : ""}최근 ${next.matchIds.length}판 중 재경기·5분 미만 ${next.excluded}판 제외` } };
+      evidence: `Match-V5 queue 450 · ${input.absolute ? `${next.windowDays ?? 90}일 이내 ` : ""}최근 ${next.matchIds.length}판 중 재경기·5분 미만 ${next.excluded}판 제외${input.absolute && next.wins + next.losses < 20 ? " · 유효 표본 20판 미만" : ""}` } };
   }
 }
 

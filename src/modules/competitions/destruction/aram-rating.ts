@@ -23,6 +23,7 @@ export type AramCollection = Readonly<{
   startedAt: string;
   performanceSum?: number;
   performanceGames?: number;
+  windowDays?: 90 | 180 | 365;
 }>;
 
 /** Tournament-only valuation, never an estimate of Riot MMR or ranked tier. */

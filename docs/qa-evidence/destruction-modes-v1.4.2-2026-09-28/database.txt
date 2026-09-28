@@ -1,0 +1,11 @@
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ S08 adapter persists recruitment, seeded auction, BO stages, roster history, MVP revote and atomic receipts (6202.2759ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7223.2096
+[db-contract] cluster stopped and disposable workspace path removed

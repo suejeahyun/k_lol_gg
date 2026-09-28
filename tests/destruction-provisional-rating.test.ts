@@ -80,6 +80,23 @@ test("Riot facts request normal APIs, validate source rows and never infer unran
   assert.ok(paths.every((path) => !path.includes("2400")));
 });
 
+test("challenge matching tolerates locale typography but rejects seasonal, inactive, duplicate and missing facts", async () => {
+  const names = ["All Random All Champions", "All Random All Flawless", "NA–RAM"];
+  const valid = names.map((name, i) => ({ id: i + 1, state: "ENABLED", tracking: "LIFETIME", localizedNames: { en_us: { name: ` ${name} ` } }, thresholds: { MASTER: 100 } }));
+  async function run(configs: unknown[], entries = [1, 2, 3].map((challengeId) => ({ challengeId, value: 60 }))) {
+    const request: typeof fetch = async (input) => Response.json(String(input).endsWith("config") ? configs : { challenges: entries });
+    return new RiotRatingFacts(new RiotAramRecords("test", "https://asia.api.riotgames.com", request), "https://kr.api.riotgames.com").challenges("test", now);
+  }
+  assert.equal((await run(valid)).score, 60);
+  for (const patch of [{ tracking: "SEASON" }, { state: "ARCHIVED" }, { thresholds: {} }, { id: 2 }, { localizedNames: { en_us: { name: names[0] + ": 2026" } } }]) {
+    const result = await run([{ ...valid[0], ...patch }, ...valid.slice(1)]);
+    assert.equal(result.score, null); assert.match(result.evidence, /정의 확인 필요/);
+  }
+  assert.equal((await run([...valid, valid[0]])).score, null);
+  assert.equal((await run(valid, [{ challengeId: 1, value: 0 }])).score, null);
+  assert.equal((await run(valid, [1, 2, 3].map((challengeId) => ({ challengeId, value: 0 })))).score, 0);
+});
+
 test("cron authentication rejects unauthorized requests before touching data and exposes only counters", async () => {
   let calls = 0;
   const secret = "synthetic-cron-secret-at-least-32-characters";

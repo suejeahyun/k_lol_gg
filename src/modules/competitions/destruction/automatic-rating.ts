@@ -33,7 +33,7 @@ export async function advanceAutomaticRating(participant: DestructionParticipant
     if (error.code === "RATE_LIMITED" || (attempts < 3 && ["UNAVAILABLE", "INVALID_RESPONSE"].includes(error.code))) {
       return { ...participant, provisionalRating: snapshot, ratingCollection: { complete: false, attempts, error: error.code, retryAt: new Date(Date.parse(now) + Math.max(error.retryAfterSeconds, 60) * 1000).toISOString() } };
     }
-    component = { score: null, status: error.code === "NO_MATCHES" || error.code === "NOT_CONNECTED" ? "NO_DATA" : "ERROR", source: "RIOT", samples: 0, observedAt: now, evidence: error.code };
+    component = { score: null, status: error.code === "NO_MATCHES" || error.code === "NOT_CONNECTED" ? "NO_DATA" : "ERROR", source: "RIOT", samples: 0, observedAt: now, evidence: key === "aram" && error.code === "NO_MATCHES" ? "최근 90→180→365일 단계 조회 · 제공된 최근 최대 100판 내 유효 일반 칼바람 기록 없음" : error.code };
   }
   const provisionalRating: RatingSnapshot = { ...snapshot, collectedAt: now, components: { ...snapshot.components, ...(component ? { [key]: component } : {}) } };
   const complete = RATING_KEYS.every((key) => !policy.weights[key] || Boolean(provisionalRating.components[key]));

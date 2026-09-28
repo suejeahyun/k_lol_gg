@@ -29,16 +29,31 @@ export class RiotRatingFacts {
 
   async challenges(puuid: string, now: string): Promise<RatingComponent> {
     const configs = await this.api.json("/lol/challenges/v1/challenges/config", this.platformBaseUrl);
-    // Exact names and lifetime scope avoid accidentally summing unrelated, retired or seasonal challenges.
+    // Normalize locale casing/typography only; seasonal suffixes still cannot match.
     if (!Array.isArray(configs) || configs.length > 5000) throw new AramSyncError("INVALID_RESPONSE");
     const names = ["All Random All Champions", "All Random All Flawless", "NA-RAM"];
-    const selected = configs.flatMap((raw) => {
-      const cfg = object(raw); const text = object(object(cfg?.localizedNames)?.en_US);
-      const master = object(cfg?.thresholds)?.MASTER;
-      return cfg && cfg.state === "ENABLED" && cfg.tracking === "LIFETIME" && names.includes(String(text?.name)) && count(cfg.id) && typeof master === "number" && Number.isFinite(master) && master > 0
-        ? [{ id: cfg.id, name: String(text?.name), target: master }] : [];
+    const normalize = (value: unknown) => typeof value === "string" ? value.normalize("NFKC").replace(/[‐‑–—]/gu, "-").replace(/\s+/gu, " ").trim().toLowerCase() : "";
+    const candidates = configs.flatMap((raw) => {
+      const cfg = object(raw); const locales = object(cfg?.localizedNames);
+      const english = Object.entries(locales ?? {}).find(([locale]) => locale.replace("-", "_").toLowerCase() === "en_us");
+      const name = object(english?.[1])?.name;
+      const canonical = names.find((expected) => normalize(expected) === normalize(name));
+      return cfg && canonical ? [{ cfg, name: canonical }] : [];
     });
-    if (selected.length !== names.length || new Set(selected.map((item) => item.name)).size !== names.length) return noRatingData("칼바람 도전과제 정의·집계 범위를 확인하지 못함", now);
+    const selected = candidates.flatMap(({ cfg, name }) => {
+      const master = object(cfg.thresholds)?.MASTER;
+      return cfg.state === "ENABLED" && cfg.tracking === "LIFETIME" && count(cfg.id) && typeof master === "number" && Number.isFinite(master) && master > 0
+        ? [{ id: cfg.id, name, target: master }] : [];
+    });
+    if (selected.length !== names.length || new Set(selected.map((item) => item.name)).size !== names.length || new Set(selected.map((item) => item.id)).size !== names.length) {
+      // Only public configuration fields are retained, never identity or raw response data.
+      const scalar = (value: unknown) => ["string", "number"].includes(typeof value) ? String(value).replace(/[\r\n]/gu, " ").slice(0, 24) : "미제공";
+      const diagnostic = names.map((name) => {
+        const rows = candidates.filter((item) => item.name === name);
+        return `${name}: ${rows.length ? rows.slice(0, 2).map(({ cfg }) => `${scalar(cfg.id)}/${scalar(cfg.state)}/${scalar(cfg.tracking)}/MASTER=${scalar(object(cfg.thresholds)?.MASTER)}`).join(",") : "이름 미일치"}`;
+      }).join(" · ");
+      return noRatingData(`칼바람 도전과제 정의 확인 필요 · ${diagnostic}`.slice(0, 500), now);
+    }
     const data = object(await this.api.json(`/lol/challenges/v1/player-data/${encodeURIComponent(puuid)}`, this.platformBaseUrl));
     if (!Array.isArray(data?.challenges)) throw new AramSyncError("INVALID_RESPONSE");
     const values = selected.map((cfg) => {
