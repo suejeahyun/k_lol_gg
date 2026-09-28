@@ -70,6 +70,7 @@ function configuration(value: unknown) {
 }
 
 import { validateDestructionSchedule } from "./schedule";
+import { RATING_KEYS, validateRatingPolicy, type RatingKey } from "./provisional-rating";
 
 function resultPayload(value: unknown) {
   const body = record(value, ["fixtureId", "teamAScore", "teamBScore", "winnerTeamId"]);
@@ -80,6 +81,13 @@ export function parseDestructionAdminAction(value: unknown): Pick<DestructionAdm
   const input = record(value, ["type", "payload"]);
   const payload = input.payload ?? {};
   switch (input.type) {
+    case "SET_RATING_POLICY": return { type: input.type, payload: validateRatingPolicy(payload) };
+    case "RETRY_RATING": return { type: input.type, payload: { participantId: uuid(record(payload, ["participantId"]).participantId) } };
+    case "VERIFY_RATING_COMPONENT": {
+      const body = record(payload, ["participantId", "key", "score", "evidence"]);
+      if (!RATING_KEYS.includes(body.key as RatingKey)) throw new TypeError("INVALID_INPUT");
+      return { type: input.type, payload: { participantId: uuid(body.participantId), key: body.key as RatingKey, score: finite(body.score, 0, 100), evidence: text(body.evidence, 500, 10) } };
+    }
     case "VERIFY_ARAM_RECORD": {
       const body = record(payload, ["participantId", "mode", "wins", "losses", "evidence"]);
       if (body.mode !== "ARAM" && body.mode !== "ARAM_MAYHEM") throw new TypeError("INVALID_INPUT");

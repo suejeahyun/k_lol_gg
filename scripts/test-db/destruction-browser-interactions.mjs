@@ -13,7 +13,7 @@ async function port() {
   return number;
 }
 
-export async function runDestructionBrowserInteractions({ origin, tournamentId, mayhemId, accountToken, recruitingIds, classicRecruitingId, adminToken, output, root }) {
+export async function runDestructionBrowserInteractions({ origin, tournamentId, absoluteRatingsOnly = false, mayhemId, accountToken, recruitingIds, classicRecruitingId, adminToken, output, root }) {
   const debugPort = await port();
   const parent = resolve(tmpdir());
   const profile = await mkdtemp(join(parent, "klol-destruction-browser-"));
@@ -51,6 +51,30 @@ export async function runDestructionBrowserInteractions({ origin, tournamentId, 
     await call("Network.setCookie", { name: "klol_v2_session", value: adminToken, url: origin, httpOnly: true, sameSite: "Strict" });
     await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     await call("Page.navigate", { url: `${origin}/admin/progress/destruction/${tournamentId}` });
+    if (absoluteRatingsOnly) {
+      await until("document.body.innerText.includes('멸망전 자동 임시 티어') && document.body.innerText.includes('연결됨')");
+      const before = await current();
+      await evaluate("[...document.querySelectorAll('summary')].find(s => s.textContent === '평가 비중 변경').click()");
+      await evaluate("(() => { const input = [...document.querySelectorAll('label')].find(l => l.textContent === '솔랭 실력 (%)').querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'36'); input.dispatchEvent(new Event('input',{bubbles:true})); })()");
+      await until("[...document.querySelectorAll('button')].some(b => b.textContent === '비중 저장·재계산' && b.disabled)");
+      assert.equal((await current()).revision, before.revision);
+      await evaluate("(() => { const input = [...document.querySelectorAll('label')].find(l => l.textContent === '내전 통계 (%)').querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'24'); input.dispatchEvent(new Event('input',{bubbles:true})); })()");
+      await until("[...document.querySelectorAll('button')].some(b => b.textContent === '비중 저장·재계산' && !b.disabled)");
+      await click("비중 저장·재계산");
+      await until("document.body.innerText.includes('솔랭 실력 36%') && document.body.innerText.includes('연결됨')");
+      const after = await current();
+      assert.equal(after.revision, before.revision + 1);
+      assert.equal(after.ratingPolicy.weights.solo, 36);
+      assert.ok(after.participants.every(p => p.provisionalRating.policy.weights.solo === 36));
+      report.push("모바일 비중 폼: 합계 101% 차단, 100% 저장 후 전체 참가자 점수 재계산");
+      await evaluate(await readFile(resolve(root, "node_modules/axe-core/axe.min.js"), "utf8"));
+      const accessibility = await evaluate("axe.run(document.querySelector('[aria-label=\"멸망전 운영 작업\"]'), { runOnly: { type:'tag', values:['wcag2a','wcag2aa','wcag21aa'] } }).then(r => r.violations.map(v => ({id:v.id,impact:v.impact,nodes:v.nodes.length})))");
+      assert.deepEqual(accessibility, []); assert.deepEqual(exceptions, []);
+      report.push("자동 평가 운영 영역 axe 접근성·브라우저 예외 검사 통과");
+      await writeFile(join(output, "interactions.json"), JSON.stringify({ passed: report, accessibility, exceptions }, null, 2));
+      await call("Browser.close");
+      return;
+    }
     await until("document.body.innerText.includes('연결됨') && [...document.querySelectorAll('button')].some(b => b.textContent === '경매 일시 중단')");
     await until("document.querySelector('[data-auction-phase]')?.dataset.auctionPhase === 'revealed'");
     await evaluate("window.__auctionSounds = []; const originalStart = AudioBufferSourceNode.prototype.start; AudioBufferSourceNode.prototype.start = function(...args) { window.__auctionSounds.push(this.buffer?.duration ?? 0); return originalStart.apply(this,args); };");

@@ -1,0 +1,202 @@
+[
+  {
+    "path": "/competitions/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb?tab=score-table",
+    "name": "aram-absolute-frozen-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb",
+    "name": "aram-absolute-frozen-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57?tab=score-table",
+    "name": "aram-absolute-pending-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57",
+    "name": "aram-absolute-pending-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d?tab=score-table",
+    "name": "mayhem-absolute-frozen-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d",
+    "name": "mayhem-absolute-frozen-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34?tab=score-table",
+    "name": "mayhem-absolute-pending-public-390",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34?tab=score-table"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34",
+    "name": "mayhem-absolute-pending-admin-390",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34"
+    },
+    "viewport": {
+      "width": 390,
+      "height": 1000,
+      "mobile": true
+    }
+  },
+  {
+    "path": "/competitions/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb?tab=score-table",
+    "name": "aram-absolute-frozen-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb",
+    "name": "aram-absolute-frozen-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/b2fd5419-2582-4cc5-ae26-71238a2fa1eb"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57?tab=score-table",
+    "name": "aram-absolute-pending-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57",
+    "name": "aram-absolute-pending-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d8355af8-c281-44cf-b3fe-7c04b8b6af57"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d?tab=score-table",
+    "name": "mayhem-absolute-frozen-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d",
+    "name": "mayhem-absolute-frozen-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d2cf6bfa-4dd7-491f-bdb5-099f85b9bf9d"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/competitions/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34?tab=score-table",
+    "name": "mayhem-absolute-pending-public-1440",
+    "expectedRedirect": {
+      "destination": "/competitions/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34?tab=score-table"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  },
+  {
+    "path": "/admin/progress/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34",
+    "name": "mayhem-absolute-pending-admin-1440",
+    "session": "admin",
+    "expectedRedirect": {
+      "destination": "/admin/progress/destruction/d96c902c-74c1-4b9a-8975-915f0070eb34"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "mobile": false
+    }
+  }
+]

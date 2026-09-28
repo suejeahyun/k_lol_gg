@@ -1,4 +1,8 @@
 import { DestructionCommandHandler } from "../../src/modules/competitions/destruction/destruction-command-handler";
+import { DEFAULT_RATING_POLICY, RATING_KEYS, evaluateProvisionalRating } from "../../src/modules/competitions/destruction/provisional-rating";
+import { runAutomaticRatingStep } from "../../src/modules/competitions/destruction/automatic-rating-worker";
+import { RiotAesGcmIdentityProtector, parseRiotEncryptionKeyring } from "../../src/modules/riot/infrastructure/riot-identity-protector";
+import { MMR_FORMULA_VERSION } from "../../src/modules/mmr/domain/mmr-projection";
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
@@ -13,6 +17,10 @@ import { applyMigrations } from "../../src/platform/db/migrate";
 import { deriveLegacyCompetitionUuid } from "../../src/platform/legacy-identifiers";
 import {
   auditEvents,
+  siteSettings,
+  riotAccountLinks,
+  mmrProjectionStates,
+  mmrPlayerProfiles,
   authSessions,
   destructionApplicationIndex,
   destructionCommandReceipts,
@@ -128,7 +136,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
 
     // A second isolated tournament exercises mode-specific valuations against real transactions.
     const aramId = randomUUID();
-    async function recruitPositionless(id: string, gameMode: "ARAM" | "ARAM_MAYHEM") {
+    async function recruitPositionless(id: string, gameMode: "ARAM" | "ARAM_MAYHEM", legacy = true) {
       let rev = (await service.create(context(adminActor, "ADMIN", "positionless-create"), { tournamentId: id, title: gameMode + " DB QA", configuration: { gameMode, teamCount: 4, recruitmentLimit: 20, preliminaryFormat: "FULL_ROUND_ROBIN_BO1" } })).revision;
       rev = (await service.executeAdmin(context(adminActor, "ADMIN", "positionless-start"), id, rev, { type: "START_RECRUITMENT", payload: {} })).revision;
       for (let i = 0; i < playerIds.length; i++) {
@@ -144,11 +152,19 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       rev = (await service.executeAdmin(context(adminActor, "ADMIN", "no-position-close"), id, rev, { type: "CLOSE_RECRUITMENT", payload: {} })).revision;
       assert.ok((await adapter.getAdmin(id))!.participants.every((p) => p.position === null && !p.isCaptain));
       assert.equal((await adapter.getAdmin(id))!.applications.filter((a) => a.captainVolunteer).length, 3);
+      const created = (await adapter.getAdmin(id))!;
+      assert.deepEqual(created.ratingPolicy, DEFAULT_RATING_POLICY);
+      assert.ok(created.participants.every((p) => p.provisionalRating && !p.minimumBid));
+      if (legacy) {
+        // Explicitly emulate an already persisted v1 competition to preserve the legacy regression suite.
+        const old = { ...created, ratingPolicy: undefined, participants: created.participants.map((p) => ({ ...p, provisionalRating: undefined })) };
+        await database.update(destructionCompetitions).set({ aggregateJson: JSON.parse(JSON.stringify(old)) }).where(eq(destructionCompetitions.id, id));
+      }
       return rev;
     }
     let aramRevision = await recruitPositionless(aramId, "ARAM");
     const aramCaptains = [0, 6, 12, 18].map((index, i) => ({ teamId: randomUUID(), name: `칼바람 ${i + 1}팀`, participantId: applicationIds[index], baselineValue: 199 }));
-    await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "aram-no-records"), aramId, aramRevision, { type: "CONFIRM_TEAMS", payload: { seed: "aram-qa-seed", captains: aramCaptains } }), /전적과 임시 등급/);
+    await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "aram-no-records"), aramId, aramRevision, { type: "CONFIRM_TEAMS", payload: { seed: "aram-qa-seed", captains: aramCaptains } }), /평가 항목과 임시 등급/);
     let fetched = 0;
     const aramService = new DestructionService(new DestructionCommandHandler({ ...adapter.dependencies, aramRecords: { next: async (_tx, _aggregate, _id, at) => {
       fetched += 1;
@@ -238,6 +254,68 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       assert.equal(published.auctionRatings.length, 20);
       assert.ok(published.auctionRatings.every((r) => r.source === (id === aramId ? "RIOT" : "ADMIN_VERIFIED")));
     }
+
+    // Real database worker, synthetic Riot responses: no live requests or production data.
+    const encryptionKeys = JSON.stringify({ current: "test", keys: { test: Buffer.alloc(32, 9).toString("base64url") } });
+    const protector = new RiotAesGcmIdentityProtector(parseRiotEncryptionKeyring(encryptionKeys));
+    const puuid = "synthetic-destruction-puuid";
+    await database.insert(siteSettings).values({ id: 1, brandName: "Test", tagline: "Test", featuresJson: { riotIntegration: true }, aiAllowedRolesJson: [] }).onConflictDoUpdate({ target: siteSettings.id, set: { featuresJson: { riotIntegration: true } } });
+    const linkId = randomUUID();
+    await database.insert(riotAccountLinks).values({ id: linkId, playerId: playerIds[0]!, ownerUserAccountId: ownerIds[0]!, gameName: "RatingQA", tagLine: "KR1", normalizedKey: "ratingqa#kr1", protectedPuuid: await protector.protect(puuid), method: "DIRECT_OWNER", status: "CONNECTED", linkedAt: now });
+    await database.insert(mmrProjectionStates).values({ key: "GLOBAL", generation: 1, status: "READY", formulaVersion: MMR_FORMULA_VERSION, sourceChecksum: Buffer.alloc(32, 1), calculatedAt: now }).onConflictDoUpdate({ target: mmrProjectionStates.key, set: { generation: 1, status: "READY", formulaVersion: MMR_FORMULA_VERSION, sourceChecksum: Buffer.alloc(32, 1), calculatedAt: now } });
+    await database.insert(mmrPlayerProfiles).values({ generation: 1, playerId: playerIds[0]!, overallScoreBp: 7000, confidenceBp: 10000, sampleSize: 40, formulaVersion: MMR_FORMULA_VERSION, calculatedAt: now });
+    const calls: string[] = [];
+    const challengeNames = ["All Random All Champions", "All Random All Flawless", "NA-RAM"];
+    const request: typeof fetch = async (input) => {
+      const url = new URL(String(input)); calls.push(url.toString());
+      if (url.pathname.includes("league/v4")) return Response.json([{ queueType: "RANKED_SOLO_5x5", tier: "DIAMOND", rank: "I", leaguePoints: 50, wins: 50, losses: 50 }]);
+      if (url.pathname.includes("champion-mastery")) return Response.json(Array.from({ length: 40 }, (_, i) => ({ championId: i + 1, championPoints: 10000, lastPlayTime: now.getTime() })));
+      if (url.pathname.endsWith("challenges/config")) return Response.json(challengeNames.map((name, i) => ({ id: i + 1, state: "ENABLED", tracking: "LIFETIME", localizedNames: { en_US: { name } }, thresholds: { MASTER: 100 } })));
+      if (url.pathname.includes("player-data")) return Response.json({ challenges: challengeNames.map((_, i) => ({ challengeId: i + 1, value: 60 })) });
+      if (url.pathname.endsWith("/ids")) { assert.equal(url.searchParams.get("queue"), "450"); assert.ok(url.searchParams.has("startTime")); return Response.json(["KR_12345"]); }
+      return Response.json({ metadata: { matchId: "KR_12345" }, info: { queueId: 450, gameDuration: 900, participants: Array.from({ length: 10 }, (_, i) => ({ puuid: i ? "other-" + i : puuid, win: i < 5, teamId: i < 5 ? 100 : 200, kills: 5, assists: 15, totalDamageDealtToChampions: 10000, totalHealsOnTeammates: 100, totalDamageShieldedOnTeammates: 100, timeCCingOthers: 10 })) } });
+    };
+    const config = { apiKey: "synthetic-key-never-used", regionalBaseUrl: "https://asia.api.riotgames.com", platformBaseUrl: "https://kr.api.riotgames.com", encryptionKeys, jobSecret: "synthetic", requestTimeoutMilliseconds: 3000, rso: null };
+    let workerTime = Date.now() + 60_000;
+    for (const mode of ["ARAM", "ARAM_MAYHEM"] as const) {
+      const id = randomUUID();
+      await recruitPositionless(id, mode, false);
+      const pending = (await adapter.getAdmin(id))!;
+      // Other entrants are synthetic completed snapshots; exercise collection of the first player end to end.
+      const components = Object.fromEntries(RATING_KEYS.map((key) => [key, { score: 70, status: "READY", source: "RIOT", samples: 100, observedAt: now.toISOString(), evidence: "synthetic fixture" }]));
+      const seeded = { ...pending, participants: pending.participants.map((p) => p.playerId === playerIds[0] ? (mode === "ARAM" ? { ...p, provisionalRating: undefined, aramCollection: { linkId, linkRevision: 1, matchIds: ["KR_99999"], processed: 1, wins: 1, losses: 0, excluded: 0, startedAt: now.toISOString() } } : p) : ({ ...p, provisionalRating: { policy: DEFAULT_RATING_POLICY, components, collectedAt: now.toISOString() }, minimumBid: 250, ratingCollection: { complete: true, retryAt: now.toISOString(), attempts: 0, error: null } })) };
+      await database.update(destructionCompetitions).set({ aggregateJson: JSON.parse(JSON.stringify(seeded)) }).where(eq(destructionCompetitions.id, id));
+      for (let step = 0; step < 5; step++) { workerTime += 10_000; assert.equal((await runAutomaticRatingStep(database, new Date(workerTime), request, config)).kind, "UPDATED"); }
+      let state = (await adapter.getAdmin(id))!;
+      const measured = state.participants.find((p) => p.playerId === playerIds[0])!;
+      assert.equal(measured.ratingCollection?.complete, true);
+      assert.ok(evaluateProvisionalRating(measured.provisionalRating!).tier, JSON.stringify(measured.provisionalRating?.components));
+      assert.equal(measured.provisionalRating?.components.inhouse?.score, 70);
+      assert.equal(measured.aramRecord?.mode, "ARAM", "Mayhem uses the agreed normal ARAM proxy");
+      assert.deepEqual(measured.aramCollection?.matchIds, ["KR_12345"], "legacy partial lists cannot bypass the 90-day collection window");
+      assert.equal(JSON.stringify(await adapter.getPublic(id)).includes(puuid), false);
+      assert.equal(JSON.stringify(await adapter.getPublic(id)).includes(linkId), false);
+      assert.equal((await runAutomaticRatingStep(database, new Date(workerTime + 1000), request, config)).kind, "RATE_LIMITED");
+      const change = { version: "ABSOLUTE_V1", weights: { aram: 20, solo: 35, inhouse: 25, champions: 15, challenges: 5 } };
+      const changeContext = context(adminActor, "ADMIN", "policy-change");
+      const changeRevision = state.revision;
+      const changed = await service.executeAdmin(changeContext, id, changeRevision, { type: "SET_RATING_POLICY", payload: change });
+      assert.equal((await service.executeAdmin(changeContext, id, changeRevision, { type: "SET_RATING_POLICY", payload: change })).replayed, true);
+      state = (await adapter.getAdmin(id))!;
+      assert.equal(state.participants[0]?.provisionalRating?.policy.weights.solo, 35);
+      const captains = [0, 6, 12, 18].map((index, i) => ({ teamId: randomUUID(), name: "절대평가 " + (i + 1), participantId: applicationIds[index], baselineValue: 0 }));
+      await database.update(riotAccountLinks).set({ revision: measured.provisionalRating!.linkRevision! + 1 }).where(eq(riotAccountLinks.id, linkId));
+      await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "stale-account"), id, changed.revision, { type: "CONFIRM_TEAMS", payload: { seed: "absolute-test-seed", captains } }), /연결 계정이 변경/);
+      assert.equal((await adapter.getAdmin(id))!.revision, changed.revision);
+      await database.update(riotAccountLinks).set({ revision: measured.provisionalRating!.linkRevision! }).where(eq(riotAccountLinks.id, linkId));
+      const confirmed = await service.executeAdmin(context(adminActor, "ADMIN", "absolute-confirm"), id, changed.revision, { type: "CONFIRM_TEAMS", payload: { seed: "absolute-test-seed", captains } });
+      await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "frozen-policy"), id, confirmed.revision, { type: "SET_RATING_POLICY", payload: DEFAULT_RATING_POLICY }), /주장 확정/);
+      await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "frozen-retry"), id, confirmed.revision, { type: "RETRY_RATING", payload: { participantId: applicationIds[0] } }), /주장 확정/);
+      workerTime += 10_000;
+      assert.equal((await runAutomaticRatingStep(database, new Date(workerTime), request, config)).kind, "IDLE");
+      assert.equal((await adapter.getAdmin(id))!.revision, confirmed.revision);
+    }
+    assert.ok(calls.length > 0 && calls.every((url) => !url.includes("2400")));
 
     const captainIndexes = [0, 6, 12, 18];
     const teamIds = Array.from({ length: 4 }, () => randomUUID());
@@ -362,8 +440,10 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     assert.equal((await adapter.getOwnApplication(tournamentId, ownerIds[0]!))?.playerId, playerIds[0]);
     assert.equal((await database.select().from(destructionApplicationIndex).where(eq(destructionApplicationIndex.tournamentId, tournamentId))).length, 20);
     const receipts = await database.select().from(destructionCommandReceipts);
-    assert.equal((await database.select().from(destructionOutbox)).length, receipts.length);
-    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "DESTRUCTION"))).length, receipts.length);
+    const workerEvents = await database.select().from(auditEvents).where(eq(auditEvents.action, "DESTRUCTION_AUTO_RATING"));
+    assert.equal(workerEvents.length, 10);
+    assert.equal((await database.select().from(destructionOutbox)).length, receipts.length + workerEvents.length);
+    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "DESTRUCTION"))).length, receipts.length + workerEvents.length);
     await assert.rejects(database.delete(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)));
   } finally { await pool.end(); }
 });

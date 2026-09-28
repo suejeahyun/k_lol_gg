@@ -1,5 +1,5 @@
 import { destructionAuctionCard } from "./auction-presentation";
-import { aramAuctionRating } from "./aram-rating";
+import { evaluateProvisionalRating, participantAuctionRating, RATING_KEYS, type RatingKey, type RatingPolicy } from "./provisional-rating";
 import {
   competitionPlayerLabel,
   competitionTeamLabel,
@@ -24,6 +24,7 @@ export type DestructionAggregate = Readonly<{
   title: string;
   lifecycle: DestructionLifecycle;
   configuration: DestructionConfiguration;
+  ratingPolicy?: RatingPolicy;
   applications: readonly DestructionApplication[];
   teams: readonly DestructionTeam[];
   participants: readonly DestructionParticipant[];
@@ -113,7 +114,9 @@ export type DestructionPublicDto = Readonly<{
   advanceTeamCount: number;
   teamCount: number;
   gameMode: import("./aram-rating").DestructionGameMode;
-  auctionRatings: readonly Readonly<{ playerName: string; tier: string; games: number; wins: number; losses: number; minimumBid: number; captainPoints: number; provisional: boolean; source: string; fetchedAt: string }>[];
+  ratingPolicy?: RatingPolicy;
+  auctionRatings: readonly Readonly<{ playerName: string; tier: string; score?: number | null; games: number; wins: number; losses: number; minimumBid: number; captainPoints: number; provisional: boolean; source: string; fetchedAt: string }>[];
+  absoluteRatings?: readonly { playerName: string; score: number | null; tier: string | null; minimum: number; maximum: number; minimumBid: number | null; captainPoints: number | null; components: readonly { key: RatingKey; score: number | null; status: string; source: string | null }[] }[];
   unassignedPlayers: readonly Readonly<{ participantId: string; playerId: string; playerName: string; position: string | null; teamName: string; isCaptain: boolean; purchasePoints: number | null }>[];
   schedule: DestructionSchedule;
   recruitment: ReturnType<typeof destructionRecruitment>;
@@ -170,7 +173,13 @@ export function toDestructionPublicDto(
     advanceTeamCount: aggregate.configuration.advanceTeamCount,
     teamCount: aggregate.configuration.teamCount,
     gameMode: aggregate.configuration.gameMode ?? "CLASSIC",
-    auctionRatings: aggregate.participants.flatMap((p) => p.aramRecord ? [{ playerName: competitionPlayerLabel(playerCatalog, p.playerId), ...aramAuctionRating(p.aramRecord), source: p.aramRecord.source, fetchedAt: p.aramRecord.fetchedAt }] : []),
+    ...(aggregate.ratingPolicy ? { ratingPolicy: aggregate.ratingPolicy,
+    absoluteRatings: aggregate.participants.map((p) => {
+      const snapshot = p.provisionalRating ?? { policy: aggregate.ratingPolicy!, components: {}, collectedAt: aggregate.updatedAt };
+      const rating = evaluateProvisionalRating(snapshot);
+      return { playerName: competitionPlayerLabel(playerCatalog, p.playerId), ...rating, components: RATING_KEYS.map((key) => ({ key, score: snapshot.components[key]?.score ?? null, status: snapshot.components[key]?.status ?? "PENDING", source: snapshot.components[key]?.source ?? null })) };
+    }) } : {}),
+    auctionRatings: aggregate.participants.flatMap((p) => { const rating = participantAuctionRating(p); return rating ? [{ playerName: competitionPlayerLabel(playerCatalog, p.playerId), ...rating, source: p.provisionalRating ? "COMPOSITE" : p.aramRecord!.source, fetchedAt: p.provisionalRating?.collectedAt ?? p.aramRecord!.fetchedAt }] : []; }),
     schedule: aggregate.schedule ?? EMPTY_DESTRUCTION_SCHEDULE,
     unassignedPlayers: aggregate.participants.filter((entry) => entry.teamId === null).map((entry) => ({ participantId: entry.id, playerId: entry.playerId, playerName: competitionPlayerLabel(playerCatalog, entry.playerId), position: entry.position, teamName: "팀 배정 대기", isCaptain: entry.isCaptain, purchasePoints: entry.purchasePoints })),
     recruitment: destructionRecruitment(aggregate),

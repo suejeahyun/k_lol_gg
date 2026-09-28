@@ -3,6 +3,10 @@
   "ignoreCommand": "node scripts/releases/ignore-docs-only-deployment.mjs",
   "crons": [
     {
+      "path": "/api/cron/destruction-ratings",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/statistics-projection",
       "schedule": "*/5 * * * *"
     },

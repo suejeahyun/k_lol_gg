@@ -10,6 +10,7 @@ export type AramRecord = Readonly<{
   losses: number;
   fetchedAt: string;
   evidence: string;
+  performanceScore?: number;
 }>;
 export type AramCollection = Readonly<{
   linkId: string;
@@ -20,6 +21,8 @@ export type AramCollection = Readonly<{
   losses: number;
   excluded: number;
   startedAt: string;
+  performanceSum?: number;
+  performanceGames?: number;
 }>;
 
 /** Tournament-only valuation, never an estimate of Riot MMR or ranked tier. */

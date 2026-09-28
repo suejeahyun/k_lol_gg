@@ -152,6 +152,9 @@ export type DestructionAdminCommand =
   | AdminCommand<"START_RECRUITMENT", Readonly<Record<string, never>>>
   | AdminCommand<"SET_SCHEDULE", DestructionSchedule>
   | AdminCommand<"SYNC_ARAM_RECORD", Readonly<{ participantId: string }>>
+  | AdminCommand<"SET_RATING_POLICY", import("./provisional-rating").RatingPolicy>
+  | AdminCommand<"RETRY_RATING", Readonly<{ participantId: string }>>
+  | AdminCommand<"VERIFY_RATING_COMPONENT", Readonly<{ participantId: string; key: import("./provisional-rating").RatingKey; score: number; evidence: string }>>
   | AdminCommand<"VERIFY_ARAM_RECORD", Readonly<{ participantId: string; mode: "ARAM" | "ARAM_MAYHEM"; wins: number; losses: number; evidence: string }>>
   | AdminCommand<"RESET_ARAM_RECORD", Readonly<{ participantId: string }>>
   | AdminCommand<"SET_APPLICATION_STATUS", Readonly<{ applicationId: string; status: Exclude<DestructionApplicationStatus, "APPLIED" | "CANCELLED"> }>>

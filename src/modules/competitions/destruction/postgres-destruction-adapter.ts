@@ -5,7 +5,7 @@ import { RiotAesGcmIdentityProtector, parseRiotEncryptionKeyring } from "@/modul
 import { riotAccountLinks, siteSettings } from "@/platform/db/schema";
 import { randomUUID } from "node:crypto";
 
-import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
 import {
   ADMIN_MUTATION_SESSION_POLICY,
@@ -30,6 +30,7 @@ import { players } from "@/platform/db/schema/registry";
 import type { V2Transaction } from "@/platform/db/transaction";
 import { deriveLegacyCompetitionUuid } from "@/platform/legacy-identifiers";
 import { loadCompetitionPlayerDisplayCatalog } from "../infrastructure/postgres-player-display-catalog";
+import { requireCompetition } from "../core/error";
 
 import type { CompetitionCommandReceipt } from "../core";
 import { DestructionCommandHandler, type DestructionCommandHandlerDependencies, type DestructionReceiptClaim, type DestructionTransactionContext } from "./destruction-command-handler";
@@ -86,8 +87,9 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
       const settings = (await tx.select({ features: siteSettings.featuresJson }).from(siteSettings).where(eq(siteSettings.id, 1)).limit(1))[0];
       if (settings?.features.riotIntegration !== true) throw new AramSyncError("UNAVAILABLE");
       await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended('destruction:aram:riot-budget', 0))`);
-      const latest = (await tx.select({ at: auditEvents.createdAt }).from(auditEvents).where(eq(auditEvents.action, "DESTRUCTION_SYNC_ARAM_RECORD")).orderBy(desc(auditEvents.createdAt)).limit(1))[0];
-      if (latest && Date.parse(now) - latest.at.getTime() < 8_000) throw new AramSyncError("RATE_LIMITED", 8);
+      const latest = (await tx.select({ at: auditEvents.createdAt, metadata: auditEvents.metadataJson }).from(auditEvents).where(inArray(auditEvents.action, ["DESTRUCTION_SYNC_ARAM_RECORD", "DESTRUCTION_AUTO_RATING"])).orderBy(desc(auditEvents.createdAt)).limit(1))[0];
+      const retryAt = Math.max(latest ? latest.at.getTime() + 8_000 : 0, typeof latest?.metadata?.retryAt === "string" ? Date.parse(latest.metadata.retryAt) || 0 : 0);
+      if (retryAt > Date.parse(now)) throw new AramSyncError("RATE_LIMITED", Math.ceil((retryAt - Date.parse(now)) / 1000));
       const participant = aggregate.participants.find((p) => p.id === participantId)!;
       const link = (await tx.select().from(riotAccountLinks).where(eq(riotAccountLinks.playerId, participant.playerId)).for("share").limit(1))[0];
       if (!link || link.status !== "CONNECTED" || !link.protectedPuuid) throw new AramSyncError("NOT_CONNECTED");
@@ -112,6 +114,12 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
       },
     },
     repository: {
+      assertRatingSourcesCurrent: async (context, aggregate) => {
+        const evaluated = aggregate.participants.filter((p) => p.provisionalRating?.linkId);
+        if (!evaluated.length) return;
+        const links = await this.tx(context).select().from(riotAccountLinks).where(inArray(riotAccountLinks.playerId, evaluated.map((p) => p.playerId))).for("share");
+        requireCompetition(evaluated.every((p) => links.some((link) => link.playerId === p.playerId && link.status === "CONNECTED" && link.id === p.provisionalRating!.linkId && link.revision === p.provisionalRating!.linkRevision)), "PRECONDITION_FAILED", "평가 후 연결 계정이 변경된 선수가 있습니다. 자동 평가를 다시 수집해 주세요.");
+      },
       loadForUpdate: async (context, tournamentId) => {
         const row = (await this.tx(context).select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).for("update").limit(1))[0];
         return row ? aggregateFromRow(row) : null;

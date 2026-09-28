@@ -19,6 +19,8 @@ export type DestructionParticipant = Readonly<{
   aramRecord?: import("./aram-rating").AramRecord;
   aramCollection?: import("./aram-rating").AramCollection;
   minimumBid?: number;
+  provisionalRating?: import("./provisional-rating").RatingSnapshot;
+  ratingCollection?: import("./provisional-rating").RatingCollectionState;
 }>;
 
 export type DestructionTeam = Readonly<{
