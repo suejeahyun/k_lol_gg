@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-09-28T13:50:45.085Z",
+  "revision": 138,
+  "policy": {
+    "version": "ABSOLUTE_V2",
+    "weights": {
+      "aram": 20,
+      "solo": 40,
+      "inhouse": 20,
+      "champions": 15,
+      "challenges": 5
+    }
+  },
+  "mode": "ARAM_MAYHEM",
+  "applicationConfirmed": true,
+  "selfReportedNumbersPresent": false,
+  "canEditModeRecord": true,
+  "collectionComplete": true,
+  "components": {
+    "aram": {
+      "score": null,
+      "status": "NO_DATA",
+      "source": "SELF_REPORTED"
+    },
+    "solo": {
+      "score": 78.46,
+      "status": "READY",
+      "source": "RIOT"
+    },
+    "inhouse": {
+      "score": 43.65,
+      "status": "READY",
+      "source": "INHOUSE"
+    },
+    "champions": {
+      "score": 100,
+      "status": "READY",
+      "source": "RIOT"
+    },
+    "challenges": {
+      "score": 72.93,
+      "status": "READY",
+      "source": "RIOT"
+    }
+  },
+  "result": {
+    "score": null,
+    "minimum": 58.76,
+    "maximum": 78.76,
+    "tier": null,
+    "minimumBid": null,
+    "captainPoints": null,
+    "missing": [
+      "aram"
+    ],
+    "formulaVersion": "ABSOLUTE_V2"
+  },
+  "manualScoreOverrides": 0
+}

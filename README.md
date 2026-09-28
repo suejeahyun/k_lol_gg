@@ -1,6 +1,6 @@
 # K-LOL.GG V2
 
-**멸망전 자동 절대평가 1.4.2 운영 반영**: 칼바람 90→180→365일 확대 조회, 도전과제 실제 응답 호환, 연결 계정 재평가 확인. [운영 검증](docs/qa-evidence/destruction-modes-v1.4.2-2026-09-28/production.md).
+**멸망전 승패 직접 입력 평가 1.5.0 운영 반영**: 신청 시 승수·패수 숫자 입력, 자동 합산·본인 수정·확정 후 잠금. [운영 검증](docs/qa-evidence/destruction-modes-v1.5.0-2026-09-28/production.md).
 
 **멸망전 1.2.0 운영 반영**: 세 모드 참가 신청 시 일반 선수/주장 지원 선택, 모집 심사·주장 선정 목록 표시. 기존 심사 큐·경매 연출 유지. [검증·배포 근거](docs/qa-evidence/destruction-modes-v1.2.0-2026-09-25/README.md).
 
