@@ -1554,6 +1554,20 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "destruction-modes",
+      "version": "1.4.0",
+      "gitTag": "destruction-modes-v1.4.0",
+      "commit": "2990f82adcfb7d2b2bc3b23cec2a85eb7ae2cfae",
+      "releasedAt": "2026-09-28T12:30:44.062Z",
+      "migrationHead": "0046_overconfident_robbie_robertson",
+      "qaEvidence": "docs/qa-evidence/destruction-modes-v1.4.0-2026-09-28/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-28-destruction-absolute-ratings.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      },
+      "externalInstallations": []
     }
   ]
 }
