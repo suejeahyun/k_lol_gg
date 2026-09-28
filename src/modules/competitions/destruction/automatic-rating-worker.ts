@@ -53,9 +53,11 @@ export async function runAutomaticRatingStep(database: V2Database, now = new Dat
       component: async (key): Promise<RatingComponent> => {
         if (key === "inhouse") {
           const profile = (await tx.select({ score: mmrPlayerProfiles.overallScoreBp, samples: mmrPlayerProfiles.sampleSize, formula: mmrPlayerProfiles.formulaVersion, calculatedAt: mmrPlayerProfiles.calculatedAt })
-            .from(mmrPlayerProfiles).innerJoin(mmrProjectionStates, and(eq(mmrProjectionStates.key, "GLOBAL"), eq(mmrProjectionStates.status, "READY"), eq(mmrProjectionStates.generation, mmrPlayerProfiles.generation)))
+            .from(mmrPlayerProfiles).innerJoin(mmrProjectionStates, and(eq(mmrProjectionStates.key, "GLOBAL"), eq(mmrProjectionStates.status, "READY"), eq(mmrProjectionStates.generation, mmrPlayerProfiles.generation), eq(mmrProjectionStates.formulaVersion, mmrPlayerProfiles.formulaVersion)))
             .where(eq(mmrPlayerProfiles.playerId, participant.playerId)).limit(1))[0];
-          if (!profile || profile.samples < 1 || profile.formula !== MMR_FORMULA_VERSION) return noRatingData("유효한 내전 통계 없음 또는 공식 전환 대기", now.toISOString(), "INHOUSE");
+          // The imported V1 projection also stores the original 0–100 score in basis points.
+          // Read the active projection without triggering a site-wide MMR formula migration.
+          if (!profile || profile.samples < 1 || ![MMR_FORMULA_VERSION, "V1_INTERNAL_MMR_1"].includes(profile.formula)) return noRatingData("유효한 내전 통계 없음 또는 지원하지 않는 공식", now.toISOString(), "INHOUSE");
           return { score: boundedRatingScore(50 + (profile.score / 100 - 50) * Math.min(profile.samples / 30, 1)), status: "READY", source: "INHOUSE", samples: profile.samples, observedAt: profile.calculatedAt.toISOString(), evidence: `내전 ${profile.samples}판 · ${profile.formula} ${profile.score / 100}점 · 30판까지 중립 보정` };
         }
         if (!puuid) throw new AramSyncError("NOT_CONNECTED");

@@ -280,6 +280,10 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     for (const mode of ["ARAM", "ARAM_MAYHEM"] as const) {
       const id = randomUUID();
       await recruitPositionless(id, mode, false);
+      if (mode === "ARAM_MAYHEM") {
+        await database.update(mmrProjectionStates).set({ formulaVersion: "V1_INTERNAL_MMR_1" }).where(eq(mmrProjectionStates.key, "GLOBAL"));
+        await database.update(mmrPlayerProfiles).set({ formulaVersion: "V1_INTERNAL_MMR_1" }).where(eq(mmrPlayerProfiles.playerId, playerIds[0]!));
+      }
       const pending = (await adapter.getAdmin(id))!;
       // Other entrants are synthetic completed snapshots; exercise collection of the first player end to end.
       const components = Object.fromEntries(RATING_KEYS.map((key) => [key, { score: 70, status: "READY", source: "RIOT", samples: 100, observedAt: now.toISOString(), evidence: "synthetic fixture" }]));
@@ -291,6 +295,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       assert.equal(measured.ratingCollection?.complete, true);
       assert.ok(evaluateProvisionalRating(measured.provisionalRating!).tier, JSON.stringify(measured.provisionalRating?.components));
       assert.equal(measured.provisionalRating?.components.inhouse?.score, 70);
+      assert.ok(measured.provisionalRating?.components.inhouse?.evidence.includes(mode === "ARAM_MAYHEM" ? "V1_INTERNAL_MMR_1" : MMR_FORMULA_VERSION));
       assert.equal(measured.aramRecord?.mode, "ARAM", "Mayhem uses the agreed normal ARAM proxy");
       assert.deepEqual(measured.aramCollection?.matchIds, ["KR_12345"], "legacy partial lists cannot bypass the 90-day collection window");
       assert.equal(JSON.stringify(await adapter.getPublic(id)).includes(puuid), false);
