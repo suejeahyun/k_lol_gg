@@ -1668,6 +1668,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "admin-password-login",
+      "version": "1.0.0",
+      "gitTag": "admin-password-login-v1.0.0",
+      "commit": "32c3337317e03216a9a50b717f2626a170257488",
+      "releasedAt": "2026-09-30T04:13:36.417Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/admin-password-login-v1.0.0-2026-09-30/production.md",
+      "patchNotes": "docs/patch-notes/2026-09-30-admin-password-login.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_8QFsioeFb9hAXAWhmB91zXHa6LS6",
+        "url": "https://k-lol-dn9rzaxlc-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-30T04:13:36.417Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

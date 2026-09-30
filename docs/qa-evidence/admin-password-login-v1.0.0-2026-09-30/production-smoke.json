@@ -1,0 +1,28 @@
+{
+  "at": "2026-09-30T04:13:08.509Z",
+  "base": "https://k-lol-gg.vercel.app",
+  "health": {
+    "status": 200,
+    "state": "ready"
+  },
+  "login": {
+    "status": 200,
+    "passwordOnly": true
+  },
+  "admin": {
+    "status": 307
+  },
+  "csv": {
+    "status": 401
+  },
+  "settings": {
+    "status": 401
+  },
+  "retiredTotp": {
+    "status": 401
+  },
+  "validation": {
+    "foreignOrigin": 403,
+    "missingCredentials": 400
+  }
+}
