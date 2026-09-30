@@ -597,4 +597,4 @@
 
 ## 2026-09-30 사이트 이용 통계
 
-usage-analytics@1.0.0 후보: 운영 기준에 비회원 포함 이용 통계와 일반 관리자 조회를 추가했다. migration head는 journal을 참조한다. 검증과 배포 상태는 [QA 근거](qa-evidence/usage-analytics-v1.0.0-2026-09-30/README.md) 및 릴리스 registry를 따른다.
+usage-analytics@1.0.0 운영 반영: 운영 기준에 비회원 포함 이용 통계와 일반 관리자 조회를 추가했다. migration head는 journal을 참조한다. 검증과 배포 상태는 [QA 근거](qa-evidence/usage-analytics-v1.0.0-2026-09-30/README.md) 및 릴리스 registry를 따른다.

@@ -1,0 +1,8 @@
+{
+  "at": "2026-09-30T03:14:10.529Z",
+  "migration": "0047_usage_analytics",
+  "migrationCount": 48,
+  "tables": 3,
+  "initialized": true,
+  "idempotent": true
+}

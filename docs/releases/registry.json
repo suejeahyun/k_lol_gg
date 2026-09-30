@@ -1648,6 +1648,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "usage-analytics",
+      "version": "1.0.0",
+      "gitTag": "usage-analytics-v1.0.0",
+      "commit": "de3f7a777f9907e414696fdaee734966bde0dc06",
+      "releasedAt": "2026-09-30T03:18:39.214Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/usage-analytics-v1.0.0-2026-09-30/production.md",
+      "patchNotes": "docs/patch-notes/2026-09-30-usage-analytics.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_3ftQA4oktnG7vStB3vkmCX8CPMrw",
+        "url": "https://k-lol-hfnhzbrom-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-30T03:18:39.214Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

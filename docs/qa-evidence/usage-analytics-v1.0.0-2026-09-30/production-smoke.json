@@ -1,0 +1,31 @@
+{
+  "at": "2026-09-30T03:17:58.975Z",
+  "base": "https://k-lol-gg.vercel.app",
+  "health": {
+    "status": 200,
+    "state": "ready"
+  },
+  "admin": {
+    "status": 307
+  },
+  "export": {
+    "status": 401
+  },
+  "settings": {
+    "status": 401
+  },
+  "privacy": {
+    "status": 200
+  },
+  "home": {
+    "status": 200
+  },
+  "collection": {
+    "status": 204,
+    "cookieIssued": true,
+    "originBoundary": 403,
+    "extraFields": 400,
+    "dnt": 204,
+    "duplicateResponse": 204
+  }
+}
