@@ -127,7 +127,7 @@ export function makeDisciplineCommand(input: Readonly<{
       expectedRevision: input.expectedRevision,
       issuedAt: new Date().toISOString(),
       authorizationIntent: admin
-        ? { kind: "ADMIN_TOTP" as const, sessionId: input.session.sessionId, minimumRole: input.session.role as "ADMIN" | "SUPER_ADMIN", authVersion: input.session.authVersion, requireTotp: true as const, transactionRecheck: true as const }
+        ? { kind: "ADMIN_SESSION" as const, sessionId: input.session.sessionId, minimumRole: input.session.role as "ADMIN" | "SUPER_ADMIN", authVersion: input.session.authVersion, requireAdminSession: true as const, transactionRecheck: true as const }
         : { kind: "ACCOUNT_SESSION" as const, sessionId: input.session.sessionId, role: input.session.role, authVersion: input.session.authVersion, transactionRecheck: true as const },
       idempotency: {
         scope: admin ? "admin:discipline:evidence:review" : "account:discipline:evidence:submit",

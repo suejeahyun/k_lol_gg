@@ -50,7 +50,7 @@ export default async function AdminDashboardPage() {
         <div className={styles.sessionCard}>
           <small>현재 로그인</small>
           <strong>{accountRoleLabel(session.role)}</strong>
-          <span>{session.adminTotpVerified ? "2단계 인증 완료" : "2단계 인증 등록 필요"}</span>
+          <span>관리자 로그인 완료</span>
         </div>
       </header>
 
@@ -58,7 +58,7 @@ export default async function AdminDashboardPage() {
         <div><ShieldCheck aria-hidden="true" /></div>
         <div>
           <h2 id="admin-foundation-title">관리자 보안</h2>
-          <p>중요한 작업은 관리자 권한과 2단계 인증을 다시 확인합니다.</p>
+          <p>중요한 작업은 관리자 권한과 로그인 상태를 다시 확인합니다.</p>
         </div>
       </section>
 

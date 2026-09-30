@@ -166,7 +166,7 @@ export default async function AdminKakaoPage({
           <article><Clock3/><div><h2>nonce·영수증</h2><p>활성 nonce {result.data.activeNonceCount} · 미완료 영수증 {result.data.incompleteReceiptCount}</p></div></article>
           <article><DatabaseZap/><div><h2>세션·outbox</h2><p>활성 이미지 세션 {result.data.activeImageSessionCount} · 대기 outbox {result.data.pendingOutboxCount}</p></div></article>
         </section>
-        {session.role === "SUPER_ADMIN" && settingsResult?.state === "ready" ? <section className={styles.panel}><div className={styles.panelHead}><h2>안전 복구 작업</h2><span>SUPER · 2단계 인증</span></div><div className={styles.settingsBody}><p>만료 시간이 지난 활성 이미지 수신 세션만 EXPIRED 상태로 전환합니다. 자산이나 신청 데이터는 삭제하지 않습니다.</p><KakaoHealthRepair revision={settingsResult.data.revision}/></div></section> : null}
+        {session.role === "SUPER_ADMIN" && settingsResult?.state === "ready" ? <section className={styles.panel}><div className={styles.panelHead}><h2>안전 복구 작업</h2><span>최고 관리자 전용</span></div><div className={styles.settingsBody}><p>만료 시간이 지난 활성 이미지 수신 세션만 EXPIRED 상태로 전환합니다. 자산이나 신청 데이터는 삭제하지 않습니다.</p><KakaoHealthRepair revision={settingsResult.data.revision}/></div></section> : null}
       </> : null}
     </> : result.state === "unavailable" ? <section className={styles.state} role="status"><DatabaseZap/><h2>모집 저장소를 사용할 수 없습니다.</h2><p>데이터베이스 연결과 0009 migration 상태를 확인해 주세요.</p></section> : <section className={styles.state} role="alert"><CircleAlert/><h2>모집 상태를 불러오지 못했습니다.</h2><p>서버 로그의 trace와 데이터베이스 상태를 확인해 주세요.</p></section>}
   </main>;

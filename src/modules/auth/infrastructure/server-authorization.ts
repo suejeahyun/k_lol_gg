@@ -11,10 +11,6 @@ export async function requirePageRole(requiredRole: AuthRole, nextPath: string) 
   const decision = authorizeSession(await getCurrentSession(purpose), requiredRole);
   if (decision.allowed) return decision.session;
 
-  if (decision.reason === "TOTP_REQUIRED") {
-    redirect(`/admin/security?setup=required&next=${encodeURIComponent(nextPath)}`);
-  }
-
   if (decision.reason === "PASSWORD_CHANGE_REQUIRED") {
     redirect("/account/password?required=1");
   }

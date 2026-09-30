@@ -1,6 +1,5 @@
 import type { AuthAccountRepository } from "./ports/auth-account-repository";
 import type { PasswordVerifier } from "./ports/password-verifier";
-import type { TotpVerifier } from "./ports/totp-verifier";
 import { isAdminRole, type AuthSessionSeed } from "../domain/auth-session";
 import { containsUnsafeText } from "@/platform/security/input-safety";
 
@@ -12,19 +11,16 @@ export type AdminLoginInput = {
 
 export type AdminLoginResult =
   | { type: "authenticated"; session: AuthSessionSeed; requiresTwoFactorSetup: boolean }
-  | { type: "two-factor-required" }
   | { type: "invalid-credentials" }
   | {
       type: "forbidden";
-      reason: "PASSWORD_CHANGE" | "ROLE" | "STATUS" | "TOTP" | "TOTP_REPLAY";
+      reason: "PASSWORD_CHANGE" | "ROLE" | "STATUS";
     }
-  | { type: "unavailable" }
   | { type: "invalid-input" };
 
 type AuthenticateAdminDependencies = {
   accounts: AuthAccountRepository;
   passwords: PasswordVerifier;
-  totp: TotpVerifier;
 };
 
 export async function authenticateAdmin(
@@ -76,28 +72,9 @@ export async function authenticateAdmin(
     return { type: "forbidden", reason: "PASSWORD_CHANGE" };
   }
 
-  if (account.adminTotpEnabled && account.adminTotpSecretUnavailable) {
-    return { type: "unavailable" };
-  }
-
-  if (account.adminTotpEnabled) {
-    if (!totpCode || !account.adminTotpSecret) {
-      return { type: "two-factor-required" };
-    }
-
-    const verification = dependencies.totp.verify(account.adminTotpSecret, totpCode);
-    if (!verification.ok) {
-      return { type: "forbidden", reason: "TOTP" };
-    }
-
-    if (!await dependencies.accounts.consumeTotpStep(account.id, verification.step)) {
-      return { type: "forbidden", reason: "TOTP_REPLAY" };
-    }
-  }
-
   return {
     type: "authenticated",
-    requiresTwoFactorSetup: !account.adminTotpEnabled,
+    requiresTwoFactorSetup: false,
     session: {
       userId: account.id,
       role: account.role,
@@ -105,7 +82,7 @@ export async function authenticateAdmin(
       accountStatus: account.status,
       mustChangePassword: account.mustChangePassword,
       authVersion: account.authVersion,
-      adminTotpVerified: account.adminTotpEnabled,
+      adminTotpVerified: false,
       source: dependencies.accounts.source,
     },
   };

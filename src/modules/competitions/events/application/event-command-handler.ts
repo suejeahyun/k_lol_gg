@@ -111,9 +111,9 @@ function validateCommand(command: EventCommand) {
   } else {
     const intent = metadata.authorizationIntent;
     if (
-      intent.kind !== "ADMIN_TOTP" ||
+      intent.kind !== "ADMIN_SESSION" ||
       intent.minimumRole !== "ADMIN" ||
-      intent.requireTotp !== true ||
+      intent.requireAdminSession !== true ||
       intent.transactionRecheck !== true
     ) {
       throw new EventDomainError("INVALID_AUTHORIZATION_INTENT", "Admin event commands require ADMIN+TOTP transaction recheck.");

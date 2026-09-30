@@ -18,12 +18,12 @@ export type RiotAuthorizationIntent =
       transactionRecheck: true;
     }>
   | Readonly<{
-      kind: "ADMIN_TOTP";
+      kind: "ADMIN_SESSION";
       sessionId: string;
       role: "ADMIN" | "SUPER_ADMIN";
       authVersion: number;
       minimumRole: "ADMIN" | "SUPER_ADMIN";
-      requireTotp: true;
+      requireAdminSession: true;
       transactionRecheck: true;
     }>
   | Readonly<{

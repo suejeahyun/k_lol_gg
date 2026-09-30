@@ -10,10 +10,10 @@ export type ChampionCommandMetadata = Readonly<{
   expectedRevision: number;
   issuedAt: string;
   authorizationIntent: Readonly<{
-    kind: "ADMIN_TOTP";
+    kind: "ADMIN_SESSION";
     sessionId: string;
     minimumRole: "ADMIN";
-    requireTotp: true;
+    requireAdminSession: true;
     transactionRecheck: true;
   }>;
   idempotency: Readonly<{

@@ -399,7 +399,7 @@ function sameDigest(left: Uint8Array, right: Uint8Array) {
 
 function expectedScope(command: DestructionHttpCommand) {
   if (command.type === "CREATE_DESTRUCTION") return "admin:destruction:create";
-  if (command.metadata.authorizationIntent.kind === "ADMIN_TOTP") return `admin:destruction:${command.type.toLocaleLowerCase("en-US")}`;
+  if (command.metadata.authorizationIntent.kind === "ADMIN_SESSION") return `admin:destruction:${command.type.toLocaleLowerCase("en-US")}`;
   if (command.type === "UPSERT_OWN_APPLICATION") return "destruction:application:upsert";
   if (command.type === "CANCEL_OWN_APPLICATION") return "destruction:application:cancel";
   return "destruction:mvp:vote";
@@ -412,9 +412,9 @@ function validateCommandContract(command: DestructionHttpCommand) {
   requireCompetition(metadata.idempotency.requestFingerprint instanceof Uint8Array && metadata.idempotency.requestFingerprint.byteLength === 32 && sameDigest(metadata.idempotency.requestFingerprint, destructionCommandRequestFingerprint(command)), "INVALID_COMMAND_CONTRACT", "The request fingerprint is invalid.");
   requireCompetition(metadata.idempotency.scope === expectedScope(command), "INVALID_COMMAND_CONTRACT", "The command scope is invalid.");
   const intent = metadata.authorizationIntent;
-  if (intent.kind === "ADMIN_TOTP") {
+  if (intent.kind === "ADMIN_SESSION") {
     const minimumRole = destructionAdminMinimumRole(command.type as DestructionAdminCommandType);
-    requireCompetition(intent.minimumRole === minimumRole && intent.requireTotp === true && intent.transactionRecheck === true, "INVALID_COMMAND_CONTRACT", "The administrator authorization contract is invalid.");
+    requireCompetition(intent.minimumRole === minimumRole && intent.requireAdminSession === true && intent.transactionRecheck === true, "INVALID_COMMAND_CONTRACT", "The administrator authorization contract is invalid.");
     requireCompetition(metadata.actor.role === "SUPER_ADMIN" || (metadata.actor.role === "ADMIN" && minimumRole === "ADMIN"), "INVALID_COMMAND_CONTRACT", "The actor role does not satisfy the command contract.");
   } else {
     requireCompetition(intent.requireApprovedAccount === true && intent.requireOwnership === true && intent.transactionRecheck === true && intent.ownerUserAccountId === metadata.actor.userAccountId, "INVALID_COMMAND_CONTRACT", "The owner authorization contract is invalid.");
@@ -469,4 +469,4 @@ export class DestructionCommandHandler {
   }
 }
 
-type DestructionAdminCommandType = Extract<DestructionHttpCommand, { metadata: { authorizationIntent: { kind: "ADMIN_TOTP" } } }>["type"];
+type DestructionAdminCommandType = Extract<DestructionHttpCommand, { metadata: { authorizationIntent: { kind: "ADMIN_SESSION" } } }>["type"];

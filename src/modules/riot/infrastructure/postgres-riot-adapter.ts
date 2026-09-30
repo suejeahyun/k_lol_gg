@@ -213,9 +213,9 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
               sessionId: intent.sessionId,
               role: intent.role,
               authVersion: intent.authVersion,
-            }, new Date(), intent.kind === "ADMIN_TOTP" ? ADMIN_MUTATION_SESSION_POLICY : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY);
+            }, new Date(), intent.kind === "ADMIN_SESSION" ? ADMIN_MUTATION_SESSION_POLICY : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY);
             if (!locked) return null;
-            if (intent.kind === "ADMIN_TOTP") {
+            if (intent.kind === "ADMIN_SESSION") {
               actor = { purpose: "ADMIN", principalId: input.principalId, userAccountId: locked.id, role: locked.role === "SUPER_ADMIN" ? "SUPER_ADMIN" : "ADMIN" };
             } else {
               const owned = (await transaction.select({ id: players.id }).from(players).where(and(

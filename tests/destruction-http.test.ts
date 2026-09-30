@@ -71,8 +71,8 @@ test("service binds owner identity, request fingerprint and SUPER-sensitive inte
 
   assert.throws(() => service.executeAdmin(context("ADMIN", "ADMIN"), tournamentId, 3, { type: "ASSIGN_MVP", payload: { fixtureId: "fixture-1", playerId: candidateId } }), /FORBIDDEN/);
   await service.executeAdmin(context("ADMIN", "SUPER_ADMIN"), tournamentId, 3, { type: "ASSIGN_MVP", payload: { fixtureId: "fixture-1", playerId: candidateId } });
-  assert.equal(commands[1]?.metadata.authorizationIntent.kind, "ADMIN_TOTP");
-  assert.equal(commands[1]?.metadata.authorizationIntent.kind === "ADMIN_TOTP" && commands[1].metadata.authorizationIntent.minimumRole, "SUPER_ADMIN");
+  assert.equal(commands[1]?.metadata.authorizationIntent.kind, "ADMIN_SESSION");
+  assert.equal(commands[1]?.metadata.authorizationIntent.kind === "ADMIN_SESSION" && commands[1].metadata.authorizationIntent.minimumRole, "SUPER_ADMIN");
 });
 
 test("HTTP mutation boundary requires same origin, If-Match and Idempotency-Key", async () => {

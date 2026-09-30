@@ -43,7 +43,6 @@ export function AdminShell({ session, children }: { session: AuthSession; childr
             <div className={styles.topActions}>
               <span className={styles.environment}>{environmentLabel()}</span>
               <Link href="/admin/search" aria-label="전체 검색"><Search aria-hidden="true" /><span>전체 검색</span></Link>
-              <Link href="/admin/security" aria-label="보안 설정"><ShieldCheck aria-hidden="true" /><span>보안</span></Link>
             </div>
           </div>
           <AdminOperationsNavigation />

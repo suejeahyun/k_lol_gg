@@ -71,7 +71,7 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
           if (intent.kind === "SIGNED_JOB") {
             return { purpose: "JOB", principalId: input.principalId, jobName: "riot-sync" };
           }
-          if (intent.kind === "ADMIN_TOTP") {
+          if (intent.kind === "ADMIN_SESSION") {
             return { purpose: "ADMIN", principalId: input.principalId, userAccountId: input.principalId, role: intent.role };
           }
           const playerId = this.ownerPlayers.get(input.principalId) ?? input.principalId;

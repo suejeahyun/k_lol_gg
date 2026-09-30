@@ -114,7 +114,7 @@ export const ADMIN_MUTATION_SESSION_POLICY: TransactionSessionPolicy = {
   minimumRole: "ADMIN",
   allowedStatuses: ["APPROVED"],
   allowMustChangePassword: false,
-  adminTotp: "REQUIRED",
+  adminTotp: "OPTIONAL",
 };
 
 export const APPROVED_ACCOUNT_MUTATION_SESSION_POLICY: TransactionSessionPolicy = {

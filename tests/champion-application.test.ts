@@ -47,7 +47,7 @@ function command<Type extends ChampionCommand["type"]>(
       requestId: `request-${type.toLowerCase()}`,
       expectedRevision,
       issuedAt: now.toISOString(),
-      authorizationIntent: { kind: "ADMIN_TOTP", sessionId: "admin-session-1", minimumRole: "ADMIN", requireTotp: true, transactionRecheck: true },
+      authorizationIntent: { kind: "ADMIN_SESSION", sessionId: "admin-session-1", minimumRole: "ADMIN", requireAdminSession: true, transactionRecheck: true },
       idempotency: {
         scope,
         keyHash: hashChampionRequestKey(`key-${type.toLowerCase()}-12345678`),

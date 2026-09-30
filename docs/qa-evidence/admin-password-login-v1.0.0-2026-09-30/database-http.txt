@@ -1,0 +1,1 @@
+[admin-password-qa] Password-only ADMIN/SUPER and legacy-TOTP accounts; real DB sessions and SUPER mutation; role/status/origin/tamper/revocation gates; retired endpoints; no enrollment form: passed

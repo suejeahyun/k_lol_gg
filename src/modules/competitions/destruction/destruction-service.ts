@@ -185,7 +185,7 @@ export class DestructionService {
     const type = "CREATE_DESTRUCTION" as const;
     return this.handler.handle(fingerprint({ type, tournamentId, metadata: {
       ...metadata(context, 0, "admin:destruction:create"),
-      authorizationIntent: { kind: "ADMIN_TOTP", minimumRole: "ADMIN", requireTotp: true, transactionRecheck: true },
+      authorizationIntent: { kind: "ADMIN_SESSION", minimumRole: "ADMIN", requireAdminSession: true, transactionRecheck: true },
     }, payload: { title: text(input.title, 120), configuration: configuration(input.configuration) } }));
   }
 
@@ -199,7 +199,7 @@ export class DestructionService {
       tournamentId: uuid(tournamentId),
       metadata: {
         ...metadata(context, expectedRevision, `admin:destruction:${action.type.toLocaleLowerCase("en-US")}`),
-        authorizationIntent: { kind: "ADMIN_TOTP", minimumRole, requireTotp: true, transactionRecheck: true },
+        authorizationIntent: { kind: "ADMIN_SESSION", minimumRole, requireAdminSession: true, transactionRecheck: true },
       },
     } as DestructionAdminCommand));
   }

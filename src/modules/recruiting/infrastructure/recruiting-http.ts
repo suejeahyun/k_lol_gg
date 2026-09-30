@@ -81,9 +81,9 @@ export function adminActor(session: AuthSession): RecruitingCommandActor {
     principalId: session.userId,
     sessionActor: transactionSessionActor(session),
     authorizationIntent: {
-      kind: "ADMIN_TOTP",
+      kind: "ADMIN_SESSION",
       minimumRole: session.role,
-      requireTotp: true,
+      requireAdminSession: true,
       transactionRecheck: true,
     },
   };

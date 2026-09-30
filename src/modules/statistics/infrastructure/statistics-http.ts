@@ -28,7 +28,7 @@ const STATISTICS_HTTP_PROBLEMS = Object.freeze({
     code: "FORBIDDEN",
     status: 403,
     title: "이 작업을 수행할 권한이 없습니다.",
-    detail: "현재 관리자 역할과 2단계 인증 상태를 확인해 주세요.",
+    detail: "현재 관리자 역할과 로그인 상태를 확인해 주세요.",
   }),
   idempotencyMismatch: definePublicProblem({
     code: "IDEMPOTENCY_MISMATCH",
@@ -70,7 +70,7 @@ const STATISTICS_HTTP_PROBLEMS = Object.freeze({
     code: "UNAUTHENTICATED",
     status: 401,
     title: "관리자 로그인이 필요합니다.",
-    detail: "관리자 로그인과 2단계 인증을 완료해 주세요.",
+    detail: "관리자 로그인을 완료해 주세요.",
   }),
 });
 

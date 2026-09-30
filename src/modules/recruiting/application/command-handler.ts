@@ -105,7 +105,7 @@ function validateAuthorization(command: RecruitingCommand) {
   if (actor.kind === "ADMIN") {
     canonicalIdentifier(actor.sessionActor.sessionId, "actor.sessionId");
     const intent = actor.authorizationIntent;
-    if (actor.principalId !== actor.sessionActor.userAccountId || actor.sessionActor.role !== intent.minimumRole || intent.kind !== "ADMIN_TOTP" || !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole) || intent.requireTotp !== true || intent.transactionRecheck !== true) {
+    if (actor.principalId !== actor.sessionActor.userAccountId || actor.sessionActor.role !== intent.minimumRole || intent.kind !== "ADMIN_SESSION" || !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole) || intent.requireAdminSession !== true || intent.transactionRecheck !== true) {
       throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "Administrator commands require an ADMIN-purpose TOTP session recheck.");
     }
     if (command.type === "RESET_PARTY" && intent.minimumRole !== "SUPER_ADMIN") {

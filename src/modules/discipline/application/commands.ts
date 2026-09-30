@@ -11,11 +11,11 @@ export type DisciplineAuthorizationIntent =
       transactionRecheck: true;
     }>
   | Readonly<{
-      kind: "ADMIN_TOTP";
+      kind: "ADMIN_SESSION";
       sessionId: string;
       minimumRole: "ADMIN" | "SUPER_ADMIN";
       authVersion: number;
-      requireTotp: true;
+      requireAdminSession: true;
       transactionRecheck: true;
     }>;
 

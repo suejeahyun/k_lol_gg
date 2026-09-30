@@ -53,7 +53,8 @@ test("database authentication fails closed when any required runtime value is mi
 
   for (const missing of Object.keys(complete) as Array<keyof typeof complete>) {
     const incomplete = { ...complete, [missing]: undefined };
-    assert.throws(() => parseDatabaseAuthRuntimeSecrets(incomplete));
+    if (missing === "TOTP_ENCRYPTION_KEYS") assert.equal(parseDatabaseAuthRuntimeSecrets(incomplete).totpEncryptionKeys.keys.size, 0);
+    else assert.throws(() => parseDatabaseAuthRuntimeSecrets(incomplete));
   }
   assert.throws(() => parseDatabaseAuthRuntimeSecrets({
     ...complete,

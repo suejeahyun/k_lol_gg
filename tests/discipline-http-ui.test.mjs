@@ -72,6 +72,6 @@ test("discipline administrator headings and status labels are readable Korean", 
   assert.match(list, /typeLabel\[record\.type\]/);
   assert.match(detail, /evidenceStatusLabel\[item\.status\]/);
   assert.match(create, /관리자 · 새 기록/);
-  assert.match(actions, /최신 변경 버전과 관리자 2단계 인증 상태/);
+  assert.match(actions, /최신 변경 버전과 관리자 로그인 상태/);
   assert.doesNotMatch(`${list}\n${detail}\n${create}\n${actions}`, /ADMIN · DISCIPLINE|ADMIN · DETAIL|ADMIN · NEW|최신 revision/);
 });

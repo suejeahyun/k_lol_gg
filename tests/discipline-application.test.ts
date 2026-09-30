@@ -83,11 +83,11 @@ function reviewCommand(): Extract<DisciplineCommand, { type: "REVIEW_EVIDENCE" }
       expectedRevision: 1,
       issuedAt: now.toISOString(),
       authorizationIntent: {
-        kind: "ADMIN_TOTP",
+        kind: "ADMIN_SESSION",
         sessionId: "admin-session-1",
         minimumRole: "ADMIN",
         authVersion: 0,
-        requireTotp: true,
+        requireAdminSession: true,
         transactionRecheck: true,
       },
       idempotency: {

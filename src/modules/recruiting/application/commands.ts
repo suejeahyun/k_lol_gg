@@ -5,9 +5,9 @@ import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signatu
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
 export type RecruitingAdminAuthorizationIntent = Readonly<{
-  kind: "ADMIN_TOTP";
+  kind: "ADMIN_SESSION";
   minimumRole: "ADMIN" | "SUPER_ADMIN";
-  requireTotp: true;
+  requireAdminSession: true;
   transactionRecheck: true;
 }>;
 

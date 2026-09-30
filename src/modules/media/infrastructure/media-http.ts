@@ -23,7 +23,7 @@ import { MediaServiceError, type MediaCommandContext } from "../application/medi
 import type { MediaMutationResult } from "../application/ports/media-repository";
 
 const problems = Object.freeze({
-  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "관리자 권한과 2단계 인증 상태를 확인해 주세요." }),
+  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "관리자 권한과 로그인 상태를 확인해 주세요." }),
   idempotencyMismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 이미 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
   invalidInput: definePublicProblem({ code: "INVALID_INPUT", status: 400, title: "미디어 입력이 올바르지 않습니다.", detail: "제목, 설명, 자산과 게시 값을 확인해 주세요." }),
   invalidTransition: definePublicProblem({ code: "INVALID_TRANSITION", status: 409, title: "현재 상태에서는 변경할 수 없습니다.", detail: "최신 게시 상태를 확인한 뒤 다시 시도해 주세요." }),

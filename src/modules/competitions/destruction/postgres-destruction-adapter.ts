@@ -157,7 +157,7 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
     authorization: {
       recheck: async (context, command) => {
         const intent = command.metadata.authorizationIntent;
-        const policy = intent.kind === "ADMIN_TOTP"
+        const policy = intent.kind === "ADMIN_SESSION"
           ? { ...ADMIN_MUTATION_SESSION_POLICY, minimumRole: intent.minimumRole }
           : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY;
         const account = await lockTransactionSessionActor(this.tx(context), command.metadata.actor, new Date(), policy);

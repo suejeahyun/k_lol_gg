@@ -23,7 +23,7 @@ import { championCommandRequestHash, type ChampionCommand } from "../application
 
 const problems = Object.freeze({
   alreadyExists: definePublicProblem({ code: "ALREADY_EXISTS", status: 409, title: "이미 등록된 챔피언입니다.", detail: "고정 키를 확인해 주세요." }),
-  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "관리자 권한과 2단계 인증을 확인해 주세요." }),
+  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "관리자 권한과 로그인 상태을 확인해 주세요." }),
   idempotencyMismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 이미 사용되었습니다.", detail: "새 요청 키로 다시 시도해 주세요." }),
   invalidInput: definePublicProblem({ code: "INVALID_INPUT", status: 400, title: "챔피언 입력이 올바르지 않습니다.", detail: "고정 키, 표시 이름과 상태를 확인해 주세요." }),
   notFound: definePublicProblem({ code: "NOT_FOUND", status: 404, title: "챔피언을 찾을 수 없습니다.", detail: "주소를 확인해 주세요." }),
@@ -96,7 +96,7 @@ export async function prepareChampionMutation(
       requestId: randomUUID(),
       expectedRevision: revision.revision,
       issuedAt: new Date().toISOString(),
-      authorizationIntent: { kind: "ADMIN_TOTP" as const, sessionId: session.sessionId, minimumRole: "ADMIN" as const, requireTotp: true as const, transactionRecheck: true as const },
+      authorizationIntent: { kind: "ADMIN_SESSION" as const, sessionId: session.sessionId, minimumRole: "ADMIN" as const, requireAdminSession: true as const, transactionRecheck: true as const },
       idempotency: { scope, keyHash, requestHash: new Uint8Array(32), bodyDigestHex },
     },
     payload,

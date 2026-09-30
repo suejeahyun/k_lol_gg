@@ -76,12 +76,12 @@ class Harness {
 
   adminContext(key: string, superAdmin = false) {
     return this.context(superAdmin ? "super-principal" : "admin-principal", {
-      kind: "ADMIN_TOTP",
+      kind: "ADMIN_SESSION",
       sessionId: superAdmin ? "super-session" : "admin-session",
       role: superAdmin ? "SUPER_ADMIN" : "ADMIN",
       authVersion: 0,
       minimumRole: superAdmin ? "SUPER_ADMIN" : "ADMIN",
-      requireTotp: true,
+      requireAdminSession: true,
       transactionRecheck: true,
     }, key);
   }

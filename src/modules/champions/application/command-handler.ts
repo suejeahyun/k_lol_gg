@@ -74,7 +74,7 @@ function validate(command: ChampionCommand) {
     throw new ChampionApplicationError("INVALID_INPUT", "bodyDigestHex must be lowercase SHA-256.");
   }
   const intent = command.metadata.authorizationIntent;
-  if (intent.kind !== "ADMIN_TOTP" || intent.minimumRole !== "ADMIN" || intent.requireTotp !== true || intent.transactionRecheck !== true) {
+  if (intent.kind !== "ADMIN_SESSION" || intent.minimumRole !== "ADMIN" || intent.requireAdminSession !== true || intent.transactionRecheck !== true) {
     throw new ChampionApplicationError("FORBIDDEN", "Champion mutation requires an ADMIN-purpose TOTP session.");
   }
   if (command.metadata.actorSession.sessionId !== command.metadata.authorizationIntent.sessionId) {

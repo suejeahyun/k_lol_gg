@@ -98,21 +98,13 @@ export async function POST(request: NextRequest) {
   if (result.type === "invalid-credentials") {
     return json({ message: "아이디 또는 비밀번호가 올바르지 않습니다." }, 401);
   }
-  if (result.type === "unavailable") {
-    return json({ message: "2단계 인증 저장소를 확인할 수 없습니다." }, 503);
-  }
-  if (result.type === "two-factor-required") {
-    return json({ requiresTwoFactor: true, message: "인증 앱의 6자리 코드를 입력해 주세요." }, 401);
-  }
   if (result.type === "forbidden") {
     const messages = {
       ROLE: "관리자 권한이 없습니다.",
       STATUS: "승인된 관리자 계정만 로그인할 수 있습니다.",
       PASSWORD_CHANGE: "일반 로그인에서 임시 비밀번호를 먼저 변경해 주세요.",
-      TOTP: "2단계 인증 코드가 올바르지 않습니다.",
-      TOTP_REPLAY: "이미 사용한 인증 코드입니다. 새 코드를 입력해 주세요.",
     } as const;
-    return json({ message: messages[result.reason], requiresTwoFactor: result.reason.startsWith("TOTP") }, 403);
+    return json({ message: messages[result.reason], requiresTwoFactor: false }, 403);
   }
 
   const token = await issueRuntimeSession(result.session).catch(() => null);

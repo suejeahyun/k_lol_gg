@@ -22,7 +22,7 @@ import type { OperationsActor, OperationsCommandMetadata, OperationsCommandResul
 import { OperationsError } from "./postgres-operations-repository";
 
 const problems = Object.freeze({
-  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "필요한 권한과 2단계 인증을 확인해 주세요." }),
+  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "필요한 권한과 로그인 상태을 확인해 주세요." }),
   invalid: definePublicProblem({ code: "INVALID_INPUT", status: 400, title: "입력값이 올바르지 않습니다.", detail: "입력 범위와 요청 형식을 확인해 주세요." }),
   conflict: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 다른 요청에 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
   precondition: definePublicProblem({ code: "PRECONDITION_FAILED", status: 412, title: "설정이 이미 변경되었습니다.", detail: "최신 설정을 불러온 뒤 다시 시도해 주세요." }),

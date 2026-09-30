@@ -131,7 +131,7 @@ function adminMetadata(context: EventCommandContext, expectedRevision: number, s
   return {
     ...baseMetadata(context, expectedRevision, scope),
     actor: { userAccountId: context.actorSession.userAccountId, sessionId: context.actorSession.sessionId, purpose: "ADMIN" as const, requiredRole: "ADMIN" as const, authVersion: context.actorSession.authVersion, sessionRole: context.actorSession.role },
-    authorizationIntent: { kind: "ADMIN_TOTP" as const, minimumRole: "ADMIN" as const, requireTotp: true as const, transactionRecheck: true as const },
+    authorizationIntent: { kind: "ADMIN_SESSION" as const, minimumRole: "ADMIN" as const, requireAdminSession: true as const, transactionRecheck: true as const },
   };
 }
 

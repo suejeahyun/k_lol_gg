@@ -6,7 +6,6 @@ import { DatabaseAuthAccountRepository } from "./database-auth-account-repositor
 import { getFixtureAuthAccountRepository } from "./fixture-auth-repository";
 import { hashPassword, identifyPasswordHash, NodePasswordVerifier } from "./node-password";
 import { resolveRuntimeAuthContext } from "./runtime-auth-context";
-import { Rfc6238TotpVerifier } from "./totp";
 
 export async function authenticateAdminFromRuntime(input: AdminLoginInput) {
   const context = resolveRuntimeAuthContext();
@@ -18,13 +17,12 @@ export async function authenticateAdminFromRuntime(input: AdminLoginInput) {
       : null;
     const accounts = context.mode === "fixture"
       ? await getFixtureAuthAccountRepository()
-      : new DatabaseAuthAccountRepository(context.repository, context.totpKeys);
+      : new DatabaseAuthAccountRepository(context.repository);
     if (!accounts) return null;
 
     const result = await authenticateAdmin(input, {
       accounts,
       passwords: new NodePasswordVerifier(),
-      totp: new Rfc6238TotpVerifier(),
     });
     if (
       context.mode === "database" &&

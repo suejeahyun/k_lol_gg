@@ -1,169 +1,41 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { AuthAccount } from "../src/modules/auth/domain/auth-account";
-import type { AuthAccountRepository } from "../src/modules/auth/application/ports/auth-account-repository";
 import { authenticateAdmin } from "../src/modules/auth/application/authenticate-admin";
 import { hashPassword, NodePasswordVerifier } from "../src/modules/auth/infrastructure/node-password";
-import { generateTotpCode, Rfc6238TotpVerifier } from "../src/modules/auth/infrastructure/totp";
 
-function base32Encode(value: Buffer) {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-  const bits = [...value].map((byte) => byte.toString(2).padStart(8, "0")).join("");
-  let result = "";
-  for (let index = 0; index < bits.length; index += 5) {
-    result += alphabet[Number.parseInt(bits.slice(index, index + 5).padEnd(5, "0"), 2)];
-  }
-  return result;
+const password = "synthetic-password-123!";
+async function account(patch: Partial<AuthAccount> = {}): Promise<AuthAccount> {
+  return { id: "fixture-admin", loginId: "e2e_admin", passwordHash: await hashPassword(password), role: "ADMIN", status: "APPROVED", authVersion: 1, revision: 0, mustChangePassword: false, passwordChangedAt: null, statusChangedAt: new Date(0), statusReasonPublic: null, adminTotpEnabled: false, adminTotpSecret: null, ...patch };
 }
-
-const SECRET = base32Encode(Buffer.from("12345678901234567890"));
-const NOW = 59_000;
-
-class MemoryAccountRepository implements AuthAccountRepository {
-  readonly source = "fixture" as const;
-  private consumedStep: number | undefined;
-
-  constructor(private readonly account: AuthAccount) {}
-
-  async findByLoginId(loginId: string) {
-    return loginId === this.account.loginId ? this.account : null;
-  }
-
-  async findById(accountId: string) {
-    return accountId === this.account.id ? this.account : null;
-  }
-
-  async consumeTotpStep(_accountId: string, step: number) {
-    if (this.consumedStep !== undefined && step <= this.consumedStep) return false;
-    this.consumedStep = step;
-    return true;
-  }
+function dependencies(value: AuthAccount) {
+  return { accounts: { source: "fixture" as const, findByLoginId: async (id: string) => id === value.loginId ? value : null, findById: async () => value, consumeTotpStep: async () => { throw new Error("Password login must not consume TOTP"); } }, passwords: new NodePasswordVerifier() };
 }
-
-test("admin login requires password, TOTP, and rejects code replay", async () => {
-  const account: AuthAccount = {
-    id: "fixture-admin",
-    loginId: "e2e_admin",
-    passwordHash: await hashPassword("synthetic-password-123!"),
-    role: "ADMIN",
-    status: "APPROVED",
-    authVersion: 1,
-    revision: 0,
-    mustChangePassword: false,
-    passwordChangedAt: null,
-    statusChangedAt: new Date(0),
-    statusReasonPublic: null,
-    adminTotpEnabled: true,
-    adminTotpSecret: SECRET,
-  };
-  const dependencies = {
-    accounts: new MemoryAccountRepository(account),
-    passwords: new NodePasswordVerifier(),
-    totp: new Rfc6238TotpVerifier(() => NOW, 0),
-  };
-
-  assert.deepEqual(await authenticateAdmin({
-    loginId: account.loginId,
-    password: "wrong-password",
-  }, dependencies), { type: "invalid-credentials" });
-
-  assert.deepEqual(await authenticateAdmin({
-    loginId: account.loginId,
-    password: "synthetic-password-123!",
-  }, dependencies), { type: "two-factor-required" });
-
-  const totpCode = generateTotpCode(SECRET, 1);
-  const authenticated = await authenticateAdmin({
-    loginId: account.loginId,
-    password: "synthetic-password-123!",
-    totpCode,
-  }, dependencies);
-  assert.equal(authenticated.type, "authenticated");
-
-  assert.deepEqual(await authenticateAdmin({
-    loginId: account.loginId,
-    password: "synthetic-password-123!",
-    totpCode,
-  }, dependencies), { type: "forbidden", reason: "TOTP_REPLAY" });
-
-  for (const input of [
-    { loginId: `${account.loginId}\u061c`, password: "synthetic-password-123!" },
-    { loginId: account.loginId, password: "synthetic\u200e-password-123!" },
-    { loginId: account.loginId, password: "synthetic-password-123!", totpCode: `12\u200f3456` },
-    { loginId: account.loginId, password: "synthetic-password-123!", totpCode: "123 456" },
-  ]) {
-    assert.deepEqual(await authenticateAdmin(input, dependencies), { type: "invalid-input" });
+test("approved administrators log in using only a password, regardless of legacy TOTP enrollment or keys", async () => {
+  for (const legacy of [false, true]) {
+    const value = await account({ adminTotpEnabled: legacy, adminTotpSecretUnavailable: legacy });
+    const deps = dependencies(value);
+    assert.deepEqual(await authenticateAdmin({ loginId: value.loginId, password: "wrong" }, deps), { type: "invalid-credentials" });
+    for (const totpCode of [undefined, "123456", "123456"]) {
+      const result = await authenticateAdmin({ loginId: value.loginId, password, totpCode }, deps);
+      assert.equal(result.type, "authenticated");
+      if (result.type === "authenticated") {
+        assert.equal(result.requiresTwoFactorSetup, false);
+        assert.equal(result.session.adminTotpVerified, false);
+        assert.equal(result.session.purpose, "ADMIN");
+      }
+    }
   }
 });
-
-test("non-admin and pending accounts cannot obtain an admin session", async () => {
-  const base: AuthAccount = {
-    id: "fixture-user",
-    loginId: "e2e_user",
-    passwordHash: await hashPassword("synthetic-password-123!"),
-    role: "USER",
-    status: "APPROVED",
-    authVersion: 1,
-    revision: 0,
-    mustChangePassword: false,
-    passwordChangedAt: null,
-    statusChangedAt: new Date(0),
-    statusReasonPublic: null,
-    adminTotpEnabled: false,
-    adminTotpSecret: null,
-  };
-  const passwords = new NodePasswordVerifier();
-  const totp = new Rfc6238TotpVerifier(() => NOW, 0);
-
-  assert.deepEqual(await authenticateAdmin({
-    loginId: base.loginId,
-    password: "synthetic-password-123!",
-  }, { accounts: new MemoryAccountRepository(base), passwords, totp }), {
-    type: "forbidden",
-    reason: "ROLE",
-  });
-
-  const pending = { ...base, role: "ADMIN" as const, status: "PENDING" as const };
-  assert.deepEqual(await authenticateAdmin({
-    loginId: pending.loginId,
-    password: "synthetic-password-123!",
-  }, { accounts: new MemoryAccountRepository(pending), passwords, totp }), {
-    type: "forbidden",
-    reason: "STATUS",
-  });
+test("administrator password login still rejects user roles, unapproved accounts and temporary passwords", async () => {
+  for (const [patch, reason] of [[{ role: "USER" }, "ROLE"], [{ status: "PENDING" }, "STATUS"], [{ status: "SUSPENDED" }, "STATUS"], [{ mustChangePassword: true }, "PASSWORD_CHANGE"]] as const) {
+    const value = await account(patch);
+    assert.deepEqual(await authenticateAdmin({ loginId: value.loginId, password }, dependencies(value)), { type: "forbidden", reason });
+  }
+  const value = await account({ role: "SUPER_ADMIN" });
+  assert.equal((await authenticateAdmin({ loginId: value.loginId, password }, dependencies(value))).type, "authenticated");
 });
-
-test("missing TOTP decryption key is exposed only after the password is verified", async () => {
-  const account: AuthAccount = {
-    id: "fixture-unavailable-key",
-    loginId: "unavailable_key_admin",
-    passwordHash: await hashPassword("synthetic-password-123!"),
-    role: "ADMIN",
-    status: "APPROVED",
-    authVersion: 1,
-    revision: 0,
-    mustChangePassword: false,
-    passwordChangedAt: null,
-    statusChangedAt: new Date(0),
-    statusReasonPublic: null,
-    adminTotpEnabled: true,
-    adminTotpSecret: null,
-    adminTotpSecretUnavailable: true,
-  };
-  const dependencies = {
-    accounts: new MemoryAccountRepository(account),
-    passwords: new NodePasswordVerifier(),
-    totp: new Rfc6238TotpVerifier(() => NOW, 0),
-  };
-
-  assert.deepEqual(await authenticateAdmin({
-    loginId: account.loginId,
-    password: "wrong-password",
-    totpCode: "123456",
-  }, dependencies), { type: "invalid-credentials" });
-  assert.deepEqual(await authenticateAdmin({
-    loginId: account.loginId,
-    password: "synthetic-password-123!",
-    totpCode: "123456",
-  }, dependencies), { type: "unavailable" });
+test("login input rejects control characters and invalid legacy OTP fields", async () => {
+  const value = await account(), deps = dependencies(value);
+  for (const input of [{ loginId: `${value.loginId}\u061c`, password }, { loginId: value.loginId, password: "synthetic\u200e-password-123!" }, { loginId: value.loginId, password, totpCode: "123 456" }]) assert.deepEqual(await authenticateAdmin(input, deps), { type: "invalid-input" });
 });

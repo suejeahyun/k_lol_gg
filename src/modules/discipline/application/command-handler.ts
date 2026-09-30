@@ -90,8 +90,8 @@ function validateCommand(command: DisciplineCommand) {
       throw new DisciplineApplicationError("INVALID_AUTHORIZATION", "Evidence submission requires a live account session.");
     }
   } else if (
-    intent.kind !== "ADMIN_TOTP" ||
-    intent.requireTotp !== true ||
+    intent.kind !== "ADMIN_SESSION" ||
+    intent.requireAdminSession !== true ||
     intent.transactionRecheck !== true ||
     !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole)
   ) {
@@ -255,7 +255,7 @@ export class DisciplineCommandHandler {
     }
     if (
       command.type === "REVIEW_EVIDENCE" &&
-      command.metadata.authorizationIntent.kind === "ADMIN_TOTP" &&
+      command.metadata.authorizationIntent.kind === "ADMIN_SESSION" &&
       command.metadata.authorizationIntent.minimumRole === "SUPER_ADMIN" &&
       actor.purpose === "ADMIN" &&
       actor.role !== "SUPER_ADMIN"

@@ -130,7 +130,9 @@ export function parseDatabaseAuthRuntimeSecrets(
 
   return {
     sessionSigningKeys: parseSessionSigningKeyring(environment.SESSION_SIGNING_KEYS),
-    totpEncryptionKeys: parseTotpEncryptionKeyring(environment.TOTP_ENCRYPTION_KEYS),
+    totpEncryptionKeys: environment.TOTP_ENCRYPTION_KEYS?.trim()
+      ? parseTotpEncryptionKeyring(environment.TOTP_ENCRYPTION_KEYS)
+      : { currentKeyVersion: 1, keys: new Map() },
     rateLimitPepper: parseRateLimitPepper(environment.V2_AUTH_RATE_LIMIT_PEPPER),
   };
 }

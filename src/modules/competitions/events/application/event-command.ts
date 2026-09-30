@@ -13,9 +13,9 @@ export type EventOwnerAuthorizationIntent = Readonly<{
 }>;
 
 export type EventAdminAuthorizationIntent = Readonly<{
-  kind: "ADMIN_TOTP";
+  kind: "ADMIN_SESSION";
   minimumRole: "ADMIN";
-  requireTotp: true;
+  requireAdminSession: true;
   transactionRecheck: true;
 }>;
 

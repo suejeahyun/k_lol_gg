@@ -24,7 +24,7 @@ import type { RiotMutationResult } from "../application/riot-application";
 
 const problems = Object.freeze({
   unauthenticated: definePublicProblem({ code: "UNAUTHENTICATED", status: 401, title: "로그인이 필요합니다.", detail: "요청에 맞는 계정으로 다시 로그인해 주세요." }),
-  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "Riot 연동 권한이 없습니다.", detail: "승인 계정의 소유권 또는 관리자 2단계 인증을 확인해 주세요." }),
+  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "Riot 연동 권한이 없습니다.", detail: "승인 계정의 소유권 또는 관리자 로그인을 확인해 주세요." }),
   invalid: definePublicProblem({ code: "INVALID_INPUT", status: 400, title: "Riot 연동 요청이 올바르지 않습니다.", detail: "Riot ID와 요청 형식을 확인해 주세요." }),
   notFound: definePublicProblem({ code: "NOT_FOUND", status: 404, title: "Riot 연동 정보를 찾을 수 없습니다.", detail: "연결 대상과 현재 상태를 확인해 주세요." }),
   conflict: definePublicProblem({ code: "CONFLICT", status: 409, title: "현재 상태에서는 처리할 수 없습니다.", detail: "연결·동기화 상태를 새로 불러온 뒤 다시 시도해 주세요." }),
@@ -68,12 +68,12 @@ export async function prepareRiotMutation(
     issuedAt: new Date().toISOString(),
     authorizationIntent: session.purpose === "ADMIN"
       ? {
-          kind: "ADMIN_TOTP",
+          kind: "ADMIN_SESSION",
           sessionId: session.sessionId,
           role: session.role === "SUPER_ADMIN" ? "SUPER_ADMIN" : "ADMIN",
           authVersion: session.authVersion,
           minimumRole: session.role === "SUPER_ADMIN" ? "SUPER_ADMIN" : "ADMIN",
-          requireTotp: true,
+          requireAdminSession: true,
           transactionRecheck: true,
         }
       : {

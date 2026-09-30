@@ -75,10 +75,10 @@ function command(input: Readonly<{
       expectedRevision: input.expectedRevision,
       issuedAt: new Date().toISOString(),
       authorizationIntent: {
-        kind: "ADMIN_TOTP",
+        kind: "ADMIN_SESSION",
         sessionId: input.actor.sessionId,
         minimumRole: "ADMIN",
-        requireTotp: true,
+        requireAdminSession: true,
         transactionRecheck: true,
       },
       idempotency: {

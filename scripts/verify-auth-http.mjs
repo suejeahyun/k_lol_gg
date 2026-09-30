@@ -190,8 +190,6 @@ const fixtures = JSON.stringify([
 ]);
 const protectedWorkspacePaths = PROTECTED_ADMIN_PAGE_CASES.map(({ requestPath }) => requestPath);
 const superAdminWorkspaceRoutes = new Set([
-  "/admin/kakao/rooms",
-  "/admin/logs",
   "/admin/site-settings",
 ]);
 const enrollmentPath = ADMIN_SECURITY_PAGE_CASE.requestPath;
@@ -270,24 +268,19 @@ try {
     body: JSON.stringify({ loginId: "http_admin_setup", password }),
   });
   assert.equal(setupLogin.status, 200);
-  assert.equal((await setupLogin.clone().json()).requiresTwoFactorSetup, true);
+  assert.equal((await setupLogin.clone().json()).requiresTwoFactorSetup, false);
   const setupCookie = (setupLogin.headers.get("set-cookie") ?? "").split(";", 1)[0];
   assert.match(setupCookie, /^klol_v2_session=/);
-  for (const workspacePath of protectedWorkspacePaths) {
-    const response = await fetch(`${origin}${workspacePath}`, {
-      headers: { cookie: setupCookie },
-      redirect: "manual",
-    });
-    assert.equal(response.status, 307, `${workspacePath} must require TOTP enrollment`);
-    const location = new URL(response.headers.get("location") ?? "", origin);
-    assert.equal(location.pathname, enrollmentPath);
-    assert.equal(location.searchParams.get("setup"), "required");
+  for (const { canonicalRoute, requestPath } of PROTECTED_ADMIN_PAGE_CASES) {
+    const response = await fetch(origin+requestPath, { headers: { cookie: setupCookie }, redirect: "manual" });
+    assert.equal(response.status, superAdminWorkspaceRoutes.has(canonicalRoute) ? 307 : 200, requestPath);
   }
   const enrollment = await fetch(`${origin}${enrollmentPath}`, {
     headers: { cookie: setupCookie },
     redirect: "manual",
   });
-  assert.equal(enrollment.status, 200, "unverified ADMIN must be able to enroll TOTP");
+  assert.equal(enrollment.status, 307, "former enrollment redirects to the dashboard");
+  assert.equal(enrollment.headers.get("location"), "/admin");
 
   const deepAnonymousPage = await fetch(`${origin}/admin/players?status=pending`, {
     headers: { "x-klol-admin-request-path": "//attacker.invalid" },
@@ -340,8 +333,8 @@ try {
     headers: { "content-type": "application/json", origin },
     body: JSON.stringify({ loginId: "http_admin", password }),
   });
-  assert.equal(challenge.status, 401);
-  assert.equal((await challenge.json()).requiresTwoFactor, true);
+  assert.equal(challenge.status, 200);
+  assert.equal((await challenge.json()).requiresTwoFactorSetup, false);
 
   const acceptedTotpCode = totp(totpSecret);
   const login = await fetch(`${origin}/api/admin/login`, {
@@ -394,7 +387,7 @@ try {
     headers: { cookie: cookiePair },
     redirect: "manual",
   });
-  assert.equal(verifiedEnrollment.status, 200, "verified ADMIN must be able to inspect TOTP status");
+  assert.equal(verifiedEnrollment.status, 307, "former TOTP page redirects after password login");
 
   const session = await fetch(`${origin}/api/admin/session`, { headers: { cookie: cookiePair } });
   assert.equal(session.status, 200);
@@ -406,7 +399,7 @@ try {
     headers: { "content-type": "application/json", origin },
     body: JSON.stringify({ loginId: "http_admin", password, totpCode: acceptedTotpCode }),
   });
-  assert.equal(replay.status, 403);
+  assert.equal(replay.status, 200);
 
   const fixtureAdminTokenInAccountCookie = `klol_v2_account_session=${cookiePair.split("=")[1]}`;
   const fixturePurposeConfusion = await fetch(`${origin}/api/auth/logout`, {
@@ -505,7 +498,7 @@ try {
   assert.doesNotMatch(csp, /unsafe-eval/);
   assert.match(csp, /upgrade-insecure-requests/);
 
-  console.log("Auth HTTP verification passed: guards, limits, password+TOTP, cookie, roles, headers, logout, production fixture lockout.");
+  console.log("Auth HTTP verification passed: guards, limits, administrator password, cookie, roles, headers, logout, production fixture lockout.");
 } catch (error) {
   const sanitizedLog = productionLog
     .replaceAll(password, "[synthetic-password]")

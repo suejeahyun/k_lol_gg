@@ -288,7 +288,7 @@ export class PostgresDisciplineAdapter implements
       };
       const locked = await lockTransactionSessionActor(transaction, actorSession, new Date(), policy);
       if (!locked) return null;
-      if (intent.kind === "ADMIN_TOTP") return { purpose: "ADMIN", principalId: locked.id, userAccountId: locked.id, role: locked.role as "ADMIN" | "SUPER_ADMIN" };
+      if (intent.kind === "ADMIN_SESSION") return { purpose: "ADMIN", principalId: locked.id, userAccountId: locked.id, role: locked.role as "ADMIN" | "SUPER_ADMIN" };
       const player = (await transaction.select({ id: players.id }).from(players).where(eq(players.userAccountId, locked.id)).limit(1))[0];
       return { purpose: "ACCOUNT", principalId: locked.id, userAccountId: locked.id, playerId: player?.id ?? null };
     }

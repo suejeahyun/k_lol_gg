@@ -77,7 +77,7 @@ try {
   assert.equal((await post(event(),{cookie:`${ADMIN_SESSION_COOKIE_NAME}=${adminToken}`})).status,204);
   assert.equal((await pool.query("SELECT count(*)::int AS n FROM usage.events")).rows[0].n,2);
   assert.equal((await fetch(`${origin}/api/admin/usage/export`)).status,401);
-  assert.equal((await fetch(`${origin}/api/admin/usage/export`,{headers:{cookie:`${ADMIN_SESSION_COOKIE_NAME}=${unenrolledToken}`}})).status,403);
+  assert.equal((await fetch(`${origin}/api/admin/usage/export`,{headers:{cookie:`${ADMIN_SESSION_COOKIE_NAME}=${unenrolledToken}`}})).status,200);
   const ordinaryHeaders = {cookie:`${ADMIN_SESSION_COOKIE_NAME}=${ordinaryToken}`};
   for (const path of ["/admin/logs?view=stats", "/admin/logs?view=ai-requests", "/admin/usage", "/api/admin/usage/export", "/api/admin/logs", "/api/admin/logs/stats", "/api/admin/ai-requests", "/admin/kakao?tab=logs", "/admin/kakao?tab=health", "/admin/kakao?tab=settings"]) {
     const r=await fetch(origin+path,{headers:ordinaryHeaders,redirect:"manual"});
@@ -93,7 +93,7 @@ try {
   const page = await fetch(`${origin}/admin/usage`,{headers:adminHeaders});
   assert.equal(page.status,200); assert.match(await page.text(),/회원들의 월 방문 빈도/);
   assert.equal((await fetch(`${origin}/api/admin/usage/export?from=invalid`,{headers:adminHeaders})).status,400);
-  console.log("[usage-qa] HTTP origin/body validation, exclusions, deduplication, member attribution and admin/TOTP gates passed");
+  console.log("[usage-qa] HTTP origin/body validation, exclusions, deduplication, member attribution and administrator session/role gates passed");
 
   const debugPort = await port();
   chrome = spawn("C:/Program Files/Google/Chrome/Application/chrome.exe",["--headless=new","--disable-gpu","--no-first-run",`--remote-debugging-port=${debugPort}`,`--user-data-dir=${resolve(output,`chrome-${Date.now()}`)}`,"about:blank"],{windowsHide:true,stdio:"ignore"});

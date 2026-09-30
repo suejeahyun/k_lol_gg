@@ -36,7 +36,7 @@ export async function AdminWorkspacePage({ workspace }: { workspace: AdminWorksp
           <li><strong>권한</strong><span>관리자 역할에 따라 사용할 수 있는 메뉴가 달라집니다.</span></li>
           <li><strong>데이터</strong><span>등록된 정보가 없으면 다음 작업을 안내합니다.</span></li>
           <li><strong>오류</strong><span>문제가 발생하면 잠시 후 다시 시도해 주세요.</span></li>
-          <li><strong>보안</strong><span>중요한 작업은 권한과 2단계 인증을 다시 확인합니다.</span></li>
+          <li><strong>보안</strong><span>중요한 작업은 권한과 로그인 상태를 다시 확인합니다.</span></li>
         </ul>
       </section>
 

@@ -134,10 +134,10 @@ function validateContext(context: RiotCommandContext): void {
     if (!Number.isSafeInteger(intent.authVersion) || intent.authVersion < 0) {
       throw new RiotApplicationError("INVALID_COMMAND", "Account authorization version is invalid.");
     }
-  } else if (intent.kind === "ADMIN_TOTP") {
+  } else if (intent.kind === "ADMIN_SESSION") {
     identifier(intent.sessionId, "sessionId");
     if (
-      intent.requireTotp !== true ||
+      intent.requireAdminSession !== true ||
       !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole) ||
       !Number.isSafeInteger(intent.authVersion) ||
       intent.authVersion < 0
@@ -752,10 +752,10 @@ export class RiotApplicationService {
       if (actor.purpose !== "ACCOUNT" || actor.accountStatus !== "APPROVED" || (playerId && actor.playerId !== playerId)) {
         throw new RiotApplicationError("NOT_FOUND", "Riot resource is not available.");
       }
-    } else if (intent.kind === "ADMIN_TOTP") {
+    } else if (intent.kind === "ADMIN_SESSION") {
       if (
         actor.purpose !== "ADMIN" ||
-        intent.requireTotp !== true ||
+        intent.requireAdminSession !== true ||
         !roleAtLeast(actor.role, intent.minimumRole) ||
         (requireSuper && actor.role !== "SUPER_ADMIN")
       ) throw new RiotApplicationError("FORBIDDEN", "Administrative Riot permission is required.");

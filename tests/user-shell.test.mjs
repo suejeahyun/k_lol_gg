@@ -113,13 +113,13 @@ test("모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아�
   assert.match(shell, /<MobileAdminNavigation roleLabel=\{accountRoleLabel\(session\.role\)\} \/>/);
 });
 
-test("관리자 로그인 1단계는 존재하지 않는 TOTP 필드를 null로 보내지 않는다", async () => {
+test("관리자 로그인은 비밀번호 후 원래 화면으로 이동하며 인증 코드 필드가 없다", async () => {
   const loginForm = await readFile(
     new URL("../src/components/auth/admin-login-form.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(loginForm, /typeof totpCode === "string" \? \{ totpCode \} : \{\}/);
-  assert.doesNotMatch(loginForm, /totpCode:\s*formData\.get/);
+  assert.match(loginForm, /window\.location\.assign\(nextPath\)/);
+  assert.doesNotMatch(loginForm, /totpCode|one-time-code|requiresTwoFactor/);
 });
 
 test("계정 작업 UI는 stale revision에서 최신 projection을 읽고 안내를 유지한다", async () => {
@@ -218,7 +218,7 @@ test("계정 시각은 공통 Asia/Seoul 24시간 포맷터를 사용한다", as
     "utf8",
   );
   assert.match(accountPage, /formatOptionalKoreanDateTime/);
-  assert.match(adminDetail, /formatKoreanDateTime\(account\.adminTotpEnabledAt\)/);
+  assert.doesNotMatch(adminDetail, /관리자 2단계 인증/);
   assert.doesNotMatch(adminDetail, /toLocaleString\("ko-KR"\)/);
 });
 

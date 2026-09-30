@@ -23,7 +23,7 @@ import type { DestructionCommandContext, DestructionMutationResult } from "./htt
 import { DestructionRevisionConflict } from "./revision-conflict";
 
 const problems = Object.freeze({
-  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "멸망전 작업 권한이 없습니다.", detail: "승인 계정 소유권 또는 관리자 2단계 인증과 역할을 확인해 주세요." }),
+  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "멸망전 작업 권한이 없습니다.", detail: "승인 계정 소유권 또는 관리자 로그인과 역할을 확인해 주세요." }),
   invalidInput: definePublicProblem({ code: "INVALID_INPUT", status: 400, title: "멸망전 요청이 올바르지 않습니다.", detail: "입력값과 허용된 조회 조건을 확인해 주세요." }),
   notFound: definePublicProblem({ code: "NOT_FOUND", status: 404, title: "멸망전을 찾을 수 없습니다.", detail: "주소와 대회 식별자를 확인해 주세요." }),
   conflict: definePublicProblem({ code: "INVALID_TRANSITION", status: 409, title: "현재 단계에서는 처리할 수 없습니다.", detail: "최신 단계와 참가자·팀·경매·대진 조건을 확인해 주세요." }),

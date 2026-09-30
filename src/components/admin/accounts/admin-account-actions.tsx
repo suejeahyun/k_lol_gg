@@ -405,21 +405,7 @@ export function AdminAccountActions({
           <button type="submit" disabled={!targetAllowed || actionsUnavailable}>{busy?.startsWith("status") ? "처리 중…" : "상태 변경"}</button>
         </form>
 
-        <form className={styles.actionPanel} onSubmit={(event) => {
-          event.preventDefault();
-          const data = new FormData(event.currentTarget);
-          if (!requireTypedConfirmation(data)) return;
-          void mutate("2fa-reset", `/api/admin/users/${account.id}/2fa-reset`, "PATCH", {
-            internalReason: String(data.get("internalReason") ?? ""),
-            confirmLoginId: String(data.get("confirmLoginId") ?? ""),
-          });
-        }}>
-          <h3>관리자 2단계 인증 초기화</h3>
-          <p>최고 관리자(SUPER_ADMIN)만 다른 관리자(ADMIN)의 등록 정보를 제거할 수 있습니다. 대상의 모든 세션이 종료되며 다음 관리자 로그인에서 다시 등록해야 합니다.</p>
-          <label>내부 운영 사유<textarea name="internalReason" minLength={2} maxLength={1000} required /></label>
-          <label>대상 확인<input name="confirmLoginId" autoComplete="off" placeholder={account.loginId} required /></label>
-          <button data-tone="danger" type="submit" disabled={!superActiveAllowed || account.role !== "ADMIN" || !account.adminTotpConfigured || actionsUnavailable}>{busy === "2fa-reset" ? "초기화 중…" : account.adminTotpConfigured ? "2단계 인증 초기화" : "등록된 2단계 인증 없음"}</button>
-        </form>
+
 
         {actor.role === "SUPER_ADMIN" ? <form id="role-management" className={styles.actionPanel} onSubmit={(event) => {
           event.preventDefault();
@@ -429,7 +415,7 @@ export function AdminAccountActions({
         }}>
           <h3>역할 관리</h3>
           <p>최고 관리자(SUPER_ADMIN)만 일반 사용자(USER)↔관리자(ADMIN)를 변경할 수 있고 최고 관리자 역할은 웹에서 부여하거나 회수할 수 없습니다.</p>
-          <p>관리자 지정 요건은 승인됨(APPROVED)이고 삭제되지 않은 일반 사용자(USER) 계정입니다. 플레이어 연결 여부는 요건이 아닙니다. 지정하면 기존 세션이 모두 종료되고, 다음 관리자 로그인에서 2단계 인증 등록이 필요합니다.</p>
+          <p>관리자 지정 요건은 승인됨(APPROVED)이고 삭제되지 않은 일반 사용자(USER) 계정입니다. 플레이어 연결 여부는 요건이 아닙니다. 지정하면 기존 세션이 모두 종료되고, 관리자 아이디와 비밀번호로 다시 로그인해 주세요.</p>
           {roleManagementBlockedReason ? <p className={styles.inactiveNotice}>{roleManagementBlockedReason}</p> : null}
           <label>다음 역할<select name="role" value={roleAction} onChange={(event) => setRoleAction(event.target.value as "USER" | "ADMIN")} disabled={!superActiveAllowed}><option value="USER" disabled={account.role === "USER"}>일반 사용자 (USER)</option><option value="ADMIN" disabled={account.role === "ADMIN"}>관리자 (ADMIN)</option></select></label>
           <label>내부 운영 사유<textarea name="internalReason" minLength={2} maxLength={1000} required /></label>
@@ -471,7 +457,7 @@ export function AdminAccountActions({
           if (!requireTypedConfirmation(data)) return;
           void mutate(restoring ? "restore" : "delete", `/api/admin/users/${account.id}${restoring ? "/restore" : ""}`, restoring ? "PATCH" : "DELETE", { internalReason: String(data.get("internalReason") ?? ""), confirmLoginId: String(data.get("confirmLoginId") ?? "") });
         }}>
-          <h3>{account.deletedAt ? "계정 복구" : "소프트 삭제"}</h3><p>연결된 플레이어와 기록은 보존하되 공개 비활성화하고, 대기 claim과 활성 복구 요청은 해제합니다. 복구 시 claim을 다시 잠가 선점 여부를 확인하며, 다른 계정이 선점했다면 복구 전체가 취소됩니다. 관리자(ADMIN) 삭제 시 2단계 인증을 제거하고 비밀번호 변경을 강제합니다.</p>
+          <h3>{account.deletedAt ? "계정 복구" : "소프트 삭제"}</h3><p>연결된 플레이어와 기록은 보존하되 공개 비활성화하고, 대기 claim과 활성 복구 요청은 해제합니다. 복구 시 claim을 다시 잠가 선점 여부를 확인하며, 다른 계정이 선점했다면 복구 전체가 취소됩니다. 관리자(ADMIN) 삭제 시 기존 보안 등록 정보를 정리하고 비밀번호 변경을 강제합니다.</p>
           <label>내부 운영 사유<textarea name="internalReason" minLength={2} maxLength={1000} required /></label>
           <label>대상 확인<input name="confirmLoginId" autoComplete="off" placeholder={account.loginId} required /></label>
           <button data-tone={account.deletedAt ? undefined : "danger"} type="submit" disabled={!superTargetAllowed || actionsUnavailable}>{busy === "delete" || busy === "restore" ? "처리 중…" : account.deletedAt ? "계정 복구" : "계정 소프트 삭제"}</button>

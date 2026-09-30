@@ -24,7 +24,7 @@ import type { EventMutationResult } from "../application/ports";
 
 const problems = Object.freeze({
   unauthenticated: definePublicProblem({ code: "UNAUTHENTICATED", status: 401, title: "로그인이 필요합니다.", detail: "요청에 맞는 계정으로 로그인해 주세요." }),
-  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "이벤트전 작업 권한이 없습니다.", detail: "승인 계정의 소유권 또는 관리자 2단계 인증을 확인해 주세요." }),
+  forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "이벤트전 작업 권한이 없습니다.", detail: "승인 계정의 소유권 또는 관리자 로그인을 확인해 주세요." }),
   invalidInput: definePublicProblem({ code: "INVALID_INPUT", status: 400, title: "이벤트전 요청이 올바르지 않습니다.", detail: "입력값과 허용된 조회 조건을 확인해 주세요." }),
   notFound: definePublicProblem({ code: "NOT_FOUND", status: 404, title: "이벤트전을 찾을 수 없습니다.", detail: "주소와 이벤트 식별자를 확인해 주세요." }),
   conflict: definePublicProblem({ code: "INVALID_TRANSITION", status: 409, title: "현재 단계에서는 처리할 수 없습니다.", detail: "최신 이벤트 단계와 참가자·팀·대진 조건을 확인해 주세요." }),

@@ -138,3 +138,9 @@ export function adminSecurityReauthenticationSuccess(
   }
   return response;
 }
+
+export async function retiredAdminTotpResponse(request: Request) {
+  const authorization = await requireAdminSecuritySession(request);
+  if (!authorization.ok) return authorization.response;
+  return adminSecuritySuccess(request, { code: "ADMIN_TOTP_RETIRED", message: "관리자 2단계 인증은 더 이상 사용하지 않습니다." }, 410);
+}

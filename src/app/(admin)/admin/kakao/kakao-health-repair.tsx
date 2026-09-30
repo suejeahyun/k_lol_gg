@@ -41,6 +41,6 @@ export function KakaoHealthRepair({ revision }: { revision: number }) {
       {state === "running" ? "정리 중…" : "만료 이미지 세션 정리"}
     </button>
     {state === "done" ? <p role="status">만료 세션 {expiredSessionCount}건을 정리했습니다.</p> : null}
-    {state === "error" ? <p role="alert">정리하지 못했습니다. SUPER 2단계 인증과 최신 revision을 확인해 주세요.</p> : null}
+    {state === "error" ? <p role="alert">정리하지 못했습니다. 최고 관리자 권한과 최신 revision을 확인해 주세요.</p> : null}
   </div>;
 }

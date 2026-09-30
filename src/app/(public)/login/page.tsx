@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <h1 id="login-title">로그인</h1>
           <p>아이디와 비밀번호를 입력해 주세요.</p>
           <UserLoginForm nextPath={nextPath} />
-          <p className={styles.notice}><ShieldCheck aria-hidden="true" /> 관리자 작업은 별도 관리자 로그인과 2단계 인증이 모두 필요합니다.</p>
+          <p className={styles.notice}><ShieldCheck aria-hidden="true" /> 관리자 작업은 별도 관리자 로그인이 필요합니다.</p>
         </section>
       </div>
     </div>

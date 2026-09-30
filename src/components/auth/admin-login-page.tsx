@@ -14,7 +14,7 @@ export function AdminLoginPage({ nextPath }: { nextPath: string }) {
         <div className={styles.heading}>
           <span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> 보호된 운영 공간</span>
           <h1 id="admin-login-title">관리자 로그인</h1>
-          <p>비밀번호와 인증 앱 코드를 모두 확인한 뒤 관리자 화면을 엽니다.</p>
+          <p>관리자 아이디와 비밀번호로 로그인해 주세요.</p>
         </div>
         <AdminLoginForm nextPath={nextPath} />
         <p className={styles.notice}>

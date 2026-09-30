@@ -1,5 +1,4 @@
 import type { AuthRole, AuthSession } from "../domain/auth-session";
-import { isAdminRole } from "../domain/auth-session";
 
 const ROLE_RANK: Record<AuthRole, number> = {
   USER: 0,
@@ -14,7 +13,6 @@ export type AuthorizationDecision =
       reason:
         | "UNAUTHENTICATED"
         | "FORBIDDEN"
-        | "TOTP_REQUIRED"
         | "PASSWORD_CHANGE_REQUIRED";
     };
 
@@ -40,10 +38,6 @@ export function authorizeSession(
 
   if (ROLE_RANK[session.role] < ROLE_RANK[requiredRole]) {
     return { allowed: false, reason: "FORBIDDEN" };
-  }
-
-  if (isAdminRole(requiredRole) && !session.adminTotpVerified) {
-    return { allowed: false, reason: "TOTP_REQUIRED" };
   }
 
   return { allowed: true, session };

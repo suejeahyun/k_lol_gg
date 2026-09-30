@@ -7,7 +7,7 @@ import { definePublicProblem, formatRevisionEtag, noStoreJsonResponse, problemRe
 export const dynamic = "force-dynamic";
 
 const unauthenticated = definePublicProblem({ code: "UNAUTHENTICATED", status: 401, title: "관리자 로그인이 필요합니다.", detail: "다시 로그인해 주세요." });
-const forbidden = definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "관리자 권한과 2단계 인증을 확인해 주세요." });
+const forbidden = definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "관리자 권한과 로그인 상태을 확인해 주세요." });
 const notFound = definePublicProblem({ code: "NOT_FOUND", status: 404, title: "챔피언을 찾을 수 없습니다.", detail: "주소를 확인해 주세요." });
 const unavailable = definePublicProblem({ code: "CHAMPION_SERVICE_UNAVAILABLE", status: 503, title: "챔피언 관리 기능을 사용할 수 없습니다.", detail: "데이터베이스 연결을 확인해 주세요." });
 

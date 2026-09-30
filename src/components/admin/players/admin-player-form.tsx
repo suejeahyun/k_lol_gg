@@ -256,7 +256,7 @@ export function AdminPlayerAccountPromotion({
     return (
       <p className={styles.formMessage} data-tone="success" role="status" aria-live="polite">
         {promoted
-          ? "관리자 역할로 변경했습니다. 기존 세션은 종료되며 다음 관리자 로그인에서 2단계 인증 등록이 필요합니다."
+          ? "관리자 역할로 변경했습니다. 기존 세션은 종료되며 관리자 아이디와 비밀번호로 다시 로그인해 주세요."
           : "이미 관리자(ADMIN) 계정입니다."}
       </p>
     );
@@ -325,7 +325,7 @@ export function AdminPlayerAccountPromotion({
     >
       <h3>관리자 지정</h3>
       <p>연결된 일반 사용자(USER)를 관리자(ADMIN)로 지정합니다. 최고 관리자 역할은 이 화면에서 부여할 수 없습니다.</p>
-      <p>역할이 변경되면 기존 세션은 모두 종료되고, 다음 관리자 로그인에서 2단계 인증 등록이 필요합니다.</p>
+      <p>역할이 변경되면 기존 세션은 모두 종료되고, 관리자 아이디와 비밀번호로 다시 로그인해 주세요.</p>
       {blockedReason ? <p className={styles.inactiveNotice}>{blockedReason}</p> : null}
       <label>
         내부 운영 사유

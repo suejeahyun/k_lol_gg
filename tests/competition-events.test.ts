@@ -288,7 +288,7 @@ test("cancellation recovery restores only the recorded phase and public DTOs omi
 function adminMetadata(expectedRevision: number) {
   return {
     actor: { userAccountId: "admin-1", sessionId: "session-1", purpose: "ADMIN", requiredRole: "ADMIN" },
-    authorizationIntent: { kind: "ADMIN_TOTP", minimumRole: "ADMIN", requireTotp: true, transactionRecheck: true },
+    authorizationIntent: { kind: "ADMIN_SESSION", minimumRole: "ADMIN", requireAdminSession: true, transactionRecheck: true },
     requestId: "request-1",
     expectedRevision,
     idempotency: { scope: "admin:event:create", keyHash: digest(1), requestFingerprint: digest(2) },
@@ -486,7 +486,7 @@ test("command metadata cannot downgrade admin commands or detach owner intent fr
     ...command,
     metadata: {
       ...command.metadata,
-      authorizationIntent: { ...command.metadata.authorizationIntent, requireTotp: false },
+      authorizationIntent: { ...command.metadata.authorizationIntent, requireAdminSession: false },
     },
   };
   assert.throws(

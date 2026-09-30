@@ -113,9 +113,9 @@ export type DestructionOwnerAuthorizationIntent = Readonly<{
 }>;
 
 export type DestructionAdminAuthorizationIntent = Readonly<{
-  kind: "ADMIN_TOTP";
+  kind: "ADMIN_SESSION";
   minimumRole: "ADMIN" | "SUPER_ADMIN";
-  requireTotp: true;
+  requireAdminSession: true;
   transactionRecheck: true;
 }>;
 

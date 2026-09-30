@@ -131,7 +131,7 @@ test("session codec pins issuer, audience, algorithm, and rejects future issuanc
   assert.equal(await codec.decode(await sign("k-lol-gg-v2", "k-lol-gg-v2-web", "HS256", nowSeconds + 60), { nowMs: NOW }), null);
 });
 
-test("authorization distinguishes missing role and missing admin TOTP", () => {
+test("authorization requires an administrator session and role without TOTP", () => {
   const session = {
     ...seed,
     sessionId: SESSION_ID,
@@ -143,10 +143,7 @@ test("authorization distinguishes missing role and missing admin TOTP", () => {
     allowed: false,
     reason: "FORBIDDEN",
   });
-  assert.deepEqual(authorizeSession({ ...session, adminTotpVerified: false }, "ADMIN"), {
-    allowed: false,
-    reason: "TOTP_REQUIRED",
-  });
+  assert.equal(authorizeSession({ ...session, adminTotpVerified: false }, "ADMIN").allowed, true);
   assert.equal(authorizeSession({ ...session, role: "SUPER_ADMIN" }, "ADMIN").allowed, true);
 });
 
