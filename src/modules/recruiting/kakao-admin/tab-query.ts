@@ -2,10 +2,9 @@ export const KAKAO_ADMIN_TABS = ["recruits", "scrims", "stats", "settings", "log
 
 export type KakaoAdminTab = (typeof KAKAO_ADMIN_TABS)[number];
 
-const SUPER_ADMIN_TABS: ReadonlySet<KakaoAdminTab> = new Set(["settings", "logs", "health"]);
-
-export function kakaoAdminRequiredRole(tab: KakaoAdminTab): "ADMIN" | "SUPER_ADMIN" {
-  return SUPER_ADMIN_TABS.has(tab) ? "SUPER_ADMIN" : "ADMIN";
+export function kakaoAdminRequiredRole(_tab: KakaoAdminTab): "ADMIN" {
+  void _tab;
+  return "ADMIN";
 }
 
 export function parseKakaoAdminTabQuery(

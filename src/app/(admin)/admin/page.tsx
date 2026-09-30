@@ -67,7 +67,7 @@ export default async function AdminDashboardPage() {
         <div>
           <h2 id="admin-operations-title">운영 상태</h2>
           {operations.state === "unavailable" ? <p>운영 현황을 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.</p> : operations.state === "error" ? <p>운영 현황을 읽는 중 오류가 발생했습니다.</p> : <p>계정 {operations.data.accounts} · 활성 플레이어 {operations.data.activePlayers} · 공개 경기 {operations.data.publishedMatches} · 대기 이벤트 {operations.data.pendingOperationsEvents}</p>}
-          {session.role === "SUPER_ADMIN" ? <p><Link href="/admin/site-settings">사이트 설정</Link> · <Link href="/admin/logs">감사 로그</Link> · <Link href="/admin/ai-requests">AI 요청 내역</Link></p> : null}
+          <p><Link href="/admin/usage">사이트 이용 현황</Link> · <Link href="/admin/logs">감사 로그</Link> · <Link href="/admin/ai-requests">AI 요청 내역</Link>{session.role === "SUPER_ADMIN" ? <> · <Link href="/admin/site-settings">사이트 설정</Link></> : null}</p>
         </div>
       </section>
 

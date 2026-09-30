@@ -74,7 +74,7 @@ export function AdminBreadcrumb() {
     <Link href="/admin">관리자</Link><span aria-hidden="true">/</span>
     {operations ? <>
       <Link href="/admin/discipline">운영·감사</Link>
-      <span aria-hidden="true">/</span><span aria-current="page">{pathname.startsWith("/admin/operation-forms") ? formLink?.label ?? "운영 신청서" : "징계"}</span>
+      <span aria-hidden="true">/</span><span aria-current="page">{pathname.startsWith("/admin/operation-forms") ? formLink?.label ?? "운영 신청서" : pathname === "/admin/usage" ? "사이트 이용 현황" : pathname === "/admin/logs" ? "운영 로그" : pathname === "/admin/ai-requests" ? "AI 요청 내역" : "징계"}</span>
     </> : <span>보호된 작업 공간</span>}
   </nav>;
 }
@@ -94,6 +94,8 @@ export function AdminOperationsNavigation() {
   if (!isAdminWorkspaceActive(pathname, "/admin/discipline")) return null;
   return <nav ref={navigation} className={styles.operationsNav} aria-label="운영·감사 메뉴">
     <Link href="/admin/discipline" aria-current={pathname.startsWith("/admin/discipline") ? "page" : undefined}>징계</Link>
+    <Link href="/admin/usage" aria-current={pathname === "/admin/usage" ? "page" : undefined}>사이트 이용 현황</Link>
+    <Link href="/admin/logs" aria-current={pathname === "/admin/logs" ? "page" : undefined}>운영 로그</Link>
     {ADMIN_OPERATION_FORM_LINKS.map((link) => <Link key={link.formType} href={link.href} aria-current={link.formType === formType ? "page" : undefined}>{link.label}</Link>)}
     <Link className={styles.operationsAll} href="/admin/operation-forms" aria-current={pathname === "/admin/operation-forms" && !formType ? "page" : undefined}>전체 신청</Link>
   </nav>;

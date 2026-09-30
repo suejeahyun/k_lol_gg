@@ -330,6 +330,13 @@
       "when": 1790334701541,
       "tag": "0046_overconfident_robbie_robertson",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1790737732434,
+      "tag": "0047_usage_analytics",
+      "breakpoints": true
     }
   ]
 }

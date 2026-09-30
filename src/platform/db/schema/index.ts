@@ -1,4 +1,5 @@
 export * from "./audit";
+export * from "./usage";
 export * from "./auth";
 export * from "./namespaces";
 export * from "./registry";

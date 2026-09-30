@@ -27,8 +27,8 @@ test("Kakao admin API splits ADMIN reads from SUPER TOTP mutations", async () =>
   assert.match(page, /kakaoAdminRequiredRole\(tab\)/u);
   assert.match(page, /session\.role === "SUPER_ADMIN"/u);
   assert.match(page, /getPartyMemberStats/u);
-  assert.match(roomsPage, /requirePageRole\("SUPER_ADMIN"/u);
-  assert.doesNotMatch(roomsPage, /읽기 전용/u);
+  assert.match(roomsPage, /requirePageRole\("ADMIN"/u);
+  assert.match(roomsPage, /session\.role === "SUPER_ADMIN"/u);
   assert.match(repairUi, /REPAIR_EXPIRED_SESSIONS/u);
   assert.match(repairUi, /If-Match/u);
   for (const boundary of ["lockTransactionSessionActor", "ADMIN_MUTATION_SESSION_POLICY", "recruitingCommandReceipts", "auditEvents", "recruitingOutbox", "PRECONDITION_FAILED"]) assert.match(adapter, new RegExp(boundary));

@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `daddcfc97d6c5c645de482052da21dc1818e52af3a116945e6e7099508c7d390`
-- Tables: 108
-- Foreign keys: 171
+- Schema SHA-256: `0601644420b7cbdc056c1f307d67aec845c6190d005d31c5143cc44cb0d4baa2`
+- Tables: 111
+- Foreign keys: 173
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -1718,4 +1718,36 @@ erDiagram
     team_tools__team_balance_drafts ||--o{ team_tools__team_balance_draft_candidates : "draft_id to id"
     team_tools__team_balance_drafts ||--o{ team_tools__team_balance_draft_participants : "draft_id to id"
     team_tools__team_balance_drafts ||--o{ team_tools__team_balance_outbox : "draft_id to id"
+```
+
+## usage
+
+```mermaid
+erDiagram
+    usage__collection {
+        boolean singleton PK "NOT NULL"
+        timestamp_with_time_zone first_event_at "nullable"
+        timestamp_with_time_zone bucket_at "NOT NULL"
+        integer bucket_count "NOT NULL"
+    }
+    usage__events {
+        uuid id PK "NOT NULL"
+        uuid visitor_id "NOT NULL"
+        uuid visit_id "NOT NULL"
+        uuid user_account_id FK "nullable"
+        varchar_8 kind "NOT NULL"
+        varchar_80 route "NOT NULL"
+        varchar_80 target "nullable"
+        timestamp_with_time_zone occurred_at "NOT NULL"
+    }
+    usage__visitors {
+        uuid id PK "NOT NULL"
+        uuid visit_id "NOT NULL"
+        uuid user_account_id FK "nullable"
+        timestamp_with_time_zone last_seen_at "NOT NULL"
+        timestamp_with_time_zone bucket_at "NOT NULL"
+        integer bucket_count "NOT NULL"
+    }
+    auth__user_accounts o|--o{ usage__events : "user_account_id to id"
+    auth__user_accounts o|--o{ usage__visitors : "user_account_id to id"
 ```

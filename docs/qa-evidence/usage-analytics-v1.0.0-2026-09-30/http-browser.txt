@@ -1,0 +1,3 @@
+[usage-qa] HTTP origin/body validation, exclusions, deduplication, member attribution and admin/TOTP gates passed
+[usage-qa] 1440px/390px: no horizontal overflow or WCAG A/AA violations; synthetic screenshots saved to .tmp/usage-qa
+[usage-qa] Real browser member and anonymous signup visits, page/search/link capture and opt-out passed; raw search text was not stored

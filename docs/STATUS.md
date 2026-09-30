@@ -594,3 +594,7 @@
 3. 승인된 실제 사용자 계정으로 Riot RSO와 Blob 업로드·읽기·삭제 E2E를 각각 기록한다.
 4. 오래된 내전 전체 양식 충돌을 V1 표시 형식을 유지하는 revision/base token으로 탐지한다.
 5. 개인정보 없이 팀 계산 실패율, 결과 복사 성공·실패율과 수동 교체율을 관측하고 목표값은 운영자 승인 후 정한다.
+
+## 2026-09-30 사이트 이용 통계
+
+usage-analytics@1.0.0 후보: 운영 기준에 비회원 포함 이용 통계와 일반 관리자 조회를 추가했다. migration head는 journal을 참조한다. 검증과 배포 상태는 [QA 근거](qa-evidence/usage-analytics-v1.0.0-2026-09-30/README.md) 및 릴리스 registry를 따른다.

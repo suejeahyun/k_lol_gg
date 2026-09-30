@@ -82,7 +82,7 @@ export default async function AdminKakaoPage({
   const statsQuery = parsePartyMemberStatsQuery(resolvedSearchParams.q);
   const [result, settingsResult, memberStatsResult] = await Promise.all([
     loadRuntimeRecruiting((service) => service.getAdminStatus()),
-    session.role === "SUPER_ADMIN" && (tab === "settings" || tab === "health")
+    (tab === "settings" || tab === "health")
       ? loadRuntimeKakaoAdmin((service) => service.getSettings())
       : Promise.resolve(null),
     tab === "stats" && statsQuery.state === "ready"
@@ -100,12 +100,12 @@ export default async function AdminKakaoPage({
       <Link aria-current={tab === "recruits" ? "page" : undefined} href="/admin/kakao?tab=recruits">파티</Link>
       <Link aria-current={tab === "scrims" ? "page" : undefined} href="/admin/kakao?tab=scrims">스크림</Link>
       <Link aria-current={tab === "stats" ? "page" : undefined} href="/admin/kakao?tab=stats">통계</Link>
-      {session.role === "SUPER_ADMIN" ? <>
+      <>
         <Link aria-current={tab === "settings" ? "page" : undefined} href="/admin/kakao?tab=settings">설정</Link>
         <Link aria-current={tab === "logs" ? "page" : undefined} href="/admin/kakao?tab=logs">처리 상태</Link>
         <Link aria-current={tab === "health" ? "page" : undefined} href="/admin/kakao?tab=health">보안 점검</Link>
         <Link href="/admin/kakao/rooms">레거시 방 권한</Link>
-      </> : null}
+      </>
     </nav>
 
     {result.state === "ready" ? <>
@@ -157,7 +157,7 @@ export default async function AdminKakaoPage({
 
       {tab === "settings" ? settingsResult?.state === "ready" ? <section className={styles.panel}>
         <div className={styles.panelHead}><h2>비밀값 제외 운영 설정</h2><span>SUPER 수정 가능</span></div>
-        <div className={styles.settingsBody}><p>서명 키와 비상 bootstrap 방·발신자 원문은 서버 환경변수에만 두며 화면과 API에 노출하지 않습니다. 현재 V1 strict R8/V4는 프로필별 installation scope로 검증하며, canonical DB registry는 레거시 endpoint에만 적용됩니다.</p><KakaoSettingsForm initial={settingsResult.data}/></div>
+        <div className={styles.settingsBody}><p>서명 키와 비상 bootstrap 방·발신자 원문은 서버 환경변수에만 두며 화면과 API에 노출하지 않습니다. 현재 V1 strict R8/V4는 프로필별 installation scope로 검증하며, canonical DB registry는 레거시 endpoint에만 적용됩니다.</p><KakaoSettingsForm initial={settingsResult.data} readOnly={session.role !== "SUPER_ADMIN"}/></div>
       </section> : <section className={styles.state} role={settingsResult?.state === "error" ? "alert" : "status"}><DatabaseZap/><h2>운영 설정을 불러올 수 없습니다.</h2><p>0022 migration과 데이터베이스 상태를 확인해 주세요.</p></section> : null}
 
       {tab === "health" ? <>
@@ -166,7 +166,7 @@ export default async function AdminKakaoPage({
           <article><Clock3/><div><h2>nonce·영수증</h2><p>활성 nonce {result.data.activeNonceCount} · 미완료 영수증 {result.data.incompleteReceiptCount}</p></div></article>
           <article><DatabaseZap/><div><h2>세션·outbox</h2><p>활성 이미지 세션 {result.data.activeImageSessionCount} · 대기 outbox {result.data.pendingOutboxCount}</p></div></article>
         </section>
-        {settingsResult?.state === "ready" ? <section className={styles.panel}><div className={styles.panelHead}><h2>안전 복구 작업</h2><span>SUPER · 2단계 인증</span></div><div className={styles.settingsBody}><p>만료 시간이 지난 활성 이미지 수신 세션만 EXPIRED 상태로 전환합니다. 자산이나 신청 데이터는 삭제하지 않습니다.</p><KakaoHealthRepair revision={settingsResult.data.revision}/></div></section> : null}
+        {session.role === "SUPER_ADMIN" && settingsResult?.state === "ready" ? <section className={styles.panel}><div className={styles.panelHead}><h2>안전 복구 작업</h2><span>SUPER · 2단계 인증</span></div><div className={styles.settingsBody}><p>만료 시간이 지난 활성 이미지 수신 세션만 EXPIRED 상태로 전환합니다. 자산이나 신청 데이터는 삭제하지 않습니다.</p><KakaoHealthRepair revision={settingsResult.data.revision}/></div></section> : null}
       </> : null}
     </> : result.state === "unavailable" ? <section className={styles.state} role="status"><DatabaseZap/><h2>모집 저장소를 사용할 수 없습니다.</h2><p>데이터베이스 연결과 0009 migration 상태를 확인해 주세요.</p></section> : <section className={styles.state} role="alert"><CircleAlert/><h2>모집 상태를 불러오지 못했습니다.</h2><p>서버 로그의 trace와 데이터베이스 상태를 확인해 주세요.</p></section>}
   </main>;

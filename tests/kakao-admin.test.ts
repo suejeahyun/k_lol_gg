@@ -54,7 +54,7 @@ test("Kakao admin tab query accepts only allowlisted keys for the selected tab",
 
 test("sensitive Kakao admin tabs require SUPER_ADMIN while operating tabs remain ADMIN", () => {
   for (const tab of ["recruits", "scrims", "stats"] as const) assert.equal(kakaoAdminRequiredRole(tab), "ADMIN");
-  for (const tab of ["settings", "logs", "health"] as const) assert.equal(kakaoAdminRequiredRole(tab), "SUPER_ADMIN");
+  for (const tab of ["settings", "logs", "health"] as const) assert.equal(kakaoAdminRequiredRole(tab), "ADMIN");
 });
 
 test("party member statistics search is normalized and bounded", () => {

@@ -33,6 +33,7 @@ const contractScope = process.env.V2_DB_CONTRACT_SCOPE?.trim().toLocaleLowerCase
 
 if (
   contractScope !== "all" &&
+  contractScope !== "usage" &&
   contractScope !== "accounts" &&
   contractScope !== "matches" &&
   contractScope !== "statistics" &&
@@ -49,7 +50,7 @@ if (
   contractScope !== "champions" &&
   contractScope !== "recovery"
 ) {
-  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'accounts', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'kakao-v4', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', 'champions', or 'recovery'.");
+  throw new Error("V2_DB_CONTRACT_SCOPE must be 'usage', 'all', 'accounts', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'kakao-v4', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', 'champions', or 'recovery'.");
 }
 
 type EphemeralCluster = Readonly<{
@@ -438,6 +439,7 @@ async function runContractTests(connectionString: string): Promise<void> {
 
   const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
   const allTestFiles = [
+    "tests/database/usage.contract.test.ts",
     "tests/database/inhouse-migration.contract.test.ts",
     "tests/database/data-platform.contract.test.ts",
     "tests/database/auth-totp-lifecycle.contract.test.ts",
@@ -470,6 +472,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/cleanup-readiness.contract.test.ts",
   ];
   const scopedTestFiles: Readonly<Record<string, readonly string[]>> = {
+    usage: ["tests/database/usage.contract.test.ts"],
     accounts: ["tests/database/account-lifecycle.contract.test.ts"],
     matches: ["tests/database/match-snapshot.contract.test.ts"],
     statistics: ["tests/database/statistics-projection.contract.test.ts"],

@@ -135,13 +135,13 @@ export function CoinTossTool() {
         {error ? <p className={styles.error} role="alert">{error}</p> : null}
 
         <div className={styles.actions}>
-          <button className={styles.primaryButton} type="button" onClick={start} disabled={state.phase === "playing"}>
+          <button className={styles.primaryButton} type="button" data-usage-action="coin-toss.start" onClick={start} disabled={state.phase === "playing"}>
             <Coins size={18} aria-hidden="true" /> {state.phase === "revealed" ? "한 번 더 던지기" : "코인 던지기"}
           </button>
           <button className={styles.secondaryButton} type="button" onClick={reset} disabled={state.phase === "idle"}>
             <RotateCcw size={17} aria-hidden="true" /> 초기화
           </button>
-          <button className={styles.secondaryButton} type="button" onClick={copyResult} disabled={state.phase !== "revealed"}>
+          <button className={styles.secondaryButton} type="button" data-usage-action="coin-toss.copy" onClick={copyResult} disabled={state.phase !== "revealed"}>
             <Clipboard size={17} aria-hidden="true" /> 결과 복사
           </button>
         </div>

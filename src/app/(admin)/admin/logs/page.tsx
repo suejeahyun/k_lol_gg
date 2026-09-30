@@ -17,7 +17,7 @@ export default async function AdminLogsPage({
 }: {
   searchParams: Promise<{ view?: string }>;
 }) {
-  await requirePageRole("SUPER_ADMIN", "/admin/logs");
+  await requirePageRole("ADMIN", "/admin/logs");
   const view = normalizeView((await searchParams).view);
   const result = await loadRuntimeOperations(async (repository) => {
     const [logs, stats, aiRequests] = await Promise.all([
@@ -30,7 +30,7 @@ export default async function AdminLogsPage({
 
   return <main className={styles.page}>
     <header className={styles.header}>
-      <div><span className={styles.eyebrow}>SUPER · 감사</span><h1>운영 로그 센터</h1><p>감사 이벤트, 운영 통계, AI 요청 원장을 한곳에서 확인합니다.</p></div>
+      <div><span className={styles.eyebrow}>ADMIN · 감사</span><h1>운영 로그 센터</h1><p>감사 이벤트, 운영 통계, AI 요청 원장을 한곳에서 확인합니다.</p></div>
     </header>
     <nav className={styles.actions} aria-label="로그 화면">
       <Link className={styles.link} aria-current={view === "events" ? "page" : undefined} href="/admin/logs">감사 이벤트</Link>
