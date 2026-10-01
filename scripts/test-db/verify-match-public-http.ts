@@ -11,6 +11,8 @@ import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import { championCatalog, players, seasons, userAccounts } from "../../src/platform/db/schema/index";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
+import { hashPassword } from "../../src/modules/auth/infrastructure/node-password";
+import sharp from "sharp";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
@@ -41,7 +43,7 @@ async function startServer(environment: NodeJS.ProcessEnv, probePath: string) {
   const origin = `http://127.0.0.1:${port}`;
   const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
   const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
-    cwd: process.cwd(), env: environment, stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
+    cwd: process.cwd(), env: { ...environment, V2_PUBLIC_ORIGIN: origin, NEXT_PUBLIC_SITE_URL: origin }, stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
   });
   const deadline = Date.now() + 45_000;
   while (Date.now() < deadline) {
@@ -58,6 +60,7 @@ async function startServer(environment: NodeJS.ProcessEnv, probePath: string) {
 
 const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
 const actorId = randomUUID();
+const adminPassword = randomBytes(24).toString("base64url");
 const seasonId = randomUUID();
 const playerRows = Array.from({ length: 10 }, (_, index) => ({
   id: randomUUID(), memberName: `HTTP 비공개 회원 ${index + 1}`, memberNameNormalized: `http-member-${index + 1}`,
@@ -81,7 +84,7 @@ const databaseAuthEnvironment = {
 
 try {
   await applyMigrations(database);
-  await database.insert(userAccounts).values({ id: actorId, loginId: `match-http-${actorId}`, loginIdNormalized: `match-http-${actorId}`, passwordHash: "$argon2id$v=19$synthetic", role: "ADMIN", status: "APPROVED" });
+  await database.insert(userAccounts).values({ id: actorId, loginId: `match-http-${actorId}`, loginIdNormalized: `match-http-${actorId}`, passwordHash: await hashPassword(adminPassword), role: "ADMIN", status: "APPROVED" });
   await database.insert(seasons).values({ id: seasonId, name: "HTTP 공개 경기", nameNormalized: "http 공개 경기", status: "DRAFT" });
   await database.insert(players).values(playerRows);
   await database.insert(championCatalog).values(champions);
@@ -115,8 +118,42 @@ try {
     process.stdout.write(`[match-public-http] PASS unavailableService expected=503 actual=${unavailableResponse.status}\n`);
   } finally { await stopServer(unavailable.child); }
 
-  const available = await startServer({ ...process.env, NODE_ENV: "development", ...databaseAuthEnvironment }, `/api/matches/${matchId}`);
+  const available = await startServer({ ...process.env, NODE_ENV: "development", ...databaseAuthEnvironment, V2_FAKE_PRIVATE_ASSETS: "1" }, `/api/matches/${matchId}`);
   try {
+    const login = await fetch(`${available.origin}/api/admin/login`, {
+      method: "POST", headers: { "content-type": "application/json", origin: available.origin },
+      body: JSON.stringify({ loginId: `match-http-${actorId}`, password: adminPassword }),
+    });
+    assert.equal(login.status, 200, await login.clone().text());
+    const cookie = (login.headers.get("set-cookie") ?? "").split(";", 1)[0]!;
+    assert.match(cookie, /^klol_v2_session=/);
+    const sessionRows = await pool.query("SELECT totp_verified_at FROM auth.sessions WHERE user_account_id=$1", [actorId]);
+    assert.equal(sessionRows.rows.length, 1);
+    assert.equal(sessionRows.rows[0].totp_verified_at, null);
+    const createHeaders = { cookie, origin: available.origin, "content-type": "application/json", "if-match": '"0"', "idempotency-key": randomUUID() };
+    const createBody = JSON.stringify({ title: "Password-only OCR import", seasonId: null, playedOn: "2026-10-01", startedAt: null });
+    const imported = await fetch(`${available.origin}/api/admin/matches/import`, { method: "POST", headers: createHeaders, body: createBody });
+    assert.equal(imported.status, 201, await imported.clone().text());
+    const draft = await imported.json() as { submissionId: string; revision: number };
+    const image = await sharp({ create: { width: 1280, height: 720, channels: 3, background: "white" } }).png().toBuffer();
+    const uploaded = await fetch(`${available.origin}/api/admin/matches/import`, {
+      method: "PUT", headers: {
+        cookie, origin: available.origin, "content-type": "image/png", "if-match": `"${draft.revision}"`,
+        "idempotency-key": randomUUID(), "x-content-sha256": createHash("sha256").update(image).digest("hex"),
+        "x-match-game-number": "1", "x-match-import-id": draft.submissionId, "x-upload-file-name": "synthetic.png",
+      }, body: new Uint8Array(image),
+    });
+    assert.equal(uploaded.ok, true, await uploaded.clone().text());
+    const anonymous = await fetch(`${available.origin}/api/admin/matches/import`, {
+      method: "POST", headers: { ...createHeaders, cookie: "", "idempotency-key": randomUUID() }, body: createBody,
+    });
+    assert.equal(anonymous.status, 401);
+    await pool.query("UPDATE auth.sessions SET revoked_at=now() WHERE user_account_id=$1", [actorId]);
+    const revoked = await fetch(`${available.origin}/api/admin/matches/import`, {
+      method: "POST", headers: { ...createHeaders, "idempotency-key": randomUUID() }, body: createBody,
+    });
+    assert.equal(revoked.status, 401);
+    process.stdout.write("[match-import-http] PASS password-only login, private import create/upload, anonymous/revoked denial (synthetic local storage/OCR)\n");
     const existing = await fetch(`${available.origin}/api/matches/${matchId}`);
     const existingText = await existing.text();
     assert.equal(existing.status, 200, existingText);

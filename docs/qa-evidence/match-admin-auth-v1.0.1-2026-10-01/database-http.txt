@@ -1,0 +1,54 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+▶ S04 stores participant display identity and rejection reasons as durable history
+  ✔ published detail keeps ten KDA rows and exposes a real API 404/fallback contract (44.0064ms)
+  ✔ registry rename does not rewrite a recorded participant or its archived revision (247.8399ms)
+  ✔ reject after and reopen before audit snapshots retain the cleared public reason (25.8557ms)
+  ✔ web submission accepts only the owner's current valid selected team draft (21.0051ms)
+  ✔ admin match creation rechecks and persists the exact selected team draft (14.3948ms)
+  ✔ submission approval carries team-balance provenance through match history and outbox (35.5771ms)
+✔ S04 stores participant display identity and rejection reasons as durable history (1306.443ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1975.3522
+▶ match writes accept password-only administrators and enforce current session boundaries
+  ✔ ADMIN without TOTP (10.3945ms)
+  ✔ SUPER_ADMIN without TOTP (2.4766ms)
+  ✔ existing TOTP session (3.2157ms)
+  ✔ ACCOUNT cookie cannot authorize admin import (2.5415ms)
+  ✔ ordinary member (1.7022ms)
+  ✔ revoked session (1.8825ms)
+  ✔ expired session despite earlier request time (1.9914ms)
+  ✔ stale auth version (1.8592ms)
+  ✔ changed role (1.8771ms)
+  ✔ suspended account (1.7664ms)
+  ✔ deleted account (1.5292ms)
+  ✔ password reset required (1.4579ms)
+  ✔ fixture session cannot write (1.7324ms)
+  ✔ approved member submission (1.988ms)
+✔ match writes accept password-only administrators and enforce current session boundaries (124.7994ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 747.4747
+[match-public-http] PASS repository participantCount expected=10 actual=10
+[match-public-http] PASS repository kdaPreserved=true
+[match-public-http] PASS repository dataDragonFallback=https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Annie.png
+[match-public-http] PASS invalidIdentifier expected=400 actual=400
+[match-public-http] PASS unavailableService expected=503 actual=503
+[match-import-http] PASS password-only login, private import create/upload, anonymous/revoked denial (synthetic local storage/OCR)
+[match-public-http] PASS publishedMatch expected=200 actual=200 participantCount=10 kdaPreserved=true dataDragonFallback=https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Annie.png
+[match-public-http] PASS missingUuid expected=404 actual=404
+[db-contract] cluster stopped and disposable workspace path removed

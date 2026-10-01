@@ -448,6 +448,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/kakao-site-notices.contract.test.ts",
     "tests/database/account-lifecycle.contract.test.ts",
     "tests/database/match-snapshot.contract.test.ts",
+    "tests/database/match-authorization.contract.test.ts",
     "tests/database/statistics-projection.contract.test.ts",
     "tests/database/media.contract.test.ts",
     "tests/database/team-balance-draft.contract.test.ts",
@@ -474,7 +475,7 @@ async function runContractTests(connectionString: string): Promise<void> {
   const scopedTestFiles: Readonly<Record<string, readonly string[]>> = {
     usage: ["tests/database/usage.contract.test.ts"],
     accounts: ["tests/database/account-lifecycle.contract.test.ts"],
-    matches: ["tests/database/match-snapshot.contract.test.ts"],
+    matches: ["tests/database/match-snapshot.contract.test.ts", "tests/database/match-authorization.contract.test.ts"],
     statistics: ["tests/database/statistics-projection.contract.test.ts"],
     "team-tools": ["tests/database/team-balance-draft.contract.test.ts"],
     mmr: ["tests/database/mmr-projection.contract.test.ts"],

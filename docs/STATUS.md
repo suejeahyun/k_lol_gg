@@ -602,3 +602,7 @@ usage-analytics@1.0.0 운영 반영: 운영 기준에 비회원 포함 이용 �
 ## 2026-09-30 관리자 2차 인증 제거
 
 admin-password-login@1.0.0 운영 반영: 비밀번호 로그인과 ADMIN 세션·역할 검사로 통일했다. [인증 결정](architecture/0010-admin-password-login.md)과 [검증 근거](qa-evidence/admin-password-login-v1.0.0-2026-09-30/README.md)를 따른다. 운영 배포 근거는 releases/registry.json에 연결한다.
+
+## 2026-10-01 관리자 경기 저장 인증 수정
+
+match-admin-auth@1.0.1: 비밀번호 전용 관리자 세션을 경기 transaction에서도 허용한다. 세션 경계와 OCR 접수·업로드의 격리 DB/HTTP 및 전체 검사를 통과했다. [검증 근거](qa-evidence/match-admin-auth-v1.0.1-2026-10-01/README.md).
