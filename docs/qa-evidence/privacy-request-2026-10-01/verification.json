@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-01T12:07:31.643Z",
+  "accountDisabled": true,
+  "loginIdentityErased": true,
+  "passwordErased": true,
+  "activeSessions": 0,
+  "activeRiotLinks": 0,
+  "identityMatchesAfterCommit": 0,
+  "publicProfileStatus": 200,
+  "publicProfileNotFound": true,
+  "publicSearches": [
+    {
+      "matches": 0,
+      "status": 200
+    },
+    {
+      "matches": 0,
+      "status": 200
+    }
+  ],
+  "sharedGamesPreserved": 5,
+  "participantsPerGame": 10,
+  "encryptedRecoveryVerified": true,
+  "updatedRows": 2109,
+  "deletedRows": 19,
+  "scope": "Direct identifiers removed; inactive anonymous account/player references and shared game statistics retained for referential integrity.",
+  "linkedScoreboardImages": 0
+}

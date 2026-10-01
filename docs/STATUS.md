@@ -606,3 +606,7 @@ admin-password-login@1.0.0 운영 반영: 비밀번호 로그인과 ADMIN 세션
 ## 2026-10-01 관리자 경기 저장 인증 수정
 
 match-admin-auth@1.0.1: 비밀번호 전용 관리자 세션을 경기 transaction에서도 허용한다. 세션 경계와 OCR 접수·업로드의 격리 DB/HTTP 및 전체 검사를 통과했다. [검증 근거](qa-evidence/match-admin-auth-v1.0.1-2026-10-01/README.md).
+
+## 2026-10-01 개인정보 삭제 요청 처리
+
+지정된 단일 요청자의 직접 식별정보를 V1·V2 데이터에서 제거하고 계정을 삭제 상태로 전환했다. 공동 경기·참조 무결성은 비활성 익명 참조로 보존했다. 원본 개인정보를 포함하지 않은 [검증 근거](qa-evidence/privacy-request-2026-10-01/README.md)를 남겼다.
