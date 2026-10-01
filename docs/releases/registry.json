@@ -1688,6 +1688,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "match-admin-auth",
+      "version": "1.0.1",
+      "gitTag": "match-admin-auth-v1.0.1",
+      "commit": "69a6106142ec434b2f9dfaa3357659b2cf29118a",
+      "releasedAt": "2026-10-01T12:01:29.209Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/match-admin-auth-v1.0.1-2026-10-01/production.md",
+      "patchNotes": "docs/patch-notes/2026-10-01-match-admin-auth.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_pdYj94XWTYbBTxPKNEW7STDQ35Cn",
+        "url": "https://k-lol-4j5ean2ji-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-01T12:01:29.209Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

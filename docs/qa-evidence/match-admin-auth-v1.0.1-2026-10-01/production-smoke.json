@@ -1,0 +1,25 @@
+{
+  "base": "https://k-lol-gg.vercel.app",
+  "verifiedAt": "2026-10-01T12:00:59.033Z",
+  "results": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/admin/login",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/admin/matches/new",
+      "status": 307,
+      "location": "/admin/login?next=%2Fadmin%2Fmatches%2Fnew"
+    },
+    {
+      "path": "/api/admin/matches/import",
+      "status": 401
+    }
+  ]
+}
