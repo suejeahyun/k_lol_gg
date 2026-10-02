@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "origin": "http://127.0.0.1:65060",
+  "eventId": "4c50e105-57b6-4c17-90b7-6d3ceef764d3",
+  "partyId": "d5738fe4-d8c7-4441-bdc8-bf89c2e461d2",
+  "checks": [
+    "origin",
+    "input-consent",
+    "bounded-body",
+    "idempotency",
+    "private-admin-access",
+    "redacted-audit",
+    "cron-auth",
+    "robots-sitemap",
+    "event-login",
+    "signup"
+  ]
+}

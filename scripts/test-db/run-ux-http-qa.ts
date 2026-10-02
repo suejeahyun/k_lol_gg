@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import { startEphemeralCluster, stopAndRemoveCluster, childTestEnvironment } from "./run-data-contracts";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
-import { authSessions, eventCompetitions, recruitParties, seasons, userAccounts } from "../../src/platform/db/schema";
+import { authSessions, eventCompetitions, recruitParties, seasons, userAccounts, players, playerSeasonStats, seasonProjectionStates } from "../../src/platform/db/schema";
 import { createEventAggregate, startEventRecruitment } from "../../src/modules/competitions/events/domain/event";
 import { JoseSessionCodec } from "../../src/modules/auth/infrastructure/jose-session-codec";
 import { hashSessionToken } from "../../src/modules/auth/infrastructure/session-token-hash";
@@ -22,7 +22,19 @@ let app: ChildProcess | undefined;
 try {
   await applyMigrations(database);
   const now = new Date(Math.floor(Date.now() / 1000) * 1000), past = new Date(now.getTime() - 3600_000), future = new Date(now.getTime() + 7 * 86_400_000);
-  await database.insert(seasons).values({ id: randomUUID(), name: "UX 검증 시즌", nameNormalized: "ux 검증 시즌", status: "ACTIVE", activatedAt: past, applicationsOpenAt: past, applicationsCloseAt: future });
+  const seasonId = randomUUID();
+  await database.insert(seasons).values({ id: seasonId, name: "UX 검증 시즌", nameNormalized: "ux 검증 시즌", status: "ACTIVE", activatedAt: past, applicationsOpenAt: past, applicationsCloseAt: future });
+  if (process.env.V2_UX_QA_RANKING === "true") {
+    // Synthetic projection fixture, only inside this harness's ephemeral cluster.
+    const fixture = [
+      { nickname: "달빛소환사", totalGames: 20, wins: 16, mvpCount: 5 },
+      { nickname: "오늘도협곡으로출발하는플레이어", totalGames: 40, wins: 24, mvpCount: 7 },
+      { nickname: "별빛정글러", totalGames: 30, wins: 21, mvpCount: 12 },
+    ].map((row) => ({ ...row, id: randomUUID() }));
+    await database.insert(players).values(fixture.map((row, index) => ({ id: row.id, nickname: row.nickname, nicknameNormalized: row.nickname, memberName: `합성회원${index}`, memberNameNormalized: `합성회원${index}`, tagLine: `QA${index}`, tagLineNormalized: `qa${index}`, status: "ACTIVE" as const })));
+    await database.insert(seasonProjectionStates).values({ seasonId, generation: 1, status: "READY", sourceChecksum: randomBytes(32), calculatedAt: now });
+    await database.insert(playerSeasonStats).values(fixture.map((row) => ({ seasonId, playerId: row.id, generation: 1, totalGames: row.totalGames, participationCount: row.totalGames, wins: row.wins, losses: row.totalGames - row.wins, mvpCount: row.mvpCount, calculatedAt: now })));
+  }
   const partyId = randomUUID();
   await database.insert(recruitParties).values({ id: partyId, recruitDate: now.toISOString().slice(0,10), recruitNumber: 12, type: "PARTY_NUMBER", status: "IN_PROGRESS", title: "테스트 파티 모집", maximumMembers: 5, membersJson: [], lastActivityAt: now });
   const secret = randomBytes(32), cron = randomBytes(32).toString("hex"), userId = randomUUID(), sessionId = randomUUID();

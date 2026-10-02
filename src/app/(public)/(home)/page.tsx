@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HomeRankingCarousel } from "@/components/home/home-ranking-carousel";
 import { HomeGuideArt } from "@/components/home/home-guide-art";
 import { MediaCarousel } from "@/app/(public)/(media)/media-carousel";
 import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
@@ -131,16 +132,14 @@ export default async function HomePage() {
         <div className="hero-copy">
           <Badge className="foundation-badge" variant="secondary">
             <Sparkles size={13} aria-hidden="true" />
-            K-LOL.GG · NEW SEASON
+            K-LOL.GG · 함께하는 내전
           </Badge>
-          <p className="hero-kicker">친구와 함께하는 내전 놀이터</p>
           <h1 id="home-title">
             우리 같이
             <span>롤하자~</span>
           </h1>
           <p className="hero-description">
-            같이할 플레이어를 찾고, 팀을 만들고, 오늘의 기록을 남겨요.
-            내전 준비부터 결과 확인까지 한곳에서 즐겨 보세요.
+            같이할 사람을 찾고, 팀을 나누고, 오늘의 기록을 남겨요.
           </p>
 
           <form className="hero-search" action="/players" method="get">
@@ -159,10 +158,6 @@ export default async function HomePage() {
           </form>
 
           <Link className="home-start-link" href="/start">처음이신가요? 이용 방법 보기 →</Link>
-          <div className="hero-proof" aria-label="서비스 안내">
-            <span><ShieldCheck size={15} aria-hidden="true" /> 공개 정보만 안전하게</span>
-            <span><Sparkles size={15} aria-hidden="true" /> 어디서든 가볍게</span>
-          </div>
         </div>
 
         <div
@@ -185,6 +180,39 @@ export default async function HomePage() {
             <em>{dailyChampion ? "KST 기준 매일 변경" : "여성 챔피언 팬아트"}</em>
           </div>
         </div>
+      </section>
+
+      <section className="home-ranking-section" aria-labelledby="home-ranking-title">
+        <div className="section-heading">
+          <div>
+            <p>SEASON RANKING</p>
+            <h2 id="home-ranking-title">랭킹</h2>
+          </div>
+          <Link href="/rankings">전체 랭킹 보기 <ArrowRight size={15} aria-hidden="true" /></Link>
+        </div>
+        {currentRankings.some((ranking) => ranking.rows.length) ? (
+          <HomeRankingCarousel
+            seasonName={rankingResult.state === "ready" ? rankingResult.data.season?.name ?? "시즌 랭킹" : "시즌 랭킹"}
+            minimumParticipation={rankingResult.state === "ready" ? rankingResult.data.minimumParticipation : 10}
+            slides={currentRankings.map((ranking) => ({
+              id: ranking.id,
+              label: ranking.label,
+              description: ranking.description,
+              metricLabel: ranking.metricLabel,
+              rows: ranking.rows.map((row) => ({
+                playerId: row.playerId,
+                displayName: row.displayName,
+                riotId: row.riotId,
+                value: ranking.metric(row),
+              })),
+            }))}
+          />
+        ) : (
+          <div className={`home-ranking-empty${rankingResult.state === "error" ? " home-ranking-empty--error" : ""}`} role={rankingResult.state === "error" ? "alert" : "status"}>
+            <Trophy size={24} aria-hidden="true" />
+            <div><strong>{rankingResult.state === "ready" ? "아직 순위가 없어요." : rankingResult.state === "unavailable" ? "랭킹 집계를 준비하고 있어요." : "랭킹을 불러오지 못했어요."}</strong><p>{rankingResult.state === "ready" ? "시즌에 10회 이상 참여한 플레이어의 기록이 집계되면 보여 드릴게요." : rankingResult.state === "unavailable" ? "집계 환경이 준비되면 승률·참여·MVP 순위를 표시합니다." : "전체 랭킹 페이지에서 잠시 후 다시 확인해 주세요."}</p></div>
+          </div>
+        )}
       </section>
 
       <section className="task-section" aria-labelledby="tasks-title">
@@ -215,19 +243,6 @@ export default async function HomePage() {
               <article className={`task-link task-link--${tone} task-link--planned`} key={title}>{content}</article>
             );
           })}
-        </div>
-      </section>
-
-      <section className="home-personal-section" aria-labelledby="home-personal-title">
-        <div className="home-personal-copy">
-          <span><Sparkles aria-hidden="true" /> FOR YOU</span>
-          <h2 id="home-personal-title">내 활동 이어보기</h2>
-          {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 결과 접수</Link><Link href="/tools/team-balance/drafts">저장한 팀</Link></div></> : session ? <><p>계정 정보를 불러오지 못했어요. 내 계정에서 다시 확인해 주세요.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
-        </div>
-        <div className="home-season-card" data-season-state={homeResult.state === "ready" && homeResult.snapshot.activeSeason ? "active" : "inactive"}>
-          <CalendarDays aria-hidden="true" />
-          <span>현재 시즌</span>
-          {homeResult.state === "ready" && homeResult.snapshot.activeSeason ? <><strong>{homeResult.snapshot.activeSeason.name}</strong><small>{homeResult.snapshot.activeSeason.endsAt ? `${dateLabel(homeResult.snapshot.activeSeason.endsAt)} 종료 예정` : "종료 일정 미정"}</small><Link href="/applications">참가 현황 보기 <ArrowRight aria-hidden="true" /></Link></> : <><strong>{homeResult.state === "ready" ? "활성 시즌 없음" : "확인할 수 없음"}</strong><small>{homeResult.state === "ready" ? "새 시즌이 시작되면 알려 드릴게요." : "잠시 후 다시 확인해 주세요."}</small></>}
         </div>
       </section>
 
@@ -265,32 +280,17 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="home-ranking-section" aria-labelledby="home-ranking-title">
-        <div className="section-heading">
-          <div>
-            <p>SEASON RANKING</p>
-            <h2 id="home-ranking-title">현재 랭킹</h2>
-          </div>
-          <Link href="/rankings">전체 랭킹 보기 <ArrowRight size={15} aria-hidden="true" /></Link>
+      <section className="home-personal-section" aria-labelledby="home-personal-title">
+        <div className="home-personal-copy">
+          <span><Sparkles aria-hidden="true" /> FOR YOU</span>
+          <h2 id="home-personal-title">내 활동 이어보기</h2>
+          {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 결과 접수</Link><Link href="/tools/team-balance/drafts">저장한 팀</Link></div></> : session ? <><p>계정 정보를 불러오지 못했어요. 내 계정에서 다시 확인해 주세요.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
         </div>
-        {currentRankings.some((ranking) => ranking.rows.length) ? (
-          <div className="home-ranking-summary-grid" aria-label="현재 시즌 지표별 상위 랭킹">
-            {currentRankings.map((ranking) => (
-              <article className="home-ranking-summary" data-ranking-kind={ranking.id} key={ranking.id}>
-                <header>
-                  <Link href={`/rankings?view=${ranking.id}`}><span>{ranking.label}</span><ArrowRight size={14} aria-hidden="true" /></Link>
-                  <small>{ranking.description}</small>
-                </header>
-                <ol>{ranking.rows.map((row, index) => <li data-rank={index + 1} key={row.playerId}><b>{index + 1}</b><Link href={`/players/${row.playerId}`}><strong>{row.displayName}</strong><small>{row.riotId}</small></Link><em>{ranking.metric(row)}</em></li>)}</ol>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className={`home-ranking-empty${rankingResult.state === "error" ? " home-ranking-empty--error" : ""}`} role={rankingResult.state === "error" ? "alert" : "status"}>
-            <Trophy size={24} aria-hidden="true" />
-            <div><strong>{rankingResult.state === "ready" ? "아직 순위가 없어요." : rankingResult.state === "unavailable" ? "랭킹 집계를 준비하고 있어요." : "랭킹을 불러오지 못했어요."}</strong><p>{rankingResult.state === "ready" ? "공개 경기가 쌓이면 지표별 상위 플레이어를 바로 보여 드릴게요." : rankingResult.state === "unavailable" ? "집계 환경이 준비되면 승률·참여·MVP 순위를 표시합니다." : "전체 랭킹 페이지에서 잠시 후 다시 확인해 주세요."}</p></div>
-          </div>
-        )}
+        <div className="home-season-card" data-season-state={homeResult.state === "ready" && homeResult.snapshot.activeSeason ? "active" : "inactive"}>
+          <CalendarDays aria-hidden="true" />
+          <span>현재 시즌</span>
+          {homeResult.state === "ready" && homeResult.snapshot.activeSeason ? <><strong>{homeResult.snapshot.activeSeason.name}</strong><small>{homeResult.snapshot.activeSeason.endsAt ? `${dateLabel(homeResult.snapshot.activeSeason.endsAt)} 종료 예정` : "종료 일정 미정"}</small><Link href="/applications">참가 현황 보기 <ArrowRight aria-hidden="true" /></Link></> : <><strong>{homeResult.state === "ready" ? "활성 시즌 없음" : "확인할 수 없음"}</strong><small>{homeResult.state === "ready" ? "새 시즌이 시작되면 알려 드릴게요." : "잠시 후 다시 확인해 주세요."}</small></>}
+        </div>
       </section>
 
       <section className="home-status-section" aria-labelledby="home-status-title">
@@ -299,10 +299,10 @@ export default async function HomePage() {
             <p>LIVE STATUS</p>
             <h2 id="home-status-title">지금 볼 수 있는 기록</h2>
           </div>
-          <span>시즌·경기·구인 현황을 최신 기록으로 확인하세요.</span>
+          <span>함께한 플레이어와 확정된 경기 기록을 확인하세요.</span>
         </div>
         <HomeDataState result={homeResult} />
-        {homeResult.state === "ready" ? <div className="home-feed-contract" aria-label="실제 공개 피드 건수"><span data-state="ready">최근 경기 <strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></span><span data-state="ready">구인 <strong>{homeResult.snapshot.feeds.recruits.length}건</strong></span><span data-state="ready">대회 <strong>{homeResult.snapshot.feeds.competitions.length}건</strong></span><span data-state="ready">멸망전 우승 사진 <strong>{destructionWinnerSlides.length}장</strong></span></div> : null}
+        <div className="home-record-links"><Link href="/players">플레이어 전적 찾기 <ArrowRight size={16} aria-hidden="true" /></Link><Link href="/matches">지난 경기 둘러보기 <ArrowRight size={16} aria-hidden="true" /></Link></div>
       </section>
     </div>
   );

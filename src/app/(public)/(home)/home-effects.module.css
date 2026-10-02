@@ -25,35 +25,6 @@
   content: "";
 }
 
-.effectsRoot :global(.home-ranking-summary) {
-  position: relative;
-  overflow: hidden;
-}
-
-.effectsRoot :global(.home-ranking-summary)::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 3px;
-  background: linear-gradient(90deg, #72b8ea, #8d78d6, #e393bb);
-  opacity: .7;
-  content: "";
-}
-
-.effectsRoot :global(.home-ranking-summary li[data-rank="1"]) {
-  background: linear-gradient(90deg, rgba(255, 242, 191, .88), rgba(255, 252, 238, .72));
-  box-shadow: inset 3px 0 #d8a733, 0 7px 18px rgba(187, 140, 36, .08);
-}
-
-.effectsRoot :global(.home-ranking-summary li[data-rank="2"]) {
-  background: linear-gradient(90deg, rgba(232, 243, 252, .72), transparent);
-  box-shadow: inset 3px 0 rgba(119, 151, 180, .48);
-}
-
-.effectsRoot :global(.home-ranking-summary li[data-rank="3"]) {
-  background: linear-gradient(90deg, rgba(252, 235, 225, .7), transparent);
-  box-shadow: inset 3px 0 rgba(183, 119, 86, .42);
-}
-
 .effectsRoot :global(.home-feed-panel) {
   position: relative;
   isolation: isolate;
@@ -119,7 +90,6 @@
 
 @media (hover: hover) and (pointer: fine) {
   .effectsRoot :global(.home-feed-panel:hover)::after { opacity: 1; }
-  .effectsRoot :global(.home-ranking-summary li:hover) { box-shadow: inset 3px 0 #718fd4; }
 }
 
 @media (max-width: 640px) {
@@ -135,8 +105,6 @@
 @media (forced-colors: active) {
   .effectsRoot :global(.hero-art__custom)::after,
   .effectsRoot :global(.task-link)::before,
-  .effectsRoot :global(.home-ranking-summary)::before,
   .effectsRoot :global(.home-feed-panel)::after,
   .effectsRoot :global(.home-season-card)::before { display: none; }
-  .effectsRoot :global(.home-ranking-summary li[data-rank]) { border-inline-start: 3px solid CanvasText; box-shadow: none; }
 }

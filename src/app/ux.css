@@ -40,7 +40,6 @@ html { scroll-padding-top: 7rem; }
 .home-page .hero-copy h1 span { display: inline; margin-left: .3rem; }
 .home-page .hero-description { margin-block: .8rem; }
 .home-page .hero-art { min-height: 0; }
-.home-page .hero-proof { margin-top: .6rem; }
 .home-page .hero-search { margin-top: 1rem; }
 .home-page .task-section { margin-top: 1rem; }
 .home-page .task-section .section-heading { margin-bottom: .8rem; }
@@ -89,7 +88,7 @@ html { scroll-padding-top: 7rem; }
   .home-page .hero-panel { grid-template-columns: 1fr; }
   .home-page .hero-copy { padding: 1rem; }
   .home-page .hero-art { display: none; }
-  .home-page .foundation-badge, .home-page .hero-kicker, .home-page .hero-proof { display: none; }
+  .home-page .foundation-badge { display: none; }
   .home-page .hero-copy h1 { margin: 0; font-size: 1.9rem; }
   .home-page .hero-copy h1 span { display: inline; margin-left: .3rem; }
   .home-page .hero-description { margin-block: .6rem; font-size: .875rem; }
