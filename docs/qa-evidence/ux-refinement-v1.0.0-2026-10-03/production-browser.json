@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-02T23:00:55.000Z",
+  "viewportMobile": {
+    "width": 390,
+    "height": 844
+  },
+  "ranking": {
+    "height": 478.484375,
+    "kind": "participation",
+    "overflow": false,
+    "scrollTop": 0
+  },
+  "login": {
+    "buttonY": 408.71875,
+    "overflow": false,
+    "usernameY": 264.140625
+  },
+  "matches": {
+    "overflow": false,
+    "resultsY": 634
+  },
+  "filterReset": {
+    "open": false,
+    "url": "https://k-lol-gg.vercel.app/matches",
+    "winner": ""
+  },
+  "recruits": {
+    "full": 1,
+    "hasMissingInfoExplanation": true,
+    "open": 1,
+    "overflow": false
+  },
+  "desktop": {
+    "headings": [
+      "우리 같이롤하자~",
+      "랭킹",
+      "무엇을 하러 왔나요?",
+      "지금 올라온 소식",
+      "내 활동 이어보기",
+      "지금 볼 수 있는 기록"
+    ],
+    "height": 844,
+    "overflow": false,
+    "width": 1280
+  }
+}

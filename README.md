@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-03 이용 동선 개선 1.0.0 운영 반영**: 홈 참가 버튼, 모바일 로그인·경기 필터, 모집 정원 안내, 메뉴·랭킹 조작과 생성 이미지를 다듬었습니다. [운영 검증](docs/qa-evidence/ux-refinement-v1.0.0-2026-10-03/production.md), [변경 안내](docs/patch-notes/2026-10-03-ux-refinement.md).
+
 **2026-10-03 이미지 테마 1.0.0 운영 반영**: 전체 페이지의 메뉴·상태 아이콘을 생성 이미지로 교체하고, 판타지 배경과 패널 질감을 적용했습니다. [운영 검증](docs/qa-evidence/image-theme-v1.0.0-2026-10-03/production.md), [업데이트 안내](docs/patch-notes/2026-10-03-image-theme.md), [이미지·프롬프트](docs/design/image-theme-v1.json).
 
 

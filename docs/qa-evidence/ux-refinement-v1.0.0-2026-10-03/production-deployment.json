@@ -1,0 +1,18 @@
+{
+  "source": "be4dc46f46ab257ed50398ddb96615d0381f0813",
+  "branch": "main",
+  "id": "dpl_7o8iQsemzwydvMV544uK3PPJyJTb",
+  "url": "k-lol-279g9iv6k-tjdmswo11-3715s-projects.vercel.app",
+  "status": "READY",
+  "aliases": [
+    "k-lol-gg.vercel.app",
+    "k-lol-gg-tjdmswo11-3715s-projects.vercel.app",
+    "k-lol-gg-git-main-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "verifiedAt": "2026-10-02T23:00:03.409Z",
+  "rollback": {
+    "id": "dpl_8qHjykoMNz82LX7eBrE38SR1K1zT",
+    "url": "k-lol-34l97dzpx-tjdmswo11-3715s-projects.vercel.app",
+    "source": "0e1fc0ecfbf3bd16c678bb46b93f7cbe4809a7a0"
+  }
+}

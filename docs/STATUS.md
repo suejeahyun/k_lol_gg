@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-03 이용 동선·표시 정확성 개선 1.0.0 운영 반영
+
+홈 참가 버튼, 단일 랭킹 조작·모바일 높이, 로그인/가입 입력 순서, 접이식 경기 필터, 모집 빈자리·참가 안내와 메뉴 명칭을 개선했다. 홈은 실제 경기일·참가 가능한 파티·진행 중 대회 중심으로 표시한다. 생성 조작 이미지 16개를 보완했다.
+
+source be4dc46f, tag ux-refinement-v1.0.0, Vercel dpl_7o8iQsemzwydvMV544uK3PPJyJTb READY. 필수 check·격리 DB·운영 HTTP 14개 및 PC/모바일 브라우저 검증 통과. migration 0047 유지. [검증·배포](./qa-evidence/ux-refinement-v1.0.0-2026-10-03/production.md), [업데이트 안내](./patch-notes/2026-10-03-ux-refinement.md).
+
 ## 2026-10-03 이미지 테마 1.0.0 운영 반영
 
 전체 페이지에 생성 이미지 배경과 96종 이미지 아이콘을 적용했다. 모바일 배경/전송 용량, 글자 가독성, 좁은 팀 편성 화면을 보완했다. source 16761e3f, tag image-theme-v1.0.0, Vercel dpl_CwPCXjmLXSPSvXNiFCuwct4ZUqhN READY. 2026-10-02T21:09:23.236Z 운영 14개 HTTP 응답과 11개 이미지 해시, 브라우저 레이아웃·슬라이드 확인. 필수 check 통과. 기존 전체 DB contract fixture의 세션 purpose 오류는 별도 제한으로 기록했다. [검증·배포](./qa-evidence/image-theme-v1.0.0-2026-10-03/production.md), [생성 이미지 명세](./design/image-theme-v1.json).
