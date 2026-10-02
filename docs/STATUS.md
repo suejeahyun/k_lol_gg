@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-03 홈 랭킹 쇼케이스 1.0.1 운영 반영
+
+홈을 소개 → 랭킹 → 주요 작업 → 소식 → 내 활동 → 기록 순서로 재배치하고, 세 랭킹 카드를 시상대 슬라이드로 통합했다. 모바일 배치·조작 버튼·중복 안내를 개선하고, 화면 크기 전환 후 상단이 가려지는 현상을 보완했다.
+
+source c37f6dc3, tag home-ranking-showcase-v1.0.1, Vercel dpl_DBt8BXea1upip7ncq5AuoU5Jd2rJ READY. 2026-10-02T20:26:27.143Z에 운영 7개 HTTP 검사 및 모바일/데스크톱 브라우저 동작 확인. 전체 check 통과. [검증·배포 근거](./qa-evidence/home-ranking-showcase-v1.0.1-2026-10-03/production.md).
+
 ## 2026-10-02 목적 중심 탐색 개선 1.0.0
 
 운영 반영 확인: source `52df8f75`, tag `ux-discoverability-v1.0.0`, Vercel `dpl_7kg8HgGTQ3AzdKCHhRHarvqSNtSM` READY. 2026-10-02T12:40:50.950Z 기준 운영 주소 15개 HTTP 검사 통과, 모바일 홈과 기능 검색 이동 확인.

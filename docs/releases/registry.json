@@ -1748,6 +1748,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "home-ranking-showcase",
+      "version": "1.0.1",
+      "gitTag": "home-ranking-showcase-v1.0.1",
+      "commit": "c37f6dc37fdcd4c2c12e50fab214749164ae1cd6",
+      "releasedAt": "2026-10-02T20:26:27.143Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/home-ranking-showcase-v1.0.1-2026-10-03/production.md",
+      "patchNotes": "docs/patch-notes/2026-10-03-home-ranking-showcase-1.0.1.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_DBt8BXea1upip7ncq5AuoU5Jd2rJ",
+        "url": "https://k-lol-i6txx8dmf-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-02T20:26:27.143Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

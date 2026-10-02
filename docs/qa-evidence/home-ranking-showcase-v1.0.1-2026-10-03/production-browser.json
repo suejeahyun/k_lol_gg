@@ -1,0 +1,18 @@
+{
+  "active": "win-rate",
+  "height": 720,
+  "order": [
+    "home-title",
+    "home-ranking-title",
+    "tasks-title",
+    "home-overview-title",
+    "home-personal-title",
+    "home-status-title"
+  ],
+  "overflow": "clip",
+  "pageOverflow": false,
+  "scrollTop": 0,
+  "sectionY": -177.703125,
+  "toplineOffset": 27,
+  "width": 1280
+}

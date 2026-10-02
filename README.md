@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-03 홈 랭킹 쇼케이스 1.0.1 운영 반영**: 요청 순서의 홈, 시상대 랭킹 슬라이드, 모바일 조작과 화면 전환 보완. [운영 검증](docs/qa-evidence/home-ranking-showcase-v1.0.1-2026-10-03/production.md), [홈 개편 안내](docs/patch-notes/2026-10-03-home-ranking-showcase.md).
+
 **2026-10-02 목적 중심 탐색 개선 1.0.0**: 홈·메뉴·검색·신청·문의·검색 노출을 개선했습니다. [전체 분석과 검증](docs/qa-evidence/ux-discoverability-v1.0.0-2026-10-02/README.md), [배포 상태](docs/qa-evidence/ux-discoverability-v1.0.0-2026-10-02/production.md), [사용자 안내](docs/patch-notes/2026-10-02-ux-discoverability.md). 아래 이전 릴리스 기록과 현재 배포 상태를 구분합니다.
 
 **멸망전 판수 평가 1.6.0 운영 반영**: 판수 30·솔랭 50·협곡 내전 10·챔피언 5·도전과제 5. 총 판수 300판에서 100점, 승률 미반영. [운영 검증](docs/qa-evidence/destruction-modes-v1.6.0-2026-09-28/production.md).
