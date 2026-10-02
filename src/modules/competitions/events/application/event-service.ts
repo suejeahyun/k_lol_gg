@@ -56,14 +56,15 @@ function settings(value: unknown): EventSettings {
   };
 }
 
-function preference(body: Record<string, unknown>, format?: EventSettings["format"]) {
+function preference(body: Record<string, unknown>) {
   const mainPosition = body.mainPosition === null ? null : body.mainPosition;
   const subPositions = body.subPositions;
   if (!Array.isArray(subPositions) || subPositions.length > 4 || !subPositions.every((item) => COMPETITION_POSITIONS.includes(item as never))) {
     throw new TypeError("INVALID_INPUT");
   }
-  if (format === "ARAM") return { mainPosition: null, subPositions: [] as const };
-  if (!COMPETITION_POSITIONS.includes(mainPosition as never)) throw new TypeError("INVALID_INPUT");
+  // The aggregate validates these preferences against the stored event format.
+  // A null main position is the valid wire representation for an ARAM application.
+  if (mainPosition !== null && !COMPETITION_POSITIONS.includes(mainPosition as never)) throw new TypeError("INVALID_INPUT");
   return { mainPosition: mainPosition as EventParticipantInput["mainPosition"], subPositions: subPositions as EventParticipantInput["subPositions"] };
 }
 

@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import styles from "../help.module.css";
 import { SiteFeatureStatePanel } from "@/components/site-feature-state";
 import { readSiteFeatureState, siteFeatureLabel } from "@/modules/operations/infrastructure/site-feature-access";
 
-export const metadata: Metadata = { title: "카카오 봇 연동 안내", alternates: { canonical: "/help/kakao" } };
+export const metadata = createRouteMetadata("/help/kakao");
 
 export default async function KakaoHelpPage() {
   const featureState = await readSiteFeatureState("kakaoHelp");

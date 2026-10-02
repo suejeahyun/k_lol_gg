@@ -2,19 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { findGlobalCommands, playerSearchHref } from "../src/modules/navigation/domain/global-command-palette";
-import { canonicalUserRoutes } from "../src/modules/navigation/domain/user-navigation";
+import { userMenuRoutes } from "../src/modules/navigation/domain/user-navigation";
 
-test("익명 전역 검색은 공개 canonical 기능만 반환한다", () => {
+test("익명 검색에도 계정 기능을 발견할 수 있고 접근 필요 상태가 유지된다", () => {
   const results = findGlobalCommands("", { accountSignedIn: false, limit: 50 });
   assert.equal(results.length > 10, true);
-  assert.equal(results.every((result) => result.access === "PUBLIC"), true);
-  assert.equal(results.some((result) => result.href === "/account"), false);
+  assert.equal(results.find((result) => result.href === "/matches/submit")?.access, "ACCOUNT");
+  assert.equal(results.some((result) => result.href === "/account"), true);
   assert.equal(results.some((result) => result.href === "/tools/random-team"), true);
   assert.equal(results.some((result) => result.href === "/competitions"), true);
 });
 
 test("팔레트 바로 가기는 실제 canonical 사용자 페이지 안에서만 구성된다", () => {
-  const canonical = new Set<string>(canonicalUserRoutes.map((route) => route.template));
+  const canonical = new Set<string>(userMenuRoutes.map((route) => route.template));
   const results = findGlobalCommands("", { accountSignedIn: true, limit: 50 });
   assert.equal(results.every((result) => canonical.has(result.href)), true);
   assert.deepEqual(new Set(results.map((result) => result.group)), new Set(["페이지", "도구", "콘텐츠", "계정"]));

@@ -11,7 +11,7 @@ test("public MMR page exposes canonical allowlisted filters and bounded projecti
   for (const contract of [
     "parseMmrPlayerQuery",
     "loadRuntimeMmr",
-    'alternates: { canonical: "/rankings/mmr" }',
+    'createRouteMetadata("/rankings/mmr")',
     'name="q"',
     'name="position"',
     "viewValid",

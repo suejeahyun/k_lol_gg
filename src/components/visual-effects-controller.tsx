@@ -39,7 +39,10 @@ function decorateElement(
     element.dataset.uiSurface = element.closest("[data-ui-scope='admin']") ? "operational" : "feature";
   }
 
-  if (revealObserver) {
+  // Content already in view must stay visible during hydration, including large forms.
+  if (element.getBoundingClientRect().top < window.innerHeight || element.matches("form") || element.querySelector("form")) {
+    element.dataset.uiVisible = "true";
+  } else if (revealObserver) {
     revealObserver.observe(element);
   } else {
     requestAnimationFrame(() => {
@@ -55,6 +58,7 @@ export function VisualEffectsController() {
     const root = document.documentElement;
     const decorated = new Set<HTMLElement>();
     let scrollFrame = 0;
+    let decorationFrame = 0;
     const canAnimate = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealObserver = typeof IntersectionObserver === "undefined" || !canAnimate
       ? null
@@ -118,8 +122,12 @@ export function VisualEffectsController() {
     decoratePage();
     updateScrollProgress();
 
-    const mutationObserver = new MutationObserver(() => decoratePage());
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    const mutationObserver = new MutationObserver((mutations) => {
+      if (decorationFrame || !mutations.some((mutation) => Array.from(mutation.addedNodes).some((node) => node instanceof HTMLElement))) return;
+      decorationFrame = requestAnimationFrame(() => { decorationFrame = 0; decoratePage(); });
+    });
+    const main = document.querySelector("#main-content, [data-ui-scope='admin'] main, body > main");
+    if (main) mutationObserver.observe(main, { childList: true, subtree: true });
     window.addEventListener("scroll", requestProgressUpdate, { passive: true });
     window.addEventListener("resize", requestProgressUpdate, { passive: true });
     if (heroArt && finePointer && canAnimate) {
@@ -136,6 +144,7 @@ export function VisualEffectsController() {
       heroArt?.removeEventListener("pointerleave", resetHeroLight);
       resetHeroLight();
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
+      if (decorationFrame) window.cancelAnimationFrame(decorationFrame);
       for (const element of decorated) {
         delete element.dataset.uiPage;
         delete element.dataset.uiReveal;

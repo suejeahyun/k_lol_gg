@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Clock3, FolderOpen, Scale } from "lucide-react";
 
@@ -13,12 +13,7 @@ import { TeamBalanceFeatureState } from "../team-balance-feature-state";
 import { TeamBalanceRecommendationsPanel } from "./team-balance-recommendations-panel";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "팀 밸런스 초안",
-  description: "팀 밸런스 초안을 다시 확인하고 재평가·결과 등록 작업을 이어갑니다.",
-  alternates: { canonical: "/tools/team-balance/drafts" },
-  robots: { index: false, follow: false },
-};
+export const metadata = createRouteMetadata("/tools/team-balance/drafts");
 
 const statusLabel = Object.freeze({ EVALUATED: "평가됨", SAVED: "저장됨", ARCHIVED: "보관됨" });
 

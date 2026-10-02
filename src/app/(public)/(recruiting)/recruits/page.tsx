@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import { RecruitInstructions } from "@/components/navigation/recruit-instructions";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { Bot, CalendarClock, CircleAlert, Gamepad2, Sparkles, Swords, UsersRound } from "lucide-react";
 
@@ -7,11 +8,7 @@ import { loadRuntimeRecruiting } from "@/modules/recruiting/infrastructure/runti
 import styles from "./recruits.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "파티·스크림 모집",
-  description: "현재 진행 중인 K-LOL.GG 파티와 스크림 모집을 확인합니다.",
-  alternates: { canonical: "/recruits" },
-};
+export const metadata = createRouteMetadata("/recruits");
 
 const partyTypeLabel = {
   FLEX_RANK: "자유 랭크", NORMAL_GAME: "일반 게임", SOLO_RANK: "솔로 랭크", ARAM: "칼바람",
@@ -48,7 +45,7 @@ export default async function RecruitsPage() {
             {result.data.parties.length === 0 ? <div className={styles.inlineEmpty}>진행 중인 파티 모집이 없어요.</div> : (
               <div className={styles.cards}>
                 {result.data.parties.map((party) => <article
-                  className={styles.card}
+                  className={`${styles.card} recruit-card-target`} id={`party-${party.id}`}
                   data-kind="party"
                   data-capacity={party.memberCount >= party.maximumMembers ? "full" : party.memberCount === 0 ? "empty" : "open"}
                   data-has-organizer={party.organizerText ? "true" : "false"}
@@ -73,6 +70,7 @@ export default async function RecruitsPage() {
                     aria-valuemax={party.maximumMembers}
                     aria-valuenow={party.memberCount}
                   ><i aria-hidden="true" style={{ width: `${Math.min(100, party.memberCount / party.maximumMembers * 100)}%` }} /></div>
+                  <RecruitInstructions recruitNumber={party.recruitNumber} />
                 </article>)}
               </div>
             )}
@@ -81,10 +79,11 @@ export default async function RecruitsPage() {
             <header className={styles.heading}><div><span>SCRIM</span><h2 id="scrim-recruits-title">스크림 모집</h2></div><p>{result.data.scrims.length}개 진행 중</p></header>
             {result.data.scrims.length === 0 ? <div className={styles.inlineEmpty}>진행 중인 스크림 모집이 없어요.</div> : (
               <div className={styles.cards}>
-                {result.data.scrims.map((scrim) => <article className={styles.card} data-kind="scrim" data-status={scrim.status.toLowerCase()} key={scrim.id}>
+                {result.data.scrims.map((scrim) => <article id={`scrim-${scrim.id}`} className={`${styles.card} recruit-card-target`} data-kind="scrim" data-status={scrim.status.toLowerCase()} key={scrim.id}>
                   <div className={styles.cardTop}><span>{scrim.status === "RECRUITING" ? "상대 모집 중" : scrim.status === "MATCHED" ? "매칭됨" : "확정"}</span><b>#{scrim.scrimNumber}</b></div>
                   <h3>{scrim.title ?? (scrim.bestOf ? `BO${scrim.bestOf} 스크림` : "스크림 기록")}</h3>
                   <dl><div><dt>요청 팀</dt><dd>{scrim.requesterTeamName ?? scrim.requesterTeamId?.slice(0, 8) ?? "기록 없음"}</dd></div><div><dt>예정</dt><dd>{timeLabel(scrim.scheduledAt)}</dd></div></dl>
+                  <p>기존 스크림 기록입니다. 새 참여는 파티 모집 또는 내전 신청을 이용해 주세요.</p><Link href="/applications">내전 신청 보기</Link>
                   <p className={styles.scrimLine}><Swords aria-hidden="true" /> {scrim.opponentTeamName ?? (scrim.opponentTeamId ? `상대 팀 ${scrim.opponentTeamId.slice(0, 8)}` : "상대 팀을 기다리고 있어요")}</p>
                 </article>)}
               </div>
@@ -94,9 +93,9 @@ export default async function RecruitsPage() {
       ) : result.state === "ready" ? (
         <section className={styles.state}><Sparkles aria-hidden="true" /><h2>지금은 열린 모집이 없어요.</h2><p>새 모집이 등록되면 이 화면에 바로 나타납니다.</p><Link href="/help/recruits">모집 방법 알아보기</Link></section>
       ) : result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><CalendarClock aria-hidden="true" /><h2>모집을 확인할 수 없어요.</h2><p>잠시 후 다시 확인해 주세요.</p></section>
+        <section className={styles.state} role="status"><CalendarClock aria-hidden="true" /><h2>모집을 확인할 수 없어요.</h2><p>잠시 후 다시 확인해 주세요.</p><Link href="/recruits">다시 확인</Link></section>
       ) : (
-        <section className={styles.state} role="alert"><CircleAlert aria-hidden="true" /><h2>모집을 불러오지 못했어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>
+        <section className={styles.state} role="alert"><CircleAlert aria-hidden="true" /><h2>모집을 불러오지 못했어요.</h2><p>잠시 후 다시 시도해 주세요.</p><Link href="/recruits">다시 시도</Link></section>
       )}
     </div>
   );

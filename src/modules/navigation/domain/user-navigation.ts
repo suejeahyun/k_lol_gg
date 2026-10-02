@@ -94,3 +94,11 @@ export function isUserNavigationActive(pathname: string, href: string): boolean 
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+/** Auxiliary routes retain legacy canonical inventory while remaining discoverable. */
+export const supplementalUserRoutes = [
+  { template: "/matches/submissions", label: "내 결과 접수", section: "registry-match", implementationState: "page-contract" },
+  { template: "/help", label: "도움말·문의", section: "auth-help", implementationState: "page-contract" },
+  { template: "/help/contact", label: "운영팀 문의", section: "auth-help", implementationState: "page-contract" },
+] as const satisfies readonly UserRouteDefinition[];
+export const userMenuRoutes = [...canonicalUserRoutes, ...supplementalUserRoutes] as const;

@@ -27,7 +27,8 @@ test("admin mutation requires ADMIN session, same-origin, If-Match and idempoten
   assert.match(api, /requireOperationFormAdmin/u); assert.match(api, /prepareOperationFormMutation/u);
   for (const evidence of ["hasSameOrigin", "readIfMatchRevision", "readIdempotencyKey"]) assert.match(http, new RegExp(evidence));
   assert.match(adapter, /lockTransactionSessionActor/u); assert.match(adapter, /ADMIN_MUTATION_SESSION_POLICY/u);
-  assert.match(adapter, /deletedAt/u); assert.doesNotMatch(adapter, /\.delete\(operationForms\)/u);
+  assert.match(adapter, /deletedAt/u); assert.doesNotMatch(adapter.slice(adapter.indexOf("async softDelete(")), /\.delete\(operationForms\)/u);
+  assert.match(adapter, /eq\(operationForms.sourceRoomId, SITE_SUPPORT_SOURCE\)/u);
 });
 
 test("admin pages expose filtered empty/error/unavailable states and compatibility routes", async () => {

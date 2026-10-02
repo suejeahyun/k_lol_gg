@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 
 import { AccountShell } from "@/components/accounts/account-shell";
@@ -8,7 +8,7 @@ import { requireApprovedAccountPage } from "@/modules/auth/infrastructure/server
 import { publicRiotLinkMethodLabel, publicRiotLinkStatusLabel, publicRiotSyncStatusLabel } from "@/modules/competitions/core";
 import { getRuntimeRiot, loadRuntimeRiot } from "@/modules/riot/infrastructure/runtime-riot";
 
-export const metadata: Metadata = { title: "내 Riot 계정" };
+export const metadata = createRouteMetadata("/account/riot");
 export const dynamic = "force-dynamic";
 
 export default async function AccountRiotPage() {

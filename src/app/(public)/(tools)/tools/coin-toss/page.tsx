@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import { Coins, Sparkles } from "lucide-react";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
@@ -6,11 +6,7 @@ import { TeamToolNav } from "../team-tool-nav";
 import { CoinTossTool } from "./coin-toss-tool";
 import styles from "../team-tools.module.css";
 
-export const metadata: Metadata = {
-  title: "코인 토스",
-  description: "앞면과 뒷면 중 하나를 공정하게 무작위로 뽑습니다.",
-  alternates: { canonical: "/tools/coin-toss" },
-};
+export const metadata = createRouteMetadata("/tools/coin-toss");
 
 export default async function CoinTossPage() {
   const session = await getCurrentSession("ACCOUNT");

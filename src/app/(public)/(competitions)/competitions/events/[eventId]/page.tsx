@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { cache } from "react";
+import { BackToList } from "@/components/navigation/list-return";
+import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Check, Crown, Sparkles, Swords, UsersRound } from "lucide-react";
@@ -17,7 +20,13 @@ import styles from "../../events.module.css";
 import { EventApplicationActions } from "./event-application-actions";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata({ params }: { params: Promise<{ eventId: string }> }): Promise<Metadata> { const { eventId } = await params; return { title: "이벤트전 상세", alternates: { canonical: `/competitions/events/${encodeURIComponent(eventId)}` } }; }
+const loadDetail = cache(async (id: string) => getRuntimeEvent()?.repository.getPublic(id, new Date()));
+export async function generateMetadata({ params }: { params: Promise<{ eventId: string }> }): Promise<Metadata> {
+  const { eventId: id } = await params;
+  const item = await loadDetail(id).catch(() => null);
+  if (!item) return createNoIndexMetadata({ title: "이벤트전 정보 확인", description: "현재 공개 대회 정보를 확인할 수 없습니다." });
+  return createPublicMetadata({ title: item.title, description: `이벤트전 · ${item.participantCount}명 참가. 모집과 팀 편성, 경기 결과를 확인하세요.`, canonical: `/competitions/events/${encodeURIComponent(id)}` });
+}
 
 const EVENT_STEPS = ["PLANNED", "RECRUITING", "TEAM_BUILDING", "IN_PROGRESS", "COMPLETED"] as const;
 
@@ -55,12 +64,12 @@ export default async function EventDetailPage({ params, searchParams }: { params
   }
   const eventId = rawId.toLocaleLowerCase("en-US");
   let event;
-  try { event = await runtime.repository.getPublic(eventId, new Date()); } catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>이벤트전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
+  try { event = await loadDetail(eventId); } catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>이벤트전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
   if (!event) notFound();
   const session = await getCurrentSession("ACCOUNT");
   const own = session ? await runtime.repository.getOwnApplication(eventId, session.userId).catch(() => null) : null;
   return <div className={styles.page}>
-    <Link className={styles.back} href="/competitions/events"><ArrowLeft aria-hidden="true" /> 이벤트 대회 목록</Link>
+    <BackToList className={styles.back} href="/competitions/events"><ArrowLeft aria-hidden="true" /> 이벤트 대회 목록</BackToList>
     <header className={styles.detailHero} data-kind="event"><div><span className={styles.statusBadge} data-status={event.status}>{publicEventStatusLabel(event.status)}</span><p className={styles.heroKicker}>{publicCompetitionFormatLabel(event.format)} 이벤트전</p><h1>{event.title}</h1><p>{event.description ?? "즐거운 이벤트전입니다."}</p></div><Swords aria-hidden="true" /></header>
     {event.status === "CANCELLED" ? <p className={styles.cancelledNotice} role="status">이 이벤트전은 취소되었습니다. 참가 신청과 경기 진행은 종료됐어요.</p> : <ol className={styles.statusJourney} aria-label="이벤트전 진행 단계">{EVENT_STEPS.map((step, index) => { const current = EVENT_STEPS.indexOf(event.status as (typeof EVENT_STEPS)[number]); return <li data-state={index < current ? "done" : index === current ? "current" : "upcoming"} key={step}>{index < current ? <Check aria-hidden="true" /> : <span>{index + 1}</span>}<strong>{publicEventStatusLabel(step)}</strong></li>; })}</ol>}
     <section className={styles.facts} aria-label="이벤트전 일정"><article><CalendarDays aria-hidden="true" /><div><span>모집 기간</span><strong>{formatKoreanDateTime(event.recruitmentOpensAt)}<br />~ {formatKoreanDateTime(event.recruitmentClosesAt)}</strong></div></article><article><UsersRound aria-hidden="true" /><div><span>현재 참가자</span><strong>{event.participantCount}/10명</strong></div></article><article><Swords aria-hidden="true" /><div><span>경기 방식</span><strong>{publicCompetitionFormatLabel(event.format)} · BO{event.fixtures[0]?.bestOf ?? "-"}</strong></div></article><article><Crown aria-hidden="true" /><div><span>최종 결과</span><strong>{event.winnerTeamName ?? "진행 중"}{event.mvpPlayerName ? ` · MVP ${event.mvpPlayerName}` : ""}</strong></div></article></section>

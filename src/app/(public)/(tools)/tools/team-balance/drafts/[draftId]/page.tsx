@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { ArrowLeft, Scale } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -15,7 +15,7 @@ import { TeamToolNav } from "../../../team-tool-nav";
 import styles from "../../../team-tools.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "팀 밸런스 초안", robots: { index: false, follow: false } };
+export const metadata = createRouteMetadata("/tools/team-balance/drafts/[draftId]");
 
 export default async function TeamBalanceDraftPage({ params, searchParams }: { params: Promise<{ draftId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { draftId } = await params;

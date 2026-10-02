@@ -170,6 +170,17 @@ test("S07 event adapter persists exact-ten lifecycle, S06 teams, correction inva
       eventError("INVALID_AUTHORIZATION_INTENT"),
     );
 
+    const aramEventId = randomUUID();
+    await service.create(context(adminActor, "ADMIN", "create-aram-owner"), { eventId: aramEventId, settings: { ...settings, title: "칼바람 참가 신청", format: "ARAM" } });
+    await service.executeAdmin(context(adminActor, "ADMIN", "start-aram-owner"), aramEventId, 1, { type: "START_RECRUITMENT", payload: {} });
+    const aramBody = { participantId: randomUUID(), mainPosition: null, subPositions: [] };
+    const aramContext = context(ownerActor, "ACCOUNT", "aram-owner-apply");
+    const aramApplied = await service.upsertOwnApplication(aramContext, aramEventId, playerIds[0]!, 2, aramBody);
+    assert.equal((await service.upsertOwnApplication(aramContext, aramEventId, playerIds[0]!, 2, aramBody)).replayed, true);
+    assert.equal((await adapter.getOwnApplication(aramEventId, ownerId))?.mainPosition, null);
+    await assert.rejects(service.upsertOwnApplication(context(ownerActor, "ACCOUNT", "aram-with-position"), aramEventId, playerIds[0]!, aramApplied.revision, { ...aramBody, mainPosition: "TOP" }), eventError("INVALID_INPUT"));
+    await assert.rejects(service.upsertOwnApplication(context(ownerActor, "ACCOUNT", "position-with-null"), ownerEventId, playerIds[0]!, applied.revision, { participantId, mainPosition: null, subPositions: [] }), eventError("INVALID_INPUT"));
+
     assert.equal((await database.select().from(eventParticipantIndex).where(eq(eventParticipantIndex.eventId, eventId))).length, 10);
     assert.ok((await database.select().from(eventCommandReceipts)).length >= 14);
     assert.equal((await database.select().from(eventOutbox)).length, (await database.select().from(eventCommandReceipts)).length);

@@ -1,0 +1,5 @@
+# These generated/checksummed text artifacts are byte-compared by release checks.
+/docs/database/ERD.md text eol=lf
+/tests/fixtures/kakao/v1/KLOL_KAKAO_BOT_V40_GUIDED_HUB.js text eol=lf
+/integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js text eol=lf
+/public/videos/coin-toss-breeze-source.svg text eol=lf

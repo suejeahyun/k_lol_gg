@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { getSiteOrigin } from "@/modules/seo/domain/site-seo";
 import { PwaRegistration } from "@/components/pwa-registration";
 import { SiteAiAssistant } from "@/components/site-ai-assistant";
 import { VisualEffectsController } from "@/components/visual-effects-controller";
 import "./globals.css";
+import "./ux.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: getSiteOrigin(),
   title: {
     default: "K-LOL.GG",
     template: "%s | K-LOL.GG",

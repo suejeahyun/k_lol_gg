@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import { Dices, Sparkles } from "lucide-react";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
@@ -6,11 +6,7 @@ import { TeamToolNav } from "../team-tool-nav";
 import { RandomTeamTool } from "./random-team-tool";
 import styles from "../team-tools.module.css";
 
-export const metadata: Metadata = {
-  title: "랜덤 팀 나누기",
-  description: "10명의 참가자를 무작위 또는 티어 점수 균형으로 5명씩 나눕니다.",
-  alternates: { canonical: "/tools/random-team" },
-};
+export const metadata = createRouteMetadata("/tools/random-team");
 
 export default async function RandomTeamPage({
   searchParams,

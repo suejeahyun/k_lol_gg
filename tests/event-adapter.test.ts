@@ -55,6 +55,22 @@ test("own application requires a stable participant UUID so retry fingerprints c
   assert.throws(() => service.upsertOwnApplication(ownerContext, eventId, playerId, 1, { mainPosition: "MID", subPositions: [] }), TypeError);
 });
 
+test("ARAM application reaches the aggregate without fabricated position preferences", async () => {
+  const commands: EventCommand[] = [];
+  const service = new EventService({ handle: async (command) => {
+    commands.push(command);
+    return { body: { eventId: command.eventId, revision: 2, status: "RECRUITING", commandType: command.type }, revision: 2, replayed: false };
+  } });
+  const ownerContext: EventCommandContext = { ...context, purpose: "ACCOUNT", actorSession: { ...actorSession, role: "USER" } };
+  const eventId = randomUUID(), playerId = randomUUID();
+  const body = { participantId: randomUUID(), mainPosition: null, subPositions: [] };
+  await service.upsertOwnApplication(ownerContext, eventId, playerId, 1, body);
+  assert.deepEqual(commands[0]?.payload, { ...body, playerId });
+  for (const mainPosition of [undefined, "", "ANY", 1]) {
+    assert.throws(() => service.upsertOwnApplication(ownerContext, eventId, playerId, 1, { ...body, mainPosition }), TypeError);
+  }
+});
+
 test("event gallery command accepts only an exact nullable gallery identifier", async () => {
   const commands: EventCommand[] = [];
   const service = new EventService({ handle: async (command) => {

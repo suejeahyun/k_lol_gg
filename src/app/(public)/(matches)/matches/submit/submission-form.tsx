@@ -1,4 +1,5 @@
 "use client";
+import { recordUsageAction } from "@/components/usage/usage-actions";
 
 import { useRef, useState } from "react";
 import Link from "next/link";
@@ -112,6 +113,7 @@ export function SubmissionForm({
       const created = await response.json() as { submissionId: string; publicCode: string; status: MatchSubmissionView["status"]; revision: number };
       mutationKeys.complete(commandTicket);
       createRequestIds.complete(requestTicket);
+      recordUsageAction("match.submitted");
       const next: MatchSubmissionView = {
         id: created.submissionId, publicCode: created.publicCode, seasonId: body.seasonId,
         seasonName: seasons.find((season) => season.id === body.seasonId)?.name ?? null,

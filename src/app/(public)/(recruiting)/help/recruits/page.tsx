@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import styles from "../help.module.css";
 
-export const metadata: Metadata = { title: "모집 이용 안내", alternates: { canonical: "/help/recruits" } };
+export const metadata = createRouteMetadata("/help/recruits");
 
 export default function RecruitHelpPage() {
   return <div className={`page-wrap ${styles.page}`}>
@@ -56,7 +56,7 @@ export default function RecruitHelpPage() {
     <section className={styles.section}>
       <h2>모집 등록 안내</h2>
       <ul>
-        <li>승인된 계정으로 로그인하면 모집을 등록하고 관리할 수 있습니다.</li>
+        <li>파티 모집 등록·수정은 봇이 있는 카카오톡 방에서 진행합니다. 사이트에서는 현황과 참여 방법을 확인합니다. 내전 참가 신청은 사이트의 ‘오늘 내전 신청’에서도 가능합니다.</li>
         <li>같은 요청이 반복되어도 모집은 한 번만 등록됩니다.</li>
         <li>모집에 작성한 참여자 표시 이름, 포지션과 예비 여부는 현재 모집 카드에 공개됩니다.</li>
         <li>로그인 ID, 연락처, 방·발신자 식별값과 운영 메모는 공개하지 않습니다.</li>

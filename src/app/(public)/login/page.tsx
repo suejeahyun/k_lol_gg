@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import { CloudSun, ShieldCheck, UserRoundCheck } from "lucide-react";
 
 import { UserLoginForm } from "@/components/accounts/account-auth-forms";
 import styles from "@/components/accounts/account-access.module.css";
 import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
 
-export const metadata: Metadata = { title: "로그인" };
+export const metadata = createRouteMetadata("/login");
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
   const nextPath = normalizeAccountNext((await searchParams).next, "/");
@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className={styles.accessGrid}>
         <section className={styles.intro}>
           <span className={styles.eyebrow}><CloudSun aria-hidden="true" /> ACCOUNT ACCESS</span>
-          <h1>내 계정으로<br />가볍게 돌아와요.</h1>
+          <h2>내 계정으로<br />가볍게 돌아와요.</h2>
           <p>내 계정 상태를 확인하고 참가 신청과 팀 도구를 이어서 이용해 보세요.</p>
           <div className={styles.promise}><span><strong>상태 확인</strong>가입 승인 상태 안내</span><span><strong>내 정보 관리</strong>플레이어·Riot ID 확인</span><span><strong>안전한 이용</strong>비밀번호 변경 지원</span></div>
         </section>

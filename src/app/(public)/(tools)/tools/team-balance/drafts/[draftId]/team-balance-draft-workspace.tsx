@@ -19,11 +19,11 @@ const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜",
 const teamLabel = { BLUE: "블루", RED: "레드" } as const;
 const preferenceLabel = { MAIN: "주", SUB: "부", AUTO: "자동" } as const;
 const candidateCriteria = {
-  V1_AI_GLOBAL: { label: "AI 최적 추천", description: "V1의 전체 후보 평가 기준으로 가장 균형 잡힌 한 가지 결과" },
+  V1_AI_GLOBAL: { label: "AI 최적 추천", description: "실력과 포지션 평가 기준으로 가장 균형 잡힌 한 가지 결과" },
   OVERALL_BALANCE: { label: "종합 균형", description: "팀 전력·라인 차이·포지션 선호를 모두 반영한 추천" },
   POSITION_BALANCE: { label: "라인 균형", description: "각 라인의 맞대결 점수 차이를 가장 먼저 줄인 추천" },
   PREFERENCE_PRIORITY: { label: "주 포지션 우선", description: "참가자가 신청한 주 포지션 배치를 가장 먼저 지킨 추천" },
-  LEGACY: { label: "이전 계산 결과", description: "최신 V1 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },
+  LEGACY: { label: "이전 계산 결과", description: "최신 평가 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },
   MANUAL: { label: "수동 배치", description: "사용자가 직접 교체하고 서버에서 다시 평가한 배치" },
 } as const;
 
@@ -98,7 +98,7 @@ export function TeamBalanceDraftWorkspace({
     try {
       if (!navigator.clipboard?.writeText) throw new Error("이 브라우저에서는 클립보드 복사를 사용할 수 없어요.");
       await navigator.clipboard.writeText(formatTeamBalanceShareText(selectedCandidate, draft.participants));
-      setMessage("V1 형식의 팀 결과를 복사했어요.");
+      setMessage("팀 결과를 복사했어요.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "팀 결과를 복사하지 못했어요.");
     }
@@ -143,7 +143,7 @@ export function TeamBalanceDraftWorkspace({
       </section>
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
-        <div className={styles.heading}><div><span>V1 ENGINE · ONE RESULT</span><h2 id="candidate-title">AI 최적 팀 추천</h2><p className={styles.stageHint}>전체 조합을 V1 기준으로 평가해 가장 높은 한 가지 결과를 바로 적용합니다.</p></div></div>
+        <div className={styles.heading}><div><span>추천 결과</span><h2 id="candidate-title">AI 최적 팀 추천</h2><p className={styles.stageHint}>전체 조합을 실력과 포지션으로 평가해 가장 높은 한 가지 결과를 바로 적용합니다.</p></div></div>
         {selectedCandidate ? <div className={styles.evaluationOverview} data-balance={differenceTone(selectedCandidate.score.teamStrength.difference)} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}
         <div className={styles.candidateGrid}>
           {autoCandidates.slice(0, 1).map((candidate) => {
@@ -196,13 +196,13 @@ export function TeamBalanceDraftWorkspace({
             })}</div>
           </section>)}
         </div>
-        <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 V1 계산 기준으로 다시 평가합니다.</strong><small>브라우저 임시 점수를 저장하지 않고 서버가 참가자·포지션·점수를 검증한 결과만 선택합니다.</small></div><button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
+        <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 팀 균형 기준으로 다시 평가합니다.</strong><small>직접 바꾼 팀의 실력 차이와 포지션 적합도를 확인하고 저장하세요.</small></div><button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
       </section>
 
       <section className={styles.draftActions} data-pending={pending || undefined} aria-busy={Boolean(pending)} aria-label="초안 작업">
         <button className={styles.primaryButton} type="button" disabled={Boolean(pending) || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
         <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
-        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "V1 기준으로 재평가" : "최신 통계로 재평가"}</button>
+        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "실력과 포지션으로 재평가" : "최신 통계로 재평가"}</button>
         {mode === "OWNER" && draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? <Link className={styles.primaryLink} href={`/matches/submit?teamBalanceDraftId=${encodeURIComponent(draft.id)}`}>이 팀으로 경기 결과 접수 <ArrowRight size={16} aria-hidden="true" /></Link> : null}
         {mode === "ADMIN" && draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? <Link className={styles.primaryLink} href={`/admin/matches/new?teamBalanceDraftId=${encodeURIComponent(draft.id)}`}>선택 팀으로 경기 등록 <ArrowRight size={16} aria-hidden="true" /></Link> : null}
         {mode === "ADMIN" && draft.status !== "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={Boolean(pending)} onClick={() => mutate("archive", {})}><Archive size={17} aria-hidden="true" /> 초안 보관</button> : null}

@@ -1,4 +1,20 @@
 export const USAGE_ACTIONS = {
+  "navigation.open": "전체 메뉴 열기",
+  "navigation.header": "상단 메뉴에서 이동",
+  "navigation.mobile": "모바일 메뉴에서 이동",
+  "navigation.menu": "전체 메뉴에서 이동",
+  "navigation.home": "홈 바로가기에서 이동",
+  "search.open": "기능 검색 열기",
+  "search.empty": "기능 검색 결과 없음",
+  "search.select": "기능 검색 결과 선택",
+  "application.saved": "내전 신청 저장 완료",
+  "application.cancelled": "내전 신청 취소 완료",
+  "event.applied": "이벤트전 신청 완료",
+  "destruction.applied": "멸망전 신청 완료",
+  "match.submitted": "경기 결과 접수 완료",
+  "team-balance.saved": "팀 구성 저장 완료",
+  "recruit.instructions": "모집 참가 방법 보기",
+  "support.submitted": "운영팀 문의 접수 완료",
   "team-balance.quick": "팀 밸런스 추천 계산",
   "team-balance.riot": "솔랭 갱신 후 분석",
   "coin-toss.start": "동전 던지기",
@@ -6,6 +22,9 @@ export const USAGE_ACTIONS = {
 } as const;
 
 export const USAGE_ROUTES: Record<string, string> = {
+  "/help": "도움말·문의",
+  "/help/contact": "운영팀 문의",
+  "/competitions/events": "이벤트전 목록", "/competitions/destruction": "멸망전 목록",
   "/login": "로그인", "/signup": "회원가입",
   "/": "홈", "/players": "플레이어 검색", "/players/:id": "플레이어 전적",
   "/matches": "경기 목록", "/matches/:id": "경기 상세", "/matches/submit": "경기 제출",

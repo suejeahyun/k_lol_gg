@@ -34,7 +34,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             <PrimaryUserNavigation />
           </Suspense>
 
-          <HeaderUserControls accountSignedIn={accountSignedIn} />
+          <Suspense fallback={null}><HeaderUserControls accountSignedIn={accountSignedIn} /></Suspense>
         </div>
       </header>
 
@@ -44,7 +44,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         <div>
           <strong>K-LOL.GG</strong>
           <p>함께 즐긴 내전의 기록과 다음 경기를 한곳에서 만나보세요.</p>
-          <p><Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보 처리 안내</Link></p>
+          <p><Link href="/help">도움말·문의</Link> · <Link href="/start">처음 이용 안내</Link> · <Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보 처리 안내</Link></p>
         </div>
         <p className="riot-disclaimer">
           K-LOL.GG는 Riot Games 소유 자산을 사용하여{" "}

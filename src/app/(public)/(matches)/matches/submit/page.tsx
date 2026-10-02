@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -15,11 +15,7 @@ import { readSiteFeatureState, siteFeatureLabel } from "@/modules/operations/inf
 import styles from "./submit.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "경기 결과 접수",
-  description: "소유자 전용 비공개 스코어보드 업로드와 경기 결과 검토를 요청합니다.",
-  robots: { index: false, follow: false },
-};
+export const metadata = createRouteMetadata("/matches/submit");
 
 export default async function MatchSubmitPage({
   searchParams,

@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import { CircleAlert, Sparkles } from "lucide-react";
 
 import styles from "@/components/discipline/discipline.module.css";
 import { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "징계 안내", description: "K-LOL.GG 징계 정책과 익명 집계 현황입니다.", alternates: { canonical: "/discipline" } };
+export const metadata = createRouteMetadata("/discipline");
 
 export default async function DisciplinePage() {
   const result = await loadRuntimeDiscipline((service) => service.adapter.getPublicStatistics());

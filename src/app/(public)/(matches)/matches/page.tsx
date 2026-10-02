@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { CalendarDays, ChevronRight, CloudSun, FilePlus2, Gamepad2, Search } from "lucide-react";
 
@@ -9,11 +9,7 @@ import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-
 import styles from "./matches.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "경기 결과",
-  description: "K-LOL.GG 내전 경기 결과와 게임별 공개 스코어보드를 확인합니다.",
-  alternates: { canonical: "/matches" },
-};
+export const metadata = createRouteMetadata("/matches");
 
 function urlFromSearchParams(input: Record<string, string | string[] | undefined>) {
   const params = new URLSearchParams();

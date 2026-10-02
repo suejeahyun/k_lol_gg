@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Search, Sparkles, UsersRound } from "lucide-react";
 
@@ -16,11 +16,7 @@ import { loadRuntimePlayerCatalog } from "@/modules/players/infrastructure/runti
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "플레이어 찾기",
-  description: "회원명, 공개 닉네임과 Riot ID로 K-LOL.GG 플레이어를 검색합니다.",
-  alternates: { canonical: "/players" },
-};
+export const metadata = createRouteMetadata("/players");
 
 function playersHref(query: string, tier: PlayerTierFilter | null, page: number) {
   const params = new URLSearchParams();

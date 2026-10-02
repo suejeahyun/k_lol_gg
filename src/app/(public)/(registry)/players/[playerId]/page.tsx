@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { cache } from "react";
+import { BackToList } from "@/components/navigation/list-return";
+import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Gamepad2, Hash, ShieldCheck, Sparkles, Trophy } from "lucide-react";
@@ -20,10 +23,14 @@ import championStyles from "./player-champions.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "플레이어 상세",
-  description: "K-LOL.GG 플레이어의 공개 프로필과 경기 기록을 확인합니다.",
-};
+const loadDetail = cache((id: string) => loadRuntimePlayerProfile(id));
+
+export async function generateMetadata({ params }: { params: Promise<{ playerId: string }> }): Promise<Metadata> {
+  const { playerId: id } = await params;
+  const result = await loadDetail(id);
+  if (result.state !== "ready" || !result.data) return createNoIndexMetadata({ title: "정보 확인", description: "현재 공개 정보를 확인할 수 없습니다." });
+  return createPublicMetadata({ title: `${result.data.displayName} 전적`, description: `${result.data.displayName}의 공개 내전 기록, 플레이어 프로필과 경기 결과를 확인하세요.`, canonical: `/players/${encodeURIComponent(id)}` });
+}
 
 function formatJoinedAt(value: Date) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -103,7 +110,7 @@ export default async function PlayerDetailPage({
   const [result, statisticsResult] = legacyMappingFailure
     ? [{ state: legacyMappingFailure } as const, { state: legacyMappingFailure } as const]
     : await Promise.all([
-      loadRuntimePlayerProfile(playerId),
+      loadDetail(playerId),
       loadRuntimeStatisticsData((service) => service.getPublicPlayerStatistics(playerId, null)),
     ]);
   const riotResult = tab === "riot" && !legacyMappingFailure
@@ -117,7 +124,7 @@ export default async function PlayerDetailPage({
 
   return (
     <div className="page-wrap player-detail-page">
-      <Link className="back-link" href="/players"><ArrowLeft size={16} aria-hidden="true" /> 플레이어 목록</Link>
+      <BackToList className="back-link" href="/players"><ArrowLeft size={16} aria-hidden="true" /> 플레이어 목록</BackToList>
 
       {result.state === "unavailable" ? (
         <section className="detail-state" role="status" aria-labelledby="player-unavailable-title">

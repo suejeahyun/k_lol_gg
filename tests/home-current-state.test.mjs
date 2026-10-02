@@ -9,11 +9,11 @@ function source(relativePath) {
 test("홈과 데스크톱 메뉴는 이미 구현된 경기·팀 밸런스를 준비 중으로 표시하지 않는다", () => {
   const home = source("../src/app/(public)/(home)/page.tsx");
   const navigation = source("../src/components/navigation/user-site-navigation.tsx");
-  assert.equal(home.includes('href: "/matches"'), true);
+  assert.equal(home.includes('href: "/matches/submit"'), true);
   assert.equal(home.includes('href: "/tools/team-balance"'), true);
   assert.equal(home.includes('title: "경기 살펴보기",\n    description: "시즌·기간별 경기와 세트 기록을 한 흐름으로 준비합니다."'), false);
   assert.equal(navigation.includes('aria-label="경기 기능 준비 중"'), false);
-  assert.equal(navigation.includes("<Swords"), true);
+  assert.equal(navigation.includes("icon: Swords"), true);
 });
 
 test("홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센다", () => {
@@ -85,7 +85,7 @@ test("홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST
   assert.doesNotMatch(home, /ChampionPortrait/);
   assert.doesNotMatch(home, /variant="splash"/);
   assert.doesNotMatch(home, /displayChampion\.imageUrl/);
-  assert.doesNotMatch(guideArt, /<source/);
+  assert.match(guideArt, /<source media="\(max-width: 820px\)" srcSet="data:image\/gif/);
   assert.match(guideArt, /src=\{webpSrc\}/);
   assert.match(guideArt, /hero-art__custom--fallback/);
   assert.doesNotMatch(home, /26\.18\.1/);
@@ -97,7 +97,7 @@ test("홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명�
   const home = source("../src/app/(public)/(home)/page.tsx");
   const playerPage = source("../src/app/(public)/(registry)/players/page.tsx");
   const playerRepository = source("../src/modules/players/infrastructure/postgres-player-repository.ts");
-  assert.match(home, /회원명, 닉네임 또는 GameName#TAG/);
+  assert.match(home, /닉네임 또는 Riot ID/);
   assert.match(playerPage, /회원명·닉네임 또는 Riot ID/);
   assert.match(playerPage, /player-tier-filters/);
   assert.match(playerRepository, /players\.memberNameNormalized/);

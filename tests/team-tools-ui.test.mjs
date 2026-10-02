@@ -85,7 +85,7 @@ test("공개 도구 페이지에는 상호 이동과 canonical metadata가 있�
     assert.equal(navigation.includes(`href="${href}"`), true, href);
   }
   for (const page of [randomPage, coinPage, balancePage]) {
-    assert.equal(page.includes("alternates: { canonical:"), true);
+    assert.equal(page.includes("createRouteMetadata("), true);
   }
   assert.equal(navigation.includes('aria-label="팀 도구"'), true);
   assert.equal(navigation.includes('aria-current='), true);
@@ -106,7 +106,7 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
     "TeamToolNav",
     "TeamBalanceBuilder",
     'role="status"',
-    'href="/login?next=%2Ftools%2Fteam-balance"',
+    'href={session ? "/account" : "/login?next=%2Ftools%2Fteam-balance"}',
   ]) {
     assert.equal(page.includes(contract), true, contract);
   }
@@ -128,18 +128,18 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
     '"If-Match"',
     '"Idempotency-Key"',
     'role="alert"',
-    "V1 추천 계산",
+    "균형 잡힌 팀 만들기",
     "입력 초기화",
   ]) {
     assert.equal(builder.includes(contract), true, contract);
   }
   for (const contract of [
-    "V1 ENGINE · ONE RESULT",
+    "추천 결과",
     "AI 최적 팀 추천",
     "selectedCandidate.score.v1?.recommendationScore",
     "AI 최적 추천",
     "추천 기준",
-    "V1 기준으로 재평가",
+    "실력과 포지션으로 재평가",
     "formatTeamBalanceShareText",
     "navigator.clipboard.writeText",
     "팀 결과 복사",
@@ -161,8 +161,8 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   assert.equal(detail.includes("자동 추천 후보 비교"), false, "기존 세 후보 비교 제목은 노출하지 않는다");
   assert.equal(detail.includes("compactTeams"), false, "1·2·3안의 블루/레드 사진형 미리보기를 제거한다");
   assert.equal(detail.includes("<select"), false, "수동 배치에는 플레이어 드롭다운을 표시하지 않는다");
-  assert.equal(page.includes("V1 기준의 가장 균형 잡힌 배치 한 가지"), true, "시작 화면은 단일 추천을 안내한다");
-  assert.equal(drafts.includes('title: "팀 밸런스 초안"'), true, "목록 metadata는 공용 운영 명칭을 사용한다");
+  assert.equal(page.includes("가장 균형 잡힌 팀 배치 한 가지"), true, "시작 화면은 단일 추천을 안내한다");
+  assert.equal(drafts.includes('createRouteMetadata("/tools/team-balance/drafts")'), true, "목록 metadata는 공용 운영 명칭을 사용한다");
   assert.equal(drafts.includes('"팀 밸런스 초안"}</h1>'), true, "목록 제목은 공용 운영 명칭을 사용한다");
   assert.equal(navigation.includes("팀 밸런스 초안"), true, "팀 도구 메뉴는 개인 소유 명칭을 사용하지 않는다");
   assert.equal(detailPage.includes("초안 목록"), true, "상세 화면은 공용 초안 목록으로 돌아간다");

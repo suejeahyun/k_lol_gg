@@ -11,8 +11,8 @@ test("public competition pages expose list/detail/application states without adm
   const detail = source("../src/app/(public)/(competitions)/competitions/events/[eventId]/page.tsx");
   const application = source("../src/app/(public)/(competitions)/competitions/events/[eventId]/event-application-actions.tsx");
   for (const token of ["parseEventListQuery", "parseDestructionListQuery", 'action="/competitions/events"', 'action="/competitions/destruction"', 'role={error ? "alert" : "status"}']) assert.equal(list.includes(token), true, token);
-  assert.match(eventListPage, /canonical: "\/competitions\/events"/);
-  assert.match(destructionListPage, /canonical: "\/competitions\/destruction"/);
+  assert.match(eventListPage, /createRouteMetadata\("\/competitions\/events"\)/);
+  assert.match(destructionListPage, /createRouteMetadata\("\/competitions\/destruction"\)/);
   for (const token of ["notFound()", "applicationsOpen", "EventApplicationActions", "팀 편성", "대진과 결과", "event.gallery", "ResilientMediaImage", "parseEventDetailAction"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["playerName", "teamAName", "teamBName", "winnerTeamName"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["If-Match", "Idempotency-Key", 'aria-live="polite"', 'method: "PUT"', '"DELETE"']) assert.equal(application.includes(token), true, token);

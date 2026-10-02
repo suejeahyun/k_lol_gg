@@ -1,15 +1,11 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Image from "next/image";
 import Link from "next/link";
 import { DatabaseZap, EyeOff, Link2, LockKeyhole, RefreshCw, ShieldCheck } from "lucide-react";
 
 import styles from "../../guide.module.css";
 
-export const metadata: Metadata = {
-  title: "Riot 연동 도움말",
-  description: "Riot 계정 연결, RSO 소유권 확인, 동기화 범위와 개인정보 보호 원칙을 안내합니다.",
-  alternates: { canonical: "/help/riot" },
-};
+export const metadata = createRouteMetadata("/help/riot");
 
 export default function RiotHelpPage() {
   return (

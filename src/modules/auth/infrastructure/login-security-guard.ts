@@ -175,7 +175,7 @@ export function acquireAccountCredentialWork() {
 
 export async function guardAccountOperationAttempt(
   request: Pick<NextRequest, "headers">,
-  operation: "login" | "recovery" | "signup" | "password-change" | "admin-password-reset",
+  operation: "login" | "recovery" | "signup" | "password-change" | "admin-password-reset" | "support",
   subject: string,
 ): Promise<RuntimeLoginRateLimitDecision> {
   const context = resolveRuntimeAuthContext();
@@ -189,6 +189,7 @@ export async function guardAccountOperationAttempt(
   }
 
   const policies = {
+    support: { globalLimit: 30, ipLimit: 6, subjectLimit: 4, windowMs: 60 * 60_000 },
     login: { globalLimit: 100, ipLimit: 24, subjectLimit: 8, windowMs: 5 * 60_000 },
     signup: { globalLimit: 60, ipLimit: 6, subjectLimit: 3, windowMs: 60 * 60_000 },
     recovery: { globalLimit: 80, ipLimit: 12, subjectLimit: 4, windowMs: 30 * 60_000 },

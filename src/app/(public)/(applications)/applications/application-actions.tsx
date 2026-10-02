@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { recordUsageAction } from "@/components/usage/usage-actions";
 import { useRouter } from "next/navigation";
 
 import {
@@ -88,6 +89,7 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
     setMessage(null);
     try {
       const result = await mutate("POST", { recruitNo, mainPosition: isRift ? mainPosition : null, subPositions: isRift ? subPositions : [], reserve });
+      recordUsageAction("application.saved");
       setMessage([initial ? "신청 내용을 수정했어요." : "참가 신청을 접수했어요.", result.notice].filter(Boolean).join("\n"));
       router.refresh();
     } catch (error) {
@@ -103,6 +105,7 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
     setMessage(null);
     try {
       await mutate("DELETE", { recruitNo });
+      recordUsageAction("application.cancelled");
       setMessage("신청을 취소했어요. 이력은 안전하게 보관됩니다.");
       router.refresh();
     } catch (error) {

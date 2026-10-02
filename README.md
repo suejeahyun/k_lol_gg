@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-02 목적 중심 탐색 개선 1.0.0**: 홈·메뉴·검색·신청·문의·검색 노출을 개선했습니다. [전체 분석과 검증](docs/qa-evidence/ux-discoverability-v1.0.0-2026-10-02/README.md), [배포 상태](docs/qa-evidence/ux-discoverability-v1.0.0-2026-10-02/production.md), [사용자 안내](docs/patch-notes/2026-10-02-ux-discoverability.md). 아래 이전 릴리스 기록과 현재 배포 상태를 구분합니다.
+
 **멸망전 판수 평가 1.6.0 운영 반영**: 판수 30·솔랭 50·협곡 내전 10·챔피언 5·도전과제 5. 총 판수 300판에서 100점, 승률 미반영. [운영 검증](docs/qa-evidence/destruction-modes-v1.6.0-2026-09-28/production.md).
 
 **멸망전 1.2.0 운영 반영**: 세 모드 참가 신청 시 일반 선수/주장 지원 선택, 모집 심사·주장 선정 목록 표시. 기존 심사 큐·경매 연출 유지. [검증·배포 근거](docs/qa-evidence/destruction-modes-v1.2.0-2026-09-25/README.md).

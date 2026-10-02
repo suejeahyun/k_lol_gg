@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { Activity, Gauge, Search, Sparkles } from "lucide-react";
 
@@ -9,11 +9,7 @@ import { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date
 import styles from "./mmr.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "MMR 랭킹",
-  description: "공개 경기 전체를 순서대로 재생해 계산한 플레이어·포지션 MMR입니다.",
-  alternates: { canonical: "/rankings/mmr" },
-};
+export const metadata = createRouteMetadata("/rankings/mmr");
 
 const labels = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { Clapperboard, CloudSun, Play, Sparkles } from "lucide-react";
 
@@ -9,7 +9,7 @@ import styles from "../media.module.css";
 import { ResilientMediaImage } from "../resilient-media-image";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "하이라이트", description: "K-LOL.GG의 공개 경기 하이라이트를 봅니다.", alternates: { canonical: "/highlights" } };
+export const metadata = createRouteMetadata("/highlights");
 
 export default async function HighlightsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const raw = await searchParams; const params = new URLSearchParams();

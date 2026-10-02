@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Image from "next/image";
 import Link from "next/link";
 import { AppWindow, ExternalLink, LockKeyhole, MonitorSmartphone, ShieldCheck, Smartphone } from "lucide-react";
@@ -6,11 +6,7 @@ import { AppWindow, ExternalLink, LockKeyhole, MonitorSmartphone, ShieldCheck, S
 import { InstallActions } from "./install-actions";
 import styles from "../guide.module.css";
 
-export const metadata: Metadata = {
-  title: "앱 설치",
-  description: "K-LOL.GG를 데스크톱과 모바일에 안전한 웹앱으로 설치하는 방법을 확인합니다.",
-  alternates: { canonical: "/install" },
-};
+export const metadata = createRouteMetadata("/install");
 
 export default function InstallPage() {
   return (

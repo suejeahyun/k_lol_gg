@@ -1,15 +1,11 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { Gavel, PartyPopper } from "lucide-react";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import styles from "./events.module.css";
 
-export const metadata: Metadata = {
-  title: "대회 종류 선택",
-  description: "K-LOL.GG 이벤트 대회와 멸망전을 각각 확인하세요.",
-  alternates: { canonical: "/competitions" },
-};
+export const metadata = createRouteMetadata("/competitions");
 
 export default async function CompetitionsEntryPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const raw = await searchParams;

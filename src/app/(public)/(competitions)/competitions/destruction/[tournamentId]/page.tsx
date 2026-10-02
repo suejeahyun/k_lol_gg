@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { cache } from "react";
+import { BackToList } from "@/components/navigation/list-return";
+import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, Check, Crown, Gavel, Images, Sparkles, Swords, UsersRound, X } from "lucide-react";
@@ -24,9 +27,12 @@ export const dynamic = "force-dynamic";
 
 const DESTRUCTION_STEPS = ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT", "COMPLETED"] as const;
 
+const loadDetail = cache(async (id: string) => getRuntimeDestruction()?.repository.getPublic(id));
 export async function generateMetadata({ params }: { params: Promise<{ tournamentId: string }> }): Promise<Metadata> {
-  const { tournamentId } = await params;
-  return { title: "멸망전 상세", alternates: { canonical: `/competitions/destruction/${encodeURIComponent(tournamentId)}` } };
+  const { tournamentId: id } = await params;
+  const item = await loadDetail(id).catch(() => null);
+  if (!item) return createNoIndexMetadata({ title: "멸망전 정보 확인", description: "현재 공개 대회 정보를 확인할 수 없습니다." });
+  return createPublicMetadata({ title: item.title, description: "멸망전 모집과 참가 신청, 팀 편성, 경매와 경기 결과를 확인하세요.", canonical: `/competitions/destruction/${encodeURIComponent(id)}` });
 }
 
 
@@ -82,7 +88,7 @@ export default async function DestructionDetailPage({ params, searchParams }: { 
     ));
   }
   let destruction;
-  try { destruction = await runtime.repository.getPublic(tournamentId); }
+  try { destruction = await loadDetail(tournamentId); }
   catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
   if (!destruction) notFound();
   const selectedPlayer = selectedPlayerId === null ? null : [...destruction.unassignedPlayers, ...destruction.teams.flatMap((team) => team.rosterPlayers.map((player) => ({ ...player, teamName: team.name })))].find((player) => player.playerId === selectedPlayerId || player.participantId === selectedPlayerId);
@@ -100,7 +106,7 @@ export default async function DestructionDetailPage({ params, searchParams }: { 
   const participantCount = destruction.recruitment.reduce((count, lane) => count + lane.confirmed, 0);
 
   return <div className={styles.page}>
-    <Link className={styles.back} href="/competitions/destruction"><ArrowLeft aria-hidden="true" /> 멸망전 목록</Link>
+    <BackToList className={styles.back} href="/competitions/destruction"><ArrowLeft aria-hidden="true" /> 멸망전 목록</BackToList>
     <header className={styles.detailHero} data-kind="destruction"><div><span className={styles.statusBadge} data-status={destruction.status}>{publicDestructionStatusLabel(destruction.status)}</span><p className={styles.heroKicker}>AUCTION TOURNAMENT</p><h1>{destruction.title}</h1><p>모집, 주장 선정, 경매, 예선과 본선 결과를 한 화면에서 확인하세요.</p></div><Gavel aria-hidden="true" /></header>
     {destruction.status === "CANCELLED" ? <p className={styles.cancelledNotice} role="status">이 멸망전은 취소되었습니다. 신청과 운영 작업은 종료됐어요.</p> : <ol className={styles.statusJourney} aria-label="멸망전 진행 단계">{DESTRUCTION_STEPS.map((step, index) => { const current = DESTRUCTION_STEPS.indexOf(destruction.status as (typeof DESTRUCTION_STEPS)[number]); return <li data-state={index < current ? "done" : index === current ? "current" : "upcoming"} key={step}>{index < current ? <Check aria-hidden="true" /> : <span>{index + 1}</span>}<strong>{publicDestructionStatusLabel(step)}</strong></li>; })}</ol>}
     <DestructionPublicProgress destruction={destruction} />

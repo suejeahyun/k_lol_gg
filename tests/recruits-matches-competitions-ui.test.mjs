@@ -43,7 +43,10 @@ test("이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름
   assert.match(lists, /loadRuntimeEvent/);
   assert.match(lists, /loadRuntimeDestruction/);
   assert.match(entry, /permanentRedirect/);
-  assert.match(applications, /type === "event" \? "\/competitions\/events" : "\/competitions\/destruction"/);
+  assert.match(applications, /<RecruitingCompetitions/);
+  const recruiting = source("../src/components/navigation/recruiting-competitions.tsx");
+  assert.match(recruiting, /RECRUITING/);
+  assert.match(recruiting, /\?action=apply/);
   assert.match(eventAdmin, /aria-current="page" href="\/admin\/progress\/event"/);
   assert.match(destructionAdmin, /aria-current="page" href="\/admin\/progress\/destruction"/);
 });

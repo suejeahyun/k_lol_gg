@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { AlertTriangle, CalendarCheck2, Gamepad2, Swords } from "lucide-react";
 
@@ -14,7 +14,7 @@ import { requireAccountPage } from "@/modules/auth/infrastructure/server-authori
 import { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";
 import { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date-time";
 
-export const metadata: Metadata = { title: "내 계정" };
+export const metadata = createRouteMetadata("/account");
 export const dynamic = "force-dynamic";
 
 const statusLabels = { PENDING: "승인 대기", APPROVED: "승인됨", REJECTED: "거절됨", SUSPENDED: "이용 제한" } as const;
@@ -52,11 +52,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const rawTab = (await searchParams).tab;
   const tab = (Array.isArray(rawTab) ? rawTab[0] : rawTab) === "player" ? "player" : "overview";
   if (!account) {
-    return <AccountShell activeTab="overview" title="내 계정" description="계정 상태와 연결된 플레이어 정보를 관리하세요."><section className={styles.panel} role="alert"><h1>계정 정보를 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></AccountShell>;
+    return <AccountShell activeTab="overview" title="내 계정" description="계정 상태와 연결된 플레이어 정보를 관리하세요."><section className={styles.panel} role="alert"><h2>계정 정보를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section></AccountShell>;
   }
   return (
     <AccountShell activeTab={tab} title={account.loginId} description="계정 상태와 연결된 플레이어 정보를 관리하세요." status={{ label: statusLabels[account.status], state: account.status }} action={<AccountLogoutButton />}>
       {account.mustChangePassword ? <p className={styles.notice}>임시 비밀번호를 사용 중입니다. 다른 기능을 사용하기 전에 <Link href="/account/password?required=1">비밀번호를 변경해 주세요.</Link></p> : null}
+      <nav className="task-links" aria-label="내 활동 바로가기"><Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 제출 내역</Link><Link href="/tools/team-balance/drafts">내 저장 팀</Link><Link href="/help/contact">계정·탈퇴 문의</Link></nav>
       {tab === "overview" ? (
         <>
           <section className={styles.panel}><h2>계정 상태</h2><dl className={styles.facts}><div><dt>상태</dt><dd>{statusLabels[account.status]}</dd></div><div><dt>역할</dt><dd>{accountRoleLabel(account.role)}</dd></div><div><dt>상태 변경</dt><dd>{formatOptionalKoreanDateTime(account.statusChangedAt)}</dd></div><div><dt>비밀번호 변경</dt><dd>{formatOptionalKoreanDateTime(account.passwordChangedAt)}</dd></div></dl><p className={styles.notice}>{account.statusReason ?? defaultStatusMessages[account.status]}</p></section>

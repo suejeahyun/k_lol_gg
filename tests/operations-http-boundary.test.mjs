@@ -70,5 +70,6 @@ test("Vercel schedules destruction ratings, statistics, MMR, Riot and daily Kaka
   }, {
     path: "/api/cron/riot-sync",
     schedule: "*/5 * * * *",
+  }, { path: "/api/cron/support-retention", schedule: "0 19 * * *",
   }]);
 });

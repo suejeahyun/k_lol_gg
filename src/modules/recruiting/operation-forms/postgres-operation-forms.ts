@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { SITE_SUPPORT_SOURCE, SITE_SUPPORT_RETENTION_DAYS, supportAuditSummary } from "./site-support";
 
 import type { AuthSession } from "@/modules/auth/domain/auth-session";
 import { transactionSessionActor } from "@/modules/auth/domain/transaction-session";
@@ -196,16 +197,59 @@ export class PostgresOperationForms {
     requestId: string; actorUserAccountId: string | null; action: string; form: OperationForm;
     before: Record<string, unknown> | null; after: Record<string, unknown>;
   }>) {
+    const source = (await transaction.select({ source: operationForms.sourceRoomId }).from(operationForms).where(eq(operationForms.id, input.form.id)).limit(1))[0]?.source;
+    const isSupport = source === SITE_SUPPORT_SOURCE;
+    const before = isSupport && input.before ? { id: input.form.id, revision: input.form.revision - 1, source: SITE_SUPPORT_SOURCE } : input.before;
+    const after = isSupport ? supportAuditSummary(input.form) : input.after;
     await transaction.insert(auditEvents).values({
       requestId: input.requestId, actorUserAccountId: input.actorUserAccountId, action: input.action,
-      targetType: "OPERATION_FORM", targetId: input.form.id, beforeJson: input.before, afterJson: input.after,
+      targetType: "OPERATION_FORM", targetId: input.form.id, beforeJson: before, afterJson: after,
       metadataJson: { formType: input.form.formType }, createdAt: new Date(input.form.updatedAt),
     });
     await transaction.insert(recruitingOutbox).values({
       id: `operation-form:${input.requestId}`, requestId: input.requestId, aggregateType: "OPERATION_FORM",
       aggregateId: input.form.id, aggregateRevision: input.form.revision, eventType: input.action,
-      dedupeKey: `operation-form:${input.requestId}:${input.action}`, payloadJson: input.after,
+      dedupeKey: `operation-form:${input.requestId}:${input.action}`, payloadJson: after,
       createdAt: new Date(input.form.updatedAt),
+    });
+  }
+
+  /** Only new website inquiries are subject to this policy; existing Kakao forms are untouched. */
+  async purgeExpiredSupport(now = new Date()) {
+    return withTransaction(this.database, async (transaction) => {
+      const cutoff = new Date(now.getTime() - SITE_SUPPORT_RETENTION_DAYS * 86_400_000);
+      const rows = await transaction.select({ id: operationForms.id }).from(operationForms)
+        .where(and(eq(operationForms.sourceRoomId, SITE_SUPPORT_SOURCE), lt(operationForms.submittedAt, cutoff)))
+        .limit(100).for("update", { skipLocked: true });
+      if (!rows.length) return 0;
+      const ids = rows.map((row) => row.id);
+      // Admin replay receipts can contain the private form body. Remove those copies too.
+      const scopes = ids.flatMap((id) => [`ADMIN:REVIEW_OPERATION_FORM:suggestions:${id}`, `ADMIN:DELETE_OPERATION_FORM:suggestions:${id}`]);
+      await transaction.delete(recruitingCommandReceipts).where(inArray(recruitingCommandReceipts.scope, scopes));
+      await transaction.delete(operationForms).where(inArray(operationForms.id, ids));
+      return rows.length;
+    });
+  }
+
+  async submitSupport(input: Readonly<{ payload: unknown; requestId: string; idempotency: OperationFormIdempotency }>): Promise<OperationFormMutationResult> {
+    const payload = parseOperationFormPayload("suggestions", input.payload);
+    await this.purgeExpiredSupport();
+    return withTransaction(this.database, async (transaction) => {
+      const actorPrincipalId = SITE_SUPPORT_SOURCE;
+      const scope = "SITE:SUPPORT";
+      const receipt = await this.claimReceipt(transaction, { actorPrincipalId, scope, expectedRevision: 0, idempotency: input.idempotency });
+      if (receipt.replay) return { ...receipt.replay, replayed: true };
+      const now = new Date();
+      const row = (await transaction.insert(operationForms).values({
+        id: randomUUID(), formType: "suggestions", status: "PENDING", payloadJson: payload,
+        sourceRoomId: SITE_SUPPORT_SOURCE, sourceSenderId: receipt.keyHash.toString("hex"),
+        submittedAt: now, createdAt: now, updatedAt: now,
+      }).returning())[0]!;
+      const form = fromRow(row);
+      await this.appendEvent(transaction, { requestId: input.requestId, actorUserAccountId: null, action: "SITE_SUPPORT_SUBMITTED", form, before: null, after: supportAuditSummary(form) });
+      const result = { body: { receiptId: form.id, submittedAt: form.submittedAt }, revision: 0, status: 201 as const };
+      await this.completeReceipt(transaction, { actorPrincipalId, scope, keyHash: receipt.keyHash, requestHash: receipt.requestHash, result });
+      return { ...result, replayed: false };
     });
   }
 
@@ -241,6 +285,7 @@ export class PostgresOperationForms {
   }
 
   async list(input: Readonly<{ formType?: OperationFormType; status?: OperationFormStatus; limit?: number }> = {}): Promise<OperationFormList> {
+    await this.purgeExpiredSupport();
     const conditions = [sql`${operationForms.deletedAt} IS NULL`];
     if (input.formType) conditions.push(eq(operationForms.formType, input.formType));
     if (input.status) conditions.push(eq(operationForms.status, input.status));
@@ -252,6 +297,7 @@ export class PostgresOperationForms {
   }
 
   async get(formType: OperationFormType, id: string) {
+    await this.purgeExpiredSupport();
     const row = (await this.database.select().from(operationForms).where(and(
       eq(operationForms.id, id), eq(operationForms.formType, formType), sql`${operationForms.deletedAt} IS NULL`,
     )).limit(1))[0];

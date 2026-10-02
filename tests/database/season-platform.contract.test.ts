@@ -1080,7 +1080,7 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
       ))[0]?.value, 0);
     });
 
-    await t.test("TOTP removal wins over a queued ADMIN mutation", async () => {
+    await t.test("optional TOTP removal preserves a valid password-only ADMIN session", async () => {
       const raceAdmin = approvedAccount(`season_totp_race_${randomUUID()}`, "ADMIN");
       await database.insert(userAccounts).values(accountRow(raceAdmin));
       await database.insert(authSessions).values({
@@ -1094,7 +1094,7 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
         issuedAt: new Date(),
         expiresAt: new Date(Date.now() + 30 * 60_000),
       });
-      const blockedName = `TOTP 경합 차단 ${randomUUID()}`;
+      const allowedName = `비밀번호 관리자 경합 ${randomUUID()}`;
       const blocker = await pool.connect();
       try {
         await blocker.query("begin");
@@ -1102,7 +1102,7 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
         const pending = service.createSeason(
           command(raceAdmin.id, "totp-vs-create"),
           {
-            name: blockedName,
+            name: allowedName,
             applicationsOpenAt: null,
             applicationsCloseAt: null,
             startsAt: null,
@@ -1115,14 +1115,14 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
           eq(authSessions.id, raceAdmin.sessionId),
         );
         await blocker.query("commit");
-        await assert.rejects(pending, errorCode("SESSION_STALE"));
+        await pending;
       } finally {
         await blocker.query("rollback").catch(() => undefined);
         blocker.release();
       }
       assert.equal((await database.select({ value: count() }).from(seasons).where(
-        eq(seasons.nameNormalized, blockedName.normalize("NFKC").toLocaleLowerCase("ko-KR")),
-      ))[0]?.value, 0);
+        eq(seasons.nameNormalized, allowedName.normalize("NFKC").toLocaleLowerCase("ko-KR")),
+      ))[0]?.value, 1);
     });
 
     await t.test("soft-deleted account is rejected again inside the mutation transaction", async () => {

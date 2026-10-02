@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { CloudSun, Images, Sparkles } from "lucide-react";
 import { parseMediaPublicListQuery, toPublicGalleryDto } from "@/modules/media";
@@ -7,7 +7,7 @@ import styles from "../media.module.css";
 import { ResilientMediaImage } from "../resilient-media-image";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "이미지 갤러리", description: "K-LOL.GG의 공개 갤러리를 봅니다.", alternates: { canonical: "/images" } };
+export const metadata = createRouteMetadata("/images");
 
 export default async function ImagesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const raw = await searchParams; const queryParams = new URLSearchParams();

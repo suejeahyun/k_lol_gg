@@ -22,21 +22,22 @@ test("사용자 shell은 skip target, landmark, modal search, 모바일 5개 진
     navigation.indexOf("export function MobileUserNavigation"),
     navigation.indexOf("export function NavigationFallback"),
   );
-  assert.equal((mobileBlock.match(/<Link/g) ?? []).length, 3);
-  assert.equal((mobileBlock.match(/<(?:SearchControl|AllMenuControl) compact\b/g) ?? []).length, 2);
+  for (const label of ["홈", "참가·모집", "팀 만들기", "경기·전적", "내 활동"]) assert.ok(mobileBlock.includes(label));
+  assert.match(navigation, /<SearchControl accountSignedIn/);
+  assert.match(navigation, /<AllMenuControl accountSignedIn/);
   assert.match(globals, /grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(globals, /body:has\(main input:focus/);
 });
 
-test("전체 메뉴는 로그인 상태에 맞지 않는 계정·인증 경로를 숨긴다", async () => {
+test("전체 메뉴는 목적별로 기능을 보여주고 필요한 계정 접근을 안내한다", async () => {
   const navigation = await readFile(
     new URL("../src/components/navigation/user-site-navigation.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(navigation, /accountOnlyMenuRoutes/);
-  assert.match(navigation, /signedOutOnlyMenuRoutes/);
+  assert.match(navigation, /userTaskGroups/);
+  assert.match(navigation, /link.account && !accountSignedIn/);
   assert.match(navigation, /<AllMenuControl accountSignedIn=\{accountSignedIn\}/);
-  assert.match(navigation, /<AllMenuControl compact accountSignedIn=\{accountSignedIn\}/);
+  assert.match(navigation, /로그인 필요/);
 });
 
 test("일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다", async () => {
@@ -46,9 +47,9 @@ test("일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 
   assert.match(loginPage, /normalizeAccountNext\(\(await searchParams\)\.next, "\/"\)/);
   assert.match(authForms, /nextPath = "\/"/);
   assert.match(authForms, /홈으로 이동합니다/);
-  assert.match(authForms, /"\/account\/password\?required=1"/);
+  assert.match(authForms, /\/account\/password\?required=1&next=/);
   assert.match(authForms, /router\.push\([\s\S]*router\.refresh\(\)/);
-  assert.equal((navigation.match(/accountSignedIn \? "내 정보" : "로그인"/g) ?? []).length, 2);
+  assert.equal((navigation.match(/accountSignedIn \? "내 정보" : "로그인"/g) ?? []).length, 1);
   assert.doesNotMatch(navigation, /회원명·Discord 식별자는 플레이어 검색 대상이 아닙니다/);
 });
 test("V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다", async () => {
@@ -156,7 +157,8 @@ test("계정 작업 UI는 stale revision에서 최신 projection을 읽고 안�
   assert.match(passwordForm, /fetch\("\/api\/auth\/me"/);
   assert.match(passwordForm, /setCurrentRevision/);
   assert.match(passwordForm, /다시 로그인/);
-  assert.match(passwordForm, /router\.replace\("\/login"\);[\s\S]*router\.refresh\(\)/);
+  assert.match(passwordForm, /normalizeAccountNext\(nextPath\)/);
+  assert.match(passwordForm, /router\.replace\(loginHref\);[\s\S]*router\.refresh\(\)/);
 });
 
 test("일회성 비밀번호는 숨김·BFCache 복귀·명시적 닫기에서 메모리와 안내를 함께 종료한다", async () => {

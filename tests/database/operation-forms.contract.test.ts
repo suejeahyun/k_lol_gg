@@ -82,5 +82,29 @@ test("S09 operation forms persist signed submissions and ADMIN TOTP mutations at
     assert.ok(retained?.deletedAt); assert.equal((await service.list()).items.length, 2);
     assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateType, "OPERATION_FORM"))).length, 5);
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "OPERATION_FORM"))).length, 5);
+    const inquiry = { payload: { applicantName: "테스트 문의자", applicantNickname: "reply@example.invalid", reason: "[사이트 문의] 오류 신고", content: "테스트용 비공개 문의 본문" }, requestId: randomUUID(), idempotency: { requestKey: `support-${randomUUID()}`, bodyDigestHex: "ab".repeat(32) } };
+    const [support, duplicate] = await Promise.all([service.submitSupport(inquiry), service.submitSupport({ ...inquiry, requestId: randomUUID() })]);
+    assert.deepEqual(support.body, duplicate.body);
+    assert.notEqual(support.replayed, duplicate.replayed);
+    assert.deepEqual(Object.keys(support.body).sort(), ["receiptId", "submittedAt"]);
+    const inquiryId = String(support.body.receiptId);
+    await assert.rejects(service.submitSupport({ ...inquiry, idempotency: { ...inquiry.idempotency, bodyDigestHex: "cd".repeat(32) } }), (error: unknown) => error instanceof OperationFormApplicationError && error.code === "IDEMPOTENCY_MISMATCH");
+    const savedInquiry = await service.get("suggestions", inquiryId);
+    assert.ok(savedInquiry && "content" in savedInquiry.payload);
+    assert.equal(savedInquiry.payload.content, inquiry.payload.content);
+    await service.review({ session, requestId: randomUUID(), formType: "suggestions", id: inquiryId, expectedRevision: 0, status: "IN_REVIEW", adminNote: "private-admin-note", idempotency: { requestKey: `support-review-${randomUUID()}`, bodyDigestHex: "ef".repeat(32) } });
+    const auditCopies = JSON.stringify(await database.select().from(auditEvents).where(eq(auditEvents.targetId, inquiryId)));
+    const outboxCopies = JSON.stringify(await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, inquiryId)));
+    for (const value of [inquiry.payload.content, inquiry.payload.applicantNickname, "private-admin-note"]) {
+      assert.equal(auditCopies.includes(value), false); assert.equal(outboxCopies.includes(value), false);
+    }
+    const old = new Date(Date.now() - 181 * 86_400_000);
+    await database.update(operationForms).set({ submittedAt: old }).where(eq(operationForms.id, inquiryId));
+    await database.update(operationForms).set({ submittedAt: old }).where(eq(operationForms.id, createdForm.id));
+    assert.equal(await service.purgeExpiredSupport(), 1);
+    assert.equal(await service.purgeExpiredSupport(), 0);
+    assert.equal(await service.get("suggestions", inquiryId), null);
+    assert.equal((await database.select().from(operationForms).where(eq(operationForms.id, createdForm.id))).length, 1, "Existing Kakao forms are not purged by the website policy");
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.scope, `ADMIN:REVIEW_OPERATION_FORM:suggestions:${inquiryId}`))).length, 0, "Private replay body is removed too");
   } finally { await pool.end(); }
 });

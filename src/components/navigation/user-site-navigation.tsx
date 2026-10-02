@@ -1,31 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   CalendarCheck2,
   Dices,
   Home,
-  LogIn,
   Menu,
   Search,
   Sparkles,
   Swords,
-  Trophy,
   UserRound,
-  UsersRound,
   X,
 } from "lucide-react";
 
 import {
-  canonicalUserRoutes,
   isUserNavigationActive,
-  primaryUserNavigation,
-  userNavigationSections,
 } from "@/modules/navigation/domain/user-navigation";
 import { findGlobalCommands, playerSearchHref } from "@/modules/navigation/domain/global-command-palette";
+
+import { userTaskGroups, personalTaskLinks, type TaskLink } from "@/modules/navigation/domain/task-navigation";
+import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
+import { recordUsageAction } from "@/components/usage/usage-actions";
 
 function openDialog(dialog: HTMLDialogElement | null, initialFocus?: HTMLElement | null) {
   if (!dialog || dialog.open) return;
@@ -47,8 +45,15 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
   const [query, setQuery] = useState("");
   const commands = useMemo(() => findGlobalCommands(query, { accountSignedIn }), [accountSignedIn, query]);
   const playerHref = playerSearchHref(query);
+  const router = useRouter();
+  useEffect(() => {
+    if (!query.trim() || commands.length) return;
+    const timer = window.setTimeout(() => recordUsageAction("search.empty"), 600);
+    return () => window.clearTimeout(timer);
+  }, [query, commands.length]);
 
   function openSearch() {
+    recordUsageAction("search.open");
     setQuery("");
     openDialog(dialog.current, input.current);
   }
@@ -60,6 +65,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
       const editing = target?.matches("input, textarea, select, [contenteditable='true']");
       if ((event.key.toLocaleLowerCase("en-US") === "k" && (event.ctrlKey || event.metaKey)) || (event.key === "/" && !editing)) {
         event.preventDefault();
+        recordUsageAction("search.open");
         setQuery("");
         openDialog(dialog.current, input.current);
       }
@@ -84,7 +90,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
         onClick={openSearch}
       >
         <Search size={compact ? 20 : 18} aria-hidden="true" />
-        {compact ? <span>검색</span> : null}
+        <span>검색</span>
       </button>
 
       <dialog
@@ -107,7 +113,11 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
             </button>
           </div>
 
-          <form className="global-search-form" action="/players" method="get" role="search" onSubmit={() => closeDialog(dialog.current)}>
+          <form className="global-search-form" role="search" onSubmit={(event) => {
+            event.preventDefault();
+            const href = commands[0]?.href ?? playerHref;
+            if (href) { recordUsageAction("search.select"); closeDialog(dialog.current); router.push(href); }
+          }}>
             <label htmlFor={inputId}>페이지, 도구, 콘텐츠 또는 플레이어</label>
             <div>
               <Search size={19} aria-hidden="true" />
@@ -117,7 +127,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
                 name="q"
                 type="search"
                 maxLength={80}
-                placeholder="예: 팀 밸런스, 회원명, GameName#TAG"
+                placeholder="예: 내전 신청, 팀 만들기, 닉네임"
                 autoComplete="off"
                 value={query}
                 aria-controls={resultsId}
@@ -129,7 +139,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
                   }
                 }}
               />
-              {playerHref ? <button className="global-search-form__player" type="submit">플레이어 검색</button> : <span className="global-search-form__shortcut" aria-hidden="true">Ctrl K</span>}
+              {query ? <button className="global-search-form__player" type="submit">{commands.length ? "기능 열기" : "플레이어 검색"}</button> : <span className="global-search-form__shortcut" aria-hidden="true">Ctrl K</span>}
             </div>
           </form>
           <div className="command-palette-results" id={resultsId} aria-live="polite">
@@ -137,7 +147,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
             {commands.length ? <ul aria-label="접근 가능한 페이지와 기능">{commands.map((command, index) => <li key={command.id}><Link
               ref={(node) => { resultLinks.current[index] = node; }}
               href={command.href}
-              onClick={() => closeDialog(dialog.current)}
+              onClick={() => { recordUsageAction("search.select"); closeDialog(dialog.current); }}
               onKeyDown={(event) => {
                 if (event.key === "ArrowDown") { event.preventDefault(); focusResult(Math.min(index + 1, commands.length - 1)); }
                 if (event.key === "ArrowUp") {
@@ -146,28 +156,21 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
                   else focusResult(index - 1);
                 }
               }}
-            ><span><small>{command.group}</small><strong>{command.label}</strong><em>{command.description}</em></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <p className="command-palette-empty">일치하는 바로 가기가 없어요. 입력한 이름은 위의 플레이어 검색으로 찾아볼 수 있습니다.</p>}
+            ><span><small>{command.group}{command.access === "ACCOUNT" && !accountSignedIn ? " · 로그인 필요" : ""}</small><strong>{command.label}</strong><em>{command.description}</em></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <p className="command-palette-empty">일치하는 기능이 없어요. 다른 표현으로 검색하거나 플레이어 이름으로 찾아보세요.</p>}
           </div>
-          <p className="user-dialog__hint">
-            로그인 전에는 공개 기능만 표시합니다. 회원명으로 찾아도 결과에는 공개 닉네임과 Riot ID만 보여요.
-          </p>
+          {playerHref ? <Link className="search-player-link" href={playerHref} onClick={() => closeDialog(dialog.current)}>“{query}” 플레이어 이름으로 검색 →</Link> : null}
+          <p className="user-dialog__hint">Enter로 첫 기능을 열고, 방향키로 결과를 선택할 수 있어요. 로그인 필요한 기능도 먼저 살펴볼 수 있습니다.</p>
         </div>
       </dialog>
     </>
   );
 }
 
-const accountOnlyMenuRoutes = new Set([
-  "/account",
-  "/account/password",
-  "/account/riot",
-  "/account/discipline",
-  "/matches/submit",
-  "/tools/team-balance",
-  "/tools/team-balance/drafts",
-]);
-
-const signedOutOnlyMenuRoutes = new Set(["/login", "/signup", "/forgot-password"]);
+const helpLinks: readonly TaskLink[] = [
+  { href: "/help", label: "도움말·문의" }, { href: "/help/recruits", label: "모집 참가 방법" },
+  { href: "/help/kakao", label: "카카오 이용 안내" }, { href: "/help/riot", label: "Riot 연결 안내" },
+  { href: "/install", label: "앱 설치" }, { href: "/terms", label: "이용약관" }, { href: "/privacy", label: "개인정보 안내" },
+];
 
 function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?: boolean; accountSignedIn?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -180,10 +183,10 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
         type="button"
         aria-haspopup="dialog"
         aria-label="전체 메뉴 열기"
-        onClick={() => openDialog(dialog.current)}
+        onClick={() => { recordUsageAction("navigation.open"); openDialog(dialog.current); }}
       >
         <Menu size={compact ? 20 : 18} aria-hidden="true" />
-        {compact ? <span>메뉴</span> : null}
+        <span>메뉴</span>
       </button>
 
       <dialog
@@ -209,28 +212,15 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
           <p className="user-dialog__hint user-dialog__hint--top">
             찾는 기능을 빠르게 열 수 있도록 역할과 이용 흐름별로 모았습니다.
           </p>
-          <div className="all-menu-grid">
-            {userNavigationSections.map((section) => (
-              <section key={section.id} aria-labelledby={`${titleId}-${section.id}`}>
-                <h3 id={`${titleId}-${section.id}`}>{section.label}</h3>
-                <ul>
-                  {canonicalUserRoutes
-                    .filter((route) => (
-                      route.section === section.id &&
-                      !route.template.includes("[") &&
-                      route.implementationState === "page-contract" &&
-                      (!accountOnlyMenuRoutes.has(route.template) || accountSignedIn) &&
-                      (!signedOutOnlyMenuRoutes.has(route.template) || !accountSignedIn)
-                    ))
-                    .map((route) => (
-                      <li key={route.template}>
-                        <Link href={route.template} onClick={() => closeDialog(dialog.current)}>
-                          {route.label}
-                          <span>바로 열기</span>
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
+          <div className="all-menu-grid" data-usage-context="menu">
+            {[...userTaskGroups, { label: "내 활동", links: personalTaskLinks }, { label: "도움말·계정", links: [...helpLinks, ...(accountSignedIn ? [] : [{ href: "/login", label: "로그인" }, { href: "/signup", label: "회원가입" }])] }].map((group, groupIndex) => (
+              <section key={group.label} aria-labelledby={titleId + groupIndex}>
+                <h3 id={titleId + groupIndex}>{group.label}</h3>
+                <ul>{group.links.map((link: TaskLink) => <li key={link.href}>
+                  <Link href={link.href} onClick={() => closeDialog(dialog.current)}>{link.label}
+                    {link.account && !accountSignedIn ? <span>로그인 필요</span> : null}
+                  </Link>
+                </li>)}</ul>
               </section>
             ))}
           </div>
@@ -242,41 +232,38 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
 
 export function PrimaryUserNavigation() {
   const pathname = usePathname();
-
-  return (
-    <nav className="desktop-nav" aria-label="주요 메뉴">
-      {primaryUserNavigation.map((item) => (
-        <Link
-          href={item.href}
-          key={item.href}
-          aria-current={isUserNavigationActive(pathname, item.activeRoot) ? "page" : undefined}
-        >
-          {item.href === "/" ? (
-            <Home size={16} aria-hidden="true" />
-          ) : item.href === "/players" ? (
-            <UsersRound size={16} aria-hidden="true" />
-          ) : item.href === "/rankings" ? (
-            <Trophy size={16} aria-hidden="true" />
-          ) : item.href === "/matches" ? (
-            <Swords size={16} aria-hidden="true" />
-          ) : item.href.startsWith("/tools/") ? (
-            <Dices size={16} aria-hidden="true" />
-          ) : (
-            <CalendarCheck2 size={16} aria-hidden="true" />
-          )}
-          {item.label}
-        </Link>
-      ))}
-    </nav>
-  );
+  const nav = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const close = () => nav.current?.querySelectorAll("details[open]").forEach((element) => element.removeAttribute("open"));
+    const outside = (event: PointerEvent) => { if (event.target instanceof Node && !nav.current?.contains(event.target)) close(); };
+    close();
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [pathname]);
+  return <nav ref={nav} className="desktop-nav task-navigation" aria-label="주요 메뉴" data-usage-context="header">
+    {userTaskGroups.map((group) => <details className="task-menu" name="site-task-menu" key={group.label}
+      data-active={group.roots.some((root) => isUserNavigationActive(pathname, root)) || undefined}
+      onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
+      <summary>{group.label}</summary>
+      <div className="task-menu__links">{group.links.map((link) => <Link key={link.href} href={link.href}
+        aria-current={pathname === link.href ? "page" : undefined}
+        onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); }}>{link.label}</Link>)}</div>
+    </details>)}
+  </nav>;
 }
 
 export function HeaderUserControls({ accountSignedIn = false }: { accountSignedIn?: boolean }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const authPage = ["/login", "/signup", "/forgot-password"].includes(pathname);
+  const savedNext = searchParams.getAll("next");
+  const next = normalizeAccountNext(authPage ? (savedNext.length === 1 ? savedNext[0] : undefined) : pathname + (searchParams.size ? `?${searchParams}` : ""), "/");
+  const loginHref = `/login?next=${encodeURIComponent(next)}`;
   return (
-    <div className="header-actions">
+    <div className="header-actions" data-usage-context="header">
       <SearchControl accountSignedIn={accountSignedIn} />
       <AllMenuControl accountSignedIn={accountSignedIn} />
-      <Link className="header-account" href={accountSignedIn ? "/account" : "/login"} aria-label={accountSignedIn ? "내 정보" : "사용자 로그인"}>
+      <Link className="header-account" href={accountSignedIn ? "/account" : loginHref} aria-label={accountSignedIn ? "내 정보" : "사용자 로그인"}>
         <UserRound size={17} aria-hidden="true" />
         <span>{accountSignedIn ? "내 정보" : "로그인"}</span>
       </Link>
@@ -286,28 +273,18 @@ export function HeaderUserControls({ accountSignedIn = false }: { accountSignedI
 
 export function MobileUserNavigation({ accountSignedIn = false }: { accountSignedIn?: boolean }) {
   const pathname = usePathname();
-
-  return (
-    <nav className="mobile-nav" aria-label="모바일 주요 메뉴">
-      <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
-        <Home size={20} aria-hidden="true" />
-        <span>홈</span>
-      </Link>
-      <Link
-        href="/players"
-        aria-current={isUserNavigationActive(pathname, "/players") ? "page" : undefined}
-      >
-        <UsersRound size={20} aria-hidden="true" />
-        <span>플레이어</span>
-      </Link>
-      <SearchControl compact accountSignedIn={accountSignedIn} />
-      <Link href={accountSignedIn ? "/account" : "/login"} aria-current={accountSignedIn ? (pathname.startsWith("/account") ? "page" : undefined) : (pathname === "/login" ? "page" : undefined)}>
-        {accountSignedIn ? <UserRound size={20} aria-hidden="true" /> : <LogIn size={20} aria-hidden="true" />}
-        <span>{accountSignedIn ? "내 정보" : "로그인"}</span>
-      </Link>
-      <AllMenuControl compact accountSignedIn={accountSignedIn} />
-    </nav>
-  );
+  const links = [
+    { href: "/", label: "홈", icon: Home, roots: ["/"] },
+    { href: "/applications", label: "참가·모집", icon: CalendarCheck2, roots: ["/applications", "/recruits"] },
+    { href: "/tools/team-balance", label: "팀 만들기", icon: Dices, roots: ["/tools"] },
+    { href: "/matches", label: "경기·전적", icon: Swords, roots: ["/matches", "/players", "/rankings"] },
+    { href: accountSignedIn ? "/account" : "/login?next=%2Faccount", label: "내 활동", icon: UserRound, roots: ["/account", "/login", "/signup"] },
+  ];
+  return <nav className="mobile-nav" aria-label="모바일 주요 메뉴" data-usage-context="mobile">
+    {links.map(({ href, label, icon: Icon, roots }) => <Link href={href} key={href} aria-current={roots.some((root) => isUserNavigationActive(pathname, root)) ? "page" : undefined}>
+      <Icon size={20} aria-hidden="true" /><span>{label}</span>
+    </Link>)}
+  </nav>;
 }
 
 export function NavigationFallback({ mobile = false }: { mobile?: boolean }) {

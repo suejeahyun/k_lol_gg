@@ -46,10 +46,21 @@ export function UsageTracker() {
       if (!(control instanceof HTMLAnchorElement)) return;
       const url = new URL(control.href, window.location.origin);
       const target = url.origin === window.location.origin ? usageRoute(url.pathname) : null;
-      if (target) send({ kind: "click", route, target });
+      if (target) {
+        const context = control.closest("[data-usage-context]")?.getAttribute("data-usage-context");
+        const source = `navigation.${context}`;
+        if (Object.hasOwn(USAGE_ACTIONS, source)) send({ kind: "click", route, target: source });
+        send({ kind: "click", route, target });
+      }
     };
     document.addEventListener("click", click, true);
-    return () => document.removeEventListener("click", click, true);
+    const action = (event: Event) => {
+      const value: unknown = (event as CustomEvent).detail;
+      const route = usageRoute(window.location.pathname);
+      if (route && typeof value === "string" && Object.hasOwn(USAGE_ACTIONS, value)) send({ kind: "click", route, target: value });
+    };
+    window.addEventListener("klol:usage-action", action);
+    return () => { document.removeEventListener("click", click, true); window.removeEventListener("klol:usage-action", action); };
   }, []);
   return null;
 }

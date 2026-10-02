@@ -17,6 +17,7 @@ export function HomeGuideArt({
 
   return (
     <picture className="hero-art__custom">
+      <source media="(max-width: 820px)" srcSet="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
       <img
         src={webpSrc}
         alt={alt}

@@ -30,6 +30,7 @@ function stableIdempotencyKey(
 
 export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
   const router = useRouter();
+  const safeNext = normalizeAccountNext(nextPath, "/");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message>(null);
 
@@ -60,11 +61,10 @@ export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
       setMessage({
         text: passwordChangeRequired
           ? "로그인되었습니다. 먼저 비밀번호를 변경해 주세요."
-          : "로그인되었습니다. 홈으로 이동합니다.",
+          : safeNext === "/" ? "로그인되었습니다. 홈으로 이동합니다." : "로그인되었습니다. 하던 작업으로 돌아갑니다.",
         tone: "success",
       });
-      const safeNext = normalizeAccountNext(nextPath, "/");
-      router.push(passwordChangeRequired ? "/account/password?required=1" : safeNext);
+      router.push(passwordChangeRequired ? `/account/password?required=1&next=${encodeURIComponent(safeNext)}` : safeNext);
       router.refresh();
     } catch {
       setMessage({ text: "네트워크 연결을 확인한 뒤 다시 시도해 주세요.", tone: "error" });
@@ -81,13 +81,15 @@ export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
       <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">
         {message?.text ?? "승인 대기·거절·이용 제한 계정도 상태 확인과 비밀번호 변경을 위해 로그인할 수 있습니다."}
       </div>
-      <div className={styles.links}><Link href="/signup">가입 신청</Link><Link href="/forgot-password">비밀번호 도움</Link><Link href="/admin/login">관리자 로그인</Link></div>
+      <div className={styles.links}><Link href={`/signup?next=${encodeURIComponent(safeNext)}`}>회원가입 후 계속하기</Link><Link href="/forgot-password">비밀번호 도움</Link><Link href="/admin/login">관리자 로그인</Link></div>
     </form>
   );
 }
 
-export function SignupForm() {
+export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
   const router = useRouter();
+  const safeNext = normalizeAccountNext(nextPath, "/");
+  const loginHref = `/login?next=${encodeURIComponent(safeNext)}`;
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message>(null);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
@@ -132,7 +134,7 @@ export function SignupForm() {
       idempotency.current = null;
       setMessage({ text: safeMessage(body, "가입과 자동 승인이 완료되었습니다."), tone: "success" });
       form.reset();
-      window.setTimeout(() => router.push("/login"), 900);
+      router.push(loginHref);
     } catch {
       setMessage({ text: "네트워크 연결을 확인한 뒤 다시 시도해 주세요.", tone: "error" });
     } finally {
@@ -150,7 +152,7 @@ export function SignupForm() {
       <label className={styles.check}><input name="privacyAccepted" type="checkbox" required /><span><Link href="/privacy" target="_blank">개인정보 처리 안내</Link>에 따른 계정·회원명·Riot ID 처리에 동의합니다.</span></label>
       <button className={styles.submit} type="submit" disabled={busy}>{busy ? "가입 중…" : "가입하기"}</button>
       <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "새 Riot ID는 가입 즉시 승인됩니다. 기존 플레이어와 일치하면 안전한 연결을 위해 관리자 확인을 거칩니다."}</div>
-      <div className={styles.links}><Link href="/login">이미 계정이 있어요</Link></div>
+      <div className={styles.links}><Link href={loginHref}>이미 계정이 있어요</Link></div>
     </form>
   );
 }

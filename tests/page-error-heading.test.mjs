@@ -17,7 +17,11 @@ test("사용자·관리자 상세 화면은 저장소 오류 상태에서도 페
 
   for (const [path, message] of cases) {
     const page = source(path);
-    assert.match(page, new RegExp(`<h1>${message}</h1>`), path);
+    if (path.includes("(public)/account")) {
+      assert.match(page, new RegExp(`<h2>${message}</h2>`));
+      assert.match(page, /<AccountShell activeTab="overview" title="내 계정"/);
+      assert.match(source("../src/components/accounts/account-shell.tsx"), /<h1>\{title\}<\/h1>/);
+    } else assert.match(page, new RegExp(`<h1>${message}</h1>`), path);
     assert.match(page, /role=(?:"(?:alert|status)"|\{[^}]+\})/, path);
   }
 });

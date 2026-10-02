@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { ArrowRight, Crown, Gamepad2, Medal, Sparkles, Trophy, UsersRound } from "lucide-react";
 
@@ -11,11 +11,7 @@ import { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date
 import styles from "./rankings.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  title: "시즌 랭킹",
-  description: "K-LOL.GG 시즌별 승률, 참여 횟수와 MVP 랭킹을 확인합니다.",
-  alternates: { canonical: "/rankings" },
-};
+export const metadata = createRouteMetadata("/rankings");
 
 export default async function RankingsPage({
   searchParams,

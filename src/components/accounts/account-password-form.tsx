@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
 
 import styles from "./account-access.module.css";
 
@@ -15,8 +16,9 @@ function messageFrom(value: unknown) {
       : "비밀번호를 변경하지 못했습니다.";
 }
 
-export function AccountPasswordForm({ revision }: { revision: number }) {
+export function AccountPasswordForm({ revision, nextPath = "/account" }: { revision: number; nextPath?: string }) {
   const router = useRouter();
+  const loginHref = `/login?next=${encodeURIComponent(normalizeAccountNext(nextPath))}`;
   const [currentRevision, setCurrentRevision] = useState(revision);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: "error" | "success" } | null>(null);
@@ -94,7 +96,7 @@ export function AccountPasswordForm({ revision }: { revision: number }) {
       setMessage({ text: "비밀번호가 변경되었습니다. 다시 로그인해 주세요.", tone: "success" });
       form.reset();
       window.setTimeout(() => {
-        router.replace("/login");
+        router.replace(loginHref);
         router.refresh();
       }, 900);
     } catch {
@@ -110,7 +112,7 @@ export function AccountPasswordForm({ revision }: { revision: number }) {
       <label className={styles.field}>새 비밀번호<input name="newPassword" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /><small>문자와 숫자를 포함한 10자 이상이어야 합니다.</small></label>
       <label className={styles.field}>새 비밀번호 확인<input name="confirmation" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
       <button className={styles.submit} type="submit" disabled={busy || requiresRelogin}>{busy ? "변경 중…" : "비밀번호 변경"}</button>
-      {requiresRelogin ? <button className={styles.submit} type="button" onClick={() => router.replace("/login?next=%2Faccount%2Fpassword")}>다시 로그인</button> : null}
+      {requiresRelogin ? <button className={styles.submit} type="button" onClick={() => router.replace(`/login?next=${encodeURIComponent(`/account/password?next=${encodeURIComponent(normalizeAccountNext(nextPath))}`)}`)}>다시 로그인</button> : null}
       <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "변경 후에는 모든 기기에서 다시 로그인해야 합니다."}</div>
     </form>
   );

@@ -1,4 +1,5 @@
 "use client";
+import { recordUsageAction } from "@/components/usage/usage-actions";
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -36,6 +37,7 @@ export function useDestructionMutation(revision: number) {
         return false;
       }
       if (typeof result.revision === "number") setCommittedRevision(result.revision);
+      if (snapshot.method === "PUT" && /^\/api\/competitions\/destruction\/[^/]+\/application$/.test(snapshot.path)) recordUsageAction("destruction.applied");
       setMessage("작업을 반영했습니다."); refresh(); return true;
     } catch {
       unresolved.current = snapshot;

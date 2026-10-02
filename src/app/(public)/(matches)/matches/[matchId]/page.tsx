@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { cache } from "react";
+import { BackToList } from "@/components/navigation/list-return";
+import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Crown, Gamepad2, ShieldCheck } from "lucide-react";
@@ -9,7 +12,14 @@ import { loadRuntimeMatchData } from "@/modules/matches/infrastructure/runtime-m
 import styles from "../matches.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "경기 상세", robots: { index: true, follow: true } };
+const loadDetail = cache((id: string) => loadRuntimeMatchData((service) => service.getPublic(id)));
+
+export async function generateMetadata({ params }: { params: Promise<{ matchId: string }> }): Promise<Metadata> {
+  const { matchId: id } = await params;
+  const result = await loadDetail(id);
+  if (result.state !== "ready" || !result.data) return createNoIndexMetadata({ title: "정보 확인", description: "현재 공개 정보를 확인할 수 없습니다." });
+  return createPublicMetadata({ title: result.data.title, description: `${result.data.playedOn} · ${result.data.season.name} · 블루 ${result.data.blueWins} : ${result.data.redWins} 레드. 경기별 기록과 MVP를 확인하세요.`, canonical: `/matches/${encodeURIComponent(id)}` });
+}
 const publicMatchIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function teamLabel(team: "BLUE" | "RED") {
@@ -32,12 +42,12 @@ export default async function MatchDetailPage({
     return <div className={`page-wrap ${styles.page}`}><section className={styles.state} role={mapping.state === "error" ? "alert" : "status"}><Gamepad2 /><h1>경기 주소를 확인하지 못했어요.</h1></section></div>;
   }
   if (!publicMatchIdPattern.test(matchId)) notFound();
-  const result = await loadRuntimeMatchData((service) => service.getPublic(matchId));
+  const result = await loadDetail(matchId);
   if (result.state === "ready" && !result.data) notFound();
 
   return (
     <div className={`page-wrap ${styles.page}`}>
-      <Link className="back-link" href="/matches"><ArrowLeft size={16} aria-hidden="true" /> 경기 결과</Link>
+      <BackToList className="back-link" href="/matches"><ArrowLeft size={16} aria-hidden="true" /> 경기 결과</BackToList>
       {result.state === "unavailable" ? (
         <section className={styles.state} role="status"><Gamepad2 /><h1>경기 결과를 확인할 수 없어요.</h1></section>
       ) : result.state === "error" ? (

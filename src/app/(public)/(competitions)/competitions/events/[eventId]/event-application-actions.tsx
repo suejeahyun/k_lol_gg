@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { recordUsageAction } from "@/components/usage/usage-actions";
 import { useRouter } from "next/navigation";
 
 import styles from "../../events.module.css";
@@ -13,6 +15,8 @@ export function EventApplicationActions({ eventId, revision, format, open, signe
   const regionRef = useRef<HTMLElement>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const newParticipantId = useRef<string | null>(null);
+  const pendingRequest = useRef<{ fingerprint: string; key: string } | null>(null);
 
   useLayoutEffect(() => {
     if (!focusOnMount) return;
@@ -25,10 +29,15 @@ export function EventApplicationActions({ eventId, revision, format, open, signe
 
   async function mutate(method: "PUT" | "DELETE", body: unknown) {
     setBusy(true); setMessage("");
+    const fingerprint = JSON.stringify({ method, body, revision });
+    if (pendingRequest.current?.fingerprint !== fingerprint) pendingRequest.current = { fingerprint, key: `event-application-${crypto.randomUUID()}` };
     try {
-      const response = await fetch(`/api/competitions/events/${eventId}/application`, { method, headers: { "Content-Type": "application/json", "If-Match": `"${revision}"`, "Idempotency-Key": `event-application-${crypto.randomUUID()}` }, body: JSON.stringify(body) });
+      const response = await fetch(`/api/competitions/events/${eventId}/application`, { method, headers: { "Content-Type": "application/json", "If-Match": `"${revision}"`, "Idempotency-Key": pendingRequest.current.key }, body: JSON.stringify(body) });
       const result = await response.json() as { detail?: string };
+      if (response.status === 412) { pendingRequest.current = null; router.refresh(); throw new Error("참가 현황이 변경되어 최신 내용을 불러왔어요. 다시 신청해 주세요."); }
       if (!response.ok) throw new Error(result.detail ?? "신청을 처리하지 못했습니다.");
+      pendingRequest.current = null;
+      if (method === "PUT") recordUsageAction("event.applied");
       setMessage(method === "DELETE" ? "신청을 취소했습니다." : "참가 신청을 저장했습니다.");
       router.refresh();
     } catch (error) { setMessage(error instanceof Error ? error.message : "신청을 처리하지 못했습니다."); }
@@ -38,13 +47,15 @@ export function EventApplicationActions({ eventId, revision, format, open, signe
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    void mutate("PUT", { participantId: application?.participantId ?? crypto.randomUUID(), mainPosition: format === "ARAM" ? null : data.get("mainPosition"), subPositions: format === "ARAM" ? [] : data.getAll("subPositions") });
+    newParticipantId.current ??= crypto.randomUUID();
+    const mainPosition = format === "ARAM" ? null : data.get("mainPosition");
+    void mutate("PUT", { participantId: application?.participantId ?? newParticipantId.current, mainPosition, subPositions: format === "ARAM" ? [] : data.getAll("subPositions").filter((position) => position !== mainPosition) });
   }
 
   const region = (children: React.ReactNode) => <section ref={regionRef} id="event-application" tabIndex={-1} className={styles.applicationDeepLink} aria-labelledby="event-application-title"><h2 id="event-application-title">참가 신청</h2>{children}</section>;
-  if (!signedIn) return region(<p className={styles.applicationNotice}>참가 신청은 승인된 계정으로 로그인한 뒤 사용할 수 있어요.</p>);
-  if (!approved) return region(<p className={styles.applicationNotice}>계정 승인과 활성 플레이어 연결이 필요해요.</p>);
-  if (!open) return region(<p className={styles.applicationNotice}>현재는 참가 신청 기간이 아니에요.</p>);
+  if (!signedIn) return region(<p className={styles.applicationNotice}>참가 신청은 승인된 계정으로 로그인한 뒤 사용할 수 있어요. <Link href={`/login?next=${encodeURIComponent(`/competitions/events/${eventId}?action=apply`)}`}>로그인하고 신청하기</Link></p>);
+  if (!approved) return region(<p className={styles.applicationNotice}>계정 승인과 활성 플레이어 연결이 필요해요. <Link href="/account">내 계정 상태 확인</Link></p>);
+  if (!open) return region(<p className={styles.applicationNotice}>현재는 참가 신청 기간이 아니에요. <Link href="/applications?type=event">다른 이벤트 모집 보기</Link></p>);
   return region(<form className={styles.application} onSubmit={submit}>
     <h2>{application?.status === "ACTIVE" ? "내 신청 수정" : "참가 신청"}</h2>
     {format === "POSITION" ? <><label>주 포지션<select name="mainPosition" defaultValue={application?.mainPosition ?? "TOP"}>{positions.map((position) => <option key={position}>{position}</option>)}</select></label><fieldset><legend>부 포지션</legend>{positions.map((position) => <label key={position}><input type="checkbox" name="subPositions" value={position} defaultChecked={application?.subPositions.includes(position)} /> {position}</label>)}</fieldset></> : <p>칼바람 이벤트는 포지션을 선택하지 않아요.</p>}

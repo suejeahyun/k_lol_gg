@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 
 import { OwnerDisciplineTasks } from "@/components/discipline/owner-discipline-tasks";
@@ -7,7 +7,7 @@ import { requireApprovedAccountPage } from "@/modules/auth/infrastructure/server
 import { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "내 징계 과제" };
+export const metadata = createRouteMetadata("/account/discipline");
 export default async function AccountDisciplinePage() {
   const session = await requireApprovedAccountPage("/account/discipline");
   const result = await loadRuntimeDiscipline((service) => service.adapter.getOwnerOverview(session.userId));
