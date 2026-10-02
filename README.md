@@ -1,5 +1,8 @@
 # K-LOL.GG V2
 
+**2026-10-03 이미지 테마 1.0.0 운영 반영**: 전체 페이지의 메뉴·상태 아이콘을 생성 이미지로 교체하고, 판타지 배경과 패널 질감을 적용했습니다. [운영 검증](docs/qa-evidence/image-theme-v1.0.0-2026-10-03/production.md), [업데이트 안내](docs/patch-notes/2026-10-03-image-theme.md), [이미지·프롬프트](docs/design/image-theme-v1.json).
+
+
 **2026-10-03 홈 랭킹 쇼케이스 1.0.1 운영 반영**: 요청 순서의 홈, 시상대 랭킹 슬라이드, 모바일 조작과 화면 전환 보완. [운영 검증](docs/qa-evidence/home-ranking-showcase-v1.0.1-2026-10-03/production.md), [홈 개편 안내](docs/patch-notes/2026-10-03-home-ranking-showcase.md).
 
 **2026-10-02 목적 중심 탐색 개선 1.0.0**: 홈·메뉴·검색·신청·문의·검색 노출을 개선했습니다. [전체 분석과 검증](docs/qa-evidence/ux-discoverability-v1.0.0-2026-10-02/README.md), [배포 상태](docs/qa-evidence/ux-discoverability-v1.0.0-2026-10-02/production.md), [사용자 안내](docs/patch-notes/2026-10-02-ux-discoverability.md). 아래 이전 릴리스 기록과 현재 배포 상태를 구분합니다.

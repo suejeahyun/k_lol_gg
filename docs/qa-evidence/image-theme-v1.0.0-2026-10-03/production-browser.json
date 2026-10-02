@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-02T21:09:54.140Z",
+  "layouts": [
+    {
+      "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"https://k-lol-gg.vercel.app/images/theme/v1/world.webp\")",
+      "icons": 74,
+      "route": "/",
+      "scrollWidth": 1265,
+      "width": 1280
+    },
+    {
+      "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"https://k-lol-gg.vercel.app/images/theme/v1/world-mobile.webp\")",
+      "icons": 31,
+      "route": "/recruits",
+      "scrollWidth": 375,
+      "width": 390
+    },
+    {
+      "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"https://k-lol-gg.vercel.app/images/theme/v1/world-mobile.webp\")",
+      "icons": 31,
+      "route": "/login",
+      "scrollWidth": 375,
+      "width": 390
+    },
+    {
+      "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"https://k-lol-gg.vercel.app/images/theme/v1/world-mobile.webp\")",
+      "icons": 75,
+      "route": "/",
+      "scrollWidth": 305,
+      "width": 320
+    }
+  ],
+  "slides": [
+    {
+      "kind": "participation",
+      "scrollTop": 0
+    },
+    {
+      "kind": "mvp",
+      "scrollTop": 0
+    }
+  ]
+}

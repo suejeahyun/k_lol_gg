@@ -1,0 +1,145 @@
+{
+  "checkedAt": "2026-10-02T21:09:23.236Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "routes": [
+    {
+      "route": "/",
+      "status": 200,
+      "rasterIcons": 75
+    },
+    {
+      "route": "/rankings?view=win-rate",
+      "status": 200,
+      "rasterIcons": 34
+    },
+    {
+      "route": "/rankings?view=participation",
+      "status": 200,
+      "rasterIcons": 34
+    },
+    {
+      "route": "/rankings?view=mvp",
+      "status": 200,
+      "rasterIcons": 34
+    },
+    {
+      "route": "/recruits",
+      "status": 200,
+      "rasterIcons": 32
+    },
+    {
+      "route": "/matches",
+      "status": 200,
+      "rasterIcons": 57
+    },
+    {
+      "route": "/competitions",
+      "status": 200,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/help",
+      "status": 200,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/login",
+      "status": 200,
+      "rasterIcons": 31
+    },
+    {
+      "route": "/admin/login",
+      "status": 200,
+      "rasterIcons": 4
+    },
+    {
+      "route": "/privacy",
+      "status": 200,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/tools/coin-toss",
+      "status": 200,
+      "rasterIcons": 38
+    },
+    {
+      "route": "/start",
+      "status": 200,
+      "rasterIcons": 33
+    },
+    {
+      "route": "/api/health",
+      "status": 200,
+      "rasterIcons": 0
+    }
+  ],
+  "assets": [
+    {
+      "path": "public/images/theme/v1/world.webp",
+      "status": 200,
+      "bytes": 111328,
+      "sha256": "20efe3ea1bb6c6e4135fc063eb299717d845f21c30ef2f2951d774f138908ddb"
+    },
+    {
+      "path": "public/images/theme/v1/world-mobile.webp",
+      "status": 200,
+      "bytes": 41556,
+      "sha256": "a4e5a4d5982500f1551f7c33a89b7a89b2af6a098bd0f60e90ef51074d8ac2f8"
+    },
+    {
+      "path": "public/images/theme/v1/arena.webp",
+      "status": 200,
+      "bytes": 83856,
+      "sha256": "d23fa8fa6c9094bd76160904ed92c12b22d7008267a6e7fa865858fcfa1ef2ce"
+    },
+    {
+      "path": "public/images/theme/v1/arena-mobile.webp",
+      "status": 200,
+      "bytes": 30210,
+      "sha256": "79cc4d24fc0f9462525dc6d7caa4b4d48af1f84ea7222869d59b6e1dbb745fc5"
+    },
+    {
+      "path": "public/images/theme/v1/panel.webp",
+      "status": 200,
+      "bytes": 10494,
+      "sha256": "adea7bab368962d514b42d15fd892d3fc6a3935c3662d6faf192b93fd556caa2"
+    },
+    {
+      "path": "public/images/theme/v1/navigation.webp",
+      "status": 200,
+      "bytes": 95418,
+      "sha256": "ced5aa7caccc450a64f087bcc5fec9f008f5fc5c276eb4712a33ba3a89de0a45"
+    },
+    {
+      "path": "public/images/theme/v1/community.webp",
+      "status": 200,
+      "bytes": 103906,
+      "sha256": "9f9a5b5afdc216bd34ce49513fb69ff16107f89cb8fab88d3d2f6e42757e068f"
+    },
+    {
+      "path": "public/images/theme/v1/status.webp",
+      "status": 200,
+      "bytes": 89694,
+      "sha256": "6278aff104c30c67501b0856a692a496b8d6933948c5798afed328f0196a39cd"
+    },
+    {
+      "path": "public/images/theme/v1/actions.webp",
+      "status": 200,
+      "bytes": 81272,
+      "sha256": "bbe9e4cf6d0ca5d7e0d28cf7c2a1994334bb1c60119d7908be840eb1558bcdf7"
+    },
+    {
+      "path": "public/images/theme/v1/records.webp",
+      "status": 200,
+      "bytes": 67260,
+      "sha256": "e6fa14706a003f4e2d8ec2de2cb3438141dfc43a121705063e21b4b76cc92909"
+    },
+    {
+      "path": "public/images/theme/v1/tools.webp",
+      "status": 200,
+      "bytes": 82530,
+      "sha256": "ea47b78f21c028d687b4fde1460832e702f536fa36a9526efd6764e02bb742a5"
+    }
+  ],
+  "health": "ready"
+}

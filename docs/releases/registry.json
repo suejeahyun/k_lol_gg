@@ -1768,6 +1768,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "image-theme",
+      "version": "1.0.0",
+      "gitTag": "image-theme-v1.0.0",
+      "commit": "16761e3f3ae85a9b7d6b6b1bdbdb5d8bcc18e412",
+      "releasedAt": "2026-10-02T21:09:23.236Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/image-theme-v1.0.0-2026-10-03/production.md",
+      "patchNotes": "docs/patch-notes/2026-10-03-image-theme.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_CwPCXjmLXSPSvXNiFCuwct4ZUqhN",
+        "url": "https://k-lol-gxd9v0bpb-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-02T21:09:23.236Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }
