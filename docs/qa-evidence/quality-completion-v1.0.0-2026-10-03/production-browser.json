@@ -1,0 +1,382 @@
+{
+  "checkedAt": "2026-10-02T23:55:40.780Z",
+  "source": "667c33d4e74479a5acea81453571b541c7b58a36",
+  "home": {
+    "headings": [
+      "우리 같이롤하자~",
+      "랭킹",
+      "무엇을 하러 왔나요?",
+      "지금 올라온 소식",
+      "내 활동 이어보기",
+      "지금 볼 수 있는 기록"
+    ],
+    "overflow": false
+  },
+  "rankingSlides": [
+    "최다 참여자",
+    "최다 MVP"
+  ],
+  "eventReset": {
+    "status": "",
+    "format": ""
+  },
+  "rows": [
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "오늘 같이 뛰어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/applications",
+      "scrollWidth": 305,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 320
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/competitions/events",
+      "scrollWidth": 305,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 320
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/competitions/destruction",
+      "scrollWidth": 305,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 320
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "快刀亂麻"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/players/806b4ee7-659e-49d4-ad1b-65bcc7a83102",
+      "scrollWidth": 317,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 320
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/rankings/mmr",
+      "scrollWidth": 305,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 320
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "내 제출 기록"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/matches/submissions",
+      "scrollWidth": 305,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 320
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "10명이면, 팀 완성!"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/tools/random-team",
+      "scrollWidth": 305,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 320
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "오늘 같이 뛰어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/applications",
+      "scrollWidth": 375,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 390
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/competitions/events",
+      "scrollWidth": 375,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 390
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/competitions/destruction",
+      "scrollWidth": 375,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 390
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "快刀亂麻"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/players/806b4ee7-659e-49d4-ad1b-65bcc7a83102",
+      "scrollWidth": 375,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 390
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/rankings/mmr",
+      "scrollWidth": 375,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 390
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "내 제출 기록"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/matches/submissions",
+      "scrollWidth": 375,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 390
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "10명이면, 팀 완성!"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/tools/random-team",
+      "scrollWidth": 375,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 390
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "오늘 같이 뛰어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/applications",
+      "scrollWidth": 1425,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 1440
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/competitions/events",
+      "scrollWidth": 1425,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 1440
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "멸망전"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/competitions/destruction",
+      "scrollWidth": 1425,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 1440
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "快刀亂麻"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/players/806b4ee7-659e-49d4-ad1b-65bcc7a83102",
+      "scrollWidth": 1425,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 1440
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "화면을 준비하고 있어요"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/rankings/mmr",
+      "scrollWidth": 1425,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 1440
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "내 제출 기록"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/matches/submissions",
+      "scrollWidth": 1440,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 1440
+    },
+    {
+      "alerts": [],
+      "brokenImages": [],
+      "duplicateIds": [],
+      "h1": [
+        "10명이면, 팀 완성!"
+      ],
+      "lang": "ko",
+      "main": 1,
+      "missingAlts": [],
+      "overflow": false,
+      "path": "/tools/random-team",
+      "scrollWidth": 1425,
+      "smallInputs": [],
+      "unnamedControls": [],
+      "width": 1440
+    }
+  ]
+}

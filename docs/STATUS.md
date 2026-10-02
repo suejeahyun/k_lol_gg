@@ -1,5 +1,9 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-03 전체 화면·조회 복구 개선 1.0.0 운영 반영
+
+대회·제출 기록의 빈 필터 오류, 필터 초기화, 팀 결과 이동, 조회 재시도, 320px의 네 화면 넘침, 로딩 구조와 관리자 역할 선택 이름을 개선했다. source 667c33d4, tag quality-completion-v1.0.0, Vercel dpl_EvyosSgPiYDnFMiMWqU2KTGzt5AX READY. 전체 check·DB 계약/HTTP·백업 복구 통과. 108개 페이지/486개 화면 조건·인증 HTTP 169개, 운영 변경 화면 21개 조건을 확인했다. migration 0047 유지. [검증·배포](./qa-evidence/quality-completion-v1.0.0-2026-10-03/production.md), [업데이트 안내](./patch-notes/2026-10-03-quality-completion.md).
+
 ## 2026-10-03 이용 동선·표시 정확성 개선 1.0.0 운영 반영
 
 홈 참가 버튼, 단일 랭킹 조작·모바일 높이, 로그인/가입 입력 순서, 접이식 경기 필터, 모집 빈자리·참가 안내와 메뉴 명칭을 개선했다. 홈은 실제 경기일·참가 가능한 파티·진행 중 대회 중심으로 표시한다. 생성 조작 이미지 16개를 보완했다.

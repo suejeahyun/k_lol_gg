@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-10-02T23:55:14.270Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "passed": true,
+  "rows": [
+    {
+      "path": "/competitions/events?q=&status=&format=",
+      "status": 200
+    },
+    {
+      "path": "/competitions/events?q=&status=RECRUITING&format=",
+      "status": 200
+    },
+    {
+      "path": "/competitions/events?status=UNKNOWN",
+      "status": 200
+    },
+    {
+      "path": "/competitions/destruction?q=&status=&format=",
+      "status": 200
+    },
+    {
+      "path": "/competitions/destruction?q=&status=RECRUITING&format=",
+      "status": 200
+    },
+    {
+      "path": "/competitions/destruction?status=UNKNOWN",
+      "status": 200
+    }
+  ],
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ready",
+      "checkedAt": "2026-10-02T23:55:12.166Z"
+    }
+  }
+}

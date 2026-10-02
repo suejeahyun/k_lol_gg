@@ -1,0 +1,10 @@
+{
+  "focus": "random-team-result-title",
+  "inputFont": "16px",
+  "overflow": false,
+  "resultY": 211.6875,
+  "teamHeadings": [
+    "1팀5명",
+    "2팀5명"
+  ]
+}

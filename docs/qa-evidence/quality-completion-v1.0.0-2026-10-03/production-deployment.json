@@ -1,0 +1,14 @@
+{
+  "source": "667c33d4e74479a5acea81453571b541c7b58a36",
+  "gitTag": "quality-completion-v1.0.0",
+  "deploymentId": "dpl_EvyosSgPiYDnFMiMWqU2KTGzt5AX",
+  "url": "https://k-lol-r0lds9wec-tjdmswo11-3715s-projects.vercel.app",
+  "state": "READY",
+  "aliases": [
+    "k-lol-gg.vercel.app",
+    "k-lol-gg-tjdmswo11-3715s-projects.vercel.app",
+    "k-lol-gg-git-main-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "verifiedAt": "2026-10-02T23:55:14.270Z",
+  "healthStatus": "ready"
+}
