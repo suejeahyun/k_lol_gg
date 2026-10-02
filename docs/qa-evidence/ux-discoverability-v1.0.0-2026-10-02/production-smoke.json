@@ -1,0 +1,82 @@
+{
+  "origin": "https://k-lol-gg.vercel.app",
+  "checkedAt": "2026-10-02T12:40:50.950Z",
+  "passed": true,
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/help",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/help/contact",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/start",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/competitions/events",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/competitions/destruction",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/login?next=%2Fapplications",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/operation-forms",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "/api/cron/support-retention",
+      "status": 401,
+      "passed": true
+    }
+  ]
+}

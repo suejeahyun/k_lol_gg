@@ -1708,6 +1708,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "ux-discoverability",
+      "version": "1.0.0",
+      "gitTag": "ux-discoverability-v1.0.0",
+      "commit": "52df8f75a0e09f621cc02a05f2e4a8d897af5f81",
+      "releasedAt": "2026-10-02T12:40:50.950Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/ux-discoverability-v1.0.0-2026-10-02/production.md",
+      "patchNotes": "docs/patch-notes/2026-10-02-ux-discoverability.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_7kg8HgGTQ3AzdKCHhRHarvqSNtSM",
+        "url": "https://k-lol-nza8kvbon-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-02T12:40:50.950Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }
