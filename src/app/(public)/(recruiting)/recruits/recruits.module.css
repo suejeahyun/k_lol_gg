@@ -27,6 +27,8 @@
 .card[data-status="matched"] .cardTop span,.card[data-status="confirmed"] .cardTop span { color: #34735f; background: #e7f8f0; }
 .cardTop b { color: var(--text-muted); }
 .card h3 { margin: 0; overflow-wrap: anywhere; font-size: 20px; }
+.availability { width: fit-content; margin: 0; padding: 7px 11px; border-radius: 9px; color: #185c46; background: #e8f5ef; font-size: 13px; font-weight: 800; }
+.availability[data-full="true"] { color: #7b4258; background: #faedf2; }
 .card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
 .card dl div { display: grid; gap: 3px; }
 .card[data-has-organizer="true"] dl div:first-child { padding: 9px 11px; border: 1px solid rgba(208,185,235,.62); border-radius: 13px; background: linear-gradient(135deg,rgba(246,239,255,.9),rgba(255,247,252,.88)); box-shadow: inset 3px 0 #a887dc; }

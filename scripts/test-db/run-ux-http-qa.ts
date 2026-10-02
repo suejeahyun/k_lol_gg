@@ -8,7 +8,8 @@ import { resolve } from "node:path";
 import { startEphemeralCluster, stopAndRemoveCluster, childTestEnvironment } from "./run-data-contracts";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
-import { authSessions, eventCompetitions, recruitParties, seasons, userAccounts, players, playerSeasonStats, seasonProjectionStates } from "../../src/platform/db/schema";
+import { authSessions, eventCompetitions, recruitParties, seasons, userAccounts, players, playerSeasonStats, seasonProjectionStates, matchSeries } from "../../src/platform/db/schema";
+import { PostgresHomeRepository } from "../../src/modules/home/infrastructure/postgres-home-repository";
 import { createEventAggregate, startEventRecruitment } from "../../src/modules/competitions/events/domain/event";
 import { JoseSessionCodec } from "../../src/modules/auth/infrastructure/jose-session-codec";
 import { hashSessionToken } from "../../src/modules/auth/infrastructure/session-token-hash";
@@ -50,6 +51,24 @@ try {
   const initialEvent = startEventRecruitment(createEventAggregate({ id: randomUUID(), now: now.toISOString(), settings: { title: "UX 검증 이벤트", description: "로컬 합성 데이터입니다.", format: "ARAM", recruitmentOpensAt: past.toISOString(), recruitmentClosesAt: future.toISOString(), bracketBestOf: 1 } }), now.toISOString());
   const event = { ...initialEvent, revision: 1 };
   await database.insert(eventCompetitions).values({ id: event.id, title: event.settings.title, titleNormalized: event.settings.title.toLowerCase(), description: event.settings.description, format: event.settings.format, status: event.lifecycle.status, recruitmentOpensAt: past, recruitmentClosesAt: future, bracketBestOf: 1, aggregateJson: JSON.parse(JSON.stringify(event)), revision: event.revision, createdAt: now, updatedAt: now, createdByUserAccountId: userId, updatedByUserAccountId: userId });
+  if (process.env.V2_UX_QA_JOURNEY === "true") {
+    const member = (slotNo: number, substitute = false) => ({ name: `합성${substitute ? "예비" : "참가"}${slotNo}`, slotNo, substitute, position: null, playerId: null });
+    const fullPartyId = randomUUID(), reservePartyId = randomUUID();
+    await database.insert(recruitParties).values([
+      { id: fullPartyId, recruitDate: now.toISOString().slice(0,10), recruitNumber: 13, type: "PARTY_NUMBER", status: "IN_PROGRESS", title: "정원 마감 검증 파티", maximumMembers: 5, membersJson: [...Array.from({ length: 5 }, (_, i) => member(i + 1)), member(1, true)], startTimeText: "오늘 21시", gameInfo: "협곡 자유 랭크", lastActivityAt: now },
+      { id: reservePartyId, recruitDate: now.toISOString().slice(0,10), recruitNumber: 14, type: "PARTY_NUMBER", status: "IN_PROGRESS", title: "예비 제외 인원 검증 파티", maximumMembers: 5, membersJson: [...Array.from({ length: 4 }, (_, i) => member(i + 1)), member(1, true), member(2, true)], organizerText: "합성주최자", startTimeText: "오늘 20시", gameInfo: "초보 환영", lastActivityAt: now },
+    ]);
+    await database.insert(matchSeries).values({ id: randomUUID(), seasonId, title: "날짜 검증 경기", titleNormalized: "날짜 검증 경기", playedOn: "2026-09-24", blueWins: 2, redWins: 1, gameCount: 3, status: "PUBLISHED", publishedAt: new Date("2026-09-25T00:00:00Z") });
+    for (let i = 0; i < 5; i++) {
+      const placeholder = { ...event, id: randomUUID(), settings: { ...event.settings, title: `test-${i}` } };
+      await database.insert(eventCompetitions).values({ id: placeholder.id, title: placeholder.settings.title, titleNormalized: placeholder.settings.title, format: "ARAM", status: "RECRUITING", recruitmentOpensAt: past, recruitmentClosesAt: future, bracketBestOf: 1, aggregateJson: JSON.parse(JSON.stringify(placeholder)), revision: 1, createdAt: now, updatedAt: future, createdByUserAccountId: userId, updatedByUserAccountId: userId });
+    }
+    const snapshot = await new PostgresHomeRepository(database).load();
+    assert.ok(!snapshot.feeds.recruits.some((party) => party.id === fullPartyId), "full parties do not invite home visitors");
+    assert.equal(snapshot.feeds.recruits.find((party) => party.id === reservePartyId)?.summary, "1자리 남음 · 4/5명", "reserves do not count against primary capacity");
+    assert.deepEqual(snapshot.feeds.competitions.map((item) => item.id), [event.id], "placeholder titles cannot starve real events before SQL limit");
+    assert.equal(snapshot.feeds.recentMatches[0]?.playedOn, "2026-09-24");
+  }
   const codec = new JoseSessionCodec({ currentKeyId: "qa", keys: new Map([["qa", secret]]) });
   const token = await codec.encode({ userId, role: "ADMIN", purpose: "ADMIN", accountStatus: "APPROVED", mustChangePassword: false, authVersion: 0, adminTotpVerified: false, source: "database" }, { sessionId, nowMs: now.getTime(), ttlSeconds: 1800 });
   await database.insert(authSessions).values({ id: sessionId, tokenHash: hashSessionToken(token), userAccountId: userId, authVersion: 0, role: "ADMIN", purpose: "ADMIN", issuedAt: now, expiresAt: new Date(now.getTime() + 1800_000) });

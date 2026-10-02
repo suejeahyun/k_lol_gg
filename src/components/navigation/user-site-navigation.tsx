@@ -91,7 +91,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
         onClick={openSearch}
       >
         <Search size={compact ? 20 : 18} aria-hidden="true" />
-        <span>검색</span>
+        <span>기능 찾기</span>
       </button>
 
       <dialog
@@ -168,7 +168,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
 }
 
 const helpLinks: readonly TaskLink[] = [
-  { href: "/help", label: "도움말·문의" }, { href: "/help/recruits", label: "모집 참가 방법" },
+  { href: "/help", label: "도움말·문의" }, { href: "/start", label: "처음 이용 안내" }, { href: "/help/recruits", label: "모집 참가 방법" },
   { href: "/help/kakao", label: "카카오 이용 안내" }, { href: "/help/riot", label: "Riot 연결 안내" },
   { href: "/install", label: "앱 설치" }, { href: "/terms", label: "이용약관" }, { href: "/privacy", label: "개인정보 안내" },
 ];
@@ -211,18 +211,18 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
           </div>
 
           <p className="user-dialog__hint user-dialog__hint--top">
-            찾는 기능을 빠르게 열 수 있도록 역할과 이용 흐름별로 모았습니다.
+            참가와 팀 만들기는 바로 선택하고, 다른 기능은 항목을 펼쳐 확인하세요.
           </p>
           <div className="all-menu-grid" data-usage-context="menu">
             {[...userTaskGroups, { label: "내 활동", links: personalTaskLinks }, { label: "도움말·계정", links: [...helpLinks, ...(accountSignedIn ? [] : [{ href: "/login", label: "로그인" }, { href: "/signup", label: "회원가입" }])] }].map((group, groupIndex) => (
-              <section key={group.label} aria-labelledby={titleId + groupIndex}>
-                <h3 id={titleId + groupIndex}>{group.label}</h3>
-                <ul>{group.links.map((link: TaskLink) => <li key={link.href}>
+              <details className="all-menu-section" key={group.label} open={groupIndex < 2}>
+                <summary><h3 id={titleId + groupIndex}>{group.label}</h3><ChevronDown size={20} aria-hidden="true" /></summary>
+                <ul>{group.links.filter((link) => group.label !== "커뮤니티" || !["/help", "/start"].includes(link.href)).map((link: TaskLink) => <li key={link.href}>
                   <Link href={link.href} onClick={() => closeDialog(dialog.current)}>{link.label}
                     {link.account && !accountSignedIn ? <span>로그인 필요</span> : null}
                   </Link>
                 </li>)}</ul>
-              </section>
+              </details>
             ))}
           </div>
         </div>

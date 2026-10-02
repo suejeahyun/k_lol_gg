@@ -1,0 +1,2 @@
+[ux-qa] HTTP checks passed. Browser fixture: http://127.0.0.1:60797
+[ux-qa] Holding isolated fixture until .tmp/ux-qa/stop is created.

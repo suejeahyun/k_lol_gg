@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-10-02T22:58:04.803Z",
+  "environment": "Isolated synthetic PostgreSQL fixture; CUA in-app browser",
+  "filterReset": {
+    "from": "",
+    "open": false,
+    "overflow": false,
+    "resultsY": 634,
+    "url": "http://127.0.0.1:60797/matches",
+    "winner": ""
+  },
+  "ranking": {
+    "height": 478.484375,
+    "kind": "win-rate",
+    "overflow": false,
+    "scrollTop": 0
+  },
+  "verified": [
+    "Basic native GET with blank optional controls succeeds",
+    "Advanced winner/date apply shows two active filters",
+    "Submitting while details collapsed retains active filters",
+    "Reset link clears query, winner, dates and closes advanced filters",
+    "Ranking next hint, previous, selector, keyboard ArrowRight work",
+    "Autoplay can be started and stopped; manual default retained",
+    "Menu groups Enter and dialog Escape",
+    "Function search: 진영 + ArrowDown/Enter opens coin-toss",
+    "Synthetic member login returns to requested team-balance builder",
+    "Full party latest-command copy explicitly says participation is not complete",
+    "Missing recruitment details direct users to 모집방",
+    "Home keeps six requested sections; full parties and exact placeholder event titles excluded"
+  ]
+}

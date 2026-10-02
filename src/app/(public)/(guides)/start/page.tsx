@@ -36,7 +36,7 @@ export default async function StartPage() {
           <Link className={styles.card} href="/players"><Search size={24} aria-hidden="true" /><strong>플레이어 찾기</strong><p>닉네임이나 Riot ID로 공개 프로필과 기록을 확인합니다.</p><small>누구나 이용 가능</small></Link>
           <Link className={styles.card} href="/matches"><Gamepad2 size={24} aria-hidden="true" /><strong>경기 결과 보기</strong><p>공개된 내전 결과와 세트별 점수, 참가 기록을 확인합니다.</p><small>누구나 이용 가능</small></Link>
           {approved ? (
-            <Link className={styles.card} href="/matches/submit"><ClipboardCheck size={24} aria-hidden="true" /><strong>결과 접수 시작</strong><p>내 계정으로 경기 결과와 검토용 이미지를 안전하게 제출합니다.</p><small>승인 계정</small></Link>
+            <Link className={styles.card} href="/matches/submit"><ClipboardCheck size={24} aria-hidden="true" /><strong>경기 결과 제출</strong><p>내 계정으로 경기 결과와 검토용 이미지를 안전하게 제출합니다.</p><small>승인 계정</small></Link>
           ) : session ? (
             <Link className={styles.card} href={session.mustChangePassword ? "/account/password" : "/account"}><ShieldCheck size={24} aria-hidden="true" /><strong>계정 상태 확인</strong><p>승인 상태와 필요한 비밀번호 변경, 연결 플레이어 정보를 확인합니다.</p><small>로그인 계정</small></Link>
           ) : (

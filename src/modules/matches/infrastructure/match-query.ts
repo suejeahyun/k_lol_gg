@@ -164,12 +164,13 @@ export function parsePublicMatchQuery(url: string): PublicMatchQuery | null {
   const query = queryText(params.get("q"));
   const seasonIdRaw = params.get("seasonId") || undefined;
   const seasonId = seasonIdRaw?.toLocaleLowerCase("en-US");
-  const winnerValue = params.get("winner");
+  // Native GET forms submit unselected optional controls as empty strings.
+  const winnerValue = params.get("winner") || null;
   const winner = winnerValue === "BLUE" || winnerValue === "RED" || winnerValue === "TIE"
     ? winnerValue
     : undefined;
-  const fromValue = params.get("from");
-  const toValue = params.get("to");
+  const fromValue = params.get("from") || null;
+  const toValue = params.get("to") || null;
   const from = fromValue === null ? undefined : parseKstDate(fromValue);
   const to = toValue === null ? undefined : parseKstDate(toValue);
   const sortValue = params.get("sort");

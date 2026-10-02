@@ -39,8 +39,8 @@ export default async function OwnMatchSubmissionsPage({
     ? await service.listOwnSubmissions(session.userId, query).catch(() => null)
     : null;
   return <div className={`page-wrap ${styles.page}`}>
-    <Link className="back-link" href="/matches/submit"><ArrowLeft size={16} aria-hidden="true" /> 결과 접수</Link>
-    <section className={styles.hero}><p>MY SUBMISSIONS</p><h1>내 결과 접수 기록</h1><span>접수 코드로 이어서 이미지를 등록하거나 검토 결과를 확인할 수 있어요.</span></section>
+    <Link className="back-link" href="/matches/submit"><ArrowLeft size={16} aria-hidden="true" /> 경기 결과 제출</Link>
+    <section className={styles.hero}><p>MY SUBMISSIONS</p><h1>내 제출 기록</h1><span>접수 코드로 이어서 이미지를 등록하거나 검토 결과를 확인할 수 있어요.</span></section>
     {!session ? <section className={styles.panel}><h2>로그인이 필요해요.</h2><Link className={styles.login} href="/login?next=%2Fmatches%2Fsubmissions">로그인</Link></section>
       : !query ? <section className={styles.panel} role="alert"><h2>목록 조건이 올바르지 않아요.</h2></section>
       : !result ? <section className={styles.panel} role="status"><h2>접수 기록을 불러오지 못했어요.</h2></section>

@@ -1,0 +1,542 @@
+[
+  {
+    "clientWidth": 375,
+    "fields": [
+      {
+        "name": "q",
+        "top": 292
+      }
+    ],
+    "headings": [
+      {
+        "text": "우리 같이롤하자~",
+        "top": 94
+      },
+      {
+        "text": "랭킹",
+        "top": 420
+      },
+      {
+        "text": "무엇을 하러 왔나요?",
+        "top": 999
+      },
+      {
+        "text": "지금 올라온 소식",
+        "top": 1356
+      },
+      {
+        "text": "내 활동 이어보기",
+        "top": 2213
+      },
+      {
+        "text": "지금 볼 수 있는 기록",
+        "top": 2647
+      }
+    ],
+    "height": 844,
+    "page": "/",
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "clientWidth": 375,
+    "fields": [
+      {
+        "name": "loginId",
+        "top": 264
+      },
+      {
+        "name": "password",
+        "top": 349
+      }
+    ],
+    "headings": [
+      {
+        "text": "로그인",
+        "top": 141
+      },
+      {
+        "text": "내 계정으로가볍게 돌아와요.",
+        "top": 804
+      }
+    ],
+    "height": 844,
+    "page": "/login",
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "clientWidth": 375,
+    "fields": [
+      {
+        "name": "loginId",
+        "top": 288
+      },
+      {
+        "name": "password",
+        "top": 398
+      },
+      {
+        "name": "memberName",
+        "top": 507
+      },
+      {
+        "name": "riotId",
+        "top": 592
+      },
+      {
+        "name": "termsAccepted",
+        "top": 697
+      },
+      {
+        "name": "privacyAccepted",
+        "top": 757
+      }
+    ],
+    "headings": [
+      {
+        "text": "회원가입",
+        "top": 141
+      },
+      {
+        "text": "내전 놀이터에함께할 준비.",
+        "top": 1137
+      }
+    ],
+    "height": 844,
+    "page": "/signup",
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "clientWidth": 375,
+    "fields": [
+      {
+        "name": "q",
+        "top": 376
+      },
+      {
+        "name": "from",
+        "top": 778
+      },
+      {
+        "name": "to",
+        "top": 862
+      }
+    ],
+    "headings": [
+      {
+        "text": "우리의 내전 기록",
+        "top": 190
+      },
+      {
+        "text": "경기 결과",
+        "top": 634
+      }
+    ],
+    "height": 844,
+    "page": "/matches",
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "clientWidth": 375,
+    "fields": [],
+    "headings": [
+      {
+        "text": "오늘 같이 플레이해요",
+        "top": 196
+      },
+      {
+        "text": "파티 모집",
+        "top": 522
+      },
+      {
+        "text": "기존 스크림 기록",
+        "top": 2934
+      }
+    ],
+    "height": 844,
+    "page": "/recruits",
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "clientWidth": 375,
+    "fields": [],
+    "headings": [
+      {
+        "text": "우리 팀, 근거 있게 나눠요",
+        "top": 149
+      },
+      {
+        "text": "승인된 계정으로 시작해 주세요",
+        "top": 605
+      }
+    ],
+    "height": 844,
+    "page": "/tools/team-balance",
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "clientWidth": 305,
+    "fields": [
+      {
+        "name": "q",
+        "top": 311
+      }
+    ],
+    "headings": [
+      {
+        "text": "우리 같이롤하자~",
+        "top": 94
+      },
+      {
+        "text": "랭킹",
+        "top": 439
+      },
+      {
+        "text": "무엇을 하러 왔나요?",
+        "top": 1012
+      },
+      {
+        "text": "지금 올라온 소식",
+        "top": 1410
+      },
+      {
+        "text": "내 활동 이어보기",
+        "top": 2272
+      },
+      {
+        "text": "지금 볼 수 있는 기록",
+        "top": 2706
+      }
+    ],
+    "height": 844,
+    "page": "/",
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "clientWidth": 305,
+    "fields": [
+      {
+        "name": "loginId",
+        "top": 264
+      },
+      {
+        "name": "password",
+        "top": 349
+      }
+    ],
+    "headings": [
+      {
+        "text": "로그인",
+        "top": 141
+      },
+      {
+        "text": "내 계정으로가볍게 돌아와요.",
+        "top": 879
+      }
+    ],
+    "height": 844,
+    "page": "/login",
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "clientWidth": 305,
+    "fields": [
+      {
+        "name": "loginId",
+        "top": 288
+      },
+      {
+        "name": "password",
+        "top": 416
+      },
+      {
+        "name": "memberName",
+        "top": 544
+      },
+      {
+        "name": "riotId",
+        "top": 629
+      },
+      {
+        "name": "termsAccepted",
+        "top": 753
+      },
+      {
+        "name": "privacyAccepted",
+        "top": 813
+      }
+    ],
+    "headings": [
+      {
+        "text": "회원가입",
+        "top": 141
+      },
+      {
+        "text": "내전 놀이터에함께할 준비.",
+        "top": 1193
+      }
+    ],
+    "height": 844,
+    "page": "/signup",
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "clientWidth": 305,
+    "fields": [
+      {
+        "name": "q",
+        "top": 424
+      },
+      {
+        "name": "from",
+        "top": 826
+      },
+      {
+        "name": "to",
+        "top": 910
+      }
+    ],
+    "headings": [
+      {
+        "text": "우리의 내전 기록",
+        "top": 238
+      },
+      {
+        "text": "경기 결과",
+        "top": 682
+      }
+    ],
+    "height": 844,
+    "page": "/matches",
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "clientWidth": 305,
+    "fields": [],
+    "headings": [
+      {
+        "text": "오늘 같이 플레이해요",
+        "top": 196
+      },
+      {
+        "text": "파티 모집",
+        "top": 574
+      },
+      {
+        "text": "기존 스크림 기록",
+        "top": 3064
+      }
+    ],
+    "height": 844,
+    "page": "/recruits",
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "clientWidth": 305,
+    "fields": [],
+    "headings": [
+      {
+        "text": "우리 팀, 근거 있게 나눠요",
+        "top": 149
+      },
+      {
+        "text": "승인된 계정으로 시작해 주세요",
+        "top": 596
+      }
+    ],
+    "height": 844,
+    "page": "/tools/team-balance",
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "clientWidth": 1265,
+    "fields": [
+      {
+        "name": "q",
+        "top": 382
+      }
+    ],
+    "headings": [
+      {
+        "text": "우리 같이롤하자~",
+        "top": 166
+      },
+      {
+        "text": "랭킹",
+        "top": 529
+      },
+      {
+        "text": "무엇을 하러 왔나요?",
+        "top": 1231
+      },
+      {
+        "text": "지금 올라온 소식",
+        "top": 1503
+      },
+      {
+        "text": "내 활동 이어보기",
+        "top": 2061
+      },
+      {
+        "text": "지금 볼 수 있는 기록",
+        "top": 2317
+      }
+    ],
+    "height": 844,
+    "page": "/",
+    "scrollWidth": 1265,
+    "width": 1280
+  },
+  {
+    "clientWidth": 1265,
+    "fields": [
+      {
+        "name": "loginId",
+        "top": 339
+      },
+      {
+        "name": "password",
+        "top": 424
+      }
+    ],
+    "headings": [
+      {
+        "text": "로그인",
+        "top": 199
+      },
+      {
+        "text": "내 계정으로가볍게 돌아와요.",
+        "top": 417
+      }
+    ],
+    "height": 844,
+    "page": "/login",
+    "scrollWidth": 1265,
+    "width": 1280
+  },
+  {
+    "clientWidth": 1265,
+    "fields": [
+      {
+        "name": "loginId",
+        "top": 339
+      },
+      {
+        "name": "password",
+        "top": 448
+      },
+      {
+        "name": "memberName",
+        "top": 558
+      },
+      {
+        "name": "riotId",
+        "top": 643
+      },
+      {
+        "name": "termsAccepted",
+        "top": 748
+      },
+      {
+        "name": "privacyAccepted",
+        "top": 808
+      }
+    ],
+    "headings": [
+      {
+        "text": "회원가입",
+        "top": 199
+      },
+      {
+        "text": "내전 놀이터에함께할 준비.",
+        "top": 729
+      }
+    ],
+    "height": 844,
+    "page": "/signup",
+    "scrollWidth": 1265,
+    "width": 1280
+  },
+  {
+    "clientWidth": 1265,
+    "fields": [
+      {
+        "name": "q",
+        "top": 542
+      },
+      {
+        "name": "from",
+        "top": 682
+      },
+      {
+        "name": "to",
+        "top": 765
+      }
+    ],
+    "headings": [
+      {
+        "text": "우리의 내전 기록",
+        "top": 230
+      },
+      {
+        "text": "경기 결과",
+        "top": 726
+      }
+    ],
+    "height": 844,
+    "page": "/matches",
+    "scrollWidth": 1265,
+    "width": 1280
+  },
+  {
+    "clientWidth": 1265,
+    "fields": [],
+    "headings": [
+      {
+        "text": "오늘 같이 플레이해요",
+        "top": 232
+      },
+      {
+        "text": "파티 모집",
+        "top": 539
+      },
+      {
+        "text": "기존 스크림 기록",
+        "top": 1323
+      }
+    ],
+    "height": 844,
+    "page": "/recruits",
+    "scrollWidth": 1265,
+    "width": 1280
+  },
+  {
+    "clientWidth": 1265,
+    "fields": [],
+    "headings": [
+      {
+        "text": "우리 팀, 근거 있게 나눠요",
+        "top": 200
+      },
+      {
+        "text": "승인된 계정으로 시작해 주세요",
+        "top": 566
+      }
+    ],
+    "height": 844,
+    "page": "/tools/team-balance",
+    "scrollWidth": 1265,
+    "width": 1280
+  }
+]

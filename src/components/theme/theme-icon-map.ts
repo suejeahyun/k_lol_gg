@@ -41,13 +41,13 @@ export const themeIconMap = {
     "row": 1
   },
   "Menu": {
-    "atlas": "navigation",
-    "column": 0,
+    "atlas": "controls",
+    "column": 1,
     "row": 2
   },
   "Search": {
-    "atlas": "navigation",
-    "column": 1,
+    "atlas": "controls",
+    "column": 0,
     "row": 2
   },
   "SearchX": {
@@ -206,17 +206,17 @@ export const themeIconMap = {
     "row": 2
   },
   "Check": {
-    "atlas": "status",
-    "column": 1,
-    "row": 2
-  },
-  "X": {
-    "atlas": "status",
+    "atlas": "controls",
     "column": 2,
     "row": 2
   },
+  "X": {
+    "atlas": "controls",
+    "column": 3,
+    "row": 1
+  },
   "Plus": {
-    "atlas": "status",
+    "atlas": "controls",
     "column": 3,
     "row": 2
   },
@@ -241,34 +241,34 @@ export const themeIconMap = {
     "row": 3
   },
   "ArrowRight": {
-    "atlas": "actions",
+    "atlas": "controls",
     "column": 0,
     "row": 0
   },
   "ArrowLeft": {
-    "atlas": "actions",
+    "atlas": "controls",
     "column": 1,
     "row": 0
   },
   "ChevronRight": {
-    "atlas": "actions",
+    "atlas": "controls",
     "column": 2,
     "row": 0
   },
   "ChevronLeft": {
-    "atlas": "actions",
+    "atlas": "controls",
     "column": 3,
     "row": 0
   },
   "ChevronDown": {
-    "atlas": "actions",
+    "atlas": "controls",
     "column": 0,
     "row": 1
   },
   "RefreshCw": {
-    "atlas": "actions",
-    "column": 1,
-    "row": 1
+    "atlas": "controls",
+    "column": 0,
+    "row": 3
   },
   "RotateCcw": {
     "atlas": "actions",
@@ -276,14 +276,14 @@ export const themeIconMap = {
     "row": 1
   },
   "Play": {
-    "atlas": "actions",
-    "column": 3,
+    "atlas": "controls",
+    "column": 1,
     "row": 1
   },
   "Pause": {
-    "atlas": "actions",
-    "column": 0,
-    "row": 2
+    "atlas": "controls",
+    "column": 2,
+    "row": 1
   },
   "Send": {
     "atlas": "actions",
@@ -291,18 +291,18 @@ export const themeIconMap = {
     "row": 2
   },
   "Download": {
-    "atlas": "actions",
-    "column": 2,
-    "row": 2
+    "atlas": "controls",
+    "column": 1,
+    "row": 3
   },
   "ExternalLink": {
-    "atlas": "actions",
+    "atlas": "controls",
     "column": 3,
-    "row": 2
+    "row": 3
   },
   "Share2": {
-    "atlas": "actions",
-    "column": 0,
+    "atlas": "controls",
+    "column": 2,
     "row": 3
   },
   "Link2": {

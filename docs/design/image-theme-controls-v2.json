@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "generatedWith": "built-in image_gen",
+  "source": "C:/Users/sjh11/.codex/generated_images/01a0fc6a-8f1b-7073-87cc-6c7f68906d09/exec-47ea8702-45e5-4baf-b9a7-a277c9b87165.png",
+  "assets": [
+    {
+      "id": "controls",
+      "path": "public/images/theme/v1/controls.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one production UI sprite atlas, exactly 4 columns by 4 rows in a square transparent canvas. Create 16 SIMPLE, BOLD, HIGH-CONTRAST fantasy crystal UI glyphs for a Korean League-of-Legends community website. This is a single sprite sheet asset, no labels or other text. Every cell is exactly one quarter of the width and height; each glyph centered at the cell center, with consistent 18% transparent inset on all cell edges, no marks crossing cells. Style: smooth cobalt blue enamel with a subtle lavender edge, minimal bright bevel, thick familiar silhouettes readable at 18px. No ornamental details, no tiny sparkles, no badges or circular backplates, no drop shadows outside glyphs. True transparent alpha, no checkerboard. Required exact row-major glyphs: row 1: thick right arrow with shaft; thick left arrow with shaft; right chevron; left chevron. Row 2: down chevron; solid right-pointing play triangle; two thick pause bars; bold X close. Row 3: magnifying glass with thick ring and handle; hamburger menu with three thick horizontal bars; large check mark; bold plus sign. Row 4: circular refresh arrow; downward download arrow into tray; upward arrow from tray; external-link arrow pointing northeast out of a square. The strokes should be broad and unambiguous, deep blue around #2857A0 with sparing lighter blue and lavender facets. No lettering, no brand logo, no watermark, no scene. All 16 icons same scale and aligned to precise 4x4 cells.",
+      "cells": [
+        "ArrowRight",
+        "ArrowLeft",
+        "ChevronRight",
+        "ChevronLeft",
+        "ChevronDown",
+        "Play",
+        "Pause",
+        "X",
+        "Search",
+        "Menu",
+        "Check",
+        "Plus",
+        "RefreshCw",
+        "Download",
+        "Share2",
+        "ExternalLink"
+      ],
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "bytes": 45794,
+      "sha256": "c7ae0e491761f986a942eeacb3c795bf44bfedef37ab8c60a6c00cfb2e0fe4f1"
+    }
+  ]
+}

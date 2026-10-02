@@ -23,6 +23,7 @@ export function HomeRankingCarousel({ slides, seasonName, minimumParticipation }
   const swiped = useRef(false);
   const slideId = useId();
   const active = slides[index % slides.length];
+  const nextSlide = slides[(index + 1) % slides.length];
   const canMove = slides.length > 1;
 
   useEffect(() => {
@@ -113,7 +114,10 @@ export function HomeRankingCarousel({ slides, seasonName, minimumParticipation }
       </div>
 
       <div className={styles.bottomline}>
+        <div className={styles.footerLinks}>
         <Link className={styles.allRankings} href={`/rankings?view=${active.id}`}>전체 {active.label} 순위 <ArrowRight size={16} aria-hidden="true" /></Link>
+      {canMove ? <button type="button" className={styles.nextHint} onClick={() => move(1)} aria-controls={slideId}>다음: {nextSlide.label} <ArrowRight size={18} aria-hidden="true" /></button> : null}
+        </div>
         {canMove ? <div className={styles.controls}>
           <Button className={styles.control} variant="ghost" size="icon" onClick={() => move(-1)} aria-label="이전 랭킹" aria-controls={slideId}><ChevronLeft aria-hidden="true" /></Button>
           <div className={styles.dots} role="group" aria-label="랭킹 슬라이드 선택">

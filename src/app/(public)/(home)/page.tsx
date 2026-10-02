@@ -39,8 +39,8 @@ export const metadata = createRouteMetadata("/");
 const taskCards = [
   { title: "오늘 내전 참가", description: "현재 인원과 내 신청 상태를 확인하고 참가하세요.", href: "/applications", icon: CalendarDays, tone: "sky", status: "모집 현황 보기" },
   { title: "파티 찾기", description: "같이할 사람과 남은 자리를 확인하세요.", href: "/recruits", icon: UsersRound, tone: "peach", status: "참가 방법 안내" },
-  { title: "팀 나누기", description: "실력과 포지션에 맞춰 10명을 나누세요.", href: "/tools/team-balance", icon: ShieldCheck, tone: "mint", status: "로그인 필요" },
-  { title: "경기 결과 올리기", description: "결과를 제출하고 검토 상태를 확인하세요.", href: "/matches/submit", icon: Swords, tone: "lilac", status: "로그인 필요" },
+  { title: "실력 맞춰 팀 나누기", description: "실력과 포지션에 맞춰 10명을 나누세요.", href: "/tools/team-balance", icon: ShieldCheck, tone: "mint", status: "로그인 필요" },
+  { title: "경기 결과 제출", description: "결과를 제출하고 검토 상태를 확인하세요.", href: "/matches/submit", icon: Swords, tone: "lilac", status: "로그인 필요" },
 ] as const;
 
 const accountStatusLabel = {
@@ -121,7 +121,7 @@ export default async function HomePage() {
         href: `/images/${gallery.galleryId}`,
         eyebrow: "멸망전 우승",
         title: displayTitle,
-        description: gallery.galleryDescription,
+        description: gallery.galleryDescription === displayTitle ? "함께 만든 우승의 순간" : gallery.galleryDescription,
       }));
     })
     : [];
@@ -142,16 +142,20 @@ export default async function HomePage() {
             같이할 사람을 찾고, 팀을 나누고, 오늘의 기록을 남겨요.
           </p>
 
+          <div className="home-join-actions">
+            <Link href="/applications"><CalendarDays size={22} aria-hidden="true" /> 오늘 내전 참가</Link>
+            <Link href="/recruits"><UsersRound size={22} aria-hidden="true" /> 파티 찾기</Link>
+          </div>
           <form className="hero-search" action="/players" method="get">
             <label className="sr-only" htmlFor="home-player-search">
-              회원명, 플레이어 닉네임 또는 Riot ID
+              플레이어 전적 검색: 회원명, 닉네임 또는 Riot ID
             </label>
             <Search aria-hidden="true" size={19} />
             <Input
               id="home-player-search"
               name="q"
               maxLength={80}
-              placeholder="닉네임 또는 Riot ID"
+              placeholder="플레이어 닉네임 · Riot ID"
               autoComplete="off"
             />
             <Button size="lg" type="submit">전적 검색</Button>
@@ -258,15 +262,15 @@ export default async function HomePage() {
           <div className="home-overview-grid">
             <article className="home-feed-panel" data-feed-kind="matches">
               <header><Swords aria-hidden="true" /><div><span>최근 경기</span><strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></div><Link href="/matches">전체 보기</Link></header>
-              {homeResult.snapshot.feeds.recentMatches.length ? <ul>{homeResult.snapshot.feeds.recentMatches.map((match) => <li key={match.id}><Link href={`/matches/${match.id}`}><span><strong>{match.title}</strong><small>{dateLabel(match.occurredAt)} · BLUE {match.blueWins}:{match.redWins} RED</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>아직 공개 확정 경기가 없어요.</FeedEmpty>}
+              {homeResult.snapshot.feeds.recentMatches.length ? <ul>{homeResult.snapshot.feeds.recentMatches.map((match) => <li key={match.id}><Link href={`/matches/${match.id}`}><span><strong>{match.title}</strong><small>경기일 {dateLabel(match.playedOn)} · BLUE {match.blueWins}:{match.redWins} RED</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>아직 공개 확정 경기가 없어요.</FeedEmpty>}
             </article>
             <article className="home-feed-panel" data-feed-kind="recruits">
-              <header><UsersRound aria-hidden="true" /><div><span>진행 중 구인</span><strong>{homeResult.snapshot.feeds.recruits.length}건</strong></div><Link href="/recruits">전체 보기</Link></header>
-              {homeResult.snapshot.feeds.recruits.length ? <ul>{homeResult.snapshot.feeds.recruits.map((recruit) => <li key={`${recruit.kind}-${recruit.id}`}><Link href={`/recruits#${recruit.kind.toLowerCase()}-${recruit.id}`}><span><strong>{recruit.title}</strong><small>{recruit.kind === "PARTY" ? "파티" : "스크림"} · {recruit.summary}</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>현재 진행 중인 파티·스크림 구인이 없어요.</FeedEmpty>}
+              <header><UsersRound aria-hidden="true" /><div><span>참가 가능한 파티</span><strong>{homeResult.snapshot.feeds.recruits.length}건</strong></div><Link href="/recruits">전체 보기</Link></header>
+              {homeResult.snapshot.feeds.recruits.length ? <ul>{homeResult.snapshot.feeds.recruits.map((recruit) => <li key={`${recruit.kind}-${recruit.id}`}><Link href={`/recruits#${recruit.kind.toLowerCase()}-${recruit.id}`}><span><strong>{recruit.title}</strong><small>{recruit.kind === "PARTY" ? "파티" : "스크림"} · {recruit.summary}</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>현재 빈자리가 있는 파티가 없어요. 전체 보기에서 모집 현황을 확인하세요.</FeedEmpty>}
             </article>
             <article className="home-feed-panel" data-feed-kind="competitions">
               <header><Trophy aria-hidden="true" /><div><span>대회 현황</span><strong>{homeResult.snapshot.feeds.competitions.length}건</strong></div><Link href="/competitions">전체 보기</Link></header>
-              {homeResult.snapshot.feeds.competitions.length ? <ul>{homeResult.snapshot.feeds.competitions.map((competition) => <li key={`${competition.kind}-${competition.id}`}><Link href={competition.kind === "EVENT" ? `/competitions/events/${competition.id}` : `/competitions/destruction/${competition.id}`}><span><strong>{competition.title}</strong><small>{competition.kind === "EVENT" ? "이벤트전" : "멸망전"} · {({ DRAFT: "준비 중", RECRUITING: "모집 중", TEAM_BUILDING: "팀 구성 중", IN_PROGRESS: "진행 중", COMPLETED: "종료", CANCELLED: "취소" } as Record<string, string>)[competition.status] ?? "진행 현황"} · {competition.participantCount}명</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>공개된 이벤트전·멸망전이 아직 없어요.</FeedEmpty>}
+              {homeResult.snapshot.feeds.competitions.length ? <ul>{homeResult.snapshot.feeds.competitions.map((competition) => <li key={`${competition.kind}-${competition.id}`}><Link href={competition.kind === "EVENT" ? `/competitions/events/${competition.id}` : `/competitions/destruction/${competition.id}`}><span><strong>{competition.title}</strong><small>{competition.kind === "EVENT" ? "이벤트전" : "멸망전"} · {({ DRAFT: "준비 중", RECRUITING: "모집 중", TEAM_BUILDING: "팀 구성 중", PLANNED: "준비 중", AUCTION: "경매 중", PRELIMINARY: "예선 진행 중", TOURNAMENT: "본선 진행 중", IN_PROGRESS: "진행 중", COMPLETED: "종료", CANCELLED: "취소" } as Record<string, string>)[competition.status] ?? "진행 현황"} · {competition.participantCount}명</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>공개된 이벤트전·멸망전이 아직 없어요.</FeedEmpty>}
             </article>
             <article className="home-feed-panel" data-feed-kind="champions">
               <header><Images aria-hidden="true" /><div><span>멸망전 우승 사진</span><strong>{destructionWinnerSlides.length}장</strong></div><Link href="/images">전체 보기</Link></header>
@@ -284,7 +288,7 @@ export default async function HomePage() {
         <div className="home-personal-copy">
           <span><Sparkles aria-hidden="true" /> FOR YOU</span>
           <h2 id="home-personal-title">내 활동 이어보기</h2>
-          {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 결과 접수</Link><Link href="/tools/team-balance/drafts">저장한 팀</Link></div></> : session ? <><p>계정 정보를 불러오지 못했어요. 내 계정에서 다시 확인해 주세요.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
+          {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 제출 기록</Link><Link href="/tools/team-balance/drafts">저장한 팀</Link></div></> : session ? <><p>계정 정보를 불러오지 못했어요. 내 계정에서 다시 확인해 주세요.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
         </div>
         <div className="home-season-card" data-season-state={homeResult.state === "ready" && homeResult.snapshot.activeSeason ? "active" : "inactive"}>
           <CalendarDays aria-hidden="true" />

@@ -11,6 +11,12 @@ export default function RecruitHelpPage() {
       <h1>파티·내전 모집 이용 안내</h1>
       <p>최신 명단 전체를 복사하고 이름과 필요한 라인을 적어 전송해주세요.</p>
     </header>
+    <section id="find-room" className={styles.section}>
+      <h2>모집방을 모르겠어요</h2>
+      <p>파티 참가는 해당 모집이 올라온 카카오톡 방에서 진행합니다. 이미 커뮤니티에 참여 중이라면 모집 글을 올린 사람에게 방을 확인해 주세요.</p>
+      <p>처음 방문했다면 <Link href="/help/contact">운영팀에 참가 경로 문의</Link>를 남겨 주세요. 이 사이트에 방 초대 링크가 공개되어 있지 않은 모집은 임의로 연결할 수 없습니다.</p>
+      <p>사이트에서 바로 신청하려면 <Link href="/applications">오늘 내전 신청</Link>을 이용하세요.</p>
+    </section>
     <section className={styles.section}>
       <h2>카카오톡에서 복사·붙여넣기로 참가하기</h2>
       <ol>

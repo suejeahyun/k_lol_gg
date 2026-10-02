@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, lt, sql } from "drizzle-orm";
 
 import { destructionCompetitions } from "@/platform/db/schema/destruction-competitions";
 import { eventCompetitions } from "@/platform/db/schema/event-competitions";
@@ -8,7 +8,7 @@ import {
   mediaGalleryExternalImages,
 } from "@/platform/db/schema/media";
 import { matchSeries, privateAssets } from "@/platform/db/schema/matches";
-import { recruitParties, scrimRecruits } from "@/platform/db/schema/recruiting";
+import { recruitParties } from "@/platform/db/schema/recruiting";
 import { players } from "@/platform/db/schema/registry";
 import { seasons } from "@/platform/db/schema/seasons";
 import type { DatabaseExecutor } from "@/platform/db/transaction";
@@ -16,8 +16,9 @@ import type { DatabaseExecutor } from "@/platform/db/transaction";
 import type { HomeRepository } from "../application/ports/home-repository";
 import {
   mergeRecentHomeItems,
+  HOME_PLACEHOLDER_COMPETITION_TITLE_PATTERN,
+  selectHomeCompetitions,
   selectHomeDestructionWinnerGalleries,
-  type HomeCompetition,
   type HomeRecruit,
   type HomeSnapshot,
 } from "../domain/home-snapshot";
@@ -30,6 +31,7 @@ export class PostgresHomeRepository implements HomeRepository {
   constructor(private readonly database: DatabaseExecutor) {}
 
   async load(): Promise<HomeSnapshot> {
+    const primaryMemberCount = sql<number>`(select count(*)::int from jsonb_array_elements(${recruitParties.membersJson}) as member where coalesce((member->>'substitute')::boolean, false) = false)`;
     const [
       playerRows,
       seasonRows,
@@ -37,7 +39,6 @@ export class PostgresHomeRepository implements HomeRepository {
       activeSeasonRows,
       recentMatchRows,
       partyRows,
-      scrimRows,
       eventRows,
       destructionRows,
       linkedWinnerGalleryRows,
@@ -62,37 +63,30 @@ export class PostgresHomeRepository implements HomeRepository {
         title: recruitParties.title,
         status: recruitParties.status,
         maximumMembers: recruitParties.maximumMembers,
-        memberCount: sql<number>`jsonb_array_length(${recruitParties.membersJson})`,
+        memberCount: primaryMemberCount,
         updatedAt: recruitParties.updatedAt,
-      }).from(recruitParties).where(eq(recruitParties.status, "IN_PROGRESS"))
+      }).from(recruitParties).where(and(eq(recruitParties.status, "IN_PROGRESS"), lt(primaryMemberCount, recruitParties.maximumMembers)))
         .orderBy(desc(recruitParties.updatedAt), desc(recruitParties.id)).limit(4),
-      this.database.select({
-        id: scrimRecruits.id,
-        status: scrimRecruits.status,
-        scrimNumber: scrimRecruits.scrimNumber,
-        bestOf: scrimRecruits.bestOf,
-        updatedAt: scrimRecruits.updatedAt,
-      }).from(scrimRecruits).where(and(
-        eq(scrimRecruits.isDraft, false),
-        inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
-      ))
-        .orderBy(desc(scrimRecruits.updatedAt), desc(scrimRecruits.id)).limit(4),
       this.database.select({
         id: eventCompetitions.id,
         title: eventCompetitions.title,
         status: eventCompetitions.status,
         participantCount: eventCompetitions.activeParticipantCount,
         updatedAt: eventCompetitions.updatedAt,
-      }).from(eventCompetitions).where(inArray(eventCompetitions.status, ["PLANNED", "RECRUITING", "TEAM_BUILDING", "IN_PROGRESS", "COMPLETED"]))
-        .orderBy(desc(eventCompetitions.updatedAt), desc(eventCompetitions.id)).limit(4),
+      }).from(eventCompetitions).where(and(
+        inArray(eventCompetitions.status, ["RECRUITING", "TEAM_BUILDING", "IN_PROGRESS", "COMPLETED"]),
+        sql`trim(${eventCompetitions.title}) <> '' and trim(${eventCompetitions.title}) !~* ${HOME_PLACEHOLDER_COMPETITION_TITLE_PATTERN}`,
+      )).orderBy(asc(sql`case when ${eventCompetitions.status} = 'COMPLETED' then 1 else 0 end`), desc(eventCompetitions.updatedAt), desc(eventCompetitions.id)).limit(4),
       this.database.select({
         id: destructionCompetitions.id,
         title: destructionCompetitions.title,
         status: destructionCompetitions.status,
         participantCount: destructionCompetitions.participantCount,
         updatedAt: destructionCompetitions.updatedAt,
-      }).from(destructionCompetitions).where(inArray(destructionCompetitions.status, ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT", "COMPLETED"]))
-        .orderBy(desc(destructionCompetitions.updatedAt), desc(destructionCompetitions.id)).limit(4),
+      }).from(destructionCompetitions).where(and(
+        inArray(destructionCompetitions.status, ["RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT", "COMPLETED"]),
+        sql`trim(${destructionCompetitions.title}) <> '' and trim(${destructionCompetitions.title}) !~* ${HOME_PLACEHOLDER_COMPETITION_TITLE_PATTERN}`,
+      )).orderBy(asc(sql`case when ${destructionCompetitions.status} = 'COMPLETED' then 1 else 0 end`), desc(destructionCompetitions.updatedAt), desc(destructionCompetitions.id)).limit(4),
       this.database.select({
         tournamentId: destructionCompetitions.id,
         tournamentTitle: destructionCompetitions.title,
@@ -169,20 +163,12 @@ export class PostgresHomeRepository implements HomeRepository {
         kind: "PARTY" as const,
         title: row.title,
         status: row.status,
-        summary: `${row.memberCount}/${row.maximumMembers}명 참여`,
-        occurredAt: row.updatedAt.toISOString(),
-      })),
-      scrimRows.map((row) => ({
-        id: row.id,
-        kind: "SCRIM" as const,
-        title: `스크림 #${row.scrimNumber}`,
-        status: row.status,
-        summary: `BO${row.bestOf} 상대 팀 모집`,
+        summary: `${row.maximumMembers - row.memberCount}자리 남음 · ${row.memberCount}/${row.maximumMembers}명`,
         occurredAt: row.updatedAt.toISOString(),
       })),
     ], 4);
 
-    const competitions = mergeRecentHomeItems<HomeCompetition>([
+    const competitions = selectHomeCompetitions([
       eventRows.map((row) => ({
         id: row.id,
         kind: "EVENT" as const,

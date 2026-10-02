@@ -151,3 +151,13 @@ test("own submission history cursor is status-bound and reaches beyond the first
     null,
   );
 });
+
+
+test("native public search forms treat empty optional filters as unselected without weakening validation", () => {
+  const defaults = { sort: "playedOn", order: "desc", page: 1, pageSize: 12 };
+  assert.deepEqual(parsePublicMatchQuery("https://example.test/matches?q=&sort=playedOn&seasonId=&winner=&from=&to=&order=desc&pageSize=12"), defaults);
+  assert.deepEqual(parsePublicMatchQuery("https://example.test/matches?q=&sort=playedOn&seasonId=&winner=BLUE&from=2026-09-01&to=&order=desc&pageSize=12"), { ...defaults, winner: "BLUE", from: "2026-09-01" });
+  for (const invalid of ["winner=%20", "from=wrong", "to=2026-02-30", "winner=&winner=BLUE", "pageSize=", "sort="]) {
+    assert.equal(parsePublicMatchQuery("https://example.test/matches?" + invalid), null, invalid);
+  }
+});

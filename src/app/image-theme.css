@@ -3,7 +3,7 @@
   --theme-world-image: url('/images/theme/v1/world.webp');
   --theme-arena-image: url('/images/theme/v1/arena.webp');
   --theme-panel-image: url('/images/theme/v1/panel.webp');
-  --theme-surface-background: linear-gradient(#ffffff9e, #ffffff9e), #f8fbff var(--theme-panel-image) center / cover no-repeat;
+  --theme-surface-background: linear-gradient(#ffffffdf, #ffffffdf), #f8fbff var(--theme-panel-image) center / cover no-repeat;
   --theme-feature-background: linear-gradient(100deg, #ffffffdb, #ffffff80), var(--theme-world-image) center / cover no-repeat;
   --theme-page-background: linear-gradient(#ffffff9e, #ffffff9e) fixed, #f2f4ff var(--theme-world-image) center top / cover fixed no-repeat;
 }

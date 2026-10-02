@@ -49,9 +49,11 @@ test("image icons preserve size, accessible names and decorative semantics", () 
 
 test("artwork files match their provenance, alpha grids and transfer budget", async () => {
   const manifest = JSON.parse(await readFile("docs/design/image-theme-v1.json", "utf8"));
+  const controls = JSON.parse(await readFile("docs/design/image-theme-controls-v2.json", "utf8"));
+  const expectedPositions: Record<string, { atlas: string; column: number; row: number }> = {};
   let bytes = 0;
   const cells = new Set<string>();
-  for (const asset of manifest.assets) {
+  for (const asset of [...manifest.assets, ...controls.assets]) {
     const buffer = await readFile(asset.path);
     assert.equal(createHash("sha256").update(buffer).digest("hex"), asset.sha256);
     assert.equal(buffer.length, asset.bytes);
@@ -64,9 +66,9 @@ test("artwork files match their provenance, alpha grids and transfer budget", as
       assert.equal(asset.cells.length, 16); assert.equal(meta.hasAlpha, true);
       const { data, info } = await sharp(buffer).raw().toBuffer({ resolveWithObject: true });
       for (const [index, name] of asset.cells.entries()) {
-        assert.ok(!cells.has(name)); cells.add(name);
-        const position = themeIconMap[name as keyof typeof themeIconMap];
-        assert.deepEqual(position, { atlas: asset.id, column: index % 4, row: Math.floor(index / 4) });
+        cells.add(name);
+        const position = { atlas: asset.id, column: index % 4, row: Math.floor(index / 4) };
+        expectedPositions[name] = position;
         let opaque = 0, transparent = 0;
         const cellSize = info.width / 4;
         for (let y = position.row * cellSize; y < (position.row + 1) * cellSize; y++) {
@@ -86,6 +88,7 @@ test("artwork files match their provenance, alpha grids and transfer budget", as
       bytes += mobile.length;
     }
   }
+  assert.deepEqual(themeIconMap, expectedPositions, "every glyph uses its most recent generated cell");
   assert.equal(cells.size, 96);
   assert.ok(bytes < 850_000, `all shared artwork stays below 850 KB; got ${bytes}`);
 });

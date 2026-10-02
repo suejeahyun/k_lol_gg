@@ -31,7 +31,7 @@ test("홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 �
   const repository = source("../src/modules/home/infrastructure/postgres-home-repository.ts");
   const domain = source("../src/modules/home/domain/home-snapshot.ts");
   const home = source("../src/app/(public)/(home)/page.tsx");
-  for (const table of ["recruitParties", "scrimRecruits", "eventCompetitions", "destructionCompetitions", "mediaGalleries"]) {
+  for (const table of ["recruitParties", "eventCompetitions", "destructionCompetitions", "mediaGalleries"]) {
     assert.equal(repository.includes(table), true, table);
   }
   assert.equal(repository.includes('eq(mediaGalleries.status, "PUBLISHED")'), true);

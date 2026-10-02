@@ -164,7 +164,8 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   assert.equal(page.includes("가장 균형 잡힌 팀 배치 한 가지"), true, "시작 화면은 단일 추천을 안내한다");
   assert.equal(drafts.includes('createRouteMetadata("/tools/team-balance/drafts")'), true, "목록 metadata는 공용 운영 명칭을 사용한다");
   assert.equal(drafts.includes('"팀 밸런스 초안"}</h1>'), true, "목록 제목은 공용 운영 명칭을 사용한다");
-  assert.equal(navigation.includes("팀 밸런스 초안"), true, "팀 도구 메뉴는 개인 소유 명칭을 사용하지 않는다");
+  assert.equal(navigation.includes("저장한 팀"), true, "공용 팀 초안을 쉬운 명칭으로 안내한다");
+  assert.equal(navigation.includes("내 저장 팀"), false, "공용 목록을 개인 소유로 표시하지 않는다");
   assert.equal(detailPage.includes("초안 목록"), true, "상세 화면은 공용 초안 목록으로 돌아간다");
   assert.equal(detail.includes("플레이어 카드를 클릭한 채 원하는 자리로 끌어 놓으세요"), false, "수동 배치의 중복 드래그 설명은 노출하지 않는다");
   assert.equal(detail.includes("<small>드래그해 교체</small>"), false, "플레이어 카드의 반복 드래그 문구를 제거한다");

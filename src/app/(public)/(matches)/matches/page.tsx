@@ -58,6 +58,8 @@ export default async function MatchesPage({
     loadRuntimeSeasonData((service) => service.listPublicSeasons()),
   ]);
 
+  const advancedFilterCount = [query?.seasonId, query?.winner, query?.from, query?.to, query?.order === "asc"].filter(Boolean).length;
+
   return (
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="matches-title">
@@ -66,23 +68,31 @@ export default async function MatchesPage({
           <h1 id="matches-title">우리의 내전 기록</h1>
           <span>게임별 승패와 MVP, 공개 플레이어 기록을 한눈에 확인해요.</span>
           <div className={styles.heroActions}>
-            <Link href="/matches/submit"><FilePlus2 size={17} aria-hidden="true" /> 결과 접수</Link>
+            <Link href="/matches/submit"><FilePlus2 size={17} aria-hidden="true" /> 경기 결과 제출</Link>
             <Link href="/players"><Search size={17} aria-hidden="true" /> 플레이어 찾기</Link>
           </div>
         </div>
         <Gamepad2 aria-hidden="true" />
       </section>
 
-      <form className={styles.filters} action="/matches" method="get" role="search">
-        <label className={styles.filterWide}>경기 이름<input name="q" maxLength={100} defaultValue={query?.query ?? ""} placeholder="내전 이름 검색" /></label>
-        <label>시즌<select name="seasonId" defaultValue={query?.seasonId ?? ""}><option value="">전체 시즌</option>{seasonResult.state === "ready" ? seasonResult.data.map((season) => <option key={season.id} value={season.id}>{season.name}</option>) : null}</select></label>
-        <label>시리즈 결과<select name="winner" defaultValue={query?.winner ?? ""}><option value="">전체</option><option value="BLUE">블루 승리</option><option value="RED">레드 승리</option><option value="TIE">무승부</option></select></label>
-        <label>시작일<input name="from" type="date" defaultValue={query?.from ?? ""} /></label>
-        <label>종료일<input name="to" type="date" defaultValue={query?.to ?? ""} /></label>
-        <label>정렬 기준<select name="sort" defaultValue={query?.sort ?? "playedOn"}><option value="playedOn">경기 날짜</option><option value="title">경기 이름</option></select></label>
-        <label>정렬 방향<select name="order" defaultValue={query?.order ?? "desc"}><option value="desc">최신/내림차순</option><option value="asc">오래된/오름차순</option></select></label>
+      <form key={JSON.stringify(query)} className={styles.filters} action="/matches" method="get" role="search">
+        <div className={styles.quickFilters}>
+          <label className={styles.filterWide}>경기 이름<input name="q" maxLength={100} defaultValue={query?.query ?? ""} placeholder="내전 이름 검색" /></label>
+          <label>정렬 기준<select name="sort" defaultValue={query?.sort ?? "playedOn"}><option value="playedOn">경기 날짜</option><option value="title">경기 이름</option></select></label>
+          <button type="submit">찾아보기</button>
+        </div>
+        <details className={styles.advancedFilters} open={advancedFilterCount > 0}>
+          <summary>상세 필터 <span>{advancedFilterCount ? advancedFilterCount + "개 적용" : "시즌 · 승패 · 날짜"}</span></summary>
+          <div className={styles.advancedFields}>
+            <label>시즌<select name="seasonId" defaultValue={query?.seasonId ?? ""}><option value="">전체 시즌</option>{seasonResult.state === "ready" ? seasonResult.data.map((season) => <option key={season.id} value={season.id}>{season.name}</option>) : null}</select></label>
+            <label>시리즈 결과<select name="winner" defaultValue={query?.winner ?? ""}><option value="">전체</option><option value="BLUE">블루 승리</option><option value="RED">레드 승리</option><option value="TIE">무승부</option></select></label>
+            <label>시작일<input name="from" type="date" defaultValue={query?.from ?? ""} /></label>
+            <label>종료일<input name="to" type="date" defaultValue={query?.to ?? ""} /></label>
+            <label>정렬 방향<select name="order" defaultValue={query?.order ?? "desc"}><option value="desc">최신/내림차순</option><option value="asc">오래된/오름차순</option></select></label>
+          </div>
+        </details>
+        {advancedFilterCount > 0 || query?.query || query?.sort === "title" ? <Link className={styles.resetFilters} href="/matches">검색 조건 초기화</Link> : null}
         <input type="hidden" name="pageSize" value={query?.pageSize ?? 12} />
-        <button type="submit">찾아보기</button>
       </form>
 
       <section aria-labelledby="match-list-title">
@@ -97,7 +107,7 @@ export default async function MatchesPage({
       ) : result.state === "error" ? (
         <section className={styles.state} role="alert"><Search /><h2>경기 결과를 불러오지 못했어요.</h2><p>검색 조건을 확인하거나 잠시 후 다시 시도해 주세요.</p></section>
       ) : result.data.items.length === 0 ? (
-        <section className={styles.state}><Gamepad2 /><h2>조건에 맞는 공개 경기가 없어요.</h2><p>첫 경기가 공개되면 이곳에 표시됩니다.</p></section>
+        <section className={styles.state}><Gamepad2 /><h2>조건에 맞는 공개 경기가 없어요.</h2><p>검색어와 상세 필터를 바꾸거나 전체 경기 기록을 확인해 보세요.</p><Link href="/matches">전체 경기 보기</Link></section>
       ) : (
         <>
           <div className={styles.grid}>

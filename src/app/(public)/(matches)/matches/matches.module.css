@@ -6,8 +6,15 @@
 .hero > svg { z-index: 1; width: clamp(76px, 14vw, 130px); height: auto; color: #7aaee0; filter: drop-shadow(0 16px 24px rgba(104,133,184,.18)); }
 .heroActions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .heroActions a { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border-radius: 15px; text-decoration: none; font-weight: 850; background: #fff; box-shadow: 0 8px 22px rgba(78,104,149,.1); transition: box-shadow .18s ease, transform .18s ease; }
-.filters { display: grid; grid-template-columns: repeat(4,minmax(130px,1fr)); gap: 12px; align-items: end; padding: 20px; border: 1px solid var(--border); border-radius: 24px; background: var(--card); }
-.filterWide { grid-column: span 2; }
+.filters { display: grid; gap: 12px; padding: 20px; border: 1px solid var(--border); border-radius: 24px; background: var(--theme-surface-background); }
+.quickFilters { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; gap: 12px; align-items: end; }
+.filterWide { min-width: 0; }
+.advancedFilters { border-top: 1px solid var(--border); padding-top: 4px; }
+.advancedFilters summary { min-height: 44px; padding-block: 12px; color: var(--ink-strong); font-size: 14px; font-weight: 800; cursor: pointer; }
+.advancedFilters summary span { margin-left: 8px; color: var(--text-muted); font-size: 12px; font-weight: 500; }
+.advancedFilters summary:focus-visible, .resetFilters:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.advancedFields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; padding-block: 8px; }
+.resetFilters { display: inline-flex; align-items: center; min-height: 44px; width: fit-content; color: var(--primary); font-size: 14px; text-underline-offset: 3px; }
 .filters label { display: grid; gap: 7px; color: var(--text-muted); font-size: 13px; font-weight: 800; }
 .filters input,.filters select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 13px; color: var(--foreground); background: #fff; transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease; }
 .filters input:focus-visible,.filters select:focus-visible,.filters button:focus-visible,.heroActions a:focus-visible,.card:focus-visible,.pager a:focus-visible { outline: 3px solid rgba(103,166,227,.44); outline-offset: 2px; }
@@ -67,6 +74,7 @@
 .privacy { padding: 16px 18px; border-radius: 18px; color: var(--text-muted); background: var(--cream); font-size: 13px; line-height: 1.65; }
 @media (hover:hover) and (pointer:fine) { .card:hover { border-color: rgba(137,177,219,.62); transform: translateY(-3px); box-shadow: var(--shadow-soft); } .heroActions a:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(78,104,149,.15); } .game:hover { border-color: rgba(137,177,219,.54); box-shadow: 0 15px 34px rgba(76,105,155,.1); transform: translateY(-2px); } .player:hover { border-color: rgba(118,151,198,.3); background: #f7fbff; transform: translateX(2px); } .player[data-mvp="true"]:hover { border-color: rgba(201,145,39,.55); background: #fffaf0; } }
 @media (prefers-reduced-motion:reduce) { .card,.heroActions a,.filters input,.filters select,.score strong,.game,.team,.player { transition: none; transform: none; } }
-@media (max-width: 900px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .filters { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 640px) { .hero { min-height: 0; border-radius: 24px; } .hero > svg { display: none; } .filters,.grid,.teams { grid-template-columns: 1fr; } .filterWide { grid-column: auto; } .card { min-height: 0; } .detailHero { grid-template-columns: 1fr; } .team + .team { border-left: 0; border-top: 1px solid var(--border); } .heading { align-items: start; flex-direction: column; } }
+@media (max-width: 640px) { .heroActions { display: none; } }
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .advancedFields { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .page { gap: 18px; } .hero { min-height: 0; border-radius: 24px; padding: 22px; } .hero h1 { font-size: 30px; } .hero > svg { display: none; } .grid,.teams,.advancedFields { grid-template-columns: 1fr; } .quickFilters { grid-template-columns: minmax(0,1fr) auto; } .filterWide { grid-column: 1 / -1; } .filters { padding: 16px; } .card { min-height: 0; } .detailHero { grid-template-columns: 1fr; } .team + .team { border-left: 0; border-top: 1px solid var(--border); } .heading { align-items: start; flex-direction: column; } }
 @media (forced-colors:active) { .card,.detailHero,.game,.player { border-color: CanvasText; } .card[data-winner="blue"],.card[data-winner="red"],.team[data-winner="true"],.player[data-mvp="true"] { border-color: Highlight; } .game::before { background: Highlight; } }

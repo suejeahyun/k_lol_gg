@@ -36,8 +36,9 @@ export default async function TeamBalancePage() {
         <section className={styles.emptyState} role="status">
           <LogIn aria-hidden="true" />
           <h2>승인된 계정으로 시작해 주세요</h2>
-          <p>팀 초안은 승인된 계정에서 만들고, 관리자가 검수·경기 결과 등록까지 이어서 사용할 수 있어요.</p>
+          <p>참가자 10명을 골라 실력과 포지션에 맞는 팀을 만듭니다. 신규 플레이어는 회원가입 후 바로 시작할 수 있으며, 기존 플레이어 연결은 관리자 확인이 필요합니다.</p>
           <Link className={styles.primaryLink} href={session ? "/account" : "/login?next=%2Ftools%2Fteam-balance"}>{session ? "내 계정 상태 확인" : "로그인"}</Link>
+          {!session ? <Link href="/signup?next=%2Ftools%2Fteam-balance">회원가입 후 팀 만들기</Link> : null}
         </section>
       ) : <TeamBalanceBuilder />}
     </div>

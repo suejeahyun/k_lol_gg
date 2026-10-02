@@ -66,12 +66,16 @@
 .place[data-rank="1"] .metric strong { font-size: 38px; color: #ffe4a7; }
 .profile { display: flex; align-items: center; gap: 5px; color: #e8e2f2; font-size: 12px; }
 .bottomline { margin-top: 18px; padding-top: 12px; border-top: 1px solid #ffffff1c; }
+.footerLinks { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.nextHint { display: flex; align-items: center; gap: 8px; width: fit-content; min-height: 44px; margin: 0; padding: 8px 10px; border: 1px solid #ffffff40; border-radius: 10px; color: #f3f0ff; background: #15203bba; font: inherit; font-size: 13px; cursor: pointer; }
+.nextHint svg, .allRankings svg, .profile svg { border-radius: 4px; background: #f6f5ff; }
 .allRankings { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; color: #f2edfb; font-size: 13px; text-decoration: none; }
 .controls, .dots { display: flex; align-items: center; }
 .controls { gap: 6px; }
 .control, .dot { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; color: #f6f0ff; }
-.control { background: #ffffff0e; border: 1px solid #ffffff26; }
-.control:hover, .dot:hover { background: #ffffff21; color: #fff; }
+.control { background: #f2efff; border: 1px solid #e7defa; }
+.control:hover { background: white; }
+.dot:hover { background: #ffffff21; color: #fff; }
 .dot { background: transparent; }
 .dot > span { height: 6px; width: 6px; border-radius: 5px; background: #ffffff66; transition: width 180ms, background 180ms; }
 .dot[aria-current="true"] > span { width: 22px; background: var(--spotlight); box-shadow: 0 0 10px #dec2ff40; }
@@ -82,31 +86,36 @@
 }
 @keyframes reveal { from { opacity: .35; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
 @media (max-width: 640px) {
-  .carousel { padding: 20px 16px 12px; border-radius: 20px; }
-  .intro { padding: 14px 0 18px; }
+  .carousel { padding: 14px 14px 8px; border-radius: 20px; }
+  .intro { padding: 6px 0 12px; }
+  .intro h3 { margin-block: 4px; font-size: 26px; }
+  .category { font-size: 10px; letter-spacing: .02em; }
   .intro p { max-width: 240px; margin-inline: auto; }
   .podium { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
   .place[data-rank="1"] { grid-column: 1 / -1; grid-row: 1; }
   .place[data-rank="2"] { grid-column: 1; grid-row: 2; }
   .place[data-rank="3"] { grid-column: 2; grid-row: 2; }
-  .player { padding: 14px 10px; border-radius: 14px; }
-  .place[data-rank="1"] .player { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; column-gap: 12px; padding: 18px 14px; text-align: left; }
-  .place[data-rank="1"] .medal { grid-column: 1; grid-row: 1 / 5; width: 54px; height: 54px; margin: 0; }
+  .player { padding: 10px; border-radius: 14px; }
+  .place[data-rank="1"] .player { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; column-gap: 10px; padding: 12px; text-align: left; }
+  .place[data-rank="1"] .medal { grid-column: 1; grid-row: 1 / 5; width: 44px; height: 44px; margin: 0; }
   .place[data-rank="1"] .medal svg { width: 30px; height: 30px; }
   .place[data-rank="1"] .rank { grid-column: 2; margin-bottom: 4px; font-size: 10px; }
   .place[data-rank="1"] .name { grid-column: 2; font-size: 18px; }
-  .place[data-rank="1"] .riotId { grid-column: 2; }
+  .place[data-rank="1"] .riotId { display: none; }
   .place[data-rank="1"] .metric { grid-column: 3; grid-row: 1 / 5; flex-direction: column; align-items: flex-end; gap: 3px; margin: 0; }
   .place[data-rank="1"] .metric strong { font-size: 30px; }
   .place[data-rank="1"] .profile { grid-column: 2; margin-top: 6px; }
   .name { font-size: 16px; }
+  .place:not([data-rank="1"]) .medal, .place:not([data-rank="1"]) .riotId, .place:not([data-rank="1"]) .profile { display: none; }
   .rank { margin-bottom: 6px; }
   .medal { width: 32px; height: 32px; margin-bottom: 5px; }
   .medal svg { width: 20px; height: 20px; }
-  .metric { margin: 8px 0; gap: 5px; }
+  .metric { margin: 6px 0 0; gap: 5px; }
   .metric strong { font-size: 26px; }
-  .bottomline { flex-direction: column; gap: 0; margin-top: 14px; padding-top: 4px; }
-  .allRankings { order: 2; }
+  .bottomline { flex-direction: column; gap: 0; margin-top: 4px; padding-top: 4px; }
+  .footerLinks { width: 100%; gap: 4px; order: 2; }
+  .allRankings, .nextHint { font-size: 11px; }
+  .nextHint { padding-inline: 6px; gap: 4px; }
   .controls { justify-content: center; width: 100%; }
 }
 @media (max-width: 360px) {

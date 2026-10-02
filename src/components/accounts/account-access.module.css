@@ -15,7 +15,9 @@
   color: var(--account-text);
   padding: clamp(1rem, 4vw, 3rem) 0 5rem;
 }
-.accessGrid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(22rem, .55fr); gap: clamp(1rem, 4vw, 2rem); align-items: stretch; }
+.accessGrid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(22rem, .55fr); grid-template-areas: "intro form"; gap: clamp(1rem, 4vw, 2rem); align-items: stretch; }
+.accessGrid > .intro { grid-area: intro; }
+.accessGrid > .formCard { grid-area: form; min-width: 0; }
 .intro, .formCard, .accountHero, .panel { border: 1px solid var(--account-border); border-radius: 1.6rem; background: var(--theme-surface-background); box-shadow: 0 1rem 3rem rgb(50 78 119 / 9%), 0 .15rem .45rem rgb(50 78 119 / 5%); }
 .intro { min-height: 35rem; display: grid; align-content: end; overflow: hidden; padding: clamp(1.5rem, 5vw, 3.2rem); background: linear-gradient(180deg, #ffffff00 12%, #ffffffc7 54%, #fffffff0 82%), var(--theme-world-image) 22% center / cover no-repeat; }
 .eyebrow { display: inline-flex; width: fit-content; align-items: center; gap: .4rem; border-radius: 999px; color: var(--account-accent); background: #eaf5ff; padding: .45rem .7rem; font-size: .75rem; font-weight: 900; line-height: 1.35; letter-spacing: .05em; }
@@ -99,7 +101,7 @@
 .accountGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .skeleton { min-height: 30rem; border-radius: 1.5rem; background: linear-gradient(100deg, #edf2f8 20%, #fafcff 45%, #edf2f8 70%); background-size: 300% 100%; animation: shimmer 1.2s ease infinite; }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
-@media (max-width: 800px) { .accessGrid { grid-template-columns: 1fr; } .intro { min-height: 22rem; } .activityGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 800px) { .accessGrid { grid-template-columns: 1fr; grid-template-areas: "form" "intro"; } .accessGrid > .intro { min-height: 0; padding: 1.25rem; } .accessGrid > .intro h2 { font-size: 1.5rem; } .accessGrid .promise { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; } .accessGrid .promise span { min-height: 0; flex: 1 1 140px; padding: .7rem; } .activityGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .page { width: min(100% - 20px, 72rem); padding-top: .75rem; } .intro, .formCard, .accountHero, .panel { border-radius: 1.2rem; } .promise, .facts, .playerTierGrid, .activityGrid, .accountGrid { grid-template-columns: 1fr; } .intro { min-height: 19rem; padding: 1.25rem; } .accountHero, .panelHeading { align-items: flex-start; flex-direction: column; } .accountHero > div, .accountHeroActions, .logoutControl, .logoutControl button, .logoutError { width: 100%; } }
 @media (prefers-reduced-motion: no-preference) {
   .submit,

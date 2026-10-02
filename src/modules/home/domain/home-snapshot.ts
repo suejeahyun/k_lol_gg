@@ -66,6 +66,18 @@ export type HomeSnapshot = Readonly<{
   }>;
 }>;
 
+// Only the home showcase omits placeholder titles; competition records remain accessible.
+export const HOME_PLACEHOLDER_COMPETITION_TITLE_PATTERN = "^(test|테스트|임시)([ _-]*[0-9]+)?$";
+
+export function selectHomeCompetitions(groups: readonly (readonly HomeCompetition[])[], limit: number): readonly HomeCompetition[] {
+  if (!Number.isSafeInteger(limit) || limit < 0) throw new TypeError("HOME_FEED_LIMIT_INVALID");
+  const placeholder = new RegExp(HOME_PLACEHOLDER_COMPETITION_TITLE_PATTERN, "i");
+  const candidates = groups.flat().filter((item) => item.title.trim() && !placeholder.test(item.title.trim()));
+  return [...mergeRecentHomeItems([candidates], candidates.length)]
+    .sort((left, right) => Number(left.status === "COMPLETED") - Number(right.status === "COMPLETED"))
+    .slice(0, limit);
+}
+
 export function mergeRecentHomeItems<T extends Readonly<{ id: string; occurredAt: string }>>(
   groups: readonly (readonly T[])[],
   limit: number,

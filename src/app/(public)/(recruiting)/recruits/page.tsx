@@ -16,8 +16,11 @@ const partyTypeLabel = {
   PARTY_NUMBER: "파티 번호", PARTY_RIFT: "파티 협곡", OTHER_GAME: "기타 게임",
 } as const;
 
-function timeLabel(value: string | null) {
-  if (!value) return "시간 협의";
+function timeLabel(value: string | null, startTimeText?: string) {
+  if (!value) {
+    const text = startTimeText?.trim();
+    return text && !["미정", "시간 협의", "미입력"].includes(text) ? text : "미정 · 모집방에서 확인";
+  }
   return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" }).format(new Date(value));
 }
 
@@ -26,6 +29,8 @@ const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜",
 export default async function RecruitsPage() {
   const result = await loadRuntimeRecruiting((service) => service.listPublicFeed());
   const empty = result.state === "ready" && result.data.parties.length === 0 && result.data.scrims.length === 0;
+  const parties = result.state === "ready" ? [...result.data.parties].sort((a, b) => Number(a.memberCount >= a.maximumMembers) - Number(b.memberCount >= b.maximumMembers)) : [];
+  const openCount = parties.filter((party) => party.memberCount < party.maximumMembers).length;
   return (
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="recruit-title">
@@ -41,10 +46,10 @@ export default async function RecruitsPage() {
       {result.state === "ready" && !empty ? (
         <>
           <section aria-labelledby="party-recruits-title">
-            <header className={styles.heading}><div><span>PARTY</span><h2 id="party-recruits-title">파티 모집</h2></div><p>{result.data.parties.length}개 진행 중</p></header>
+            <header className={styles.heading}><div><span>PARTY</span><h2 id="party-recruits-title">파티 모집</h2></div><p>참가 가능 {openCount}개 · 정원 마감 {parties.length - openCount}개</p></header>
             {result.data.parties.length === 0 ? <div className={styles.inlineEmpty}>진행 중인 파티 모집이 없어요.</div> : (
               <div className={styles.cards}>
-                {result.data.parties.map((party) => <article
+                {parties.map((party) => <article
                   className={`${styles.card} recruit-card-target`} id={`party-${party.id}`}
                   data-kind="party"
                   data-capacity={party.memberCount >= party.maximumMembers ? "full" : party.memberCount === 0 ? "empty" : "open"}
@@ -53,7 +58,8 @@ export default async function RecruitsPage() {
                 >
                   <div className={styles.cardTop}><span>{partyTypeLabel[party.type]}</span><b>#{party.recruitNumber}</b></div>
                   <h3>{party.title}</h3>
-                  <dl><div><dt>주최자</dt><dd>{party.organizerText ?? "미입력"}</dd></div><div><dt>참여</dt><dd>{party.memberCount} / {party.maximumMembers}명</dd></div><div><dt>예정</dt><dd>{timeLabel(party.scheduledStartAt)}</dd></div></dl>
+                  <p className={styles.availability} data-full={party.memberCount >= party.maximumMembers}>{party.memberCount >= party.maximumMembers ? "정원 마감" : `참가 가능 · ${party.maximumMembers - party.memberCount}자리 남음`}</p>
+                  <dl><div><dt>주최자</dt><dd>{party.organizerText?.trim() || "미등록 · 모집방에서 확인"}</dd></div><div><dt>참여</dt><dd>{party.memberCount} / {party.maximumMembers}명</dd></div><div><dt>시작 예정</dt><dd>{timeLabel(party.scheduledStartAt, party.startTimeText)}</dd></div><div><dt>게임·모집 안내</dt><dd>{party.gameInfo.trim() && party.gameInfo !== "미입력" ? party.gameInfo : "미등록 · 모집방에서 확인"}</dd></div></dl>
                   <section className={styles.members} aria-label={`파티 #${party.recruitNumber} 참여자`}>
                     <strong>참여자</strong>
                     {party.members.length ? <ul>{party.members.map((member) => <li key={`${member.substitute ? "reserve" : "member"}-${member.slotNo}`}>
@@ -70,14 +76,14 @@ export default async function RecruitsPage() {
                     aria-valuemax={party.maximumMembers}
                     aria-valuenow={party.memberCount}
                   ><i aria-hidden="true" style={{ width: `${Math.min(100, party.memberCount / party.maximumMembers * 100)}%` }} /></div>
-                  <RecruitInstructions recruitNumber={party.recruitNumber} />
+                  <RecruitInstructions recruitNumber={party.recruitNumber} full={party.memberCount >= party.maximumMembers} />
                 </article>)}
               </div>
             )}
           </section>
           <section aria-labelledby="scrim-recruits-title">
-            <header className={styles.heading}><div><span>SCRIM</span><h2 id="scrim-recruits-title">스크림 모집</h2></div><p>{result.data.scrims.length}개 진행 중</p></header>
-            {result.data.scrims.length === 0 ? <div className={styles.inlineEmpty}>진행 중인 스크림 모집이 없어요.</div> : (
+            <header className={styles.heading}><div><span>SCRIM</span><h2 id="scrim-recruits-title">기존 스크림 기록</h2></div><p>{result.data.scrims.length}개 기록</p></header>
+            {result.data.scrims.length === 0 ? <div className={styles.inlineEmpty}>표시할 기존 스크림 기록이 없어요.</div> : (
               <div className={styles.cards}>
                 {result.data.scrims.map((scrim) => <article id={`scrim-${scrim.id}`} className={`${styles.card} recruit-card-target`} data-kind="scrim" data-status={scrim.status.toLowerCase()} key={scrim.id}>
                   <div className={styles.cardTop}><span>{scrim.status === "RECRUITING" ? "상대 모집 중" : scrim.status === "MATCHED" ? "매칭됨" : "확정"}</span><b>#{scrim.scrimNumber}</b></div>
