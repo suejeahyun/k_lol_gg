@@ -40,6 +40,17 @@ test("destruction list query is an explicit single-value allowlist", () => {
   assert.equal(parseDestructionListQuery("https://v2.invalid/competitions?pageSize=1000"), null);
 });
 
+test("destruction list accepts blank native GET controls without accepting invalid filters", () => {
+  const base = "https://v2.example/competitions/destruction?";
+  const defaults = { query: "", status: null, format: null, page: 1, pageSize: 12 };
+  assert.deepEqual(parseDestructionListQuery(base + "q=&status=&format="), defaults);
+  assert.deepEqual(parseDestructionListQuery(base + "q=&status=RECRUITING&format="), { ...defaults, status: "RECRUITING" });
+  assert.deepEqual(parseDestructionListQuery(base + "q=&status=&format=SWISS_ROUND_BO3"), { ...defaults, format: "SWISS_ROUND_BO3" });
+  for (const query of ["status=&status=RECRUITING", "format=&format=SWISS_ROUND_BO3", "status=UNKNOWN", "format=UNKNOWN", "status=%20", "format=%20"]) {
+    assert.equal(parseDestructionListQuery(base + query), null, query);
+  }
+});
+
 test("admin parser covers lifecycle commands and rejects unknown or extra material", () => {
   assert.deepEqual(parseDestructionAdminAction({ type: "SELL_AUCTION", payload: { participantId: applicationId, teamId: tournamentId, purchasePoints: 330 } }), {
     type: "SELL_AUCTION", payload: { participantId: applicationId, teamId: tournamentId, purchasePoints: 330 },

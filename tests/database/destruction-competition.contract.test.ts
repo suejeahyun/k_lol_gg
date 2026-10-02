@@ -58,6 +58,8 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
   const extraOwnerId = randomUUID();
   const tournamentId = deriveLegacyCompetitionUuid("competition.destruction_competitions", 801)!;
   const galleryId = randomUUID();
+  let previousFeatures: Record<string, boolean> | undefined;
+  let settingsChanged = false;
   const emptyGalleryId = randomUUID();
   const galleryAssetId = randomUUID();
   const now = new Date();
@@ -262,7 +264,9 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     const encryptionKeys = JSON.stringify({ current: "test", keys: { test: Buffer.alloc(32, 9).toString("base64url") } });
     const protector = new RiotAesGcmIdentityProtector(parseRiotEncryptionKeyring(encryptionKeys));
     const puuid = "synthetic-destruction-puuid";
+    previousFeatures = (await database.select().from(siteSettings).where(eq(siteSettings.id, 1)))[0]?.featuresJson;
     await database.insert(siteSettings).values({ id: 1, brandName: "Test", tagline: "Test", featuresJson: { riotIntegration: true }, aiAllowedRolesJson: [] }).onConflictDoUpdate({ target: siteSettings.id, set: { featuresJson: { riotIntegration: true } } });
+    settingsChanged = true;
     const linkId = randomUUID();
     await database.insert(riotAccountLinks).values({ id: linkId, playerId: playerIds[0]!, ownerUserAccountId: ownerIds[0]!, gameName: "RatingQA", tagLine: "KR1", normalizedKey: "ratingqa#kr1", protectedPuuid: await protector.protect(puuid), method: "DIRECT_OWNER", status: "CONNECTED", linkedAt: now });
     await database.insert(mmrProjectionStates).values({ key: "GLOBAL", generation: 1, status: "READY", formulaVersion: MMR_FORMULA_VERSION, sourceChecksum: Buffer.alloc(32, 1), calculatedAt: now }).onConflictDoUpdate({ target: mmrProjectionStates.key, set: { generation: 1, status: "READY", formulaVersion: MMR_FORMULA_VERSION, sourceChecksum: Buffer.alloc(32, 1), calculatedAt: now } });
@@ -472,5 +476,11 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     assert.equal((await database.select().from(destructionOutbox)).length, receipts.length + workerEvents.length);
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "DESTRUCTION"))).length, receipts.length + workerEvents.length);
     await assert.rejects(database.delete(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)));
-  } finally { await pool.end(); }
+  } finally {
+    if (settingsChanged) {
+      if (previousFeatures) await database.update(siteSettings).set({ featuresJson: previousFeatures }).where(eq(siteSettings.id, 1));
+      else await database.delete(siteSettings).where(eq(siteSettings.id, 1));
+    }
+    await pool.end();
+  }
 });

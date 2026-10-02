@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-10-02T23:43:15.860Z",
+  "environment": "isolated PostgreSQL fixture / CUA",
+  "observations": [
+    {
+      "flow": "이벤트전·멸망전 검색",
+      "observed": "상태 RECRUITING, 빈 q/format을 실제 GET 폼으로 제출해 정상 목록을 확인. 초기화 링크 후 status/format 빈 값 확인."
+    },
+    {
+      "flow": "잘못된 대회 주소",
+      "observed": "status=UNKNOWN에서 h1·오류 설명·전체 이벤트전 링크 표시. 링크로 정상 목록 복귀."
+    },
+    {
+      "flow": "팀 만들기 인원 오류",
+      "observed": "0명 제출 시 오류 안내 및 random-team-participants 포커스. 모바일 textarea 16px."
+    },
+    {
+      "flow": "팀 생성",
+      "observed": "10명으로 5:5 생성. 결과 제목 포커스 확인. 개선 후 320px에서 제목 top 212px (기존 결과 하단 노출 개선)."
+    },
+    {
+      "flow": "결과 복사·초기화",
+      "observed": "복사 성공 안내 확인. 초기화 시 입력 빈 값과 이름 입력 포커스 확인."
+    },
+    {
+      "flow": "티어 누락",
+      "observed": "10명 티어 미선택 안내 및 첫 참가자 티어 선택칸 포커스."
+    },
+    {
+      "flow": "내 제출 기록 전체 상태",
+      "observed": "수정 전 status= GET에서 오류 재현. 수정 빌드에서 동일한 적용 버튼으로 정상 조회 확인."
+    },
+    {
+      "flow": "시즌 조회 장애·복구",
+      "observed": "격리 DB 시즌 저장소 장애를 주입해 오류와 다시 불러오기/현재 모집 보기를 확인. 복구 후 다시 불러오기를 눌러 정상 화면·단일 main·type=season&recruitNo=1&source=kakao 유지 확인."
+    }
+  ]
+}

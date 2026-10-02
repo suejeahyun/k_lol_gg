@@ -201,6 +201,13 @@ async function expectSessionStatus(cookiePair: string, status: number): Promise<
 try {
   await waitUntilReady(origin, child);
 
+  // Keep the nine-attempt assertion inside one real five-minute rate window.
+  // Starting at its boundary can legitimately split attempts across two buckets.
+  const remainingWindowMs = 5 * 60_000 - Date.now() % (5 * 60_000);
+  if (remainingWindowMs < 10_000) {
+    await new Promise((resolve) => setTimeout(resolve, remainingWindowMs + 100));
+  }
+
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const allowedAttempt = await fetch(`${origin}/api/admin/login`, {
       method: "POST",

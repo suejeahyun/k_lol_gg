@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-02T23:52:35.050Z",
+  "command": "V2_DB_CONTRACT_SCOPE=all npm run test:db",
+  "exitCode": 0,
+  "contractProcesses": 33,
+  "contractTests": 162,
+  "httpSuites": [
+    "durable-auth",
+    "admin-password",
+    "player-admin",
+    "season",
+    "account"
+  ],
+  "migrationHead": "0047_usage_analytics"
+}

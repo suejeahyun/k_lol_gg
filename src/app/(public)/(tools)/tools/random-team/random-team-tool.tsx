@@ -1,7 +1,7 @@
 "use client";
 
 import { Clipboard, Dices, RotateCcw, Sparkles, UsersRound } from "@/components/theme/theme-icons";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   createRandomTeams,
@@ -57,7 +57,17 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
   const [result, setResult] = useState<DisplayResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const parsed = useMemo(() => parseRandomTeamInput(rawInput), [rawInput]);
+
+  useEffect(() => {
+    if (result) {
+      resultHeadingRef.current?.focus({ preventScroll: true });
+      resultHeadingRef.current?.scrollIntoView({ block: "start" });
+    }
+  }, [result]);
 
   const participants = parsed.ok ? parsed.value.participants : parsed.participants;
 
@@ -77,6 +87,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
 
     if (!parsed.ok) {
       setResult(null);
+      inputRef.current?.focus();
       setError(
         parsed.actual === 0
           ? "참가자 이름 10명을 한 줄에 한 명씩 입력해 주세요."
@@ -93,6 +104,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
         if (missing.length > 0) {
           setResult(null);
           setError(`티어를 선택하지 않은 참가자가 ${missing.length}명 있어요.`);
+          formRef.current?.querySelector<HTMLSelectElement>("select:invalid")?.focus();
           return;
         }
 
@@ -121,13 +133,14 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
 
   function reset() {
     setRawInput("");
+    inputRef.current?.focus();
     setTiers({});
     clearFeedback();
   }
 
   return (
     <div className={styles.workspace}>
-      <form className={styles.panel} onSubmit={(event) => { event.preventDefault(); createTeams(); }} noValidate>
+      <form ref={formRef} className={styles.panel} onSubmit={(event) => { event.preventDefault(); createTeams(); }} noValidate>
         <div className={styles.heading}>
           <div><span>PARTICIPANTS</span><h2>참가자 입력</h2></div>
           <strong className={styles.count} aria-live="polite">{participants.length} / 10명</strong>
@@ -141,6 +154,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
         <label className={styles.fieldLabel} htmlFor="random-team-participants">
           참가자 이름
           <textarea
+            ref={inputRef}
             id="random-team-participants"
             value={rawInput}
             onChange={(event) => {
@@ -195,7 +209,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
 
       <section className={styles.resultPanel} aria-labelledby="random-team-result-title">
         <div className={styles.heading}>
-          <div><span>RESULT</span><h2 id="random-team-result-title">팀 결과</h2></div>
+          <div><span>RESULT</span><h2 id="random-team-result-title" ref={resultHeadingRef} tabIndex={-1}>팀 결과</h2></div>
           {result ? <strong className={styles.count}>5 : 5</strong> : null}
         </div>
 

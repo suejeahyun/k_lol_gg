@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, CheckCircle2, CloudSun, LogIn, ShieldCheck, UsersRound } from "@/components/theme/theme-icons";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { parseCanonicalViewQuery } from "@/modules/navigation/application/canonical-view-query";
 import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-season-data";
@@ -26,6 +27,15 @@ function statusLabel(status: string) {
 }
 
 const recruitNoValues = Array.from({ length: 999 }, (_, index) => String(index + 1));
+
+function ApplicationRecovery({ recruitNo, source }: { recruitNo: number; source?: string }) {
+  return <div className="recovery-links"><form action="/applications" method="get">
+    <input type="hidden" name="type" value="season" />
+    <input type="hidden" name="recruitNo" value={recruitNo} />
+    {source ? <input type="hidden" name="source" value={source} /> : null}
+    <Button type="submit" size="lg">다시 불러오기</Button>
+  </form><Link href="/applications">현재 모집 보기</Link></div>;
+}
 
 function ApplicationsHero({ type, source }: { type: string; source?: string }) {
   return <><section className={styles.hero} aria-labelledby="applications-title">
@@ -66,12 +76,14 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
           <CloudSun aria-hidden="true" />
           <h2>시즌 현황을 불러올 수 없어요.</h2>
           <p>잠시 후 다시 확인해 주세요.</p>
+          <ApplicationRecovery recruitNo={selectedRecruitNo} source={source} />
         </section>
       ) : result.state === "error" ? (
         <section className={`${styles.stateCard} ${styles.error}`} role="alert">
           <ShieldCheck aria-hidden="true" />
           <h2>시즌 정보를 불러오지 못했어요.</h2>
-          <p>잠시 후 새로고침해 주세요.</p>
+          <p>잠시 후 다시 불러와 주세요. 선택한 모집 회차는 유지됩니다.</p>
+          <ApplicationRecovery recruitNo={selectedRecruitNo} source={source} />
         </section>
       ) : !result.data.currentSeason ? (
         <section className={styles.stateCard}>

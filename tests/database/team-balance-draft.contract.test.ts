@@ -94,7 +94,7 @@ test("team internal experience counts published games only and converges after v
   } finally { await pool.end(); }
 });
 
-test("team-only override is SUPER/TOTP audited and recent solo provider requires connected fresh identity", async () => {
+test("team-only override requires a live SUPER session and recent solo provider requires connected fresh identity", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
@@ -166,8 +166,10 @@ test("team-only override is SUPER/TOTP audited and recent solo provider requires
     await assert.rejects(database.update(riotSummaries).set({ recentSoloJson: null }).where(eq(riotSummaries.playerId, playerId)), (error: unknown) => (error as { cause?: { constraint?: string } }).cause?.constraint === "riot_summaries_recent_solo_pair");
     await assert.rejects(database.update(teamBalancePlayerOverrides).set({ score: 1001 }).where(eq(teamBalancePlayerOverrides.playerId, playerId)), (error: unknown) => (error as { cause?: { constraint?: string } }).cause?.constraint === "team_balance_override_score_range");
     await database.update(authSessions).set({ totpVerifiedAt: null }).where(eq(authSessions.id, superSessionId));
+    assert.equal((await repository.setPlayerOverride(original, 0, input, now)).replayed, true);
+    await database.update(authSessions).set({ revokedAt: now }).where(eq(authSessions.id, superSessionId));
     await assert.rejects(repository.setPlayerOverride(original, 0, input, now), serviceError("SESSION_STALE"));
-    await database.update(authSessions).set({ totpVerifiedAt: now }).where(eq(authSessions.id, superSessionId));
+    await database.update(authSessions).set({ revokedAt: null }).where(eq(authSessions.id, superSessionId));
     await database.update(userAccounts).set({ authVersion: 1 }).where(eq(userAccounts.id, superId));
     await assert.rejects(repository.setPlayerOverride(original, 0, input, now), serviceError("SESSION_STALE"));
   } finally { await pool.end(); }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "@/components/theme/theme-icons";
+import { Button } from "@/components/ui/button";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import type { MatchSubmissionStatus } from "@/modules/matches";
@@ -42,8 +43,8 @@ export default async function OwnMatchSubmissionsPage({
     <Link className="back-link" href="/matches/submit"><ArrowLeft size={16} aria-hidden="true" /> 경기 결과 제출</Link>
     <section className={styles.hero}><p>MY SUBMISSIONS</p><h1>내 제출 기록</h1><span>접수 코드로 이어서 이미지를 등록하거나 검토 결과를 확인할 수 있어요.</span></section>
     {!session ? <section className={styles.panel}><h2>로그인이 필요해요.</h2><Link className={styles.login} href="/login?next=%2Fmatches%2Fsubmissions">로그인</Link></section>
-      : !query ? <section className={styles.panel} role="alert"><h2>목록 조건이 올바르지 않아요.</h2></section>
-      : !result ? <section className={styles.panel} role="status"><h2>접수 기록을 불러오지 못했어요.</h2></section>
+      : !query ? <section className={styles.panel} role="alert"><h2>목록 조건이 올바르지 않아요.</h2><Link href="/matches/submissions">전체 제출 기록 보기</Link></section>
+      : !result ? <section className={styles.panel} role="alert"><h2>접수 기록을 불러오지 못했어요.</h2><p>잠시 후 다시 불러와 주세요.</p><form action="/matches/submissions" method="get">{query.status ? <input type="hidden" name="status" value={query.status} /> : null}<Button type="submit" size="lg">다시 불러오기</Button></form></section>
       : <>
         <form className={styles.historyFilters} action="/matches/submissions" method="get"><label>상태<select name="status" defaultValue={query.status ?? ""}><option value="">전체 상태</option>{Object.entries(STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><button type="submit">적용</button></form>
         {result.items.length === 0 ? <section className={styles.panel}><h2>조건에 맞는 접수가 없어요.</h2></section> : <div className={styles.historyList}>{result.items.map((submission) => <article className={styles.historyCard} data-status={submission.status} key={submission.id}><div><span>{STATUS_LABEL[submission.status]}</span><h2>{submission.title}</h2><p>{submission.organizer} · {submission.seriesNumber}회 · {submission.playedOn}</p><small>{submission.publicCode} · 이미지 {submission.receivedGameNumbers.length}/{submission.expectedGameCount}</small>{submission.publicReviewReason ? <p>검토 결과: {submission.publicReviewReason}</p> : null}</div><div>{submission.approvedMatchSeriesId ? <Link href={`/matches/${submission.approvedMatchSeriesId}`}>공개 경기 보기 <ChevronRight size={15} aria-hidden="true" /></Link> : submission.status !== "CANCELLED" ? <Link href={`/matches/submit?code=${submission.publicCode}`}>이어하기 <ChevronRight size={15} aria-hidden="true" /></Link> : null}</div></article>)}</div>}

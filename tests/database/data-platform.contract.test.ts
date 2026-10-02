@@ -97,6 +97,11 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
 
   try {
     await t.test("forward migration preserves existing player rows and is idempotent", async () => {
+      assert.equal(
+        (await pool.query("select to_regclass('auth.sessions') as existing")).rows[0].existing,
+        null,
+        "The legacy upgrade contract must run before suites that install the current schema.",
+      );
       const partialMigrationFolder = await mkdtemp(join(tmpdir(), "klol-v2-migrations-"));
       const partialMetaFolder = join(partialMigrationFolder, "meta");
       const preexistingPlayerId = randomUUID();

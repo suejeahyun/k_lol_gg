@@ -52,8 +52,8 @@ export function parseEventListQuery(input: string): EventListQuery | null {
   if ([...url.searchParams.keys()].some((key) => !ALLOWED.has(key))) return null;
   for (const key of ALLOWED) if (url.searchParams.getAll(key).length > 1) return null;
   const query = (url.searchParams.get("q") ?? "").normalize("NFKC").trim().replace(/\s+/gu, " ");
-  const status = url.searchParams.get("status");
-  const format = url.searchParams.get("format");
+  const status = url.searchParams.get("status") || null;
+  const format = url.searchParams.get("format") || null;
   const page = Number(url.searchParams.get("page") ?? "1");
   const pageSize = Number(url.searchParams.get("pageSize") ?? "12");
   if (

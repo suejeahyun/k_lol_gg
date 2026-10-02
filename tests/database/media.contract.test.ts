@@ -34,7 +34,7 @@ function isServiceError(code: MediaServiceError["code"]) {
   return (error: unknown) => error instanceof MediaServiceError && error.code === code;
 }
 
-test("S10 media publication is TOTP-authorized, idempotent, asset-safe, auditable, and soft archived", async () => {
+test("S10 media publication requires a live admin session and is idempotent, asset-safe, auditable, and soft archived", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
@@ -57,7 +57,8 @@ test("S10 media publication is TOTP-authorized, idempotent, asset-safe, auditabl
       { id: thumbnailAssetId, createdByUserAccountId: adminId, ingestSource: "ADMIN", storageProvider: "FAKE_LOCAL", storageKey: `highlight/${thumbnailAssetId}`, originalFileName: "thumbnail.webp", contentType: "image/webp", byteSize: 128, width: 32, height: 32, sha256: randomBytes(32), purpose: "HIGHLIGHT_THUMBNAIL", status: "READY", readyAt: now },
     ]);
 
-    const createHighlightContext = context(actor, "s10-highlight-create-key");
+    // Password-authenticated ADMIN sessions are supported by the current policy.
+    const createHighlightContext = context(unverifiedActor, "s10-highlight-create-key");
     const highlightBody = { title: "결승 역전", description: "바론 앞 한타", youtubeUrl: "https://youtu.be/dQw4w9WgXcQ", thumbnailAssetId, sortOrder: 1 };
     const createdHighlight = await service.createHighlight(createHighlightContext, 0, highlightBody, now);
     const highlightId = String((createdHighlight.body.highlight as { id: string }).id);
@@ -74,7 +75,8 @@ test("S10 media publication is TOTP-authorized, idempotent, asset-safe, auditabl
     assert.equal(await service.resolvePublicHighlightLegacyId("101"), highlightId);
     await assert.rejects(service.updateHighlight(context(actor, "s10-highlight-stale-key"), highlightId, 0, highlightBody, now), isServiceError("PRECONDITION_FAILED"));
 
-    await assert.rejects(service.createGallery(context(unverifiedActor, "s10-no-totp-key"), 0, { title: "거부", description: "2FA 없음", imageAssetIds: [galleryAssetId] }, now), isServiceError("SESSION_STALE"));
+    await database.update(authSessions).set({ revokedAt: now }).where(eq(authSessions.id, unverifiedSessionId));
+    await assert.rejects(service.createGallery(context(unverifiedActor, "s10-revoked-session-key"), 0, { title: "거부", description: "폐기된 세션", imageAssetIds: [galleryAssetId] }, now), isServiceError("SESSION_STALE"));
     await assert.rejects(service.createGallery(context(actor, "s10-wrong-purpose-key"), 0, { title: "잘못된 자산", description: "목적 불일치", imageAssetIds: [thumbnailAssetId] }, now), isServiceError("INVALID_INPUT"));
 
     const createdGallery = await service.createGallery(context(actor, "s10-gallery-create-key"), 0, { title: "우승 기록", description: "함께 남긴 순간", imageAssetIds: [galleryAssetId] }, now);

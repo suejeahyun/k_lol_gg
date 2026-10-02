@@ -153,6 +153,15 @@ test("own submission history cursor is status-bound and reaches beyond the first
 });
 
 
+test("own submission history accepts the native all-status filter and rejects invalid values", () => {
+  const base = "https://example.test/matches/submissions?";
+  assert.deepEqual(parseOwnSubmissionQuery(base + "status="), { pageSize: 20 });
+  assert.deepEqual(parseOwnSubmissionQuery(base + "status=PENDING_REVIEW"), { status: "PENDING_REVIEW", pageSize: 20 });
+  for (const invalid of ["status=%20", "status=UNKNOWN", "status=&status=PENDING_REVIEW"]) {
+    assert.equal(parseOwnSubmissionQuery(base + invalid), null, invalid);
+  }
+});
+
 test("native public search forms treat empty optional filters as unselected without weakening validation", () => {
   const defaults = { sort: "playedOn", order: "desc", page: 1, pageSize: 12 };
   assert.deepEqual(parsePublicMatchQuery("https://example.test/matches?q=&sort=playedOn&seasonId=&winner=&from=&to=&order=desc&pageSize=12"), defaults);

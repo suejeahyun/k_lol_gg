@@ -1,0 +1,3094 @@
+[
+  {
+    "route": "/",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "우리 같이롤하자~"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/login",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "관리자 로그인"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/login",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "대회 종류를 선택해 주세요."
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/events",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "이벤트 대회"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/events",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/events/[eventId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "칼바람 참가 신청"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/events/7549cde2-bb38-4912-99b1-6805d72136de",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/discipline",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "함께 지키는 플레이 약속"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/discipline",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/forbidden",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "이 공간을 열 권한이 없어요."
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/forbidden",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/forgot-password",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "비밀번호 도움"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/forgot-password",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/help",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "어떤 도움이 필요하세요?"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/help",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/help/contact",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영팀에 문의하기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/help/contact",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/help/kakao",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "최신 명단으로 참가하고 수정해요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/help/kakao",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/help/recruits",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "파티·내전 모집 이용 안내"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/help/recruits",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/help/riot",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "내 Riot 계정은내가 확인하고 연결해요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/help/riot",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/highlights",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "우리의 반짝이는 장면"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/highlights",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/highlights/[highlightId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "결승 역전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/highlights/6d848316-314e-4e50-9583-d8c91693d71b",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/images",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "함께 남긴 포근한 기록"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/images",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/images/[imageId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 결과 갤러리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/images/693eb296-7a0d-46f1-b66f-70e1db945158",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/install",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "어디서든 같은 화면으로가볍게 열어요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/install",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/login",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "로그인"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/login",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/matches",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "우리의 내전 기록"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/matches",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/matches/[matchId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "첫 번째 경기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/matches/5a1b051c-59c2-401e-8987-1ebf09deeb05",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/players",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "플레이어 찾기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/players",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/players/[playerId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Breezea43b60e1"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": true,
+    "path": "/players/dd377a7f-8d2e-4c46-bfdf-69d63d3429b3",
+    "scrollWidth": 322,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/privacy",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "개인정보 처리 안내"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/privacy",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/rankings",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "함께 쌓은 시즌 기록"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/rankings",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/rankings/mmr",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "실력의 흐름을 한눈에"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": true,
+    "path": "/rankings/mmr",
+    "scrollWidth": 329,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/recruits",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "오늘 같이 플레이해요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/recruits",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/signup",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "회원가입"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/signup",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/start",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "지금 필요한 일부터가볍게 시작해요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/start",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/terms",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "이용약관"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/terms",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/coin-toss",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "가볍게 톡, 결정 완료!"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/coin-toss",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/random-team",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "10명이면, 팀 완성!"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/random-team",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?action=apply",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=captain-points",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants&player=625c7335-99db-4b15-bbfd-8465491ea36a",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery&imageIndex=0",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/destruction/[tournamentId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=mvp",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/competitions/events/[eventId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "칼바람 참가 신청"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/competitions/events/7549cde2-bb38-4912-99b1-6805d72136de?action=apply",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/players/[playerId]",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Breezea43b60e1"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": true,
+    "path": "/players/dd377a7f-8d2e-4c46-bfdf-69d63d3429b3?tab=riot",
+    "scrollWidth": 322,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/rankings/mmr",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "실력의 흐름을 한눈에"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": true,
+    "path": "/rankings/mmr?view=players",
+    "scrollWidth": 329,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/random-team",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "10명이면, 팀 완성!"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/random-team?mode=tier",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/app",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "우리 같이롤하자~"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/app/players",
+    "session": "anonymous",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "플레이어 찾기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/players",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/account",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "browser_super_a43b60e1"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/account",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/account/discipline",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "경고 해소 과제"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/account/discipline",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/account/password",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "비밀번호 변경"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/account/password",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/account/riot",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "내 Riot 계정"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/account/riot",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/applications",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "오늘 같이 뛰어요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/applications",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/matches/submissions",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "내 제출 기록"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/matches/submissions",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/matches/submit",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "결과를 차근차근 접수해요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/matches/submit",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/team-balance",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "우리 팀, 근거 있게 나눠요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/team-balance",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/team-balance/drafts",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "팀 밸런스 초안"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/team-balance/drafts",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/team-balance/drafts/[draftId]",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저녁 내전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/team-balance/drafts/fb5e6856-59d4-4250-b163-5ab08c48ca3a",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/account",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "browser_super_a43b60e1"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/account?tab=player",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/applications",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "오늘 같이 뛰어요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/applications?type=season",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/applications",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "오늘 같이 뛰어요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/applications?type=season&source=pwa",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/applications",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "오늘 같이 뛰어요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/applications?type=event",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/applications",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "오늘 같이 뛰어요"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/applications?type=destruction",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/team-balance/drafts",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저장 팀 밴픽 추천"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/team-balance/drafts?view=recommendations&draftId=fb5e6856-59d4-4250-b163-5ab08c48ca3a&team=RED",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/team-balance/drafts",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저장 팀 밴픽 추천"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/team-balance/drafts?view=recommendations&draftId=fb5e6856-59d4-4250-b163-5ab08c48ca3a&team=BLUE",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/team-balance/drafts/[draftId]",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저녁 내전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/team-balance/drafts/fb5e6856-59d4-4250-b163-5ab08c48ca3a?tab=recommendations&team=RED",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/tools/team-balance/drafts/[draftId]",
+    "session": "account",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저녁 내전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/tools/team-balance/drafts/fb5e6856-59d4-4250-b163-5ab08c48ca3a?tab=recommendations&team=BLUE",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 흐름을 한눈에 정리해요."
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "통계·랭킹 상태"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance-ai",
+    "session": "admin",
+    "alerts": [
+      "MMR 공식 전환 재계산이 필요합니다현재 게시 generation 1은 V1_INTERNAL_MMR_1 공식으로 계산됐습니다. 자동 전환하지 않으며, SUPER_ADMIN이 기존 공식에서 V2_DETERMINISTIC_1로 전환하는 재계산을 확인해야 새 generation이 게시됩니다."
+    ],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "MMR projection 작업대"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance-ai",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance/drafts",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "전체 팀 밸런스 초안"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance/drafts",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance/drafts/[draftId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저녁 내전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance/drafts/fb5e6856-59d4-4250-b163-5ab08c48ca3a",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/champions",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "챔피언 관리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/champions",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/champions/[championId]/edit",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "애니"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/champions/v1-1/edit",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/champions/new",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "챔피언 등록"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/champions/new",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/discipline",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "징계 관리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/discipline",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/discipline/[recordId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S11 대상"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/discipline/687390a8-360d-42d9-b847-b02011a4c4e2",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/discipline/new",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "징계 기록 등록"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/discipline/new",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/highlights",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "하이라이트 관리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/highlights",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/highlights/[highlightId]/edit",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "결승 역전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/highlights/6d848316-314e-4e50-9583-d8c91693d71b/edit",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/highlights/new",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "하이라이트 초안 만들기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/highlights/new",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/images",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "갤러리 관리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/images",
+    "scrollWidth": 320,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/images/[imageId]/edit",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 결과 갤러리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/images/693eb296-7a0d-46f1-b66f-70e1db945158/edit",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/images/new",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "갤러리 초안 만들기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": true,
+    "path": "/admin/images/new",
+    "scrollWidth": 355,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/rooms",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "레거시 카카오 방·설치본 연결"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao/rooms",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/logs",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 로그 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/logs",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/matches",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "경기·결과"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/matches",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/matches/[matchId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "첫 번째 경기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/matches/5a1b051c-59c2-401e-8987-1ebf09deeb05",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/matches/[matchId]/edit",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "첫 번째 경기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/matches/5a1b051c-59c2-401e-8987-1ebf09deeb05/edit",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/matches/new",
+    "session": "admin",
+    "alerts": [
+      "저장 전 확인경기 이름은 두 글자 이상 입력해 주세요.시즌을 선택해 주세요.1게임의 플레이어 10명을 모두 선택해 주세요.1게임의 챔피언 10명을 모두 선택해 주세요."
+    ],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "새 경기 초안"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/matches/new",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/matches/submissions/[submissionId]",
+    "session": "admin",
+    "alerts": [
+      "승인 전 해결할 항목1게임: 등록 플레이어 10명을 직접 선택해 주세요.1게임: 챔피언 10명을 모두 확인해 주세요.1게임: 원본과 대조하지 않은 행이 10개 있습니다.2게임: 등록 플레이어 10명을 직접 선택해 주세요.2게임: 챔피언 10명을 모두 확인해 주세요.2게임: 원본과 대조하지 않은 행이 10개 있습니다."
+    ],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Kakao owner bridge"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/matches/submissions/b8722bb1-8296-416b-bce5-01df364fa653",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 신청서"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms/[formType]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "건의사항"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms?type=suggestions",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms/[formType]/[id]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "건의사항"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms/suggestions/6daaf899-47a5-4af5-b550-5b2e18dc22e1",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/players",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "플레이어 등록부"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/players",
+    "scrollWidth": 311,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/players/[playerId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Breezea43b60e1#S03"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/players/dd377a7f-8d2e-4c46-bfdf-69d63d3429b3",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/players/new",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "새 플레이어 등록"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/players/new",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/private-assets",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "비공개 자산"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/private-assets",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/private-assets/[assetId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "비공개 자산 상세"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/private-assets/165b9975-6d67-4e61-b8a3-170be23a990e",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/progress/destruction",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "멸망전 작업 공간"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/progress/destruction",
+    "scrollWidth": 306,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/progress/destruction/[tournamentId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/progress/destruction/new",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "새 멸망전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/progress/destruction/new",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/progress/event",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "이벤트전 작업 공간"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/progress/event",
+    "scrollWidth": 306,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/progress/event/[eventId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "칼바람 참가 신청"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": true,
+    "path": "/admin/progress/event/7549cde2-bb38-4912-99b1-6805d72136de",
+    "scrollWidth": 333,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/progress/event/new",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "새 이벤트전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/progress/event/new",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/riot",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Riot 연동 운영"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/riot",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/search",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "관리자 작업 공간 찾기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/search",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/seasons",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "시즌·참가"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/seasons",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/seasons/kakao-pending",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 회원 연결"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/seasons/kakao-pending",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/seasons/kakao-pending/[pendingId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 접수·회원 연결"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/seasons/kakao-pending/5e22ae8e-a17a-4452-a924-7ff64f60ce93",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/site-settings",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "사이트 설정"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/site-settings",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/usage",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "사이트 이용 현황"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/usage",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/users",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "사용자 계정"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/users",
+    "scrollWidth": 311,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/users/[userAccountId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "browser_super_a43b60e1"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/users/06a6e267-b29c-42db-bfd4-9c2224f92f49",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance-ai",
+    "session": "admin",
+    "alerts": [
+      "MMR 공식 전환 재계산이 필요합니다현재 게시 generation 1은 V1_INTERNAL_MMR_1 공식으로 계산됐습니다. 자동 전환하지 않으며, SUPER_ADMIN이 기존 공식에서 V2_DETERMINISTIC_1로 전환하는 재계산을 확인해야 새 generation이 게시됩니다."
+    ],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "MMR projection 작업대"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance-ai?tab=players",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance-ai",
+    "session": "admin",
+    "alerts": [
+      "MMR 공식 전환 재계산이 필요합니다현재 게시 generation 1은 V1_INTERNAL_MMR_1 공식으로 계산됐습니다. 자동 전환하지 않으며, SUPER_ADMIN이 기존 공식에서 V2_DETERMINISTIC_1로 전환하는 재계산을 확인해야 새 generation이 게시됩니다."
+    ],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "MMR projection 작업대"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance-ai?tab=reviews",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance-ai",
+    "session": "admin",
+    "alerts": [
+      "MMR 공식 전환 재계산이 필요합니다현재 게시 generation 1은 V1_INTERNAL_MMR_1 공식으로 계산됐습니다. 자동 전환하지 않으며, SUPER_ADMIN이 기존 공식에서 V2_DETERMINISTIC_1로 전환하는 재계산을 확인해야 새 generation이 게시됩니다."
+    ],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "MMR projection 작업대"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance-ai?tab=reviews&review=b3fc8ada-55af-4c1a-9a0c-e28dc7e8218c",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance-ai",
+    "session": "admin",
+    "alerts": [
+      "MMR 공식 전환 재계산이 필요합니다현재 게시 generation 1은 V1_INTERNAL_MMR_1 공식으로 계산됐습니다. 자동 전환하지 않으며, SUPER_ADMIN이 기존 공식에서 V2_DETERMINISTIC_1로 전환하는 재계산을 확인해야 새 generation이 게시됩니다."
+    ],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "MMR projection 작업대"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance-ai?action=recalculate",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance/drafts",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "전체 초안 밴픽 추천"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance/drafts?view=recommendations&draftId=fb5e6856-59d4-4250-b163-5ab08c48ca3a&team=RED",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance/drafts",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "전체 초안 밴픽 추천"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance/drafts?view=recommendations&draftId=fb5e6856-59d4-4250-b163-5ab08c48ca3a&team=BLUE",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance/drafts/[draftId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저녁 내전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance/drafts/fb5e6856-59d4-4250-b163-5ab08c48ca3a?tab=recommendations&team=RED",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/balance/drafts/[draftId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "저녁 내전"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/balance/drafts/fb5e6856-59d4-4250-b163-5ab08c48ca3a?tab=recommendations&team=BLUE",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/discipline",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "징계 관리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/discipline?tab=tasks",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/discipline",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "징계 관리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/discipline?tab=reviews",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=recruits",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=scrims",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=stats",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=settings",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=logs",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=health",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/logs",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 로그 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/logs?view=stats",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/logs",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 로그 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/logs?view=ai-requests",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/matches",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "경기·결과"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/matches?view=submissions",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/matches/[matchId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "첫 번째 경기"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/matches/5a1b051c-59c2-401e-8987-1ebf09deeb05?tab=ai-review",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "디스코드 초대"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms?type=friends",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "외출"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms?type=leaves",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "모임"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms?type=meetups",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "건의사항"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms?type=suggestions",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/players/[playerId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Breezea43b60e1#S03"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/players/dd377a7f-8d2e-4c46-bfdf-69d63d3429b3?mode=edit",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/players/[playerId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Breezea43b60e1#S03"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/players/dd377a7f-8d2e-4c46-bfdf-69d63d3429b3?tab=balance",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/players/[playerId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Breezea43b60e1#S03"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/players/dd377a7f-8d2e-4c46-bfdf-69d63d3429b3?tab=riot",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/private-assets",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "비공개 자산"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/private-assets?status=READY",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/private-assets",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "비공개 자산"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/private-assets?status=DELETE_PENDING",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/progress/destruction/[tournamentId]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "S08 하늘빛 멸망전 실시간 경매"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=auction&mode=live",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/riot",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Riot 연동 운영"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/riot?tab=sync",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/riot",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Riot 연동 운영"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/riot?tab=logs",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/riot",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "Riot 연동 운영"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/riot?tab=accounts&action=bulk-link&q=QA&batchSize=10",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/seasons",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "시즌·참가"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/seasons?view=applications",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/ai-requests",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 로그 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/logs?view=ai-requests",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/operation-forms",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 신청서"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/operation-forms/[formType]",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "건의사항"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/operation-forms?type=suggestions",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/recruits",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=recruits",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/recruits/logs",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=logs",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/recruits/settings",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=health",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/scrims",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=scrims",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/season-apply",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 회원 연결"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/seasons/kakao-pending",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/settings",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=settings",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/kakao/stats",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=stats",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/logs/kakao",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=logs",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/operation-forms/warnings",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "징계 관리"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/discipline",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/recruits",
+    "session": "admin",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "카카오 연동 센터"
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin/kakao?tab=recruits",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  },
+  {
+    "route": "/admin/security",
+    "session": "setup",
+    "alerts": [],
+    "brokenImages": [],
+    "duplicateIds": [],
+    "h1": [
+      "운영 흐름을 한눈에 정리해요."
+    ],
+    "lang": "ko",
+    "main": 1,
+    "missingAlts": [],
+    "overflow": false,
+    "path": "/admin",
+    "scrollWidth": 305,
+    "smallInputs": [],
+    "unnamedControls": [],
+    "width": 320
+  }
+]

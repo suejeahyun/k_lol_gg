@@ -14,6 +14,7 @@ import {
   type SignupInput,
 } from "../../src/modules/accounts/domain/account-contracts";
 import { protectAccountReceiptMaterial } from "../../src/modules/accounts/domain/account-receipt-protection";
+import { ACCOUNT_PRIVACY_VERSION, ACCOUNT_TERMS_VERSION } from "../../src/modules/accounts/domain/account-policies";
 import { PostgresAccountRepository } from "../../src/modules/accounts/infrastructure/postgres-account-repository";
 import { PostgresAuthRepository } from "../../src/modules/auth/infrastructure/postgres-auth-repository";
 import {
@@ -478,8 +479,8 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
         .where(eq(userAccounts.id, newAccountId))
     )[0];
     assert.deepEqual(signupEvidence, {
-      termsVersion: "terms-2026-09-12.1",
-      privacyVersion: "privacy-2026-09-01.1",
+      termsVersion: ACCOUNT_TERMS_VERSION,
+      privacyVersion: ACCOUNT_PRIVACY_VERSION,
     });
     const newLinkedPlayer = (
       await database.select().from(players).where(eq(players.userAccountId, newAccountId))

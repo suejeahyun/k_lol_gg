@@ -15,6 +15,17 @@ test("event public query rejects duplicate and unknown filters", () => {
   assert.equal(parseEventListQuery("https://v2.example/competitions?status=PLANNED&status=COMPLETED"), null);
 });
 
+test("event list accepts blank native GET controls without accepting invalid filters", () => {
+  const base = "https://v2.example/competitions/events?";
+  const defaults = { query: "", format: null, status: null, page: 1, pageSize: 12 };
+  assert.deepEqual(parseEventListQuery(base + "q=&status=&format="), defaults);
+  assert.deepEqual(parseEventListQuery(base + "q=&status=RECRUITING&format="), { ...defaults, status: "RECRUITING" });
+  assert.deepEqual(parseEventListQuery(base + "q=&status=&format=ARAM"), { ...defaults, format: "ARAM" });
+  for (const query of ["status=&status=RECRUITING", "format=&format=ARAM", "status=UNKNOWN", "format=UNKNOWN", "status=%20", "format=%20"]) {
+    assert.equal(parseEventListQuery(base + query), null, query);
+  }
+});
+
 test("event service creates a server-fingerprinted command and rejects unstable identifiers or even BO", async () => {
   const commands: EventCommand[] = [];
   const service = new EventService({ handle: async (command) => {

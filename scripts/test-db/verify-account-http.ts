@@ -2161,10 +2161,7 @@ try {
     body: confirmedReason("관리자 대상 제한 시도", adminVictim.loginId),
   });
   assert.equal(adminCannotMutateAdmin.status, 403);
-  // This synthetic account logged in earlier in this fast verifier. The next
-  // accepted TOTP window proves replay protection without waiting for a wall
-  // clock boundary or misclassifying a replay as an account-flow failure.
-  const adminVictimCookie = await loginAdmin(origin, adminVictim, 1);
+  const adminVictimCookie = await loginAdmin(origin, adminVictim);
   const adminCannotResetTotp = await adminMutation({
     origin,
     cookie: adminCookie,
@@ -2196,61 +2193,41 @@ try {
   assert.equal((await fetch(`${origin}/api/admin/users`, {
     headers: { cookie: adminVictimCookie },
   })).status, 401, "2FA reset must revoke the target ADMIN session");
-  const reenrollmentLogin = await fetch(`${origin}/api/admin/login`, {
+  // The retired self-enrollment endpoints must not recreate credentials.
+  // Reset still revokes the old session; a new password login follows current policy.
+  const resetLogin = await fetch(`${origin}/api/admin/login`, {
     method: "POST",
     headers: { origin, "content-type": "application/json" },
     body: JSON.stringify({ loginId: adminVictim.loginId, password: adminVictim.password }),
   });
-  assert.equal(reenrollmentLogin.status, 200);
-  assert.equal(((await reenrollmentLogin.clone().json()) as { requiresTwoFactorSetup: boolean }).requiresTwoFactorSetup, true);
-  const reenrollmentCookie = extractCookie(reenrollmentLogin, ADMIN_COOKIE_NAME);
-  assert.equal((await fetch(`${origin}/api/admin/users`, {
-    headers: { cookie: reenrollmentCookie },
-  })).status, 403);
+  assert.equal(resetLogin.status, 200);
+  assert.equal(((await resetLogin.clone().json()) as { requiresTwoFactorSetup: boolean }).requiresTwoFactorSetup, false);
+  const resetCookie = extractCookie(resetLogin, ADMIN_COOKIE_NAME);
+  assert.equal((await fetch(`${origin}/api/admin/users`, { headers: { cookie: resetCookie } })).status, 200);
   assert.equal((await fetch(`${origin}/admin/security`, {
-    headers: { cookie: reenrollmentCookie },
-    redirect: "manual",
-  })).status, 200);
-  const reenrollmentSetup = await fetch(`${origin}/api/admin/security/totp/setup`, {
-    method: "POST",
-    headers: { cookie: reenrollmentCookie, origin, "content-type": "application/json" },
-    body: "{}",
-  });
-  assert.equal(reenrollmentSetup.status, 201);
-  const reenrollmentSetupBody = await reenrollmentSetup.json() as { manualSecret: string };
-  syntheticSecrets.push(reenrollmentSetupBody.manualSecret);
-  assert.equal((await database.select().from(userAccounts).where(
-    eq(userAccounts.id, adminVictim.id),
-  ))[0]?.revision, 2);
-  const reenrollmentEnableStep = Math.floor(Date.now() / 30_000);
-  const reenrollmentEnable = await fetch(`${origin}/api/admin/security/totp/enable`, {
-    method: "POST",
-    headers: { cookie: reenrollmentCookie, origin, "content-type": "application/json" },
-    body: JSON.stringify({
-      code: generateTotpCode(reenrollmentSetupBody.manualSecret, reenrollmentEnableStep),
-    }),
-  });
-  assert.equal(reenrollmentEnable.status, 200);
-  assert.equal((await database.select().from(userAccounts).where(
-    eq(userAccounts.id, adminVictim.id),
-  ))[0]?.revision, 3);
+    headers: { cookie: resetCookie }, redirect: "manual",
+  })).status, 307);
+  for (const endpoint of ["setup", "enable"]) {
+    assert.equal((await fetch(`${origin}/api/admin/security/totp/${endpoint}`, {
+      method: "POST", headers: { cookie: resetCookie, origin, "content-type": "application/json" }, body: "{}",
+    })).status, 410);
+  }
+  assert.equal((await database.select().from(userAccounts).where(eq(userAccounts.id, adminVictim.id)))[0]?.revision, 1);
   const staleTotpReset = await adminMutation({
-    origin,
-    cookie: superAdminCookie,
-    path: `/api/admin/users/${adminVictim.id}/2fa-reset`,
-    revision: 1,
-    body: { internalReason: "self 2FA 변경 후 stale revision 검증", confirmLoginId: adminVictim.loginId },
+    origin, cookie: superAdminCookie, path: `/api/admin/users/${adminVictim.id}/2fa-reset`,
+    revision: 0,
+    body: { internalReason: "이전 초기화 revision 재사용 금지 검증", confirmLoginId: adminVictim.loginId },
   });
   assert.equal(staleTotpReset.status, 412);
   assert.equal((await database.select({ value: count() }).from(adminTotpCredentials).where(
     eq(adminTotpCredentials.userAccountId, adminVictim.id),
-  ))[0]?.value, 1, "stale SUPER reset must not delete the newly enabled factor");
+  ))[0]?.value, 0, "retired enrollment and stale reset must not recreate credentials");
   const deletedAdmin = await adminMutation({
     origin,
     cookie: superAdminCookie,
     path: `/api/admin/users/${adminVictim.id}`,
     method: "DELETE",
-    revision: 3,
+    revision: 1,
     body: { internalReason: "관리자 계정 삭제 보안 초기화 검증", confirmLoginId: adminVictim.loginId },
   });
   assert.equal(deletedAdmin.status, 200);
@@ -2266,7 +2243,7 @@ try {
     origin,
     cookie: superAdminCookie,
     path: `/api/admin/users/${adminVictim.id}/restore`,
-    revision: 4,
+    revision: 2,
     body: { internalReason: "삭제 계정 복구 검증", confirmLoginId: adminVictim.loginId },
   });
   assert.equal(restoredAdmin.status, 200);

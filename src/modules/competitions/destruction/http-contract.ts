@@ -83,8 +83,8 @@ export function parseDestructionListQuery(input: string): DestructionListQuery |
   if ([...url.searchParams.keys()].some((key) => !LIST_QUERY_KEYS.has(key))) return null;
   for (const key of LIST_QUERY_KEYS) if (url.searchParams.getAll(key).length > 1) return null;
   const query = (url.searchParams.get("q") ?? "").normalize("NFKC").trim().replace(/\s+/gu, " ");
-  const status = url.searchParams.get("status");
-  const format = url.searchParams.get("format");
+  const status = url.searchParams.get("status") || null;
+  const format = url.searchParams.get("format") || null;
   const page = Number(url.searchParams.get("page") ?? "1");
   const pageSize = Number(url.searchParams.get("pageSize") ?? "12");
   if (

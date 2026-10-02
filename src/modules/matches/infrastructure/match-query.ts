@@ -307,7 +307,7 @@ function decodeOwnSubmissionCursor(value: string): OwnCursorPayload | null {
 export function parseOwnSubmissionQuery(url: string): OwnSubmissionQuery | null {
   const params = new URL(url).searchParams;
   if (!exactSingleParams(params, new Set(["status", "cursor", "pageSize"]))) return null;
-  const statusValue = params.get("status");
+  const statusValue = params.get("status") || null;
   const status = MATCH_SUBMISSION_STATUSES.find((candidate) => candidate === statusValue);
   const pageSize = positiveInteger(params.get("pageSize"), 20, 50);
   const cursorValue = params.get("cursor");

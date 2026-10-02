@@ -124,7 +124,7 @@ html { scroll-padding-top: 7rem; }
   .home-page .task-link__copy small { font-size: .75rem; }
   .home-page .task-link__copy > span, .home-page .task-link__arrow { display: none; }
   .home-page .task-link__icon { width: 28px; height: 28px; flex-shrink: 0; }
-  main input:not([type='checkbox']):not([type='radio']), main select, main textarea { font-size: 16px; }
+  main :is(input:not([type='checkbox']):not([type='radio']), select, textarea) { font-size: 16px; }
   .all-menu-grid { grid-template-columns: 1fr; }
   .global-search-form > div { flex-wrap: wrap; }
   .global-search-form input { min-width: 0; flex: 1; }

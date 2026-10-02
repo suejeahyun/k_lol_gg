@@ -102,7 +102,7 @@ function command(input: Readonly<{
   } as ChampionCommand;
 }
 
-test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledgers atomic", async () => {
+test("S10 champion catalog keeps live ADMIN session mutations, replay and durable ledgers atomic", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
   assertSafeTestDatabase({
@@ -186,7 +186,7 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
       championKey: "contract-ahri",
       expectedRevision: 0,
       payload: { displayName: "계약 아리" },
-      actor,
+      actor: unverifiedActor,
       label: "create",
     });
     const created = await handler.handle(create);
@@ -303,15 +303,16 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
     assert.equal(retained?.revision, 7, "pre-existing catalog data must remain unchanged");
     assert.equal(retained?.createdAt.toISOString(), legacyCreatedAt.toISOString());
 
+    await database.update(authSessions).set({ revokedAt: now }).where(eq(authSessions.id, unverifiedSessionId));
     await assert.rejects(handler.handle(command({
       type: "CREATE_CHAMPION",
-      championKey: "totp-denied",
+      championKey: "revoked-session-denied",
       expectedRevision: 0,
       payload: { displayName: "거부 대상" },
       actor: unverifiedActor,
-      label: "totp-denied",
+      label: "revoked-session-denied",
     })), isChampionError("FORBIDDEN"));
-    assert.equal((await database.select().from(championCatalog).where(eq(championCatalog.key, "totp-denied"))).length, 0);
+    assert.equal((await database.select().from(championCatalog).where(eq(championCatalog.key, "revoked-session-denied"))).length, 0);
 
     assert.deepEqual({
       receipts: (await database.select().from(championCommandReceipts)).length,

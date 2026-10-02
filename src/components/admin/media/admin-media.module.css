@@ -1,4 +1,4 @@
-.page { display: grid; gap: 1.4rem; width: min(1120px, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 4rem; }
+.page { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.4rem; width: min(1120px, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 4rem; }
 .header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 1.6rem; border: 1px solid #d9e5f3; border-radius: 1.35rem; background: var(--theme-surface-background); }
 .header h1 { margin: .25rem 0; font-size: clamp(1.6rem,4vw,2.35rem); }
 .header p { margin: 0; color: #63738b; line-height: 1.6; }
@@ -129,3 +129,9 @@
   .assetPanel:focus-within,
   .filePicker:focus-within { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; }
 }
+
+/* Let native file inputs shrink inside narrow gallery forms. */
+.form,.form label,.assetPanel { min-width: 0; grid-template-columns: minmax(0,1fr); }
+.form input,.form select,.form textarea { min-width: 0; }
+.filePicker input { min-width: 0; width: 100%; max-width: 100%; }
+.header > div { min-width: 0; overflow-wrap: anywhere; }

@@ -8,3 +8,8 @@
 @keyframes event-status-in{from{opacity:0;transform:translateY(-4px)}}
 @media(prefers-reduced-motion:reduce){.filters button:active:not(:disabled),.form button:active:not(:disabled),.primary:active{transform:none}}
 @media(forced-colors:active){.hero,.filters,.list,.state,.stages li,.summary article,.panel,.actions,.form,.competitionKinds{border-color:CanvasText;box-shadow:none}.filters:focus-within,.form:focus-within,.panel:focus-within{outline:2px solid Highlight;outline-offset:2px;box-shadow:none}}
+
+/* Intrinsic input widths must not expand the action grid on phones. */
+.form,.form label { min-width: 0; grid-template-columns: minmax(0,1fr); }
+.form input,.form select,.form textarea { min-width: 0; max-width: 100%; }
+@media(max-width:520px){.actionsGrid{grid-template-columns:minmax(0,1fr)}}

@@ -1208,6 +1208,7 @@
 .toolNav a:focus-visible,
 .primaryLink:focus-visible,
 .backLink:focus-visible,
+.resultPanel h2:focus-visible,
 .primaryButton:focus-visible,
 .secondaryButton:focus-visible,
 .modeTabs button:focus-visible,
@@ -1227,6 +1228,8 @@
   outline: 3px solid rgba(96,130,199,.34);
   outline-offset: 2px;
 }
+
+.resultPanel h2[tabindex] { scroll-margin-block: 100px; }
 
 .fieldLabel textarea,
 .tierGrid select,

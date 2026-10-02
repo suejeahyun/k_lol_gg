@@ -439,9 +439,11 @@ async function runContractTests(connectionString: string): Promise<void> {
 
   const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
   const allTestFiles = [
+    // The legacy upgrade contract must own the initially empty database.
+    // Other suites apply the current schema before inserting their fixtures.
+    "tests/database/data-platform.contract.test.ts",
     "tests/database/usage.contract.test.ts",
     "tests/database/inhouse-migration.contract.test.ts",
-    "tests/database/data-platform.contract.test.ts",
     "tests/database/auth-totp-lifecycle.contract.test.ts",
     "tests/database/player-admin.contract.test.ts",
     "tests/database/season-platform.contract.test.ts",
@@ -555,7 +557,7 @@ async function runDurableAuthHttpVerification(connectionString: string): Promise
   }
 }
 
-async function runTotpLifecycleHttpVerification(connectionString: string): Promise<void> {
+async function runAdminPasswordHttpVerification(connectionString: string): Promise<void> {
   assertSafeTestDatabase({
     connectionString,
     nodeEnv: "test",
@@ -563,7 +565,7 @@ async function runTotpLifecycleHttpVerification(connectionString: string): Promi
   });
 
   const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
-  const verificationFile = resolve(workspaceRoot, "scripts/test-db/verify-totp-lifecycle-http.ts");
+  const verificationFile = resolve(workspaceRoot, "scripts/test-db/run-admin-password-http.ts");
   const child = spawn(process.execPath, [tsxCli, verificationFile], {
     cwd: workspaceRoot,
     env: childTestEnvironment(connectionString),
@@ -573,12 +575,12 @@ async function runTotpLifecycleHttpVerification(connectionString: string): Promi
   const exitCode = await new Promise<number>((resolveExit, reject) => {
     child.once("error", reject);
     child.once("exit", (code, signal) => {
-      if (signal) reject(new Error(`TOTP lifecycle HTTP verification ended by ${signal}.`));
+      if (signal) reject(new Error(`Admin password HTTP verification ended by ${signal}.`));
       else resolveExit(code ?? 1);
     });
   });
   if (exitCode !== 0) {
-    throw new Error(`TOTP lifecycle HTTP verification failed with exit code ${exitCode}.`);
+    throw new Error(`Admin password HTTP verification failed with exit code ${exitCode}.`);
   }
 }
 
@@ -1236,7 +1238,7 @@ async function main(): Promise<void> {
       await runSeasonBrowserQaServer(connectionString);
     } else {
       await runDurableAuthHttpVerification(connectionString);
-      await runTotpLifecycleHttpVerification(connectionString);
+      await runAdminPasswordHttpVerification(connectionString);
       await runPlayerAdminHttpVerification(connectionString);
       await runSeasonHttpVerification(connectionString);
       await runAccountHttpVerification(connectionString);
@@ -1262,7 +1264,7 @@ async function main(): Promise<void> {
       await runSeasonBrowserQaServer(cluster.connectionString);
     } else {
       await runDurableAuthHttpVerification(cluster.connectionString);
-      await runTotpLifecycleHttpVerification(cluster.connectionString);
+      await runAdminPasswordHttpVerification(cluster.connectionString);
       await runPlayerAdminHttpVerification(cluster.connectionString);
       await runSeasonHttpVerification(cluster.connectionString);
       await runAccountHttpVerification(cluster.connectionString);

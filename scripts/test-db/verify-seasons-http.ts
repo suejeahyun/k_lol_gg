@@ -803,7 +803,9 @@ try {
         origin,
         `198.51.100.${index + 20}`,
       ),
-      body: JSON.stringify({ mainPosition: "JGL", subPositions: [] }),
+      // Cancellation rate limiting needs 13 entries; use explicit reserves so the
+      // current ten-seat main-participant capacity remains enforced.
+      body: JSON.stringify({ mainPosition: "JGL", subPositions: [], reserve: true }),
     });
     assert.equal(appliedForCancellation.status, 201, await appliedForCancellation.text());
   }

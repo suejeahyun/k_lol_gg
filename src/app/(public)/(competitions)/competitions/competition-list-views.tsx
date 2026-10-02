@@ -22,7 +22,7 @@ function inputUrl(pathname: string, raw: RawSearchParams) {
 
 export async function EventCompetitionList({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
   const query = parseEventListQuery(inputUrl("/competitions/events", await searchParams));
-  if (!query) return <CompetitionState error title="이벤트전 목록 주소를 확인해 주세요." description="검색 조건은 한 번씩만 사용할 수 있어요." />;
+  if (!query) return <CompetitionState page error title="이벤트전 목록 주소를 확인해 주세요." description="검색 조건을 확인하거나 아래 전체 목록으로 돌아가 다시 찾아보세요." />;
   const result = await loadRuntimeEvent(({ repository }) => repository.listPublic(query, new Date()));
   return <div className={styles.page} data-competition-kind="event">
     <CompetitionKindNavigation active="event" />
@@ -35,7 +35,7 @@ export async function EventCompetitionList({ searchParams }: { searchParams: Pro
 
 export async function DestructionCompetitionList({ searchParams }: { searchParams: Promise<RawSearchParams> }) {
   const query = parseDestructionListQuery(inputUrl("/competitions/destruction", await searchParams));
-  if (!query) return <CompetitionState error title="멸망전 목록 주소를 확인해 주세요." description="검색 조건은 한 번씩만 사용할 수 있어요." />;
+  if (!query) return <CompetitionState page error title="멸망전 목록 주소를 확인해 주세요." description="검색 조건을 확인하거나 아래 전체 목록으로 돌아가 다시 찾아보세요." />;
   const result = await loadRuntimeDestruction(({ repository }) => repository.listPublic(query));
   return <div className={styles.page} data-competition-kind="destruction">
     <CompetitionKindNavigation active="destruction" />
@@ -51,11 +51,12 @@ function CompetitionKindNavigation({ active }: { active: "event" | "destruction"
 }
 
 function CompetitionFilters({ action, query, status, format, statuses, formats }: Readonly<{ action: string; query: string; status: string | null; format: string | null; statuses: readonly Readonly<{ value: string; label: string }>[]; formats: readonly Readonly<{ value: string; label: string }>[] }>) {
-  return <form className={styles.filters} action={action} method="get" role="search"><label><span>대회 검색</span><div><Search aria-hidden="true" /><input name="q" defaultValue={query} maxLength={64} placeholder="대회 이름" /></div></label><label><span>상태</span><select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{statuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label><span>방식</span><select name="format" defaultValue={format ?? ""}><option value="">전체 방식</option>{formats.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><button type="submit">찾기</button><Link href={action}>필터 초기화</Link></form>;
+  return <form key={JSON.stringify([query, status, format])} className={styles.filters} action={action} method="get" role="search"><label><span>대회 검색</span><div><Search aria-hidden="true" /><input name="q" defaultValue={query} maxLength={64} placeholder="대회 이름" /></div></label><label><span>상태</span><select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{statuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label><span>방식</span><select name="format" defaultValue={format ?? ""}><option value="">전체 방식</option>{formats.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><button type="submit">찾기</button><Link href={action}>필터 초기화</Link></form>;
 }
 
-function CompetitionState({ title, description, error = false }: Readonly<{ title: string; description: string; error?: boolean }>) {
-  return <section className={styles.state} role={error ? "alert" : "status"}><PartyPopper aria-hidden="true" /><h2>{title}</h2><p>{description}</p><nav className="recovery-links"><Link href="/competitions/events">전체 이벤트전</Link><Link href="/competitions/destruction">전체 멸망전</Link><Link href="/applications">참가 신청 찾기</Link></nav></section>;
+function CompetitionState({ title, description, error = false, page = false }: Readonly<{ title: string; description: string; error?: boolean; page?: boolean }>) {
+  const Heading = page ? "h1" : "h2";
+  return <section className={styles.state} role={error ? "alert" : "status"}><PartyPopper aria-hidden="true" /><Heading>{title}</Heading><p>{description}</p><nav className="recovery-links"><Link href="/competitions/events">전체 이벤트전</Link><Link href="/competitions/destruction">전체 멸망전</Link><Link href="/applications">참가 신청 찾기</Link></nav></section>;
 }
 
 function CompetitionPagination({ path, query, totalPages }: { path: string; query: { query: string; status: string | null; format: string | null; page: number; pageSize: number }; totalPages: number }) {
