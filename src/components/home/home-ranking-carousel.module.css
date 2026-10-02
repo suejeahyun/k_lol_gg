@@ -2,7 +2,8 @@
   --spotlight: #e4ccff;
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  /* Decoration must clip without creating a focus-scroll container. */
+  overflow: clip;
   padding: 26px 32px 18px;
   border: 1px solid #c9b3ff;
   border-radius: 24px;

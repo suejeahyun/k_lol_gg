@@ -1,0 +1,42 @@
+{
+  "origin": "https://k-lol-gg.vercel.app",
+  "checkedAt": "2026-10-02T20:20:30.284Z",
+  "passed": true,
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/rankings?view=win-rate",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/rankings?view=participation",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/rankings?view=mvp",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/players",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/matches",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "passed": true
+    }
+  ]
+}
