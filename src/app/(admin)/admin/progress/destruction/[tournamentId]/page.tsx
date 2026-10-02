@@ -1,7 +1,7 @@
 import { DESTRUCTION_GAME_MODES } from "@/modules/competitions/destruction/aram-rating";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ArrowLeft, Gavel } from "lucide-react";
+import { ArrowLeft, Gavel } from "@/components/theme/theme-icons";
 import { competitionPreliminaryFormatLabel } from "@/modules/competitions/core/display-projection";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";

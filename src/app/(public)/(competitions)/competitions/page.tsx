@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { Gavel, PartyPopper } from "lucide-react";
+import { Gavel, PartyPopper } from "@/components/theme/theme-icons";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import styles from "./events.module.css";

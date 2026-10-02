@@ -4,9 +4,9 @@
 .header p, .muted { color: #66758b; line-height: 1.6; }
 .eyebrow { color: #315eaa; font-size: .75rem; font-weight: 850; }
 .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
-.card { border: 1px solid #dfe7f2; border-radius: 1rem; background: #fff; padding: 1rem; }
+.card { border: 1px solid #dfe7f2; border-radius: 1rem; background: var(--theme-surface-background); padding: 1rem; }
 .card strong { display: block; margin-top: .35rem; font-size: 1.35rem; color: #274f91; }
-.state { border: 1px dashed #b9c9df; border-radius: 1rem; background: #f8fbff; padding: 1.2rem; color: #52647d; }
+.state { border: 1px dashed #b9c9df; border-radius: 1rem; background: var(--theme-surface-background); padding: 1.2rem; color: #52647d; }
 .form { display: grid; gap: 1rem; max-width: 48rem; }
 .field { display: grid; gap: .35rem; }
 .field span { font-weight: 750; }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Gavel, PartyPopper, Search, Swords, UsersRound } from "lucide-react";
+import { CalendarDays, ChevronRight, Gavel, PartyPopper, Search, Swords, UsersRound } from "@/components/theme/theme-icons";
 
 import { publicCompetitionFormatLabel, publicDestructionStatusLabel, publicEventStatusLabel, publicPreliminaryFormatLabel } from "@/modules/competitions/core";
 import { DESTRUCTION_PRELIMINARY_FORMATS, DESTRUCTION_PUBLIC_STATUSES, parseDestructionListQuery } from "@/modules/competitions/destruction";

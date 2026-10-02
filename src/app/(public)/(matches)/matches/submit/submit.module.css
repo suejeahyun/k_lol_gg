@@ -1,8 +1,8 @@
 .page { display: grid; gap: 24px; }
-.hero { padding: clamp(26px,5vw,48px); border: 1px solid var(--border); border-radius: 30px; background: linear-gradient(135deg,var(--mint),var(--sky) 52%,var(--lilac)); }
+.hero { padding: clamp(26px,5vw,48px); border: 1px solid var(--border); border-radius: 30px; background: var(--theme-feature-background); }
 .hero p { margin: 0; color: var(--text-accent); font-size: 12px; font-weight: 900; letter-spacing: .12em; }
 .hero h1 { margin: 8px 0; font-family: var(--font-heading); font-size: clamp(32px,5vw,52px); }
-.panel { position: relative; overflow: hidden; display: grid; gap: 20px; padding: clamp(20px,4vw,32px); border: 1px solid var(--border); border-radius: 26px; background: rgba(255,255,255,.9); box-shadow: var(--shadow-soft); transition: border-color .18s ease, box-shadow .18s ease; }
+.panel { position: relative; overflow: hidden; display: grid; gap: 20px; padding: clamp(20px,4vw,32px); border: 1px solid var(--border); border-radius: 26px; background: var(--theme-surface-background); box-shadow: var(--shadow-soft); transition: border-color .18s ease, box-shadow .18s ease; }
 .panel[data-submission-status]::before { position: absolute; inset: 0 0 auto; height: 4px; background: #77a9d5; content: ""; }
 .panel[data-submission-status="PENDING_REVIEW"]::before { background: #c99b43; }
 .panel[data-submission-status="APPROVED"]::before { background: #46a37c; }
@@ -48,7 +48,7 @@
 .historyFilters select { min-height: 42px; padding: 8px 12px; border: 1px solid var(--input); border-radius: 11px; background: #fff; }
 .historyFilters button { min-height: 42px; padding: 8px 14px; border: 0; border-radius: 11px; color: #fff; background: var(--primary); font-weight: 850; }
 .historyList { display: grid; gap: 12px; }
-.historyCard { position:relative; overflow:hidden; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 20px 20px 24px; border: 1px solid var(--border); border-radius: 19px; background: #fff; transition: transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease; }
+.historyCard { position:relative; overflow:hidden; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 20px 20px 24px; border: 1px solid var(--border); border-radius: 19px; background: var(--theme-surface-background); transition: transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease; }
 .historyCard::before { position:absolute; inset:0 auto 0 0; width:4px; background:#8aa5cb; content:""; }
 .historyCard[data-status="AWAITING_UPLOAD"]::before { background:#6aa7dc; }
 .historyCard[data-status="PENDING_REVIEW"]::before { background:#c89b45; }

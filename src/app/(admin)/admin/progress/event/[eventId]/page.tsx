@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { isEventUuid } from "@/modules/competitions/events";

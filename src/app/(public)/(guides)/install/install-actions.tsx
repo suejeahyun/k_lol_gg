@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
+import { Download } from "@/components/theme/theme-icons";
 
 import styles from "../guide.module.css";
 

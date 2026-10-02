@@ -1,6 +1,6 @@
 "use client";
 
-import { Clapperboard, Play } from "lucide-react";
+import { Clapperboard, Play } from "@/components/theme/theme-icons";
 import { useState } from "react";
 
 import styles from "./media.module.css";

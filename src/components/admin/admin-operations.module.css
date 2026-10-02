@@ -1,5 +1,5 @@
 .page { width: min(100%, 76rem); min-width: 0; margin: 0 auto; display: grid; gap: 1.25rem; padding: clamp(1rem, 3vw, 2rem); color: var(--admin-text); }
-.header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: clamp(1rem, 2.5vw, 1.5rem); border: 1px solid var(--admin-border); border-radius: 1rem; background: var(--admin-surface); }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: clamp(1rem, 2.5vw, 1.5rem); border: 1px solid var(--admin-border); border-radius: 1rem; background: var(--theme-surface-background); }
 .header > div { min-width: 0; }
 .header h1 { margin: .35rem 0; color: var(--admin-text); font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.25; letter-spacing: -.035em; overflow-wrap: anywhere; }
 .header p, .muted { margin: 0; color: var(--admin-muted); font-size: .875rem; line-height: 1.65; }
@@ -25,7 +25,7 @@
 .badge { display: inline-flex; padding: .3rem .6rem; border-radius: 999px; background: var(--admin-accent-soft); color: var(--admin-accent); font-size: .75rem; font-weight: 750; }
 .badge[data-status="COMPLETED"], .badge[data-status="INACTIVE"] { background: var(--admin-surface-muted); color: var(--admin-muted); }
 .badge[data-status="REJECTED"], .badge[data-status="CANCELLED"] { border: 1px solid var(--admin-danger); background: var(--admin-surface); color: var(--admin-danger); }
-.state, .panel { min-width: 0; padding: 1.25rem; border: 1px solid var(--admin-border); border-radius: 1rem; background: var(--admin-surface); }
+.state, .panel { min-width: 0; padding: 1.25rem; border: 1px solid var(--admin-border); border-radius: 1rem; background: var(--theme-surface-background); }
 .state { display: grid; align-content: center; justify-items: start; min-height: 11rem; color: var(--admin-muted); }
 .state h1, .state h2, .panel h2 { margin: 0 0 .5rem; color: var(--admin-text); font-size: 1.15rem; }
 .state p { margin: 0; line-height: 1.65; }

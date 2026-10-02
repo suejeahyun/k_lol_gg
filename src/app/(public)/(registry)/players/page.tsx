@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft, ChevronRight, Search, Sparkles, UsersRound } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Search, Sparkles, UsersRound } from "@/components/theme/theme-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -37,7 +37,7 @@
   gap: 0.15rem;
   border: 1px solid #d7e4f6;
   border-radius: 1rem;
-  background: white;
+  background: var(--theme-surface-background);
   box-shadow: 0 1rem 2.4rem rgb(69 97 139 / 8%);
   padding: 1rem 1.15rem;
 }
@@ -96,7 +96,7 @@
   min-height: 13rem;
   border: 1px solid #dfe7f2;
   border-radius: 1.15rem;
-  background: white;
+  background: var(--theme-surface-background);
   box-shadow: 0 0.75rem 2rem rgb(68 90 126 / 6%);
   color: #1d2a3d;
   padding: 1.15rem;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileImage, ShieldCheck } from "lucide-react";
+import { FileImage, ShieldCheck } from "@/components/theme/theme-icons";
 import { notFound } from "next/navigation";
 
 import type { PrivateAssetMetadataDto } from "@/modules/assets/application/private-asset-dto";

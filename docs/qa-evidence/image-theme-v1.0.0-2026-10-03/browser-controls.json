@@ -1,0 +1,18 @@
+{
+  "slides": [
+    {
+      "kind": "mvp",
+      "scrollTop": 0
+    },
+    {
+      "kind": "participation",
+      "scrollTop": 0
+    },
+    {
+      "kind": "win-rate",
+      "scrollTop": 0
+    }
+  ],
+  "search": "팀 나누기 results shown",
+  "mobileMenu": "opened with image close control"
+}

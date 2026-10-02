@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle } from "@/components/theme/theme-icons";
 
 import { Button } from "@/components/ui/button";
 import styles from "@/components/admin/players/admin-players.module.css";

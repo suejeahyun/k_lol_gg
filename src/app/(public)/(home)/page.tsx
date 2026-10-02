@@ -12,7 +12,7 @@ import {
   Swords,
   Trophy,
   UsersRound,
-} from "lucide-react";
+} from "@/components/theme/theme-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -157,7 +157,7 @@ export default async function HomePage() {
             <Button size="lg" type="submit">전적 검색</Button>
           </form>
 
-          <Link className="home-start-link" href="/start">처음이신가요? 이용 방법 보기 →</Link>
+          <Link className="home-start-link" href="/start">처음이신가요? 이용 방법 보기 <ArrowRight className="theme-inline-icon" aria-hidden="true" /></Link>
         </div>
 
         <div

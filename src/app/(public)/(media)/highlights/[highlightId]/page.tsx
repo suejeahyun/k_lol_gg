@@ -3,7 +3,7 @@ import { cache } from "react";
 import { BackToList } from "@/components/navigation/list-return";
 import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ArrowLeft, ExternalLink, Sparkles } from "lucide-react";
+import { ArrowLeft, ExternalLink, Sparkles } from "@/components/theme/theme-icons";
 import { toPublicHighlightDto } from "@/modules/media";
 import { buildLegacyCanonicalIdDestination } from "@/modules/navigation/application/legacy-user-redirects";
 import { parseLegacyIntegerId } from "@/platform/legacy-identifiers";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "@/components/theme/theme-icons";
 
 import { AdminPlayerForm } from "@/components/admin/players/admin-player-form";
 import styles from "@/components/admin/players/admin-players.module.css";

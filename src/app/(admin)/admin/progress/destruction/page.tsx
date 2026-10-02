@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Gavel, Plus } from "lucide-react";
+import { Gavel, Plus } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { DESTRUCTION_PRELIMINARY_FORMATS, DESTRUCTION_PUBLIC_STATUSES, parseDestructionListQuery } from "@/modules/competitions/destruction";

@@ -1,4 +1,4 @@
-import { CalendarCheck2, Database, Filter, ShieldCheck } from "lucide-react";
+import { CalendarCheck2, Database, Filter, ShieldCheck } from "@/components/theme/theme-icons";
 import Link from "next/link";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";

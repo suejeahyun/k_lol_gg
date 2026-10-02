@@ -1,5 +1,7 @@
 .page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 22px;
   padding: 28px 0 64px;
 }
@@ -16,9 +18,7 @@
   border: 1px solid rgba(118, 151, 198, 0.22);
   border-radius: 30px;
   background:
-    radial-gradient(circle at 84% 16%, rgba(255, 255, 255, 0.92) 0 6%, transparent 6.5%),
-    radial-gradient(circle at 73% 74%, rgba(255, 255, 255, 0.68) 0 9%, transparent 9.5%),
-    linear-gradient(135deg, #eefaff 0%, #f2edff 55%, #fff0f6 100%);
+    var(--theme-feature-background);
   box-shadow: var(--shadow-soft);
 }
 
@@ -118,7 +118,7 @@
 .coinStage {
   border: 1px solid rgba(118, 151, 198, 0.2);
   border-radius: 25px;
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--theme-surface-background);
   box-shadow: 0 15px 40px rgba(76, 105, 155, 0.09);
 }
 
@@ -370,12 +370,12 @@
   overflow: hidden;
   border: 1px solid rgba(118, 151, 198, 0.19);
   border-radius: 19px;
-  background: #fbfdff;
+  background: var(--theme-surface-background);
   box-shadow: 0 10px 28px rgba(54, 111, 169, 0.1);
 }
 
 .teamCard:nth-child(2) {
-  background: #fffafd;
+  background: var(--theme-surface-background);
   box-shadow: 0 10px 28px rgba(171, 75, 117, 0.09);
 }
 
@@ -470,7 +470,7 @@
   padding: 35px;
   text-align: center;
   background:
-    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.96), rgba(247, 242, 255, 0.82) 47%, rgba(226, 244, 255, 0.78));
+    var(--theme-surface-background);
 }
 
 .coinVisual {
@@ -638,7 +638,7 @@
   border: 1px solid rgba(118, 151, 198, 0.2);
   border-radius: 25px;
   padding: clamp(20px, 3vw, 30px);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--theme-surface-background);
   box-shadow: 0 15px 40px rgba(76, 105, 155, 0.09);
 }
 
@@ -958,9 +958,9 @@
   cursor: not-allowed;
   opacity: .48;
 }
-.stepEmpty { margin: 0; border-radius: 12px; padding: 18px; color: var(--text-muted); background: #f4f7fa; text-align: center; }
+.stepEmpty { margin: 0; border-radius: 12px; padding: 18px; color: var(--text-muted); background: var(--theme-surface-background); text-align: center; }
 
-.draftHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, #effaff, #f4efff); }
+.draftHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: var(--theme-surface-background); }
 .draftHeader span { color: #6b5aa1; font-size: 10px; font-weight: 950; letter-spacing: .13em; }
 .draftHeader h1 { margin: 5px 0; color: var(--ink-strong); font: 950 clamp(28px, 4vw, 42px)/1.15 var(--font-heading); letter-spacing: -.04em; }
 .draftHeader p { margin: 0; color: var(--text-muted); font-size: 12px; }
@@ -1036,7 +1036,7 @@
   border: 1px solid rgba(118, 151, 198, 0.2);
   border-radius: 25px;
   padding: clamp(22px, 4vw, 36px);
-  background: linear-gradient(135deg, #effaff, #f4efff 58%, #fff3f7);
+  background: var(--theme-surface-background);
   box-shadow: 0 15px 40px rgba(76, 105, 155, 0.09);
 }
 
@@ -1055,7 +1055,7 @@
   border-radius: 19px;
   padding: 18px 20px;
   color: inherit;
-  background: rgba(255, 255, 255, .88);
+  background: var(--theme-surface-background);
   box-shadow: 0 10px 28px rgba(76, 105, 155, .07);
   text-decoration: none;
   transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
@@ -1128,7 +1128,7 @@
 .teamSwitch a[aria-current="page"][data-team="RED"] { color: #934f6c; background: #ffedf4; }
 .teamSwitch a[aria-current="page"][data-team="BLUE"] { color: #376697; background: #eaf6ff; }
 .pickGrid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; }
-.pickCard { min-width: 0; border: 1px solid rgba(118,151,198,.18); border-radius: 17px; padding: 13px; background: #fbfdff; }
+.pickCard { min-width: 0; border: 1px solid rgba(118,151,198,.18); border-radius: 17px; padding: 13px; background: var(--theme-surface-background); }
 .pickCard>header { display: grid; gap: 4px; padding-bottom: 10px; }
 .pickCard>header span { color: #6b5aa1; font-size: 10px; font-weight: 900; }
 .pickCard>header strong { overflow: hidden; color: #34435d; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }

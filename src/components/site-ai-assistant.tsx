@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Bot, Send, Sparkles, X } from "lucide-react";
+import { Bot, Send, Sparkles, X } from "@/components/theme/theme-icons";
 import { usePathname } from "next/navigation";
 
 import styles from "./site-ai-assistant.module.css";

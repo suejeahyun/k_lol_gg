@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldX } from "lucide-react";
+import { ShieldX } from "@/components/theme/theme-icons";
 
 export default function ForbiddenPage() {
   return (

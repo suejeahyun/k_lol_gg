@@ -1,0 +1,194 @@
+[
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 64,
+    "route": "/",
+    "scrollWidth": 1265,
+    "title": "화면을 준비하고 있어요",
+    "width": 1280
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 31,
+    "route": "/recruits",
+    "scrollWidth": 1265,
+    "title": "오늘 같이 플레이해요",
+    "width": 1280
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 37,
+    "route": "/account",
+    "scrollWidth": 1265,
+    "title": "ux-admin",
+    "width": 1280
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 41,
+    "route": "/tools/team-balance",
+    "scrollWidth": 1265,
+    "title": "우리 팀, 근거 있게 나눠요",
+    "width": 1280
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 36,
+    "route": "/admin",
+    "scrollWidth": 1265,
+    "title": "운영 흐름을 한눈에 정리해요.",
+    "width": 1280
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 26,
+    "route": "/admin/players",
+    "scrollWidth": 1280,
+    "title": "플레이어 등록부",
+    "width": 1280
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 63,
+    "route": "/",
+    "scrollWidth": 753,
+    "title": "우리 같이롤하자~",
+    "width": 768
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 31,
+    "route": "/recruits",
+    "scrollWidth": 753,
+    "title": "오늘 같이 플레이해요",
+    "width": 768
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 37,
+    "route": "/account",
+    "scrollWidth": 753,
+    "title": "ux-admin",
+    "width": 768
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 41,
+    "route": "/tools/team-balance",
+    "scrollWidth": 753,
+    "title": "우리 팀, 근거 있게 나눠요",
+    "width": 768
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 36,
+    "route": "/admin",
+    "scrollWidth": 753,
+    "title": "운영 흐름을 한눈에 정리해요.",
+    "width": 768
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world.webp\")",
+    "icons": 26,
+    "route": "/admin/players",
+    "scrollWidth": 753,
+    "title": "플레이어 등록부",
+    "width": 768
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 63,
+    "route": "/",
+    "scrollWidth": 375,
+    "title": "우리 같이롤하자~",
+    "width": 390
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 31,
+    "route": "/recruits",
+    "scrollWidth": 375,
+    "title": "오늘 같이 플레이해요",
+    "width": 390
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 37,
+    "route": "/account",
+    "scrollWidth": 375,
+    "title": "ux-admin",
+    "width": 390
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 41,
+    "route": "/tools/team-balance",
+    "scrollWidth": 375,
+    "title": "우리 팀, 근거 있게 나눠요",
+    "width": 390
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 36,
+    "route": "/admin",
+    "scrollWidth": 375,
+    "title": "운영 흐름을 한눈에 정리해요.",
+    "width": 390
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 26,
+    "route": "/admin/players",
+    "scrollWidth": 375,
+    "title": "플레이어 등록부",
+    "width": 390
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 63,
+    "route": "/",
+    "scrollWidth": 305,
+    "title": "우리 같이롤하자~",
+    "width": 320
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 31,
+    "route": "/recruits",
+    "scrollWidth": 305,
+    "title": "오늘 같이 플레이해요",
+    "width": 320
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 37,
+    "route": "/account",
+    "scrollWidth": 305,
+    "title": "ux-admin",
+    "width": 320
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 41,
+    "route": "/tools/team-balance",
+    "scrollWidth": 305,
+    "title": "우리 팀, 근거 있게 나눠요",
+    "width": 320
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 36,
+    "route": "/admin",
+    "scrollWidth": 305,
+    "title": "운영 흐름을 한눈에 정리해요.",
+    "width": 320
+  },
+  {
+    "background": "linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.62)), url(\"http://127.0.0.1:54637/images/theme/v1/world-mobile.webp\")",
+    "icons": 26,
+    "route": "/admin/players",
+    "scrollWidth": 311,
+    "title": "플레이어 등록부",
+    "width": 320
+  }
+]

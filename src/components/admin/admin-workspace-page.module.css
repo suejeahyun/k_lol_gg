@@ -16,7 +16,7 @@
 .header h1 { margin: .55rem 0; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.1; letter-spacing: -.04em; }
 .header p { max-width: 45rem; margin: 0; color: var(--workspace-muted); font-size: .875rem; line-height: 1.7; }
 .foundation { flex: none; border: 1px solid #b9d0ec; border-radius: 999px; background: #edf5ff; color: #285a9e; padding: .55rem .8rem; font-size: .75rem; font-weight: 850; line-height: 1.35; }
-.empty { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; margin: 2rem 0 1rem; border: 1px solid var(--workspace-border-strong); border-radius: 1.25rem; background: linear-gradient(135deg, #f1f7ff, #fffaff); box-shadow: 0 .8rem 2.2rem rgb(42 70 108 / 7%); padding: clamp(1.2rem, 3vw, 2rem); }
+.empty { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; margin: 2rem 0 1rem; border: 1px solid var(--workspace-border-strong); border-radius: 1.25rem; background: var(--theme-surface-background); box-shadow: 0 .8rem 2.2rem rgb(42 70 108 / 7%); padding: clamp(1.2rem, 3vw, 2rem); }
 .emptyIcon { width: 3rem; height: 3rem; display: grid; place-items: center; border-radius: 1rem; background: white; color: #315eaa; box-shadow: 0 .75rem 2rem rgb(49 94 170 / 10%); }
 .emptyIcon svg { width: 1.3rem; height: 1.3rem; }
 .empty span, .contract > div span { color: var(--workspace-accent); font-size: .75rem; font-weight: 850; line-height: 1.4; }

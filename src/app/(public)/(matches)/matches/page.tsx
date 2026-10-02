@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, CloudSun, FilePlus2, Gamepad2, Search } from "lucide-react";
+import { CalendarDays, ChevronRight, CloudSun, FilePlus2, Gamepad2, Search } from "@/components/theme/theme-icons";
 
 import { parsePublicMatchQuery } from "@/modules/matches/infrastructure/match-query";
 import { loadRuntimeMatchData } from "@/modules/matches/infrastructure/runtime-match-data";

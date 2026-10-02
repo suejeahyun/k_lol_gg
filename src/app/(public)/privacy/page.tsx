@@ -1,7 +1,7 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import { UsagePreference } from "@/components/usage/usage-preference";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "@/components/theme/theme-icons";
 
 import styles from "@/components/accounts/account-access.module.css";
 import { ACCOUNT_PRIVACY_VERSION } from "@/modules/accounts/domain/account-policies";

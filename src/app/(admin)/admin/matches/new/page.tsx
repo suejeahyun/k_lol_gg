@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/theme/theme-icons";
 import { notFound } from "next/navigation";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";

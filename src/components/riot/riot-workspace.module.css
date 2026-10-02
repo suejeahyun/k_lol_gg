@@ -1,5 +1,5 @@
 .page { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 72px; color: var(--foreground); }
-.hero { display: flex; justify-content: space-between; gap: 24px; align-items: end; padding: 28px; border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); border-radius: 28px; background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, white), color-mix(in srgb, #bde8ff 35%, white)); box-shadow: 0 18px 50px rgba(65, 112, 160, .1); }
+.hero { display: flex; justify-content: space-between; gap: 24px; align-items: end; padding: 28px; border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); border-radius: 28px; background: var(--theme-feature-background); box-shadow: 0 18px 50px rgba(65, 112, 160, .1); }
 .hero span { color: var(--primary); font-weight: 800; font-size: .78rem; letter-spacing: .12em; }
 .hero h1 { margin: 8px 0; font-size: clamp(1.8rem, 4vw, 3rem); }
 .hero p, .state p, .card p { color: var(--muted-foreground); line-height: 1.7; }
@@ -7,7 +7,7 @@
 .tabs a { padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); font-weight: 700; text-decoration: none; }
 .tabs a[aria-current="page"] { color: white; background: var(--primary); border-color: var(--primary); }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.card, .state { padding: 24px; border: 1px solid var(--border); border-radius: 22px; background: var(--card); box-shadow: 0 12px 34px rgba(65, 112, 160, .08); }
+.card, .state { padding: 24px; border: 1px solid var(--border); border-radius: 22px; background: var(--theme-surface-background); box-shadow: 0 12px 34px rgba(65, 112, 160, .08); }
 .card h2, .state h2 { margin: 0 0 10px; }
 .facts { display: grid; gap: 10px; margin: 18px 0 0; }
 .facts div { display: flex; justify-content: space-between; gap: 18px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
@@ -20,7 +20,7 @@
 .filterForm label { width: 100%; color: var(--muted-foreground); font-size: .78rem; font-weight: 800; }
 .filterForm input, .filterForm select, .filterForm button { min-height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--background); color: inherit; }
 .filterForm button { border-color: var(--primary); background: var(--primary); color: white; font-weight: 800; cursor: pointer; }
-.selectionSummary { margin: 0; padding: 10px 12px; border-radius: 12px; color: var(--muted-foreground); background: color-mix(in srgb, var(--primary) 7%, var(--card)); font-size: .78rem; }
+.selectionSummary { margin: 0; padding: 10px 12px; border-radius: 12px; color: var(--muted-foreground); background: var(--theme-surface-background); font-size: .78rem; }
 .selectionList { display: grid; gap: 7px; margin: 0; padding: 14px; border: 1px solid var(--border); border-radius: 14px; }
 .selectionList legend { padding: 0 6px; color: var(--foreground); font-weight: 800; }
 .selectionList label { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 9px; min-height: 42px; padding: 7px 9px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 5%, var(--card)); cursor: pointer; }
@@ -36,7 +36,7 @@
 .actions button:disabled { opacity: .55; cursor: wait; }
 .notice { padding: 12px 14px; border-radius: 13px; background: color-mix(in srgb, var(--primary) 9%, var(--card)); overflow-wrap: anywhere; }
 .dialogBackdrop { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(26, 43, 63, .42); }
-.dialog { width: min(520px, 100%); max-height: min(720px, calc(100vh - 36px)); overflow: auto; padding: 24px; border: 1px solid var(--border); border-radius: 22px; background: var(--card); box-shadow: 0 24px 70px rgba(20, 42, 74, .24); }
+.dialog { width: min(520px, 100%); max-height: min(720px, calc(100vh - 36px)); overflow: auto; padding: 24px; border: 1px solid var(--border); border-radius: 22px; background: var(--theme-surface-background); box-shadow: 0 24px 70px rgba(20, 42, 74, .24); }
 .dialog h3 { margin: 0 0 8px; }
 .dialog p { color: var(--muted-foreground); }
 .dialog ul { display: grid; gap: 8px; max-height: 280px; overflow: auto; margin: 16px 0; padding: 0; list-style: none; }

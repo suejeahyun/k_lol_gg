@@ -1,5 +1,5 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
-import { KeyRound, LockKeyhole } from "lucide-react";
+import { KeyRound, LockKeyhole } from "@/components/theme/theme-icons";
 
 import { PasswordRecoveryForm } from "@/components/accounts/account-auth-forms";
 import styles from "@/components/accounts/account-access.module.css";

@@ -1,3 +1,5 @@
+import { Sparkles } from "@/components/theme/theme-icons";
+
 export function StatusPanel({
   eyebrow,
   title,
@@ -12,7 +14,7 @@ export function StatusPanel({
   return (
     <section className="status-panel" aria-labelledby="status-title">
       <span className="status-panel__mark" aria-hidden="true">
-        ✦
+        <Sparkles />
       </span>
       <p className="status-panel__eyebrow">{eyebrow}</p>
       <h1 id="status-title">{title}</h1>

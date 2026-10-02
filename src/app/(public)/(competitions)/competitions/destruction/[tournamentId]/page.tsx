@@ -4,7 +4,7 @@ import { BackToList } from "@/components/navigation/list-return";
 import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ArrowLeft, Check, Crown, Gavel, Images, Sparkles, Swords, UsersRound, X } from "lucide-react";
+import { ArrowLeft, Check, Crown, Gavel, Images, Sparkles, Swords, UsersRound, X } from "@/components/theme/theme-icons";
 
 import { ResilientMediaImage } from "@/app/(public)/(media)/resilient-media-image";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";

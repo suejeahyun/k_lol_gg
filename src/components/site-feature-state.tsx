@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LockKeyhole, RefreshCw } from "lucide-react";
+import { LockKeyhole, RefreshCw } from "@/components/theme/theme-icons";
 
 import type { SiteFeatureState } from "@/modules/operations/infrastructure/site-feature-access";
 

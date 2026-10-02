@@ -7,7 +7,7 @@ import {
   Search,
   ShieldCheck,
   UsersRound,
-} from "lucide-react";
+} from "@/components/theme/theme-icons";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 

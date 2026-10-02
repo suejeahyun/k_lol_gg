@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Clock3, FolderOpen, Scale } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3, FolderOpen, Scale } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { readSiteFeatureState } from "@/modules/operations/infrastructure/site-feature-access";

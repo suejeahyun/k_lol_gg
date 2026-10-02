@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "@/components/theme/theme-icons";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import type { MatchSubmissionStatus } from "@/modules/matches";

@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Info, ShieldAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, ShieldAlert } from "@/components/theme/theme-icons";
 
 import type { MatchIntegrityReview as Review } from "@/modules/matches/domain/match-integrity-review";
 import styles from "../matches-admin.module.css";

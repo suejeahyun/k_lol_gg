@@ -1,7 +1,7 @@
 import { RecruitInstructions } from "@/components/navigation/recruit-instructions";
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { Bot, CalendarClock, CircleAlert, Gamepad2, Sparkles, Swords, UsersRound } from "lucide-react";
+import { Bot, CalendarClock, CircleAlert, Gamepad2, Sparkles, Swords, UsersRound } from "@/components/theme/theme-icons";
 
 import { loadRuntimeRecruiting } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 

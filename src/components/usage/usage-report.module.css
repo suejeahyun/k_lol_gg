@@ -9,7 +9,7 @@
 .filters button { color: white; background: #315eaa; cursor: pointer; }
 .filters a { color: #315eaa; text-decoration: none; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .8rem; }
-.card { border: 1px solid #dfe7f2; border-radius: .9rem; background: white; padding: 1.2rem; display: grid; gap: .55rem; }
+.card { border: 1px solid #dfe7f2; border-radius: .9rem; background: var(--theme-surface-background); padding: 1.2rem; display: grid; gap: .55rem; }
 .card strong { font-size: 1.7rem; color: #214d8e; }
 .card small, .section small { color: #53647c; line-height: 1.6; }
 .section { margin: 1.5rem 0; min-width: 0; }

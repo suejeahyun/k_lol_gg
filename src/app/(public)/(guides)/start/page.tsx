@@ -1,7 +1,7 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Image from "next/image";
 import Link from "next/link";
-import { ClipboardCheck, Gamepad2, LogIn, Search, ShieldCheck, Sparkles, UserRoundPlus } from "lucide-react";
+import { ClipboardCheck, Gamepad2, LogIn, Search, ShieldCheck, Sparkles, UserRoundPlus } from "@/components/theme/theme-icons";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 

@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { FileCheck2 } from "lucide-react";
+import { FileCheck2 } from "@/components/theme/theme-icons";
 
 import styles from "@/components/accounts/account-access.module.css";
 import { ACCOUNT_TERMS_VERSION } from "@/modules/accounts/domain/account-policies";

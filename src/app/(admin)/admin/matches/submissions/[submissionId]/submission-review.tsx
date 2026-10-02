@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "@/components/theme/theme-icons";
 import { useRouter } from "next/navigation";
 
 import type { AdminMatchEditorCatalog } from "@/modules/matches/application/ports/match-repository";

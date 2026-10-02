@@ -8,16 +8,16 @@
   border: 1px solid #c9b3ff;
   border-radius: 24px;
   color: #f8f5ff;
-  background: radial-gradient(ellipse at 50% 100%, #6342a4 0, transparent 67%), linear-gradient(115deg, #191d3d, #302248 60%, #251f41);
+  background: linear-gradient(#17182d40, #30224870), var(--theme-arena-image) center / cover no-repeat;
   box-shadow: 0 20px 50px #55419526, inset 0 1px #ffffff29;
 }
 .carousel[data-ranking-kind="participation"] {
   --spotlight: #a4e9ff;
-  background: radial-gradient(ellipse at 50% 100%, #225e85 0, transparent 67%), linear-gradient(115deg, #151f3c, #16394b 60%, #202b50);
+  background: linear-gradient(#151f3c50, #16394b90), var(--theme-arena-image) center / cover no-repeat;
 }
 .carousel[data-ranking-kind="mvp"] {
   --spotlight: #ffdba0;
-  background: radial-gradient(ellipse at 50% 100%, #7b4056 0, transparent 67%), linear-gradient(115deg, #241d38, #48273d 60%, #322240);
+  background: linear-gradient(#241d3840, #48273d85), var(--theme-arena-image) center / cover no-repeat;
 }
 .orbit {
   position: absolute;

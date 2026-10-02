@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Database, Gamepad2, Pencil, Radio, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Database, Gamepad2, Pencil, Radio, ShieldCheck, UserRound } from "@/components/theme/theme-icons";
 
 import {
   AdminPlayerAccountPromotion,

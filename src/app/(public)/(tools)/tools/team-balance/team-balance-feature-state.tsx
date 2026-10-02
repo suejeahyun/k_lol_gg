@@ -1,4 +1,4 @@
-import { Scale } from "lucide-react";
+import { Scale } from "@/components/theme/theme-icons";
 
 import type { SiteFeatureState } from "@/modules/operations/infrastructure/site-feature-access";
 

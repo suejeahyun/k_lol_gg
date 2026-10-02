@@ -6,6 +6,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   CalendarCheck2,
+  ChevronDown,
   Dices,
   Home,
   Menu,
@@ -14,7 +15,7 @@ import {
   Swords,
   UserRound,
   X,
-} from "lucide-react";
+} from "@/components/theme/theme-icons";
 
 import {
   isUserNavigationActive,
@@ -158,7 +159,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
               }}
             ><span><small>{command.group}{command.access === "ACCOUNT" && !accountSignedIn ? " · 로그인 필요" : ""}</small><strong>{command.label}</strong><em>{command.description}</em></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <p className="command-palette-empty">일치하는 기능이 없어요. 다른 표현으로 검색하거나 플레이어 이름으로 찾아보세요.</p>}
           </div>
-          {playerHref ? <Link className="search-player-link" href={playerHref} onClick={() => closeDialog(dialog.current)}>“{query}” 플레이어 이름으로 검색 →</Link> : null}
+          {playerHref ? <Link className="search-player-link" href={playerHref} onClick={() => closeDialog(dialog.current)}>“{query}” 플레이어 이름으로 검색 <ArrowRight className="theme-inline-icon" aria-hidden="true" /></Link> : null}
           <p className="user-dialog__hint">Enter로 첫 기능을 열고, 방향키로 결과를 선택할 수 있어요. 로그인 필요한 기능도 먼저 살펴볼 수 있습니다.</p>
         </div>
       </dialog>
@@ -244,7 +245,7 @@ export function PrimaryUserNavigation() {
     {userTaskGroups.map((group) => <details className="task-menu" name="site-task-menu" key={group.label}
       data-active={group.roots.some((root) => isUserNavigationActive(pathname, root)) || undefined}
       onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
-      <summary>{group.label}</summary>
+      <summary>{group.label}<ChevronDown size={16} aria-hidden="true" /></summary>
       <div className="task-menu__links">{group.links.map((link) => <Link key={link.href} href={link.href}
         aria-current={pathname === link.href ? "page" : undefined}
         onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); }}>{link.label}</Link>)}</div>

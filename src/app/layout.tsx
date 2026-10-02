@@ -5,6 +5,7 @@ import { SiteAiAssistant } from "@/components/site-ai-assistant";
 import { VisualEffectsController } from "@/components/visual-effects-controller";
 import "./globals.css";
 import "./ux.css";
+import "./image-theme.css";
 
 export const metadata: Metadata = {
   metadataBase: getSiteOrigin(),

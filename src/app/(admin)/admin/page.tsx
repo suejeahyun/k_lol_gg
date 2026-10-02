@@ -10,7 +10,7 @@ import {
   Sparkles,
   Trophy,
   Users,
-} from "lucide-react";
+} from "@/components/theme/theme-icons";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { ADMIN_WORKSPACES, type AdminWorkspaceIconKey } from "@/modules/admin/domain/admin-workspaces";
 import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";

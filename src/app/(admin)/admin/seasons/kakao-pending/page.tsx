@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Database, Filter, MessageCircleQuestion } from "lucide-react";
+import { Database, Filter, MessageCircleQuestion } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseAdminKakaoPendingQuery } from "@/modules/seasons/infrastructure/admin-kakao-pending-query";

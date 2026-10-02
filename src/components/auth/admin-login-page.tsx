@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CloudSun, ShieldCheck } from "lucide-react";
+import { CloudSun, ShieldCheck } from "@/components/theme/theme-icons";
 import { AdminLoginForm } from "./admin-login-form";
 import styles from "./admin-login-page.module.css";
 

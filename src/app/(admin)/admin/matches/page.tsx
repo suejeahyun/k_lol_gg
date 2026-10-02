@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, FilePlus2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePlus2 } from "@/components/theme/theme-icons";
 
 import type { AdminMatchQuery } from "@/modules/matches/application/ports/match-repository";
 import { parseAdminMatchQuery } from "@/modules/matches/infrastructure/match-query";

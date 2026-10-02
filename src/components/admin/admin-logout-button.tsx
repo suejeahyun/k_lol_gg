@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut } from "@/components/theme/theme-icons";
 
 import { clearAdminImportRecovery } from "@/modules/matches/infrastructure/admin-import-recovery";
 import styles from "./admin-shell.module.css";

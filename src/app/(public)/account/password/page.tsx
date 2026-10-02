@@ -1,7 +1,7 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
-import { KeyRound } from "lucide-react";
+import { KeyRound } from "@/components/theme/theme-icons";
 
 import { AccountPasswordForm } from "@/components/accounts/account-password-form";
 import styles from "@/components/accounts/account-access.module.css";

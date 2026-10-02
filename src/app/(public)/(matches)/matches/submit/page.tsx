@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/theme/theme-icons";
 import { notFound } from "next/navigation";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";

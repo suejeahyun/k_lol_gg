@@ -1,0 +1,79 @@
+/* Generated artwork, shared by every route. See docs/design/image-theme-v1.json. */
+:root {
+  --theme-world-image: url('/images/theme/v1/world.webp');
+  --theme-arena-image: url('/images/theme/v1/arena.webp');
+  --theme-panel-image: url('/images/theme/v1/panel.webp');
+  --theme-surface-background: linear-gradient(#ffffff9e, #ffffff9e), #f8fbff var(--theme-panel-image) center / cover no-repeat;
+  --theme-feature-background: linear-gradient(100deg, #ffffffdb, #ffffff80), var(--theme-world-image) center / cover no-repeat;
+  --theme-page-background: linear-gradient(#ffffff9e, #ffffff9e) fixed, #f2f4ff var(--theme-world-image) center top / cover fixed no-repeat;
+}
+
+body {
+  background: var(--theme-page-background);
+}
+
+.theme-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.theme-inline-icon { width: 1em; height: 1em; margin-inline-start: .3em; }
+.task-menu summary > .theme-icon { margin-left: .4rem; }
+.task-menu[open] summary > .theme-icon { transform: rotate(180deg); }
+.status-panel__mark > .theme-icon { width: 46px; height: 46px; }
+.brand__mark > .theme-icon { width: 32px; height: 32px; }
+.task-link__icon > .theme-icon { width: 32px; height: 32px; }
+
+/* Shared primitives also receive the texture before client hydration. */
+[data-slot='card'],
+[data-slot='dialog-content'],
+[data-slot='popover-content'] {
+  background: var(--theme-surface-background);
+}
+
+.site-footer {
+  background: var(--theme-surface-background);
+  border: 1px solid #d9dfef;
+  border-radius: 24px 24px 0 0;
+  padding-inline: clamp(16px, 3vw, 32px);
+}
+
+.dark {
+  --theme-surface-background: linear-gradient(#101d35ed, #101d35ed), var(--theme-arena-image) center / cover no-repeat;
+  --theme-feature-background: linear-gradient(#101d35b8, #101d35b8), var(--theme-arena-image) center / cover no-repeat;
+  --theme-page-background: #0c1830 var(--theme-arena-image) center top / cover fixed no-repeat;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --theme-world-image: url('/images/theme/v1/world-mobile.webp');
+    --theme-arena-image: url('/images/theme/v1/arena-mobile.webp');
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-icon { animation: none !important; transition: none !important; }
+}
+
+@media (forced-colors: active) {
+  :root, .dark {
+    --theme-world-image: none;
+    --theme-arena-image: none;
+    --theme-panel-image: none;
+    --theme-surface-background: Canvas;
+    --theme-feature-background: Canvas;
+    --theme-page-background: Canvas;
+  }
+}
+
+@media print {
+  :root, .dark {
+    --theme-world-image: none;
+    --theme-arena-image: none;
+    --theme-panel-image: none;
+    --theme-surface-background: white;
+    --theme-feature-background: white;
+    --theme-page-background: white;
+  }
+}

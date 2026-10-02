@@ -17,7 +17,7 @@ import {
   Trophy,
   Users,
   X,
-} from "lucide-react";
+} from "@/components/theme/theme-icons";
 import {
   ADMIN_WORKSPACES,
   ADMIN_OPERATION_FORM_LINKS,

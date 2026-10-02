@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Coins, Dices, FolderOpen, Scale } from "lucide-react";
+import { Coins, Dices, FolderOpen, Scale } from "@/components/theme/theme-icons";
 
 import styles from "./team-tools.module.css";
 

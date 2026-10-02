@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Database, KeyRound, Search, UserCheck, UsersRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, KeyRound, Search, UserCheck, UsersRound } from "@/components/theme/theme-icons";
 
 import styles from "@/components/admin/players/admin-players.module.css";
 import { parseAdminAccountQuery } from "@/modules/accounts/application/parse-admin-account-query";

@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { AlertTriangle, CalendarCheck2, Gamepad2, Swords } from "lucide-react";
+import { AlertTriangle, CalendarCheck2, Gamepad2, Swords } from "@/components/theme/theme-icons";
 
 import { AccountLogoutButton } from "@/components/accounts/account-logout-button";
 import { AccountPlayerForm } from "@/components/accounts/account-player-form";

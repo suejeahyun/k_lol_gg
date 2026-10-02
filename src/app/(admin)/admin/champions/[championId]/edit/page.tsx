@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { loadRuntimeChampions } from "@/modules/champions/infrastructure/runtime-champions";
 import { AdminContentTabs } from "@/components/admin/media/admin-media-pages";
-import { Sparkles } from "lucide-react";
+import { Sparkles } from "@/components/theme/theme-icons";
 
 import { ChampionForm } from "../../champion-form";
 import styles from "@/components/admin/media/admin-media.module.css";

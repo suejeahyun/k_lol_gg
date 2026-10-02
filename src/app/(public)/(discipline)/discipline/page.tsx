@@ -1,5 +1,5 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
-import { CircleAlert, Sparkles } from "lucide-react";
+import { CircleAlert, Sparkles } from "@/components/theme/theme-icons";
 
 import styles from "@/components/discipline/discipline.module.css";
 import { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Database, LockKeyhole, Search, UserPlus, UsersRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, LockKeyhole, Search, UserPlus, UsersRound } from "@/components/theme/theme-icons";
 
 import { Button } from "@/components/ui/button";
 import styles from "@/components/admin/players/admin-players.module.css";

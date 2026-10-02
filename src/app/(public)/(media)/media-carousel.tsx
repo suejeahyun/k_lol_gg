@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/theme/theme-icons";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import styles from "./media.module.css";

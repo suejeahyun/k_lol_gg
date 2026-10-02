@@ -1,4 +1,4 @@
-import { Activity, Database, RefreshCw, ShieldCheck } from "lucide-react";
+import { Activity, Database, RefreshCw, ShieldCheck } from "@/components/theme/theme-icons";
 import Link from "next/link";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";

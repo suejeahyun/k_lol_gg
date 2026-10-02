@@ -1,3 +1,4 @@
+import { ArrowRight } from "@/components/theme/theme-icons";
 import Link from "next/link";
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 
@@ -16,5 +17,5 @@ const guides = [
 ] as const;
 
 export default function HelpPage() {
-  return <div className="page-wrap help-page"><header><h1>어떤 도움이 필요하세요?</h1><p>하려는 일을 고르면 필요한 화면과 안내로 연결합니다.</p></header><div className="task-links">{guides.map(([href, title, description]) => <Link className="task-link" key={href} href={href}><strong>{title}</strong><span>{description}</span></Link>)}</div><section className="task-section"><h2>여전히 해결되지 않았나요?</h2><p>K-LOL.GG 운영팀에 오류, 계정 문제, 개선 제안 또는 개인정보 요청을 남겨 주세요.</p><Link href="/help/contact">운영팀에 문의하기 →</Link></section></div>;
+  return <div className="page-wrap help-page"><header><h1>어떤 도움이 필요하세요?</h1><p>하려는 일을 고르면 필요한 화면과 안내로 연결합니다.</p></header><div className="task-links">{guides.map(([href, title, description]) => <Link className="task-link" key={href} href={href}><strong>{title}</strong><span>{description}</span></Link>)}</div><section className="task-section"><h2>여전히 해결되지 않았나요?</h2><p>K-LOL.GG 운영팀에 오류, 계정 문제, 개선 제안 또는 개인정보 요청을 남겨 주세요.</p><Link href="/help/contact">운영팀에 문의하기 <ArrowRight className="theme-inline-icon" aria-hidden="true" /></Link></section></div>;
 }

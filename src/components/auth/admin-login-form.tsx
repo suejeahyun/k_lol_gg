@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { LoaderCircle, LockKeyhole } from "lucide-react";
+import { LoaderCircle, LockKeyhole } from "@/components/theme/theme-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import styles from "./admin-login-form.module.css";

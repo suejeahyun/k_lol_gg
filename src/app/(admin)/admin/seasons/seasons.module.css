@@ -10,7 +10,7 @@
 .viewTabs a[aria-current="page"] { border-color: #315eaa; color: white; background: #315eaa; }
 .panel[data-focus="true"] { border-color: #7ca1d3; box-shadow: 0 0 0 3px rgb(49 94 170 / 12%), 0 1rem 2.8rem rgb(66 91 129 / 7%); }
 
-.panel, .state { min-width: 0; margin-top: 1rem; border: 1px solid #dce6f3; border-radius: 1.25rem; background: white; box-shadow: 0 1rem 2.8rem rgb(66 91 129 / 7%); padding: clamp(1rem, 2.5vw, 1.5rem); }
+.panel, .state { min-width: 0; margin-top: 1rem; border: 1px solid #dce6f3; border-radius: 1.25rem; background: var(--theme-surface-background); box-shadow: 0 1rem 2.8rem rgb(66 91 129 / 7%); padding: clamp(1rem, 2.5vw, 1.5rem); }
 .panelHeading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .panelHeading span { color: #315eaa; font-size: .67rem; font-weight: 900; letter-spacing: .09em; }
 .panelHeading h2 { margin: .2rem 0 0; color: #1d2a3d; font-size: 1.25rem; }

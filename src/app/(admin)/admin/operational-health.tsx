@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, CalendarCheck, Database, Gamepad2, MessageCircleMore } from "lucide-react";
+import { Activity, CalendarCheck, Database, Gamepad2, MessageCircleMore } from "@/components/theme/theme-icons";
 import { Badge } from "@/components/ui/badge";
 import { operationalHealthStatuses, type OperationalHealthSnapshot, type OperationalStatus } from "@/modules/operations/application/operational-health";
 import styles from "./page.module.css";

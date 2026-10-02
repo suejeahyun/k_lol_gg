@@ -4,7 +4,7 @@ import { BackToList } from "@/components/navigation/list-return";
 import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ArrowLeft, CalendarDays, Crown, Gamepad2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CalendarDays, Crown, Gamepad2, ShieldCheck } from "@/components/theme/theme-icons";
 
 import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import { loadRuntimeMatchData } from "@/modules/matches/infrastructure/runtime-match-data";

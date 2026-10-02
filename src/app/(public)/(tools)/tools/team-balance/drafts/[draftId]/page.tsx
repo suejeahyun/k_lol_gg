@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { ArrowLeft, Scale } from "lucide-react";
+import { ArrowLeft, Scale } from "@/components/theme/theme-icons";
 import { notFound } from "next/navigation";
 
 import { requireApprovedAccountPage } from "@/modules/auth/infrastructure/server-authorization";

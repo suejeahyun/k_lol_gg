@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Sparkles } from "@/components/theme/theme-icons";
 import { Suspense } from "react";
 
 import {

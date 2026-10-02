@@ -1,7 +1,7 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Image from "next/image";
 import Link from "next/link";
-import { DatabaseZap, EyeOff, Link2, LockKeyhole, RefreshCw, ShieldCheck } from "lucide-react";
+import { DatabaseZap, EyeOff, Link2, LockKeyhole, RefreshCw, ShieldCheck } from "@/components/theme/theme-icons";
 
 import styles from "../../guide.module.css";
 

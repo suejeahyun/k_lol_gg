@@ -7,10 +7,9 @@ html { scroll-padding-top: 7rem; }
 .desktop-nav.task-navigation { gap: .1rem; overflow: visible; flex: 0 1 auto; }
 .task-menu { position: relative; }
 .task-menu summary { display: flex; align-items: center; min-height: 44px; padding: .5rem .75rem; border-radius: .7rem; list-style: none; cursor: pointer; white-space: nowrap; color: var(--foreground); font-size: .9375rem; font-weight: 750; }
-.task-menu summary::after { content: '⌄'; margin-left: .4rem; }
 .task-menu summary::-webkit-details-marker { display: none; }
 .task-menu[open] summary, .task-menu[data-active] summary { background: var(--surface-subtle); color: var(--primary); }
-.task-menu__links { position: absolute; top: calc(100% + .5rem); left: 0; z-index: 60; display: grid; min-width: 220px; padding: .5rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--popover); box-shadow: var(--shadow-2); }
+.task-menu__links { position: absolute; top: calc(100% + .5rem); left: 0; z-index: 60; display: grid; min-width: 220px; padding: .5rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--theme-surface-background); box-shadow: var(--shadow-2); }
 .desktop-nav .task-menu__links a { display: flex; min-height: 44px; padding: .65rem .8rem; white-space: nowrap; font-size: .9375rem; }
 .all-menu-grid a { min-height: 44px; font-size: .9375rem; }
 .all-menu-grid a span { font-size: .75rem; }
@@ -23,7 +22,7 @@ html { scroll-padding-top: 7rem; }
 .workflow-nav a, .task-links a { border: 1px solid var(--border); border-radius: .75rem; background: var(--card); }
 .workflow-nav a[aria-current='page'] { color: var(--primary-foreground); background: var(--primary); }
 .task-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1rem; }
-.task-card, .task-state { padding: 1.25rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); color: var(--foreground); min-width: 0; }
+.task-card, .task-state { padding: 1.25rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--theme-surface-background); color: var(--foreground); min-width: 0; }
 .task-card { display: flex; flex-direction: column; gap: .6rem; text-decoration: none; }
 .task-card h2, .task-card h3 { margin: 0; font-size: 1.125rem; overflow-wrap: anywhere; }
 .task-card p { margin: 0; color: var(--text-muted); }
@@ -62,7 +61,7 @@ html { scroll-padding-top: 7rem; }
 .recruit-instructions button { min-height: 44px; padding: .7rem 1rem; border-radius: .75rem; background: var(--primary); color: var(--primary-foreground); border: 0; font: inherit; cursor: pointer; }
 .recruit-instructions p { font-size: .875rem; line-height: 1.7; }
 .recruit-instructions a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; }
-.help-page details { margin-block: .8rem; padding: 1rem; border: 1px solid var(--border); border-radius: .8rem; background: var(--card); }
+.help-page details { margin-block: .8rem; padding: 1rem; border: 1px solid var(--border); border-radius: .8rem; background: var(--theme-surface-background); }
 .help-page summary { min-height: 44px; font-weight: 700; cursor: pointer; }
 .support-form { display: grid; gap: 1rem; max-width: 700px; }
 .support-form label { display: grid; gap: .4rem; font-weight: 700; }

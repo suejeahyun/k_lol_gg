@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search } from "@/components/theme/theme-icons";
 import { ADMIN_WORKSPACES } from "@/modules/admin/domain/admin-workspaces";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import styles from "./search.module.css";

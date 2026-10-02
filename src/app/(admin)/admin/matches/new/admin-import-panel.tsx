@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardPaste, ScanLine } from "lucide-react";
+import { ClipboardPaste, ScanLine } from "@/components/theme/theme-icons";
 
 import {
   clearAdminImportRecovery,

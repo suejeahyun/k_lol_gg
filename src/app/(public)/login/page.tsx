@@ -1,5 +1,5 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
-import { CloudSun, ShieldCheck, UserRoundCheck } from "lucide-react";
+import { CloudSun, ShieldCheck, UserRoundCheck } from "@/components/theme/theme-icons";
 
 import { UserLoginForm } from "@/components/accounts/account-auth-forms";
 import styles from "@/components/accounts/account-access.module.css";

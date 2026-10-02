@@ -4,7 +4,7 @@
 .header h1 { margin: .4rem 0; color: #1d2a3d; font-size: clamp(2rem, 4vw, 3rem); }
 .header p { max-width: 48rem; margin: 0; color: #66758b; line-height: 1.7; }
 .header > a, .filters > a, .list > li > a, .pagination a, .pagination span { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; border-radius: .75rem; color: #315eaa; background: #edf5ff; padding: 0 .85rem; font-size: .72rem; font-weight: 850; text-decoration: none; }
-.panel, .state { min-width: 0; border: 1px solid #dce6f3; border-radius: 1.25rem; background: white; box-shadow: 0 1rem 2.8rem rgb(66 91 129 / 7%); padding: clamp(1rem, 2.5vw, 1.5rem); }
+.panel, .state { min-width: 0; border: 1px solid #dce6f3; border-radius: 1.25rem; background: var(--theme-surface-background); box-shadow: 0 1rem 2.8rem rgb(66 91 129 / 7%); padding: clamp(1rem, 2.5vw, 1.5rem); }
 .panelHeading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .panelHeading h2 { margin: .2rem 0 0; color: #1d2a3d; }
 .panelHeading > strong { border-radius: 999px; color: #4e4e89; background: #f0edff; padding: .4rem .65rem; font-size: .72rem; }

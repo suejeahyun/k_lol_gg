@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, CircleAlert, Database, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CircleAlert, Database, ShieldCheck } from "@/components/theme/theme-icons";
 import type { AdminWorkspace } from "@/modules/admin/domain/admin-workspaces";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import styles from "./admin-workspace-page.module.css";

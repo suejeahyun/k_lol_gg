@@ -4,7 +4,7 @@ import { BackToList } from "@/components/navigation/list-return";
 import { createPublicMetadata, createNoIndexMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ArrowLeft, CalendarDays, Check, Crown, Sparkles, Swords, UsersRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, Crown, Sparkles, Swords, UsersRound } from "@/components/theme/theme-icons";
 
 import { isEventUuid, type PublicEventDto } from "@/modules/competitions/events";
 import { getRuntimeEvent } from "@/modules/competitions/events/infrastructure/runtime-event";

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Images, Plus, Sparkles } from "lucide-react";
+import { Images, Plus, Sparkles } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseMediaAdminListQuery } from "@/modules/media";

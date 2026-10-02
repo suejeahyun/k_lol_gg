@@ -1,5 +1,5 @@
 .page { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; max-width: 100vw; min-width: 0; gap: 22px; overflow-x: hidden; padding: 28px clamp(18px,3vw,38px) 90px; }
-.hero { display: flex; justify-content: space-between; gap: 18px; padding: 26px; border: 1px solid var(--border); border-radius: 25px; background: linear-gradient(135deg,var(--sky),var(--lilac)); }
+.hero { display: flex; justify-content: space-between; gap: 18px; padding: 26px; border: 1px solid var(--border); border-radius: 25px; background: var(--theme-feature-background); }
 .hero h1 { margin: 5px 0; font-family: var(--font-heading); font-size: 32px; }
 .hero p { margin: 0; color: var(--text-muted); }
 .hero a,.action { align-self: center; padding: 11px 16px; border: 0; border-radius: 13px; color: #fff; background: var(--primary); font-weight: 850; text-decoration: none; cursor: pointer; }
@@ -19,8 +19,8 @@
 .pagination { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .pagination a,.pagination span { display: inline-flex; align-items: center; gap: 4px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 11px; background: #fff; text-decoration: none; }
 .pagination span[aria-disabled="true"] { opacity: .45; }
-.state { padding: 38px; border: 1px dashed var(--border); border-radius: 20px; text-align: center; background: #fff; }
-.panel { display: grid; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 22px; background: #fff; }
+.state { padding: 38px; border: 1px dashed var(--border); border-radius: 20px; text-align: center; background: var(--theme-surface-background); }
+.panel { display: grid; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 22px; background: var(--theme-surface-background); }
 .panel h2,.panel p { margin: 0; }
 .importPanel { display: block; padding: 0; }
 .importSummary { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; cursor: pointer; list-style: none; }
@@ -41,7 +41,7 @@
 .inlineFields { display: grid; grid-template-columns: minmax(0,1fr) 125px; gap: 8px; }
 .gameStack { display: grid; gap: 16px; }
 .gameEditor { overflow: hidden; border: 1px solid var(--border); border-radius: 19px; background: #fbfdff; }
-.gameEditorHeader { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 16px 18px; background: linear-gradient(120deg,var(--sky),var(--lilac)); }
+.gameEditorHeader { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 16px 18px; background: var(--theme-surface-background); }
 .gameEditorHeader span { color: var(--text-accent); font-size: 11px; font-weight: 900; letter-spacing: .1em; }
 .gameEditorHeader h3 { margin: 2px 0 0; }
 .compactControls { display: flex; align-items: end; gap: 8px; }
@@ -91,7 +91,7 @@
 .actions button[data-danger="true"] { color: #fff; border-color: var(--destructive); background: var(--destructive); }
 .message { padding: 12px 14px; border-radius: 13px; color: #315e78; background: var(--sky); }
 .message[data-error="true"] { color: #8d3c53; background: #ffe8ee; }
-.reviewPanel { display: grid; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 22px; background: #fff; }
+.reviewPanel { display: grid; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 22px; background: var(--theme-surface-background); }
 .reviewHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .reviewHeader span { color: var(--text-accent); font-size: 10px; font-weight: 900; letter-spacing: .1em; }
 .reviewHeader h2 { margin: 4px 0; font-family: var(--font-heading); font-size: 25px; }
@@ -124,7 +124,7 @@
 .paste { display: grid; min-height: 150px; place-items: center; padding: 20px; border: 2px dashed #8db5d8; border-radius: 18px; text-align: center; background: #f7fcff; }
 .paste img { display: block; max-width: 100%; max-height: 360px; object-fit: contain; }
 .dialogBackdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 18px; background: rgb(14 30 46 / 50%); }
-.dialog { display: grid; width: min(520px,100%); gap: 14px; padding: 22px; border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 24px 70px rgb(13 30 50 / 28%); background: #fff; }
+.dialog { display: grid; width: min(520px,100%); gap: 14px; padding: 22px; border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 24px 70px rgb(13 30 50 / 28%); background: var(--theme-surface-background); }
 .dialog h2,.dialog p { margin: 0; }
 .dialog label { display: grid; gap: 6px; color: var(--text-muted); font-size: 13px; font-weight: 800; }
 .dialog textarea { min-height: 110px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 12px; resize: vertical; }

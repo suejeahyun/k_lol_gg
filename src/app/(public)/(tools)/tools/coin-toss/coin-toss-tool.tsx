@@ -1,6 +1,6 @@
 "use client";
 
-import { Clipboard, Coins, RotateCcw, Sparkles } from "lucide-react";
+import { Clipboard, Coins, RotateCcw, Sparkles } from "@/components/theme/theme-icons";
 import { useEffect, useRef, useState } from "react";
 
 import {

@@ -4,7 +4,7 @@
   padding: clamp(2rem, 6vw, 4rem);
   border: 1px solid rgba(92, 139, 199, 0.22);
   border-radius: 2rem;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(235, 246, 255, 0.94));
+  background: var(--theme-surface-background);
   box-shadow: 0 1.5rem 4rem rgba(67, 101, 151, 0.16);
   text-align: center;
 }

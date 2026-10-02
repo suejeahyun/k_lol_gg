@@ -3,7 +3,7 @@ import {
   CloudSun,
   Search,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/theme/theme-icons";
 import type { AuthSession } from "@/modules/auth/domain/auth-session";
 import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
 import { AdminBreadcrumb, AdminOperationsNavigation, AdminWorkspaceNavigation, MobileAdminNavigation } from "./admin-navigation";

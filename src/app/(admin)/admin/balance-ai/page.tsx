@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, BrainCircuit, Database, History } from "lucide-react";
+import { Activity, BrainCircuit, Database, History } from "@/components/theme/theme-icons";
 
 import { isMmrUuid, parseMmrPlayerQuery } from "@/modules/mmr";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";

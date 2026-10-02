@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, CloudSun, LogIn, ShieldCheck, UsersRound } from "lucide-react";
+import { CalendarDays, CheckCircle2, CloudSun, LogIn, ShieldCheck, UsersRound } from "@/components/theme/theme-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";

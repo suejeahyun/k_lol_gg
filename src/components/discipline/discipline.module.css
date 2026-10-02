@@ -1,10 +1,10 @@
 .page { width: min(100%, 76rem); margin: 0 auto; padding: clamp(1rem, 3vw, 2.5rem); display: grid; gap: 1.4rem; }
-.hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; min-height: 13rem; padding: clamp(1.6rem, 5vw, 3.2rem); border: 1px solid rgba(151, 187, 225, .38); border-radius: 2rem; background: linear-gradient(135deg, #eefaff, #faf2ff 55%, #fff5f8); box-shadow: var(--shadow-soft); }
+.hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; min-height: 13rem; padding: clamp(1.6rem, 5vw, 3.2rem); border: 1px solid rgba(151, 187, 225, .38); border-radius: 2rem; background: var(--theme-feature-background); box-shadow: var(--shadow-soft); }
 .hero h1, .header h1 { margin: .35rem 0; color: var(--ink-strong); font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3.6rem); letter-spacing: -.05em; }
 .hero p, .header p, .muted { color: var(--text-muted); line-height: 1.65; }
 .eyebrow { color: var(--text-accent-purple); font-size: .75rem; font-weight: 900; letter-spacing: .12em; }
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
-.card, .panel, .state { border: 1px solid var(--border); border-radius: 1.25rem; background: rgba(255,255,255,.9); padding: 1.1rem; box-shadow: 0 12px 34px rgba(76,94,130,.07); }
+.card, .panel, .state { border: 1px solid var(--border); border-radius: 1.25rem; background: var(--theme-surface-background); padding: 1.1rem; box-shadow: 0 12px 34px rgba(76,94,130,.07); }
 .card { position:relative; overflow:hidden; transition:transform var(--motion-base) var(--ease-out),border-color var(--motion-fast) ease; }
 .card::before { position:absolute; inset:0 0 auto; height:4px; background:#8ba5c8; content:""; }
 .card[data-severity="caution"]::before { background:#d3aa55; }

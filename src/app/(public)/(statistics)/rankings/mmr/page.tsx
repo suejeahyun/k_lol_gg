@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { Activity, Gauge, Search, Sparkles } from "lucide-react";
+import { Activity, Gauge, Search, Sparkles } from "@/components/theme/theme-icons";
 
 import { MMR_POSITIONS, parseMmrPlayerQuery } from "@/modules/mmr";
 import { loadRuntimeMmr } from "@/modules/mmr/infrastructure/runtime-mmr";

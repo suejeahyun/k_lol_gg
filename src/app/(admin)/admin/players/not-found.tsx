@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SearchX } from "lucide-react";
+import { SearchX } from "@/components/theme/theme-icons";
 
 import styles from "@/components/admin/players/admin-players.module.css";
 

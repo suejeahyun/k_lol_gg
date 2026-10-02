@@ -1,7 +1,7 @@
 "use client";
 import { recordUsageAction } from "@/components/usage/usage-actions";
 
-import { ChevronDown, Plus, RefreshCw, RotateCcw, Scale, Search, UserRoundPlus, X } from "lucide-react";
+import { ChevronDown, Plus, RefreshCw, RotateCcw, Scale, Search, UserRoundPlus, X } from "@/components/theme/theme-icons";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 

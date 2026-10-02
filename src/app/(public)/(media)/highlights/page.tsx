@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { Clapperboard, CloudSun, Play, Sparkles } from "lucide-react";
+import { Clapperboard, CloudSun, Play, Sparkles } from "@/components/theme/theme-icons";
 
 import { parseMediaPublicListQuery, toPublicHighlightDto } from "@/modules/media";
 import { loadRuntimeMedia } from "@/modules/media/infrastructure/runtime-media";

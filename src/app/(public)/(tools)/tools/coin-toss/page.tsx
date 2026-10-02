@@ -1,5 +1,5 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
-import { Coins, Sparkles } from "lucide-react";
+import { Coins, Sparkles } from "@/components/theme/theme-icons";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { TeamToolNav } from "../team-tool-nav";

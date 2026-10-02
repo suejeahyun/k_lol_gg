@@ -4,16 +4,14 @@
   place-items: center;
   padding: clamp(1rem, 5vw, 4rem);
   background:
-    radial-gradient(circle at 15% 10%, rgb(222 236 255 / 75%), transparent 34%),
-    radial-gradient(circle at 90% 15%, rgb(244 225 255 / 70%), transparent 34%),
-    linear-gradient(155deg, #f8fcff, #fff9fd 55%, #f6fbff);
+    var(--theme-page-background);
 }
 
 .card {
   width: min(100%, 29rem);
   border: 1px solid rgb(150 178 218 / 35%);
   border-radius: 1.5rem;
-  background: rgb(255 255 255 / 92%);
+  background: var(--theme-surface-background);
   box-shadow: 0 1.5rem 4rem rgb(79 103 154 / 14%);
   padding: clamp(1.35rem, 5vw, 2.25rem);
 }

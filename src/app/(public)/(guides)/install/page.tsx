@@ -1,7 +1,7 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Image from "next/image";
 import Link from "next/link";
-import { AppWindow, ExternalLink, LockKeyhole, MonitorSmartphone, ShieldCheck, Smartphone } from "lucide-react";
+import { AppWindow, ExternalLink, LockKeyhole, MonitorSmartphone, ShieldCheck, Smartphone } from "@/components/theme/theme-icons";
 
 import { InstallActions } from "./install-actions";
 import styles from "../guide.module.css";

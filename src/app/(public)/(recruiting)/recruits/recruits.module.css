@@ -1,5 +1,5 @@
 .page { display: grid; gap: 28px; }
-.hero { position: relative; overflow: hidden; min-height: 220px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: clamp(28px, 5vw, 54px); border: 1px solid rgba(155,186,226,.34); border-radius: 34px; background: linear-gradient(130deg,#eefaff,#f8f0ff 58%,#fff2f7); box-shadow: var(--shadow-soft); }
+.hero { position: relative; overflow: hidden; min-height: 220px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: clamp(28px, 5vw, 54px); border: 1px solid rgba(155,186,226,.34); border-radius: 34px; background: var(--theme-feature-background); box-shadow: var(--shadow-soft); }
 .hero::after { position: absolute; width: 190px; aspect-ratio: 1; right: 9%; top: -46px; border: 28px solid rgba(255,255,255,.36); border-radius: 50%; content: ""; pointer-events: none; }
 .hero > * { position: relative; z-index: 1; }
 .hero p,.heading span { margin: 0; color: var(--text-accent); font-size: 12px; font-weight: 900; letter-spacing: .12em; }
@@ -14,7 +14,7 @@
 .heading h2 { margin: 4px 0 0; font-size: 26px; letter-spacing: -.03em; }
 .heading p { margin: 0; color: var(--text-muted); font-size: 13px; }
 .cards { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
-.card { position: relative; overflow: hidden; display: grid; gap: 15px; min-width: 0; padding: 22px 20px 20px; border: 1px solid var(--border); border-radius: 24px; background: linear-gradient(155deg,rgba(255,255,255,.98),rgba(250,252,255,.9)); box-shadow: 0 12px 34px rgba(76,94,130,.07); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.card { position: relative; overflow: hidden; display: grid; gap: 15px; min-width: 0; padding: 22px 20px 20px; border: 1px solid var(--border); border-radius: 24px; background: var(--theme-surface-background); box-shadow: 0 12px 34px rgba(76,94,130,.07); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
 .card::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg,#8fbce8,#c49ee4); }
 .card[data-kind="party"]::before { background: linear-gradient(90deg,#7ab9e8,#d895ce); }
 .card[data-kind="scrim"]::before { background: linear-gradient(90deg,#806fce,#75b8e8); }
@@ -48,7 +48,7 @@
 .card[data-capacity="full"] .capacity i { background: linear-gradient(90deg,#e486a7,#d595ce); }
 .scrimLine { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--text-muted); font-size: 13px; }
 .scrimLine svg { width: 17px; color: #d77eaa; }
-.inlineEmpty,.state { padding: 28px; border: 1px dashed var(--border); border-radius: 22px; color: var(--text-muted); background: rgba(255,255,255,.66); text-align: center; }
+.inlineEmpty,.state { padding: 28px; border: 1px dashed var(--border); border-radius: 22px; color: var(--text-muted); background: var(--theme-surface-background); text-align: center; }
 .state { position: relative; overflow: hidden; min-height: 260px; display: grid; place-content: center; justify-items: center; gap: 9px; box-shadow: inset 0 1px rgba(255,255,255,.8),0 16px 42px rgba(77,101,145,.06); }
 .state::before { content: ""; position: absolute; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle,rgba(210,183,239,.24),transparent 68%); pointer-events: none; }
 .state > * { position: relative; }

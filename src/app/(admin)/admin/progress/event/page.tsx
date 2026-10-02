@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Trophy } from "lucide-react";
+import { Plus, Trophy } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseEventListQuery } from "@/modules/competitions/events";

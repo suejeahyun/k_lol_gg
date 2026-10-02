@@ -1,5 +1,5 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
-import { Sparkles, UserPlus } from "lucide-react";
+import { Sparkles, UserPlus } from "@/components/theme/theme-icons";
 
 import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
 import { SignupForm } from "@/components/accounts/account-auth-forms";

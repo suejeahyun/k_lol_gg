@@ -13,6 +13,8 @@ import { createEventAggregate, startEventRecruitment } from "../../src/modules/c
 import { JoseSessionCodec } from "../../src/modules/auth/infrastructure/jose-session-codec";
 import { hashSessionToken } from "../../src/modules/auth/infrastructure/session-token-hash";
 import { ADMIN_SESSION_COOKIE_NAME } from "../../src/modules/auth/infrastructure/session-constants";
+import { hashPassword } from "../../src/modules/auth/infrastructure/node-password";
+import { eq } from "drizzle-orm";
 
 const output = resolve(".tmp/ux-qa");
 await mkdir(output, { recursive: true });
@@ -38,7 +40,13 @@ try {
   const partyId = randomUUID();
   await database.insert(recruitParties).values({ id: partyId, recruitDate: now.toISOString().slice(0,10), recruitNumber: 12, type: "PARTY_NUMBER", status: "IN_PROGRESS", title: "테스트 파티 모집", maximumMembers: 5, membersJson: [], lastActivityAt: now });
   const secret = randomBytes(32), cron = randomBytes(32).toString("hex"), userId = randomUUID(), sessionId = randomUUID();
-  await database.insert(userAccounts).values({ id: userId, loginId: "ux-admin", loginIdNormalized: "ux-admin", role: "ADMIN", status: "APPROVED" });
+  const themeQa = process.env.V2_UX_QA_THEME === "true";
+  const totpKeysJson = JSON.stringify({ current: 1, keys: { 1: randomBytes(32).toString("base64url") } });
+  await database.insert(userAccounts).values({ id: userId, loginId: "ux-admin", loginIdNormalized: "ux-admin", role: "ADMIN", status: "APPROVED", ...(themeQa ? { passwordHash: await hashPassword("QaOnlyPass2026!"), passwordChangedAt: now } : {}) });
+  if (themeQa) {
+    // Disposable UI fixture only; exercise the normal account/admin password sign-in.
+    await database.update(players).set({ userAccountId: userId }).where(eq(players.nickname, "달빛소환사"));
+  }
   const initialEvent = startEventRecruitment(createEventAggregate({ id: randomUUID(), now: now.toISOString(), settings: { title: "UX 검증 이벤트", description: "로컬 합성 데이터입니다.", format: "ARAM", recruitmentOpensAt: past.toISOString(), recruitmentClosesAt: future.toISOString(), bracketBestOf: 1 } }), now.toISOString());
   const event = { ...initialEvent, revision: 1 };
   await database.insert(eventCompetitions).values({ id: event.id, title: event.settings.title, titleNormalized: event.settings.title.toLowerCase(), description: event.settings.description, format: event.settings.format, status: event.lifecycle.status, recruitmentOpensAt: past, recruitmentClosesAt: future, bracketBestOf: 1, aggregateJson: JSON.parse(JSON.stringify(event)), revision: event.revision, createdAt: now, updatedAt: now, createdByUserAccountId: userId, updatedByUserAccountId: userId });
@@ -49,7 +57,7 @@ try {
   const address = portServer.address(); assert.ok(address && typeof address !== "string");
   const origin = `http://127.0.0.1:${address.port}`;
   await new Promise<void>((done) => portServer.close(() => done()));
-  app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(address.port)], { windowsHide: true, stdio: "ignore", env: { ...childTestEnvironment(cluster.connectionString), NODE_ENV: "production", V2_PUBLIC_DATA_SOURCE: "postgres", V2_PUBLIC_ORIGIN: origin, NEXT_PUBLIC_SITE_URL: origin, CRON_SECRET: cron, SESSION_SIGNING_KEYS: JSON.stringify({ current: "qa", keys: { qa: secret.toString("base64url") } }), TOTP_ENCRYPTION_KEYS: JSON.stringify({ current: 1, keys: { 1: randomBytes(32).toString("base64url") } }), V2_AUTH_RATE_LIMIT_PEPPER: randomBytes(32).toString("base64url") } });
+  app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(address.port)], { windowsHide: true, stdio: "ignore", env: { ...childTestEnvironment(cluster.connectionString), NODE_ENV: "production", V2_PUBLIC_DATA_SOURCE: "postgres", V2_PUBLIC_ORIGIN: origin, NEXT_PUBLIC_SITE_URL: origin, CRON_SECRET: cron, SESSION_SIGNING_KEYS: JSON.stringify({ current: "qa", keys: { qa: secret.toString("base64url") } }), TOTP_ENCRYPTION_KEYS: totpKeysJson, V2_AUTH_RATE_LIMIT_PEPPER: randomBytes(32).toString("base64url") } });
   let ready = false;
   for (let attempt = 0; attempt < 100; attempt += 1) {
     try { if ((await fetch(`${origin}/api/health`)).ok) { ready = true; break; } } catch { /* startup */ }

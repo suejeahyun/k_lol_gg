@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Database, RotateCcw } from "lucide-react";
+import { Database, RotateCcw } from "@/components/theme/theme-icons";
 
 import styles from "@/components/admin/players/admin-players.module.css";
 

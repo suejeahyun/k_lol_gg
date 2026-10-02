@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, KeyRound, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, KeyRound, ShieldCheck, UserRound } from "@/components/theme/theme-icons";
 
 import { AdminAccountActions } from "@/components/admin/accounts/admin-account-actions";
 import styles from "@/components/admin/players/admin-players.module.css";

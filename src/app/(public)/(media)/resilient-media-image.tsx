@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ImageOff } from "lucide-react";
+import { ImageOff } from "@/components/theme/theme-icons";
 import { useState } from "react";
 
 import styles from "./media.module.css";

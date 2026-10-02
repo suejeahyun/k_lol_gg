@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LibraryBig, Plus, Sparkles } from "lucide-react";
+import { LibraryBig, Plus, Sparkles } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseChampionListQuery } from "@/modules/champions";

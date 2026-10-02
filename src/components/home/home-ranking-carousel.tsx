@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Crown, Medal, Pause, Play, Trophy } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Crown, Medal, Pause, Play, Trophy } from "@/components/theme/theme-icons";
 import { Button } from "@/components/ui/button";
 import type { PublicRankingView } from "@/modules/statistics/domain/public-ranking-view";
 import styles from "./home-ranking-carousel.module.css";

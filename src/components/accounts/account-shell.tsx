@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { AlertTriangle, KeyRound, Radio, ShieldCheck, UsersRound } from "lucide-react";
+import { AlertTriangle, KeyRound, Radio, ShieldCheck, UsersRound } from "@/components/theme/theme-icons";
 
 import styles from "./account-access.module.css";
 

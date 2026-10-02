@@ -1,4 +1,4 @@
-import { Gamepad2, Hash, TrendingUp } from "lucide-react";
+import { Gamepad2, Hash, TrendingUp } from "@/components/theme/theme-icons";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";

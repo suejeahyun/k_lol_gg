@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Archive, ArrowRight, Check, Copy, GripVertical, RefreshCw, RotateCcw, Save, SlidersHorizontal } from "lucide-react";
+import { Archive, ArrowRight, Check, Copy, GripVertical, RefreshCw, RotateCcw, Save, SlidersHorizontal } from "@/components/theme/theme-icons";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 

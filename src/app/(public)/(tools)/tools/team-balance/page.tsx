@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { LogIn, Scale, Sparkles } from "lucide-react";
+import { LogIn, Scale, Sparkles } from "@/components/theme/theme-icons";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { readSiteFeatureState } from "@/modules/operations/infrastructure/site-feature-access";

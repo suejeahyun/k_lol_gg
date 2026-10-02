@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { ArrowRight, Crown, Gamepad2, Medal, Sparkles, Trophy, UsersRound } from "lucide-react";
+import { ArrowRight, Crown, Gamepad2, Medal, Sparkles, Trophy, UsersRound } from "@/components/theme/theme-icons";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { isStatisticsUuid } from "@/modules/statistics/application/statistics-query";

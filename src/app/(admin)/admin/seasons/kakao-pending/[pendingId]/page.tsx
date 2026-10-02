@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Database, UserRoundSearch } from "lucide-react";
+import { Database, UserRoundSearch } from "@/components/theme/theme-icons";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseCandidateQuery } from "@/modules/seasons/infrastructure/admin-kakao-pending-query";

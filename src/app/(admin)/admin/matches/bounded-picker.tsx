@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, X } from "@/components/theme/theme-icons";
 
 import {
   moveSelectableIndex,

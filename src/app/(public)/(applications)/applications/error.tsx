@@ -1,6 +1,6 @@
 "use client";
 
-import { CloudSun } from "lucide-react";
+import { CloudSun } from "@/components/theme/theme-icons";
 import styles from "./applications.module.css";
 
 export default function ApplicationsError({ reset }: { reset: () => void }) {

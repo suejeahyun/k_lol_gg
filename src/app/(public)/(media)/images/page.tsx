@@ -1,6 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
-import { CloudSun, Images, Sparkles } from "lucide-react";
+import { CloudSun, Images, Sparkles } from "@/components/theme/theme-icons";
 import { parseMediaPublicListQuery, toPublicGalleryDto } from "@/modules/media";
 import { loadRuntimeMedia } from "@/modules/media/infrastructure/runtime-media";
 import styles from "../media.module.css";

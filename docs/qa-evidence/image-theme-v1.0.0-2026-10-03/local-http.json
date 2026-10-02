@@ -1,0 +1,1150 @@
+{
+  "checkedAt": "2026-10-02T21:05:39.288Z",
+  "origin": "http://127.0.0.1:54637",
+  "pages": 108,
+  "statusCounts": {
+    "200": 95,
+    "404": 13
+  },
+  "fixtureLimit": "Dynamic records other than event/player are absent in this small isolated UI fixture. Their 404 or guarded redirects verify themed boundary rendering only.",
+  "pagesWithMissingFixture": 20,
+  "rows": [
+    {
+      "route": "/",
+      "resolved": "/",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 65
+    },
+    {
+      "route": "/account",
+      "resolved": "/account",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 37
+    },
+    {
+      "route": "/account/discipline",
+      "resolved": "/account/discipline",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account/discipline",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 28
+    },
+    {
+      "route": "/account/password",
+      "resolved": "/account/password",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account/password",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/account/riot",
+      "resolved": "/account/riot",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account/riot",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 34
+    },
+    {
+      "route": "/admin",
+      "resolved": "/admin",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 36
+    },
+    {
+      "route": "/admin/ai-requests",
+      "resolved": "/admin/ai-requests",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/logs",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/balance",
+      "resolved": "/admin/balance",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 23
+    },
+    {
+      "route": "/admin/balance-ai",
+      "resolved": "/admin/balance-ai",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance-ai",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 22
+    },
+    {
+      "route": "/admin/balance/drafts",
+      "resolved": "/admin/balance/drafts",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance/drafts",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/balance/drafts/[draftId]",
+      "resolved": "/admin/balance/drafts/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/balance/drafts/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/champions",
+      "resolved": "/admin/champions",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/champions",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 21
+    },
+    {
+      "route": "/admin/champions/[championId]/edit",
+      "resolved": "/admin/champions/00000000-0000-4000-8000-000000000001/edit",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/champions/00000000-0000-4000-8000-000000000001/edit",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/champions/new",
+      "resolved": "/admin/champions/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/champions/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/discipline",
+      "resolved": "/admin/discipline",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/discipline/[recordId]",
+      "resolved": "/admin/discipline/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/discipline/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/discipline/new",
+      "resolved": "/admin/discipline/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/highlights",
+      "resolved": "/admin/highlights",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 21
+    },
+    {
+      "route": "/admin/highlights/[highlightId]/edit",
+      "resolved": "/admin/highlights/00000000-0000-4000-8000-000000000001/edit",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/highlights/00000000-0000-4000-8000-000000000001/edit",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/highlights/new",
+      "resolved": "/admin/highlights/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/images",
+      "resolved": "/admin/images",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 21
+    },
+    {
+      "route": "/admin/images/[imageId]/edit",
+      "resolved": "/admin/images/00000000-0000-4000-8000-000000000001/edit",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/images/00000000-0000-4000-8000-000000000001/edit",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/images/new",
+      "resolved": "/admin/images/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/kakao",
+      "resolved": "/admin/kakao",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/kakao/operation-forms",
+      "resolved": "/admin/kakao/operation-forms",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/kakao/operation-forms/[formType]",
+      "resolved": "/admin/kakao/operation-forms/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/kakao/operation-forms/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/kakao/recruits",
+      "resolved": "/admin/kakao/recruits",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/kakao/recruits/logs",
+      "resolved": "/admin/kakao/recruits/logs",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/kakao/recruits/settings",
+      "resolved": "/admin/kakao/recruits/settings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 23
+    },
+    {
+      "route": "/admin/kakao/rooms",
+      "resolved": "/admin/kakao/rooms",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao/rooms",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/kakao/scrims",
+      "resolved": "/admin/kakao/scrims",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/kakao/season-apply",
+      "resolved": "/admin/kakao/season-apply",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons/kakao-pending",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 21
+    },
+    {
+      "route": "/admin/kakao/settings",
+      "resolved": "/admin/kakao/settings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/kakao/stats",
+      "resolved": "/admin/kakao/stats",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 27
+    },
+    {
+      "route": "/admin/login",
+      "resolved": "/admin/login",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/admin/login",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 4
+    },
+    {
+      "route": "/admin/logs",
+      "resolved": "/admin/logs",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/logs",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/logs/kakao",
+      "resolved": "/admin/logs/kakao",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/matches",
+      "resolved": "/admin/matches",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/matches/[matchId]",
+      "resolved": "/admin/matches/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/matches/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/matches/[matchId]/edit",
+      "resolved": "/admin/matches/00000000-0000-4000-8000-000000000001/edit",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/matches/00000000-0000-4000-8000-000000000001/edit",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/matches/new",
+      "resolved": "/admin/matches/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 43
+    },
+    {
+      "route": "/admin/matches/submissions/[submissionId]",
+      "resolved": "/admin/matches/submissions/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/matches/submissions/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/operation-forms",
+      "resolved": "/admin/operation-forms",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/operation-forms/[formType]",
+      "resolved": "/admin/operation-forms/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/operation-forms/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/operation-forms/[formType]/[id]",
+      "resolved": "/admin/operation-forms/00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/operation-forms/00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/operation-forms/warnings",
+      "resolved": "/admin/operation-forms/warnings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/players",
+      "resolved": "/admin/players",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 26
+    },
+    {
+      "route": "/admin/players/[playerId]",
+      "resolved": "/admin/players/0421d28b-685a-416a-b6a0-1ab598081d4d",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players/0421d28b-685a-416a-b6a0-1ab598081d4d",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 25
+    },
+    {
+      "route": "/admin/players/new",
+      "resolved": "/admin/players/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 22
+    },
+    {
+      "route": "/admin/private-assets",
+      "resolved": "/admin/private-assets",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/private-assets",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/private-assets/[assetId]",
+      "resolved": "/admin/private-assets/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/private-assets/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/progress/destruction",
+      "resolved": "/admin/progress/destruction",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/destruction",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 21
+    },
+    {
+      "route": "/admin/progress/destruction/[tournamentId]",
+      "resolved": "/admin/progress/destruction/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 404,
+      "finalPath": "/admin/progress/destruction/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": false,
+      "rasterIcons": 0
+    },
+    {
+      "route": "/admin/progress/destruction/new",
+      "resolved": "/admin/progress/destruction/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/destruction/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/progress/event",
+      "resolved": "/admin/progress/event",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/event",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 21
+    },
+    {
+      "route": "/admin/progress/event/[eventId]",
+      "resolved": "/admin/progress/event/c3b71acb-089e-490e-a8c0-f8de104f70f3",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/event/c3b71acb-089e-490e-a8c0-f8de104f70f3",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 22
+    },
+    {
+      "route": "/admin/progress/event/new",
+      "resolved": "/admin/progress/event/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/event/new",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/recruits",
+      "resolved": "/admin/recruits",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/riot",
+      "resolved": "/admin/riot",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/riot",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/search",
+      "resolved": "/admin/search",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/search",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/seasons",
+      "resolved": "/admin/seasons",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 22
+    },
+    {
+      "route": "/admin/seasons/kakao-pending",
+      "resolved": "/admin/seasons/kakao-pending",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons/kakao-pending",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 21
+    },
+    {
+      "route": "/admin/seasons/kakao-pending/[pendingId]",
+      "resolved": "/admin/seasons/kakao-pending/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons/kakao-pending/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": true,
+      "rasterIcons": 20
+    },
+    {
+      "route": "/admin/security",
+      "resolved": "/admin/security",
+      "session": "setup",
+      "status": 200,
+      "finalPath": "/admin/login",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 4
+    },
+    {
+      "route": "/admin/site-settings",
+      "resolved": "/admin/site-settings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/forbidden",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/admin/usage",
+      "resolved": "/admin/usage",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/usage",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/admin/users",
+      "resolved": "/admin/users",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/users",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 22
+    },
+    {
+      "route": "/admin/users/[userAccountId]",
+      "resolved": "/admin/users/00000000-0000-4000-8000-000000000001",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/users/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": true,
+      "rasterIcons": 19
+    },
+    {
+      "route": "/app",
+      "resolved": "/app",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 65
+    },
+    {
+      "route": "/app/players",
+      "resolved": "/app/players",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/players",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 44
+    },
+    {
+      "route": "/applications",
+      "resolved": "/applications",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/applications",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 31
+    },
+    {
+      "route": "/competitions",
+      "resolved": "/competitions",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/competitions/destruction",
+      "resolved": "/competitions/destruction",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 33
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "resolved": "/competitions/destruction/00000000-0000-4000-8000-000000000001",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/competitions/events",
+      "resolved": "/competitions/events",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 35
+    },
+    {
+      "route": "/competitions/events/[eventId]",
+      "resolved": "/competitions/events/c3b71acb-089e-490e-a8c0-f8de104f70f3",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events/c3b71acb-089e-490e-a8c0-f8de104f70f3",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 36
+    },
+    {
+      "route": "/discipline",
+      "resolved": "/discipline",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/discipline",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/forbidden",
+      "resolved": "/forbidden",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/forbidden",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/forgot-password",
+      "resolved": "/forgot-password",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/forgot-password",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/help",
+      "resolved": "/help",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/help/contact",
+      "resolved": "/help/contact",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/contact",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 28
+    },
+    {
+      "route": "/help/kakao",
+      "resolved": "/help/kakao",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/kakao",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/help/recruits",
+      "resolved": "/help/recruits",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/recruits",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/help/riot",
+      "resolved": "/help/riot",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/riot",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 36
+    },
+    {
+      "route": "/highlights",
+      "resolved": "/highlights",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/highlights",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 31
+    },
+    {
+      "route": "/highlights/[highlightId]",
+      "resolved": "/highlights/00000000-0000-4000-8000-000000000001",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/highlights/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/images",
+      "resolved": "/images",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/images",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 31
+    },
+    {
+      "route": "/images/[imageId]",
+      "resolved": "/images/00000000-0000-4000-8000-000000000001",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/images/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/install",
+      "resolved": "/install",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/install",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 37
+    },
+    {
+      "route": "/login",
+      "resolved": "/login",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/login",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 31
+    },
+    {
+      "route": "/matches",
+      "resolved": "/matches",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/matches",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 33
+    },
+    {
+      "route": "/matches/[matchId]",
+      "resolved": "/matches/00000000-0000-4000-8000-000000000001",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/matches/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/matches/submissions",
+      "resolved": "/matches/submissions",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/matches/submissions",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/matches/submit",
+      "resolved": "/matches/submit",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/matches/submit",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/players",
+      "resolved": "/players",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/players",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 44
+    },
+    {
+      "route": "/players/[playerId]",
+      "resolved": "/players/0421d28b-685a-416a-b6a0-1ab598081d4d",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/players/0421d28b-685a-416a-b6a0-1ab598081d4d",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 38
+    },
+    {
+      "route": "/privacy",
+      "resolved": "/privacy",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/privacy",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 30
+    },
+    {
+      "route": "/rankings",
+      "resolved": "/rankings",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/rankings",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 34
+    },
+    {
+      "route": "/rankings/mmr",
+      "resolved": "/rankings/mmr",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/rankings/mmr",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 33
+    },
+    {
+      "route": "/recruits",
+      "resolved": "/recruits",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/recruits",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 32
+    },
+    {
+      "route": "/signup",
+      "resolved": "/signup",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/signup",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 31
+    },
+    {
+      "route": "/start",
+      "resolved": "/start",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/start",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 33
+    },
+    {
+      "route": "/terms",
+      "resolved": "/terms",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/terms",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 29
+    },
+    {
+      "route": "/tools/coin-toss",
+      "resolved": "/tools/coin-toss",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/tools/coin-toss",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 38
+    },
+    {
+      "route": "/tools/random-team",
+      "resolved": "/tools/random-team",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/tools/random-team",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 37
+    },
+    {
+      "route": "/tools/team-balance",
+      "resolved": "/tools/team-balance",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 42
+    },
+    {
+      "route": "/tools/team-balance/drafts",
+      "resolved": "/tools/team-balance/drafts",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts",
+      "missingFixture": false,
+      "themeStyles": true,
+      "rasterIcons": 34
+    },
+    {
+      "route": "/tools/team-balance/drafts/[draftId]",
+      "resolved": "/tools/team-balance/drafts/00000000-0000-4000-8000-000000000001",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts/00000000-0000-4000-8000-000000000001",
+      "missingFixture": true,
+      "themeStyles": true,
+      "rasterIcons": 29
+    }
+  ],
+  "assets": [
+    {
+      "path": "public/images/theme/v1/world.webp",
+      "status": 200,
+      "bytes": 111328
+    },
+    {
+      "path": "public/images/theme/v1/world-mobile.webp",
+      "status": 200,
+      "bytes": 41556
+    },
+    {
+      "path": "public/images/theme/v1/arena.webp",
+      "status": 200,
+      "bytes": 83856
+    },
+    {
+      "path": "public/images/theme/v1/arena-mobile.webp",
+      "status": 200,
+      "bytes": 30210
+    },
+    {
+      "path": "public/images/theme/v1/panel.webp",
+      "status": 200,
+      "bytes": 10494
+    },
+    {
+      "path": "public/images/theme/v1/navigation.webp",
+      "status": 200,
+      "bytes": 95418
+    },
+    {
+      "path": "public/images/theme/v1/community.webp",
+      "status": 200,
+      "bytes": 103906
+    },
+    {
+      "path": "public/images/theme/v1/status.webp",
+      "status": 200,
+      "bytes": 89694
+    },
+    {
+      "path": "public/images/theme/v1/actions.webp",
+      "status": 200,
+      "bytes": 81272
+    },
+    {
+      "path": "public/images/theme/v1/records.webp",
+      "status": 200,
+      "bytes": 67260
+    },
+    {
+      "path": "public/images/theme/v1/tools.webp",
+      "status": 200,
+      "bytes": 82530
+    }
+  ]
+}
