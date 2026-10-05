@@ -56,6 +56,7 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
   const [message, setMessage] = useState<string | null>(null);
   const [reserve, setReserve] = useState(initial?.status === "RESERVE");
   const reviewed = Boolean(initial?.reviewed || (initial && ["CONFIRMED", "REJECTED"].includes(initial.status)));
+  const reapplying = initial?.status === "CANCELLED";
   const isRift = mode === "RIFT";
   const full = participantCount >= capacity && initial?.status !== "APPLIED" && initial?.status !== "CONFIRMED";
   const keys = useRef(new ClientMutationKeyStore("site-application")).current;
@@ -90,7 +91,7 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
     try {
       const result = await mutate("POST", { recruitNo, mainPosition: isRift ? mainPosition : null, subPositions: isRift ? subPositions : [], reserve });
       recordUsageAction("application.saved");
-      setMessage([initial ? "신청 내용을 수정했어요." : "참가 신청을 접수했어요.", result.notice].filter(Boolean).join("\n"));
+      setMessage([initial && !reapplying ? "신청 내용을 수정했어요." : "참가 신청을 접수했어요.", result.notice].filter(Boolean).join("\n"));
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "신청을 처리하지 못했습니다.");
@@ -120,7 +121,7 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
       <div className={styles.sectionHeading}>
         <div>
           <span>내 참가 신청</span>
-          <h2 id="application-action-title">{initial ? `내 ${recruitNo}회차 신청 수정` : `오늘 ${recruitNo}회차 참가 신청`}</h2>
+          <h2 id="application-action-title">{reviewed || closed ? `내 ${recruitNo}회차 신청 상태` : reapplying ? `${recruitNo}회차 다시 참가 신청` : initial ? `내 ${recruitNo}회차 신청 수정` : `오늘 ${recruitNo}회차 참가 신청`}</h2>
         </div>
         {initial ? <strong data-status={initial.status}>{statusLabel(initial.status)}</strong> : null}
       </div>
@@ -199,7 +200,7 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
       <div className={styles.actionButtons}>
         {!reviewed && !closed ? (
           <button type="button" onClick={save} disabled={pending !== null}>
-            {pending === "save" ? "저장 중…" : initial ? "신청 수정" : "참가 신청"}
+            {pending === "save" ? "저장 중…" : reapplying ? "다시 참가 신청" : initial ? "신청 수정" : "참가 신청"}
           </button>
         ) : null}
         {!reviewed && !closed && (initial?.status === "APPLIED" || initial?.status === "RESERVE") ? (

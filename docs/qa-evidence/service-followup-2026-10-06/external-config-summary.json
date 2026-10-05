@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-10-05T23:44:01.852Z",
+  "source": "Authenticated Vercel Production environment metadata and selected non-secret booleans",
+  "settings": [
+    {
+      "key": "V2_RIOT_INTEGRATION_ENABLED",
+      "booleanValue": true,
+      "readable": true,
+      "updatedAt": 1790033282014
+    },
+    {
+      "key": "V2_RIOT_FAKE_RUNTIME",
+      "booleanValue": false,
+      "readable": true,
+      "updatedAt": 1788910359951
+    },
+    {
+      "key": "KAKAO_SITE_NOTICE_ENABLED",
+      "booleanValue": true,
+      "readable": true,
+      "updatedAt": 1790033283824
+    }
+  ],
+  "rsoRequiredKeys": [
+    {
+      "key": "RIOT_RSO_CLIENT_ID",
+      "present": false
+    },
+    {
+      "key": "RIOT_RSO_CLIENT_SECRET",
+      "present": false
+    },
+    {
+      "key": "RIOT_RSO_STATE_SECRET",
+      "present": false
+    }
+  ]
+}

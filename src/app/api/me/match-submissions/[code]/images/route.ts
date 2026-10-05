@@ -33,7 +33,7 @@ export async function POST(request: Request, context: Context) {
     if (!submission) return matchNotFoundResponse();
     const preparedHeaders = prepareMatchUploadHeaders(
       request,
-      `me:match-submissions:${code}:images`,
+      `me:match-submissions:${code.toLowerCase()}:images`,
       authorization.session,
       submission.id,
     );

@@ -1,3 +1,5 @@
+import { readValidatedTraceId } from "@/platform/http";
+import { canonicalSubmissionPublicCode } from "@/modules/matches";
 import { getRuntimeMatchService } from "@/modules/matches/infrastructure/runtime-match-data";
 import {
   matchMutationResponse,
@@ -19,10 +21,12 @@ export async function POST(request: Request, context: Context) {
   if (!authorization.ok) return authorization.response;
   const featureFailure = await requireSiteFeature(request, "matchSubmissions");
   if (featureFailure) return featureFailure;
-  const { code } = await context.params;
+  const { code: rawCode } = await context.params;
+  const code = canonicalSubmissionPublicCode(rawCode);
+  if (!code) return matchNotFoundResponse(readValidatedTraceId(request.headers));
   const prepared = await prepareMatchJsonMutation(
     request,
-    `me:match-submissions:${code}:cancel`,
+    `me:match-submissions:${code.toLowerCase()}:cancel`,
     authorization.session,
     "ACCOUNT",
     1_024,

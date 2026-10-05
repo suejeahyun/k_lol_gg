@@ -1,0 +1,130 @@
+{
+  "checkedAt": "2026-10-05T23:45:23.405Z",
+  "databaseBinding": {
+    "method": "Exact authenticated production storage-probe runId matched in this read-only connection",
+    "runId": "7cc09fcf-4b0f-46f3-aa15-fef8f001efd7",
+    "matched": true
+  },
+  "transaction": "REPEATABLE READ READ ONLY",
+  "mmr": [
+    {
+      "generation": "1",
+      "status": "READY",
+      "formula_version": "V1_INTERNAL_MMR_1",
+      "source_match_count": 42,
+      "source_game_count": 91,
+      "source_adjustment_count": 0,
+      "calculated_at": "2026-09-07T15:36:32.075Z"
+    }
+  ],
+  "mmrUnconsumed": {
+    "count": 13,
+    "oldest_created_at": "2026-09-18T09:51:26.566Z",
+    "newest_created_at": "2026-10-04T17:23:18.138Z"
+  },
+  "maintenance": [
+    {
+      "job_name": "kakao-daily-close",
+      "status": "SUCCEEDED",
+      "started_at": "2026-10-05T21:00:16.518Z",
+      "completed_at": "2026-10-05T21:00:16.518Z",
+      "failure_code": null
+    },
+    {
+      "job_name": "riot-api-probe",
+      "status": "SUCCEEDED",
+      "started_at": "2026-10-05T23:42:12.301Z",
+      "completed_at": "2026-10-05T23:42:12.643Z",
+      "failure_code": null
+    },
+    {
+      "job_name": "storage-probe",
+      "status": "SUCCEEDED",
+      "started_at": "2026-10-05T23:40:48.287Z",
+      "completed_at": "2026-10-05T23:40:50.692Z",
+      "failure_code": null
+    }
+  ],
+  "statisticsOutbox": [
+    {
+      "status": "DELIVERED",
+      "count": 13,
+      "oldest_created_at": "2026-09-18T09:51:26.566Z",
+      "latest_delivered_at": "2026-10-04T17:25:15.818Z"
+    }
+  ],
+  "riotLinks": [
+    {
+      "status": "DISCONNECTED",
+      "method": "DIRECT_OWNER",
+      "count": 23
+    },
+    {
+      "status": "CONNECTED",
+      "method": "ADMIN",
+      "count": 102
+    },
+    {
+      "status": "CONNECTED",
+      "method": "DIRECT_OWNER",
+      "count": 2
+    },
+    {
+      "status": "DISCONNECTED",
+      "method": "ADMIN",
+      "count": 2
+    },
+    {
+      "status": "REVOKED",
+      "method": "DIRECT_OWNER",
+      "count": 1
+    }
+  ],
+  "riotJobs": [
+    {
+      "status": "SUCCEEDED",
+      "failure_code": null,
+      "count": 3142,
+      "oldest_requested_at": "2026-09-22T00:00:45.173Z",
+      "latest_completed_at": "2026-10-05T23:40:48.393Z"
+    },
+    {
+      "status": "PARTIAL",
+      "failure_code": null,
+      "count": 86,
+      "oldest_requested_at": "2026-09-24T23:20:45.341Z",
+      "latest_completed_at": "2026-10-05T23:30:48.631Z"
+    }
+  ],
+  "riotJobs24h": [
+    {
+      "status": "SUCCEEDED",
+      "failure_code": null,
+      "count": 270
+    },
+    {
+      "status": "PARTIAL",
+      "failure_code": null,
+      "count": 18
+    }
+  ],
+  "riotSummaries": {
+    "count": 120,
+    "latest_synced_at": "2026-10-05T23:40:48.413Z",
+    "latest_recent_solo_synced_at": "2026-10-05T23:40:48.413Z"
+  },
+  "riotFeature": {
+    "enabled": true
+  },
+  "noticesGlobal": [
+    {
+      "status": "EXPIRED",
+      "count": 1,
+      "latest_acknowledged_at": null
+    }
+  ],
+  "noticeAuthenticationGlobal": {
+    "retained_authenticated_requests": 3,
+    "latest_authenticated_at": "2026-09-22T10:59:32.395Z"
+  }
+}

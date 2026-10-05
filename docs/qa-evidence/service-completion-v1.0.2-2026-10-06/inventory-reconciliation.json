@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-05T23:48:23.367Z",
+  "sourcePageAndRouteFiles": 383,
+  "indexedPageAndRouteFiles": 383,
+  "missingFromInventory": [],
+  "missingFromSource": [],
+  "existingInventoryCounts": {
+    "pages": 108,
+    "apiHandlers": 212,
+    "compatibilityHandlers": 63,
+    "metadataRoutes": 3,
+    "explicitHttpMethods": 499,
+    "sourceControls": 1088,
+    "menuEntries": 138
+  },
+  "scope": "Source route completeness only; current behavioral results are in README/HTTP/browser evidence"
+}

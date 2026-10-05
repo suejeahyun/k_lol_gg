@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-05T23:52:46.345Z",
+  "status": "FAIL",
+  "targetFingerprint": "c5918218dd171001",
+  "sourceReadOnly": true,
+  "archive": ".private/recovery/mmr-before-transition-5dea162e-444b-4b32-8dfe-7330cc691384/production-before.dump",
+  "privateRecoveryDirectory": ".private/recovery/mmr-before-transition-5dea162e-444b-4b32-8dfe-7330cc691384",
+  "expectedSourceMigrationTag": "0047_usage_analytics",
+  "providerPitrTested": false,
+  "blobContentsBackedUp": false,
+  "originalDatabaseChanged": false,
+  "productionBindingMatched": true,
+  "failureCode": "UNEXPECTED_SOURCE_MIGRATION_HEAD"
+}

@@ -1,0 +1,87 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+▶ S04 stores participant display identity and rejection reasons as durable history
+  ✔ published detail keeps ten KDA rows and exposes a real API 404/fallback contract (51.8517ms)
+  ✔ registry rename does not rewrite a recorded participant or its archived revision (271.054ms)
+  ✔ reject after and reopen before audit snapshots retain the cleared public reason (25.8103ms)
+  ✔ web submission accepts only the owner's current valid selected team draft (27.4686ms)
+  ✔ admin match creation rechecks and persists the exact selected team draft (14.3532ms)
+  ✔ submission approval carries team-balance provenance through match history and outbox (36.7489ms)
+✔ S04 stores participant display identity and rejection reasons as durable history (1435.029ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2187.9075
+▶ match writes accept password-only administrators and enforce current session boundaries
+  ✔ ADMIN without TOTP (10.2467ms)
+  ✔ SUPER_ADMIN without TOTP (2.3752ms)
+  ✔ existing TOTP session (3.2873ms)
+  ✔ ACCOUNT cookie cannot authorize admin import (2.4701ms)
+  ✔ ordinary member (1.6245ms)
+  ✔ revoked session (1.9495ms)
+  ✔ expired session despite earlier request time (1.9554ms)
+  ✔ stale auth version (1.8758ms)
+  ✔ changed role (2.0603ms)
+  ✔ suspended account (1.7162ms)
+  ✔ deleted account (1.6084ms)
+  ✔ password reset required (1.4762ms)
+  ✔ fixture session cannot write (1.9695ms)
+  ✔ approved member submission (1.9216ms)
+✔ match writes accept password-only administrators and enforce current session boundaries (127.7009ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 782.2414
+[match-public-http] PASS repository participantCount expected=10 actual=10
+[match-public-http] PASS repository kdaPreserved=true
+[match-public-http] PASS repository dataDragonFallback=https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Annie.png
+[match-public-http] PASS invalidIdentifier expected=400 actual=400
+[match-public-http] PASS unavailableService expected=503 actual=503
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: concurrent edits must commit once and reject the stale revision
++ actual - expected
+
+  [
++   500,
++   500
+-   200,
+-   412
+  ]
+
+    at <anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\verify-match-public-http.ts:190:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [ 500, 500 ],
+  expected: [ 200, 412 ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.1
+[db-contract] cluster stopped and disposable workspace path removed
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\run-data-contracts.ts:530
+  if (exitCode !== 0) throw new Error(`Match public HTTP verification failed with exit code ${exitCode}.`);
+                            ^
+
+Error: Match public HTTP verification failed with exit code 1.
+    at runMatchPublicHttpVerification (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\run-data-contracts.ts:530:29)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async main (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\run-data-contracts.ts:1273:40)
+    at async <anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\run-data-contracts.ts:1298:85)
+
+Node.js v24.14.1

@@ -1,0 +1,58 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+▶ S04 stores participant display identity and rejection reasons as durable history
+  ✔ published detail keeps ten KDA rows and exposes a real API 404/fallback contract (51.396ms)
+  ✔ registry rename does not rewrite a recorded participant or its archived revision (261.9843ms)
+  ✔ reject after and reopen before audit snapshots retain the cleared public reason (22.7428ms)
+  ✔ web submission accepts only the owner's current valid selected team draft (21.1212ms)
+  ✔ admin match creation rechecks and persists the exact selected team draft (14.5745ms)
+  ✔ submission approval carries team-balance provenance through match history and outbox (34.3245ms)
+✔ S04 stores participant display identity and rejection reasons as durable history (1452.4442ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2133.1559
+▶ match writes accept password-only administrators and enforce current session boundaries
+  ✔ ADMIN without TOTP (10.6328ms)
+  ✔ SUPER_ADMIN without TOTP (2.5687ms)
+  ✔ existing TOTP session (3.1717ms)
+  ✔ ACCOUNT cookie cannot authorize admin import (2.2581ms)
+  ✔ ordinary member (2.0344ms)
+  ✔ revoked session (2.042ms)
+  ✔ expired session despite earlier request time (1.9553ms)
+  ✔ stale auth version (1.9892ms)
+  ✔ changed role (2.3821ms)
+  ✔ suspended account (1.5771ms)
+  ✔ deleted account (1.691ms)
+  ✔ password reset required (1.4105ms)
+  ✔ fixture session cannot write (1.7319ms)
+  ✔ approved member submission (2.0501ms)
+✔ match writes accept password-only administrators and enforce current session boundaries (131.1982ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 791.2681
+[match-public-http] PASS repository participantCount expected=10 actual=10
+[match-public-http] PASS repository kdaPreserved=true
+[match-public-http] PASS repository dataDragonFallback=https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Annie.png
+[match-public-http] PASS invalidIdentifier expected=400 actual=400
+[match-public-http] PASS unavailableService expected=503 actual=503
+[owner-task-http] PASS malformed dynamic mutation addresses return structured 400 without hashing exceptions
+[owner-task-http] PASS submission create/replay, concurrent edit 200+412, recover/replay, invalid image recovery, upload replay, cancel/replay, terminal mutation denial
+[owner-task-http] PASS team create/replay, cross-owner read/write denial, concurrent save 200+412, reevaluate/replay, refreshed save/replay
+[owner-task-http] PASS new submission after cancel, saved-team provenance, two-image review, rejection reason, reopen, approval/replay/public match, terminal/revoked-session denial
+[match-import-http] PASS password-only login, private import create/upload, anonymous/revoked denial (synthetic local storage/OCR)
+[match-public-http] PASS publishedMatch expected=200 actual=200 participantCount=10 kdaPreserved=true dataDragonFallback=https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Annie.png
+[match-public-http] PASS missingUuid expected=404 actual=404
+[db-contract] cluster stopped and disposable workspace path removed

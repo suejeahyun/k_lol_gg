@@ -8,6 +8,7 @@ import {
   definePublicProblem,
   formatRevisionEtag,
   idempotencyHashMaterial,
+  isValidIdempotencyScope,
   noStoreJsonResponse,
   noStoreSecurityHeaders,
   problemForIdempotencyKeyError,
@@ -194,7 +195,7 @@ function mutationHeaderGuard(
   purpose: MatchSessionPurpose,
 ) {
   const traceId = readValidatedTraceId(request.headers);
-  if (new URL(request.url).searchParams.size !== 0) {
+  if (!isValidIdempotencyScope(scope) || new URL(request.url).searchParams.size !== 0) {
     return { ok: false as const, response: problemResponse(MATCH_HTTP_PROBLEMS.invalidInput, { traceId }) };
   }
   const configuredOrigin = process.env.V2_PUBLIC_ORIGIN ?? process.env.PUBLIC_ORIGIN;

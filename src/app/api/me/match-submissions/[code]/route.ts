@@ -1,4 +1,5 @@
 import { formatRevisionEtag, readValidatedTraceId } from "@/platform/http";
+import { canonicalSubmissionPublicCode } from "@/modules/matches";
 import { getRuntimeMatchService } from "@/modules/matches/infrastructure/runtime-match-data";
 import {
   matchInvalidInputResponse,
@@ -40,10 +41,12 @@ export async function PATCH(request: Request, context: Context) {
   if (!authorization.ok) return authorization.response;
   const featureFailure = await requireSiteFeature(request, "matchSubmissions");
   if (featureFailure) return featureFailure;
-  const { code } = await context.params;
+  const { code: rawCode } = await context.params;
+  const code = canonicalSubmissionPublicCode(rawCode);
+  if (!code) return matchNotFoundResponse(readValidatedTraceId(request.headers));
   const prepared = await prepareMatchJsonMutation(
     request,
-    `me:match-submissions:${code}:update`,
+    `me:match-submissions:${code.toLowerCase()}:update`,
     authorization.session,
     "ACCOUNT",
     16 * 1024,

@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-05T23:42:51.801Z",
+  "httpStatus": 200,
+  "summary": {
+    "status": "READY",
+    "generation": 1,
+    "formulaVersion": "V1_INTERNAL_MMR_1",
+    "formulaTransition": "ADMIN_RECALCULATION_REQUIRED",
+    "sourceMatchCount": 42,
+    "sourceGameCount": 91,
+    "sourceAdjustmentCount": 0,
+    "pendingSourceCount": 13,
+    "calculatedAt": "2026-09-07T15:36:32.075Z"
+  },
+  "playerCount": 80,
+  "scope": "Public read only; no player rows retained"
+}

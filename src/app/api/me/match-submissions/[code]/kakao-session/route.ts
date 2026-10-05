@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 
+import { readValidatedTraceId } from "@/platform/http";
 import { transactionSessionActor } from "@/modules/auth/domain/transaction-session";
-import { prepareMatchJsonMutation, requireMatchApiSession } from "@/modules/matches/infrastructure/match-http";
+import { canonicalSubmissionPublicCode } from "@/modules/matches";
+import { matchNotFoundResponse, prepareMatchJsonMutation, requireMatchApiSession } from "@/modules/matches/infrastructure/match-http";
 import { parseKakaoImageSessionBody, parseKakaoImageSessionRevokeBody } from "@/modules/recruiting/kakao-assistant/domain";
 import { kakaoImageSessionResponse, kakaoOwnerImageSessionErrorResponse } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoImageReceive } from "@/modules/recruiting/kakao-assistant/runtime";
@@ -20,8 +22,10 @@ async function mutate(request: Request, context: Context, action: "CREATE" | "RE
   if (action === "CREATE" && !await isRuntimeKakaoFeatureEnabled("imageReceiveEnabled")) {
     return kakaoOwnerImageSessionErrorResponse(new Error("KAKAO_IMAGE_RECEIVE_DISABLED"));
   }
-  const { code } = await context.params;
-  const scope = `me:match-submissions:${code}:kakao-session:${action.toLowerCase()}`;
+  const { code: rawCode } = await context.params;
+  const code = canonicalSubmissionPublicCode(rawCode);
+  if (!code) return matchNotFoundResponse(readValidatedTraceId(request.headers));
+  const scope = `me:match-submissions:${code.toLowerCase()}:kakao-session:${action.toLowerCase()}`;
   const prepared = await prepareMatchJsonMutation(request, scope, auth.session, "ACCOUNT", 2_048);
   if (!prepared.ok) return prepared.response;
   try {

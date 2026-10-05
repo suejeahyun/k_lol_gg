@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-05T23:56:01.734Z",
+  "environment": "disposable PostgreSQL 18 and optimized Next server",
+  "cancel": {
+    "status": 200,
+    "label": "다시 참가 신청"
+  },
+  "reapply": {
+    "status": 200,
+    "label": "신청 수정"
+  },
+  "scope": "Authenticated HTTP writes and actual server-rendered application heading/button; not a browser dialog test",
+  "passed": true
+}

@@ -18,11 +18,15 @@ export function readIdempotencyKey(headers: Headers): IdempotencyKeyResult {
   return { ok: true, key: Object.freeze({ normalized: rawValue }) };
 }
 
+export function isValidIdempotencyScope(scope: string): boolean {
+  return IDEMPOTENCY_SCOPE_PATTERN.test(scope);
+}
+
 export function idempotencyHashMaterial(key: ParsedIdempotencyKey, scope: string) {
   if (!key || !IDEMPOTENCY_KEY_PATTERN.test(key.normalized)) {
     throw new TypeError("idempotency key is invalid");
   }
-  if (!IDEMPOTENCY_SCOPE_PATTERN.test(scope)) {
+  if (!isValidIdempotencyScope(scope)) {
     throw new TypeError("idempotency scope must be a stable lower-case identifier");
   }
 

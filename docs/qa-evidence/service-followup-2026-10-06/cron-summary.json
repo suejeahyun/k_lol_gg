@@ -1,0 +1,94 @@
+{
+  "checkedAt": "2026-10-05T23:42:08.661Z",
+  "source": "Vercel authenticated production request logs",
+  "dedupe": "deploymentId + exact requestPath + timestamp + responseStatusCode",
+  "queries": [
+    {
+      "since": "1h",
+      "limit": 1000
+    },
+    {
+      "since": "2026-10-05T20:55:00Z",
+      "until": "2026-10-05T21:10:00Z",
+      "limit": 200
+    },
+    {
+      "since": "2026-10-05T18:55:00Z",
+      "until": "2026-10-05T19:10:00Z",
+      "limit": 200
+    }
+  ],
+  "rawCronRows": 88,
+  "uniqueCronRequests": 56,
+  "groups": {
+    "/api/cron/destruction-ratings": {
+      "count": 33,
+      "statuses": {
+        "0": 1,
+        "200": 32
+      },
+      "latest": "2026-10-05T23:40:18.161Z",
+      "earliest": "2026-10-05T18:55:18.320Z",
+      "deploymentIds": [
+        "dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC"
+      ]
+    },
+    "/api/cron/mmr-projection": {
+      "count": 7,
+      "statuses": {
+        "409": 7
+      },
+      "latest": "2026-10-05T23:40:13.133Z",
+      "earliest": "2026-10-05T18:55:13.271Z",
+      "deploymentIds": [
+        "dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC"
+      ]
+    },
+    "/api/cron/statistics-projection": {
+      "count": 8,
+      "statuses": {
+        "0": 1,
+        "200": 7
+      },
+      "latest": "2026-10-05T23:40:15.461Z",
+      "earliest": "2026-10-05T18:55:15.245Z",
+      "deploymentIds": [
+        "dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC"
+      ]
+    },
+    "/api/cron/riot-sync": {
+      "count": 6,
+      "statuses": {
+        "200": 6
+      },
+      "latest": "2026-10-05T21:05:45.258Z",
+      "earliest": "2026-10-05T18:55:45.165Z",
+      "deploymentIds": [
+        "dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC"
+      ]
+    },
+    "/api/cron/kakao-daily-close": {
+      "count": 1,
+      "statuses": {
+        "200": 1
+      },
+      "latest": "2026-10-05T21:00:16.100Z",
+      "earliest": "2026-10-05T21:00:16.100Z",
+      "deploymentIds": [
+        "dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC"
+      ]
+    },
+    "/api/cron/support-retention": {
+      "count": 1,
+      "statuses": {
+        "200": 1
+      },
+      "latest": "2026-10-05T19:00:10.225Z",
+      "earliest": "2026-10-05T19:00:10.225Z",
+      "deploymentIds": [
+        "dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC"
+      ]
+    }
+  },
+  "limitation": "HTTP status and timing are provider request evidence; HTTP200 alone does not prove job business outcome. Manual authenticated requests are not distinguished from scheduler unless scheduler marker is available."
+}
