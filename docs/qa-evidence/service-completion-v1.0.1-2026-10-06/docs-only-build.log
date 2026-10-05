@@ -1,0 +1,13 @@
+Vercel CLI 62.2.0 (Node.js 24.14.1)
+Fetching deployment "k-lol-wdeb8iuxg-tjdmswo11-3715s-projects.vercel.app" in tjdmswo11-3715s-projects
+2026-10-05T15:33:21.629Z  Running build in Washington, D.C., USA (East) – iad1
+2026-10-05T15:33:21.630Z  Build machine configuration: 4 cores, 8 GB
+2026-10-05T15:33:21.779Z  Cloning github.com/suejeahyun/k_lol_gg (Branch: main, Commit: fc3e48b)
+2026-10-05T15:33:32.435Z  Cloning completed: 10.655s
+2026-10-05T15:33:32.771Z  Found .vercelignore
+2026-10-05T15:33:32.799Z  Removed 0 ignored files defined in .vercelignore
+2026-10-05T15:33:32.908Z  Restored build cache from previous deployment (9WgTqPhaqq3bCBLp2QbftPk4ZceC)
+2026-10-05T15:33:34.152Z  Running "node scripts/releases/ignore-docs-only-deployment.mjs"
+2026-10-05T15:33:34.329Z  Documentation-only change since last successful deployment; preserving the current runtime.
+2026-10-05T15:33:34.334Z  The deployment was canceled because the Ignored Build Step command returned exit code 0.
+status	● Canceled

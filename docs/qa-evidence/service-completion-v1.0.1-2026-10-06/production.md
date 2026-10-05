@@ -15,3 +15,7 @@ CLI dry-run은 `.git`·환경/비공개/임시 파일의 업로드 제외를 확
 복구 기준은 `dpl_6qD46gmRkjy7JZ1rDvRBjbBaqpQU` (source `431d7a16`)다. 잘못된 빌드 생략 또는 핵심 응답 회귀 시 재승격하고 health/공개 조회를 확인한다. DB·권한·환경변수·외부 공급자·가격 플랜은 바꾸지 않았다.
 
 MMR은 기존 V1 결과를 보존하며 공식 전환 승인 대기 변경 이벤트 13건을 최신 반영 완료로 표시하지 않는다. 로컬 확인창 때문에 끝내지 못한 저장 E2E, 실기기/스크린리더와 실제 외부 연동도 별도 확인 항목이다. 운영 공개 브라우저의 24개 너비 조건·필터/슬라이드/로그인 링크 확인을 이 미확인 항목의 통과로 확대하지 않는다.
+
+## 문서 전용 실제 배포 확인
+
+후속 문서 커밋 `fc3e48b3371ea2fc266105d56854c48a838a6d2c`의 Git provider 배포에서 `Removed 0 ignored files`와 `Documentation-only change since last successful deployment; preserving the current runtime.`를 확인했다. ignored-build exit 0으로 CANCELED된 것은 의도한 생략이며 배포 실패가 아니다. 기존 READY source `1ee5bd56`의 운영 배포를 유지했다. [실제 provider 로그](docs-only-build.log). 수정 전 문서도 전체 빌드하던 원인과 수정 후 생략을 모두 운영 절차에서 확인했다.
