@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-05T15:13:38.693Z",
+  "deploymentId": "dpl_7s8AoY6TT4MTybkii1K2wx1jgq5r",
+  "source": "73b2ee70ea7cbb4375b827ae49bb21eb70bf2dcb",
+  "passed": true,
+  "method": "Authenticated Vercel CLI bypasses deployment protection; application requests are anonymous GET.",
+  "checks": [
+    "health ready",
+    "home six-section order",
+    "anonymous submission code return",
+    "MMR pagination",
+    "MMR position score labels",
+    "common ranking/top order",
+    "anonymous admin 401",
+    "anonymous cron 401"
+  ],
+  "limitations": [
+    "Plain candidate URL returned Vercel protection 302, not application content.",
+    "No application login, writes, Blob upload, or production data mutation."
+  ]
+}

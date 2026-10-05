@@ -1,0 +1,10 @@
+{
+  "sourceCommit": "bd6433d207b9358109ad3939f4197b09dc78c34a",
+  "deploymentId": "dpl_6sT2FPF3ik26uwqdHDSh1sAExQC4",
+  "url": "https://k-lol-3p68e66gs-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://k-lol-gg.vercel.app",
+  "stateAtBaseline": "READY",
+  "migrationHead": "0047_usage_analytics",
+  "trigger": "New deployment causes core route 5xx, authorization regression, wrong request context, or incorrect public ranking results.",
+  "action": "Promote the previous READY deployment with Vercel, then re-run health and public read-only smoke. No database rollback or data deletion: this release has no schema changes."
+}

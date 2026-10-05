@@ -1,0 +1,20 @@
+{
+  "source": "73b2ee70ea7cbb4375b827ae49bb21eb70bf2dcb",
+  "gitTag": "service-completion-v1.0.0",
+  "migrationHead": "0047_usage_analytics",
+  "state": "READY",
+  "status": "PRODUCTION",
+  "provider": "vercel",
+  "deploymentId": "dpl_5kJJ11nQj8PjBENEoWgw9kJ7tUEx",
+  "url": "https://k-lol-hs9agqym7-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://k-lol-gg.vercel.app",
+  "verifiedAt": "2026-10-05T15:18:42.288Z",
+  "healthStatus": "ready",
+  "candidate": {
+    "deploymentId": "dpl_7s8AoY6TT4MTybkii1K2wx1jgq5r",
+    "url": "https://k-lol-pee80o7e8-tjdmswo11-3715s-projects.vercel.app",
+    "input": "git archive of source commit; sensitive and generated local files excluded",
+    "verifiedThrough": "authenticated Vercel CLI anonymous app GET"
+  },
+  "gitSourceVerified": "Production deployment list githubCommitSha matches tag, main, and source; alias inspect returns same deployment id."
+}

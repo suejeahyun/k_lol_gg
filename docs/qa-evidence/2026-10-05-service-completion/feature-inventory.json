@@ -38316,5 +38316,23 @@
         "Subsequent viewport and keyboard checks"
       ]
     }
+  },
+  "productionVerification": {
+    "source": "73b2ee70ea7cbb4375b827ae49bb21eb70bf2dcb",
+    "status": "PRODUCTION",
+    "provider": "vercel",
+    "deploymentId": "dpl_5kJJ11nQj8PjBENEoWgw9kJ7tUEx",
+    "url": "https://k-lol-hs9agqym7-tjdmswo11-3715s-projects.vercel.app",
+    "alias": "https://k-lol-gg.vercel.app",
+    "verifiedAt": "2026-10-05T15:18:42.288Z",
+    "healthStatus": "ready",
+    "evidence": "docs/qa-evidence/2026-10-05-service-completion/production.md",
+    "httpChecks": [
+      31,
+      14
+    ],
+    "publicDomConditions": 24,
+    "authenticatedManualRemaining": "docs/qa-evidence/2026-10-05-service-completion/browser-observations.md",
+    "mmr": "Existing V1 generation intentionally preserved; 13 pending change events require explicit formula transition decision, not declared current."
   }
 }

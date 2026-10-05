@@ -1,0 +1,360 @@
+{
+  "recordedAt": "2026-10-05T15:21:54.995Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "source": "73b2ee70ea7cbb4375b827ae49bb21eb70bf2dcb",
+  "tool": "CUA Codex in-app Chromium",
+  "scope": "Anonymous production read-only navigation. Synthetic code contains no real submission.",
+  "widths": [
+    1440,
+    768,
+    390,
+    320
+  ],
+  "domConditions": [
+    {
+      "path": "/rankings/mmr",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/rankings/mmr",
+      "width": 768,
+      "scrollWidth": 753,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/rankings/mmr",
+      "width": 390,
+      "scrollWidth": 375,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/rankings/mmr",
+      "width": 320,
+      "scrollWidth": 305,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/rankings?minParticipation=10&view=participation",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/rankings?minParticipation=10&view=participation",
+      "width": 768,
+      "scrollWidth": 753,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/rankings?minParticipation=10&view=participation",
+      "width": 390,
+      "scrollWidth": 375,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/rankings?minParticipation=10&view=participation",
+      "width": 320,
+      "scrollWidth": 305,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/applications",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/applications",
+      "width": 768,
+      "scrollWidth": 753,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/applications",
+      "width": 390,
+      "scrollWidth": 375,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/applications",
+      "width": 320,
+      "scrollWidth": 305,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/matches/submit?code=MR20000000000000000",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/matches/submit?code=MR20000000000000000",
+      "width": 768,
+      "scrollWidth": 753,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/matches/submit?code=MR20000000000000000",
+      "width": 390,
+      "scrollWidth": 375,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/matches/submit?code=MR20000000000000000",
+      "width": 320,
+      "scrollWidth": 305,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/tools/team-balance",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/tools/team-balance",
+      "width": 768,
+      "scrollWidth": 753,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/tools/team-balance",
+      "width": 390,
+      "scrollWidth": 375,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/tools/team-balance",
+      "width": 320,
+      "scrollWidth": 305,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/",
+      "width": 768,
+      "scrollWidth": 753,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/",
+      "width": 390,
+      "scrollWidth": 375,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    },
+    {
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 305,
+      "overflow": false,
+      "main": 1,
+      "visibleH1": 1,
+      "duplicateIds": 0,
+      "unnamedControls": 0,
+      "smallMobileInputs": 0,
+      "brokenImages": 0,
+      "missingAlts": 0
+    }
+  ],
+  "interactions": [
+    {
+      "task": "MMR next page",
+      "result": "page 2, ranks 11–20, previous/next retain pageSize 10"
+    },
+    {
+      "task": "MMR position search",
+      "result": "TOP selected; TOP score/sample labels; page resets to first; pageSize 10 retained"
+    },
+    {
+      "task": "MMR reset",
+      "result": "/rankings/mmr with default position and empty search"
+    },
+    {
+      "task": "Season ranking dirty filter",
+      "result": "unsaved minimum 25 replaced by applied 10 after participation view navigation"
+    },
+    {
+      "task": "Single home ranking slide",
+      "result": "participation click and MVP Enter set matching aria-current"
+    },
+    {
+      "task": "Submission code login return",
+      "result": "/login?next=%2Fmatches%2Fsubmit%3Fcode%3DMR20000000000000000"
+    }
+  ],
+  "consoleErrorsAndWarnings": 0,
+  "viewportReset": true,
+  "limitations": [
+    "DOM checks are not a full visual, screen-reader or physical-device audit.",
+    "No production login, submission, application or account mutation.",
+    "Local confirm-dialog interruption prevented remaining local save/cancel manual E2E; see browser-observations.md."
+  ]
+}
