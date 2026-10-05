@@ -139,6 +139,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             </section>
           ) : result.data.canApply ? (
             <ApplicationActions
+              key={`${result.data.currentSeason.id}:${result.data.applyDate}:${result.data.selectedRecruitNo}`}
               initial={result.data.myApplication}
               recruitNo={result.data.selectedRecruitNo}
               applicantPlayer={result.data.applicantPlayer!}
@@ -150,6 +151,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             />
           ) : result.data.currentSeason.applicationsOpen && result.data.myApplication ? (
             <ApplicationActions
+              key={`${result.data.currentSeason.id}:${result.data.applyDate}:${result.data.selectedRecruitNo}`}
               initial={result.data.myApplication}
               recruitNo={result.data.selectedRecruitNo}
               applicantPlayer={result.data.applicantPlayer!}
@@ -174,8 +176,10 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 <span>MY STATUS</span>
                 <h2 id="my-status-title">{statusLabel(result.data.myApplication.status)}</h2>
                 <p>
-                  {result.data.myApplication.applyDate} · {result.data.myApplication.recruitNo}회차 · 주 {result.data.myApplication.mainPosition}
-                  {result.data.myApplication.subPositions.length > 0 ? ` · 부 ${result.data.myApplication.subPositions.join(", ")}` : " · 부 없음"}
+                  {result.data.myApplication.applyDate} · {result.data.myApplication.recruitNo}회차
+                  {result.data.round.mode === "RIFT"
+                    ? ` · 주 ${result.data.myApplication.mainPosition} · 부 ${result.data.myApplication.subPositions.join(", ") || "없음"}`
+                    : " · 포지션 구분 없음"}
                   {` · ${result.data.myApplication.source === "SITE" ? "사이트" : "카카오 연동"}`}
                 </p>
               </div>
@@ -198,7 +202,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                   <li key={`${participant.player.id}-${participant.applyDate}-${participant.recruitNo}`}>
                     <span aria-hidden="true">{participant.player.displayName.slice(0, 1).toUpperCase()}</span>
                     <div><strong>{participant.player.displayName}</strong><small>{participant.player.riotId}</small></div>
-                    <em>주 {participant.mainPosition} · 부 {participant.subPositions.join(", ") || "없음"}</em>
+                    <em>{result.data.round.mode === "RIFT" ? `주 ${participant.mainPosition} · 부 ${participant.subPositions.join(", ") || "없음"}` : "포지션 구분 없음"}</em>
                     <b data-status={participant.status}>{statusLabel(participant.status)}</b>
                   </li>
                 ))}

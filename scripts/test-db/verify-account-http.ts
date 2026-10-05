@@ -252,6 +252,22 @@ async function assertAuthenticatedMe(response: Response, expectedAccountId: stri
   recursivelyRejectSensitiveFields(body);
 }
 
+async function assertPageRedirect(response: Response, expectedPath: string, message: string) {
+  const location = response.headers.get("location");
+  if (location) {
+    assert.equal(response.status, 307, message);
+    assert.equal(location, expectedPath, message);
+    return;
+  }
+  // App Router may already have streamed the shell before resolving a session.
+  // Its documented redirect in that case is a meta refresh in a 200 document.
+  assert.equal(response.status, 200, message);
+  const document = await response.text();
+  const refreshTag = document.match(/<meta\b(?=[^>]*http-equiv="refresh")[^>]*>/)?.[0];
+  const destination = refreshTag?.match(/content="\d+;url=([^"]+)"/)?.[1]?.replaceAll("&amp;", "&");
+  assert.equal(destination, expectedPath, message);
+}
+
 async function assertPublicPlayerVisibility(input: {
   origin: string;
   playerId: string;
@@ -910,6 +926,8 @@ try {
   const [nameAfterLegacyPayload] = await database.select().from(players).where(eq(players.id, selfProfileOwner.playerId));
   assert.equal(nameAfterLegacyPayload.memberName, "KLOL 이름 변경", "omitting memberName must retain the saved name");
   await runPlayerProfileBrowserRegression(origin, selfProfileLogin.cookie);
+  assert.doesNotMatch(mainServer.readLog(), /\[browser\][^\n]*(?:hydration|hydrated)/i, "login and account pages must hydrate without DOM decoration mismatches");
+  console.log("[db-account-browser] login/account hydration console check passed");
 
   const visibleSignupBase = signupPayload("visible-identifiers");
   for (const unsafeSignup of [
@@ -1352,6 +1370,17 @@ try {
   );
   assert.equal(temporaryLogin.response.status, 200);
   assert.equal((temporaryLogin.body.account as { mustChangePassword: boolean }).mustChangePassword, true);
+  for (const protectedPath of ["/tools/team-balance/drafts", "/account/riot", "/account/discipline"]) {
+    const redirectResponse = await fetch(`${origin}${protectedPath}`, {
+      headers: { cookie: temporaryLogin.cookie },
+      redirect: "manual",
+    });
+    await assertPageRedirect(redirectResponse, `/account/password?required=1&next=${encodeURIComponent(protectedPath)}`, "required password changes retain the protected task destination");
+  }
+  const passwordReturnPath = `/account/password?next=${encodeURIComponent("/tools/team-balance/drafts")}`;
+  const expiredPasswordSession = await fetch(`${origin}${passwordReturnPath}`, { redirect: "manual" });
+  await assertPageRedirect(expiredPasswordSession, `/login?next=${encodeURIComponent(passwordReturnPath)}`, "re-login from password change retains its nested task destination");
+  console.log("[db-account-http] required-password task return and expired-session nested return passed");
   const newPassword = `새비밀번호${randomBytes(8).toString("hex")}2026`;
   syntheticSecrets.push(newPassword);
   await database.delete(loginRateLimitBuckets);

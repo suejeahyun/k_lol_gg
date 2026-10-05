@@ -31,6 +31,14 @@ export default async function MmrRankingPage({ searchParams }: {
         players: await service.listPlayers(query),
       }))
     : { state: "invalid" as const };
+  const pageHref = (page: number) => {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(query?.pageSize ?? 20) });
+    if (query?.query) params.set("q", query.query);
+    if (query?.position) params.set("position", query.position);
+    return `/rankings/mmr?${params}`;
+  };
+  const positionLabel = query?.position ? labels[query.position] : "종합";
+  const pageCount = result.state === "ready" ? Math.min(10_000, result.data.players.totalPages) : 0;
 
   return (
     <div className={`page-wrap ${styles.page}`} data-mmr-view="players">
@@ -39,10 +47,12 @@ export default async function MmrRankingPage({ searchParams }: {
         <Gauge aria-hidden="true" />
       </section>
       <nav className={styles.tabs} aria-label="랭킹 종류"><Link href="/rankings">시즌 랭킹</Link><Link href="/rankings/mmr" aria-current="page">MMR 랭킹</Link></nav>
-      <form className={styles.filters} action="/rankings/mmr" method="get">
+      <form key={`${query?.query ?? ""}:${query?.position ?? ""}:${query?.pageSize ?? 20}`} className={styles.filters} action="/rankings/mmr" method="get">
+        <input type="hidden" name="pageSize" value={query?.pageSize ?? 20} />
         <label>플레이어 검색<input name="q" defaultValue={query?.query ?? ""} maxLength={64} placeholder="닉네임 또는 태그" /></label>
         <label>기준 포지션<select name="position" defaultValue={query?.position ?? ""}><option value="">종합</option>{MMR_POSITIONS.map((position) => <option value={position} key={position}>{labels[position]}</option>)}</select></label>
         <button type="submit"><Search aria-hidden="true" /> 찾기</button>
+        {query?.query || query?.position || (query?.page ?? 1) > 1 ? <Link href="/rankings/mmr">검색 초기화</Link> : null}
       </form>
       {result.state === "ready" ? (
         <>
@@ -53,17 +63,24 @@ export default async function MmrRankingPage({ searchParams }: {
           </section>
           <p>마지막 집계: {formatOptionalKoreanDateTime(result.data.summary.calculatedAt)} · 공개된 경기 결과가 반영됩니다.</p>
           {result.data.summary.formulaTransition === "ADMIN_RECALCULATION_REQUIRED" ? <section className={styles.state} role="status" data-mmr-formula-transition="ADMIN_RECALCULATION_REQUIRED"><h2>현재 게시 MMR generation을 표시하고 있어요</h2><p>이 generation은 {result.data.summary.formulaVersion ?? "기존"} 공식으로 계산됐습니다. V2_DETERMINISTIC_1로 자동 전환하지 않으며, 관리자 재계산이 승인된 뒤에만 새 generation이 게시됩니다.</p></section> : null}
-          {result.data.summary.status === "EMPTY" || result.data.players.items.length === 0 ? (
+          {result.data.summary.status === "EMPTY" ? (
             <section className={styles.state} role="status"><Activity aria-hidden="true" /><h2>표시할 MMR이 아직 없어요</h2><p>공개 경기 반영이 끝나면 이곳에 안전한 요약만 표시됩니다.</p></section>
+          ) : result.data.players.items.length === 0 ? (
+            <section className={styles.state} role="status"><Activity aria-hidden="true" /><h2>{result.data.players.total > 0 ? "현재 페이지에 플레이어가 없어요" : query?.query ? "검색어에 맞는 플레이어가 없어요" : "표시할 플레이어가 없어요"}</h2><p>{result.data.players.total > 0 ? "목록이 변경되었거나 페이지 범위를 벗어났어요. 첫 페이지에서 다시 확인해 주세요." : query?.query ? "닉네임 또는 태그를 확인하거나 검색 조건을 초기화해 보세요." : "공개된 활성 플레이어의 MMR이 준비되면 표시됩니다."}</p>{result.data.players.total > 0 ? <Link href={pageHref(1)}>첫 페이지로</Link> : query?.query || query?.position ? <Link href="/rankings/mmr">검색 초기화</Link> : null}</section>
           ) : (
             <section className={styles.board} aria-labelledby="mmr-board-title">
-              <header><h2 id="mmr-board-title">플레이어 MMR</h2><p>{result.data.players.total}명 · 신뢰도와 표본 포함</p></header>
-              <ol>{result.data.players.items.map((player, index) => { const rank = (result.data.players.page - 1) * result.data.players.pageSize + index + 1; const confidence = player.confidence >= .8 ? "high" : player.confidence >= .5 ? "medium" : "low"; return <li key={player.playerId} data-rank={rank} data-confidence={confidence}><b>{rank}</b><Link href={`/players/${player.playerId}`}><strong>{player.displayName}</strong><small>{player.riotId}</small></Link><span><small>MMR</small>{player.overallScore.toFixed(2)}</span><span><small>신뢰도</small>{Math.round(player.confidence * 100)}%</span><span><small>표본</small>{player.sampleSize}</span></li>; })}</ol>
+              <header><h2 id="mmr-board-title">{positionLabel} MMR 순위</h2><p>{result.data.players.total}명 · {positionLabel} 점수와 표본, 종합 신뢰도</p></header>
+              <ol>{result.data.players.items.map((player, index) => { const rank = (result.data.players.page - 1) * result.data.players.pageSize + index + 1; const confidence = player.confidence >= .8 ? "high" : player.confidence >= .5 ? "medium" : "low"; const selectedPosition = query?.position ? player.positions[query.position] : null; return <li key={player.playerId} data-rank={rank} data-confidence={confidence}><b>{rank}</b><Link href={`/players/${player.playerId}`}><strong>{player.displayName}</strong><small>{player.riotId}</small></Link><span><small>{positionLabel} MMR</small>{(selectedPosition?.score ?? player.overallScore).toFixed(2)}</span><span><small>종합 신뢰도</small>{Math.round(player.confidence * 100)}%</span><span><small>{positionLabel} 표본</small>{selectedPosition?.sampleSize ?? player.sampleSize}</span></li>; })}</ol>
             </section>
           )}
+          {result.data.summary.status !== "EMPTY" && pageCount > 1 && result.data.players.items.length > 0 ? <nav className="pagination" aria-label="MMR 랭킹 페이지">
+            {result.data.players.page > 1 ? <Link href={pageHref(Math.min(result.data.players.page - 1, pageCount))} rel="prev">이전</Link> : <span aria-disabled="true">이전</span>}
+            <strong aria-current="page">{result.data.players.page} / {pageCount}</strong>
+            {result.data.players.page < pageCount ? <Link href={pageHref(result.data.players.page + 1)} rel="next">다음</Link> : <span aria-disabled="true">다음</span>}
+          </nav> : null}
         </>
       ) : (
-        <section className={styles.state} role={result.state === "invalid" || result.state === "error" ? "alert" : "status"}><Activity aria-hidden="true" /><h2>{result.state === "invalid" ? "검색 조건을 확인해 주세요" : "MMR을 불러올 수 없어요"}</h2><p>허용된 검색 조건으로 잠시 후 다시 시도해 주세요.</p></section>
+        <section className={styles.state} role={result.state === "invalid" || result.state === "error" ? "alert" : "status"}><Activity aria-hidden="true" /><h2>{result.state === "invalid" ? "검색 조건을 확인해 주세요" : "MMR을 불러올 수 없어요"}</h2><p>{result.state === "invalid" ? "검색 주소의 조건이 올바르지 않아요. 전체 순위에서 다시 검색해 주세요." : "잠시 후 같은 검색 조건으로 다시 불러와 주세요."}</p>{result.state !== "invalid" ? <a href={pageHref(query?.page ?? 1)}>다시 불러오기</a> : null}<Link href="/rankings/mmr">전체 MMR 순위</Link></section>
       )}
     </div>
   );

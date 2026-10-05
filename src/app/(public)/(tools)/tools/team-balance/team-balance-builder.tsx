@@ -2,10 +2,11 @@
 import { recordUsageAction } from "@/components/usage/usage-actions";
 
 import { ChevronDown, Plus, RefreshCw, RotateCcw, Scale, Search, UserRoundPlus, X } from "@/components/theme/theme-icons";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { TEAM_BALANCE_POSITIONS, TEAM_BALANCE_PREFERENCES } from "@/modules/team-tools";
+import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 
 import styles from "../team-tools.module.css";
 
@@ -138,6 +139,8 @@ export function TeamBalanceBuilder() {
   const [message, setMessage] = useState("");
   const [stepOneOpen, setStepOneOpen] = useState(true);
   const [stepTwoOpen, setStepTwoOpen] = useState(false);
+  const mutationKeys = useRef(new ClientMutationKeyStore("team-balance-create")).current;
+  const submitting = useRef(false);
 
   const [origin, setOrigin] = useState<CandidateOrigin>("ALL");
   const [candidateGroups, setCandidateGroups] = useState<readonly CandidateGroup[]>([]);
@@ -271,34 +274,39 @@ export function TeamBalanceBuilder() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (submitting.current) return;
     const ids = rows.map((row) => row.playerId);
     if (ids.some((id) => !id) || new Set(ids).size !== 10) {
       setMessage("서로 다른 활성 플레이어 10명을 선택해 주세요.");
       setStepOneOpen(true);
       return;
     }
+    submitting.current = true;
     setPending(true);
     setMessage("");
+    const payload = {
+      title,
+      participants: rows.map((row) => ({ playerId: row.playerId, eligiblePositions: eligiblePositions(row) })),
+    };
+    const ticket = mutationKeys.issue("POST:/api/team-tools/drafts", 0, payload);
     try {
       const response = await fetch("/api/team-tools/drafts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "If-Match": '"0"',
-          "Idempotency-Key": `team-balance-create-${crypto.randomUUID()}`,
+          "Idempotency-Key": ticket.key,
         },
-        body: JSON.stringify({
-          title,
-          participants: rows.map((row) => ({ playerId: row.playerId, eligiblePositions: eligiblePositions(row) })),
-        }),
+        body: JSON.stringify(payload),
       });
       const body = await response.json() as { detail?: string; location?: string };
       if (!response.ok || !body.location) throw new Error(body.detail ?? "추천 팀을 계산하지 못했어요.");
+      mutationKeys.complete(ticket);
       recordUsageAction("team-balance.saved");
       router.push(body.location);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "추천 팀을 계산하지 못했어요.");
-    } finally {
+      submitting.current = false;
       setPending(false);
     }
   }

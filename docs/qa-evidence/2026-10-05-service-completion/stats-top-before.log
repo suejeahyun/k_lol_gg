@@ -1,0 +1,33 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: participation ties use MVP before win rate, matching the public ranking page
++ actual - expected
+
+  [
++   '1aa9dbaf-e57f-4693-9244-7adabf6f2173',
+    '6c191e87-e064-45e7-be40-738b8153ee1a',
+-   '1aa9dbaf-e57f-4693-9244-7adabf6f2173',
+    '01ea66cd-33e7-4732-8457-191b01907063'
+  ]
+
+    at <anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\run-ux-http-qa.ts:104:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    '1aa9dbaf-e57f-4693-9244-7adabf6f2173',
+    '6c191e87-e064-45e7-be40-738b8153ee1a',
+    '01ea66cd-33e7-4732-8457-191b01907063'
+  ],
+  expected: [
+    '6c191e87-e064-45e7-be40-738b8153ee1a',
+    '1aa9dbaf-e57f-4693-9244-7adabf6f2173',
+    '01ea66cd-33e7-4732-8457-191b01907063'
+  ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.1

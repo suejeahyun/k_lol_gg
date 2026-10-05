@@ -1,4 +1,5 @@
 import { parsePublicStatisticsQuery } from "@/modules/statistics/application/statistics-query";
+import { buildPublicRankingView } from "@/modules/statistics/domain/public-ranking-view";
 import { getRuntimePublicStatisticsService } from "@/modules/statistics/infrastructure/runtime-statistics-data";
 import {
   statisticsInvalidInputResponse,
@@ -23,13 +24,10 @@ export async function GET(request: Request) {
       projection: result.projection,
       minimumParticipation: result.minimumParticipation,
       top: {
-        winRate: result.rankings.slice(0, 3),
-        participation: [...result.rankings]
-          .sort((left, right) => right.participationCount - left.participationCount || left.rank - right.rank)
-          .slice(0, 3),
-        mvp: [...result.rankings]
+        winRate: buildPublicRankingView(result.rankings, "win-rate").slice(0, 3),
+        participation: buildPublicRankingView(result.rankings, "participation").slice(0, 3),
+        mvp: buildPublicRankingView(result.rankings, "mvp")
           .filter((row) => row.mvpCount > 0)
-          .sort((left, right) => right.mvpCount - left.mvpCount || left.rank - right.rank)
           .slice(0, 3),
       },
     }, 200, traceId);

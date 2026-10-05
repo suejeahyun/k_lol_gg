@@ -227,34 +227,8 @@
   transition: transform 80ms linear;
 }
 
-html[data-ui-effects="ready"] [data-ui-page="true"] {
+.page-wrap {
   animation: ui-page-enter var(--motion-reveal) var(--ease-out) both;
-}
-
-html[data-ui-effects="ready"] [data-ui-reveal="true"] {
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity var(--motion-base) var(--ease-out),
-    transform var(--motion-base) var(--ease-out),
-    border-color var(--motion-fast) ease,
-    background-color var(--motion-fast) ease;
-}
-
-html[data-ui-effects="ready"] [data-ui-reveal="true"][data-ui-visible="true"] {
-  opacity: 1;
-  transform: none;
-}
-
-html[data-ui-effects="ready"] [data-ui-effect-delay="1"] { transition-delay: 35ms; }
-html[data-ui-effects="ready"] [data-ui-effect-delay="2"] { transition-delay: 70ms; }
-html[data-ui-effects="ready"] [data-ui-effect-delay="3"] { transition-delay: 105ms; }
-html[data-ui-effects="ready"] [data-ui-effect-delay="4"] { transition-delay: 140ms; }
-html[data-ui-effects="ready"] [data-ui-effect-delay="5"] { transition-delay: 175ms; }
-
-html[data-ui-effects="ready"] [data-ui-surface="operational"]:focus-within {
-  border-color: color-mix(in srgb, var(--admin-focus, var(--ring)) 44%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-focus, var(--ring)) 12%, transparent);
 }
 
 :where([aria-selected="true"], [aria-pressed="true"], [data-state="active"], [data-state="selected"]) {
@@ -3036,16 +3010,6 @@ body:has(.user-dialog[open]) {
     transform: translate3d(var(--hero-shift-x), var(--hero-shift-y), 0) scale(1.012);
   }
 
-  html[data-ui-effects="ready"] [data-ui-surface="feature"]:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
-    box-shadow: var(--shadow-2);
-  }
-
-  html[data-ui-effects="ready"] [data-ui-surface="operational"]:hover {
-    border-color: color-mix(in srgb, var(--admin-focus, var(--ring)) 32%, var(--border));
-  }
-
   :where(button, [role="button"], .header-account, .header-icon-action):not(:disabled):not([aria-disabled="true"]):hover {
     transform: translateY(-1px);
   }
@@ -3110,8 +3074,7 @@ body:has(.user-dialog[open]) {
     transition-delay: 0ms !important;
   }
 
-  html[data-ui-effects="ready"] [data-ui-page="true"],
-  html[data-ui-effects="ready"] [data-ui-reveal="true"] {
+  .page-wrap {
     opacity: 1;
     transform: none;
     animation: none !important;
@@ -3121,7 +3084,6 @@ body:has(.user-dialog[open]) {
     transition: none;
   }
 
-  html[data-ui-effects="ready"] [data-ui-surface]:hover,
   :where(button, [role="button"], .header-account, .header-icon-action):hover,
   .task-link:hover,
   .player-tier-filters a:hover,
@@ -3155,14 +3117,6 @@ body:has(.user-dialog[open]) {
   [aria-expanded="true"] {
     border: 2px solid Highlight;
     box-shadow: none;
-  }
-
-  html[data-ui-effects="ready"] [data-ui-surface],
-  html[data-ui-effects="ready"] [data-ui-surface]:hover,
-  html[data-ui-effects="ready"] [data-ui-surface]:focus-within {
-    border-color: CanvasText;
-    box-shadow: none;
-    filter: none;
   }
 
   :where([data-status], [aria-selected="true"], [aria-pressed="true"], [data-state="active"], [data-state="selected"]) {

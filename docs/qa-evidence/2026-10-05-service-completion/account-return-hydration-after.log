@@ -1,0 +1,19 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ S01 account lifecycle, recovery security, races, replay, and rollback hold on PostgreSQL 18 (4742.0115ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8916.0186
+[db-account-browser] owner name/Riot ID/tier keyboard save, rendered refresh, and 412 remount passed
+[db-account-browser] login/account hydration console check passed
+[db-account-http] required-password task return and expired-session nested return passed
+[db-account-http] public/account/admin users, purpose cookies, claims, recovery, concurrency headers, replay, rate limits, privacy, and 503 fail-closed passed
+[db-contract] cluster stopped and disposable workspace path removed

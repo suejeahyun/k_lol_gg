@@ -1,0 +1,195 @@
+{
+  "checkedAt": "2026-10-05T14:56:45.233Z",
+  "origin": "http://127.0.0.1:59579",
+  "passed": true,
+  "mmrTotal": 11,
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "durationMs": 254,
+      "bytes": 107394
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "durationMs": 22,
+      "bytes": 57055
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "durationMs": 18,
+      "bytes": 190020
+    },
+    {
+      "path": "/matches",
+      "status": 200,
+      "durationMs": 11,
+      "bytes": 68429
+    },
+    {
+      "path": "/competitions/events?q=&status=&format=",
+      "status": 200,
+      "durationMs": 13,
+      "bytes": 66720
+    },
+    {
+      "path": "/competitions/destruction?q=&status=&format=",
+      "status": 200,
+      "durationMs": 11,
+      "bytes": 76001
+    },
+    {
+      "path": "/rankings",
+      "status": 200,
+      "durationMs": 10,
+      "bytes": 59826
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "durationMs": 8,
+      "bytes": 57002
+    },
+    {
+      "path": "/tools/random-team",
+      "status": 200,
+      "durationMs": 7,
+      "bytes": 57154
+    },
+    {
+      "path": "/highlights",
+      "status": 200,
+      "durationMs": 7,
+      "bytes": 53559
+    },
+    {
+      "path": "/images",
+      "status": 200,
+      "durationMs": 14,
+      "bytes": 54061
+    },
+    {
+      "path": "/help",
+      "status": 200,
+      "durationMs": 8,
+      "bytes": 52516
+    },
+    {
+      "path": "/start",
+      "status": 200,
+      "durationMs": 13,
+      "bytes": 58856
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "durationMs": 6,
+      "bytes": 49813
+    },
+    {
+      "path": "/matches/submit?code=MR20000000000000000",
+      "status": 200,
+      "durationMs": 9,
+      "bytes": 51294
+    },
+    {
+      "path": "/api/rankings/mmr?pageSize=10",
+      "status": 200,
+      "durationMs": 12,
+      "bytes": 3906
+    },
+    {
+      "path": "/rankings/mmr?pageSize=10",
+      "status": 200,
+      "durationMs": 14,
+      "bytes": 67384
+    },
+    {
+      "path": "/rankings/mmr?page=2&pageSize=10&position=TOP",
+      "status": 200,
+      "durationMs": 10,
+      "bytes": 58272
+    },
+    {
+      "path": "/rankings/mmr?page=10000&pageSize=10",
+      "status": 200,
+      "durationMs": 8,
+      "bytes": 57456
+    },
+    {
+      "path": "/rankings/mmr?q=NoPlayerFixture20261005",
+      "status": 200,
+      "durationMs": 7,
+      "bytes": 57400
+    },
+    {
+      "path": "/rankings/mmr?page=bad",
+      "status": 200,
+      "durationMs": 6,
+      "bytes": 53863
+    },
+    {
+      "path": "/api/rankings/mmr?page=bad",
+      "status": 400,
+      "durationMs": 2,
+      "bytes": 202
+    },
+    {
+      "path": "/api/rankings",
+      "status": 200,
+      "durationMs": 8,
+      "bytes": 167
+    },
+    {
+      "path": "/api/stats/top",
+      "status": 200,
+      "durationMs": 3,
+      "bytes": 202
+    },
+    {
+      "path": "/api/admin/users",
+      "status": 401,
+      "durationMs": 3,
+      "bytes": 195
+    },
+    {
+      "path": "/api/admin/matches",
+      "status": 401,
+      "durationMs": 40,
+      "bytes": 177
+    },
+    {
+      "path": "/api/me/match-submissions",
+      "status": 401,
+      "durationMs": 3,
+      "bytes": 177
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "status": 401,
+      "durationMs": 3,
+      "bytes": 184
+    },
+    {
+      "path": "/api/cron/riot-sync",
+      "status": 401,
+      "durationMs": 5,
+      "bytes": 26
+    },
+    {
+      "path": "/api/cron/support-retention",
+      "status": 401,
+      "durationMs": 3,
+      "bytes": 24
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "durationMs": 3,
+      "bytes": 57
+    }
+  ],
+  "notes": "HTTP timings are single-run observations, not Web Vitals or a performance benchmark. All requests were anonymous GET."
+}

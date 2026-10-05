@@ -6,17 +6,16 @@ function source(relativePath) {
   return readFileSync(new URL(relativePath, import.meta.url), "utf8");
 }
 
-test("전체 화면 효과는 공개·관리자 범위를 구분하고 동적 화면에도 재사용된다", () => {
+test("화면 효과는 스트리밍 중인 React 하위 DOM을 변경하지 않는다", () => {
   const controller = source("../src/components/visual-effects-controller.tsx");
   const publicShell = source("../src/components/site-shell.tsx");
   const adminShell = source("../src/components/admin/admin-shell.tsx");
 
-  assert.match(controller, /MutationObserver/);
-  assert.match(controller, /IntersectionObserver/);
+  assert.doesNotMatch(controller, /MutationObserver|IntersectionObserver|querySelectorAll/);
+  assert.doesNotMatch(controller, /dataset\.(?:uiReveal|uiVisible|uiPage|uiSurface|uiEffectDelay)/);
   assert.match(controller, /--page-scroll-progress/);
   assert.match(controller, /dataset\.uiScrolled/);
   assert.match(controller, /--hero-light-x/);
-  assert.match(controller, /data-ui-scope='admin'/);
   assert.match(publicShell, /data-ui-scope="public"/);
   assert.match(adminShell, /data-ui-scope="admin"/);
 });
@@ -25,7 +24,8 @@ test("전역 효과 CSS는 감속 모드·정밀 포인터·강제 색상 경계
   const css = source("../src/app/globals.css");
 
   assert.match(css, /\.site-scroll-progress/);
-  assert.match(css, /\[data-ui-reveal="true"\]/);
+  assert.match(css, /\.page-wrap\s*\{\s*animation: ui-page-enter/);
+  assert.doesNotMatch(css, /\[data-ui-reveal="true"\]/);
   assert.match(css, /\[aria-busy="true"\]/);
   assert.match(css, /\[data-status="success"\]/);
   assert.match(css, /html\[data-ui-scrolled="true"\]/);

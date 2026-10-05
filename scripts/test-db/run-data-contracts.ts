@@ -893,6 +893,24 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
      values ($1, $2, $3, $4, 1, 'MID', array['SUP']::competition.season_application_position[], 'APPLIED', 'SITE')`,
     [applicationId, seasonId, playerId, today],
   );
+  if (process.env.V2_SERVICE_BROWSER_QA === "true") {
+    // Extra contexts only in the guarded disposable browser fixture. They let
+    // client navigation prove that one round's local edits cannot leak to another.
+    for (const [recruitNo, mode] of [[2, "RIFT"], [3, "ARAM"]] as const) {
+      await pool.query(
+        `insert into competition.season_inhouse_rounds
+           (id, season_id, apply_date, recruit_no, source_room_id_hash, mode, source_reference_hash)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
+        [randomUUID(), seasonId, today, recruitNo, randomBytes(32), mode, randomBytes(32)],
+      );
+    }
+    await pool.query(
+      `insert into competition.season_applications
+         (id, season_id, player_id, apply_date, recruit_no, main_position, sub_positions, status, source)
+       values ($1, $2, $3, $4, 2, 'JGL', array['ADC']::competition.season_application_position[], 'RESERVE', 'SITE')`,
+      [randomUUID(), seasonId, playerId, today],
+    );
+  }
 
   async function requiredFixture(label: string, query: string, values: readonly unknown[] = []) {
     const result = await pool.query<{ value: string | null }>(query, [...values]);

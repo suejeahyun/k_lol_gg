@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Archive, ArrowRight, Check, Copy, GripVertical, RefreshCw, RotateCcw, Save, SlidersHorizontal } from "@/components/theme/theme-icons";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
+import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 
 import {
   TEAM_BALANCE_TEAMS,
@@ -57,24 +58,32 @@ export function TeamBalanceDraftWorkspace({
   const [keyboardSlot, setKeyboardSlot] = useState<number | null>(null);
   const [pending, setPending] = useState("");
   const [message, setMessage] = useState("");
+  const mutationKeys = useRef(new ClientMutationKeyStore("team-balance-draft")).current;
+  const sending = useRef(false);
+  const [refreshing, startRefresh] = useTransition();
+  const busy = Boolean(pending) || refreshing;
   const participantById = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant])), [draft.participants]);
   const participantName = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant.displayName])), [draft.participants]);
 
   async function mutate(action: "select" | "save" | "reevaluate" | "archive" | "restore", body: unknown) {
+    if (busy || sending.current) return;
+    sending.current = true;
     setPending(action);
     setMessage("");
+    const ticket = mutationKeys.issue(`POST:${endpointBase}/${action}`, draft.revision, body);
     try {
       const response = await fetch(`${endpointBase}/${action}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "If-Match": `"${draft.revision}"`,
-          "Idempotency-Key": `team-balance-${action}-${crypto.randomUUID()}`,
+          "Idempotency-Key": ticket.key,
         },
         body: JSON.stringify(body),
       });
       const result = await response.json() as { detail?: string };
       if (!response.ok) throw new Error(result.detail ?? "팀 초안을 변경하지 못했어요.");
+      mutationKeys.complete(ticket);
       setMessage(action === "save"
         ? "선택한 팀을 저장했어요."
         : action === "reevaluate"
@@ -84,10 +93,11 @@ export function TeamBalanceDraftWorkspace({
             : action === "restore"
               ? "보관한 초안을 복구했어요."
               : "팀 배치를 적용했어요.");
-      router.refresh();
+      startRefresh(() => router.refresh());
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "팀 초안을 변경하지 못했어요.");
     } finally {
+      sending.current = false;
       setPending("");
     }
   }
@@ -155,7 +165,7 @@ export function TeamBalanceDraftWorkspace({
               {candidate.score.v1?.missingSources.length ? <p role="note">최근 솔로 상세가 없거나 갱신 후 24시간이 지난 경우, 또는 팀 편성 보정이 미설정인 경우 해당 보조값은 0으로 계산합니다.</p> : null}
               <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>
               <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
-              <button type="button" aria-pressed={selected} disabled={Boolean(pending) || selected || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
+              <button type="button" aria-pressed={selected} disabled={busy || selected || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
             </article>;
           })}
         </div>
@@ -196,18 +206,18 @@ export function TeamBalanceDraftWorkspace({
             })}</div>
           </section>)}
         </div>
-        <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 팀 균형 기준으로 다시 평가합니다.</strong><small>직접 바꾼 팀의 실력 차이와 포지션 적합도를 확인하고 저장하세요.</small></div><button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
+        <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 팀 균형 기준으로 다시 평가합니다.</strong><small>직접 바꾼 팀의 실력 차이와 포지션 적합도를 확인하고 저장하세요.</small></div><button className={styles.secondaryButton} type="button" disabled={busy || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
       </section>
 
-      <section className={styles.draftActions} data-pending={pending || undefined} aria-busy={Boolean(pending)} aria-label="초안 작업">
-        <button className={styles.primaryButton} type="button" disabled={Boolean(pending) || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
-        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
-        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "실력과 포지션으로 재평가" : "최신 통계로 재평가"}</button>
+      <section className={styles.draftActions} data-pending={pending || (refreshing ? "refresh" : undefined)} aria-busy={busy} aria-label="초안 작업">
+        <button className={styles.primaryButton} type="button" disabled={busy || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
+        <button className={styles.secondaryButton} type="button" disabled={busy || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
+        <button className={styles.secondaryButton} type="button" disabled={busy || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "실력과 포지션으로 재평가" : "최신 통계로 재평가"}</button>
         {mode === "OWNER" && draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? <Link className={styles.primaryLink} href={`/matches/submit?teamBalanceDraftId=${encodeURIComponent(draft.id)}`}>이 팀으로 경기 결과 접수 <ArrowRight size={16} aria-hidden="true" /></Link> : null}
         {mode === "ADMIN" && draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? <Link className={styles.primaryLink} href={`/admin/matches/new?teamBalanceDraftId=${encodeURIComponent(draft.id)}`}>선택 팀으로 경기 등록 <ArrowRight size={16} aria-hidden="true" /></Link> : null}
-        {mode === "ADMIN" && draft.status !== "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={Boolean(pending)} onClick={() => mutate("archive", {})}><Archive size={17} aria-hidden="true" /> 초안 보관</button> : null}
-        {mode === "ADMIN" && draft.status === "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={Boolean(pending)} onClick={() => mutate("restore", {})}><RotateCcw size={17} aria-hidden="true" /> 초안 복구</button> : null}
-        <p role="status" aria-live="polite">{pending ? "처리 중…" : message}</p>
+        {mode === "ADMIN" && draft.status !== "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => mutate("archive", {})}><Archive size={17} aria-hidden="true" /> 초안 보관</button> : null}
+        {mode === "ADMIN" && draft.status === "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => mutate("restore", {})}><RotateCcw size={17} aria-hidden="true" /> 초안 복구</button> : null}
+        <p role="status" aria-live="polite">{pending ? "처리 중…" : refreshing ? "최신 팀 상태를 불러오는 중…" : message}</p>
       </section>
     </>
   );

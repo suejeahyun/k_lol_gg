@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { AuthRole } from "../domain/auth-session";
 import { isAdminRole } from "../domain/auth-session";
 import { authorizeAccountSession, authorizeSession } from "../application/authorize-session";
+import { normalizeAccountNext } from "../application/normalize-internal-next";
 import { getCurrentSession } from "./runtime-session";
 
 export async function requirePageRole(requiredRole: AuthRole, nextPath: string) {
@@ -12,7 +13,7 @@ export async function requirePageRole(requiredRole: AuthRole, nextPath: string) 
   if (decision.allowed) return decision.session;
 
   if (decision.reason === "PASSWORD_CHANGE_REQUIRED") {
-    redirect("/account/password?required=1");
+    redirect(`/account/password?required=1&next=${encodeURIComponent(normalizeAccountNext(nextPath))}`);
   }
 
   if (decision.reason === "UNAUTHENTICATED") {
@@ -40,7 +41,7 @@ export async function requireAccountPage(nextPath: string) {
 export async function requireApprovedAccountPage(nextPath: string) {
   const session = await requireAccountPage(nextPath);
   if (session.accountStatus !== "APPROVED") redirect("/account");
-  if (session.mustChangePassword) redirect("/account/password?required=1");
+  if (session.mustChangePassword) redirect(`/account/password?required=1&next=${encodeURIComponent(normalizeAccountNext(nextPath))}`);
   return session;
 }
 

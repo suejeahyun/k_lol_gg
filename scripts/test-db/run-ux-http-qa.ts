@@ -17,7 +17,8 @@ import { ADMIN_SESSION_COOKIE_NAME } from "../../src/modules/auth/infrastructure
 import { hashPassword } from "../../src/modules/auth/infrastructure/node-password";
 import { eq } from "drizzle-orm";
 
-const output = resolve(".tmp/ux-qa");
+const statisticsQa = process.env.V2_UX_QA_STATS_TOP === "true";
+const output = resolve(statisticsQa ? ".tmp/stats-top-qa" : ".tmp/ux-qa");
 await mkdir(output, { recursive: true });
 const cluster = await startEphemeralCluster();
 const { database, pool } = createDatabaseHandle(cluster.connectionString);
@@ -27,7 +28,17 @@ try {
   const now = new Date(Math.floor(Date.now() / 1000) * 1000), past = new Date(now.getTime() - 3600_000), future = new Date(now.getTime() + 7 * 86_400_000);
   const seasonId = randomUUID();
   await database.insert(seasons).values({ id: seasonId, name: "UX 검증 시즌", nameNormalized: "ux 검증 시즌", status: "ACTIVE", activatedAt: past, applicationsOpenAt: past, applicationsCloseAt: future });
-  if (process.env.V2_UX_QA_RANKING === "true") {
+  const statisticsFixture = [
+    { id: randomUUID(), nickname: "높은승률", wins: 18, participationCount: 12, mvpCount: 2 },
+    { id: randomUUID(), nickname: "많은참여", wins: 16, participationCount: 15, mvpCount: 2 },
+    { id: randomUUID(), nickname: "많은MVP", wins: 14, participationCount: 15, mvpCount: 6 },
+  ];
+  if (statisticsQa) {
+    await database.insert(players).values(statisticsFixture.map((row, index) => ({ id: row.id, nickname: row.nickname, nicknameNormalized: row.nickname.toLowerCase(), memberName: `합성회원${index}`, memberNameNormalized: `합성회원${index}`, tagLine: `QA${index}`, tagLineNormalized: `qa${index}`, status: "ACTIVE" as const })));
+    await database.insert(seasonProjectionStates).values({ seasonId, generation: 1, status: "READY", sourceChecksum: randomBytes(32), calculatedAt: now });
+    await database.insert(playerSeasonStats).values(statisticsFixture.map((row) => ({ seasonId, playerId: row.id, generation: 1, totalGames: 20, participationCount: row.participationCount, wins: row.wins, losses: 20 - row.wins, mvpCount: row.mvpCount, calculatedAt: now })));
+  }
+  if (!statisticsQa && process.env.V2_UX_QA_RANKING === "true") {
     // Synthetic projection fixture, only inside this harness's ephemeral cluster.
     const fixture = [
       { nickname: "달빛소환사", totalGames: 20, wins: 16, mvpCount: 5 },
@@ -83,6 +94,22 @@ try {
     await new Promise((done) => setTimeout(done, 300));
   }
   assert.ok(ready, "Local QA server starts");
+  if (statisticsQa) {
+    const topResponse = await fetch(`${origin}/api/stats/top?seasonId=${seasonId}`);
+    assert.equal(topResponse.status, 200);
+    assert.match(topResponse.headers.get("cache-control") ?? "", /no-store/);
+    const topBody = await topResponse.json() as { top: Record<"winRate" | "participation" | "mvp", { playerId: string }[]> };
+    const ids = statisticsFixture.map((row) => row.id);
+    assert.deepEqual(topBody.top.winRate.map((row) => row.playerId), ids, "top API keeps exact win-rate order");
+    assert.deepEqual(topBody.top.participation.map((row) => row.playerId), [ids[2], ids[1], ids[0]], "participation ties use MVP before win rate, matching the public ranking page");
+    assert.deepEqual(topBody.top.mvp.map((row) => row.playerId), [ids[2], ids[1], ids[0]], "MVP ties use participation before win rate, matching the public ranking page");
+    const emptyResponse = await fetch(`${origin}/api/stats/top?seasonId=${seasonId}&minParticipation=999`);
+    assert.equal(emptyResponse.status, 200);
+    const empty = await emptyResponse.json() as typeof topBody;
+    assert.deepEqual(empty.top, { winRate: [], participation: [], mvp: [] });
+    assert.equal((await fetch(`${origin}/api/stats/top?minParticipation=invalid`)).status, 400);
+    console.log("[stats-top-qa] HTTP ordering, ties, empty criteria and invalid input passed");
+  }
   const input = { nickname: "UX 테스트", replyTo: "ux@example.invalid", category: "오류 신고", content: "합성 데이터 문의 본문", consent: true };
   const key = `ux-support-${randomUUID()}`;
   const post = (body: unknown, headers: Record<string,string> = {}) => fetch(`${origin}/api/support`, { method: "POST", headers: { origin, "Content-Type": "application/json", "Idempotency-Key": key, ...headers }, body: JSON.stringify(body) });

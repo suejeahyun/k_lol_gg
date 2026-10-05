@@ -56,7 +56,7 @@ export default async function RankingsPage({
 
       {result.state === "ready" ? (
         <>
-          <form className={styles.filters} action="/rankings" method="get">
+          <form key={`${result.data.ranking.season?.id ?? "none"}:${minimumParticipation}:${requestedView}`} className={styles.filters} action="/rankings" method="get">
             <input type="hidden" name="view" value={requestedView} />
             <label>시즌<select name="seasonId" defaultValue={result.data.ranking.season?.id ?? ""}>
               {result.data.seasons.length === 0 ? <option value="">선택 가능한 시즌 없음</option> : null}

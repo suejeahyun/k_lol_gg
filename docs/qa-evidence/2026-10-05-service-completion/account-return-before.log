@@ -1,0 +1,16 @@
+AssertionError [ERR_ASSERTION]: required password changes retain the protected task destination
++ actual - expected
+
++ '/account/password?required=1'
+- '/account/password?required=1&next=%2Ftools%2Fteam-balance%2Fdrafts'
+
+    at assertPageRedirect (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\verify-account-http.ts:268:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\scripts\test-db\verify-account-http.ts:1376:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '/account/password?required=1',
+  expected: '/account/password?required=1&next=%2Ftools%2Fteam-balance%2Fdrafts',
+  operator: 'strictEqual',
+  diff: 'simple'
+}

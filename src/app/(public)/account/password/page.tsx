@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AccountPasswordPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
   const next = normalizeAccountNext((await searchParams).next);
-  const session = await requireAccountPage("/account/password");
+  const session = await requireAccountPage(`/account/password?next=${encodeURIComponent(next)}`);
   const repository = getRuntimeAccountRepository();
   const account = repository ? await repository.findSelf(session.userId).catch(() => null) : null;
   return <div className={styles.page}><div className={styles.accessGrid}>
