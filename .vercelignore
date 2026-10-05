@@ -4,8 +4,6 @@
 .tmp/**
 .env*
 !.env.example
-.git
-.git/**
 .next
 .next/**
 node_modules
