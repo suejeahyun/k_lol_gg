@@ -1,0 +1,82 @@
+{
+  "origin": "https://k-lol-gg.vercel.app",
+  "checkedAt": "2026-10-05T15:32:17.973Z",
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "assertions": 3
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/signup",
+      "status": 200,
+      "assertions": 1
+    },
+    {
+      "path": "/matches",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/matches?winner=BLUE&from=2026-09-01&order=asc",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/matches?q=NoMatchingFixture20261003",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "assertions": 1
+    },
+    {
+      "path": "/help/recruits",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/tools/random-team",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/tools/coin-toss",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/matches?q=&sort=playedOn&seasonId=&winner=BLUE&from=2026-09-01&to=&order=desc&pageSize=12",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/matches?q=&sort=playedOn&seasonId=&winner=&from=&to=&order=desc&pageSize=12",
+      "status": 200,
+      "assertions": 2
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "assertions": 0
+    }
+  ],
+  "image": {
+    "path": "public/images/theme/v1/controls.webp",
+    "bytes": 45794,
+    "sha256": "c7ae0e491761f986a942eeacb3c795bf44bfedef37ab8c60a6c00cfb2e0fe4f1"
+  },
+  "passed": true
+}

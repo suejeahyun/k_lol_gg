@@ -1,5 +1,9 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-06 서비스 이용 흐름 개선 1.0.1 운영 반영
+
+1.0.0 기능을 유지하고 문서 전용 배포의 Git 기록을 제거하던 설정 충돌을 수정했다. source `1ee5bd56`, tag `service-completion-v1.0.1`, Vercel `dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC` READY. 전체 check·운영 HTTP 31/14개·이미지 해시·Git 경로 404 확인. [배포·검증과 남은 조건](./qa-evidence/service-completion-v1.0.1-2026-10-06/production.md).
+
 ## 2026-10-06 서비스 이용 흐름 개선 1.0.0 운영 반영
 
 회차·접수 문맥 혼동, 로그인 복귀, 결과 상태/재시도, MMR 페이지·포지션 표시, 랭킹 필터·동률 정렬, 팀 도구 재시도와 hydration 충돌을 수정했다. source `73b2ee70`, tag `service-completion-v1.0.0`, Vercel `dpl_5kJJ11nQj8PjBENEoWgw9kJ7tUEx` READY. 최종 check·격리 DB/HTTP·운영 조회와 공개 24개 viewport 조건을 확인했다. 로컬 확인창 이후 일부 저장 E2E와 실기기·외부 연동은 미확인이며, 기존 V1 MMR의 공식 전환/최신 반영은 별도 운영자 결정 경계다. migration 0047 유지. [문제·전체 기능 원장](./qa-evidence/2026-10-05-service-completion/README.md), [배포와 남은 조건](./qa-evidence/2026-10-05-service-completion/production.md), [변경 안내](./patch-notes/2026-10-05-service-completion.md).
