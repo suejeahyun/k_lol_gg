@@ -1,0 +1,141 @@
+{
+  "checkedAt": "2026-10-06T01:27:29.625Z",
+  "scope": "Five anonymous GETs only; no cookies, authentication attempts, mutations or full-suite rerun. Server HTML is not hydrated browser DOM.",
+  "expectedSource": "583dab4d3793b1bb00de92c2ea2fd4ad21a2e04d",
+  "deployment": {
+    "id": "dpl_61srgiX3pqpT8ZBygBHzPLj8S468",
+    "state": "READY",
+    "url": "https://k-lol-637qb7v21-tjdmswo11-3715s-projects.vercel.app",
+    "target": "production",
+    "source": "583dab4d3793b1bb00de92c2ea2fd4ad21a2e04d",
+    "sourceType": "github"
+  },
+  "canonicalAlias": {
+    "url": "https://k-lol-gg.vercel.app",
+    "id": "dpl_61srgiX3pqpT8ZBygBHzPLj8S468",
+    "state": "READY"
+  },
+  "sourceAndAliasMatch": true,
+  "requests": [
+    {
+      "id": "health",
+      "path": "/api/health",
+      "requestedAt": "2026-10-06T01:27:27.581Z",
+      "status": 200,
+      "cacheControl": "no-store, max-age=0",
+      "checks": {
+        "http200": true,
+        "ready": true,
+        "noStore": true
+      },
+      "responseStatus": "ready",
+      "providerCheckedAt": "2026-10-06T01:27:30.296Z",
+      "passed": true
+    },
+    {
+      "id": "login",
+      "path": "/login",
+      "requestedAt": "2026-10-06T01:27:27.618Z",
+      "status": 200,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "checks": {
+        "http200": true,
+        "oneAdminLoginLink": true,
+        "loginIdField": true,
+        "passwordField": true,
+        "noDuplicateIdleExplanation": true
+      },
+      "administratorLoginLinks": 1,
+      "passed": true
+    },
+    {
+      "id": "destruction-formats",
+      "path": "/competitions/destruction",
+      "requestedAt": "2026-10-06T01:27:27.619Z",
+      "status": 200,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "checks": {
+        "http200": true,
+        "eightFormatOptions": true,
+        "uniqueValues": true,
+        "uniqueLabels": true
+      },
+      "formats": [
+        {
+          "value": "FULL_ROUND_ROBIN_BO3",
+          "label": "전체 풀리그 · 3판 2선승"
+        },
+        {
+          "value": "FULL_ROUND_ROBIN_BO1",
+          "label": "전체 풀리그 · 단판"
+        },
+        {
+          "value": "GROUP_ROUND_ROBIN_BO3",
+          "label": "조별 풀리그 · 3판 2선승"
+        },
+        {
+          "value": "GROUP_ROUND_ROBIN_BO1",
+          "label": "조별 풀리그 · 단판"
+        },
+        {
+          "value": "SWISS_ROUND_BO3",
+          "label": "스위스 라운드 · 3판 2선승"
+        },
+        {
+          "value": "SWISS_ROUND_BO1",
+          "label": "스위스 라운드 · 단판"
+        },
+        {
+          "value": "RANDOM_ROUNDS_BO3",
+          "label": "랜덤 라운드 · 3판 2선승"
+        },
+        {
+          "value": "RANDOM_ROUNDS_BO1",
+          "label": "랜덤 라운드 · 단판"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "unauthorized-admin",
+      "path": "/api/admin/users",
+      "requestedAt": "2026-10-06T01:27:27.620Z",
+      "status": 401,
+      "cacheControl": "no-store, max-age=0",
+      "checks": {
+        "http401": true,
+        "noStore": true,
+        "problemResponse": true,
+        "noAccountData": true
+      },
+      "problem": {
+        "status": 401,
+        "title": "로그인이 필요합니다.",
+        "code": "ACCOUNT_AUTH_REQUIRED"
+      },
+      "passed": true
+    },
+    {
+      "id": "404-boundary",
+      "path": "/qa-independent-missing-20261006-v104",
+      "requestedAt": "2026-10-06T01:27:27.621Z",
+      "status": 404,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "checks": {
+        "http404": true,
+        "recoveryTitle": true,
+        "homeRecovery": true,
+        "singleMain": true,
+        "singleHeader": true,
+        "singleFooter": true
+      },
+      "landmarks": {
+        "main": 1,
+        "header": 1,
+        "footer": 1
+      },
+      "passed": true
+    }
+  ],
+  "passed": true
+}

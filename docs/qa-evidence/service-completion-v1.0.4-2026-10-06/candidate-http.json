@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-06T01:24:02.251Z",
+  "source": "583dab4d3793b1bb00de92c2ea2fd4ad21a2e04d",
+  "deployment": "dpl_Cn5yFXNuiC9Nv6T3M6HQzMMJ7Whv",
+  "passed": true,
+  "checks": [
+    {
+      "name": "health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "login",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "formats",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "admin",
+      "status": 401,
+      "passed": true
+    }
+  ]
+}

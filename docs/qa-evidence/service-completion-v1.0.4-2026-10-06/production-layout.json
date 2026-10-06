@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-06T01:25:29.552Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "source": "583dab4d3793b1bb00de92c2ea2fd4ad21a2e04d",
+  "layouts": [
+    {
+      "main": 1,
+      "overflow": false,
+      "width": 320
+    },
+    {
+      "main": 1,
+      "overflow": false,
+      "width": 390
+    },
+    {
+      "main": 1,
+      "overflow": false,
+      "width": 768
+    }
+  ],
+  "loginAdminLinks": 1
+}

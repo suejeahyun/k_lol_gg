@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-06 전체 기능 분석·부가 설명 정리 1.0.4 운영 반영
+
+source `583dab4d3793b1bb00de92c2ea2fd4ad21a2e04d`, tag `service-completion-v1.0.4`, Vercel main `dpl_61srgiX3pqpT8ZBygBHzPLj8S468` READY와 운영 alias `https://k-lol-gg.vercel.app`를 확인했다. 386경로를 먼저 분석하고 18개 기능군 순서로 공개·계정·관리 화면의 반복 설명·장식·내부 코드를 정리했다. 실제 입력·상태·오류·복구·정책·집계 기준은 유지했다. 서버 재시도, 설치 상태 경합, 중복 main, 멸망전 방식 이름 충돌도 재현·수정했다. 홈 여섯 영역·단일 랭킹·생성 이미지 테마를 유지했다.
+
+최종 필수 check, 새 격리 DB/복원, 108페이지의 HTTP 169조건과 합성 계정의 실제 신청 수정·접수/이미지 제출 등을 통과했다. 운영 HTTP·이미지·320/390/768/1280px 화면·직접 랭킹 선택과 별도 담당자의 운영 표본 재검토도 완료했다. [전체 순서별 점검표](qa-evidence/service-completion-v1.0.4-2026-10-06/ordered-review.md), [최종 배포·검증·복구 근거](qa-evidence/service-completion-v1.0.4-2026-10-06/production.md).
+
+MMR 운영 공식 전환은 실제 SUPER_ADMIN ADMIN 로그인 대기다. 카카오 휴대폰·Riot RSO·실기기 설치/스크린리더·초심자 연구 등 외부 조건을 완료로 표시하지 않는다. 이번 릴리스는 의존성·API·도메인·DB를 변경하지 않았으며 이전 감사의 개발 도구 경고 12건과 lint 경고 58건을 해결했다고 주장하지 않는다.
+
 ## 2026-10-06 첫 방문 직관성·화면 완성도 1.0.3 운영 반영
 
 source `824502a20065c4d2d84d3676e9db47028ca6c913`, tag `service-completion-v1.0.3`, Vercel main `dpl_B9ZsVWWauhziZf4veFaKo68TpB1B` READY와 `https://k-lol-gg.vercel.app` alias를 확인했다. 홈 순서·생성 테마를 유지하면서 랭킹 이름 선택, 결과 제출 단계/필수 입력/이어하기 복구, 신청 현재 메뉴·포지션, 검색 초기화, 중복 404 틀을 수정했다. Next 16.3.8 보안 patch 뒤 필수 check와 새 격리 DB·실제 제출 브라우저 과업이 통과했다. 운영 4개 화면 크기·키보드·HTTP·이미지와 독립 검토를 [최종 운영 근거](qa-evidence/service-completion-v1.0.3-2026-10-06/production.md)에 연결했다.
