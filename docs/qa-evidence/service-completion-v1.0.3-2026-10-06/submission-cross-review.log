@@ -1,0 +1,16 @@
+✔ first submission prioritizes required information while optional fields and continuation stay available (6.9906ms)
+✔ a cancelled partial upload never displays unfinished images as a completed step (1.2568ms)
+✔ anonymous result continuation returns to the same submission after login (0.822ms)
+✔ changing a continuation code or draft resets form identity while same-context refresh preserves edits (16.5851ms)
+✔ pending, rejected, suspended and password-reset accounts get recovery before filling the submission form (45.7334ms)
+✔ completed or rejected submissions show their result and recovery without impossible upload controls (4.5651ms)
+✔ submission lookup failure keeps the code for retry and is distinct from a missing submission (17.7104ms)
+✔ creating a submission locks mutations until the server route has committed and resets new-submission state (55.6166ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 525.1737

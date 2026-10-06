@@ -1,5 +1,9 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-06 서비스 이용 흐름 개선 1.0.2 운영 반영
+
+실제 접수 수정·이미지 등록·취소를 막던 내부 요청 scope의 대소문자 충돌, 잘못된 변경 주소의 500, 취소 후 재신청 안내를 수정했다. source `0410c1b5`, tag `service-completion-v1.0.2`, Vercel `dpl_8mrTSkSRqj3kmxwJN41sNUSUnR6K` READY. 필수 check·격리 owner/팀/관리자 HTTP·실제 수정/파일 복구 UI·운영 조회를 확인했다. 배포 후 재검토에서 404 메뉴 중첩을 추가 발견해 후속 patch로 진행한다. 실제 Blob/Riot/예약 작업을 확인했고 MMR 전환은 영향 분석·격리 검증 후 유효한 SUPER_ADMIN 로그인이 필요한 상태다. [배포·검증·남은 조건](./qa-evidence/service-completion-v1.0.2-2026-10-06/production.md).
+
 ## 2026-10-06 서비스 이용 흐름 개선 1.0.1 운영 반영
 
 1.0.0 기능을 유지하고 문서 전용 배포의 Git 기록을 제거하던 설정 충돌을 수정했다. source `1ee5bd56`, tag `service-completion-v1.0.1`, Vercel `dpl_9WgTqPhaqq3bCBLp2QbftPk4ZceC` READY. 전체 check·운영 HTTP 31/14개·이미지 해시·Git 경로 404 확인. [배포·검증과 남은 조건](./qa-evidence/service-completion-v1.0.1-2026-10-06/production.md).

@@ -1,4 +1,15 @@
 export type TaskLink = Readonly<{ href: string; label: string; account?: boolean }>;
+
+export function isTaskNavigationCurrent(pathname: string, query: Pick<URLSearchParams, "getAll">, href: string): boolean {
+  const [targetPath, targetQuery] = href.split("?");
+  if (pathname !== targetPath) return false;
+  if (pathname !== "/applications") return true;
+  const types = query.getAll("type");
+  const selectedType = types.length === 0 ? "season" : types.length === 1 ? types[0] : null;
+  if (!selectedType || !["season", "event", "destruction"].includes(selectedType)) return false;
+  return selectedType === (new URLSearchParams(targetQuery).get("type") ?? "season");
+}
+
 export const userTaskGroups = [
   { label: "참가·모집", roots: ["/applications", "/recruits"], links: [
     { href: "/applications", label: "오늘 내전 신청" },

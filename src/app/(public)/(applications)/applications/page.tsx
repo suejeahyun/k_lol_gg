@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { parseCanonicalViewQuery } from "@/modules/navigation/application/canonical-view-query";
 import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-season-data";
+import { APPLICATION_POSITION_LABELS } from "@/modules/seasons/application/client-application-positions";
 
 import { RecruitingCompetitions } from "@/components/navigation/recruiting-competitions";
 import { ApplicationActions } from "./application-actions";
@@ -178,7 +179,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 <p>
                   {result.data.myApplication.applyDate} · {result.data.myApplication.recruitNo}회차
                   {result.data.round.mode === "RIFT"
-                    ? ` · 주 ${result.data.myApplication.mainPosition} · 부 ${result.data.myApplication.subPositions.join(", ") || "없음"}`
+                    ? ` · 주 ${APPLICATION_POSITION_LABELS[result.data.myApplication.mainPosition]} · 부 ${result.data.myApplication.subPositions.map((position) => APPLICATION_POSITION_LABELS[position]).join(", ") || "없음"}`
                     : " · 포지션 구분 없음"}
                   {` · ${result.data.myApplication.source === "SITE" ? "사이트" : "카카오 연동"}`}
                 </p>
@@ -202,7 +203,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                   <li key={`${participant.player.id}-${participant.applyDate}-${participant.recruitNo}`}>
                     <span aria-hidden="true">{participant.player.displayName.slice(0, 1).toUpperCase()}</span>
                     <div><strong>{participant.player.displayName}</strong><small>{participant.player.riotId}</small></div>
-                    <em>{result.data.round.mode === "RIFT" ? `주 ${participant.mainPosition} · 부 ${participant.subPositions.join(", ") || "없음"}` : "포지션 구분 없음"}</em>
+                    <em>{result.data.round.mode === "RIFT" ? `주 ${APPLICATION_POSITION_LABELS[participant.mainPosition]} · 부 ${participant.subPositions.map((position) => APPLICATION_POSITION_LABELS[position]).join(", ") || "없음"}` : "포지션 구분 없음"}</em>
                     <b data-status={participant.status}>{statusLabel(participant.status)}</b>
                   </li>
                 ))}

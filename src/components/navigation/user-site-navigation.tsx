@@ -22,7 +22,7 @@ import {
 } from "@/modules/navigation/domain/user-navigation";
 import { findGlobalCommands, playerSearchHref } from "@/modules/navigation/domain/global-command-palette";
 
-import { userTaskGroups, personalTaskLinks, type TaskLink } from "@/modules/navigation/domain/task-navigation";
+import { isTaskNavigationCurrent, userTaskGroups, personalTaskLinks, type TaskLink } from "@/modules/navigation/domain/task-navigation";
 import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
 import { recordUsageAction } from "@/components/usage/usage-actions";
 
@@ -233,6 +233,7 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
 
 export function PrimaryUserNavigation() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const nav = useRef<HTMLElement>(null);
   useEffect(() => {
     const close = () => nav.current?.querySelectorAll("details[open]").forEach((element) => element.removeAttribute("open"));
@@ -240,14 +241,14 @@ export function PrimaryUserNavigation() {
     close();
     document.addEventListener("pointerdown", outside);
     return () => document.removeEventListener("pointerdown", outside);
-  }, [pathname]);
+  }, [pathname, searchParams]);
   return <nav ref={nav} className="desktop-nav task-navigation" aria-label="주요 메뉴" data-usage-context="header">
     {userTaskGroups.map((group) => <details className="task-menu" name="site-task-menu" key={group.label}
       data-active={group.roots.some((root) => isUserNavigationActive(pathname, root)) || undefined}
       onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
       <summary>{group.label}<ChevronDown size={16} aria-hidden="true" /></summary>
       <div className="task-menu__links">{group.links.map((link) => <Link key={link.href} href={link.href}
-        aria-current={pathname === link.href ? "page" : undefined}
+        aria-current={isTaskNavigationCurrent(pathname, searchParams, link.href) ? "page" : undefined}
         onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); }}>{link.label}</Link>)}</div>
     </details>)}
   </nav>;

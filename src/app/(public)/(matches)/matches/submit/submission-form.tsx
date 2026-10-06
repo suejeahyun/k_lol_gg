@@ -71,7 +71,7 @@ export function SubmissionForm({
       ? `/matches/submit?teamBalanceDraftId=${encodeURIComponent(requestedTeamBalanceDraftId)}`
       : "/matches/submit";
   if (viewer === "ANONYMOUS") {
-    return <section className={styles.panel}><h2>승인된 계정으로 로그인해 주세요</h2><p>공개 결과는 누구나 볼 수 있지만 비공개 스코어보드 접수는 로그인한 소유자만 이어갈 수 있어요.</p><Link className={styles.login} href={`/login?next=${encodeURIComponent(next)}`}>로그인</Link></section>;
+    return <section className={styles.panel}><h2>로그인하고 경기 결과를 제출하세요</h2><p>결과 이미지는 본인과 운영자만 볼 수 있어요. 제출한 내용과 검토 결과는 내 제출 기록에서 이어볼 수 있습니다.</p><Link className={styles.login} href={`/login?next=${encodeURIComponent(next)}`}>로그인하고 제출하기</Link></section>;
   }
   if (viewer === "RESTRICTED") {
     return <section className={styles.panel} role="status"><h2>현재 계정은 결과 제출이 제한되어 있어요.</h2><p>내 계정에서 승인·이용 상태를 확인해 주세요. 계정 검토가 끝나면 결과를 접수할 수 있어요.</p><Link className={styles.login} href="/account">내 계정 상태 확인</Link></section>;
@@ -135,7 +135,7 @@ export function SubmissionForm({
         publicReviewReason: null, approvedMatchSeriesId: null, revision: created.revision,
         updatedAt: new Date().toISOString(),
       };
-      setSubmission(next); setResumeCode(created.publicCode); setMessage("접수가 생성됐어요. 코드를 보관하고 게임별 이미지를 올려 주세요.");
+      setSubmission(next); setResumeCode(created.publicCode); setMessage("경기 정보를 저장했어요. 이제 게임별 결과 이미지를 올려 주세요.");
       startNavigation(() => router.replace(`/matches/submit?code=${created.publicCode}`, { scroll: false }));
     } catch (caught) {
       setError(true); setMessage(caught instanceof Error ? caught.message : "접수 생성에 실패했어요.");
@@ -179,7 +179,7 @@ export function SubmissionForm({
       const updated = await response.json() as { status: MatchSubmissionView["status"]; revision: number };
       mutationKeys.complete(uploadTicket);
       setSubmission((current) => current ? { ...current, status: updated.status, revision: updated.revision, receivedGameNumbers: [...current.receivedGameNumbers, gameNumber].sort() } : current);
-      setMessage(`${gameNumber}게임 이미지가 등록됐어요. OCR 후보는 관리자가 확인한 뒤에만 경기로 반영됩니다.`);
+      setMessage(`${gameNumber}게임 이미지가 등록됐어요. 모든 이미지를 올리면 운영자에게 검토를 요청합니다.`);
     } catch (caught) {
       try {
         const reconcile = await fetch(`/api/me/match-submissions/${submission.publicCode}`, {
@@ -192,13 +192,13 @@ export function SubmissionForm({
           if (latest.submission.receivedGameNumbers.includes(gameNumber)) {
             if (uploadTicket) mutationKeys.complete(uploadTicket);
             setError(false);
-            setMessage(`${gameNumber}게임 이미지 등록 여부를 서버에서 다시 확인했습니다.`);
+            setMessage(`${gameNumber}게임 이미지가 등록된 것을 확인했어요. 다시 올리지 않아도 됩니다.`);
             return;
           }
         }
       } catch { /* retain the original failure */ }
       setError(true);
-      setMessage(`${caught instanceof Error ? caught.message : "이미지 업로드에 실패했어요."} 같은 파일은 같은 요청으로 확인하고, 다른 파일은 새 요청으로 안전하게 재개합니다.`);
+      setMessage(`${caught instanceof Error ? caught.message : "이미지를 올리지 못했어요."} 아래에서 파일을 다시 선택해 주세요. 이미 등록된 이미지는 중복 저장하지 않아요.`);
     } finally { setBusy(false); }
   }
 
@@ -252,7 +252,7 @@ export function SubmissionForm({
   }
 
   async function cancelSubmission() {
-    if (busy || !submission || !window.confirm("이 접수를 취소할까요? 등록된 비공개 이미지는 정리 대기 상태로 전환됩니다.")) return;
+    if (busy || !submission || !window.confirm("이 결과 접수를 취소할까요? 취소한 접수는 다시 수정할 수 없어요.")) return;
     setBusy(true); setError(false); setMessage("접수를 취소하고 있어요…");
     const commandTicket = mutationKeys.issue(
       `POST:/api/me/match-submissions/${submission.id}/cancel`,
@@ -274,40 +274,48 @@ export function SubmissionForm({
       mutationKeys.complete(commandTicket);
       setSubmission((current) => current ? { ...current, status: updated.status, revision: updated.revision } : current);
       setEditing(false);
-      setMessage("접수를 취소했습니다. 이미지는 공개되지 않으며 정리 대기 상태입니다.");
+      setMessage("접수를 취소했습니다. 제출한 이미지는 공개되지 않아요.");
     } catch (caught) {
       setError(true); setMessage(caught instanceof Error ? caught.message : "접수 취소에 실패했어요.");
     } finally { setBusy(false); }
   }
 
+  const currentStep = !submission ? 0 : submission.status === "AWAITING_UPLOAD" ? 1 : 2;
+  const recoveringCode = Boolean(requestedCode && !submission);
   return (
     <>
-      <section className={styles.panel} aria-labelledby="resume-title">
-        <h2 id="resume-title">접수 코드로 이어하기</h2>
-        <form className={styles.resume} onSubmit={continueByCode}><input value={resumeCode} onChange={(event) => setResumeCode(event.target.value)} disabled={busy} maxLength={19} placeholder="MR2…" aria-label="접수 코드" /><button type="submit" disabled={busy}>불러오기</button></form><Link href="/matches/submissions">내 접수 기록 전체 보기</Link>
-      </section>
+      {!recoveringCode ? <ol className={styles.steps} aria-label="결과 제출 진행 단계">
+        {["경기 정보", "결과 이미지", "접수 상태"].map((label, index) => {
+          const complete = index < currentStep && (index !== 1 || submission?.receivedGameNumbers.length === submission?.expectedGameCount);
+          return <li key={label} aria-current={index === currentStep ? "step" : undefined} data-complete={complete}><span aria-hidden="true">{complete ? "✓" : index + 1}</span>{label}</li>;
+        })}
+      </ol> : null}
       {message ? <p className={styles.status} data-error={error} data-busy={busy ? "true" : undefined} role={error ? "alert" : "status"}>{message}</p> : null}
-      {!submission ? (
+      {recoveringCode ? null : !submission ? (
         <section className={styles.panel} aria-labelledby="new-submission-title">
           <h2 id="new-submission-title">새 결과 접수</h2>
-          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>팀 밸런스 초안 연결</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"} · 참가자와 배치는 서버에서 다시 확인합니다.</small></div> : null}
+          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>이 팀으로 경기 결과를 제출해요</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"}의 참가자와 팀 구성을 함께 전달합니다.</small></div> : null}
           <form className={styles.form} onSubmit={createSubmission}>
-            <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} defaultValue={teamBalanceDraft?.title ?? ""} /></label>
-            <label>주최자<input name="organizer" required maxLength={100} /></label>
-            <label>회차<input name="seriesNumber" type="number" min={1} max={9999} defaultValue={1} required /></label>
-            <label>플레이 날짜<input name="playedOn" type="date" required /></label>
-            <label>시작 시각(KST, 선택)<input name="startedAt" type="datetime-local" /></label>
-            <label>예상 게임 수<select name="expectedGameCount" defaultValue="2"><option value="2">2게임</option><option value="3">3게임</option></select></label>
-            <label>시즌(선택)<select name="seasonId" defaultValue=""><option value="">미지정 — 관리자 검토 시 매핑</option>{seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
-            <label className={styles.wide}>비공개 전달 메모<textarea name="note" maxLength={1000} /></label>
-            <button type="submit" disabled={busy}>접수 만들기</button>
+            <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} placeholder="예: 화요일 저녁 내전" defaultValue={teamBalanceDraft?.title ?? ""} /></label>
+            <label>주최자<input name="organizer" required maxLength={100} placeholder="경기를 진행한 사람의 닉네임" /></label>
+            <label>경기한 날짜<input name="playedOn" type="date" required /></label>
+            <label>경기 회차<input name="seriesNumber" type="number" min={1} max={9999} defaultValue={1} required /><small>같은 날 첫 번째 경기는 1회차예요.</small></label>
+            <label>진행한 게임 수<select name="expectedGameCount" defaultValue="2"><option value="2">2게임 · 이미지 2장</option><option value="3">3게임 · 이미지 3장</option></select></label>
+            <details className={styles.optionalFields}>
+              <summary>추가 정보 <span>선택 · 시즌, 시작 시각, 메모</span></summary>
+              <div className={styles.optionalGrid}>
+                <label>시즌<select name="seasonId" defaultValue=""><option value="">운영자가 확인 후 선택</option>{seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
+                <label>시작 시각 · 한국 시간<input name="startedAt" type="datetime-local" /></label>
+                <label className={styles.wide}>운영자에게 전달할 메모<textarea name="note" maxLength={1000} placeholder="경기 결과와 함께 확인할 내용이 있으면 적어 주세요." /></label>
+              </div>
+            </details>
+            <button type="submit" disabled={busy}>{busy ? "저장 중…" : "다음: 결과 이미지 올리기"}</button>
           </form>
         </section>
       ) : (
         <section className={styles.panel} data-submission-status={submission.status} aria-busy={busy} aria-labelledby="upload-title">
-          <div className={styles.code}><span>이어하기 코드</span><strong>{submission.publicCode}</strong><button type="button" onClick={() => { void navigator.clipboard.writeText(submission.publicCode).then(() => { setError(false); setMessage("이어하기 코드를 복사했습니다."); }, () => { setError(true); setMessage("클립보드에 접근할 수 없어 코드를 직접 복사해 주세요."); }); }}>복사</button></div>
-          <h2 id="upload-title">게임별 스코어보드</h2>
-          <p>{submission.title} · {submission.organizer} · 현재 상태 {STATUS_LABEL[submission.status]}</p>
+          <div className={styles.panelHeading}><h2 id="upload-title">{submission.status === "AWAITING_UPLOAD" ? "게임별 결과 이미지" : "제출한 경기 결과"}</h2><span className={styles.stateBadge}>{STATUS_LABEL[submission.status]}</span></div>
+          <p className={styles.submissionMeta}>{submission.title} · {submission.organizer}</p>
           {submission.publicReviewReason ? <p>검토 결과: {submission.publicReviewReason}</p> : null}
           {submission.approvedMatchSeriesId ? <Link className={styles.login} href={`/matches/${submission.approvedMatchSeriesId}`}>승인된 공개 경기 보기</Link> : null}
           {submission.status === "REJECTED" ? <p className={styles.help}>거절된 접수는 이미지를 추가하거나 직접 수정할 수 없어요. 보완이 필요하면 접수 코드와 함께 <Link href="/help/contact">운영팀에 문의</Link>해 주세요.</p> : null}
@@ -321,10 +329,10 @@ export function SubmissionForm({
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} defaultValue={submission.title} /></label>
             <label>주최자<input name="organizer" required maxLength={100} defaultValue={submission.organizer} /></label>
             <label>회차<input name="seriesNumber" type="number" min={1} defaultValue={submission.seriesNumber} required /></label>
-            <label>플레이 날짜<input name="playedOn" type="date" defaultValue={submission.playedOn} required /></label>
-            <label>시작 시각(KST, 선택)<input name="startedAt" type="datetime-local" defaultValue={submission.startedAt ? new Date(new Date(submission.startedAt).getTime() + 9 * 60 * 60_000).toISOString().slice(0, 16) : ""} /></label>
-            <label>예상 게임 수<select name="expectedGameCount" defaultValue={submission.expectedGameCount} disabled={submission.receivedGameNumbers.length > 0}><option value="2">2게임</option><option value="3">3게임</option></select>{submission.receivedGameNumbers.length > 0 ? <input type="hidden" name="expectedGameCount" value={submission.expectedGameCount} /> : null}</label>
-            <label>시즌(선택)<select name="seasonId" defaultValue={submission.seasonId ?? ""}><option value="">미지정 — 관리자 검토 시 매핑</option>{seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
+            <label>경기한 날짜<input name="playedOn" type="date" defaultValue={submission.playedOn} required /></label>
+            <label>시작 시각 · 한국 시간 (선택)<input name="startedAt" type="datetime-local" defaultValue={submission.startedAt ? new Date(new Date(submission.startedAt).getTime() + 9 * 60 * 60_000).toISOString().slice(0, 16) : ""} /></label>
+            <label>진행한 게임 수<select name="expectedGameCount" defaultValue={submission.expectedGameCount} disabled={submission.receivedGameNumbers.length > 0}><option value="2">2게임</option><option value="3">3게임</option></select>{submission.receivedGameNumbers.length > 0 ? <input type="hidden" name="expectedGameCount" value={submission.expectedGameCount} /> : null}</label>
+            <label>시즌(선택)<select name="seasonId" defaultValue={submission.seasonId ?? ""}><option value="">운영자가 확인 후 선택</option>{seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
             <label className={styles.wide}>비공개 전달 메모<textarea name="note" maxLength={1000} defaultValue={submission.note ?? ""} /></label>
             <button type="submit" disabled={busy}>수정 저장</button>
           </form> : null}
@@ -338,10 +346,16 @@ export function SubmissionForm({
               }} /> : null}</label>;
             })}
           </div>
-          <p className={styles.help}>{submission.status === "AWAITING_UPLOAD" ? "업로드한 이미지는 본인과 관리자만 볼 수 있어요. 모든 이미지를 제출하면 관리자가 시즌과 10명 로스터를 확인한 뒤 결과를 승인합니다." : submission.status === "PENDING_REVIEW" ? "이미지 제출이 완료되었어요. 관리자가 시즌과 10명 로스터를 확인하고 있으며 검토 결과는 내 제출 기록에서 확인할 수 있어요." : "접수와 검토 이력은 내 제출 기록에서 다시 확인할 수 있어요."}</p>
+          <p className={styles.help}>{submission.status === "AWAITING_UPLOAD" ? "승패와 참가자 10명이 보이는 게임 종료 화면을 올려 주세요. 이미지는 본인과 운영자만 볼 수 있어요." : submission.status === "PENDING_REVIEW" ? "이미지를 모두 제출했어요. 운영자가 경기 결과와 참가자를 확인하고 있어요. 검토 결과는 내 제출 기록에서 확인하세요." : "접수와 검토 이력은 내 제출 기록에서 다시 확인할 수 있어요."}</p>
           <div className={styles.actions}><Link href="/matches/submissions">내 제출 기록</Link><Link href="/matches/submit">새 결과 접수</Link></div>
+          <div className={styles.code}><span>접수 코드</span><strong>{submission.publicCode}</strong><button type="button" onClick={() => { void navigator.clipboard.writeText(submission.publicCode).then(() => { setError(false); setMessage("이어하기 코드를 복사했습니다."); }, () => { setError(true); setMessage("클립보드에 접근할 수 없어 코드를 직접 복사해 주세요."); }); }}>코드 복사</button></div>
         </section>
       )}
+      <details className={`${styles.panel} ${styles.resumePanel}`} open={recoveringCode}>
+        <summary>접수 코드로 이어하기</summary>
+        <form className={styles.resume} onSubmit={continueByCode}><input value={resumeCode} onChange={(event) => setResumeCode(event.target.value)} disabled={busy} maxLength={19} placeholder="MR2로 시작하는 접수 코드" aria-label="접수 코드" /><button type="submit" disabled={busy}>불러오기</button></form><Link href="/matches/submissions">코드 없이 내 제출 기록에서 찾기</Link>
+        {recoveringCode ? <div className={styles.actions}><Link href="/matches/submit">새 경기 결과 제출</Link></div> : null}
+      </details>
     </>
   );
 }

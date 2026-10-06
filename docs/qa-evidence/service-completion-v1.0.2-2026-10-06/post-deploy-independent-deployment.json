@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-06T00:02:27.683Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "expectedSource": "0410c1b56c2f62c5da0cc992d081c8d4cfb56991",
+  "candidate": {
+    "id": "dpl_GmPDVhfYGUWak4LGCsmnUSiMhtue",
+    "state": "READY",
+    "url": "k-lol-lotp3u34x-tjdmswo11-3715s-projects.vercel.app",
+    "target": "production",
+    "source": "0410c1b56c2f62c5da0cc992d081c8d4cfb56991"
+  },
+  "final": {
+    "id": "dpl_8mrTSkSRqj3kmxwJN41sNUSUnR6K",
+    "state": "READY",
+    "url": "k-lol-pkbh3zamm-tjdmswo11-3715s-projects.vercel.app",
+    "target": "production",
+    "source": "0410c1b56c2f62c5da0cc992d081c8d4cfb56991"
+  },
+  "alias": {
+    "id": "dpl_8mrTSkSRqj3kmxwJN41sNUSUnR6K",
+    "state": "READY",
+    "url": "k-lol-pkbh3zamm-tjdmswo11-3715s-projects.vercel.app"
+  },
+  "pass": true
+}

@@ -37,6 +37,10 @@
 .eyebrow > span { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 14px currentColor; }
 .counter { color: #c4bcd5; font-size: 12px; font-variant-numeric: tabular-nums; }
 .counter strong { color: #fff; font-size: 19px; margin-right: 5px; }
+.kindSelector { display: flex; flex-wrap: wrap; gap: 4px; width: min(100%, 460px); margin: 18px auto 14px; padding: 4px; border: 1px solid #ffffff40; border-radius: 15px; background: #171d35e6; }
+.kindButton { flex: 1 1 70px; min-width: 0; min-height: 44px; height: auto; padding: 10px 12px; border: 1px solid transparent; border-radius: 10px; color: #f5efff; background: transparent; font-size: 14px; font-weight: 750; line-height: 1.4; white-space: normal; word-break: keep-all; }
+.kindButton:hover { color: #fff; background: #ffffff1f; }
+.kindButton[aria-pressed="true"] { color: #241938; border-color: var(--spotlight); background: var(--spotlight); box-shadow: 0 2px 8px #00000026; }
 .slide { position: relative; touch-action: pan-y pinch-zoom; animation: reveal 380ms ease-out both; }
 .intro { text-align: center; padding: 4px 0 22px; }
 .category { font-size: 12px; color: var(--spotlight); letter-spacing: .08em; }
@@ -65,20 +69,12 @@
 .metric > span { color: #e8e2f2; font-size: 12px; }
 .place[data-rank="1"] .metric strong { font-size: 38px; color: #ffe4a7; }
 .profile { display: flex; align-items: center; gap: 5px; color: #e8e2f2; font-size: 12px; }
-.bottomline { margin-top: 18px; padding-top: 12px; border-top: 1px solid #ffffff1c; }
-.footerLinks { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
-.nextHint { display: flex; align-items: center; gap: 8px; width: fit-content; min-height: 44px; margin: 0; padding: 8px 10px; border: 1px solid #ffffff40; border-radius: 10px; color: #f3f0ff; background: #15203bba; font: inherit; font-size: 13px; cursor: pointer; }
-.nextHint svg, .allRankings svg, .profile svg { border-radius: 4px; background: #f6f5ff; }
+.bottomline { flex-wrap: wrap; margin-top: 18px; padding-top: 12px; border-top: 1px solid #ffffff1c; }
+.allRankings svg, .profile svg { border-radius: 4px; background: #f6f5ff; }
 .allRankings { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; color: #f2edfb; font-size: 13px; text-decoration: none; }
-.controls, .dots { display: flex; align-items: center; }
-.controls { gap: 6px; }
-.control, .dot { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; color: #f6f0ff; }
-.control { background: #f2efff; border: 1px solid #e7defa; }
+.controls { display: flex; align-items: center; gap: 6px; }
+.control { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; color: #f6f0ff; background: #f2efff; border: 1px solid #e7defa; }
 .control:hover { background: white; }
-.dot:hover { background: #ffffff21; color: #fff; }
-.dot { background: transparent; }
-.dot > span { height: 6px; width: 6px; border-radius: 5px; background: #ffffff66; transition: width 180ms, background 180ms; }
-.dot[aria-current="true"] > span { width: 22px; background: var(--spotlight); box-shadow: 0 0 10px #dec2ff40; }
 .carousel a:focus-visible, .carousel button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 @media (hover: hover) {
   .player:hover { transform: translateY(-4px); border-color: #ffffff88; background-color: #ffffff0c; }
@@ -87,6 +83,8 @@
 @keyframes reveal { from { opacity: .35; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
 @media (max-width: 640px) {
   .carousel { padding: 14px 14px 8px; border-radius: 20px; }
+  .kindSelector { margin-block: 12px 8px; }
+  .kindButton { padding-inline: 8px; font-size: 13px; }
   .intro { padding: 6px 0 12px; }
   .intro h3 { margin-block: 4px; font-size: 26px; }
   .category { font-size: 10px; letter-spacing: .02em; }
@@ -112,11 +110,9 @@
   .medal svg { width: 20px; height: 20px; }
   .metric { margin: 6px 0 0; gap: 5px; }
   .metric strong { font-size: 26px; }
-  .bottomline { flex-direction: column; gap: 0; margin-top: 4px; padding-top: 4px; }
-  .footerLinks { width: 100%; gap: 4px; order: 2; }
-  .allRankings, .nextHint { font-size: 11px; }
-  .nextHint { padding-inline: 6px; gap: 4px; }
-  .controls { justify-content: center; width: 100%; }
+  .bottomline { gap: 4px 10px; margin-top: 10px; padding-top: 8px; }
+  .allRankings { font-size: 12px; }
+  .controls { margin-left: auto; }
 }
 @media (max-width: 360px) {
   .carousel { padding-inline: 12px; }
@@ -124,16 +120,17 @@
   .place[data-rank="1"] .medal { width: 38px; height: 38px; }
   .place[data-rank="1"] .metric strong { font-size: 25px; }
   .place[data-rank="1"] .name { font-size: 16px; }
-  .controls { gap: 0; }
+  .bottomline { justify-content: center; }
+  .controls { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .slide { animation: none; }
-  .player, .dot > span { transition: none; }
+  .player, .kindButton { transition: none; }
   .player:hover { transform: none; }
 }
 @media (forced-colors: active) {
   .orbit, .watermark { display: none; }
-  .carousel, .player, .control { border: 1px solid CanvasText; }
-  .dot[aria-current="true"] { outline: 2px solid Highlight; }
+  .carousel, .player, .control, .kindSelector, .kindButton { border: 1px solid CanvasText; }
+  .kindButton[aria-pressed="true"] { color: HighlightText; background: Highlight; outline: 2px solid Highlight; outline-offset: -3px; }
   .carousel a:focus-visible, .carousel button:focus-visible { outline-color: Highlight; }
 }

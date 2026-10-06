@@ -1,0 +1,107 @@
+{
+  "checkedAt": "2026-10-05T23:58:38.876Z",
+  "status": "PASS",
+  "targetFingerprint": "c5918218dd171001",
+  "sourceReadOnly": true,
+  "archive": ".private/recovery/mmr-before-transition-994cb45b-70e1-46db-a6a0-89f0ac2ea7ff/production-before.dump",
+  "privateRecoveryDirectory": ".private/recovery/mmr-before-transition-994cb45b-70e1-46db-a6a0-89f0ac2ea7ff",
+  "expectedSourceMigrationTag": "0047_usage_analytics",
+  "providerPitrTested": false,
+  "blobContentsBackedUp": false,
+  "originalDatabaseChanged": false,
+  "productionBindingMatched": true,
+  "snapshotAt": "2026-10-05T23:58:42.433Z",
+  "sourcePostgresVersion": "17.11 (8a81ecb)",
+  "sourceMigrationHeadConfirmed": true,
+  "beforeMmr": {
+    "generation": "1",
+    "status": "READY",
+    "formula_version": "V1_INTERNAL_MMR_1",
+    "source_match_count": 42,
+    "source_game_count": 91
+  },
+  "backupMs": 164504,
+  "bytes": 130745264,
+  "sha256": "c90c9ee465ffc58bf0f0e0eb3e2ac229db8d92765ce83823cc488644a17a52a2",
+  "archiveCatalogReadable": true,
+  "restoreMs": 35316,
+  "restorePostgresVersion": "18.3",
+  "tables": 192,
+  "rowCountsMatch": true,
+  "logicalColumnsMatch": true,
+  "logicalConstraintsMatch": true,
+  "constraintsCompared": 922,
+  "canonicalizedChecks": 24,
+  "invalidConstraints": 0,
+  "migrationHead": {
+    "hash": "283090e89067e42ff00a566e287bd684fec06a6e1d74ad0f5af8792c404b645a",
+    "created_at": "1790737732434"
+  },
+  "migrationHeadMatches": true,
+  "mmrTablesCompared": 9,
+  "mmrContentsMatch": true,
+  "mmrStateMatches": true,
+  "retainedPrivateArchive": true,
+  "clusterStopped": true,
+  "mmrInitialRawJsonHashMatch": false,
+  "mmrCanonicalComparison": {
+    "checkedAt": "2026-10-06T00:03:33.859Z",
+    "sourceTimezone": "GMT",
+    "restoreTimezone": "Asia/Seoul",
+    "comparisonTimezone": "UTC",
+    "method": "Exact JSON row-by-row comparison after transaction-local UTC normalization; only aggregate SHA256 and counts retained",
+    "sourceGenerationStill": "1",
+    "tables": [
+      {
+        "table": "command_receipts",
+        "rows": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "table": "consumer_receipts",
+        "rows": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "table": "manual_adjustments",
+        "rows": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "table": "match_result_events",
+        "rows": 910,
+        "sha256": "277de31c0a117f35e43f55d67a6af95317ddfd3bbab91b681f4cdc91d128e5c6"
+      },
+      {
+        "table": "outbox",
+        "rows": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "table": "player_position_profiles",
+        "rows": 405,
+        "sha256": "beb5c3dd93b5bb17068b59eb7017de9f63dec4cd227d5292ce99bac51903dbe4"
+      },
+      {
+        "table": "player_profiles",
+        "rows": 81,
+        "sha256": "e1b39950020243caa5fceec1d3569623f60aabaacdc3b0e8a0bcd9e7da543524"
+      },
+      {
+        "table": "projection_runs",
+        "rows": 1,
+        "sha256": "8e450bcd3ac7209fdaf9f44a9bed4e33597361ce5a6989a9b509387dd83f50b5"
+      },
+      {
+        "table": "projection_states",
+        "rows": 1,
+        "sha256": "f3833e9ef5cbef9b637e52cb46170b35546f7c54c974dcc40fd5d9bcc7af438b"
+      }
+    ]
+  },
+  "priorCanonicalAttemptFailure": "CANONICAL_COMPARISON_FAILED",
+  "comparisonNotes": [
+    "The first canonical comparison restart omitted the recorded loopback port; the local server refused default-port startup before any source comparison. The next run used the recorded isolated port and passed.",
+    "Original timestamp JSON hashes differed because production uses GMT and the local restore uses Asia/Seoul. Transaction-local UTC produced exact equality for every row in all nine MMR tables; no product data or expectations were changed."
+  ]
+}

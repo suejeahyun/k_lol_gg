@@ -11,6 +11,7 @@ import {
 } from "@/modules/seasons/domain/season";
 import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 import {
+  APPLICATION_POSITION_LABELS as POSITION_LABELS,
   availableApplicationSubPositions,
   reconcileApplicationSubPositions,
 } from "@/modules/seasons/application/client-application-positions";
@@ -41,8 +42,6 @@ function statusLabel(status: OwnSeasonApplication["status"]) {
     CANCELLED: "취소",
   }[status];
 }
-
-const POSITION_LABELS = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서폿", ALL: "전체 가능" } as const;
 
 export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyDate, mode = "RIFT", closed = false, capacity = 10, participantCount = 0 }: ApplicationActionsProps) {
   const router = useRouter();

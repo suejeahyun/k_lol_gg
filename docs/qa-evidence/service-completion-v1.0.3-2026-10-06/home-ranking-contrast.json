@@ -1,0 +1,26 @@
+{
+  "method": "WCAG relative luminance calculated from local CSS, not browser pixel sampling",
+  "active": [
+    {
+      "background": "#e4ccff",
+      "foreground": "#241938",
+      "ratio": 11.31
+    },
+    {
+      "background": "#a4e9ff",
+      "foreground": "#241938",
+      "ratio": 12.33
+    },
+    {
+      "background": "#ffdba0",
+      "foreground": "#241938",
+      "ratio": 12.5
+    }
+  ],
+  "inactiveWorstCaseWhiteBacking": {
+    "foreground": "#f5efff",
+    "background": "#171d35e6 over white",
+    "ratio": 11.07
+  },
+  "pass": true
+}

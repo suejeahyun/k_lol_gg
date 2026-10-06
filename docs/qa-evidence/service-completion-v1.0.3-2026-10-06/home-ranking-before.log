@@ -1,0 +1,41 @@
+✖ ranking choices name all three rankings before the single slide and expose selection (64.2142ms)
+✖ direct ranking choice stops rotation and updates its single slide and full-ranking destination (17.438ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (12.7663ms)
+✔ empty or single ranking does not expose impossible slide controls (22.9309ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 2
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 338.8721
+
+✖ failing tests:
+
+test at tests\home-ranking-carousel.test.mjs:74:1
+✖ ranking choices name all three rankings before the single slide and expose selection (64.2142ms)
+  AssertionError [ERR_ASSERTION]: visible direct choice: 승률
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/home-ranking-carousel.test.mjs:79:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\home-ranking-carousel.test.mjs:90:1
+✖ direct ranking choice stops rotation and updates its single slide and full-ranking destination (17.438ms)
+  TypeError: Cannot read properties of undefined (reading 'props')
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/home-ranking-carousel.test.mjs:96:30)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)

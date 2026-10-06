@@ -1,0 +1,195 @@
+{
+  "checkedAt": "2026-10-06T00:00:51.387Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "passed": true,
+  "mmrTotal": 80,
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "durationMs": 1076,
+      "bytes": 125175
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "durationMs": 473,
+      "bytes": 57445
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "durationMs": 520,
+      "bytes": 76696
+    },
+    {
+      "path": "/matches",
+      "status": 200,
+      "durationMs": 795,
+      "bytes": 97746
+    },
+    {
+      "path": "/competitions/events?q=&status=&format=",
+      "status": 200,
+      "durationMs": 478,
+      "bytes": 64041
+    },
+    {
+      "path": "/competitions/destruction?q=&status=&format=",
+      "status": 200,
+      "durationMs": 1128,
+      "bytes": 65105
+    },
+    {
+      "path": "/rankings",
+      "status": 200,
+      "durationMs": 1164,
+      "bytes": 85746
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "durationMs": 274,
+      "bytes": 57883
+    },
+    {
+      "path": "/tools/random-team",
+      "status": 200,
+      "durationMs": 429,
+      "bytes": 58085
+    },
+    {
+      "path": "/highlights",
+      "status": 200,
+      "durationMs": 269,
+      "bytes": 61874
+    },
+    {
+      "path": "/images",
+      "status": 200,
+      "durationMs": 432,
+      "bytes": 59561
+    },
+    {
+      "path": "/help",
+      "status": 200,
+      "durationMs": 247,
+      "bytes": 53291
+    },
+    {
+      "path": "/start",
+      "status": 200,
+      "durationMs": 406,
+      "bytes": 60568
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "durationMs": 229,
+      "bytes": 50624
+    },
+    {
+      "path": "/matches/submit?code=MR20000000000000000",
+      "status": 200,
+      "durationMs": 518,
+      "bytes": 50252
+    },
+    {
+      "path": "/api/rankings/mmr?pageSize=10",
+      "status": 200,
+      "durationMs": 408,
+      "bytes": 4028
+    },
+    {
+      "path": "/rankings/mmr?pageSize=10",
+      "status": 200,
+      "durationMs": 438,
+      "bytes": 68303
+    },
+    {
+      "path": "/rankings/mmr?page=2&pageSize=10&position=TOP",
+      "status": 200,
+      "durationMs": 333,
+      "bytes": 68567
+    },
+    {
+      "path": "/rankings/mmr?page=10000&pageSize=10",
+      "status": 200,
+      "durationMs": 237,
+      "bytes": 58249
+    },
+    {
+      "path": "/rankings/mmr?q=NoPlayerFixture20261005",
+      "status": 200,
+      "durationMs": 239,
+      "bytes": 58193
+    },
+    {
+      "path": "/rankings/mmr?page=bad",
+      "status": 200,
+      "durationMs": 230,
+      "bytes": 54654
+    },
+    {
+      "path": "/api/rankings/mmr?page=bad",
+      "status": 400,
+      "durationMs": 225,
+      "bytes": 202
+    },
+    {
+      "path": "/api/rankings",
+      "status": 200,
+      "durationMs": 303,
+      "bytes": 3770
+    },
+    {
+      "path": "/api/stats/top",
+      "status": 200,
+      "durationMs": 229,
+      "bytes": 2245
+    },
+    {
+      "path": "/api/admin/users",
+      "status": 401,
+      "durationMs": 209,
+      "bytes": 195
+    },
+    {
+      "path": "/api/admin/matches",
+      "status": 401,
+      "durationMs": 646,
+      "bytes": 177
+    },
+    {
+      "path": "/api/me/match-submissions",
+      "status": 401,
+      "durationMs": 253,
+      "bytes": 177
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "status": 401,
+      "durationMs": 231,
+      "bytes": 184
+    },
+    {
+      "path": "/api/cron/riot-sync",
+      "status": 401,
+      "durationMs": 218,
+      "bytes": 26
+    },
+    {
+      "path": "/api/cron/support-retention",
+      "status": 401,
+      "durationMs": 248,
+      "bytes": 24
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "durationMs": 245,
+      "bytes": 57
+    }
+  ],
+  "notes": "HTTP timings are single-run observations, not Web Vitals or a performance benchmark. All requests were anonymous GET."
+}

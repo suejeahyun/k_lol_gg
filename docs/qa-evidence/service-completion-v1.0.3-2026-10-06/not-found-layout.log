@@ -1,0 +1,11 @@
+✔ unknown root addresses keep one complete public shell and recovery links (6.9383ms)
+✔ public resource and invalid-query recovery uses the existing layout without nesting another shell (1.161ms)
+✔ admin not-found content stays behind its layout authorization and inside one admin shell (16.9741ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 330.955

@@ -3,6 +3,8 @@ import {
   type SeasonApplicationPosition,
 } from "../domain/season";
 
+export const APPLICATION_POSITION_LABELS = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서폿", ALL: "전체 가능" } as const satisfies Record<SeasonApplicationPosition, string>;
+
 export function availableApplicationSubPositions(
   mainPosition: SeasonApplicationPosition,
 ): readonly SeasonApplicationPosition[] {

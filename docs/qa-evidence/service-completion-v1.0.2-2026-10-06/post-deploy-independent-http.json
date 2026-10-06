@@ -1,0 +1,103 @@
+{
+  "checkedAt": "2026-10-06T00:00:54.345Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "method": "GET only; anonymous; no cookies",
+  "scope": "Independent targeted HTML/auth review, not full smoke or authenticated write",
+  "requests": [
+    {
+      "id": "applications-anonymous",
+      "path": "/applications",
+      "status": 200,
+      "expectedStatus": 200,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "serverException": false,
+      "checks": {
+        "purposeHeading": true,
+        "seasonTab": true,
+        "eventTab": true,
+        "destructionTab": true,
+        "partyLink": true,
+        "loginLink": true
+      },
+      "pass": true
+    },
+    {
+      "id": "applications-invalid-recovery",
+      "path": "/applications?type=season&recruitNo=0",
+      "status": 200,
+      "expectedStatus": 200,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "serverException": false,
+      "checks": {
+        "invalidInputExplanation": true,
+        "recoveryLink": true,
+        "alert": true
+      },
+      "pass": true
+    },
+    {
+      "id": "submit-code-login-return",
+      "path": "/matches/submit?code=MR20000000000000000",
+      "status": 200,
+      "expectedStatus": 200,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "serverException": false,
+      "checks": {
+        "purposeHeading": true,
+        "loginReturn": true,
+        "privateScopeExplanation": true
+      },
+      "pass": true
+    },
+    {
+      "id": "submit-invalid-code",
+      "path": "/matches/submit?code=invalid",
+      "status": 200,
+      "expectedStatus": 404,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "serverException": false,
+      "checks": {
+        "notFound": false,
+        "homeRecovery": true
+      },
+      "pass": false,
+      "followUp": {
+        "checkedAt": "2026-10-06T00:03:05.093Z",
+        "deploymentId": "dpl_8mrTSkSRqj3kmxwJN41sNUSUnR6K",
+        "status": 200,
+        "notFoundDigest": true,
+        "noindex": true,
+        "interpretation": "Initial strict HTTP-404 expectation does not apply to a streamed Next not-found response. Root CUA confirmed not-found UI, but duplicate SiteShell is a separate P2 finding."
+      }
+    },
+    {
+      "id": "owner-read-auth",
+      "path": "/api/me/match-submissions/MR20000000000000000",
+      "status": 401,
+      "expectedStatus": 401,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0",
+      "serverException": false,
+      "checks": {
+        "structuredJson": true,
+        "noStore": true,
+        "notSubmission": true
+      },
+      "problemKeys": [
+        "type",
+        "title",
+        "status",
+        "detail",
+        "code"
+      ],
+      "problemCode": "UNAUTHENTICATED",
+      "pass": true
+    }
+  ],
+  "initialProbePass": false,
+  "reviewOutcome": "Four targeted HTTP/HTML checks passed. Invalid-code protocol observed, final UI separately revealed duplicate SiteShell P2; not overall complete."
+}

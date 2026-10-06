@@ -23,7 +23,6 @@ export function HomeRankingCarousel({ slides, seasonName, minimumParticipation }
   const swiped = useRef(false);
   const slideId = useId();
   const active = slides[index % slides.length];
-  const nextSlide = slides[(index + 1) % slides.length];
   const canMove = slides.length > 1;
 
   useEffect(() => {
@@ -67,6 +66,22 @@ export function HomeRankingCarousel({ slides, seasonName, minimumParticipation }
         <span className={styles.eyebrow}><span /> SEASON SPOTLIGHT</span>
         <span className={styles.counter}><strong>{String(index % slides.length + 1).padStart(2, "0")}</strong> / {String(slides.length).padStart(2, "0")}</span>
       </div>
+
+      {canMove ? <div className={styles.kindSelector} role="group" aria-label="랭킹 종류 선택">
+        {slides.map((slide, slideIndex) => (
+          <Button
+            type="button"
+            className={styles.kindButton}
+            variant="ghost"
+            key={slide.id}
+            onClick={() => { setPlaying(false); setIndex(slideIndex); }}
+            aria-pressed={active.id === slide.id}
+            aria-controls={slideId}
+          >
+            {slide.id === "participation" ? "최다 참여" : slide.label}
+          </Button>
+        ))}
+      </div> : null}
 
       <div id={slideId} aria-live={playing ? "off" : "polite"} aria-atomic="true">
         <div
@@ -114,15 +129,9 @@ export function HomeRankingCarousel({ slides, seasonName, minimumParticipation }
       </div>
 
       <div className={styles.bottomline}>
-        <div className={styles.footerLinks}>
         <Link className={styles.allRankings} href={`/rankings?view=${active.id}`}>전체 {active.label} 순위 <ArrowRight size={16} aria-hidden="true" /></Link>
-      {canMove ? <button type="button" className={styles.nextHint} onClick={() => move(1)} aria-controls={slideId}>다음: {nextSlide.label} <ArrowRight size={18} aria-hidden="true" /></button> : null}
-        </div>
         {canMove ? <div className={styles.controls}>
           <Button className={styles.control} variant="ghost" size="icon" onClick={() => move(-1)} aria-label="이전 랭킹" aria-controls={slideId}><ChevronLeft aria-hidden="true" /></Button>
-          <div className={styles.dots} role="group" aria-label="랭킹 슬라이드 선택">
-            {slides.map((slide, slideIndex) => <Button className={styles.dot} variant="ghost" size="icon" key={slide.id} onClick={() => { setPlaying(false); setIndex(slideIndex); }} aria-label={`${slideIndex + 1}번 ${slide.label} 랭킹`} aria-current={active.id === slide.id ? "true" : undefined} aria-controls={slideId}><span /></Button>)}
-          </div>
           <Button className={styles.control} variant="ghost" size="icon" onClick={() => move(1)} aria-label="다음 랭킹" aria-controls={slideId}><ChevronRight aria-hidden="true" /></Button>
           <Button className={styles.control} variant="ghost" size="icon" data-rotation-control onClick={() => setPlaying((value) => !value)} aria-label={playing ? "자동 넘김 정지" : "자동 넘김 시작"} aria-controls={slideId}>{playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}</Button>
         </div> : null}

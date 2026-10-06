@@ -1,0 +1,113 @@
+{
+  "checkedAt": "2026-10-06T00:18:44.904Z",
+  "buildId": "HgrFb7yHtyih42uuOP4X7",
+  "frameworkVersion": "16.3.8",
+  "buildManifestSha256": "396b29a451c840afc4bda45ecd0d00d07d47f5c6aa10fc3fd27abda238bde9de",
+  "appPathsManifestSha256": "18a59051ac6c0d894019ae7cde483c04b70e5a1350061ac6c512cbe13bc5912b",
+  "nftManifestCount": 392,
+  "uniqueTracedFileCount": 2670,
+  "nextRuntimePackageTraced": true,
+  "remainingAuditPackageChecks": [
+    {
+      "name": "@esbuild-kit/core-utils",
+      "severity": "moderate",
+      "auditedLocations": [
+        "node_modules/@esbuild-kit/core-utils"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "@esbuild-kit/esm-loader",
+      "severity": "moderate",
+      "auditedLocations": [
+        "node_modules/@esbuild-kit/esm-loader"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "@next/eslint-plugin-next",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/@next/eslint-plugin-next"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "@ts-morph/common",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/@ts-morph/common"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "braces",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/braces"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "drizzle-kit",
+      "severity": "moderate",
+      "auditedLocations": [
+        "node_modules/drizzle-kit"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "esbuild",
+      "severity": "moderate",
+      "auditedLocations": [
+        "node_modules/@esbuild-kit/core-utils/node_modules/esbuild"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "eslint-config-next",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/eslint-config-next"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "fast-glob",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/@ts-morph/common/node_modules/fast-glob",
+        "node_modules/fast-glob",
+        "node_modules/shadcn/node_modules/fast-glob"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "micromatch",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/micromatch"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "shadcn",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/shadcn"
+      ],
+      "tracedFileCount": 0
+    },
+    {
+      "name": "ts-morph",
+      "severity": "high",
+      "auditedLocations": [
+        "node_modules/ts-morph"
+      ],
+      "tracedFileCount": 0
+    }
+  ],
+  "cliAndGlobTracedFileCount": 0,
+  "scope": "Next.js file-trace manifests for the completed local 16.3.8 production build; not a deployed-server or all bundled-code security proof",
+  "status": "PASS"
+}

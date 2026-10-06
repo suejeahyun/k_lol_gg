@@ -319,6 +319,7 @@ export function TeamBalanceBuilder() {
     setPlayerQuery("");
     setPlayerResults([]);
     setPlayerSearchMessage("");
+    setPlayerSearchLoading(false);
     setStepOneOpen(true);
     setStepTwoOpen(false);
   }
@@ -351,7 +352,7 @@ export function TeamBalanceBuilder() {
 
           <div className={styles.playerPicker}>
             <label htmlFor="team-balance-player-search">전체 플레이어 검색</label>
-            <div><Search aria-hidden="true" /><input id="team-balance-player-search" type="search" value={playerQuery} onChange={(event) => { setPlayerQuery(event.target.value); if (!event.target.value.trim()) { setPlayerResults([]); setPlayerSearchMessage(""); } }} placeholder="이름, 닉네임 또는 GameName#TAG" autoComplete="off" maxLength={64} /></div>
+            <div><Search aria-hidden="true" /><input id="team-balance-player-search" type="search" value={playerQuery} onChange={(event) => { setPlayerQuery(event.target.value); if (!event.target.value.trim()) { setPlayerResults([]); setPlayerSearchMessage(""); setPlayerSearchLoading(false); } }} placeholder="이름, 닉네임 또는 GameName#TAG" autoComplete="off" maxLength={64} /></div>
             {playerSearchLoading ? <p className={styles.fieldHint} role="status">검색 중…</p> : null}
             {playerResults.length ? <ul className={styles.playerSearchResults}>{playerResults.map((player) => {
               const alreadySelected = selectedIds.has(player.playerId);

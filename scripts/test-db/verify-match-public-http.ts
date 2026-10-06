@@ -133,6 +133,46 @@ try {
     assert.equal(login.status, 200, await login.clone().text());
     const cookie = (login.headers.get("set-cookie") ?? "").split(";", 1)[0]!;
     assert.match(cookie, /^klol_v2_session=/);
+    // Exercise Next's real boundary selection, including resource misses and
+    // query validation inside existing public/admin layouts. Next can deliver
+    // not-found content through Flight after streaming the shell. Full fallback
+    // composition is covered by not-found-layout.test.mjs and browser QA.
+    const missingId = randomUUID();
+    for (const route of [
+      "/matches/submit?code=invalid",
+      `/players/${missingId}`,
+      `/matches/${missingId}`,
+      `/missing-page-${missingId}`,
+    ]) {
+      const response = await fetch(`${available.origin}${route}`);
+      const html = await response.text();
+      assert.ok(response.status === 404 || (response.status === 200 && html.includes("NEXT_HTTP_ERROR_FALLBACK;404")), `${route}: not-found response or streamed 404 boundary`);
+      assert.match(html, /<meta name="robots" content="noindex"/);
+      const markup = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/giu, "");
+      assert.equal((markup.match(/data-ui-scope="public"/gu) ?? []).length, 1, `${route}: one public shell`);
+      assert.equal((markup.match(/class="site-header"/gu) ?? []).length, 1, `${route}: one header`);
+      assert.equal((markup.match(/class="site-footer"/gu) ?? []).length, 1, `${route}: one footer`);
+      assert.equal((markup.match(/<main(?:\s|>)/gu) ?? []).length, 1, `${route}: one main landmark`);
+      assert.equal((markup.match(/id="main-content"/gu) ?? []).length, 1, `${route}: one skip-link destination`);
+      assert.match(html, /찾으시는 페이지가 없어요/u);
+    }
+    for (const route of [`/admin/matches/${missingId}`, `/admin/players/${missingId}`]) {
+      const response = await fetch(`${available.origin}${route}`, { headers: { cookie } });
+      const html = await response.text();
+      assert.ok(response.status === 404 || (response.status === 200 && html.includes("NEXT_HTTP_ERROR_FALLBACK;404")), `${route}: not-found response or streamed 404 boundary`);
+      assert.match(html, /<meta name="robots" content="noindex"/);
+      const markup = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/giu, "");
+      // An async admin layout can be delivered wholly through Flight on a 404.
+      // Do not treat this initial response as the final hydrated landmark tree.
+      const adminShellCount = (markup.match(/data-ui-scope="admin"/gu) ?? []).length;
+      assert.ok(adminShellCount === 1 || (adminShellCount === 0 && markup.includes('data-next-error-digest="NEXT_HTTP_ERROR_FALLBACK;404"')), `${route}: admin shell or explicit deferred 404 boundary`);
+      assert.equal((markup.match(/data-ui-scope="public"/gu) ?? []).length, 0, `${route}: no nested public shell`);
+      assert.match(html, route.includes("/players/") ? /등록부로 돌아가기/u : /관리 홈으로 돌아가기/u);
+    }
+    const protectedMissing = await fetch(`${available.origin}/admin/matches/${missingId}`, { redirect: "manual" });
+    assert.equal(protectedMissing.status, 307);
+    assert.ok(new URL(protectedMissing.headers.get("location")!, available.origin).pathname.endsWith("/login"));
+    process.stdout.write("[not-found-http] PASS invalid submission, missing player/match, unmatched URL: noindex + 404 boundary + one initial public shell; admin missing match/player: 404 boundary, no nested public shell, recovery payload, anonymous login redirect (hydrated DOM requires separate browser QA)\n");
     const sessionRows = await pool.query("SELECT totp_verified_at FROM auth.sessions WHERE user_account_id=$1", [actorId]);
     assert.equal(sessionRows.rows.length, 1);
     assert.equal(sessionRows.rows[0].totp_verified_at, null);

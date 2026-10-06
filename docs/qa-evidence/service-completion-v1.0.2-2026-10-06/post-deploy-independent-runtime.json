@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-10-06T00:03:03.371Z",
+  "deploymentId": "dpl_GmPDVhfYGUWak4LGCsmnUSiMhtue",
+  "commandScope": "logs candidate --since 15m --limit 300; bounded sample, not complete interval",
+  "eventCount": 300,
+  "resultLimit": 300,
+  "limitReached": true,
+  "earliestTimestamp": 1791244849705,
+  "latestTimestamp": 1791244880843,
+  "statusCounts": {
+    "0": 7,
+    "200": 239,
+    "204": 6,
+    "400": 6,
+    "401": 42
+  },
+  "errorOrFatalCount": 0,
+  "server5xxCount": 0,
+  "targetedPaths": [
+    "/applications",
+    "/matches/submit",
+    "/api/me/match-submissions/MR20000000000000000"
+  ],
+  "targetedEventCount": 48,
+  "targetedStatusCounts": {
+    "0": 1,
+    "200": 41,
+    "401": 6
+  },
+  "targetedErrorOrFatalCount": 0,
+  "notes": [
+    "Status 0 is incomplete, not a successful response.",
+    "Runtime log sample is not browser console verification.",
+    "No raw request headers, trace IDs, bodies, user identifiers or messages retained."
+  ],
+  "nestedLogCount": 0,
+  "nestedErrorOrFatalCount": 0
+}

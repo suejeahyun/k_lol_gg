@@ -23,6 +23,9 @@ const css = { __esModule: true, default: new Proxy({}, { get: (_target, key) => 
 const icons = new Proxy({}, { get: () => () => null });
 const Link = ({ href, children, ...props }) => React.createElement("a", { ...props, href: typeof href === "string" ? href : href.pathname }, children);
 const canonicalQuery = load("modules/navigation/application/canonical-view-query.ts", {});
+const applicationPositions = load("modules/seasons/application/client-application-positions.ts", {
+  "../domain/season": { SEASON_APPLICATION_POSITIONS: ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] },
+});
 const ApplicationActions = () => null;
 
 function find(tree, predicate) {
@@ -58,6 +61,7 @@ async function applicationPage(data) {
     "@/components/ui/button": { Button: ({ children }) => React.createElement("button", null, children) },
     "@/modules/auth/infrastructure/runtime-session": { getCurrentSession: async () => ({ userId: "synthetic-owner" }) },
     "@/modules/navigation/application/canonical-view-query": canonicalQuery,
+    "@/modules/seasons/application/client-application-positions": applicationPositions,
     "@/modules/seasons/infrastructure/runtime-season-data": { loadRuntimeSeasonData: async (read) => ({ state: "ready", data: await read({ getApplicationHub: async (_owner, recruitNo) => { assert.equal(recruitNo, data.selectedRecruitNo); return data; } }) }) },
     "@/components/navigation/recruiting-competitions": { RecruitingCompetitions: () => null },
     "./application-actions": { ApplicationActions },
@@ -87,8 +91,25 @@ test("position-free rounds do not display a fabricated main/sub position in own 
     assert.doesNotMatch(html, /주 ALL|부 없음/u);
   }
   const rift = renderToStaticMarkup(await applicationPage(hub()));
-  assert.match(rift, /주 MID/u);
+  assert.match(rift, /주 미드/u);
   assert.match(rift, /부 없음/u);
+});
+
+test("own status and public roster use the same Korean position labels as the application form", async () => {
+  for (const [position, label] of Object.entries(applicationPositions.APPLICATION_POSITION_LABELS)) {
+    const data = hub();
+    data.myApplication.mainPosition = position;
+    data.participants[0].mainPosition = position;
+    data.myApplication.subPositions = position === "ALL" ? [] : ["TOP", "JGL", "MID", "ADC", "SUP"].filter((value) => value !== position);
+    data.participants[0].subPositions = [...data.myApplication.subPositions];
+    const before = JSON.stringify(data);
+    const html = renderToStaticMarkup(await applicationPage(data));
+    assert.equal((html.match(new RegExp(`주 ${label}`, "gu")) ?? []).length, 2, position);
+    const expectedSub = data.myApplication.subPositions.map((value) => applicationPositions.APPLICATION_POSITION_LABELS[value]).join(", ") || "없음";
+    assert.equal((html.match(new RegExp(`부 ${expectedSub}`, "gu")) ?? []).length, 2, position);
+    assert.doesNotMatch(html, /주 (?:TOP|JGL|MID|ADC|SUP|ALL)|부 (?:TOP|JGL|MID|ADC|SUP|ALL)/u);
+    assert.equal(JSON.stringify(data), before, "display formatting must preserve stored position values");
+  }
 });
 
 test("ranking view and applied criteria replace stale unsaved filter inputs", async () => {

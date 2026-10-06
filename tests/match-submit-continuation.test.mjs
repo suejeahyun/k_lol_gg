@@ -41,6 +41,29 @@ function renderForm(props) {
   return renderToStaticMarkup(React.createElement(formModule.SubmissionForm, { ...baseProps, ...props }));
 }
 
+test("first submission prioritizes required information while optional fields and continuation stay available", () => {
+  const html = renderForm({});
+  assert.ok(html.indexOf('id="new-submission-title"') < html.indexOf("접수 코드로 이어하기"));
+  assert.match(html, /다음: 결과 이미지 올리기/u);
+  const optional = html.match(/<details class="optionalFields">([\s\S]*?)<\/details>/u)?.[1];
+  assert.ok(optional, "optional information starts collapsed without changing form submission fields");
+  assert.doesNotMatch(optional, /\brequired(?:=|\s|>)/u, "a required input must never be hidden from the initial task");
+  for (const name of ["seasonId", "startedAt", "note"]) assert.match(optional, new RegExp(`name="${name}"`, "u"));
+  assert.match(html, /aria-current="step"[^>]*><span[^>]*>1<\/span>경기 정보/u);
+  assert.doesNotMatch(html, /OCR|매핑|로스터/u);
+  const missing = renderForm({ requestedCode: codeA });
+  assert.match(missing, /class="panel resumePanel" open=""/u, "an unresolved continuation code must stay visible for correction");
+  assert.doesNotMatch(missing, /id="new-submission-title"|다음: 결과 이미지 올리기/u, "a missing continuation must prioritize recovery, not create a duplicate submission");
+  assert.match(missing, /href="\/matches\/submit">새 경기 결과 제출/u);
+});
+
+test("a cancelled partial upload never displays unfinished images as a completed step", () => {
+  const html = renderForm({ initial: { publicCode: codeA, title: "취소한 경기", organizer: "합성", status: "CANCELLED", expectedGameCount: 2, receivedGameNumbers: [1] } });
+  assert.match(html, /data-complete="false"><span[^>]*>2<\/span>결과 이미지/u);
+  assert.match(html, /aria-current="step"[^>]*><span[^>]*>3<\/span>접수 상태/u);
+  assert.doesNotMatch(html, /type="file"/u);
+});
+
 test("anonymous result continuation returns to the same submission after login", () => {
   for (const [code, draft, expected] of [
     [codeA, null, `/matches/submit?code=${codeA}`],
@@ -134,7 +157,7 @@ test("completed or rejected submissions show their result and recovery without i
       assert.match(html, /href="\/help\/contact"/u);
     }
     if (status === "APPROVED") assert.ok(html.includes(`href="/matches/${draftId}"`));
-    if (status === "PENDING_REVIEW") assert.match(html, /이미지 제출이 완료되었어요/u);
+    if (status === "PENDING_REVIEW") assert.match(html, /이미지를 모두 제출했어요/u);
   }
 });
 
