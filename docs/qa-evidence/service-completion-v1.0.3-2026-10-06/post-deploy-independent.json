@@ -1,0 +1,150 @@
+{
+  "checkedAt": "2026-10-06T00:29:34.759Z",
+  "expectedSource": "824502a20065c4d2d84d3676e9db47028ca6c913",
+  "candidate": {
+    "id": "dpl_DVr4h9NXK5RMaMGZEaPgMARBfgWr",
+    "state": "READY",
+    "url": "k-lol-rko8onjcf-tjdmswo11-3715s-projects.vercel.app",
+    "target": "production",
+    "source": "824502a20065c4d2d84d3676e9db47028ca6c913"
+  },
+  "final": {
+    "id": "dpl_B9ZsVWWauhziZf4veFaKo68TpB1B",
+    "state": "READY",
+    "url": "k-lol-fblz7crdr-tjdmswo11-3715s-projects.vercel.app",
+    "target": "production",
+    "source": "824502a20065c4d2d84d3676e9db47028ca6c913"
+  },
+  "canonicalAlias": {
+    "url": "https://k-lol-gg.vercel.app",
+    "id": "dpl_B9ZsVWWauhziZf4veFaKo68TpB1B",
+    "state": "READY"
+  },
+  "sourceAndAliasMatch": true,
+  "initialProbe": {
+    "checkedAt": "2026-10-06T00:27:14.558Z",
+    "origin": "https://k-lol-gg.vercel.app",
+    "deploymentId": "dpl_DVr4h9NXK5RMaMGZEaPgMARBfgWr",
+    "expectedSource": "824502a20065c4d2d84d3676e9db47028ca6c913",
+    "scope": "Anonymous GET only, no cookies, targeted protocol/HTML checks; not hydrated browser DOM or full smoke",
+    "requests": [
+      {
+        "id": "health",
+        "path": "/api/health",
+        "status": 200,
+        "cacheControl": "no-store, max-age=0",
+        "checks": {
+          "ready": true,
+          "noStore": true
+        },
+        "pass": true
+      },
+      {
+        "id": "ranking-selector",
+        "path": "/",
+        "status": 200,
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "checks": {
+          "status": true,
+          "threeNames": true,
+          "oneSelected": true,
+          "allControlSlide": true,
+          "singleSlide": true,
+          "previous": true,
+          "next": true,
+          "manualPlay": true,
+          "noDuplicateNextHint": true
+        },
+        "namedChoices": [
+          {
+            "label": "승률",
+            "pressed": true,
+            "controls": true
+          },
+          {
+            "label": "최다 참여",
+            "pressed": false,
+            "controls": true
+          },
+          {
+            "label": "최다 MVP",
+            "pressed": false,
+            "controls": true
+          }
+        ],
+        "pass": true
+      },
+      {
+        "id": "invalid-submit-recovery",
+        "path": "/matches/submit?code=invalid",
+        "status": 200,
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "checks": {
+          "notFoundProtocol": true,
+          "noindex": true,
+          "recoveryPayload": true,
+          "oneInitialPublicShell": true,
+          "oneInitialMain": true
+        },
+        "renderObservation": {
+          "stream404Digest": true,
+          "visibleTitleCount": 0,
+          "initialPublicShells": 1,
+          "initialHeaders": 1,
+          "initialFooters": 1,
+          "initialMains": 1
+        },
+        "pass": true
+      },
+      {
+        "id": "unmatched-root-recovery",
+        "path": "/qa-independent-missing-20261006",
+        "status": 404,
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "checks": {
+          "notFoundProtocol": true,
+          "noindex": false,
+          "recoveryPayload": true,
+          "oneInitialPublicShell": true,
+          "oneInitialMain": true
+        },
+        "renderObservation": {
+          "stream404Digest": false,
+          "visibleTitleCount": 1,
+          "initialPublicShells": 1,
+          "initialHeaders": 1,
+          "initialFooters": 1,
+          "initialMains": 1
+        },
+        "pass": false
+      },
+      {
+        "id": "admin-auth",
+        "path": "/admin/matches/00000000-0000-4000-8000-000000000001",
+        "status": 307,
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "checks": {
+          "redirect": true,
+          "login": true,
+          "sameOrigin": true
+        },
+        "loginPath": "/admin/login",
+        "pass": true
+      }
+    ],
+    "pass": false
+  },
+  "reviewDisposition": {
+    "accepted": true,
+    "initialProbeException": "Unmatched root URL returned HTTP 404 and complete recovery UI but no robots meta. The initial all-404-must-have-noindex assumption was unnecessary; HTTP 404 already excludes the URL from Google Search processing. Streamed HTTP 200 still requires its observed 404 boundary and noindex.",
+    "evidence": "https://developers.google.com/crawling/docs/troubleshooting/http-status-codes",
+    "changedSourceInThisReview": false
+  },
+  "finalAliasHealth": {
+    "checkedAt": "2026-10-06T00:29:36.726Z",
+    "status": 200,
+    "health": "ready",
+    "noStore": true,
+    "pass": true
+  }
+}

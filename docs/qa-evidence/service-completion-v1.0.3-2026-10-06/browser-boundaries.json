@@ -1,0 +1,49 @@
+[
+  {
+    "path": "/matches/submit?code=invalid",
+    "footers": 1,
+    "headers": 1,
+    "mains": 1,
+    "overflow": false,
+    "publicShells": 1,
+    "width": 390
+  },
+  {
+    "path": "/players/00000000-0000-4000-8000-000000000001",
+    "footers": 1,
+    "headers": 1,
+    "mains": 1,
+    "overflow": false,
+    "publicShells": 1,
+    "width": 390
+  },
+  {
+    "path": "/matches/00000000-0000-4000-8000-000000000001",
+    "footers": 1,
+    "headers": 1,
+    "mains": 1,
+    "overflow": false,
+    "publicShells": 1,
+    "width": 390
+  },
+  {
+    "path": "/qa-page-not-found-20261006",
+    "footers": 1,
+    "headers": 1,
+    "mains": 1,
+    "overflow": false,
+    "publicShells": 1,
+    "width": 390
+  },
+  {
+    "footer": 0,
+    "headings": [
+      "찾으시는 페이지가 없어요"
+    ],
+    "main": 1,
+    "overflow": false,
+    "publicShell": 0,
+    "url": "/admin/matches/00000000-0000-4000-8000-000000000001",
+    "width": 390
+  }
+]

@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-06 첫 방문 직관성·화면 완성도 1.0.3 운영 반영
+
+source `824502a20065c4d2d84d3676e9db47028ca6c913`, tag `service-completion-v1.0.3`, Vercel main `dpl_B9ZsVWWauhziZf4veFaKo68TpB1B` READY와 `https://k-lol-gg.vercel.app` alias를 확인했다. 홈 순서·생성 테마를 유지하면서 랭킹 이름 선택, 결과 제출 단계/필수 입력/이어하기 복구, 신청 현재 메뉴·포지션, 검색 초기화, 중복 404 틀을 수정했다. Next 16.3.8 보안 patch 뒤 필수 check와 새 격리 DB·실제 제출 브라우저 과업이 통과했다. 운영 4개 화면 크기·키보드·HTTP·이미지와 독립 검토를 [최종 운영 근거](qa-evidence/service-completion-v1.0.3-2026-10-06/production.md)에 연결했다.
+
+runtime audit 경고는 0건이며 개발 도구 경고 12건은 원인·runtime 미포함 근거와 함께 미해결로 구분했다. MMR 운영 공식 전환은 실제 SUPER_ADMIN 로그인 대기이며 백업/격리 복원만 완료했다. 휴대폰 카카오·RSO·실기기/스크린리더 등 외부 조건을 완료로 표시하지 않는다. 기존 전체 기능 원장과 최신 기능군별 결과는 [1.0.3 감사 기록](qa-evidence/service-completion-v1.0.3-2026-10-06/README.md)을 따른다.
+
 ## 2026-10-06 서비스 이용 흐름 개선 1.0.2 운영 반영
 
 실제 접수 수정·이미지 등록·취소를 막던 내부 요청 scope의 대소문자 충돌, 잘못된 변경 주소의 500, 취소 후 재신청 안내를 수정했다. source `0410c1b5`, tag `service-completion-v1.0.2`, Vercel `dpl_8mrTSkSRqj3kmxwJN41sNUSUnR6K` READY. 필수 check·격리 owner/팀/관리자 HTTP·실제 수정/파일 복구 UI·운영 조회를 확인했다. 배포 후 재검토에서 404 메뉴 중첩을 추가 발견해 후속 patch로 진행한다. 실제 Blob/Riot/예약 작업을 확인했고 MMR 전환은 영향 분석·격리 검증 후 유효한 SUPER_ADMIN 로그인이 필요한 상태다. [배포·검증·남은 조건](./qa-evidence/service-completion-v1.0.2-2026-10-06/production.md).

@@ -1,0 +1,139 @@
+{
+  "origin": "https://k-lol-gg.vercel.app",
+  "checkedAt": "2026-10-06T00:27:17.892Z",
+  "layouts": [
+    {
+      "headings": [
+        "우리 같이롤하자~",
+        "랭킹",
+        "무엇을 하러 왔나요?",
+        "지금 올라온 소식",
+        "내 활동 이어보기",
+        "지금 볼 수 있는 기록"
+      ],
+      "overflow": false,
+      "rankingButtons": [
+        {
+          "height": 44,
+          "label": "승률",
+          "pressed": "true",
+          "width": 79
+        },
+        {
+          "height": 44,
+          "label": "최다 참여",
+          "pressed": "false",
+          "width": 79
+        },
+        {
+          "height": 44,
+          "label": "최다 MVP",
+          "pressed": "false",
+          "width": 79
+        }
+      ],
+      "width": 320
+    },
+    {
+      "headings": [
+        "우리 같이롤하자~",
+        "랭킹",
+        "무엇을 하러 왔나요?",
+        "지금 올라온 소식",
+        "내 활동 이어보기",
+        "지금 볼 수 있는 기록"
+      ],
+      "overflow": false,
+      "rankingButtons": [
+        {
+          "height": 44,
+          "label": "승률",
+          "pressed": "true",
+          "width": 101
+        },
+        {
+          "height": 44,
+          "label": "최다 참여",
+          "pressed": "false",
+          "width": 101
+        },
+        {
+          "height": 44,
+          "label": "최다 MVP",
+          "pressed": "false",
+          "width": 101
+        }
+      ],
+      "width": 390
+    },
+    {
+      "headings": [
+        "우리 같이롤하자~",
+        "랭킹",
+        "무엇을 하러 왔나요?",
+        "지금 올라온 소식",
+        "내 활동 이어보기",
+        "지금 볼 수 있는 기록"
+      ],
+      "overflow": false,
+      "rankingButtons": [
+        {
+          "height": 44,
+          "label": "승률",
+          "pressed": "true",
+          "width": 147.328125
+        },
+        {
+          "height": 44,
+          "label": "최다 참여",
+          "pressed": "false",
+          "width": 147.34375
+        },
+        {
+          "height": 44,
+          "label": "최다 MVP",
+          "pressed": "false",
+          "width": 147.328125
+        }
+      ],
+      "width": 768
+    },
+    {
+      "headings": [
+        "우리 같이롤하자~",
+        "랭킹",
+        "무엇을 하러 왔나요?",
+        "지금 올라온 소식",
+        "내 활동 이어보기",
+        "지금 볼 수 있는 기록"
+      ],
+      "overflow": false,
+      "rankingButtons": [
+        {
+          "height": 44,
+          "label": "승률",
+          "pressed": "true",
+          "width": 147.328125
+        },
+        {
+          "height": 44,
+          "label": "최다 참여",
+          "pressed": "false",
+          "width": 147.34375
+        },
+        {
+          "height": 44,
+          "label": "최다 MVP",
+          "pressed": "false",
+          "width": 147.328125
+        }
+      ],
+      "width": 1280
+    }
+  ],
+  "interaction": {
+    "clickMvp": true,
+    "arrowLeftToParticipation": true,
+    "enterWinRateStopsAutoplay": true
+  }
+}

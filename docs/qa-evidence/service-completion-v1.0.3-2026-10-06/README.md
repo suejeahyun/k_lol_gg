@@ -1,5 +1,7 @@
 # 첫 방문 직관성·화면 완성도와 오류 복구 개선 1.0.3
 
+최종 상태: source `824502a2` / `service-completion-v1.0.3`의 [운영 배포·검증·남은 조건](production.md)과 [실제 브라우저 결과](browser.md)를 확인한다. 아래의 감사 시점 기록은 이 최종 근거와 함께 읽는다.
+
 1.0.2 배포 후 독립 검토에서 `/matches/submit?code=invalid`의 최종 404 안내에 공개 메뉴·본문·푸터가 두 번 표시되는 P2를 실제 운영 브라우저로 확인했다. 로딩 화면이 끝난 뒤의 접근성 트리와 화면 모두 중복을 보였다. root `not-found.tsx`의 SiteShell이 공개 layout의 SiteShell 아래 다시 렌더링되는 원인이다. 관리자도 자체 404가 없는 하위 경로에서 공개 틀이 들어갈 수 있었다.
 
 기존 StatusPanel의 404 내용과 복구 링크를 재사용 가능한 내용 컴포넌트로 분리한다. 공개 경로와 관리자 경로에 각각 오류 경계를 두어 현재 layout을 한 번만 유지한다. 어느 경로에도 매칭되지 않는 root 주소는 기존 SiteShell을 그대로 사용한다. 관리자는 관리 홈·검색으로 복귀하고 기존 권한 검사를 유지한다. 새 메뉴나 기능군은 추가하지 않는다.
@@ -33,7 +35,7 @@
 | 커뮤니티 이미지·하이라이트·선수·징계·문의 | 전체 페이지 HTTP와 관련 단위/계약·격리 DB, 공개 자산 MIME/hash, 문의 보존 cron 관측 | 모든 글/영상·모든 보조기기·실제 외부 경보 수신은 미확인 |
 | Riot·카카오·예약 작업 | 실제 Riot status 및 갱신, Blob 왕복, 카카오 일일 마감·통계·문의 보존 제공자 기록 확인 | RSO client·소유자 동의, 전화기 설치/수신, Riot PARTIAL 개별 원인 별도 |
 | 운영 설정·감사·DB·배포·복구 | 관리자 계약/HTTP·동시성·인증, 스키마·migration 검증, 버전별 source/tag/deployment 연결 | 제공자 PITR·Blob 전체복구·키 복구 미확인 |
-| 잘못된 주소·권한 없음·복구 | 이 patch에서 공개/관리자/root 404의 단일 화면 틀과 복구 경로를 실제 HTTP로 검사 | 실제 브라우저 최종 결과와 배포 근거는 후속 운영 기록 |
+| 잘못된 주소·권한 없음·복구 | 실제 HTTP와 hydration 후 공개/root/관리자 5경계의 단일 틀 확인, 운영 오류에서 홈 복귀 PASS | 실제 스크린리더는 미확인; streaming 응답과 최종 DOM 구분 |
 
 [1.0.0 주요 원인·기능 개선](../2026-10-05-service-completion/README.md), [1.0.2 owner 쓰기 오류·재신청 수정](../service-completion-v1.0.2-2026-10-06/README.md), [실제 격리 업무 HTTP](../2026-10-06-owner-task-http/README.md), [브라우저 결과](../service-completion-v1.0.2-2026-10-06/browser.md), [외부 운영 경계](../service-followup-2026-10-06/external-runtime.md), [MMR 영향·복구 조건](../service-followup-2026-10-06/mmr-transition-review.md)를 연결한다. 실제 실행하지 않은 전체 버튼×상태×기기 조합을 통과로 취급하지 않는다.
 
