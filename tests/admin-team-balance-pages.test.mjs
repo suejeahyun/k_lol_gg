@@ -43,7 +43,7 @@ test("administrator drafts support recoverable archive and persisted match regis
     source("../src/modules/matches/application/match-service.ts"),
     source("../src/modules/matches/infrastructure/postgres-match-repository.ts"),
   ]);
-  assert.match(workspace, /mode === "ADMIN"[\s\S]*선택 팀으로 경기 등록/);
+  assert.match(workspace, /mode === "OWNER"\s*\?\s*"이 팀으로 경기 결과 접수"\s*:\s*"선택 팀으로 경기 등록"/);
   assert.match(workspace, /초안 보관/);
   assert.match(workspace, /초안 복구/);
   assert.match(archiveRoute, /service\.archiveDraft/);

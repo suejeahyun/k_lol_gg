@@ -1,0 +1,247 @@
+✖ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (50.6776ms)
+✖ discipline: simultaneous submits issue one creation request (12.4779ms)
+✖ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (10.6645ms)
+✔ discipline: a definite first rejection allows correction with a new identity (8.303ms)
+✖ discipline: authentication rejection after uncertainty does not abandon the original creation (7.975ms)
+✖ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (55.4044ms)
+✖ highlight: simultaneous submits issue one creation request (33.7379ms)
+✖ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (31.8712ms)
+✔ highlight: a definite first rejection allows correction with a new identity (30.4704ms)
+✖ highlight: authentication rejection after uncertainty does not abandon the original creation (25.8896ms)
+✖ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (31.0363ms)
+✖ gallery: simultaneous submits issue one creation request (20.7144ms)
+✖ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (20.7526ms)
+✔ gallery: a definite first rejection allows correction with a new identity (22.9029ms)
+✖ gallery: authentication rejection after uncertainty does not abandon the original creation (20.2271ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 3
+ℹ fail 12
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 595.5247
+
+✖ failing tests:
+
+test at tests\admin-create-recovery.test.mjs:73:3
+✖ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (50.6776ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:76:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:86:3
+✖ discipline: simultaneous submits issue one creation request (12.4779ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:90:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:94:3
+✖ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (10.6645ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:97:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:114:3
+✖ discipline: authentication rejection after uncertainty does not abandon the original creation (7.975ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:117:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:73:3
+✖ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (55.4044ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:76:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:86:3
+✖ highlight: simultaneous submits issue one creation request (33.7379ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:90:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:94:3
+✖ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (31.8712ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:98:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:114:3
+✖ highlight: authentication rejection after uncertainty does not abandon the original creation (25.8896ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:117:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:73:3
+✖ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (31.0363ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:76:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:86:3
+✖ gallery: simultaneous submits issue one creation request (20.7144ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:90:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:94:3
+✖ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (20.7526ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:98:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:114:3
+✖ gallery: authentication rejection after uncertainty does not abandon the original creation (20.2271ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:117:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

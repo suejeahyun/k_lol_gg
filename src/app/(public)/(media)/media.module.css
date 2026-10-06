@@ -11,7 +11,7 @@
 .heading strong { color: var(--text-accent-purple); }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
 .card { overflow: hidden; display: grid; border: 1px solid var(--border); border-radius: 26px; color: inherit; background: var(--theme-surface-background); box-shadow: 0 12px 34px rgba(76,105,155,.09); text-decoration: none; transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease; }
-.card:focus-visible { border-color: rgba(91,131,210,.5); outline: 3px solid rgba(91,131,210,.38); outline-offset: 3px; box-shadow: var(--shadow-soft); }
+.card:focus-visible { border-color: rgba(91,131,210,.5); outline: 3px solid var(--ring); outline-offset: 3px; box-shadow: var(--shadow-soft); }
 .grid > .card:first-child { border-color: rgba(112,126,201,.36); box-shadow: 0 16px 38px rgba(76,105,155,.13); animation: mediaFeaturedReveal 220ms ease-out both; }
 .visual { position: relative; overflow: hidden; min-width: 0; aspect-ratio: 16 / 9; background: linear-gradient(145deg, var(--sky), var(--lilac)); contain: layout paint; }
 .visual::after { position: absolute; z-index: 1; inset: auto 0 0; height: 44%; background: linear-gradient(180deg, transparent, rgba(27,42,76,.22)); pointer-events: none; content: ""; }
@@ -40,7 +40,7 @@
 .state p { color: var(--text-muted); }
 .pager { display: flex; justify-content: center; }
 .pager a,.back { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 10px 17px; border: 1px solid var(--border); border-radius: 14px; background: #fff; text-decoration: none; font-weight: 850; }
-.pager a:focus-visible,.back:focus-visible { outline: 3px solid rgba(91,131,210,.38); outline-offset: 3px; }
+.pager a:focus-visible,.back:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 .detail { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 24px; }
 .detailActions { display: flex; flex-wrap: wrap; gap: 12px; }
 .detailHeader { display: grid; gap: 10px; padding: clamp(24px,5vw,44px); border-radius: 30px; background: var(--theme-feature-background); }
@@ -64,7 +64,7 @@
 .carouselViewport img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .carouselViewport::after { position: absolute; z-index: 2; inset: 0; border: 1px solid rgba(255,255,255,.52); border-radius: inherit; box-shadow: inset 0 0 44px rgba(125,108,199,.08); pointer-events: none; content: ""; }
 .carouselImageLink { position: absolute; inset: 0; border-radius: inherit; }
-.carouselImageLink:focus-visible { outline: 3px solid rgba(91,131,210,.48); outline-offset: -4px; }
+.carouselImageLink:focus-visible { outline: 3px solid #fff; outline-offset: -4px; box-shadow: inset 0 0 0 7px var(--ring); }
 .carouselCaption { display: grid; min-width: 0; gap: 3px; padding-inline: 4px; }
 .carouselCaption span { color: var(--text-accent-purple); font-size: 10px; font-weight: 950; letter-spacing: .08em; }
 .carouselCaption strong,.carouselCaption small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -74,7 +74,7 @@
 .carouselStatus { margin: 0; color: var(--text-muted); font-size: 11px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .carouselControls { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 6px; }
 .carouselControls > button,.carouselDots button { display: inline-grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; padding: 0; border: 1px solid var(--border); border-radius: 13px; color: #5872a6; background: #fff; cursor: pointer; }
-.carouselControls > button:focus-visible,.carouselDots button:focus-visible { color: #3e5995; background: #edf6ff; outline: 3px solid rgba(91,131,210,.28); outline-offset: 1px; }
+.carouselControls > button:focus-visible,.carouselDots button:focus-visible { color: #3e5995; background: #edf6ff; outline: 3px solid var(--ring); outline-offset: 1px; }
 .carouselControls > button svg { width: 18px; height: 18px; }
 .carouselDots { display: flex; min-width: 0; max-width: min(100%, 300px); gap: 2px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
 .carouselDots button { position: relative; border-color: transparent; background: transparent; }

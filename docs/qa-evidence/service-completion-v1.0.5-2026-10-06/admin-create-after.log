@@ -1,0 +1,34 @@
+✔ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (72.0029ms)
+✔ discipline: simultaneous submits issue one creation request (18.8727ms)
+✔ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (17.4548ms)
+✔ discipline: a definite first rejection allows correction with a new identity (16.5856ms)
+✔ discipline: 401 after uncertainty does not abandon the original creation (13.0696ms)
+✔ discipline: 403 after uncertainty does not abandon the original creation (14.5772ms)
+✔ discipline: 429 after uncertainty does not abandon the original creation (11.3375ms)
+✔ discipline: malformed success cannot unlock an unconfirmed creation (12.5282ms)
+✔ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (41.1012ms)
+✔ highlight: simultaneous submits issue one creation request (40.9207ms)
+✔ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (26.3766ms)
+✔ highlight: a definite first rejection allows correction with a new identity (24.8218ms)
+✔ highlight: 401 after uncertainty does not abandon the original creation (29.0629ms)
+✔ highlight: 403 after uncertainty does not abandon the original creation (29.6189ms)
+✔ highlight: 429 after uncertainty does not abandon the original creation (22.8845ms)
+✔ highlight: malformed success cannot unlock an unconfirmed creation (23.1319ms)
+✔ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (23.0064ms)
+✔ gallery: simultaneous submits issue one creation request (22.7502ms)
+✔ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (27.7266ms)
+✔ gallery: a definite first rejection allows correction with a new identity (22.1475ms)
+✔ gallery: 401 after uncertainty does not abandon the original creation (23.1851ms)
+✔ gallery: 403 after uncertainty does not abandon the original creation (27.6435ms)
+✔ gallery: 429 after uncertainty does not abandon the original creation (21.0473ms)
+✔ gallery: malformed success cannot unlock an unconfirmed creation (21.1244ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=false (38.047ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=true (30.6665ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 875.4326

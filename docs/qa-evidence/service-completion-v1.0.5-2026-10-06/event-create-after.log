@@ -1,0 +1,18 @@
+✔ event creation retries the exact uncertain request and keeps editing locked until confirmation (52.2994ms)
+✔ two submissions before render issue only one event request (10.8609ms)
+✔ server errors and unreadable successful responses retain the original event identity (7.1119ms)
+✔ a definite rejection unlocks correction and gives the corrected request a new identity (6.782ms)
+✔ an uncertain creation keeps its identity after retry receives 401 (6.2465ms)
+✔ an uncertain creation keeps its identity after retry receives 403 (6.7107ms)
+✔ an uncertain creation keeps its identity after retry receives 429 (5.6782ms)
+✔ public competition pages expose list/detail/application states without administrator controls (2.7851ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (1.6315ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.4848ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 307.477

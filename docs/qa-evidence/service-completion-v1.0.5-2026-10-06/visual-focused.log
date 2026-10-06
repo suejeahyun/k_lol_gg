@@ -1,0 +1,32 @@
+✔ public match and player detail use the same allowlisted champion portrait with a safe fallback (6.6391ms)
+✔ my account connects bounded participation and current discipline status to details and evidence (2.7845ms)
+✔ event and destruction details retain actions while exposing readable lifecycle and result hierarchy (1.2766ms)
+✔ 핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상이다 (4.352ms)
+✔ 기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다 (0.8246ms)
+✔ 작은 순위 숫자와 내 순위 배지는 4.5:1 이상의 실제 색 대비를 가진다 (1.7137ms)
+✔ 순위 분류와 기능 검색 결과의 키보드 외곽선은 밝은 배경에서 3:1 이상이다 (4.0365ms)
+✔ public competition pages expose list/detail/application states without administrator controls (2.9988ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (1.9743ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.6861ms)
+✔ ranking choices name all three rankings before the single slide and expose selection (57.7991ms)
+✔ direct ranking choice stops rotation and updates its single slide and full-ranking destination (15.3843ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (11.0769ms)
+✔ empty or single ranking does not expose impossible slide controls (18.0835ms)
+✔ 홈과 이미지 상세은 같은 접근 가능한 수동 캐러셀을 사용한다 (1.8371ms)
+✔ 캐러셀은 빈 상태를 안전하게 닫고 한 장에는 이동 컨트롤을 숨기며 여러 장에는 직접 이동을 제공한다 (1.1712ms)
+✔ 캐러셀은 모바일 비율·44px 조작 영역·모션 감소 설정을 유지한다 (0.8885ms)
+✔ 홈 우승 사진은 FK 연결을 우선하고 엄격한 레거시 후보만 보강하며 실제 자산 URL을 사용한다 (0.874ms)
+✔ gallery image load failures keep a clear, accessible fallback in the reserved card area (3.237ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (1.2038ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (2.5175ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (1.5939ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (2.3001ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (0.3199ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 355.7907

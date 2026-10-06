@@ -95,10 +95,32 @@ test("S07 event adapter persists exact-ten lifecycle, S06 teams, correction inva
 
     const createContext = context(adminActor, "ADMIN", "create-main");
     assert.equal(await adapter.resolveLegacyId(701), null);
-    const created = await service.create(createContext, { eventId, settings });
+    const identicalCreates = await Promise.all([0, 1].map(() => service.create(createContext, { eventId, settings })));
+    assert.equal(identicalCreates.filter((result) => result.replayed).length, 1, "Concurrent identical creates commit once and replay the original receipt");
+    assert.deepEqual(identicalCreates[0]!.body, identicalCreates[1]!.body);
+    const created = identicalCreates[0]!;
     assert.equal(created.revision, 1);
     assert.equal(await adapter.resolveLegacyId(701), eventId);
     assert.equal((await service.create(createContext, { eventId, settings })).replayed, true);
+
+    const contentionId = randomUUID();
+    await service.create(context(adminActor, "ADMIN", "create-contention"), { eventId: contentionId, settings });
+    const competingSettings = ["A", "B"].map((suffix) => ({ ...settings, title: `동시 수정 ${suffix}` }));
+    const competingWrites = await Promise.allSettled(competingSettings.map((replacement, index) => service.executeAdmin(
+      context(adminActor, "ADMIN", `settings-contention-${index}`), contentionId, 1,
+      { type: "REPLACE_SETTINGS", payload: { settings: replacement } },
+    )));
+    assert.equal(competingWrites.filter((result) => result.status === "fulfilled").length, 1, "Distinct commands at one revision must not both commit");
+    const rejectedWrite = competingWrites.find((result) => result.status === "rejected");
+    assert.ok(rejectedWrite?.status === "rejected");
+    assert.ok(eventError("REVISION_CONFLICT")(rejectedWrite.reason), "The losing command must report stale revision, not a storage outage");
+    const winner = competingWrites.findIndex((result) => result.status === "fulfilled");
+    const persistedContention = await adapter.getAdmin(contentionId);
+    assert.equal(persistedContention?.revision, 2);
+    assert.equal(persistedContention?.settings.title, competingSettings[winner]!.title);
+    assert.equal((await database.select().from(eventCommandReceipts).where(eq(eventCommandReceipts.eventId, contentionId))).length, 2);
+    assert.equal((await database.select().from(eventOutbox).where(eq(eventOutbox.eventId, contentionId))).length, 2);
+    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetId, contentionId))).length, 2);
     await service.executeAdmin(context(adminActor, "ADMIN", "start-main"), eventId, 1, { type: "START_RECRUITMENT", payload: {} });
     await service.executeAdmin(context(adminActor, "ADMIN", "import-nine"), eventId, 2, { type: "IMPORT_PARTICIPANTS", payload: { participants: participants.slice(0, 9) } });
     await assert.rejects(

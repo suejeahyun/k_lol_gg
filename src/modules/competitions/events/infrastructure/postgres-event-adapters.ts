@@ -87,17 +87,39 @@ function same(left: Uint8Array, right: Uint8Array) {
   return Buffer.from(left).equals(Buffer.from(right));
 }
 
+function serializationFailure(error: unknown): boolean {
+  const visited = new Set<unknown>();
+  while (error && typeof error === "object" && !visited.has(error)) {
+    visited.add(error);
+    const failure = error as { code?: string; cause?: unknown };
+    if (failure.code === "40001" || failure.code === "40P01") return true;
+    error = failure.cause;
+  }
+  return false;
+}
+
 export class PostgresEventAdapter implements EventQueryRepository {
   private readonly contexts = new WeakMap<EventTransactionContext, V2Transaction>();
   private readonly ratings = new PostgresTeamBalanceRatingProvider();
 
   readonly dependencies: EventCommandHandlerDependencies = {
     unitOfWork: {
-      transaction: (operation) => this.database.transaction(async (transaction) => {
-        const context = Object.freeze({}) as EventTransactionContext;
-        this.contexts.set(context, transaction);
-        try { return await operation(context); } finally { this.contexts.delete(context); }
-      }, { isolationLevel: "serializable" }),
+      transaction: async (operation) => {
+        for (let attempt = 0; ; attempt += 1) {
+          try {
+            return await this.database.transaction(async (transaction) => {
+              const context = Object.freeze({}) as EventTransactionContext;
+              this.contexts.set(context, transaction);
+              try { return await operation(context); } finally { this.contexts.delete(context); this.actors.delete(context); }
+            }, { isolationLevel: "serializable" });
+          } catch (error) {
+            // Receipt locks serialize identical commands, but a waiter must open a
+            // fresh snapshot after PostgreSQL rolls back a serialization conflict.
+            if (attempt >= 2 || !serializationFailure(error)) throw error;
+            await new Promise((resolve) => setTimeout(resolve, 20 * (attempt + 1)));
+          }
+        }
+      },
     },
     repository: {
       loadForUpdate: async (context, eventId) => {

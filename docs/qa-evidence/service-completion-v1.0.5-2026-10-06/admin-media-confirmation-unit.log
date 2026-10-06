@@ -1,0 +1,16 @@
+✔ invalid gallery files do not consume the five valid upload slots (0.8208ms)
+✔ gallery file planning applies remaining capacity after validation (0.1168ms)
+✔ short-lived gallery upload reports are bounded before display (0.5294ms)
+✔ admin private asset query is bounded and rejects duplicate or unknown parameters (1.0559ms)
+✔ raw media upload preflight requires same origin, If-Match, bounded image MIME/size, SHA and safe name (12.9813ms)
+✔ unconfigured upload storage returns the specific fail-closed problem (0.6907ms)
+✔ media editor and private asset administration expose the complete safe workflow (1.2592ms)
+✔ gallery editor accepts only bounded bulk upload result counts (0.5493ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 154.1455

@@ -1,0 +1,122 @@
+[
+  {
+    "documentOverflow": false,
+    "podium": [
+      {
+        "scroll": 279,
+        "width": 279,
+        "wrap": "anywhere"
+      },
+      {
+        "scroll": 279,
+        "width": 279,
+        "wrap": "anywhere"
+      }
+    ],
+    "rows": [
+      {
+        "overlap": false,
+        "scroll": 137,
+        "width": 137,
+        "wrap": "anywhere"
+      },
+      {
+        "overlap": false,
+        "scroll": 137,
+        "width": 137,
+        "wrap": "anywhere"
+      }
+    ],
+    "width": 320
+  },
+  {
+    "documentOverflow": false,
+    "podium": [
+      {
+        "scroll": 349,
+        "width": 349,
+        "wrap": "anywhere"
+      },
+      {
+        "scroll": 349,
+        "width": 349,
+        "wrap": "anywhere"
+      }
+    ],
+    "rows": [
+      {
+        "overlap": false,
+        "scroll": 207,
+        "width": 207,
+        "wrap": "anywhere"
+      },
+      {
+        "overlap": false,
+        "scroll": 207,
+        "width": 207,
+        "wrap": "anywhere"
+      }
+    ],
+    "width": 390
+  },
+  {
+    "documentOverflow": false,
+    "podium": [
+      {
+        "scroll": 727,
+        "width": 727,
+        "wrap": "anywhere"
+      },
+      {
+        "scroll": 727,
+        "width": 727,
+        "wrap": "anywhere"
+      }
+    ],
+    "rows": [
+      {
+        "overlap": false,
+        "scroll": 279,
+        "width": 279,
+        "wrap": "anywhere"
+      },
+      {
+        "overlap": false,
+        "scroll": 279,
+        "width": 279,
+        "wrap": "anywhere"
+      }
+    ],
+    "width": 768
+  },
+  {
+    "documentOverflow": false,
+    "podium": [
+      {
+        "scroll": 397,
+        "width": 397,
+        "wrap": "anywhere"
+      },
+      {
+        "scroll": 397,
+        "width": 397,
+        "wrap": "anywhere"
+      }
+    ],
+    "rows": [
+      {
+        "overlap": false,
+        "scroll": 321,
+        "width": 321,
+        "wrap": "anywhere"
+      },
+      {
+        "overlap": false,
+        "scroll": 321,
+        "width": 321,
+        "wrap": "anywhere"
+      }
+    ],
+    "width": 1280
+  }
+]

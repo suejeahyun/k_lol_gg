@@ -1,0 +1,79 @@
+✔ a lost create response retries the exact draft request with its original idempotency key (37.3629ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (26.1728ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (20.0545ms)
+✖ manual edits cannot save, copy or submit the previous selected team before evaluation (30.4149ms)
+✖ manual selection sends edited players and keeps them locked through response and refresh (20.6269ms)
+✖ archived team drafts cannot be rearranged by keyboard or drag handlers (13.6784ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 3
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 423.1272
+
+✖ failing tests:
+
+test at tests\team-tools-retry.test.mjs:157:1
+✖ manual edits cannot save, copy or submit the previous selected team before evaluation (30.4149ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-tools-retry.test.mjs:163:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\team-tools-retry.test.mjs:180:1
+✖ manual selection sends edited players and keeps them locked through response and refresh (20.6269ms)
+  AssertionError [ERR_ASSERTION]: response
+
+  true !== false
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-tools-retry.test.mjs:191:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\team-tools-retry.test.mjs:206:1
+✖ archived team drafts cannot be rearranged by keyboard or drag handlers (13.6784ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-tools-retry.test.mjs:210:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

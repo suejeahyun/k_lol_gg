@@ -1,0 +1,22 @@
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (2.9007ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (1.0745ms)
+✔ administrator drafts support recoverable archive and persisted match registration (2.3308ms)
+✔ owner team recommendations retain the selected tab, team and draft after authentication (37.5213ms)
+✔ owner draft pagination and authentication preserve the applied page size (24.6665ms)
+✔ admin team recommendations retain the selected tab, team and draft after authentication (18.8985ms)
+✔ admin draft pagination and authentication preserve the applied page size (11.3088ms)
+✔ a lost create response retries the exact draft request with its original idempotency key (37.9438ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (31.036ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (26.9723ms)
+✔ manual edits cannot save, copy or submit the previous selected team before evaluation (86.037ms)
+✔ manual selection sends edited players and keeps them locked through response and refresh (25.6692ms)
+✔ archived team drafts cannot be rearranged by keyboard or drag handlers (17.606ms)
+✔ failed manual evaluation preserves edited slots and retries the same revision and request key (17.2284ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 540.0969

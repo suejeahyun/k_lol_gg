@@ -24,6 +24,7 @@ import { hashPassword } from "../../src/modules/auth/infrastructure/node-passwor
 import { parseTotpEncryptionKeyring } from "../../src/modules/auth/infrastructure/versioned-secret-keyring";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 import { prepareTeamBalanceCaptureFixture } from "./prepare-team-balance-capture-fixture";
+import { prepareRankingCaptureFixture } from "./prepare-ranking-capture-fixture";
 
 const execFile = promisify(execFileCallback);
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -966,6 +967,9 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
   // candidate. Never let an unrelated malformed/partial contract row become a
   // silent 404 or generic error in the recommendation captures.
   const draftId = await prepareTeamBalanceCaptureFixture(pool, actorId);
+  const rankingSeasonId = process.env.V2_SERVICE_BROWSER_QA === "true"
+    ? await prepareRankingCaptureFixture(pool, connectionString)
+    : null;
 
   // Contract tests persist private-asset metadata, while their in-memory bytes
   // intentionally disappear with the test process. Bind one real image row to
@@ -997,6 +1001,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
   );
 
   const sourceIds = {
+    rankingSeasonId,
     championKey: await requiredFixture("active champion", `select key as value from catalog.champions where status = 'ACTIVE' order by updated_at desc, key limit 1`),
     publishedMatchId: await requiredFixture("published match", `select id::text as value from competition.match_series where status = 'PUBLISHED' order by updated_at desc, id limit 1`),
     submissionId: qaPrivateImage.submission_id,

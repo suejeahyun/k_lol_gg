@@ -1,0 +1,43 @@
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\app\(admin)\admin\progress\event\new\event-create-form.tsx
+  64:57  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\app\(admin)\admin\progress\event\new\event-create-form.tsx:64:57
+  62 |
+  63 |   return <form className={styles.form} onSubmit={submit} aria-busy={busy}>
+> 64 |     <fieldset className={styles.createFields} disabled={busy || pending.current !== null}>
+     |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  65 |       <legend>이벤트전 설정</legend>
+  66 |       <label>이벤트 이름<input name="title" maxLength={120} required /></label>
+  67 |       <label>설명<textarea name="description" maxLength={2000} rows={4} /></label>                                    react-hooks/refs
+  64:65  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\app\(admin)\admin\progress\event\new\event-create-form.tsx:64:65
+  62 |
+  63 |   return <form className={styles.form} onSubmit={submit} aria-busy={busy}>
+> 64 |     <fieldset className={styles.createFields} disabled={busy || pending.current !== null}>
+     |                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  65 |       <legend>이벤트전 설정</legend>
+  66 |       <label>이벤트 이름<input name="title" maxLength={120} required /></label>
+  67 |       <label>설명<textarea name="description" maxLength={2000} rows={4} /></label>                                    react-hooks/refs
+  73:61  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\app\(admin)\admin\progress\event\new\event-create-form.tsx:73:61
+  71 |       <label>대진 방식<select name="bracketBestOf">{[1,3,5,7,9].map((bestOf) => <option key={bestOf} value={bestOf}>{bestOf === 1 ? "단판" : `${bestOf}판 ${Math.ceil(bestOf / 2)}선승`}</option>)}</select></label>
+  72 |     </fieldset>
+> 73 |     <button type="submit" disabled={busy}>{busy ? "생성 중…" : pending.current ? "생성 결과 다시 확인" : "이벤트전 생성"}</button>
+     |                                                             ^^^^^^^^^^^^^^^ Cannot access ref value during render
+  74 |     {message ? <p role="alert">{message}</p> : null}
+  75 |   </form>;
+  76 | }  react-hooks/refs
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\event-create-recovery.test.mjs
+  28:3  error  Do not assign to the variable `module`. See: https://nextjs.org/docs/messages/no-assign-module-variable  @next/next/no-assign-module-variable
+
+✖ 4 problems (4 errors, 0 warnings)

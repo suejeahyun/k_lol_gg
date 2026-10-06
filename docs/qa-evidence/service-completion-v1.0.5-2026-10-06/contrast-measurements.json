@@ -1,0 +1,120 @@
+{
+  "baseline": "ca242292",
+  "method": "CSS source colors, sRGB relative luminance; alpha against white; not browser screenshot sampling",
+  "before": {
+    "focus": [
+      {
+        "name": "ranking",
+        "file": "src/app/(public)/(statistics)/rankings/rankings.module.css",
+        "selector": ".tabs a:focus-visible",
+        "cssColor": "rgba(103,166,227,.45)",
+        "whiteContrast": 1.488840100243738
+      },
+      {
+        "name": "mmr",
+        "file": "src/app/(public)/(statistics)/rankings/mmr/mmr.module.css",
+        "selector": ".tabs a:focus-visible",
+        "cssColor": "rgba(124,104,194,.4)",
+        "whiteContrast": 1.6870570194162482
+      },
+      {
+        "name": "media",
+        "file": "src/app/(public)/(media)/media.module.css",
+        "selector": ".card:focus-visible",
+        "cssColor": "rgba(91,131,210,.38)",
+        "whiteContrast": 1.555189939810706
+      },
+      {
+        "name": "search",
+        "file": "src/app/globals.css",
+        "selector": ".command-palette-results li > a:focus-visible",
+        "cssColor": "rgba(79, 135, 205, 0.16)",
+        "whiteContrast": 1.1945924370690717
+      }
+    ],
+    "badges": [
+      {
+        "rank": 1,
+        "foreground": "#fff",
+        "background": "#c79324",
+        "contrast": 2.7532371364685897
+      },
+      {
+        "rank": 2,
+        "foreground": "#fff",
+        "background": "#7893ab",
+        "contrast": 3.201143307027454
+      },
+      {
+        "rank": 3,
+        "foreground": "#fff",
+        "background": "#ad7056",
+        "contrast": 4.016146705364244
+      },
+      {
+        "rank": "own",
+        "foreground": "#fff",
+        "background": "#628fc4",
+        "contrast": 3.3624625088249815
+      }
+    ]
+  },
+  "after": {
+    "focus": [
+      {
+        "name": "ranking",
+        "file": "src/app/(public)/(statistics)/rankings/rankings.module.css",
+        "selector": ".tabs a:focus-visible",
+        "cssColor": "var(--ring)",
+        "whiteContrast": 4.921974791120136
+      },
+      {
+        "name": "mmr",
+        "file": "src/app/(public)/(statistics)/rankings/mmr/mmr.module.css",
+        "selector": ".tabs a:focus-visible",
+        "cssColor": "var(--ring)",
+        "whiteContrast": 4.921974791120136
+      },
+      {
+        "name": "media",
+        "file": "src/app/(public)/(media)/media.module.css",
+        "selector": ".card:focus-visible",
+        "cssColor": "var(--ring)",
+        "whiteContrast": 4.921974791120136
+      },
+      {
+        "name": "search",
+        "file": "src/app/globals.css",
+        "selector": ".command-palette-results li > a:focus-visible",
+        "cssColor": "var(--ring)",
+        "whiteContrast": 4.921974791120136
+      }
+    ],
+    "badges": [
+      {
+        "rank": 1,
+        "foreground": "#fff",
+        "background": "#8d6419",
+        "contrast": 5.2904054046403965
+      },
+      {
+        "rank": 2,
+        "foreground": "#fff",
+        "background": "#536b81",
+        "contrast": 5.544007275511078
+      },
+      {
+        "rank": 3,
+        "foreground": "#fff",
+        "background": "#8a533d",
+        "contrast": 6.203214289370331
+      },
+      {
+        "rank": "own",
+        "foreground": "var(--primary-foreground)",
+        "background": "var(--primary)",
+        "contrast": 4.921974791120136
+      }
+    ]
+  }
+}

@@ -82,7 +82,8 @@ test("media editor and private asset administration expose the complete safe wor
   assert.match(form, /planGalleryFiles\(files, 5\)/u);
   assert.match(form, /for \(const \[index, file\] of files\.entries\(\)\)/u);
   assert.match(form, /await uploadAsset\(file, targetAssetEndpoint, expectedRevision\)/u);
-  assert.match(form, /requestMutation\(base, "POST", contentBody\(assetIds, \[\]\), revision\)/u);
+  assert.match(form, /props\.kind === "gallery" \? contentBody\(assetIds, \[\]\) : contentBody\(\)/u);
+  assert.match(form, /requestMutation\(base, "POST", pending\.payload, 0, pending\.ticket\.key\)/u);
   assert.match(form, /`\$\{base\}\/\$\{created\.id\}\/assets`/u);
   assert.match(form, /sessionStorage\.setItem\(galleryUploadReportKey\(created\.id\), JSON\.stringify\(report\)\)/u);
   assert.match(form, /failed=\$\{Math\.min\(5, report\.failedNames\.length\)\}/u);

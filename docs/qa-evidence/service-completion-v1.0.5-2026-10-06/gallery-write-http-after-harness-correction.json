@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-10-06T01:43:42.528Z",
+  "origin": "http://127.0.0.1:59510",
+  "runId": "a325dec9-bd94-45c3-b7f0-e48233d08cf7",
+  "scope": "Existing loopback disposable PostgreSQL + Next production fixture. Only newly created synthetic entities. Fake private image storage; no external provider delivery or browser UI claim.",
+  "passed": true,
+  "groups": [
+    {
+      "name": "gallery-draft-upload-publish-archive",
+      "passed": true,
+      "steps": [
+        {
+          "name": "gallery-create",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-empty-publish-rejected",
+          "status": 409,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-upload",
+          "status": 201,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-attach",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-publish",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-public",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-stale-archive",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-archive",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-archived-private",
+          "status": 404,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-retained",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        }
+      ]
+    }
+  ]
+}

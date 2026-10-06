@@ -1,0 +1,14 @@
+✔ a lost create response retries the exact draft request with its original idempotency key (35.6813ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (27.3809ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (23.4699ms)
+✔ manual edits cannot save, copy or submit the previous selected team before evaluation (48.3737ms)
+✔ manual selection sends edited players and keeps them locked through response and refresh (28.5101ms)
+✔ archived team drafts cannot be rearranged by keyboard or drag handlers (22.9079ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 446.6627

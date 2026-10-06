@@ -1,0 +1,17 @@
+✔ administrator IA exposes exactly ten unique protected workspaces (0.5655ms)
+✔ every administrator workspace has a canonical App Router page (0.4773ms)
+✔ active workspace matching does not make the dashboard match every route (0.1095ms)
+✔ dashboard leaves a real work destination available (0.0633ms)
+✔ operations exposes all four existing form routes and selects their lists and details consistently (0.57ms)
+✔ operation form payloads accept only their bounded allowlist (1.2ms)
+✔ review transitions are monotonic and revision checked (0.9566ms)
+✔ delete is soft and the admin DTO excludes source, reviewer identity, and deletion metadata (0.1749ms)
+✔ Kakao operation form failures distinguish integration, room and capability without exposing identifiers (0.1752ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 177.5856

@@ -1,0 +1,18 @@
+✔ 핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상이다 (3.8353ms)
+✔ 기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다 (0.8383ms)
+✔ 작은 순위 숫자와 내 순위 배지는 4.5:1 이상의 실제 색 대비를 가진다 (1.6373ms)
+✔ 순위 분류와 기능 검색 결과의 키보드 외곽선은 밝은 배경에서 3:1 이상이다 (2.8825ms)
+✔ ranking choices name all three rankings before the single slide and expose selection (59.6036ms)
+✔ direct ranking choice stops rotation and updates its single slide and full-ranking destination (17.614ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (14.6194ms)
+✔ empty or single ranking does not expose impossible slide controls (20.7917ms)
+✔ rankings preserve complete Latin/Korean names, Riot IDs, player links, and separate metrics in every view (55.2938ms)
+✔ ranking player links can shrink and wrap unspaced names in narrow and wide layouts (6.7188ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 442.4749

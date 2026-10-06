@@ -36,6 +36,7 @@
 .facts dt { color: var(--admin-muted); font-size: .8125rem; font-weight: 700; }
 .facts dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; font-size: .875rem; line-height: 1.6; }
 .form { display: grid; gap: 1rem; }
+.createFields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; min-width: 0; margin: 0; padding: 0; border: 0; }
 .actions { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .65rem; margin-top: .5rem; }
 .actions .danger { border-color: var(--admin-danger); background: var(--admin-surface); color: var(--admin-danger); }
 .page button:disabled { cursor: wait; opacity: .6; }

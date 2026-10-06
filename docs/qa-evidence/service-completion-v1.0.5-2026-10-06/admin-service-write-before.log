@@ -1,0 +1,6 @@
+[admin-service-http] support-to-admin-review: PASS
+[admin-service-http] event-create-revise-cancel-restore: FAIL
+[admin-service-http] destruction-create-schedule-cancel-restore: PASS
+[admin-service-http] highlight-save-publish-archive: PASS
+[admin-service-http] gallery-draft-upload-publish-archive: FAIL
+[admin-service-http] discipline-create-update-cancel: PASS

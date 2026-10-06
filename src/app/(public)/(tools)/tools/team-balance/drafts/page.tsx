@@ -17,8 +17,11 @@ export const metadata = createRouteMetadata("/tools/team-balance/drafts");
 
 const statusLabel = Object.freeze({ EVALUATED: "평가됨", SAVED: "저장됨", ARCHIVED: "보관됨" });
 
-function pageHref(page: number) {
-  return page > 1 ? `/tools/team-balance/drafts?page=${page}` : "/tools/team-balance/drafts";
+function pageHref(page: number, pageSize = 12) {
+  const query = new URLSearchParams();
+  if (page > 1) query.set("page", String(page));
+  if (pageSize !== 12) query.set("pageSize", String(pageSize));
+  return `/tools/team-balance/drafts${query.size ? `?${query}` : ""}`;
 }
 
 function displayDate(value: string) {
@@ -34,10 +37,13 @@ export default async function TeamBalanceDraftsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await requireApprovedAccountPage("/tools/team-balance/drafts");
+  const query = parseTeamBalanceDraftsPageQuery(await searchParams);
+  const nextPath = query?.view === "recommendations"
+    ? `/tools/team-balance/drafts?${new URLSearchParams({ view: "recommendations", ...(query.draftId ? { draftId: query.draftId } : {}), team: query.team })}`
+    : pageHref(query?.list.page ?? 1, query?.list.pageSize ?? 12);
+  const session = await requireApprovedAccountPage(nextPath);
   const featureState = await readSiteFeatureState("teamBalance");
   if (featureState !== "enabled") return <TeamBalanceFeatureState state={featureState} />;
-  const query = parseTeamBalanceDraftsPageQuery(await searchParams);
   const listQuery = query?.view === "drafts" ? query.list : { page: 1, pageSize: 50 };
   const result = query
     ? await loadRuntimeTeamBalance((service) => service.listDrafts(
@@ -103,11 +109,11 @@ export default async function TeamBalanceDraftsPage({
           {result.data.totalPages > 1 ? (
             <nav className={styles.draftPager} aria-label="팀 밸런스 초안 페이지">
               {result.data.currentPage > 1 ? (
-                <Link href={pageHref(result.data.currentPage - 1)} rel="prev"><ChevronLeft size={16} aria-hidden="true" /> 이전</Link>
+                <Link href={pageHref(result.data.currentPage - 1, listQuery.pageSize)} rel="prev"><ChevronLeft size={16} aria-hidden="true" /> 이전</Link>
               ) : <span aria-disabled="true"><ChevronLeft size={16} aria-hidden="true" /> 이전</span>}
               <strong aria-current="page">{result.data.currentPage} / {result.data.totalPages}</strong>
               {result.data.currentPage < result.data.totalPages ? (
-                <Link href={pageHref(result.data.currentPage + 1)} rel="next">다음 <ChevronRight size={16} aria-hidden="true" /></Link>
+                <Link href={pageHref(result.data.currentPage + 1, listQuery.pageSize)} rel="next">다음 <ChevronRight size={16} aria-hidden="true" /></Link>
               ) : <span aria-disabled="true">다음 <ChevronRight size={16} aria-hidden="true" /></span>}
             </nav>
           ) : null}

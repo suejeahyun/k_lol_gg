@@ -1,0 +1,20 @@
+✔ uncertain destruction retry followed by 401 retains identity and inputs (14.9773ms)
+✔ uncertain destruction retry followed by 403 retains identity and inputs (7.0881ms)
+✔ uncertain destruction retry followed by 408 retains identity and inputs (7.0227ms)
+✔ uncertain destruction retry followed by 429 retains identity and inputs (6.6308ms)
+✔ confirmed destruction navigation stays locked (8.5738ms)
+✔ destruction concurrent submits send one request before React renders (10.507ms)
+✔ destruction server errors and truncated JSON preserve the creation request (5.5723ms)
+✔ a definite destruction input rejection allows correction with a new request (5.9205ms)
+✔ all eight supported preliminary formats keep distinct actual domain labels (6.6633ms)
+✔ CLASSIC creation retains valid recruitment and preliminary-format payloads (50.9679ms)
+✔ ARAM creation retains valid recruitment and preliminary-format payloads (41.2222ms)
+✔ ARAM_MAYHEM creation retains valid recruitment and preliminary-format payloads (42.2008ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 511.8097

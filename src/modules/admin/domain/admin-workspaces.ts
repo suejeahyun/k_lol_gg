@@ -41,9 +41,11 @@ export const ADMIN_WORKSPACES = [
 
 export type AdminWorkspaceId = (typeof ADMIN_WORKSPACES)[number]["id"];
 
+export const ADMIN_OPERATION_FORM_LABELS = Object.freeze({ ...operationFormTypeLabels, suggestions: "문의·건의" });
+
 export const ADMIN_OPERATION_FORM_LINKS = (["meetups", "leaves", "suggestions", "friends"] as const).map((formType) => ({
   formType,
-  label: operationFormTypeLabels[formType],
+  label: ADMIN_OPERATION_FORM_LABELS[formType],
   href: `/admin/operation-forms?type=${formType}`,
 }));
 

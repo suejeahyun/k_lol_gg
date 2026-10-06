@@ -1,0 +1,81 @@
+{
+  "checkedAt": "2026-10-06T01:57:38.448Z",
+  "origin": "http://127.0.0.1:60301",
+  "runId": "24f6d155-dff7-4d6d-9d86-07c6e24681ab",
+  "scope": "Existing loopback disposable PostgreSQL + Next production fixture. Only newly created synthetic entities. Fake private image storage; no external provider delivery or browser UI claim.",
+  "passed": true,
+  "groups": [
+    {
+      "name": "event-create-revise-cancel-restore",
+      "passed": true,
+      "steps": [
+        {
+          "name": "event-create-0",
+          "status": 201,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "event-create-1",
+          "status": 201,
+          "etag": "\"1\"",
+          "replayed": true
+        },
+        {
+          "name": "event-key-mismatch",
+          "status": 409,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "event-revise-0",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "event-revise-1",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "event-revised-read",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "event-cancel",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        },
+        {
+          "name": "event-cancel-replay",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": true
+        },
+        {
+          "name": "event-restore",
+          "status": 200,
+          "etag": "\"4\"",
+          "replayed": false
+        },
+        {
+          "name": "event-restored-read",
+          "status": 200,
+          "etag": "\"4\"",
+          "replayed": false
+        },
+        {
+          "name": "event-final-cancel",
+          "status": 200,
+          "etag": "\"5\"",
+          "replayed": false
+        }
+      ]
+    }
+  ]
+}

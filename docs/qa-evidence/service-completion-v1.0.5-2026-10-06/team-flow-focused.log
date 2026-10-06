@@ -1,0 +1,227 @@
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (4.6202ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (4.9234ms)
+✖ administrator drafts support recoverable archive and persisted match registration (4.3239ms)
+✔ the application menu marks exactly the selected application type, including query navigation (124.1091ms)
+✔ clearing or resetting a slow player search cancels the request and returns to idle (82.9914ms)
+✔ a superseded request cannot clear the loading state of the newer search (37.8321ms)
+✔ first submission prioritizes required information while optional fields and continuation stay available (8.9291ms)
+✔ a cancelled partial upload never displays unfinished images as a completed step (1.7539ms)
+✔ anonymous result continuation returns to the same submission after login (1.1728ms)
+✔ changing a continuation code or draft resets form identity while same-context refresh preserves edits (26.7148ms)
+✔ pending, rejected, suspended and password-reset accounts get recovery before filling the submission form (58.4927ms)
+✔ completed or rejected submissions show their result and recovery without impossible upload controls (6.605ms)
+✔ submission lookup failure keeps the code for retry and is distinct from a missing submission (25.5407ms)
+✔ creating a submission locks mutations until the server route has committed and resets new-submission state (50.1567ms)
+✔ match submission accepts only an owner-verified selected team-balance draft (0.8033ms)
+✔ successful server selection remounts both draft workspaces without resetting local edits (0.1358ms)
+✔ a lost create response retries the exact draft request with its original idempotency key (53.2713ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (40.0225ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (39.2487ms)
+✔ manual edits cannot save, copy or submit the previous selected team before evaluation (75.515ms)
+✔ manual selection sends edited players and keeps them locked through response and refresh (38.7731ms)
+✔ archived team drafts cannot be rearranged by keyboard or drag handlers (24.8839ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (1.5204ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (2.7215ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (1.5714ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (2.5468ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (1.1356ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 26
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 661.0582
+
+✖ failing tests:
+
+test at tests\admin-team-balance-pages.test.mjs:36:1
+✖ administrator drafts support recoverable archive and persisted match registration (4.3239ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /mode === "ADMIN"[\s\S]*선택 팀으로 경기 등록/. Input:
+
+  '"use client";\n' +
+    '\n' +
+    'import Link from "next/link";\n' +
+    'import { Archive, ArrowRight, Check, Copy, GripVertical, RefreshCw, RotateCcw, Save, SlidersHorizontal } from "@/components/theme/theme-icons";\n' +
+    'import { useRouter } from "next/navigation";\n' +
+    'import { useMemo, useRef, useState, useTransition } from "react";\n' +
+    'import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";\n' +
+    '\n' +
+    'import {\n' +
+    '  TEAM_BALANCE_TEAMS,\n' +
+    '  formatTeamBalanceShareText,\n' +
+    '  type TeamBalanceDraftCandidate,\n' +
+    '  type TeamBalanceDraft,\n' +
+    '  type TeamBalanceLayoutEntry,\n' +
+    '} from "@/modules/team-tools";\n' +
+    '\n' +
+    'import styles from "../../../team-tools.module.css";\n' +
+    '\n' +
+    'const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;\n' +
+    'const teamLabel = { BLUE: "블루", RED: "레드" } as const;\n' +
+    'const preferenceLabel = { MAIN: "주", SUB: "부", AUTO: "자동" } as const;\n' +
+    'const candidateCriteria = {\n' +
+    '  V1_AI_GLOBAL: { label: "AI 최적 추천", description: "실력과 포지션 평가 기준으로 가장 균형 잡힌 한 가지 결과" },\n' +
+    '  OVERALL_BALANCE: { label: "종합 균형", description: "팀 전력·라인 차이·포지션 선호를 모두 반영한 추천" },\n' +
+    '  POSITION_BALANCE: { label: "라인 균형", description: "각 라인의 맞대결 점수 차이를 가장 먼저 줄인 추천" },\n' +
+    '  PREFERENCE_PRIORITY: { label: "주 포지션 우선", description: "참가자가 신청한 주 포지션 배치를 가장 먼저 지킨 추천" },\n' +
+    '  LEGACY: { label: "이전 계산 결과", description: "최신 평가 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },\n' +
+    '  MANUAL: { label: "수동 배치", description: "사용자가 직접 교체하고 서버에서 다시 평가한 배치" },\n' +
+    '} as const;\n' +
+    '\n' +
+    'function candidateCriterion(candidate: Pick<TeamBalanceDraftCandidate, "criterion">) {\n' +
+    '  return candidateCriteria[candidate.criterion ?? "LEGACY"];\n' +
+    '}\n' +
+    '\n' +
+    'function differenceTone(value: number) {\n' +
+    '  if (value === 0) return "even";\n' +
+    '  if (value <= 5) return "close";\n' +
+    '  return "open";\n' +
+    '}\n' +
+    '\n' +
+    'export function TeamBalanceDraftWorkspace({\n' +
+    '  draft,\n' +
+    '  endpointBase = `/api/team-tools/drafts/${draft.id}`,\n' +
+    '  mode = "OWNER",\n' +
+    '}: {\n' +
+    '  draft: TeamBalanceDraft;\n' +
+    '  endpointBase?: string;\n' +
+    '  mode?: "OWNER" | "ADMIN";\n' +
+    '}) {\n' +
+    '  const router = useRouter();\n' +
+    '  const autoCandidates = draft.candidates.filter((candidate) => candidate.source === "AUTO");\n' +
+    '  const selectedCandidate = draft.candidates.find((candidate) => candidate.signature === draft.selectedCandidateSignature) ?? null;\n' +
+    '  const hasLegacyCandidates = autoCandidates.some((candidate) => !candidate.criterion || candidate.criterion === "LEGACY");\n' +
+    '  const initialLayout = (selectedCandidate ?? autoCandidates[0])?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? [];\n' +
+    '  const [manualLayout, setManualLayout] = useState<TeamBalanceLayoutEntry[]>(initialLayout);\n' +
+    '  const [draggingSlot, setDraggingSlot] = useState<number | null>(null);\n' +
+    '  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);\n' +
+    '  const [keyboardSlot, setKeyboardSlot] = useState<number | null>(null);\n' +
+    '  const [pending, setPending] = useState("");\n' +
+    '  const [message, setMessage] = useState("");\n' +
+    '  const mutationKeys = useRef(new ClientMutationKeyStore("team-balance-draft")).current;\n' +
+    '  const sending = useRef(false);\n' +
+    '  const [refreshing, startRefresh] = useTransition();\n' +
+    '  const busy = Boolean(pending) || refreshing;\n' +
+    '  const manualChanged = manualLayout.length !== initialLayout.length || manualLayout.some((entry) =>\n' +
+    '    !initialLayout.some((selected) => selected.playerId === entry.playerId && selected.team === entry.team && selected.position === entry.position));\n' +
+    '  const manualLocked = busy || draft.status === "ARCHIVED";\n' +
+    '  const resultHref = mode === "OWNER" ? `/matches/submit?teamBalanceDraftId=${encodeURIComponent(draft.id)}` : `/admin/matches/new?teamBalanceDraftId=${encodeURIComponent(draft.id)}`;\n' +
+    '  const resultLabel = mode === "OWNER" ? "이 팀으로 경기 결과 접수" : "선택 팀으로 경기 등록";\n' +
+    '  const participantById = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant])), [draft.participants]);\n' +
+    '  const participantName = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant.displayName])), [draft.participants]);\n' +
+    '\n' +
+    '  async function mutate(action: "select" | "save" | "reevaluate" | "archive" | "restore", body: unknown) {\n' +
+    '    if (busy || sending.current) return;\n' +
+    '    if (manualChanged && (action === "save" || action === "reevaluate")) return;\n' +
+    '    sending.current = true;\n' +
+    '    setPending(action);\n' +
+    '    setMessage("");\n' +
+    '    const ticket = mutationKeys.issue(`POST:${endpointBase}/${action}`, draft.revision, body);\n' +
+    '    try {\n' +
+    '      const response = await fetch(`${endpointBase}/${action}`, {\n' +
+    '        method: "POST",\n' +
+    '        headers: {\n' +
+    '          "Content-Type": "application/json",\n' +
+    '          "If-Match": `"${draft.revision}"`,\n' +
+    '          "Idempotency-Key": ticket.key,\n' +
+    '        },\n' +
+    '        body: JSON.stringify(body),\n' +
+    '      });\n' +
+    '      const result = await response.json() as { detail?: string };\n' +
+    '      if (!response.ok) throw new Error(result.detail ?? "팀 초안을 변경하지 못했어요.");\n' +
+    '      mutationKeys.complete(ticket);\n' +
+    '      setMessage(action === "save"\n' +
+    '        ? "선택한 팀을 저장했어요."\n' +
+    '        : action === "reevaluate"\n' +
+    '          ? "최신 통계로 다시 계산했어요."\n' +
+    '          : action === "archive"\n' +
+    '            ? "초안을 보관했어요. 일반 사용자 목록에서는 더 이상 보이지 않아요."\n' +
+    '            : action === "restore"\n' +
+    '              ? "보관한 초안을 복구했어요."\n' +
+    '              : "팀 배치를 적용했어요.");\n' +
+    '      startRefresh(() => router.refresh());\n' +
+    '    } catch (error) {\n' +
+    '      setMessage(error instanceof Error ? error.message : "팀 초안을 변경하지 못했어요.");\n' +
+    '    } finally {\n' +
+    '      sending.current = false;\n' +
+    '      setPending("");\n' +
+    '    }\n' +
+    '  }\n' +
+    '\n' +
+    '  async function copySelectedResult() {\n' +
+    '    if (!selectedCandidate || manualChanged || busy || sending.current) return;\n' +
+    '    setMessage("");\n' +
+    '    try {\n' +
+    '      if (!navigator.clipboard?.writeText) throw new Error("이 브라우저에서는 클립보드 복사를 사용할 수 없어요.");\n' +
+    '      await navigator.clipboard.writeText(formatTeamBalanceShareText(selectedCandidate, draft.participants));\n' +
+    '      setMessage("팀 결과를 복사했어요.");\n' +
+    '    } catch (error) {\n' +
+    '      setMessage(error instanceof Error ? error.message : "팀 결과를 복사하지 못했어요.");\n' +
+    '    }\n' +
+    '  }\n' +
+    '\n' +
+    '  function swapManual(sourceSlot: number, targetSlot: number) {\n' +
+    '    if (manualLocked || sending.current || sourceSlot === targetSlot) return;\n' +
+    '    setManualLayout((current) => {\n' +
+    '      const source = current[sourceSlot];\n' +
+    '      const target = current[targetSlot];\n' +
+    '      if (!source || !target) return current;\n' +
+    '      return current.map((entry, index) => index === sourceSlot\n' +
+    '        ? { ...entry, playerId: target.playerId }\n' +
+    '        : index === targetSlot\n' +
+    '          ? { ...entry, playerId: source.playerId }\n' +
+    '          : entry);\n' +
+    '    });\n' +
+    '    setMessage("");\n' +
+    '  }\n' +
+    '\n' +
+    '  function selectKeyboardSlot(slot: number) {\n' +
+    '    if (manualLocked || sending.current) return;\n' +
+    '    if (keyboardSlot === null) {\n' +
+    '      setKeyboardSlot(slot);\n' +
+    '      setMessage("교체할 두 번째 슬롯을 선택해 주세요.");\n' +
+    '      return;\n' +
+    '    }\n' +
+    '    if (keyboardSlot === slot) {\n' +
+    '      setKeyboardSlot(null);\n' +
+    '      setMessage("교체 선택을 취소했어요.");\n' +
+    '      return;\n' +
+    '    }\n' +
+    '    swapManual(keyboardSlot, slot);\n' +
+    '    setKeyboardSlot(null);\n' +
+    '    setMessage("두 슬롯의 플레이어를 교체했어요. 서버 평가로 확인해 주세요.");\n' +
+    '  }\n' +
+    '\n' +
+    '  return (\n' +
+    '    <>\n' +
+    '      <section className={styles.draftHeader} data-status={draft.status}>\n' +
+    '        <div><span>{mode === "ADMIN" ? "관리자 검토 · " : ""}평가 {draft.evaluationRound}회</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>\n' +
+    '        <strong data-status={draft.status}>{draft.status === "ARCHIVED" ? "보관됨" : draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>\n' +
+    '      </section>\n' +
+    '\n' +
+    '      <section className={styles.candidateSection} aria-labelledby="candidate-title">\n' +
+    '        <div className={styles.heading}><div><h2 id="candidate-title">AI 최적 팀 추천</h2></div></div>\n' +
+    '        {selectedCandidate ? <div className={styles.evaluationOverview} data-balance={differenceTone(selectedCandidate.score.teamStrength.difference)} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}\n' +
+    '        <div className={styles.candidateGrid}>\n' +
+    '          {autoCandidates.slice(0, 1).map((candidate) => {\n' +
+    '            const criterion = candidateCriterion(candidate);\n' +
+    '            const selected = draft.selectedCandidateSignature === candidate.signature;\n' +
+    '            return <article key={candidate.id} data-selected={selected} data-balance={differenceTone(candidate.score.teamStrength.difference)}>\n' +
+    '              <header><strong>{criterion.label}</strong><span>{selected ? "적용 중" : "추천 결과"}</span></header>\n' +
+    '              <p>{criterion.description}</p>\n' +
+    '              {candidate.score.v1?.missingSources.length ? <p role="note">최근 솔로 상세가 없거나 갱신 후 24시간이 지난 경우, 또는 팀 편성 보정이 미설정인 경우 해당 보조값은 0으로 계산합니다.</p> : null}\n' +
+    '              <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>\n' +
+    '              <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><sm'... 6537 more characters
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-team-balance-pages.test.mjs:46:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\n\nimport Link from "next/link";\nimport { Archive, ArrowRight, Check, Copy, GripVertical, RefreshCw, RotateCcw, Save, SlidersHorizontal } from "@/components/theme/theme-icons";\nimport { useRouter } from "next/navigation";\nimport { useMemo, useRef, useState, useTransition } from "react";\nimport { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";\n\nimport {\n  TEAM_BALANCE_TEAMS,\n  formatTeamBalanceShareText,\n  type TeamBalanceDraftCandidate,\n  type TeamBalanceDraft,\n  type TeamBalanceLayoutEntry,\n} from "@/modules/team-tools";\n\nimport styles from "../../../team-tools.module.css";\n\nconst positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;\nconst teamLabel = { BLUE: "블루", RED: "레드" } as const;\nconst preferenceLabel = { MAIN: "주", SUB: "부", AUTO: "자동" } as const;\nconst candidateCriteria = {\n  V1_AI_GLOBAL: { label: "AI 최적 추천", description: "실력과 포지션 평가 기준으로 가장 균형 잡힌 한 가지 결과" },\n  OVERALL_BALANCE: { label: "종합 균형", description: "팀 전력·라인 차이·포지션 선호를 모두 반영한 추천" },\n  POSITION_BALANCE: { label: "라인 균형", description: "각 라인의 맞대결 점수 차이를 가장 먼저 줄인 추천" },\n  PREFERENCE_PRIORITY: { label: "주 포지션 우선", description: "참가자가 신청한 주 포지션 배치를 가장 먼저 지킨 추천" },\n  LEGACY: { label: "이전 계산 결과", description: "최신 평가 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },\n  MANUAL: { label: "수동 배치", description: "사용자가 직접 교체하고 서버에서 다시 평가한 배치" },\n} as const;\n\nfunction candidateCriterion(candidate: Pick<TeamBalanceDraftCandidate, "criterion">) {\n  return candidateCriteria[candidate.criterion ?? "LEGACY"];\n}\n\nfunction differenceTone(value: number) {\n  if (value === 0) return "even";\n  if (value <= 5) return "close";\n  return "open";\n}\n\nexport function TeamBalanceDraftWorkspace({\n  draft,\n  endpointBase = `/api/team-tools/drafts/${draft.id}`,\n  mode = "OWNER",\n}: {\n  draft: TeamBalanceDraft;\n  endpointBase?: string;\n  mode?: "OWNER" | "ADMIN";\n}) {\n  const router = useRouter();\n  const autoCandidates = draft.candidates.filter((candidate) => candidate.source === "AUTO");\n  const selectedCandidate = draft.candidates.find((candidate) => candidate.signature === draft.selectedCandidateSignature) ?? null;\n  const hasLegacyCandidates = autoCandidates.some((candidate) => !candidate.criterion || candidate.criterion === "LEGACY");\n  const initialLayout = (selectedCandidate ?? autoCandidates[0])?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? [];\n  const [manualLayout, setManualLayout] = useState<TeamBalanceLayoutEntry[]>(initialLayout);\n  const [draggingSlot, setDraggingSlot] = useState<number | null>(null);\n  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);\n  const [keyboardSlot, setKeyboardSlot] = useState<number | null>(null);\n  const [pending, setPending] = useState("");\n  const [message, setMessage] = useState("");\n  const mutationKeys = useRef(new ClientMutationKeyStore("team-balance-draft")).current;\n  const sending = useRef(false);\n  const [refreshing, startRefresh] = useTransition();\n  const busy = Boolean(pending) || refreshing;\n  const manualChanged = manualLayout.length !== initialLayout.length || manualLayout.some((entry) =>\n    !initialLayout.some((selected) => selected.playerId === entry.playerId && selected.team === entry.team && selected.position === entry.position));\n  const manualLocked = busy || draft.status === "ARCHIVED";\n  const resultHref = mode === "OWNER" ? `/matches/submit?teamBalanceDraftId=${encodeURIComponent(draft.id)}` : `/admin/matches/new?teamBalanceDraftId=${encodeURIComponent(draft.id)}`;\n  const resultLabel = mode === "OWNER" ? "이 팀으로 경기 결과 접수" : "선택 팀으로 경기 등록";\n  const participantById = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant])), [draft.participants]);\n  const participantName = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant.displayName])), [draft.participants]);\n\n  async function mutate(action: "select" | "save" | "reevaluate" | "archive" | "restore", body: unknown) {\n    if (busy || sending.current) return;\n    if (manualChanged && (action === "save" || action === "reevaluate")) return;\n    sending.current = true;\n    setPending(action);\n    setMessage("");\n    const ticket = mutationKeys.issue(`POST:${endpointBase}/${action}`, draft.revision, body);\n    try {\n      const response = await fetch(`${endpointBase}/${action}`, {\n        method: "POST",\n        headers: {\n          "Content-Type": "application/json",\n          "If-Match": `"${draft.revision}"`,\n          "Idempotency-Key": ticket.key,\n        },\n        body: JSON.stringify(body),\n      });\n      const result = await response.json() as { detail?: string };\n      if (!response.ok) throw new Error(result.detail ?? "팀 초안을 변경하지 못했어요.");\n      mutationKeys.complete(ticket);\n      setMessage(action === "save"\n        ? "선택한 팀을 저장했어요."\n        : action === "reevaluate"\n          ? "최신 통계로 다시 계산했어요."\n          : action === "archive"\n            ? "초안을 보관했어요. 일반 사용자 목록에서는 더 이상 보이지 않아요."\n            : action === "restore"\n              ? "보관한 초안을 복구했어요."\n              : "팀 배치를 적용했어요.");\n      startRefresh(() => router.refresh());\n    } catch (error) {\n      setMessage(error instanceof Error ? error.message : "팀 초안을 변경하지 못했어요.");\n    } finally {\n      sending.current = false;\n      setPending("");\n    }\n  }\n\n  async function copySelectedResult() {\n    if (!selectedCandidate || manualChanged || busy || sending.current) return;\n    setMessage("");\n    try {\n      if (!navigator.clipboard?.writeText) throw new Error("이 브라우저에서는 클립보드 복사를 사용할 수 없어요.");\n      await navigator.clipboard.writeText(formatTeamBalanceShareText(selectedCandidate, draft.participants));\n      setMessage("팀 결과를 복사했어요.");\n    } catch (error) {\n      setMessage(error instanceof Error ? error.message : "팀 결과를 복사하지 못했어요.");\n    }\n  }\n\n  function swapManual(sourceSlot: number, targetSlot: number) {\n    if (manualLocked || sending.current || sourceSlot === targetSlot) return;\n    setManualLayout((current) => {\n      const source = current[sourceSlot];\n      const target = current[targetSlot];\n      if (!source || !target) return current;\n      return current.map((entry, index) => index === sourceSlot\n        ? { ...entry, playerId: target.playerId }\n        : index === targetSlot\n          ? { ...entry, playerId: source.playerId }\n          : entry);\n    });\n    setMessage("");\n  }\n\n  function selectKeyboardSlot(slot: number) {\n    if (manualLocked || sending.current) return;\n    if (keyboardSlot === null) {\n      setKeyboardSlot(slot);\n      setMessage("교체할 두 번째 슬롯을 선택해 주세요.");\n      return;\n    }\n    if (keyboardSlot === slot) {\n      setKeyboardSlot(null);\n      setMessage("교체 선택을 취소했어요.");\n      return;\n    }\n    swapManual(keyboardSlot, slot);\n    setKeyboardSlot(null);\n    setMessage("두 슬롯의 플레이어를 교체했어요. 서버 평가로 확인해 주세요.");\n  }\n\n  return (\n    <>\n      <section className={styles.draftHeader} data-status={draft.status}>\n        <div><span>{mode === "ADMIN" ? "관리자 검토 · " : ""}평가 {draft.evaluationRound}회</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>\n        <strong data-status={draft.status}>{draft.status === "ARCHIVED" ? "보관됨" : draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>\n      </section>\n\n      <section className={styles.candidateSection} aria-labelledby="candidate-title">\n        <div className={styles.heading}><div><h2 id="candidate-title">AI 최적 팀 추천</h2></div></div>\n        {selectedCandidate ? <div className={styles.evaluationOverview} data-balance={differenceTone(selectedCandidate.score.teamStrength.difference)} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}\n        <div className={styles.candidateGrid}>\n          {autoCandidates.slice(0, 1).map((candidate) => {\n            const criterion = candidateCriterion(candidate);\n            const selected = draft.selectedCandidateSignature === candidate.signature;\n            return <article key={candidate.id} data-selected={selected} data-balance={differenceTone(candidate.score.teamStrength.difference)}>\n              <header><strong>{criterion.label}</strong><span>{selected ? "적용 중" : "추천 결과"}</span></header>\n              <p>{criterion.description}</p>\n              {candidate.score.v1?.missingSources.length ? <p role="note">최근 솔로 상세가 없거나 갱신 후 24시간이 지난 경우, 또는 팀 편성 보정이 미설정인 경우 해당 보조값은 0으로 계산합니다.</p> : null}\n              <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>\n              <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><sm'... 6537 more characters,
+    expected: /mode === "ADMIN"[\s\S]*선택 팀으로 경기 등록/,
+    operator: 'match',
+    diff: 'simple'
+  }

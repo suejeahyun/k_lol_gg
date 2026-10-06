@@ -1,0 +1,26 @@
+✔ selected team-balance provenance requires the exact ten-player two-team layout (0.5549ms)
+✔ team balance vocabulary and neutral provider defaults are explicit (62.7405ms)
+✔ input rejects oversized, duplicate, missing-position, and invalid-score cases (0.6561ms)
+✔ the V1 global recommendation is one lossless 5:5 layout with every position exactly once (47.0951ms)
+✔ V1 global recommendation is deterministic regardless of request order (73.1543ms)
+✔ mixed legacy and new player ids keep a total order across forward, reverse and rotate (1096.861ms)
+✔ V1 search evaluates 126 anchored team splits and each team's best permutation (37.8681ms)
+✔ automatic and manual paths return the exact same scoring-kernel breakdown (37.3547ms)
+✔ position rating overrides overall and confidence shrinks unknown data toward 50 (52.0091ms)
+✔ positions omitted from the request remain legal V1 AUTO assignments (37.2469ms)
+✔ [V1 blueblack golden] score uses tier, inhouse, position experience and the data-missing path (1.3856ms)
+✔ share text keeps the V1 line order and excludes draft ids, account ids and links (52.5155ms)
+✔ manual evaluation rejects duplicate players and incomplete team-position coverage (0.4497ms)
+✔ 팀 밸런스 초안 목록 query는 단일·제한된 페이지 값만 허용한다 (0.9685ms)
+✔ 팀 밸런스 후보 query는 플레이어 검색과 최근 신청 출처만 허용한다 (0.3089ms)
+✔ team recommendations are deterministic, position ordered, and ban champions are unique (1.4198ms)
+✔ team recommendations keep selected lineup for an unavailable projection (0.2693ms)
+✔ team recommendations do not infer an unselected candidate (0.172ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1673.077

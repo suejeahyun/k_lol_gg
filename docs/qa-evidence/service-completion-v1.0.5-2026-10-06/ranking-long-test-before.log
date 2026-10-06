@@ -1,0 +1,33 @@
+✔ rankings preserve complete Latin/Korean names, Riot IDs, player links, and separate metrics in every view (47.1627ms)
+✖ ranking player links can shrink and wrap unspaced names in narrow and wide layouts (5.108ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 335.8951
+
+✖ failing tests:
+
+test at tests\rankings-long-names.test.mjs:64:1
+✖ ranking player links can shrink and wrap unspaced names in narrow and wide layouts (5.108ms)
+  AssertionError [ERR_ASSERTION]: .board li a must fit its grid column at 320px
+
+  undefined !== '0'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/rankings-long-names.test.mjs:78:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '0',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

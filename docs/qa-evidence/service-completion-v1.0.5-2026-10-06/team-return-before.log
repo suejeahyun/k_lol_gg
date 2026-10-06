@@ -1,0 +1,86 @@
+✖ owner team recommendations retain the selected tab, team and draft after authentication (18.9872ms)
+✖ owner draft pagination and authentication preserve the applied page size (25.8769ms)
+✖ admin team recommendations retain the selected tab, team and draft after authentication (7.2197ms)
+✖ admin draft pagination and authentication preserve the applied page size (11.1706ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 310.823
+
+✖ failing tests:
+
+test at tests\team-balance-session-return.test.mjs:62:3
+✖ owner team recommendations retain the selected tab, team and draft after authentication (18.9872ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/tools/team-balance/drafts/11111111-1111-4111-8111-111111111111'
+  - '/tools/team-balance/drafts/11111111-1111-4111-8111-111111111111?tab=recommendations&team=BLUE'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-balance-session-return.test.mjs:65:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tools/team-balance/drafts/11111111-1111-4111-8111-111111111111',
+    expected: '/tools/team-balance/drafts/11111111-1111-4111-8111-111111111111?tab=recommendations&team=BLUE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\team-balance-session-return.test.mjs:74:3
+✖ owner draft pagination and authentication preserve the applied page size (25.8769ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  null !== '2'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-balance-session-return.test.mjs:78:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: '2',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\team-balance-session-return.test.mjs:62:3
+✖ admin team recommendations retain the selected tab, team and draft after authentication (7.2197ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '/admin/balance/drafts/11111111-1111-4111-8111-111111111111'
+  - '/admin/balance/drafts/11111111-1111-4111-8111-111111111111?tab=recommendations&team=BLUE'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-balance-session-return.test.mjs:65:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/admin/balance/drafts/11111111-1111-4111-8111-111111111111',
+    expected: '/admin/balance/drafts/11111111-1111-4111-8111-111111111111?tab=recommendations&team=BLUE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\team-balance-session-return.test.mjs:74:3
+✖ admin draft pagination and authentication preserve the applied page size (11.1706ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  null !== '2'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-balance-session-return.test.mjs:78:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: '2',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

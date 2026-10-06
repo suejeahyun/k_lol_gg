@@ -1,0 +1,18 @@
+✔ actual review and delete handlers send the strong numeric ETag accepted by the server parser (119.9324ms)
+✔ lost responses and unreadable successes preserve request identity and edited inputs for retry (19.9461ms)
+✔ changing an unsuccessful review payload uses a separate idempotency identity (15.8635ms)
+✔ review is guarded against same-tick clicks and stays locked through server refresh (15.76ms)
+✔ a stale revision preserves local input until explicit reload and expired sessions link back to the same record (29.5284ms)
+✔ successful deletion navigates to its filtered list and cannot repeat before navigation (12.5326ms)
+✔ record detail keys review state to the record revision after an explicit server refresh (25.1702ms)
+✔ signed operation-form submit retains raw-body HMAC and durable replay boundaries (3.0425ms)
+✔ admin mutation requires ADMIN session, same-origin, If-Match and idempotency (0.8897ms)
+✔ admin pages expose filtered empty/error/unavailable states and compatibility routes (1.2504ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 450.2548

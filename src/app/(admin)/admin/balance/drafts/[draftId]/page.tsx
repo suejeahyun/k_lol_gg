@@ -18,10 +18,11 @@ export const metadata: Metadata = { title: "팀 밸런스 초안 검수", robots
 
 export default async function AdminTeamBalanceDraftPage({ params, searchParams }: { params: Promise<{ draftId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { draftId } = await params;
-  const session = await requirePageRole("ADMIN", `/admin/balance/drafts/${draftId}`);
+  const query = parseTeamBalanceDraftDetailQuery(await searchParams);
+  const nextPath = `/admin/balance/drafts/${draftId}${query?.tab === "recommendations" ? `?tab=recommendations&team=${query.team}` : ""}`;
+  const session = await requirePageRole("ADMIN", nextPath);
   const featureState = await readSiteFeatureState("teamBalance");
   if (featureState !== "enabled") return <TeamBalanceFeatureState state={featureState} />;
-  const query = parseTeamBalanceDraftDetailQuery(await searchParams);
   if (!query) notFound();
   const navigation = <nav className={styles.toolNav} aria-label="관리자 팀 초안 보기"><Link href="/admin/balance/drafts"><ArrowLeft size={16} aria-hidden="true" /> 전체 초안 목록</Link><Link data-active={query.tab === "draft"} href={`/admin/balance/drafts/${draftId}`}>팀 배치</Link><Link data-active={query.tab === "recommendations"} href={`/admin/balance/drafts/${draftId}?tab=recommendations`}>밴픽 추천</Link></nav>;
   if (query.tab === "draft") {

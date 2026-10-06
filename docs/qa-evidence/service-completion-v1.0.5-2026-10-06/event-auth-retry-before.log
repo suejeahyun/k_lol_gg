@@ -1,0 +1,68 @@
+✔ event creation retries the exact uncertain request and keeps editing locked until confirmation (51.7493ms)
+✔ two submissions before render issue only one event request (10.075ms)
+✔ server errors and unreadable successful responses retain the original event identity (6.7196ms)
+✔ a definite rejection unlocks correction and gives the corrected request a new identity (7.2023ms)
+✖ an uncertain creation keeps its identity after retry receives 401 (6.7178ms)
+✖ an uncertain creation keeps its identity after retry receives 403 (6.6156ms)
+✖ an uncertain creation keeps its identity after retry receives 429 (5.3869ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 4
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 303.2074
+
+✖ failing tests:
+
+test at tests\event-create-recovery.test.mjs:95:3
+✖ an uncertain creation keeps its identity after retry receives 401 (6.7178ms)
+  AssertionError [ERR_ASSERTION]: retry rejection does not disprove the original creation
+
+  false !== true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-create-recovery.test.mjs:103:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\event-create-recovery.test.mjs:95:3
+✖ an uncertain creation keeps its identity after retry receives 403 (6.6156ms)
+  AssertionError [ERR_ASSERTION]: retry rejection does not disprove the original creation
+
+  false !== true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-create-recovery.test.mjs:103:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\event-create-recovery.test.mjs:95:3
+✖ an uncertain creation keeps its identity after retry receives 429 (5.3869ms)
+  AssertionError [ERR_ASSERTION]: retry rejection does not disprove the original creation
+
+  false !== true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-create-recovery.test.mjs:103:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

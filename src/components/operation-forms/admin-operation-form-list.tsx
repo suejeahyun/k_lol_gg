@@ -3,13 +3,13 @@ import Link from "next/link";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import {
   isOperationFormStatus, isOperationFormType, OPERATION_FORM_STATUSES, OPERATION_FORM_TYPES,
-  operationFormTypeLabels as typeLabels,
 } from "@/modules/recruiting/operation-forms/domain";
+import { ADMIN_OPERATION_FORM_LABELS as typeLabels } from "@/modules/admin/domain/admin-workspaces";
 import { loadRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 
 import styles from "@/components/admin/admin-operations.module.css";
 
-export { operationFormTypeLabels as typeLabels } from "@/modules/recruiting/operation-forms/domain";
+export { ADMIN_OPERATION_FORM_LABELS as typeLabels } from "@/modules/admin/domain/admin-workspaces";
 export const operationFormStatusLabels = Object.freeze({ PENDING: "대기", IN_REVIEW: "검토 중", COMPLETED: "완료", REJECTED: "반려", CANCELLED: "취소" });
 
 export async function AdminOperationFormList({ selectedType, selectedStatus }: { selectedType?: string; selectedStatus?: string }) {
@@ -18,7 +18,7 @@ export async function AdminOperationFormList({ selectedType, selectedStatus }: {
   const status = isOperationFormStatus(selectedStatus) ? selectedStatus : undefined;
   const result = await loadRuntimeOperationForms((service) => service.list({ formType, status }));
   return <main className={styles.page}>
-    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>{formType ? typeLabels[formType] : "운영 신청서"}</h1><p>사이트 문의: 건의사항 · 답변: 접수 연락처로 직접 전달</p></div><Link className={styles.link} href="/admin/discipline">운영·감사</Link></header>
+    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>{formType ? typeLabels[formType] : "운영 신청서"}</h1></div><Link className={styles.link} href="/admin/discipline">운영·감사</Link></header>
     <form className={styles.filters} method="get" action={formType ? `/admin/operation-forms/${formType}` : "/admin/operation-forms"}>
       {!formType ? <label>유형<select name="type" defaultValue=""><option value="">전체 유형</option>{OPERATION_FORM_TYPES.map((type) => <option key={type} value={type}>{typeLabels[type]}{result.state === "ready" ? ` (${result.data.counts[type]}건)` : ""}</option>)}</select></label> : null}
       <label>상태<select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{OPERATION_FORM_STATUSES.map((item) => <option key={item} value={item}>{operationFormStatusLabels[item]}</option>)}</select></label><button type="submit">필터 적용</button>

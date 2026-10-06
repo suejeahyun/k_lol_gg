@@ -45,7 +45,7 @@
 }
 
 .links a:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--ring) 34%, transparent);
+  outline: 3px solid var(--ring);
   outline-offset: 3px;
 }
 

@@ -19,10 +19,11 @@ export const metadata = createRouteMetadata("/tools/team-balance/drafts/[draftId
 
 export default async function TeamBalanceDraftPage({ params, searchParams }: { params: Promise<{ draftId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { draftId } = await params;
-  const session = await requireApprovedAccountPage(`/tools/team-balance/drafts/${draftId}`);
+  const query = parseTeamBalanceDraftDetailQuery(await searchParams);
+  const nextPath = `/tools/team-balance/drafts/${draftId}${query?.tab === "recommendations" ? `?tab=recommendations&team=${query.team}` : ""}`;
+  const session = await requireApprovedAccountPage(nextPath);
   const featureState = await readSiteFeatureState("teamBalance");
   if (featureState !== "enabled") return <TeamBalanceFeatureState state={featureState} />;
-  const query = parseTeamBalanceDraftDetailQuery(await searchParams);
   if (!query) notFound();
   const navigation = <nav className={styles.toolNav} aria-label="팀 초안 보기"><Link href="/tools/team-balance/drafts"><ArrowLeft size={16} aria-hidden="true" /> 초안 목록</Link><Link data-active={query.tab === "draft"} href={`/tools/team-balance/drafts/${draftId}`}>팀 배치</Link><Link data-active={query.tab === "recommendations"} href={`/tools/team-balance/drafts/${draftId}?tab=recommendations`}>밴픽 추천</Link></nav>;
   if (query.tab === "draft") {

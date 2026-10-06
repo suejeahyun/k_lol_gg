@@ -1,0 +1,108 @@
+✔ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (74.0098ms)
+✔ discipline: simultaneous submits issue one creation request (21.0347ms)
+✔ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (17.937ms)
+✔ discipline: a definite first rejection allows correction with a new identity (17.0556ms)
+✔ discipline: 401 after uncertainty does not abandon the original creation (13.9861ms)
+✔ discipline: 403 after uncertainty does not abandon the original creation (15.6084ms)
+✔ discipline: 429 after uncertainty does not abandon the original creation (13.0757ms)
+✔ discipline: malformed success cannot unlock an unconfirmed creation (12.2542ms)
+✔ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (43.9747ms)
+✔ highlight: simultaneous submits issue one creation request (42.4198ms)
+✔ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (26.6251ms)
+✔ highlight: a definite first rejection allows correction with a new identity (25.0766ms)
+✔ highlight: 401 after uncertainty does not abandon the original creation (29.0676ms)
+✔ highlight: 403 after uncertainty does not abandon the original creation (30.0137ms)
+✔ highlight: 429 after uncertainty does not abandon the original creation (22.7337ms)
+✔ highlight: malformed success cannot unlock an unconfirmed creation (22.7738ms)
+✔ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (23.2508ms)
+✔ gallery: simultaneous submits issue one creation request (23.2513ms)
+✔ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (27.4594ms)
+✔ gallery: a definite first rejection allows correction with a new identity (22.4741ms)
+✔ gallery: 401 after uncertainty does not abandon the original creation (23.4377ms)
+✔ gallery: 403 after uncertainty does not abandon the original creation (28.2093ms)
+✔ gallery: 429 after uncertainty does not abandon the original creation (20.8951ms)
+✔ gallery: malformed success cannot unlock an unconfirmed creation (20.9152ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=false (25.6507ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=true (31.0004ms)
+✖ gallery: truncated attachment response cannot report a confirmed connection (21.3429ms)
+✖ gallery: null attachment response cannot report a confirmed connection (20.903ms)
+✖ gallery: empty attachment response cannot report a confirmed connection (24.8884ms)
+✖ gallery: invalid-revision attachment response cannot report a confirmed connection (21.212ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 26
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 972.5562
+
+✖ failing tests:
+
+test at tests\admin-create-recovery.test.mjs:189:3
+✖ gallery: truncated attachment response cannot report a confirmed connection (21.3429ms)
+  AssertionError [ERR_ASSERTION]: unconfirmed attachment must not produce a success count
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:203:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:189:3
+✖ gallery: null attachment response cannot report a confirmed connection (20.903ms)
+  AssertionError [ERR_ASSERTION]: unconfirmed attachment must not produce a success count
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:203:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:189:3
+✖ gallery: empty attachment response cannot report a confirmed connection (24.8884ms)
+  AssertionError [ERR_ASSERTION]: unconfirmed attachment must not produce a success count
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:203:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:189:3
+✖ gallery: invalid-revision attachment response cannot report a confirmed connection (21.212ms)
+  AssertionError [ERR_ASSERTION]: unconfirmed attachment must not produce a success count
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:203:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

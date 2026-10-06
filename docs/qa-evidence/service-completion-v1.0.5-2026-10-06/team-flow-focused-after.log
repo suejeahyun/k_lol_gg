@@ -1,0 +1,40 @@
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (3.9115ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (1.3307ms)
+✔ administrator drafts support recoverable archive and persisted match registration (2.9656ms)
+✔ the application menu marks exactly the selected application type, including query navigation (131.4782ms)
+✔ clearing or resetting a slow player search cancels the request and returns to idle (81.9917ms)
+✔ a superseded request cannot clear the loading state of the newer search (36.8227ms)
+✔ first submission prioritizes required information while optional fields and continuation stay available (10.4497ms)
+✔ a cancelled partial upload never displays unfinished images as a completed step (1.2932ms)
+✔ anonymous result continuation returns to the same submission after login (0.8806ms)
+✔ changing a continuation code or draft resets form identity while same-context refresh preserves edits (22.1724ms)
+✔ pending, rejected, suspended and password-reset accounts get recovery before filling the submission form (58.3368ms)
+✔ completed or rejected submissions show their result and recovery without impossible upload controls (6.051ms)
+✔ submission lookup failure keeps the code for retry and is distinct from a missing submission (22.4087ms)
+✔ creating a submission locks mutations until the server route has committed and resets new-submission state (52.7194ms)
+✔ match submission accepts only an owner-verified selected team-balance draft (0.6712ms)
+✔ successful server selection remounts both draft workspaces without resetting local edits (0.1288ms)
+✔ owner team recommendations retain the selected tab, team and draft after authentication (48.2494ms)
+✔ owner draft pagination and authentication preserve the applied page size (36.4178ms)
+✔ admin team recommendations retain the selected tab, team and draft after authentication (26.8287ms)
+✔ admin draft pagination and authentication preserve the applied page size (16.2789ms)
+✔ a lost create response retries the exact draft request with its original idempotency key (54.5795ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (44.3516ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (36.9258ms)
+✔ manual edits cannot save, copy or submit the previous selected team before evaluation (69.5968ms)
+✔ manual selection sends edited players and keeps them locked through response and refresh (28.7971ms)
+✔ archived team drafts cannot be rearranged by keyboard or drag handlers (21.9544ms)
+✔ failed manual evaluation preserves edited slots and retries the same revision and request key (19.3298ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (1.5922ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (2.8442ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (2.8544ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (2.6926ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (0.4567ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 660.228

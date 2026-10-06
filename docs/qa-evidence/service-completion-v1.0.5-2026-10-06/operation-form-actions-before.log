@@ -1,0 +1,28 @@
+✖ actual review and delete handlers send the strong numeric ETag accepted by the server parser (62.3599ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 256.4245
+
+✖ failing tests:
+
+test at tests\operation-form-actions.test.mjs:63:1
+✖ actual review and delete handlers send the strong numeric ETag accepted by the server parser (62.3599ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  '"rev-3"' !== '"3"'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:70:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"rev-3"',
+    expected: '"3"',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

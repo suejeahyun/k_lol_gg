@@ -1,0 +1,28 @@
+✖ a truncated attachment response must not claim the image was confirmed linked (117.5879ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 310.4441
+
+✖ failing tests:
+
+test at docs\qa-evidence\service-completion-v1.0.5-2026-10-06\admin-media-review-repro.mjs:79:1
+✖ a truncated attachment response must not claim the image was confirmed linked (117.5879ms)
+  AssertionError [ERR_ASSERTION]: a missing attachment confirmation must not produce the success count
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/docs/qa-evidence/service-completion-v1.0.5-2026-10-06/admin-media-review-repro.mjs:89:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

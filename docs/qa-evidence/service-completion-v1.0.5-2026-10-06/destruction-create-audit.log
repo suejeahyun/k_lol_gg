@@ -1,0 +1,82 @@
+✖ destruction audit: uncertain retry followed by 401 must retain identity (51.9878ms)
+✖ destruction audit: uncertain retry followed by 403 must retain identity (11.3518ms)
+✖ destruction audit: uncertain retry followed by 429 must retain identity (7.9887ms)
+✖ destruction audit: successful navigation stays locked (7.2014ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 277.8493
+
+✖ failing tests:
+
+test at .tmp\destruction-create-recovery-audit.test.mjs:52:3
+✖ destruction audit: uncertain retry followed by 401 must retain identity (51.9878ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/destruction-create-recovery-audit.test.mjs:55:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\destruction-create-recovery-audit.test.mjs:52:3
+✖ destruction audit: uncertain retry followed by 403 must retain identity (11.3518ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/destruction-create-recovery-audit.test.mjs:55:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\destruction-create-recovery-audit.test.mjs:52:3
+✖ destruction audit: uncertain retry followed by 429 must retain identity (7.9887ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/destruction-create-recovery-audit.test.mjs:55:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\destruction-create-recovery-audit.test.mjs:59:1
+✖ destruction audit: successful navigation stays locked (7.2014ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/destruction-create-recovery-audit.test.mjs:62:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

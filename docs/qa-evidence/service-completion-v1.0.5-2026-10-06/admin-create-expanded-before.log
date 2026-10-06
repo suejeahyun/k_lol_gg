@@ -1,0 +1,150 @@
+✔ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (71.0596ms)
+✔ discipline: simultaneous submits issue one creation request (19.5608ms)
+✔ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (17.3683ms)
+✔ discipline: a definite first rejection allows correction with a new identity (15.7062ms)
+✖ discipline: 401 after uncertainty does not abandon the original creation (13.4984ms)
+✖ discipline: 403 after uncertainty does not abandon the original creation (12.5084ms)
+✔ discipline: 429 after uncertainty does not abandon the original creation (13.5693ms)
+✔ discipline: malformed success cannot unlock an unconfirmed creation (11.0183ms)
+✔ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (41.9661ms)
+✔ highlight: simultaneous submits issue one creation request (41.2765ms)
+✔ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (28.0624ms)
+✔ highlight: a definite first rejection allows correction with a new identity (25.3882ms)
+✖ highlight: 401 after uncertainty does not abandon the original creation (29.121ms)
+✖ highlight: 403 after uncertainty does not abandon the original creation (29.7559ms)
+✔ highlight: 429 after uncertainty does not abandon the original creation (22.7974ms)
+✔ highlight: malformed success cannot unlock an unconfirmed creation (22.5706ms)
+✔ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (22.8298ms)
+✔ gallery: simultaneous submits issue one creation request (23.1291ms)
+✔ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (28.0295ms)
+✔ gallery: a definite first rejection allows correction with a new identity (21.9711ms)
+✖ gallery: 401 after uncertainty does not abandon the original creation (23.3466ms)
+✖ gallery: 403 after uncertainty does not abandon the original creation (28.5433ms)
+✔ gallery: 429 after uncertainty does not abandon the original creation (22.9467ms)
+✔ gallery: malformed success cannot unlock an unconfirmed creation (21.299ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=false (29.4616ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=true (31.6297ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 20
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 874.6853
+
+✖ failing tests:
+
+test at tests\admin-create-recovery.test.mjs:121:5
+✖ discipline: 401 after uncertainty does not abandon the original creation (13.4984ms)
+  AssertionError [ERR_ASSERTION]: sign-in must preserve the unresolved form
+  + actual - expected
+
+  + undefined
+  - '_blank'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:127:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '_blank',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:121:5
+✖ discipline: 403 after uncertainty does not abandon the original creation (12.5084ms)
+  AssertionError [ERR_ASSERTION]: sign-in must preserve the unresolved form
+  + actual - expected
+
+  + undefined
+  - '_blank'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:127:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '_blank',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:121:5
+✖ highlight: 401 after uncertainty does not abandon the original creation (29.121ms)
+  AssertionError [ERR_ASSERTION]: sign-in must preserve the unresolved form
+  + actual - expected
+
+  + undefined
+  - '_blank'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:127:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '_blank',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:121:5
+✖ highlight: 403 after uncertainty does not abandon the original creation (29.7559ms)
+  AssertionError [ERR_ASSERTION]: sign-in must preserve the unresolved form
+  + actual - expected
+
+  + undefined
+  - '_blank'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:127:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '_blank',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:121:5
+✖ gallery: 401 after uncertainty does not abandon the original creation (23.3466ms)
+  AssertionError [ERR_ASSERTION]: sign-in must preserve the unresolved form
+  + actual - expected
+
+  + undefined
+  - '_blank'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:127:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '_blank',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:121:5
+✖ gallery: 403 after uncertainty does not abandon the original creation (28.5433ms)
+  AssertionError [ERR_ASSERTION]: sign-in must preserve the unresolved form
+  + actual - expected
+
+  + undefined
+  - '_blank'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:127:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '_blank',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1333,11 +1333,16 @@ body:has(.user-dialog[open]) {
   text-decoration: none;
 }
 
-.command-palette-results li > a:hover,
-.command-palette-results li > a:focus-visible {
+.command-palette-results li > a:hover {
   border-color: rgba(79, 135, 205, 0.5);
   background: #edf7ff;
   outline: 3px solid rgba(79, 135, 205, 0.16);
+}
+
+.command-palette-results li > a:focus-visible {
+  border-color: var(--ring);
+  background: #edf7ff;
+  outline: 3px solid var(--ring);
 }
 
 .command-palette-results li > a > span {
@@ -1571,10 +1576,14 @@ body:has(.user-dialog[open]) {
   text-decoration: none;
 }
 
-.home-feed-panel li > a:hover,
-.home-feed-panel li > a:focus-visible {
+.home-feed-panel li > a:hover {
   background: #eef7ff;
   outline: 2px solid rgba(79, 135, 205, 0.18);
+}
+
+.home-feed-panel li > a:focus-visible {
+  background: #eef7ff;
+  outline: 2px solid var(--ring);
 }
 
 .home-feed-panel li span {

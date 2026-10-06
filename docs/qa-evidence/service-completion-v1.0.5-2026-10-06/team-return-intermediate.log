@@ -1,0 +1,31 @@
+✔ owner team recommendations retain the selected tab, team and draft after authentication (32.7405ms)
+✔ owner draft pagination and authentication preserve the applied page size (24.1986ms)
+✔ admin team recommendations retain the selected tab, team and draft after authentication (14.6288ms)
+✖ admin draft pagination and authentication preserve the applied page size (9.5858ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 328.3406
+
+✖ failing tests:
+
+test at tests\team-balance-session-return.test.mjs:74:3
+✖ admin draft pagination and authentication preserve the applied page size (9.5858ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  null !== '24'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/team-balance-session-return.test.mjs:84:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: '24',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

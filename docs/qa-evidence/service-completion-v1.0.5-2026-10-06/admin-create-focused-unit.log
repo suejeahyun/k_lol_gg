@@ -1,0 +1,31 @@
+✔ invalid gallery files do not consume the five valid upload slots (0.8368ms)
+✔ gallery file planning applies remaining capacity after validation (0.1412ms)
+✔ short-lived gallery upload reports are bounded before display (0.2006ms)
+✔ owner submission rechecks authorization and binds a READY private asset atomically (2.5999ms)
+✔ exact replay returns the durable body without touching the task or asset (0.4029ms)
+✔ missing private asset and failed authorization use existence-masked errors (0.5346ms)
+✔ outbox failure rolls task, audit, outbox and receipt back together (0.2614ms)
+✔ review requires an ADMIN-purpose TOTP recheck and approves the exact evidence batch (0.4356ms)
+✔ tampered immutable request body fails before the transaction (0.1869ms)
+✔ identity prioritizes account then player and normalizes direct identity (0.5645ms)
+✔ warning policy preserves V1 counts and deterministic oldest-first conversion (0.489ms)
+✔ three active warnings create one review and an existing pending review suppresses duplicates (0.1374ms)
+✔ owner evidence submission reaches review only at the exact required count (0.3076ms)
+✔ rejection creates a batch boundary and requires a complete fresh batch (0.1159ms)
+✔ stale, non-owner, duplicate, expired and invalid review operations fail closed (0.3928ms)
+✔ public discipline DTO contains aggregate counts only (0.9437ms)
+✔ discipline admin input parsers keep a closed field allowlist (0.8654ms)
+✔ review and cancellation bodies reject ambiguous shapes (0.1377ms)
+✔ admin private asset query is bounded and rejects duplicate or unknown parameters (1.0454ms)
+✔ raw media upload preflight requires same origin, If-Match, bounded image MIME/size, SHA and safe name (12.5531ms)
+✔ unconfigured upload storage returns the specific fail-closed problem (0.6911ms)
+✔ media editor and private asset administration expose the complete safe workflow (1.2093ms)
+✔ gallery editor accepts only bounded bulk upload result counts (0.4883ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 252.0994

@@ -884,7 +884,7 @@
   font-weight: 850;
   cursor: pointer;
 }
-.mainPositionButtons button:focus-visible { border-color: rgba(89,111,178,.6); background: #f0f6ff; outline: 2px solid rgba(89,111,178,.35); outline-offset: 1px; }
+.mainPositionButtons button:focus-visible { border-color: rgba(89,111,178,.6); background: #f0f6ff; outline: 2px solid var(--ring); outline-offset: 1px; }
 .mainPositionButtons button[data-selected="true"] { border-color: #6d7fc2; color: #46588f; background: linear-gradient(145deg,#e8f7ff,#eeeaff); box-shadow: inset 0 0 0 1px rgba(83,116,185,.1); }
 
 .balanceRowDetails { border-top: 1px solid rgba(118,151,198,.16); background: white; }
@@ -1060,7 +1060,7 @@
   text-decoration: none;
   transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
 }
-.draftListCard:focus-visible { border-color: rgba(111, 102, 187, .52); outline: 2px solid rgba(111,102,187,.28); outline-offset: 2px; }
+.draftListCard:focus-visible { border-color: rgba(111, 102, 187, .52); outline: 2px solid var(--ring); outline-offset: 2px; }
 .draftListCard h2 { margin: 6px 0 0; color: var(--ink-strong); font: 900 18px/1.3 var(--font-heading); }
 .draftListCard > div > span { display: inline-flex; border-radius: 999px; padding: 5px 8px; color: #536f5f; background: #e8f8ef; font-size: 10px; font-weight: 900; }
 .draftListCard > div > span[data-status="EVALUATED"] { color: #556f99; background: #eaf4ff; }
@@ -1225,7 +1225,7 @@
 .balanceRows select:focus-visible,
 .candidateFilters select:focus-visible,
 .manualGrid select:focus-visible {
-  outline: 3px solid rgba(96,130,199,.34);
+  outline: 3px solid var(--ring);
   outline-offset: 2px;
 }
 

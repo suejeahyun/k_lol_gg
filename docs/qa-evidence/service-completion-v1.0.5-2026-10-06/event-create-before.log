@@ -1,0 +1,71 @@
+✖ event creation retries the exact uncertain request and keeps editing locked until confirmation (46.4337ms)
+✖ two submissions before render issue only one event request (8.4ms)
+✖ server errors and unreadable successful responses retain the original event identity (5.9642ms)
+✔ a definite rejection unlocks correction and gives the corrected request a new identity (5.8058ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 273.0744
+
+✖ failing tests:
+
+test at tests\event-create-recovery.test.mjs:51:1
+✖ event creation retries the exact uncertain request and keeps editing locked until confirmation (46.4337ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '{"eventId":"9bb44a31-463b-4767-9594-f3f5c013f713","settings":{"title":"합성 이벤트","description":null,"format":"POSITION","recruitmentOpensAt":"2026-10-06T01:00:00.000Z","recruitmentClosesAt":"2026-10-07T01:00:00.000Z","bracketBestOf":3}}'
+  - '{"eventId":"a93cb226-4bf5-4579-ac8c-248e109715e9","settings":{"title":"stale DOM must not replace unresolved input","description":null,"format":"POSITION","recruitmentOpensAt":"2026-10-06T01:00:00.000Z","recruitmentClosesAt":"2026-10-07T01:00:00.000Z","bracketBestOf":3}}'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-create-recovery.test.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '{"eventId":"9bb44a31-463b-4767-9594-f3f5c013f713","settings":{"title":"합성 이벤트","description":null,"format":"POSITION","recruitmentOpensAt":"2026-10-06T01:00:00.000Z","recruitmentClosesAt":"2026-10-07T01:00:00.000Z","bracketBestOf":3}}',
+    expected: '{"eventId":"a93cb226-4bf5-4579-ac8c-248e109715e9","settings":{"title":"stale DOM must not replace unresolved input","description":null,"format":"POSITION","recruitmentOpensAt":"2026-10-06T01:00:00.000Z","recruitmentClosesAt":"2026-10-07T01:00:00.000Z","bracketBestOf":3}}',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\event-create-recovery.test.mjs:65:1
+✖ two submissions before render issue only one event request (8.4ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-create-recovery.test.mjs:70:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\event-create-recovery.test.mjs:75:1
+✖ server errors and unreadable successful responses retain the original event identity (5.9642ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-create-recovery.test.mjs:79:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

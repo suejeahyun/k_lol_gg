@@ -49,7 +49,7 @@ test("operations exposes all four existing form routes and selects their lists a
   assert.deepEqual(ADMIN_OPERATION_FORM_LINKS.map(({ formType, label }) => ({ formType, label })), [
     { formType: "meetups", label: "모임" },
     { formType: "leaves", label: "외출" },
-    { formType: "suggestions", label: "건의사항" },
+    { formType: "suggestions", label: "문의·건의" },
     { formType: "friends", label: "디스코드 초대" },
   ]);
   for (const link of ADMIN_OPERATION_FORM_LINKS) {

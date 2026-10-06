@@ -1,0 +1,103 @@
+✖ actual review and delete handlers send the strong numeric ETag accepted by the server parser (79.6398ms)
+✖ lost responses and unreadable successes preserve request identity and edited inputs for retry (19.0482ms)
+✖ changing an unsuccessful review payload uses a separate idempotency identity (16.4756ms)
+✖ review is guarded against same-tick clicks and stays locked through server refresh (15.2848ms)
+✖ a stale revision preserves local input until explicit reload and expired sessions link back to the same record (13.1372ms)
+✖ successful deletion navigates to its filtered list and cannot repeat before navigation (12.5717ms)
+✔ record detail keys review state to the record revision after an explicit server refresh (24.841ms)
+ℹ Error: Test "review is guarded against same-tick clicks and stays locked through server refresh" at tests\operation-form-actions.test.mjs:97:1 generated asynchronous activity after the test ended. This activity created the error "ReferenceError: module is not defined" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+ℹ Error: Test "review is guarded against same-tick clicks and stays locked through server refresh" at tests\operation-form-actions.test.mjs:97:1 generated asynchronous activity after the test ended. This activity created the error "ReferenceError: module is not defined" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+ℹ tests 7
+ℹ suites 0
+ℹ pass 1
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 383.6117
+
+✖ failing tests:
+
+test at tests\operation-form-actions.test.mjs:63:1
+✖ actual review and delete handlers send the strong numeric ETag accepted by the server parser (79.6398ms)
+  ReferenceError: module is not defined
+      at Object.render (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:55:40)
+      at Object.click (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:56:61)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:69:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17)
+
+test at tests\operation-form-actions.test.mjs:75:1
+✖ lost responses and unreadable successes preserve request identity and edited inputs for retry (19.0482ms)
+  ReferenceError: module is not defined
+      at Object.render (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:55:40)
+      at Object.setNote (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:58:35)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:82:11)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+
+test at tests\operation-form-actions.test.mjs:90:1
+✖ changing an unsuccessful review payload uses a separate idempotency identity (16.4756ms)
+  ReferenceError: module is not defined
+      at Object.render (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:55:40)
+      at Object.click (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:56:61)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:92:17)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at tests\operation-form-actions.test.mjs:97:1
+✖ review is guarded against same-tick clicks and stays locked through server refresh (15.2848ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:101:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\operation-form-actions.test.mjs:110:1
+✖ a stale revision preserves local input until explicit reload and expired sessions link back to the same record (13.1372ms)
+  ReferenceError: module is not defined
+      at Object.render (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:55:40)
+      at Object.setNote (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:58:35)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:113:13)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at tests\operation-form-actions.test.mjs:127:1
+✖ successful deletion navigates to its filtered list and cannot repeat before navigation (12.5717ms)
+  ReferenceError: module is not defined
+      at Object.render (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:55:40)
+      at Object.click (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:56:61)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/operation-form-actions.test.mjs:129:17)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)

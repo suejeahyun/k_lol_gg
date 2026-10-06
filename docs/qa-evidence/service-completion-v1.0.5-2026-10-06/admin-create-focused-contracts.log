@@ -1,0 +1,48 @@
+✔ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (79.0926ms)
+✔ discipline: simultaneous submits issue one creation request (23.8433ms)
+✔ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (21.105ms)
+✔ discipline: a definite first rejection allows correction with a new identity (17.8305ms)
+✔ discipline: 401 after uncertainty does not abandon the original creation (13.5214ms)
+✔ discipline: 403 after uncertainty does not abandon the original creation (15.6217ms)
+✔ discipline: 429 after uncertainty does not abandon the original creation (12.7272ms)
+✔ discipline: malformed success cannot unlock an unconfirmed creation (12.5373ms)
+✔ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (44.2331ms)
+✔ highlight: simultaneous submits issue one creation request (45.5172ms)
+✔ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (27.9407ms)
+✔ highlight: a definite first rejection allows correction with a new identity (27.8821ms)
+✔ highlight: 401 after uncertainty does not abandon the original creation (35.0362ms)
+✔ highlight: 403 after uncertainty does not abandon the original creation (31.2306ms)
+✔ highlight: 429 after uncertainty does not abandon the original creation (23.8581ms)
+✔ highlight: malformed success cannot unlock an unconfirmed creation (23.9185ms)
+✔ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (24.88ms)
+✔ gallery: simultaneous submits issue one creation request (34.7874ms)
+✔ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (30.7305ms)
+✔ gallery: a definite first rejection allows correction with a new identity (22.8405ms)
+✔ gallery: 401 after uncertainty does not abandon the original creation (25.9406ms)
+✔ gallery: 403 after uncertainty does not abandon the original creation (30.7796ms)
+✔ gallery: 429 after uncertainty does not abandon the original creation (22.2501ms)
+✔ gallery: malformed success cannot unlock an unconfirmed creation (22.0724ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=false (33.433ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=true (31.4821ms)
+✔ public discipline API exposes aggregate statistics only (4.0441ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (1.3226ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (1.826ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (0.7816ms)
+✔ discipline pages declare real empty, error, and unavailable states (0.7527ms)
+✔ discipline administrator headings and status labels are readable Korean (0.8707ms)
+✔ event creation retries the exact uncertain request and keeps editing locked until confirmation (55.42ms)
+✔ two submissions before render issue only one event request (11.3351ms)
+✔ server errors and unreadable successful responses retain the original event identity (7.8503ms)
+✔ a definite rejection unlocks correction and gives the corrected request a new identity (6.666ms)
+✔ an uncertain creation keeps its identity after retry receives 401 (6.4293ms)
+✔ an uncertain creation keeps its identity after retry receives 403 (7.7573ms)
+✔ an uncertain creation keeps its identity after retry receives 429 (5.9441ms)
+✔ gallery image load failures keep a clear, accessible fallback in the reserved card area (2.8744ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 978.6852

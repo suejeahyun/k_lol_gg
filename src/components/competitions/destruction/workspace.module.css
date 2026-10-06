@@ -7,6 +7,7 @@
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:1rem;align-items:start}
 .form{display:grid;gap:.8rem;min-width:0}.form label{display:grid;gap:.4rem;font-size:.85rem;font-weight:600}.form input,.form select,.form textarea{width:100%;min-width:0;min-height:44px;padding:.65rem .75rem;border:1px solid var(--input);border-radius:.65rem;background:var(--background);color:var(--foreground);font:inherit}
 .form fieldset{border:1px solid var(--border);border-radius:.7rem;padding:1rem;display:grid;gap:.75rem;min-width:0}.form legend{font-weight:700;padding:0 .4rem}
+.form .createFields{grid-template-columns:minmax(0,1fr);gap:.8rem;margin:0;padding:0;border:0}
 .workspace button,.live button{min-height:44px;padding:.6rem 1rem;border:1px solid var(--border);border-radius:.65rem;background:var(--background);color:var(--foreground);font:inherit;font-size:.85rem;font-weight:650;cursor:pointer}
 .workspace button:disabled,.live button:disabled{opacity:.55;cursor:not-allowed}.workspace :is(button,input,select,summary,a):focus-visible,.live button:focus-visible{outline:3px solid var(--ring);outline-offset:3px}
 .workspace .primary{background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)}.workspace .danger{color:var(--destructive);border-color:var(--destructive)}

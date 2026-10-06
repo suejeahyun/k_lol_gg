@@ -1,0 +1,329 @@
+✖ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (52.821ms)
+✖ discipline: simultaneous submits issue one creation request (11.1724ms)
+✖ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (9.4625ms)
+✔ discipline: a definite first rejection allows correction with a new identity (9.9579ms)
+✖ discipline: authentication rejection after uncertainty does not abandon the original creation (7.0354ms)
+✖ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (54.2515ms)
+✖ highlight: simultaneous submits issue one creation request (35.4032ms)
+✖ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (28.718ms)
+✖ highlight: a definite first rejection allows correction with a new identity (28.0411ms)
+✖ highlight: authentication rejection after uncertainty does not abandon the original creation (22.9543ms)
+✖ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (20.8969ms)
+✖ gallery: simultaneous submits issue one creation request (20.6953ms)
+✖ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (21.0916ms)
+✖ gallery: a definite first rejection allows correction with a new identity (19.2151ms)
+✖ gallery: authentication rejection after uncertainty does not abandon the original creation (18.913ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 1
+ℹ fail 14
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 677.8548
+
+✖ failing tests:
+
+test at tests\admin-create-recovery.test.mjs:71:3
+✖ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (52.821ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - true
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:74:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:84:3
+✖ discipline: simultaneous submits issue one creation request (11.1724ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:88:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:92:3
+✖ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (9.4625ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 0
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:95:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:112:3
+✖ discipline: authentication rejection after uncertainty does not abandon the original creation (7.0354ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:115:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-create-recovery.test.mjs:71:3
+✖ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (54.2515ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:84:3
+✖ highlight: simultaneous submits issue one creation request (35.4032ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:92:3
+✖ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (28.718ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:101:3
+✖ highlight: a definite first rejection allows correction with a new identity (28.0411ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:112:3
+✖ highlight: authentication rejection after uncertainty does not abandon the original creation (22.9543ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:71:3
+✖ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (20.8969ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:84:3
+✖ gallery: simultaneous submits issue one creation request (20.6953ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:92:3
+✖ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (21.0916ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:101:3
+✖ gallery: a definite first rejection allows correction with a new identity (19.2151ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }
+
+test at tests\admin-create-recovery.test.mjs:112:3
+✖ gallery: authentication rejection after uncertainty does not abandon the original creation (18.913ms)
+  node:fs:440
+      return binding.readFileUtf8(path, stringToFlags(options.flag));
+                     ^
+
+  Error: ENOENT: no such file or directory, open 'E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\assets\domain\node:crypto.ts'
+      at readFileSync (node:fs:440:20)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:34:37)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:13:23
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:35:8)
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-create-recovery.test.mjs:47:16)
+      at evalmachine.<anonymous>:7:25 {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'E:\\k-LOL.GG\\worktrees\\ux-discoverability-20261002\\src\\modules\\assets\\domain\\node:crypto.ts'
+  }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import type { GalleryContent, GalleryImageReference, HighlightContent } from "@/modules/media";
 import { ResilientMediaImage } from "@/app/(public)/(media)/resilient-media-image";
+import { ClientMutationKeyStore, type MutationKeyTicket } from "@/modules/seasons/application/client-mutation-key-store";
 
 import styles from "./admin-media.module.css";
 import {
@@ -79,8 +80,19 @@ export function AdminMediaForm(props: Props) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
+  const [uncertainCreation, setUncertainCreation] = useState(false);
   const [uploadReport, setUploadReport] = useState<string | null>(() => initialUploadReport ? galleryUploadNavigationReportText(initialUploadReport) : null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const creationKeys = useRef(new ClientMutationKeyStore("admin-media-create")).current;
+  const creating = useRef(false);
+  const pendingCreation = useRef<{
+    ticket: MutationKeyTicket;
+    payload: ReturnType<typeof contentBody>;
+    files: readonly File[];
+    failures: readonly string[];
+    uncertain: boolean;
+  } | null>(null);
   const base = props.kind === "highlight" ? "/api/admin/highlights" : "/api/admin/images";
   const endpoint = initial ? `${base}/${initial.id}` : base;
   const assetEndpoint = initial ? `${endpoint}/assets` : null;
@@ -122,18 +134,22 @@ export function AdminMediaForm(props: Props) {
       };
   }
 
-  async function requestMutation(target: string, method: string, body: unknown, expectedRevision: number) {
+  async function requestMutation(target: string, method: string, body: unknown, expectedRevision: number, idempotencyKey = nextKey()) {
     try {
       const response = await fetch(target, {
         method,
         credentials: "same-origin",
-        headers: { "Content-Type": "application/json", "If-Match": `"${expectedRevision}"`, "Idempotency-Key": nextKey() },
+        headers: { "Content-Type": "application/json", "If-Match": `"${expectedRevision}"`, "Idempotency-Key": idempotencyKey },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15_000),
       });
+      if (response.status >= 500) throw new Error("요청 결과를 확인하지 못했습니다.");
       const payload = await response.json().catch(() => null) as MutationPayload | null;
-      if (!response.ok) return { ok: false as const, detail: payload?.detail ?? "요청을 처리하지 못했습니다." };
+      if (!response.ok) return { ok: false as const, status: response.status, detail: payload?.detail ?? "요청을 처리하지 못했습니다." };
+      const confirmedRevision = payload?.revision ?? payload?.gallery?.revision ?? payload?.highlight?.revision;
+      if (typeof confirmedRevision !== "number" || !Number.isSafeInteger(confirmedRevision) || confirmedRevision < 0) throw new Error("요청 결과를 확인하지 못했습니다.");
       return { ok: true as const, payload };
-    } catch { return { ok: false as const, detail: "네트워크 연결을 확인한 뒤 다시 시도해 주세요." }; }
+    } catch { return { ok: false as const, status: null, detail: "요청 결과를 확인하지 못했습니다. 네트워크 연결을 확인해 주세요." }; }
   }
 
   async function send(method: string, body: unknown) {
@@ -261,38 +277,68 @@ export function AdminMediaForm(props: Props) {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!initial && props.kind === "gallery") {
-      setBusy(true); setMessage(null); setUploadReport(null);
+    if (!initial) {
+      if (creating.current) return;
+      creating.current = true;
+      setBusy(true); setMessage(null); setUploadReport(null); setNeedsSignIn(false);
+      let savedId: string | null = null;
       try {
-        const createdResult = await requestMutation(base, "POST", contentBody(assetIds, []), revision);
-        if (!createdResult.ok) { setMessage(createdResult.detail); return; }
-        const created = createdResult.payload?.gallery;
-        if (!created) { setMessage("초안 생성 결과를 확인하지 못했습니다."); return; }
-
-        let report: GalleryUploadReport = { uploaded: 0, linked: 0, failedNames: selectionFailures };
-        if (selectedGalleryFiles.length > 0) {
-          const result = await uploadGalleryBatch(selectedGalleryFiles, `${base}/${created.id}/assets`, `${base}/${created.id}`, created.revision, []);
-          report = { ...result.report, failedNames: [...selectionFailures, ...result.report.failedNames] };
+        if (!pendingCreation.current) {
+          const payload = props.kind === "gallery" ? contentBody(assetIds, []) : contentBody();
+          pendingCreation.current = {
+            ticket: creationKeys.issue(`POST:${base}`, 0, payload), payload,
+            files: [...selectedGalleryFiles], failures: [...selectionFailures], uncertain: false,
+          };
         }
-        if (selectedGalleryFiles.length > 0 || selectionFailures.length > 0) {
+        const pending = pendingCreation.current;
+        const createdResult = await requestMutation(base, "POST", pending.payload, 0, pending.ticket.key);
+        if (!createdResult.ok) {
+          setNeedsSignIn(createdResult.status === 401 || createdResult.status === 403);
+          if (createdResult.status !== null && (!pending.uncertain || ![401, 403, 408, 429].includes(createdResult.status))) {
+            creationKeys.complete(pending.ticket); pendingCreation.current = null;
+          }
+          throw new Error(createdResult.detail);
+        }
+        const created = props.kind === "gallery" ? createdResult.payload?.gallery : createdResult.payload?.highlight;
+        if (!created?.id || typeof created.revision !== "number") throw new Error("초안 생성 결과를 확인하지 못했습니다.");
+        savedId = created.id;
+        creationKeys.complete(pending.ticket); pendingCreation.current = null; setUncertainCreation(false);
+
+        let report: GalleryUploadReport = { uploaded: 0, linked: 0, failedNames: pending.failures };
+        if (props.kind === "gallery" && pending.files.length > 0) {
+          const result = await uploadGalleryBatch(pending.files, `${base}/${created.id}/assets`, `${base}/${created.id}`, created.revision, []);
+          report = { ...result.report, failedNames: [...pending.failures, ...result.report.failedNames] };
+        }
+        if (pending.files.length > 0 || pending.failures.length > 0) {
           try { globalThis.sessionStorage.setItem(galleryUploadReportKey(created.id), JSON.stringify(report)); } catch { /* Count-only fallback remains available. */ }
         }
-        const query = selectedGalleryFiles.length > 0 || selectionFailures.length > 0
+        const query = pending.files.length > 0 || pending.failures.length > 0
           ? `?uploaded=${report.uploaded}&linked=${report.linked}&failed=${Math.min(5, report.failedNames.length)}`
           : "";
-        router.push(`/admin/images/${created.id}/edit${query}`);
-      } finally { setUploadProgress(null); setBusy(false); }
+        router.push(`/admin/${props.kind === "gallery" ? "images" : "highlights"}/${created.id}/edit${query}`);
+      } catch (error) {
+        if (savedId) {
+          router.push(`/admin/${props.kind === "gallery" ? "images" : "highlights"}/${savedId}/edit`);
+        } else {
+          if (pendingCreation.current) pendingCreation.current.uncertain = true;
+          setUncertainCreation(pendingCreation.current !== null);
+          const detail = error instanceof Error ? error.message : "초안 생성 결과를 확인하지 못했습니다.";
+          setMessage(pendingCreation.current ? `${detail} 같은 요청의 결과를 다시 확인해 주세요.` : detail);
+        }
+      } finally {
+        setUploadProgress(null);
+        if (!savedId) { creating.current = false; setBusy(false); }
+      }
       return;
     }
-    const payload = await send(initial ? "PATCH" : "POST", contentBody());
+    const payload = await send("PATCH", contentBody());
     if (!payload) return;
-    if (!initial) {
-      const created = props.kind === "highlight" ? payload.highlight : payload.gallery;
-      if (created) router.push(`/admin/${props.kind === "highlight" ? "highlights" : "images"}/${created.id}/edit`);
-    } else router.refresh();
+    router.refresh();
   }
 
-  return <form className={styles.form} onSubmit={(event) => void submit(event)}>
+  return <form className={styles.form} onSubmit={(event) => void submit(event)} aria-busy={busy}>
+    <fieldset className={styles.createFields} disabled={!initial && (busy || uncertainCreation)}>
+    <legend className="sr-only">콘텐츠 입력</legend>
     <label>제목<input maxLength={120} required value={title} onChange={(event) => setTitle(event.target.value)} /></label>
     <label>설명<textarea maxLength={4000} required value={description} onChange={(event) => setDescription(event.target.value)} /></label>
     {props.kind === "highlight" ? <div className={styles.split}><label>YouTube 주소<input type="url" required placeholder="https://youtu.be/..." value={youtubeUrl} onChange={(event) => setYoutubeUrl(event.target.value)} /></label><label>정렬 순서<input type="number" min="-100000" max="100000" value={sortOrder} onChange={(event) => setSortOrder(Number(event.target.value))} /></label></div> : null}
@@ -331,10 +377,12 @@ export function AdminMediaForm(props: Props) {
       {editable && assets.some((asset) => props.kind === "highlight" ? !assetIds.includes(asset.assetId) : !linkedGalleryAssetIds.includes(asset.assetId)) ? <div className={styles.assetSelector}><strong>이 초안의 기존 READY 이미지</strong>{assets.filter((asset) => props.kind === "highlight" ? !assetIds.includes(asset.assetId) : !linkedGalleryAssetIds.includes(asset.assetId)).map((asset) => <button disabled={busy || (props.kind === "gallery" && galleryImages.length >= 5)} key={asset.assetId} type="button" onClick={() => props.kind === "highlight" ? void saveAssets([asset.assetId]) : void saveGalleryImages([...galleryImages, { kind: "ASSET", assetId: asset.assetId }])}><span>{assetLabel(asset)}</span><b>연결</b></button>)}</div> : null}
     </section>}
 
+    </fieldset>
     {uploadProgress ? <p className={styles.notice} aria-live="polite" role="status">{uploadProgress}</p> : null}
     {uploadReport ? <p className={styles.notice} aria-live="polite" role="status">{uploadReport}</p> : null}
     {message ? <p className={styles.error} role="alert">{message}</p> : null}
-    <div className={styles.actions}><button className={styles.submit} disabled={busy} type="submit">{busy ? uploadProgress ?? "처리 중…" : initial ? "변경 저장" : props.kind === "gallery" && selectedGalleryFiles.length > 0 ? `초안 만들고 ${selectedGalleryFiles.length}장 등록` : "초안 만들기"}</button>
+    {needsSignIn ? <a href="/admin/login" target="_blank" rel="noreferrer">관리자 로그인 (새 창)</a> : null}
+    <div className={styles.actions}><button className={styles.submit} disabled={busy} type="submit">{busy ? uploadProgress ?? "처리 중…" : uncertainCreation ? "생성 결과 다시 확인" : initial ? "변경 저장" : props.kind === "gallery" && selectedGalleryFiles.length > 0 ? `초안 만들고 ${selectedGalleryFiles.length}장 등록` : "초안 만들기"}</button>
       {initial?.status === "DRAFT" ? <button disabled={busy} type="button" onClick={() => void send("PATCH", { action: "PUBLISH" }).then((result) => { if (result) router.refresh(); })}>게시</button> : null}
       {initial?.status === "PUBLISHED" ? <button disabled={busy} type="button" onClick={() => void send("PATCH", { action: "UNPUBLISH" }).then((result) => { if (result) router.refresh(); })}>게시 내리기</button> : null}
       {initial?.status === "ARCHIVED" ? <button disabled={busy} type="button" onClick={() => void send("PATCH", { action: "RESTORE" }).then((result) => { if (result) router.refresh(); })}>draft 복구</button> : null}

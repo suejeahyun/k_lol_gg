@@ -217,7 +217,7 @@
 }
 .positionGrid label[data-selected="true"] { border-color: #8fa9e5; color: #4d4f98; background: #ebeefe; }
 .positionGrid input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
-.positionGrid label:focus-within { outline: 3px solid rgba(78, 119, 198, 0.28); outline-offset: 2px; }
+.positionGrid label:focus-within { outline: 3px solid var(--ring); outline-offset: 2px; }
 .positionHint { margin: 0; border-radius: 14px; color: var(--text-muted); background: #f4f8fd; padding: 14px 16px; font-size: 12px; font-weight: 750; }
 .actionButtons { display: flex; flex-wrap: wrap; gap: 8px; }
 .actionButtons button[data-variant="danger"] { color: #a13c56; background: #fff0f4; }

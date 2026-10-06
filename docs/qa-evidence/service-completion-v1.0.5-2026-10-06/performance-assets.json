@@ -1,0 +1,208 @@
+{
+  "measuredAtUtc": "2026-10-06T01:44:59.1723790Z",
+  "baseUrl": "https://k-lol-gg.vercel.app",
+  "pageAssets": [
+    {
+      "page": "home",
+      "assets": [
+        "/_next/static/immutable/chunks/01hgg74s0z3et.js",
+        "/_next/static/immutable/chunks/0a1plit5ph5at.js",
+        "/_next/static/immutable/chunks/0c0hxoamwjsbw.js",
+        "/_next/static/immutable/chunks/0gxx3q6zkrtu3.css",
+        "/_next/static/immutable/chunks/0y2gw0x2t4ujt.js",
+        "/_next/static/immutable/chunks/0zrdz3f6i828l.js",
+        "/_next/static/immutable/chunks/12_qesojld1zb.css",
+        "/_next/static/immutable/chunks/18jlhvcm0d2vh.js",
+        "/_next/static/immutable/chunks/1p_8a1ezvxkxe.js",
+        "/_next/static/immutable/chunks/2_pola9s7repg.js",
+        "/_next/static/immutable/chunks/2a6r5tcq4dq9p.js",
+        "/_next/static/immutable/chunks/3hzjxwzosh99u.js",
+        "/_next/static/immutable/chunks/3t0_lyr4ub980.js",
+        "/_next/static/immutable/chunks/turbopack-2iqvvrachm5-u.js"
+      ]
+    },
+    {
+      "page": "tools-team-balance",
+      "assets": [
+        "/_next/static/immutable/chunks/01hgg74s0z3et.js",
+        "/_next/static/immutable/chunks/04dci1vnyfg9f.js",
+        "/_next/static/immutable/chunks/0c0hxoamwjsbw.js",
+        "/_next/static/immutable/chunks/0gxx3q6zkrtu3.css",
+        "/_next/static/immutable/chunks/0xefhmj2_-ayq.css",
+        "/_next/static/immutable/chunks/0y2gw0x2t4ujt.js",
+        "/_next/static/immutable/chunks/0zrdz3f6i828l.js",
+        "/_next/static/immutable/chunks/18jlhvcm0d2vh.js",
+        "/_next/static/immutable/chunks/1p_8a1ezvxkxe.js",
+        "/_next/static/immutable/chunks/2_pola9s7repg.js",
+        "/_next/static/immutable/chunks/2-w2nqqpky5ag.js",
+        "/_next/static/immutable/chunks/2yvfvi5p9dvme.js",
+        "/_next/static/immutable/chunks/3hzjxwzosh99u.js",
+        "/_next/static/immutable/chunks/3t0_lyr4ub980.js",
+        "/_next/static/immutable/chunks/turbopack-2iqvvrachm5-u.js"
+      ]
+    },
+    {
+      "page": "matches",
+      "assets": [
+        "/_next/static/immutable/chunks/01hgg74s0z3et.js",
+        "/_next/static/immutable/chunks/0c0hxoamwjsbw.js",
+        "/_next/static/immutable/chunks/0gxx3q6zkrtu3.css",
+        "/_next/static/immutable/chunks/0y2gw0x2t4ujt.js",
+        "/_next/static/immutable/chunks/0zrdz3f6i828l.js",
+        "/_next/static/immutable/chunks/12_qesojld1zb.css",
+        "/_next/static/immutable/chunks/18jlhvcm0d2vh.js",
+        "/_next/static/immutable/chunks/1p_8a1ezvxkxe.js",
+        "/_next/static/immutable/chunks/2_pola9s7repg.js",
+        "/_next/static/immutable/chunks/3hzjxwzosh99u.js",
+        "/_next/static/immutable/chunks/3t0_lyr4ub980.js",
+        "/_next/static/immutable/chunks/turbopack-2iqvvrachm5-u.js"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "/_next/static/immutable/chunks/01hgg74s0z3et.js",
+      "status": 200,
+      "transferredBodyBytes": 4120,
+      "decodedBytes": 10200,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/04dci1vnyfg9f.js",
+      "status": 200,
+      "transferredBodyBytes": 5064,
+      "decodedBytes": 14646,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: MISS"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0a1plit5ph5at.js",
+      "status": 200,
+      "transferredBodyBytes": 12397,
+      "decodedBytes": 36491,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0c0hxoamwjsbw.js",
+      "status": 200,
+      "transferredBodyBytes": 39797,
+      "decodedBytes": 112594,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: MISS"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0gxx3q6zkrtu3.css",
+      "status": 200,
+      "transferredBodyBytes": 20627,
+      "decodedBytes": 103062,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0xefhmj2_-ayq.css",
+      "status": 200,
+      "transferredBodyBytes": 8505,
+      "decodedBytes": 52039,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0y2gw0x2t4ujt.js",
+      "status": 200,
+      "transferredBodyBytes": 2018,
+      "decodedBytes": 5598,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0zrdz3f6i828l.js",
+      "status": 200,
+      "transferredBodyBytes": 8785,
+      "decodedBytes": 34718,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/12_qesojld1zb.css",
+      "status": 200,
+      "transferredBodyBytes": 14839,
+      "decodedBytes": 86369,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/18jlhvcm0d2vh.js",
+      "status": 200,
+      "transferredBodyBytes": 9725,
+      "decodedBytes": 30794,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/1p_8a1ezvxkxe.js",
+      "status": 200,
+      "transferredBodyBytes": 44377,
+      "decodedBytes": 160198,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/2_pola9s7repg.js",
+      "status": 200,
+      "transferredBodyBytes": 11811,
+      "decodedBytes": 35550,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/2-w2nqqpky5ag.js",
+      "status": 200,
+      "transferredBodyBytes": 8251,
+      "decodedBytes": 23534,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/2a6r5tcq4dq9p.js",
+      "status": 200,
+      "transferredBodyBytes": 6824,
+      "decodedBytes": 18683,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/2yvfvi5p9dvme.js",
+      "status": 200,
+      "transferredBodyBytes": 131819,
+      "decodedBytes": 437793,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/3hzjxwzosh99u.js",
+      "status": 200,
+      "transferredBodyBytes": 72436,
+      "decodedBytes": 229392,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/3t0_lyr4ub980.js",
+      "status": 200,
+      "transferredBodyBytes": 8200,
+      "decodedBytes": 27910,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    },
+    {
+      "path": "/_next/static/immutable/chunks/turbopack-2iqvvrachm5-u.js",
+      "status": 200,
+      "transferredBodyBytes": 4321,
+      "decodedBytes": 10986,
+      "encoding": "Content-Encoding: gzip",
+      "cache": "X-Vercel-Cache: HIT"
+    }
+  ]
+}

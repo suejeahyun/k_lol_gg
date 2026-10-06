@@ -1,0 +1,11 @@
+✔ event transaction retries a rolled-back serialization failure with a fresh context (26.4762ms)
+✔ event transaction retries deadlocks but bounds repeated database contention (75.138ms)
+✔ event transaction does not retry validation or unrelated database errors (0.4324ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 821.486

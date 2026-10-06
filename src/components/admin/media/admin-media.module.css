@@ -22,6 +22,7 @@
 .state { display: grid; justify-items: center; gap: .6rem; padding: 3rem 1rem; border: 1px dashed #ccd9e9; border-radius: 1rem; text-align: center; background: var(--theme-surface-background); }
 .state h2,.state p { margin: 0; }.state p { color: #6a7890; }
 .form { display: grid; gap: 1rem; padding: 1.35rem; border: 1px solid #dce5f1; border-radius: 1.2rem; background: white; }
+.createFields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; min-width: 0; margin: 0; padding: 0; border: 0; }
 .form label { display: grid; gap: .45rem; color: #52637a; font-size: .82rem; font-weight: 850; }
 .form input,.form select,.form textarea { width: 100%; border: 1px solid #cad8e9; border-radius: .75rem; padding: .75rem; color: #223148; background: #fff; font: inherit; }
 .form textarea { min-height: 8rem; resize: vertical; }

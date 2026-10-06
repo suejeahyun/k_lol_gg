@@ -46,7 +46,7 @@
 .check input { width: 1.1rem; height: 1.1rem; margin-top: .12rem; accent-color: #4a74bd; }
 .submit { min-height: 2.75rem; border: 1px solid transparent; border-radius: .85rem; color: white; background: linear-gradient(135deg, #376dbb, #6b59b6); box-shadow: 0 .45rem 1rem rgb(54 88 145 / 14%); padding: 0 1rem; font: inherit; font-size: .875rem; font-weight: 900; cursor: pointer; }
 .submit:hover { filter: brightness(.95); box-shadow: 0 .55rem 1.2rem rgb(54 88 145 / 18%); }
-.submit:focus-visible { outline: 3px solid rgb(47 110 200 / 34%); outline-offset: 3px; }
+.submit:focus-visible { outline: 3px solid var(--account-focus); outline-offset: 3px; }
 .submit:active:not(:disabled) { transform: translateY(1px); }
 .submit:disabled { cursor: wait; opacity: .65; }
 .logoutControl { display: grid; justify-items: end; gap: .45rem; }
@@ -62,7 +62,7 @@
 .accountHero h1 { max-width: 100%; font-size: clamp(2rem, 5vw, 3.2rem); overflow-wrap: anywhere; }
 .accountHero form button { min-width: 5.5rem; min-height: 2.75rem; border: 1px solid var(--account-border-strong); border-radius: .8rem; color: #405571; background: white; font: inherit; font-size: .8125rem; font-weight: 850; cursor: pointer; }
 .accountHero form button:hover { border-color: #91add0; background: #f5f9ff; color: var(--account-accent); }
-.accountHero form button:focus-visible { outline: 3px solid rgb(47 110 200 / 30%); outline-offset: 3px; }
+.accountHero form button:focus-visible { outline: 3px solid var(--account-focus); outline-offset: 3px; }
 .accountHeroActions { display: grid; justify-items: end; gap: .55rem; }
 .status { display: inline-flex; min-height: 2.75rem; align-items: center; border: 1px solid #cfc2ed; border-radius: 999px; color: #5e478d; background: #f0ebff; padding: 0 .8rem; font-size: .8125rem; font-weight: 900; }
 .status[data-state="APPROVED"] { border-color: #a9d8c8; color: #185f4d; background: #eaf8f3; }
@@ -72,7 +72,7 @@
 .tabs a { min-height: 2.75rem; display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--account-border); border-radius: .8rem; color: #4e627d; background: white; padding: 0 .9rem; font-size: .8125rem; font-weight: 850; text-decoration: none; white-space: nowrap; }
 .tabs a:hover { border-color: #a9bfd9; background: #f7faff; color: var(--account-accent); }
 .tabs a[aria-current="page"] { border-color: #9ebadb; color: #285a9e; background: #eaf3ff; box-shadow: inset 0 -3px #4f84ca; }
-.tabs a:focus-visible, .primaryLink:focus-visible, .panelHeading > a:focus-visible { outline: 3px solid rgb(71 119 199 / 32%); outline-offset: 3px; }
+.tabs a:focus-visible, .primaryLink:focus-visible, .panelHeading > a:focus-visible { outline: 3px solid var(--account-focus); outline-offset: 3px; }
 .panel { margin-top: 1rem; padding: clamp(1rem, 3vw, 1.5rem); }
 .panel h2 { margin: 0 0 .75rem; color: #243957; font-size: 1.05rem; line-height: 1.4; }
 .panelHeading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
