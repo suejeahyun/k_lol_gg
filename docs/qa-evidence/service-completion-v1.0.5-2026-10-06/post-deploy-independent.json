@@ -1,0 +1,88 @@
+{
+  "checkedAt": "2026-10-06T02:12:13.807Z",
+  "scope": "Five anonymous read-only page/API GETs plus their linked CSS. No cookies, user data writes, admin login, real draft lookup or shared-browser interaction. Raw bodies and provider environment metadata are not retained.",
+  "deployment": {
+    "id": "dpl_HuMGR69n3o964U2CnZZicYHCKhW7",
+    "state": "READY",
+    "target": "production",
+    "source": "c9431b9e68b468c17d02c6ff7595de7e14a7c9c8",
+    "ref": "main",
+    "url": "https://k-lol-hhf457dov-tjdmswo11-3715s-projects.vercel.app"
+  },
+  "canonicalAlias": {
+    "url": "https://k-lol-gg.vercel.app",
+    "id": "dpl_HuMGR69n3o964U2CnZZicYHCKhW7",
+    "state": "READY"
+  },
+  "checks": [
+    {
+      "id": "health",
+      "path": "/api/health",
+      "status": 200,
+      "ready": true,
+      "noStore": true,
+      "passed": true
+    },
+    {
+      "id": "team-draft-login-return",
+      "checkedAt": "2026-10-06T02:12:46.262Z",
+      "pathTemplate": "/tools/team-balance/drafts/<synthetic-uuid>?tab=recommendations&team=RED",
+      "status": 200,
+      "transport": "streamed-meta-refresh",
+      "frameworkRedirectDigest": true,
+      "loginPath": "/login",
+      "nextContainsExactOriginalPath": true,
+      "passed": true,
+      "limitation": "Server-issued redirect and exact return URL verified; browser navigation and successful login not executed in production."
+    },
+    {
+      "id": "served-ranking-wrapping",
+      "path": "/rankings?minParticipation=0",
+      "status": 200,
+      "serverError": false,
+      "linkedCss": [
+        {
+          "path": "/_next/static/immutable/chunks/3yhtret3ggg30.css",
+          "status": 200,
+          "sha256": "f631f4f1d25d6e6c1be178d4110a66fa3f7ae344fe4b47e230432fe9ff57ce5e",
+          "boardWrap": false,
+          "podiumWrap": false
+        },
+        {
+          "path": "/_next/static/immutable/chunks/2zjzurgxhtxhy.css",
+          "status": 200,
+          "sha256": "7477313e420f23c2e0f2ed1eb65ebb5389b896476752908ddd2d4285318b49ee",
+          "boardWrap": true,
+          "podiumWrap": true
+        }
+      ],
+      "passed": true,
+      "limitation": "Actual canonical linked CSS rules verified. No claim about hydrated DOM, keyboard input, or production long-name rows."
+    },
+    {
+      "id": "unauthenticated-admin-read",
+      "path": "/api/admin/competitions/events",
+      "status": 401,
+      "problemCode": "UNAUTHENTICATED",
+      "noStore": true,
+      "noEntityData": true,
+      "passed": true
+    },
+    {
+      "id": "unauthenticated-admin-read",
+      "path": "/api/admin/operation-forms?type=suggestions",
+      "status": 401,
+      "problemCode": "UNAUTHENTICATED",
+      "noStore": true,
+      "noEntityData": true,
+      "passed": true
+    }
+  ],
+  "sourceAndAliasMatch": true,
+  "passed": true,
+  "completedAt": "2026-10-06T02:12:46.263Z",
+  "harnessCorrections": [
+    "Initial operation-form list probe incorrectly used /api/admin/operation-forms/suggestions, which is not a route. Corrected to the actual /api/admin/operation-forms?type=suggestions route; product not changed.",
+    "Initial draft assertion required only HTTP 307. Bundled Next 16.3.8 redirect documentation explicitly describes meta refresh for streamed responses. The focused rerun requires actual meta refresh plus NEXT_REDIRECT and an exact original next URL; no expectation was relaxed to mere HTTP 200."
+  ]
+}

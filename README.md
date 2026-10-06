@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-06 핵심 과업·저장 복구 1.0.5 운영 반영**: 수동 팀의 실제 저장/복사 일치, 문의 관리 저장, 관리자 생성의 재시도·중복 방지, 이벤트 동시 저장, 갤러리 완료 표시와 긴 이름 랭킹을 개선했습니다. [현재 운영·검증·미완료 조건](docs/qa-evidence/service-completion-v1.0.5-2026-10-06/production.md), [18기능군 점검 원장](docs/qa-evidence/service-completion-v1.0.5-2026-10-06/coverage-gaps.md), [변경 안내](docs/patch-notes/2026-10-06-service-completion-1.0.5.md). 아래는 이전 릴리스의 시점별 기록입니다.
+
 **2026-10-03 전체 화면·조회 복구 개선 1.0.0 운영 반영**: 대회/제출 검색 오류, 팀 결과 이동, 오류 재시도와 좁은 화면을 보완했습니다. 전체 check·DB·HTTP·486개 화면 조건 검증 완료. [운영 검증](docs/qa-evidence/quality-completion-v1.0.0-2026-10-03/production.md), [업데이트 안내](docs/patch-notes/2026-10-03-quality-completion.md).
 
 **2026-10-03 이용 동선 개선 1.0.0 운영 반영**: 홈 참가 버튼, 모바일 로그인·경기 필터, 모집 정원 안내, 메뉴·랭킹 조작과 생성 이미지를 다듬었습니다. [운영 검증](docs/qa-evidence/ux-refinement-v1.0.0-2026-10-03/production.md), [변경 안내](docs/patch-notes/2026-10-03-ux-refinement.md).

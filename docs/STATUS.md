@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-06 핵심 과업·저장 복구 1.0.5 운영 반영
+
+source `c9431b9e68b468c17d02c6ff7595de7e14a7c9c8`, tag `service-completion-v1.0.5`, Vercel main `dpl_HuMGR69n3o964U2CnZZicYHCKhW7` READY와 canonical alias `https://k-lol-gg.vercel.app`를 확인했다. 수동 팀과 저장/복사/접수의 불일치, 문의 관리 ETag, 이벤트 동시 저장, 이벤트·멸망전·징계·미디어의 응답 유실 재시도/완료 이동 잠금, 갤러리 연결 성공 오표시를 수정했다. 대비와 긴 이름 랭킹을 보완하고 홈 순서·이미지 테마를 유지했다.
+
+최종 check·새 격리 DB·실제 저장 HTTP·전체108페이지169조건·인증 HTTP·전체 Git 비밀정보 검사를 통과했다. 실제 팀 교체/평가/저장/복사/새로고침과 로그인 query 복귀, 최종 랭킹 네 폭 렌더, 운영 HTTP31조건과 홈 네 폭을 확인했다. [전체 기능군과 검증 공백](qa-evidence/service-completion-v1.0.5-2026-10-06/coverage-gaps.md), [배포·검증·복구 근거](qa-evidence/service-completion-v1.0.5-2026-10-06/production.md).
+
+전체 완료를 선언하지 않는다. 합성 참가 취소의 native confirm 뒤 브라우저 도구가 멈춰 사용자에게 확인창/검증 탭 닫기를 요청했으며, 취소·재신청과 수정 후 문의 관리 등 실제 UI 후속 확인은 미완료다. 실제 최고관리자 로그인에 의존하는 MMR 운영 전환과 카카오·RSO·실기기 등 외부 조건도 남는다. 기존 lint58/개발 도구 감사12경고는 해결했다고 표시하지 않는다. migration0047 유지, 운영 데이터 시험 변경 없음.
+
 ## 2026-10-06 전체 기능 분석·부가 설명 정리 1.0.4 운영 반영
 
 source `583dab4d3793b1bb00de92c2ea2fd4ad21a2e04d`, tag `service-completion-v1.0.4`, Vercel main `dpl_61srgiX3pqpT8ZBygBHzPLj8S468` READY와 운영 alias `https://k-lol-gg.vercel.app`를 확인했다. 386경로를 먼저 분석하고 18개 기능군 순서로 공개·계정·관리 화면의 반복 설명·장식·내부 코드를 정리했다. 실제 입력·상태·오류·복구·정책·집계 기준은 유지했다. 서버 재시도, 설치 상태 경합, 중복 main, 멸망전 방식 이름 충돌도 재현·수정했다. 홈 여섯 영역·단일 랭킹·생성 이미지 테마를 유지했다.

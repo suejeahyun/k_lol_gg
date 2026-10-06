@@ -26,7 +26,7 @@
 
 [실제 브라우저 기록](browser.md), [관리 HTTP](coverage-gaps.md), [실측 성능 판단](performance-review.md)을 구분한다. 컴포넌트 handler, 합성 PostgreSQL, HTTP, 실제 UI, 운영 제공자·실기기는 서로 대체하지 않는다. 성능 표본에서 확인되지 않은 LCP·부하 개선 수치를 주장하지 않는다.
 
-최종 필수 [check](check-final.log) exit0: 계약556 PASS·단위1050 PASS/조건부skip1, 타입·ERD·생성 이미지·운영 build 통과, lint0오류/기존58경고. [인증 HTTP](auth-http.log), [전체 Git 이력 비밀정보 검사](secrets-history.log) 통과. [새 격리 DB](completion-browser-final-database.log), [전체108페이지169조건](release-http.json), [이벤트 저장 HTTP11응답](event-write-http-after.json) 통과. 마지막 랭킹 CSS 이후 새 빌드와 네 폭 실제 렌더를 확인했다. 같은 검사의 재실행 수를 합산하지 않는다. 배포 결과는 후속 production 문서에서 확정한다.
+최종 필수 [check](check-final.log) exit0: 계약556 PASS·단위1050 PASS/조건부skip1, 타입·ERD·생성 이미지·운영 build 통과, lint0오류/기존58경고. [인증 HTTP](auth-http.log), [전체 Git 이력 비밀정보 검사](secrets-history.log) 통과. [새 격리 DB](completion-browser-final-database.log), [전체108페이지169조건](release-http.json), [이벤트 저장 HTTP11응답](event-write-http-after.json) 통과. 마지막 랭킹 CSS 이후 새 빌드와 네 폭 실제 렌더를 확인했다. 같은 검사의 재실행 수를 합산하지 않는다. source `c9431b9e` 운영 배포·후속 확인과 복구 기준은 [production](production.md)에 기록했다. 브라우저 조작 제한과 외부 조건을 포함한 전체 완료 판단은 별도로 남는다.
 
 운영 MMR 공식 전환은 실제 최고관리자 로그인 대기다. 기존 읽기 전용 영향 분석과 백업/격리 복원은 [전환 검토](../service-followup-2026-10-06/mmr-transition-review.md)에 있다. Riot RSO 승인·계정 소유자 동의, 카카오 기기·허용된 방 실제 수신, 물리 기기·스크린리더, 실제 OCR 정확도·장시간 부하·외부 경보·PITR/Blob 전체 복원은 필요한 조건과 함께 미확인으로 유지한다.
 

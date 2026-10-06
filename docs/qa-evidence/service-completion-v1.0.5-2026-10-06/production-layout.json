@@ -1,0 +1,154 @@
+[
+  {
+    "brokenImages": [],
+    "mainCount": 1,
+    "overflow": false,
+    "sections": [
+      {
+        "id": "home-title",
+        "text": "우리 같이롤하자~",
+        "y": 137.59375
+      },
+      {
+        "id": "home-ranking-title",
+        "text": "랭킹",
+        "y": 430.953125
+      },
+      {
+        "id": "tasks-title",
+        "text": "무엇을 하러 왔나요?",
+        "y": 1177.59375
+      },
+      {
+        "id": "home-overview-title",
+        "text": "지금 올라온 소식",
+        "y": 1429.890625
+      },
+      {
+        "id": "home-personal-title",
+        "text": "내 활동 이어보기",
+        "y": 2415.296875
+      },
+      {
+        "id": "home-status-title",
+        "text": "지금 볼 수 있는 기록",
+        "y": 2680.296875
+      }
+    ],
+    "width": 1280
+  },
+  {
+    "brokenImages": [],
+    "mainCount": 1,
+    "overflow": false,
+    "sections": [
+      {
+        "id": "home-title",
+        "text": "우리 같이롤하자~",
+        "y": 94
+      },
+      {
+        "id": "home-ranking-title",
+        "text": "랭킹",
+        "y": 335.203125
+      },
+      {
+        "id": "tasks-title",
+        "text": "무엇을 하러 왔나요?",
+        "y": 1048.34375
+      },
+      {
+        "id": "home-overview-title",
+        "text": "지금 올라온 소식",
+        "y": 1385.234375
+      },
+      {
+        "id": "home-personal-title",
+        "text": "내 활동 이어보기",
+        "y": 2896.921875
+      },
+      {
+        "id": "home-status-title",
+        "text": "지금 볼 수 있는 기록",
+        "y": 3262.921875
+      }
+    ],
+    "width": 768
+  },
+  {
+    "brokenImages": [],
+    "mainCount": 1,
+    "overflow": false,
+    "sections": [
+      {
+        "id": "home-title",
+        "text": "우리 같이롤하자~",
+        "y": 94
+      },
+      {
+        "id": "home-ranking-title",
+        "text": "랭킹",
+        "y": 335.203125
+      },
+      {
+        "id": "tasks-title",
+        "text": "무엇을 하러 왔나요?",
+        "y": 933.4375
+      },
+      {
+        "id": "home-overview-title",
+        "text": "지금 올라온 소식",
+        "y": 1270.328125
+      },
+      {
+        "id": "home-personal-title",
+        "text": "내 활동 이어보기",
+        "y": 2629.078125
+      },
+      {
+        "id": "home-status-title",
+        "text": "지금 볼 수 있는 기록",
+        "y": 2995.078125
+      }
+    ],
+    "width": 390
+  },
+  {
+    "brokenImages": [],
+    "mainCount": 1,
+    "overflow": false,
+    "sections": [
+      {
+        "id": "home-title",
+        "text": "우리 같이롤하자~",
+        "y": 94
+      },
+      {
+        "id": "home-ranking-title",
+        "text": "랭킹",
+        "y": 353.984375
+      },
+      {
+        "id": "tasks-title",
+        "text": "무엇을 하러 왔나요?",
+        "y": 946.21875
+      },
+      {
+        "id": "home-overview-title",
+        "text": "지금 올라온 소식",
+        "y": 1303.703125
+      },
+      {
+        "id": "home-personal-title",
+        "text": "내 활동 이어보기",
+        "y": 2609.953125
+      },
+      {
+        "id": "home-status-title",
+        "text": "지금 볼 수 있는 기록",
+        "y": 2975.953125
+      }
+    ],
+    "width": 320
+  }
+]
