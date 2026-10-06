@@ -1,0 +1,12 @@
+✔ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (40.4044ms)
+✔ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (5.1851ms)
+✔ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (3.3734ms)
+✔ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (4.5963ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 292.5551

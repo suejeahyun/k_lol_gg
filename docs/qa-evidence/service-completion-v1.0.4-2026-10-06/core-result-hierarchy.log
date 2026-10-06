@@ -1,0 +1,11 @@
+✔ public match and player detail use the same allowlisted champion portrait with a safe fallback (2.6673ms)
+✔ my account connects bounded participation and current discipline status to details and evidence (2.4447ms)
+✔ event and destruction details retain actions while exposing readable lifecycle and result hierarchy (1.2144ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 68.8954

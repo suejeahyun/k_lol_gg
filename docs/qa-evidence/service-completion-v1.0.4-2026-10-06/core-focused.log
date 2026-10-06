@@ -1,0 +1,44 @@
+✔ season, date and round changes replace application form state in both editable branches (192.4825ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (39.967ms)
+✔ a missing site application retains a direct path to recover Kakao member linking (10.8098ms)
+✔ event position labels remain readable while form values retain the API position codes (9.5735ms)
+✔ own status and public roster use the same Korean position labels as the application form (56.3098ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (11.0067ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (3.2475ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (4.9436ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.8579ms)
+✔ public competition pages expose list/detail/application states without administrator controls (3.3464ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (6.046ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.6626ms)
+✔ the application menu marks exactly the selected application type, including query navigation (122.0904ms)
+✔ clearing or resetting a slow player search cancels the request and returns to idle (80.4863ms)
+✔ a superseded request cannot clear the loading state of the newer search (27.6659ms)
+✔ 홈과 데스크톱 메뉴는 이미 구현된 경기·팀 밸런스를 준비 중으로 표시하지 않는다 (1.6736ms)
+✔ 홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센다 (0.8163ms)
+✔ 홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 갤러리를 조회한다 (1.3094ms)
+✔ 홈 피드 공개 projection은 소유자·회원·Discord 필드를 선택하지 않는다 (0.6882ms)
+✔ 홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST 일일 안내 챔피언을 선택한다 (6.2077ms)
+✔ 홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다 (1.5665ms)
+✔ 홈은 소개·랭킹·바로가기·소식·내 활동·기록 순서로 안내한다 (0.9951ms)
+✔ ranking choices name all three rankings before the single slide and expose selection (78.0155ms)
+✔ direct ranking choice stops rotation and updates its single slide and full-ranking destination (21.4755ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (17.2058ms)
+✔ empty or single ranking does not expose impossible slide controls (25.3928ms)
+✔ 공개 구인 카드와 API DTO는 참여자 표시 정보만 노출한다 (3.1266ms)
+✔ 내전 등록·상세 UI는 경기 시간을 입력하거나 표시하지 않는다 (2.192ms)
+✔ 이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름을 독립 경로로 유지한다 (2.1555ms)
+✔ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (47.2479ms)
+✔ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (6.5962ms)
+✔ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (5.7787ms)
+✔ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (8.0302ms)
+✔ Kakao pending API splits ADMIN reads from SUPER TOTP mutations (3.9367ms)
+✔ pending operator UI uses bounded filters, a player picker and revision-safe commands (0.9229ms)
+✔ public season applications expose Kakao-started recruit rounds without leaking pending identities (2.1983ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 635.1555

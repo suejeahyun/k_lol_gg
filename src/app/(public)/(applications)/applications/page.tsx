@@ -2,7 +2,6 @@ import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { CalendarDays, CheckCircle2, CloudSun, LogIn, ShieldCheck, UsersRound } from "@/components/theme/theme-icons";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { parseCanonicalViewQuery } from "@/modules/navigation/application/canonical-view-query";
@@ -41,10 +40,8 @@ function ApplicationRecovery({ recruitNo, source }: { recruitNo: number; source?
 function ApplicationsHero({ type, source }: { type: string; source?: string }) {
   return <><section className={styles.hero} aria-labelledby="applications-title">
     <div>
-      <Badge variant="secondary"><CloudSun size={13} aria-hidden="true" /> TODAY · APPLICATIONS</Badge>
-      <p>{source === "kakao" ? "카카오에서 이어서 신청" : "참가·모집"}</p>
-      <h1 id="applications-title">오늘 같이 뛰어요</h1>
-      <span>신청 종류를 고르고 현재 모집과 내 신청 상태를 한눈에 확인하세요.</span>
+      {source === "kakao" ? <p>카카오에서 이어서 신청</p> : null}
+      <h1 id="applications-title">참가 신청</h1>
     </div>
     <CalendarDays aria-hidden="true" />
   </section><nav className={styles.typeTabs} aria-label="참가 신청 종류"><Link href="/applications?type=season" aria-current={type === "season" ? "page" : undefined}>오늘 내전</Link><Link href="/applications?type=event" aria-current={type === "event" ? "page" : undefined}>이벤트전</Link><Link href="/applications?type=destruction" aria-current={type === "destruction" ? "page" : undefined}>멸망전</Link><Link href="/recruits">파티 모집</Link></nav></>;
@@ -56,7 +53,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
     source: ["pwa", "bookmark", "kakao"],
     recruitNo: recruitNoValues,
   });
-  if (!selection.ok) return <div className={`page-wrap ${styles.page}`} data-application-type="invalid"><ApplicationsHero type="invalid" /><section className={`${styles.stateCard} ${styles.error}`} role="alert"><ShieldCheck aria-hidden="true" /><h2>신청 화면 주소를 확인해 주세요.</h2><p>다시 신청 종류를 선택해 주세요.</p><Link href="/applications">신청 화면 다시 열기</Link></section></div>;
+  if (!selection.ok) return <div className={`page-wrap ${styles.page}`} data-application-type="invalid"><ApplicationsHero type="invalid" /><section className={`${styles.stateCard} ${styles.error}`} role="alert"><ShieldCheck aria-hidden="true" /><h2>신청 화면 주소를 확인해 주세요.</h2><Link href="/applications">신청 화면 다시 열기</Link></section></div>;
   const type = selection.values.type ?? "season";
   const source = selection.values.source;
   const selectedRecruitNo = Number(selection.values.recruitNo ?? "1");
@@ -76,28 +73,25 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
         <section className={styles.stateCard} role="status">
           <CloudSun aria-hidden="true" />
           <h2>시즌 현황을 불러올 수 없어요.</h2>
-          <p>잠시 후 다시 확인해 주세요.</p>
           <ApplicationRecovery recruitNo={selectedRecruitNo} source={source} />
         </section>
       ) : result.state === "error" ? (
         <section className={`${styles.stateCard} ${styles.error}`} role="alert">
           <ShieldCheck aria-hidden="true" />
           <h2>시즌 정보를 불러오지 못했어요.</h2>
-          <p>잠시 후 다시 불러와 주세요. 선택한 모집 회차는 유지됩니다.</p>
           <ApplicationRecovery recruitNo={selectedRecruitNo} source={source} />
         </section>
       ) : !result.data.currentSeason ? (
         <section className={styles.stateCard}>
           <CalendarDays aria-hidden="true" />
           <h2>현재 활성 시즌이 없어요.</h2>
-          <p>새 시즌이 열리면 이곳에서 신청 기간과 오늘 참가 현황을 바로 확인할 수 있어요.</p><Link href="/recruits">지금 열린 파티 모집 보기</Link>
+          <Link href="/recruits">열린 파티 모집 보기</Link>
         </section>
       ) : (
         <>
           <section className={styles.overview} aria-labelledby="season-overview-title">
             <div className={styles.sectionHeading}>
               <div>
-                <span>ACTIVE SEASON</span>
                 <h2 id="season-overview-title">{result.data.currentSeason.name}</h2>
               </div>
               <strong data-open={result.data.currentSeason.applicationsOpen && !result.data.round.closed}>
@@ -114,21 +108,20 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               <article><span>예비</span><strong>{result.data.counts.reserve}</strong></article>
               <article><span>확정</span><strong>{result.data.counts.confirmed}</strong></article>
             </div>
-            {result.data.unlinkedCount > 0 ? <p className={styles.mergeNotice}>회원 연결 확인 중 {result.data.unlinkedCount}명도 참가 인원에 포함되어 있어요.</p> : null}
+            {result.data.unlinkedCount > 0 ? <p className={styles.mergeNotice}>참가 인원 중 회원 연결 대기 {result.data.unlinkedCount}명</p> : null}
           </section>
 
           {result.data.viewer === "RESTRICTED" ? (
             <section className={styles.stateCard} role="status">
               <ShieldCheck aria-hidden="true" />
               <h2>현재 계정은 참가 신청이 제한되어 있어요.</h2>
-              <p>계정 검토가 끝난 뒤 다시 확인해 주세요.</p><nav className="recovery-links"><Link href="/account">내 계정 상태 확인</Link><Link href="/help/contact">운영팀에 문의</Link></nav>
+              <nav className="recovery-links"><Link href="/account">내 계정 상태 확인</Link><Link href="/help/contact">운영팀에 문의</Link></nav>
             </section>
           ) : result.data.viewer === "ANONYMOUS" ? (
             <section className={styles.loginCard}>
               <LogIn aria-hidden="true" />
               <div>
-                <h2>현황은 누구나, 신청은 승인된 계정으로</h2>
-                <p>로그인하면 연결된 플레이어의 오늘 신청만 만들고 수정하거나 취소할 수 있습니다.</p>
+                <h2>참가 신청은 로그인·승인 필요</h2>
               </div>
               <Link href={`/login?next=${encodeURIComponent(`/applications?type=season&recruitNo=${selectedRecruitNo}`)}`}>로그인</Link>
             </section>
@@ -136,7 +129,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             <section className={styles.stateCard} role="status">
               <UsersRound aria-hidden="true" />
               <h2>연결된 활성 플레이어가 필요해요.</h2>
-              <p>내 플레이어 연결을 확인한 뒤 다시 신청해 주세요.</p><Link href="/account">내 계정에서 연결 확인</Link>
+              <Link href="/account">내 계정에서 연결 확인</Link>
             </section>
           ) : result.data.canApply ? (
             <ApplicationActions
@@ -166,7 +159,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             <section className={styles.stateCard}>
               <ShieldCheck aria-hidden="true" />
               <h2>신청 기간이 마감되었어요.</h2>
-              <p>이미 접수된 내 신청과 공개 참가 현황은 아래에서 확인할 수 있습니다.</p><Link href="/recruits">다른 모집 보기</Link>
+              <Link href="/recruits">다른 모집 보기</Link>
             </section>
           )}
 
@@ -174,7 +167,6 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             <section className={styles.myStatus} aria-labelledby="my-status-title">
               <CheckCircle2 aria-hidden="true" />
               <div>
-                <span>MY STATUS</span>
                 <h2 id="my-status-title">{statusLabel(result.data.myApplication.status)}</h2>
                 <p>
                   {result.data.myApplication.applyDate} · {result.data.myApplication.recruitNo}회차
@@ -189,13 +181,13 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
 
           <section className={styles.participants} aria-labelledby="participants-title">
             <div className={styles.sectionHeading}>
-              <div><span>PUBLIC ROSTER</span><h2 id="participants-title">참가 현황</h2></div>
+              <div><h2 id="participants-title">참가 현황</h2></div>
               <strong>{result.data.participantTotal}명</strong>
             </div>
             {result.data.participants.length === 0 ? (
               <div className={styles.participantEmpty}>
                 <UsersRound aria-hidden="true" />
-                <p>아직 공개할 참가 신청이 없어요. 첫 신청을 기다리고 있어요.</p>
+                <p>아직 공개할 참가 신청이 없어요.</p>
               </div>
             ) : (
               <ul className={styles.participantList}>
@@ -209,8 +201,8 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 ))}
               </ul>
             )}
-            {result.data.participantsTruncated ? <small className={styles.privacy}>전체 {result.data.participantTotal}명 중 접수 순서 기준 200명만 표시합니다.</small> : null}
-            <small className={styles.privacy}>참가 명단에는 닉네임·Riot ID·선택 라인이 공개됩니다.</small>
+            {result.data.participantsTruncated ? <small className={styles.privacy}>전체 {result.data.participantTotal}명 · 접수순 200명 표시</small> : null}
+            <small className={styles.privacy}>명단 공개 항목: 닉네임·Riot ID·선택 라인</small>
           </section>
         </>
       )}

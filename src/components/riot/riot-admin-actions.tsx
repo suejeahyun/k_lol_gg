@@ -74,7 +74,7 @@ export function RiotAdminGlobalActions({ superAdmin, items }: Readonly<{ superAd
     <form id="riot-single-link" className={styles.form} onSubmit={(event) => { event.preventDefault(); run(() => command("/api/admin/riot/link", { playerId, gameName, tagLine }, revision), "단일 연결을 반영했습니다."); }}>
       <label><span>연결할 플레이어</span><BoundedPicker ariaLabel="Riot 단일 연결 플레이어" value={playerId} options={playerOptions} placeholder="현재 목록에서 이름 또는 Riot ID 검색" onChange={selectPlayer} /></label>
       <label>게임 이름<input value={gameName} onChange={(event) => setGameName(event.target.value)} placeholder="게임 이름" maxLength={16} required /></label><label>태그<input value={tagLine} onChange={(event) => setTagLine(event.target.value)} placeholder="태그" maxLength={5} required /></label>
-      <p className={styles.selectionSummary} role="status">{selectedPlayer ? `${selectedPlayer.displayName} · 현재 revision ${revision} 자동 적용` : "현재 목록에서 미연결·연결 해제 플레이어를 선택해 주세요."}</p>
+      <p className={styles.selectionSummary} role="status">{selectedPlayer ? `${selectedPlayer.displayName} · 변경 버전 ${revision}` : "현재 목록에서 미연결·연결 해제 플레이어를 선택해 주세요."}</p>
       <div className={styles.actions}><button type="submit" disabled={pending || !selectedPlayer || !gameName || !tagLine}>단일 연결</button></div>
     </form>
     {superAdmin ? <form className={styles.form} onSubmit={(event) => { event.preventDefault(); setReviewingBulk(true); }}><fieldset className={styles.selectionList}><legend>현재 목록의 연결 계정 선택</legend>{connectedItems.length ? connectedItems.map((item) => <label key={item.linkId}><input type="checkbox" checked={selectedLinkIds.has(item.linkId)} onChange={() => toggleLink(item.linkId)} /><span><strong>{item.displayName}</strong><small>{item.riotId}</small></span></label>) : <p>현재 목록에 동기화할 연결 계정이 없습니다.</p>}</fieldset><p className={styles.selectionSummary} role="status">{selectedLinkIds.size}개 계정을 선택했습니다.</p><div className={styles.actions}><button type="submit" disabled={pending || selectedLinkIds.size === 0}>선택 일괄 동기화 미리보기</button><button type="button" data-tone="quiet" disabled={pending} onClick={() => run(() => command("/api/admin/riot/sync", { all: true }), allSyncMessage)}>전체 동기화</button></div></form> : null}
@@ -145,7 +145,7 @@ export function RiotAdminBulkLink({
     <div className={styles.actions}><button type="button" disabled={pending || items.length === 0} onClick={() => setReviewing(true)}>일괄 연결 확인</button></div>
     {reviewing ? <div className={styles.dialogBackdrop}><div className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="riot-bulk-link-title" aria-describedby="riot-bulk-link-description" onKeyDown={(event) => { if (event.key === "Escape") setReviewing(false); }}>
       <h3 id="riot-bulk-link-title">Riot ID 일괄 연결 확인</h3>
-      <p id="riot-bulk-link-description">표시된 {items.length}명의 Riot ID를 조회하고 유효한 계정만 원자적으로 저장합니다.</p>
+      <p id="riot-bulk-link-description">표시된 {items.length}명의 Riot ID 조회 · 유효한 계정만 연결</p>
       <ul>{items.map((item) => <li key={item.playerId}><strong>{item.displayName}</strong><span>{item.riotId}</span></li>)}</ul>
       <div className={styles.actions}><button type="button" data-tone="quiet" autoFocus disabled={pending} onClick={() => setReviewing(false)}>취소</button><button type="button" disabled={pending} onClick={() => void execute()}>{pending ? "처리 중…" : "연결 실행"}</button></div>
     </div></div> : null}

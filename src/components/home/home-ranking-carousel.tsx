@@ -10,7 +10,6 @@ import styles from "./home-ranking-carousel.module.css";
 type RankingSlide = Readonly<{
   id: PublicRankingView;
   label: string;
-  description: string;
   metricLabel: string;
   rows: readonly Readonly<{ playerId: string; displayName: string; riotId: string; value: string }>[];
 }>;
@@ -63,7 +62,7 @@ export function HomeRankingCarousel({ slides, seasonName, minimumParticipation }
       <div className={styles.orbit} aria-hidden="true" />
       <Trophy className={styles.watermark} aria-hidden="true" strokeWidth={0.7} />
       <div className={styles.topline}>
-        <span className={styles.eyebrow}><span /> SEASON SPOTLIGHT</span>
+        <span className={styles.eyebrow}><span /> {seasonName}</span>
         <span className={styles.counter}><strong>{String(index % slides.length + 1).padStart(2, "0")}</strong> / {String(slides.length).padStart(2, "0")}</span>
       </div>
 
@@ -107,16 +106,15 @@ export function HomeRankingCarousel({ slides, seasonName, minimumParticipation }
           onClickCapture={(event) => { if (swiped.current) { event.preventDefault(); swiped.current = false; } }}
         >
           <div className={styles.intro}>
-            <span className={styles.category}>{seasonName} · TOP 3</span>
             <h3>{active.label}</h3>
-            <p>{minimumParticipation}회 이상 참여 · {active.description}</p>
+            <p>참여 {minimumParticipation}회 이상</p>
           </div>
           <ol className={styles.podium}>
             {active.rows.map((row, rank) => (
               <li key={row.playerId} data-rank={rank + 1} className={styles.place}>
                 <Link className={styles.player} href={`/players/${row.playerId}`}>
                   <span className={styles.medal} aria-hidden="true">{rank === 0 ? <Crown /> : <Medal />}</span>
-                  <span className={styles.rank}>{rank === 0 ? "CHAMPION" : `0${rank + 1}`}<span className="sr-only"> · {rank + 1}위</span></span>
+                  <span className={styles.rank}>{rank + 1}위</span>
                   <strong className={styles.name} title={row.displayName}>{row.displayName}</strong>
                   <span className={styles.riotId} title={row.riotId}>{row.riotId}</span>
                   <span className={styles.metric}><strong>{row.value}</strong><span>{active.metricLabel}</span></span>

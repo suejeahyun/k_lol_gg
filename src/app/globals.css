@@ -440,12 +440,6 @@ html[data-ui-scrolled="true"] .site-header {
   letter-spacing: -0.03em;
 }
 
-.brand small {
-  color: var(--text-muted);
-  font-size: 10px;
-  font-weight: 800;
-}
-
 .desktop-nav {
   display: flex;
   align-items: center;
@@ -1363,15 +1357,6 @@ body:has(.user-dialog[open]) {
   font-size: 13px;
 }
 
-.command-palette-results li em {
-  overflow: hidden;
-  color: var(--text-muted);
-  font-size: 10px;
-  font-style: normal;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .command-palette-results li svg {
   flex: 0 0 auto;
   color: #8192ac;
@@ -1385,17 +1370,6 @@ body:has(.user-dialog[open]) {
   background: #f7f9fc;
   font-size: 11px;
   line-height: 1.65;
-}
-
-.user-dialog__hint {
-  margin: 13px 0 0;
-  color: var(--text-muted);
-  font-size: 11px;
-  line-height: 1.65;
-}
-
-.user-dialog__hint--top {
-  margin-top: 18px;
 }
 
 .user-dialog--menu {
@@ -2628,7 +2602,6 @@ body:has(.user-dialog[open]) {
     border-radius: 13px;
   }
 
-  .brand small,
   .header-account span {
     display: none;
   }

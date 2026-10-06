@@ -71,10 +71,10 @@ export function SubmissionForm({
       ? `/matches/submit?teamBalanceDraftId=${encodeURIComponent(requestedTeamBalanceDraftId)}`
       : "/matches/submit";
   if (viewer === "ANONYMOUS") {
-    return <section className={styles.panel}><h2>로그인하고 경기 결과를 제출하세요</h2><p>결과 이미지는 본인과 운영자만 볼 수 있어요. 제출한 내용과 검토 결과는 내 제출 기록에서 이어볼 수 있습니다.</p><Link className={styles.login} href={`/login?next=${encodeURIComponent(next)}`}>로그인하고 제출하기</Link></section>;
+    return <section className={styles.panel}><h2>로그인하고 경기 결과를 제출하세요</h2><p>결과 이미지는 본인과 운영자만 볼 수 있습니다.</p><Link className={styles.login} href={`/login?next=${encodeURIComponent(next)}`}>로그인하고 제출하기</Link></section>;
   }
   if (viewer === "RESTRICTED") {
-    return <section className={styles.panel} role="status"><h2>현재 계정은 결과 제출이 제한되어 있어요.</h2><p>내 계정에서 승인·이용 상태를 확인해 주세요. 계정 검토가 끝나면 결과를 접수할 수 있어요.</p><Link className={styles.login} href="/account">내 계정 상태 확인</Link></section>;
+    return <section className={styles.panel} role="status"><h2>현재 계정은 결과 제출이 제한되어 있어요.</h2><p>내 계정에서 승인·이용 상태를 확인해 주세요. </p><Link className={styles.login} href="/account">내 계정 상태 확인</Link></section>;
   }
   if (viewer === "PASSWORD_CHANGE_REQUIRED") {
     return <section className={styles.panel} role="status"><h2>먼저 비밀번호를 변경해 주세요.</h2><p>비밀번호를 변경하면 이 접수 화면으로 돌아와 계속할 수 있어요.</p><Link className={styles.login} href={`/account/password?required=1&next=${encodeURIComponent(next)}`}>비밀번호 변경 후 계속하기</Link></section>;
@@ -294,12 +294,12 @@ export function SubmissionForm({
       {recoveringCode ? null : !submission ? (
         <section className={styles.panel} aria-labelledby="new-submission-title">
           <h2 id="new-submission-title">새 결과 접수</h2>
-          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>이 팀으로 경기 결과를 제출해요</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"}의 참가자와 팀 구성을 함께 전달합니다.</small></div> : null}
+          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>연결된 팀</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"} · 참가자·팀 구성 연결</small></div> : null}
           <form className={styles.form} onSubmit={createSubmission}>
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} placeholder="예: 화요일 저녁 내전" defaultValue={teamBalanceDraft?.title ?? ""} /></label>
             <label>주최자<input name="organizer" required maxLength={100} placeholder="경기를 진행한 사람의 닉네임" /></label>
             <label>경기한 날짜<input name="playedOn" type="date" required /></label>
-            <label>경기 회차<input name="seriesNumber" type="number" min={1} max={9999} defaultValue={1} required /><small>같은 날 첫 번째 경기는 1회차예요.</small></label>
+            <label>같은 날 경기 회차<input name="seriesNumber" type="number" min={1} max={9999} defaultValue={1} required /></label>
             <label>진행한 게임 수<select name="expectedGameCount" defaultValue="2"><option value="2">2게임 · 이미지 2장</option><option value="3">3게임 · 이미지 3장</option></select></label>
             <details className={styles.optionalFields}>
               <summary>추가 정보 <span>선택 · 시즌, 시작 시각, 메모</span></summary>
@@ -346,7 +346,7 @@ export function SubmissionForm({
               }} /> : null}</label>;
             })}
           </div>
-          <p className={styles.help}>{submission.status === "AWAITING_UPLOAD" ? "승패와 참가자 10명이 보이는 게임 종료 화면을 올려 주세요. 이미지는 본인과 운영자만 볼 수 있어요." : submission.status === "PENDING_REVIEW" ? "이미지를 모두 제출했어요. 운영자가 경기 결과와 참가자를 확인하고 있어요. 검토 결과는 내 제출 기록에서 확인하세요." : "접수와 검토 이력은 내 제출 기록에서 다시 확인할 수 있어요."}</p>
+          {submission.status === "AWAITING_UPLOAD" || submission.status === "PENDING_REVIEW" ? <p className={styles.help}>{submission.status === "AWAITING_UPLOAD" ? "승패·참가자 10명이 보이는 종료 화면 · 본인·운영자만 열람" : "이미지 제출 완료 · 운영자 검토 후 전적 반영"}</p> : null}
           <div className={styles.actions}><Link href="/matches/submissions">내 제출 기록</Link><Link href="/matches/submit">새 결과 접수</Link></div>
           <div className={styles.code}><span>접수 코드</span><strong>{submission.publicCode}</strong><button type="button" onClick={() => { void navigator.clipboard.writeText(submission.publicCode).then(() => { setError(false); setMessage("이어하기 코드를 복사했습니다."); }, () => { setError(true); setMessage("클립보드에 접근할 수 없어 코드를 직접 복사해 주세요."); }); }}>코드 복사</button></div>
         </section>

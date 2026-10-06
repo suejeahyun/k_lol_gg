@@ -237,7 +237,7 @@ export function AdminImportPanel({ seasons, playedOn }: { seasons: readonly Seas
   }
 
   return <details className={`${styles.panel} ${styles.importPanel}`}>
-    <summary className={styles.importSummary}><div><h2>Windows 캡처 · 비공개 OCR 가져오기</h2><p>필요할 때 펼쳐 캡처 이미지를 안전하게 검토하세요.</p></div><span aria-hidden="true">펼치기</span></summary>
+    <summary className={styles.importSummary}><div><h2>Windows 캡처 · 비공개 OCR 가져오기</h2></div><span aria-hidden="true">펼치기</span></summary>
     <div className={styles.importBody}>
     <p>Ctrl/Cmd+V 또는 파일 선택으로 한 게임 스코어보드를 등록합니다. 원본은 비공개이며 OCR은 후보만 만들고, 구조화 검토 후 명시적으로 승인해야 공개됩니다.</p>
     {message ? <p className={styles.message} data-error={error} role={error ? "alert" : "status"}>{message}</p> : null}

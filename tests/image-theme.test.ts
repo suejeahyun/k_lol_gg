@@ -12,7 +12,7 @@ import { themeIconMap } from "../src/components/theme/theme-icon-map";
 
 test("every application icon import resolves to a generated image, including shared UI controls", async () => {
   const files = (await readdir("src", { recursive: true })).filter((file) => /\.(ts|tsx)$/.test(file));
-  let importCount = 0;
+  const consumers = new Set<string>();
   for (const file of files) {
     const source = await readFile(join("src", file), "utf8");
     const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
@@ -20,7 +20,7 @@ test("every application icon import resolves to a generated image, including sha
       if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) continue;
       assert.notEqual(node.moduleSpecifier.text, "lucide-react", `${file} still uses a line icon`);
       if (node.moduleSpecifier.text !== "@/components/theme/theme-icons") continue;
-      importCount++;
+      consumers.add(file.replaceAll("\\", "/"));
       const bindings = node.importClause?.namedBindings;
       assert.ok(bindings && ts.isNamedImports(bindings));
       for (const item of bindings.elements) {
@@ -32,7 +32,11 @@ test("every application icon import resolves to a generated image, including sha
       }
     }
   }
-  assert.ok(importCount >= 106, "all previously inventoried consumers remain covered");
+  // Scan all current imports above; deleting a decorative block may remove a consumer.
+  // Keep the essential navigation consumers explicit so an empty scan cannot pass.
+  for (const file of ["components/site-shell.tsx", "components/navigation/user-site-navigation.tsx", "components/navigation/recruiting-competitions.tsx"]) {
+    assert.ok(consumers.has(file), `${file} retains the generated navigation artwork`);
+  }
 });
 
 test("image icons preserve size, accessible names and decorative semantics", () => {

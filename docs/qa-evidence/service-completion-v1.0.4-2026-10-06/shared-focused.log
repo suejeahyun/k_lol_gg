@@ -1,0 +1,18 @@
+✔ season, date and round changes replace application form state in both editable branches (195.4918ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (40.3971ms)
+✔ own status and public roster use the same Korean position labels as the application form (68.0679ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (12.3083ms)
+✔ the application menu marks exactly the selected application type, including query navigation (108.6267ms)
+✔ clearing or resetting a slow player search cancels the request and returns to idle (76.6841ms)
+✔ a superseded request cannot clear the loading state of the newer search (33.6524ms)
+✔ unknown root addresses keep one complete public shell and recovery links (7.9366ms)
+✔ public resource and invalid-query recovery uses the existing layout without nesting another shell (1.6026ms)
+✔ admin not-found content stays behind its layout authorization and inside one admin shell (22.4561ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 602.6317

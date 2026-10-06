@@ -1,0 +1,738 @@
+
+> klol-gg-v2@0.1.0 check
+> npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build
+
+
+> klol-gg-v2@0.1.0 lint
+> eslint
+
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js
+   1:838   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+   5:130   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  32:231   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:79    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:196   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  34:274   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  35:200   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  36:66    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  44:347   warning  'n' is defined but never used  @typescript-eslint/no-unused-vars
+  54:409   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  56:71    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  59:168   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  60:318   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  65:1002  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  74:403   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:151   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:216   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:497   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  78:2934  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  79:8     warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  80:116   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  81:378   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V1_COMPAT.js
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
+    2:5  warning  'KLOL_V41_BUNDLE_START_SENTINEL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  369:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\v1-strict\KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_SOURCE_SHA256' is assigned a value but never used           @typescript-eslint/no-unused-vars
+     2:5   warning  'KLOL_V1_EXTRACTED_SHA256' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     3:5   warning  'KLOL_V1_SOURCE_FUNCTIONS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     6:5   warning  'KLOL_V1_TRANSPORT_SEAMS' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    38:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   131:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   228:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   239:46  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   304:10  warning  'ignoredJavaNormalizationError' is defined but never used            @typescript-eslint/no-unused-vars
+   314:10  warning  'parsePartyMemberMutationCommand' is defined but never used          @typescript-eslint/no-unused-vars
+   457:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   476:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   491:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   529:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   555:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   567:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   605:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   609:29  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   609:35  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   609:43  warning  'imageBase64' is defined but never used                              @typescript-eslint/no-unused-vars
+   609:56  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   612:36  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   612:42  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   612:50  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   754:77  warning  'packageName' is defined but never used                              @typescript-eslint/no-unused-vars
+   765:10  warning  'ignoredImageError' is defined but never used                        @typescript-eslint/no-unused-vars
+   769:10  warning  'ignoredImageBase64Error' is defined but never used                  @typescript-eslint/no-unused-vars
+   782:10  warning  'ignoredImageBitmapError' is defined but never used                  @typescript-eslint/no-unused-vars
+  1798:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1800:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1830:10  warning  'response' is defined but never used                                 @typescript-eslint/no-unused-vars
+  1838:12  warning  'ignoredDiagnosticReply' is defined but never used                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\matches\infrastructure\postgres-match-transaction-authorizer.ts
+  11:73  warning  '_now' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 58 problems (0 errors, 58 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+
+> klol-gg-v2@0.1.0 typecheck
+> tsc --noEmit
+
+
+> klol-gg-v2@0.1.0 db:erd:check
+> tsx scripts/database/generate-erd.ts --check
+
+[db:erd] up to date: 111 tables, 173 foreign keys, schema sha256 0601644420b7cbdc056c1f307d67aec845c6190d005d31c5143cc44cb0d4baa2
+
+> klol-gg-v2@0.1.0 test
+> npm run test:contracts && npm run test:unit
+
+
+> klol-gg-v2@0.1.0 test:contracts
+> node --test tests/*.test.mjs
+
+✔ public match and player detail use the same allowlisted champion portrait with a safe fallback (4.7889ms)
+✔ my account connects bounded participation and current discipline status to details and evidence (2.9683ms)
+✔ event and destruction details retain actions while exposing readable lifecycle and result hierarchy (1.2517ms)
+✔ own player mutation keeps approval, origin, revision and idempotency guards (4.2654ms)
+✔ own player form keeps one idempotency key for an uncertain retry and explains Riot relinking (1.7285ms)
+✔ account pages reuse the account shell and avoid decorative English headings (2.1195ms)
+✔ isolated account HTTP verification runs the real Chromium owner profile regression (1.6681ms)
+✔ 역할 변경 API는 same-origin 세션 검사 뒤 일반 ADMIN을 mutation parsing 전에 거부한다 (4.2739ms)
+✔ 역할 관리 UI와 목록 진입점은 SUPER_ADMIN에게만 노출된다 (1.3827ms)
+✔ 승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구하지 않는다 (1.8452ms)
+✔ 플레이어 상세는 연결 계정 revision으로 기존 SUPER_ADMIN 역할 API를 안전하게 재사용한다 (4.5837ms)
+✔ administrator balance status uses readable Korean operational labels (4.312ms)
+✔ administrator balance navigation is a visible keyboard-focusable control (1.1017ms)
+✔ MMR 수동 조정은 raw UUID 대신 bounded 플레이어 선택기를 사용한다 (1.1472ms)
+✔ Riot 작업은 현재 목록에서 플레이어와 link를 선택하고 revision을 자동 계산한다 (2.7045ms)
+✔ 징계 대상 선택은 관리자 전용 bounded endpoint의 allowlist metadata로 표시값을 채운다 (1.7769ms)
+✔ 공통 bounded picker는 원격 metadata를 문자열 allowlist로 제한한다 (0.5755ms)
+✔ the contracted match edit page reuses the guarded editor and preserves the AI review alias (3.462ms)
+✔ season administration presents lifecycle, status, source, and position labels in Korean (5.4622ms)
+✔ account and settings administration avoid decorative English labels (1.5077ms)
+✔ admin HTTP guard matrix covers every canonical App Router page (73.3999ms)
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (4.9438ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (1.1254ms)
+✔ administrator drafts support recoverable archive and persisted match registration (2.6598ms)
+✔ season, date and round changes replace application form state in both editable branches (327.5102ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (131.259ms)
+✔ a missing site application retains a direct path to recover Kakao member linking (25.0479ms)
+✔ event position labels remain readable while form values retain the API position codes (27.1149ms)
+✔ own status and public roster use the same Korean position labels as the application form (135.942ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (30.2402ms)
+✔ capture fixture example resolves every repository page without placeholders (171.4322ms)
+✔ browser QA server emits setup credentials, actor identity and fail-fast dynamic source IDs (1.5511ms)
+✔ browser quality boundary accepts WCAG and performance values at their budgets (1.8362ms)
+✔ browser quality boundary reports semantic, keyboard, motion, axe and performance failures (0.2295ms)
+✔ compact standalone auth pages do not require a skip link or a single h1 (0.0961ms)
+✔ full-page capture uses stable light reduced-motion rendering and wakes lazy media (0.7611ms)
+✔ full-page capture fails visible repository error states even when HTTP is 200 (0.1252ms)
+✔ full-page capture accepts synthetic credentials through bounded stdin (0.1402ms)
+✔ champion administrator pages reuse the highlight content shell and keep safe mutations (4.8458ms)
+✔ champion read APIs keep public and administrator namespaces separated (2.1361ms)
+✔ Data Dragon version monitor discovers the upstream latest version without changing the pinned catalog (3.8416ms)
+✔ only documentation changed since the actual successful deployment can skip (1.4494ms)
+✔ first deployments, manual redeploys, missing history and mismatched checkout build (0.2288ms)
+✔ 핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상이다 (4.2876ms)
+✔ 기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다 (1.0174ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (3.2143ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (9.5613ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.8626ms)
+✔ public discipline API exposes aggregate statistics only (5.3939ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (1.4426ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (5.3885ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (0.9142ms)
+✔ discipline pages declare real empty, error, and unavailable states (0.9488ms)
+✔ discipline administrator headings and status labels are readable Korean (1.1305ms)
+✔ public competition pages expose list/detail/application states without administrator controls (3.4025ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (1.8687ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.6262ms)
+✔ the application menu marks exactly the selected application type, including query navigation (194.3342ms)
+✔ clearing or resetting a slow player search cancels the request and returns to idle (164.6747ms)
+✔ a superseded request cannot clear the loading state of the newer search (90.7699ms)
+✔ full-page QA runner parses only tagged synthetic harness values (2.5036ms)
+✔ full-page QA summary fails count drift and any route issue (0.1728ms)
+✔ capture credentials use bounded stdin instead of command-line secrets (3.7525ms)
+✔ capture CLI rejects unknown stdin credential fields before opening files or Chromium (95.4447ms)
+✔ 홈과 데스크톱 메뉴는 이미 구현된 경기·팀 밸런스를 준비 중으로 표시하지 않는다 (1.39ms)
+✔ 홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센다 (0.9129ms)
+✔ 홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 갤러리를 조회한다 (1.6371ms)
+✔ 홈 피드 공개 projection은 소유자·회원·Discord 필드를 선택하지 않는다 (0.6884ms)
+✔ 홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST 일일 안내 챔피언을 선택한다 (5.6351ms)
+✔ 홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다 (1.2879ms)
+✔ 홈은 소개·랭킹·바로가기·소식·내 활동·기록 순서로 안내한다 (0.6771ms)
+✔ ranking choices name all three rankings before the single slide and expose selection (146.4479ms)
+✔ direct ranking choice stops rotation and updates its single slide and full-ranking destination (27.4442ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (22.8236ms)
+✔ empty or single ranking does not expose impossible slide controls (42.908ms)
+✔ a rejected native install prompt reports recovery and accepts a new browser offer (128.554ms)
+✔ installation prevents duplicate native prompts and waits for actual appinstalled (16.7399ms)
+✔ a ready browser offer is not overwritten by initial environment detection (13.9031ms)
+✔ a late native choice cannot overwrite confirmed app installation (10.3632ms)
+✔ Kakao admin API splits ADMIN reads from SUPER TOTP mutations (5.2368ms)
+✔ legacy Kakao admin pages permanently redirect to canonical real-state tabs (12.1873ms)
+✔ every canonical Kakao handler checks the stored feature policy (11.2997ms)
+✔ owner image session creation honors site and Kakao feature switches (0.8607ms)
+✔ Kakao assistant routes share raw-body HMAC and durable read receipts (5.4839ms)
+✔ managed forms remain isolated while season snapshots and owner-bound images are durable (4.0499ms)
+✔ legacy Kakao paths execute the signed canonical POST handlers without redirects (6.8676ms)
+✔ Kakao route capability policy is explicit for every phone endpoint (14.7223ms)
+✔ season member submissions and reads use the FEATURES room but force cancel has a trusted command gate (2.0464ms)
+✔ normal room authorization uses only canonical registry state and keeps environment bootstrap explicit (0.924ms)
+✔ private installer generator preserves shared settings and creates one identity per Kakao room (545.9484ms)
+✔ Kakao routes are explicitly isolated between recruit and features installations (14.1017ms)
+✔ wrong-room failures remain short and actionable on the phone (3.797ms)
+✔ recruit mutations expose PII-free stage timing for p50 and p95 aggregation (2.6436ms)
+✔ companion is ES5 and below both editor character limits (27.7875ms)
+✔ exact status/version commands are local and preserve OFF, settings and the registered target (2.2999ms)
+✔ diagnostics ignore ordinary messages, slash variants and untrusted app callbacks (0.7876ms)
+✔ registration results use fixed Korean replies and never poll or expose secrets (2.4717ms)
+✔ OFF and repeated registration replies cannot enable polling or replace a session (0.8476ms)
+✔ installed response callback reports status and registration without queue delivery (0.9373ms)
+✔ no registration, disabled, wrong app/code, or another session cannot send (0.7012ms)
+✔ ACK loss retries ACK without sending again, including after restart (1.2199ms)
+✔ crash marker or ambiguous SDK result never resends automatically (1.2982ms)
+✔ ledger write failure, wrong target and stale lease fail closed before send (1.798ms)
+✔ explicit SDK rejection is retryable after manual session renewal (0.6727ms)
+✔ whole installed runtime answers local diagnostics without credentials, network or registration (1.3982ms)
+✔ initialization failures leave version and fixed failure-stage diagnostics available (4.3003ms)
+✔ rejected callback contexts stay silent and record only fixed local diagnostic codes (0.782ms)
+✔ reply failure and SDK rejection produce fixed local evidence without leaking exceptions (1.3306ms)
+✔ reported open-chat false group flag still answers version, diagnostics and status locally (2.4221ms)
+✔ false group flag requires exact one-use code and retains only explicitly registered session (0.9007ms)
+✔ false group flag never permits debug, missing-package or other-app registration (4.908ms)
+✔ the ADR freezes every non-negotiable V1-exact adapter constraint (5.3622ms)
+✔ the reusable V4 text transport is one signed five-second request without bearer fallback (6.5111ms)
+✔ the V1 strict phone installer uses the current private artifact and omits public-only provenance (4.224ms)
+✔ installation profiles, not callback room or sender role, form the V4 text authorization boundary (0.944ms)
+✔ V2 services can reserve a hidden DRAFT and legacy bearer routes remain closed (2.1889ms)
+✔ the existing image service is separately signed, bounded, and session-backed (1.0721ms)
+✔ canonical V40 R2 routes managed commands to site-first links, not the legacy image session creator (30.7668ms)
+✔ a clean V1-strict install keeps imageDB silent instead of inventing an unreachable UUID flow (7.2014ms)
+✔ the dormant legacy image receiver remains secure for non-strict clients without reopening bearer access (4.1928ms)
+✔ builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact (371.4898ms)
+✔ Rhino audit detects functions that mix value and bare returns (0.9016ms)
+✔ V1 strict routes organizer-only metadata activation forms with or without one slash (22.0328ms)
+✔ V1 strict routes scoped in-house finish commands as unchanged raw text (75.4546ms)
+✔ R23 retired scrim commands and forms reply locally without an HTTP request (109.7026ms)
+✔ R25 local help matches optional member linking, Rift lanes, protected editing and detail rereads (9.3723ms)
+✔ R24 compact copy forms keep complete success and pending envelopes in one signed request (43.6569ms)
+✔ R24 compact form routing leaves malformed references to the server and ignores prose (13.9028ms)
+✔ R24 actual server-rendered party and inhouse templates accept one name through the phone (281.2099ms)
+✔ R23 copy-paste party and inhouse forms forward names and saved references unchanged (13.407ms)
+✔ V1 strict routes the full organizer-only template returned by the production server (3.64ms)
+✔ artifact excludes legacy HTTP, bearer, and embedded secret material (1.3125ms)
+✔ all response-reachable non-transport V1 executable lines are preserved without comments or blank spacers (38.0187ms)
+✔ strict adapter reuses the canonical V1 local dedupe storage keys (0.8061ms)
+✔ local replies, echo rules, events, and no-reply behavior equal the canonical V1 (14.9519ms)
+✔ R19 chooses one complete tone when the OpenChat entry guide appears (8.1167ms)
+✔ R19 consumes the raw join event and accepts only the OpenChat entry heading (3.5561ms)
+✔ approved party member mutations parse safely and use one RECRUIT gateway request (15.7906ms)
+✔ inhouse member shortcuts reach the matching profile gateway (20.6374ms)
+✔ reported inhouse loading echo is ignored while user commands and explicit member edits keep one reply (5.153ms)
+✔ same MessengerBot logId replay suppresses only the duplicate visible reply (12.6354ms)
+✔ ambiguous party member text never reaches the mutation gateway (28.3181ms)
+✔ local recruit help documents member commands and keeps full-form guidance (2.7304ms)
+✔ command and form predicates are byte-derived and behaviorally equal to V1 (9.038ms)
+✔ one public command performs one five-second signed gateway request without room binding (5.9725ms)
+✔ recoverable season rows reach the gateway once even with whitespace numbering and partial fields (2.7912ms)
+✔ completed augment-ARAM in-house forms reach the FEATURES gateway and always reply (3.2176ms)
+✔ completed augment-ARAM metadata with ten empty name rows activates through FEATURES (3.637ms)
+✔ a complete empty season snapshot reaches the gateway once for authoritative cancellation (23.678ms)
+✔ empty-snapshot gate rejects incomplete forms and ordinary conversation (19.6584ms)
+✔ clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior (7.7866ms)
+✔ all seven active text seams preserve V1 success and empty replies while failures use safe common notices (122.2896ms)
+✔ literal transport failures distinguish settings, input, and connection errors without exposing values (31.1935ms)
+✔ both V40 R2 image seams stay inactive for every transport outcome (7.2113ms)
+✔ R26 text commands never probe notification images before their response (11.0265ms)
+✔ R26 speed diagnostic keeps the previous request timing across ordinary chat and bot echo (3.477ms)
+✔ R27 local diagnostics bypass request state, deduplication and notification image reads (2.0291ms)
+✔ R27 diagnostic distinguishes reply failure and tolerates unavailable logging (2.3683ms)
+✔ V1-strict keeps completion diagnostics but routes incomplete operation-form candidates (10.4278ms)
+✔ V1-strict candidate routing ignores ordinary label discussion (14.0951ms)
+✔ V1-strict ordinary label discussion performs no request or local dedupe write (5.8054ms)
+✔ V1-strict accepts standalone wrapper titles but ignores wrappers embedded in prose (7.4753ms)
+✔ V1-strict response forwards one incomplete form request to the FEATURES gateway (3.7185ms)
+✔ V1-strict canonicalizes tolerant label spelling before gateway classification (3.4337ms)
+✔ V1_STRICT fixture preserves the canonical V1 bytes across checkout line endings (13.4058ms)
+✔ V1_STRICT fixture contains no hard-coded credential value (0.726ms)
+✔ V1_STRICT fixture remains ES5 and Rhino-static warning free (66.1708ms)
+✔ V1_STRICT executes the original bot-version reply with or without slash (5.9029ms)
+✔ V1_STRICT executes the original user help exactly (3.6278ms)
+✔ APPROVED_EXTENSIONS cannot be mislabeled as commands from the V1_STRICT oracle (8.7667ms)
+✔ [A01] the unified phone artifact is a readable ES5 single file below 40,000 characters (30.881ms)
+✔ [A02] the final unified artifact has zero Rhino static warning candidates (21.3962ms)
+✔ [A03] the generated artifact classifies each command into exactly one server profile (3.3358ms)
+✔ [A04] callback room, channel and group values are neither read nor transmitted (5.2278ms)
+✔ [A05] text transport timeout is no more than five seconds (2.6518ms)
+✔ V4 source template is one thin command-family routing client (17.1519ms)
+✔ the generated unified phone file is standalone ES5 with one callback (21.1442ms)
+✔ builder owns the unified output and refreshes deprecated split fixtures (2.443ms)
+✔ release docs lock one phone, one MessengerBot profile, and two Kakao rooms (3.9812ms)
+✔ [C01] each entry sends its own static profile regardless of poisoned callback room values (13.7698ms)
+✔ [C02] RECRUIT ignores FEATURES commands locally without a server call (1.1442ms)
+✔ [C03] FEATURES ignores RECRUIT commands locally without a server call (3.2254ms)
+✔ [C03A] one unified phone bot routes both room command families exactly once (7.1127ms)
+✔ [C03C] party template commands including spaced aliases use exactly one server request for a V1 number (15.1613ms)
+✔ [C03D] a copied V1 party form without its number returns the exact local guidance (8.6774ms)
+✔ [C03B] unified bot version is one local reply and never reaches transport (2.3211ms)
+✔ [C04] malformed slash, URLs and middle slash are rejected before transport (4.9212ms)
+✔ [C05] no-logId boot counter gives every independent command a new event ID (1.4985ms)
+✔ [C06] one command performs one HTTP execute with a five-second maximum (1.6794ms)
+✔ [C05A] logId replay is stable in one boot and isolated across profiles and restarts (4.2276ms)
+✔ [C05C] phone settings are read from MessengerBot storage once within one request cache (1.4617ms)
+✔ [C05B] unified echo suppression checks both room-specific bot display names (1.4848ms)
+✔ [C07] one scrim command performs exactly one client-to-server send (2.5546ms)
+✔ [C08:WRONG_PROFILE] client exposes the WRONG_PROFILE error category (1.4041ms)
+✔ [C08:INVALID_SIGNATURE] client exposes the INVALID_SIGNATURE error category (1.3587ms)
+✔ [C08:REPLAY_CONFLICT] client exposes the REPLAY_CONFLICT error category (3.1585ms)
+✔ [C08:SERVER_UNAVAILABLE] client exposes the SERVER_UNAVAILABLE error category (1.7268ms)
+✔ [C08:INVALID_FORM] client exposes the INVALID_FORM error category (4.3653ms)
+✔ [C08A] INVALID_FORM keeps the server parser detail and has a safe fallback (2.2364ms)
+✔ [P3-C01] FEATURES entry sends one request for 내전구인 (10.0344ms)
+✔ [P3-C02] FEATURES entry sends one request for 내전구인 협곡 2026-09-09 21:30 #2 10명 (2.5015ms)
+✔ [P3-C03] FEATURES entry sends one request for 내전구인 칼바람 2026-09-09 21:30 #3 10명 (2.0396ms)
+✔ [P3-C04] FEATURES entry sends one request for 내전구인 증바람 2026-09-09 21:30 #4 10명 (3.8583ms)
+✔ [P3-C05] FEATURES entry sends one request for 내전현황 (1.5653ms)
+✔ [P3-C06] FEATURES entry sends one request for 내전상세 2 (1.1112ms)
+✔ [P3-C07] FEATURES entry sends one request for 📢 내전하실분 #2 (4.8828ms)
+✔ [P3-C08] RECRUIT entry sends one request for 스크림구인 (3.5794ms)
+✔ [P3-C09] RECRUIT entry sends one request for [K-LOL.GG 스크림 구인 양식] (4.4569ms)
+✔ [P3-C10] FEATURES entry sends one request for 지인 이름: 친구 (7.5253ms)
+✔ [P3-C11] FEATURES entry sends one request for 본인 이름 및 닉네임: 홍길동/테스터 (14.0798ms)
+✔ [P3-C12] FEATURES entry sends one request for 주최자 이름 및 닉네임: 홍길동/테스터 (16.7999ms)
+✔ [P3-C13] FEATURES entry sends one request for 이름 및 닉네임: 신청자/닉 (18.6647ms)
+✔ [P3-C14] FEATURES entry sends one request for 등록 (27.3705ms)
+✔ [P3-C15] FEATURES entry sends one request for 내전등록 (4.6913ms)
+✔ [P3-C16] FEATURES entry sends one request for 경고등록 (4.2895ms)
+✔ [P3-C17] FEATURES entry sends one request for 인증 (2.0045ms)
+✔ [P3-C18] FEATURES entry sends one request for 경고현황 (1.465ms)
+✔ [P3-C19] FEATURES entry sends one request for 결과현황 (2.9324ms)
+✔ [P3-C20] FEATURES entry sends one request for 사진취소 (2.0444ms)
+✔ [P3-C21] FEATURES entry sends one request for 자동공지 20 (2.7202ms)
+✔ [P4-C01] unified 봇버전 is client-only with exact local content (12.9181ms)
+✔ [P4-C02] unified 도움말 is client-only with exact local content (4.1741ms)
+✔ [P4-C03] unified 구인도움말 is client-only with exact local content (6.2355ms)
+✔ [P4-C04] unified 구인웹도우미 is client-only with exact local content (3.3519ms)
+✔ [P4-C05] every V1 PUBLIC alias is classified by the unified phone with at most one send (81.5103ms)
+✔ [P4-C06] malformed slash, URL and middle-slash inputs never enter public transport (114.8125ms)
+✔ [P4-I01] V2도움말 never enters public V4 transport (21.8494ms)
+✔ [P4-I02] V2진단 never enters public V4 transport (29.2916ms)
+✔ [P4-I03] V2연동확인 never enters public V4 transport (9.5723ms)
+✔ [P4-I04] 연동확인 never enters public V4 transport (2.5899ms)
+✔ [P4-I05] V2모집 never enters public V4 transport (2.8781ms)
+✔ [P4-I06] V2시즌 never enters public V4 transport (4.4129ms)
+✔ [P4-I07] V2양식 never enters public V4 transport (3.7091ms)
+✔ [P4-I08] V2사진세션 never enters public V4 transport (3.2591ms)
+✔ [P4-I09] V2사진취소 never enters public V4 transport (4.0032ms)
+✔ [P4-A01] final unified phone artifact is synchronized ES5, under 40k and Rhino-static clean (30.1869ms)
+✔ [P4-C01] every public V1 alias passes the correct phone profile with zero-or-one slash (25.1113ms)
+✔ [P4-C02] local public replies are exact and never include V2 operator commands (8.3789ms)
+✔ [P4-C02A] all actual V41 public command samples pass the matching V4 phone profile (7.5077ms)
+✔ [P4-C03] photo and retired preview commands reply locally with no server transmission (4.8995ms)
+✔ [P4-C04] internal, unknown, and malformed inputs are rejected before transport (3.0946ms)
+✔ [P4-C05] unified entry preserves one send site, five-second timeout, and dynamic family split (1.422ms)
+✔ [P4-C02B] member shortcuts tolerate mobile normalization and reject ambiguous mutations (4.8273ms)
+✔ V4 private generator creates one ignored paste-ready file without printing secrets (837.5496ms)
+✔ [R01] V4 durable receipt and nonce schema is present in the ordered migration ledger (29.1054ms)
+✔ [R02] installation, canonical room, key and capability migrations match the runtime schema (30.5381ms)
+✔ [R03] V3 and V4 server intake coexist while one V4 entry binds profile-specific installation identity (11.4803ms)
+✔ [RESOLVED R04] V4 uses deterministic installation scope without a pairing command (7.3917ms)
+✔ [R05] documented Vercel variable names cover the V4 runtime without reading values (1.6432ms)
+✔ contract fixture has traceable V1 evidence and all required domains (1.662ms)
+✔ zero or exactly one leading slash routes to the same command (0.4323ms)
+✔ double slash, URL slash, separated slash, and middle slash are not commands (0.1497ms)
+✔ same installation scope members can edit and finish across sender identities (0.2009ms)
+✔ initial party form exposes the three activation fields without participant rows (0.2382ms)
+✔ full party forms are authoritative snapshots and allow A→B→A (0.2888ms)
+✔ party member shortcuts retain the full-form workflow and current-scope mutation boundary (0.1841ms)
+✔ Rift, ARAM, and Augment ARAM preserve their V1 field policies (0.2345ms)
+✔ scrim keeps full-form editing and V1 disabled manual lifecycle replies (0.2162ms)
+✔ operation forms retain V1 labels, wrappers, missing-field reply, and echo guard (0.1954ms)
+✔ registration and warning guidance preserve exact V1 headings and destinations (0.1933ms)
+✔ user-facing help excludes V2 diagnostics and raw JSON commands (0.1494ms)
+✔ representative record, recent, and ranking replies remain exact V1 fixtures (0.0887ms)
+✔ V40 구인도움말 문구와 줄바꿈을 그대로 유지한다 (19.5426ms)
+✔ V40 5인파티 생성 응답에 모집번호가 있는 편집 가능한 전체 양식을 유지한다 (8.4613ms)
+✔ V40 구인현황 제목과 상세 명령 CTA를 포함한 정확한 응답을 유지한다 (4.4236ms)
+✔ V40 bare 멸망전스크림 입력을 스크림 명령으로 분류한다 (4.8363ms)
+✔ V40 일반 도움말의 제목·항목·줄바꿈을 모든 별칭에서 그대로 유지한다 (28.8013ms)
+✔ V40 구인 웹 도우미와 구인 도움말을 서로 다른 응답으로 유지한다 (19.9321ms)
+✔ V40 등록 센터의 설명과 기존 링크를 모든 별칭에서 그대로 유지한다 (14.9134ms)
+▶ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다
+  ✔ 내전등록 (32.5777ms)
+  ✔ 경고등록 (11.8574ms)
+  ✔ 인증 (8.4407ms)
+  ✔ 경고현황 (4.5974ms)
+  ✔ 결과현황 (12.6475ms)
+✔ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다 (71.5192ms)
+▶ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다
+  ✔ 전적 (7.3643ms)
+  ✔ 최근 (5.4003ms)
+  ✔ 랭킹 (4.0661ms)
+✔ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다 (17.434ms)
+✔ V40처럼 오픈채팅봇이 출력한 운영 양식은 재접수하지 않는다 (3.4897ms)
+✔ V40 운영 양식은 서버가 만든 접수 문구를 그대로 전달한다 (5.6428ms)
+✔ V40 사진취소 별칭의 사이트 우선 안내 동작을 그대로 유지한다 (8.2441ms)
+✔ V40 입장·퇴장·초대·서버 echo 동작을 유지한다 (6.5263ms)
+✔ V40 스크림구인은 자동배정 번호와 원래 줄바꿈을 가진 전체 양식을 반환한다 (25.0248ms)
+✔ V40 스크림현황은 파티 현황과 섞지 않고 한글 상태와 상세 명령을 표시한다 (4.4347ms)
+✔ V40 스크림현황 빈 상태 문구를 정확히 유지한다 (4.0081ms)
+✔ V40 스크림상세는 복사 가능한 전체 양식과 수정 안내를 그대로 반환한다 (2.3126ms)
+✔ V40 스크림 전체 양식 신규 제출은 즉시 한 번 저장하고 등록 완료만 응답한다 (9.0927ms)
+✔ V40 원본 양식은 멸망전번호 없이 서버의 단일 활성 대회 자동 판별을 사용한다 (4.9208ms)
+✔ V40 스크림 전체 양식 수정 제출은 별도 확인 없이 같은 번호를 교체 반영한다 (14.498ms)
+✔ V40에서 사용 중단된 참가·확정·취소·수동 종료는 원래 안내만 하고 변경하지 않는다 (40.9341ms)
+✔ paste-ready V41 bot routes major commands only through the signed V2 transport (10.2953ms)
+✔ mobile installer has no Rhino CODE_HAS_NO_SIDE_EFFECTS statement candidates (91.0673ms)
+✔ phone transport renders actionable HTTP failure categories (2.8172ms)
+✔ Kakao pending slot lookup is lifecycle-neutral and only cancels ACTIVE rows (3.002ms)
+✔ 자동 수집한 전체 명령 계약은 slash/무슬래시를 하나의 canonical command로 만든다 (11.863ms)
+✔ V1 호환 파서는 모든 공개 V1 명령에서 slash/무슬래시 분류를 동일하게 유지한다 (14.6236ms)
+✔ canonical command 경계는 본문과 Riot ID를 보존하고 slash 오인식을 막는다 (2.3192ms)
+✔ 휴대폰 압축본의 V1 무통신 명령은 읽기 쉬운 전체본과 동일하게 응답한다 (25.112ms)
+✔ room and channel callback fields are not used for installation scope (10.7129ms)
+✔ installation scope is stable across signing-key rotation and differs across installations (3.3389ms)
+✔ delivery identity ignores raw room and channel while binding installation, sender, log, and message (3.2427ms)
+✔ opaque sender uses userHash when available and display-name fallback is labeled (2.2213ms)
+✔ field diagnostics explicitly use installation scope and retain opaque sender (1.5424ms)
+✔ response stores a season preview and only the matching one-time code performs SYNC (19.5982ms)
+✔ response requires a complete authoritative snapshot scope and supports preview cancellation (4.1452ms)
+✔ response ignores server echoes and restores legacy guide aliases after full-width normalization (2.8286ms)
+✔ response preserves V40 room events, missing-number guidance, and parameterized managed shortcuts (16.7086ms)
+✔ response keeps an active image session when MessengerBot only exposes a placeholder (10.8705ms)
+✔ response routes legacy record, recent, and ranking commands through V2 data while preserving V1 replies (2.8733ms)
+✔ response formats scheduled notice aliases as read-only previews (2.9967ms)
+✔ response accepts bitmap fallback, reports image progress, and clears terminal or cancelled sessions (3.914ms)
+✔ response exposes a secret-free V2 transport diagnostic (1.7794ms)
+✔ response scopes different senders to one installation and ignores broken room parser fields (2.778ms)
+✔ response suppresses a duplicate callback with the same Kakao log identity (1.5406ms)
+✔ response entry point keeps representative V1 and V2 replies identical with or without slash (24.3006ms)
+✔ raw V2 recruiting JSON is explicitly marked for the server-side operator gate (2.4171ms)
+✔ response entry point does not treat slash-only, URL, middle slash, double slash, or slash-space as commands (3.3008ms)
+✔ V41 season output uses the site application fields and round-trips as bot input (12.3112ms)
+✔ V41 season input accepts the labeled site form and rejects invalid sub positions (2.5213ms)
+✔ V41 authoritative sync response reports create, update, cancel and review counts (2.2987ms)
+✔ V1 compatibility parser stays ES5, transport-free, and rejects unsafe input (8.7759ms)
+✔ all V40 party creation, finish, help, status, and detail aliases are classified (4.266ms)
+✔ party form parser preserves metadata, positions, numbered members, and substitutes (7.1386ms)
+✔ party form metadata accepts line endings and colon variants without rewriting values (1.8791ms)
+✔ party form tolerates clipped headers, Markdown escapes, attached values, and controlled line wraps (1.7547ms)
+✔ inhouse aliases parse mode, date, time, recruit number, and capacity (4.9607ms)
+✔ scrim aliases and legacy full form are converted without a transport call (17.3032ms)
+✔ four operation forms become exact V2 payload shapes with sender fallbacks (8.1845ms)
+✔ four legacy 외출 wrappers parse identically and missing fields are explicit (3.893ms)
+✔ registration, warning, result, evidence, status, and photo-cancel aliases are classified (2.2297ms)
+✔ V1: 내전구인만 입력하면 종목 선택 안내를 정확히 보낸다 (14.8704ms)
+✔ V1: 알 수 없는 내전 종목에만 입력값을 포함한 오류와 선택 안내를 보낸다 (4.0146ms)
+✔ V1: 협곡 내전구인은 티어·라인과 빈 칸을 포함한 전체 양식을 정확히 보낸다 (3.0738ms)
+✔ V1: 칼바람 내전구인은 이름 전용 전체 양식을 정확히 보낸다 (2.2089ms)
+✔ V1: 번호 없는 내전현황은 모든 회차 요약과 내전상세 명령을 정확히 보낸다 (2.3753ms)
+✔ V1: 내전상세 번호는 참여자와 빈 칸을 포함한 편집 가능한 전체 양식을 정확히 보낸다 (2.3112ms)
+✔ V1: 작성한 전체 신청 양식은 확인 단계 없이 한 번 동기화하고 서버 답변을 그대로 보낸다 (4.7367ms)
+✔ V1: 같은 전체 신청 양식이 연속 수신되면 첫 반영 뒤 중복 요청과 중복 답변을 내지 않는다 (4.3529ms)
+✔ V1: 빈 전체 양식은 일반·ASCII slash·전각 slash 모두 0명 authoritative sync로 처리한다 (8.9466ms)
+✔ V1: 불완전한 빈 양식과 double·URL·중간 slash는 authoritative sync를 실행하지 않는다 (8.5174ms)
+✔ 외출 필수값 누락은 항목별 안내만 보내고 서버 제출을 실행하지 않는다 (3.9393ms)
+✔ 오류 제목이 이미 포함된 서버 상세는 K-LOL.GG 요청 실패 제목을 중복하지 않는다 (1.747ms)
+✔ legacy party create suppresses a duplicate callback before a second V2 mutation (14.276ms)
+✔ legacy full party form maps positions to slots and synchronizes the existing V2 party (9.0607ms)
+✔ slash and plain temporary/form flows share server-first metadata fallback and preserve free text (8.6181ms)
+✔ 99 재현, 지오, 97 기용 fixtures complete public create, form, and finish flows with or without slash (23.5883ms)
+✔ legacy party candidates stay separate from primary capacity (3.3941ms)
+✔ legacy finish suppresses a duplicate callback after the party leaves active status (2.6269ms)
+✔ same-room users can clear and finish another user's two-digit party while repeated forms stay idempotent (11.2472ms)
+✔ failed party mutations return the cause without fetching or appending status (2.4738ms)
+✔ successful sync, blank deletion, and finish explain a failed status refresh (5.2862ms)
+✔ legacy operation form, inhouse template, and scrim template stay available (4.4544ms)
+✔ legacy scrim full form is stored through the typed V2 mutation and replays safely (6.5641ms)
+✔ 숫자형 플레이어·미디어 상세는 존재 확인 뒤 canonical UUID로 이동한다 (3.7719ms)
+✔ 숫자형 이벤트전·멸망전은 존재 확인 뒤 canonical UUID로 이동한다 (3.7321ms)
+✔ 관리자 직접 가져오기는 파일·붙여넣기·비공개 미리보기·재시도 복구를 제공한다 (5.3575ms)
+✔ 관리자 로그아웃은 가져오기 복구 namespace만 best-effort로 지운다 (5.5726ms)
+✔ 직접 가져오기 API는 예약→bounded body→work gate→private finalize 순서를 지킨다 (4.8774ms)
+✔ 검토 UI는 fuzzy 자동 연결 없이 구조화 행별 사람 확인을 요구한다 (1.48ms)
+✔ admin import cancellation is authorized only for ADMIN-source rows (0.6914ms)
+✔ match editor exposes only the structured form and traps the void confirmation dialog (4.6677ms)
+✔ picker status copy is outside the listbox and visual active row matches aria active descendant (1.2218ms)
+✔ submission reject dialog shares the accessible modal behavior (5.6638ms)
+✔ submission conflict keeps component identity and adopts only a verified latest revision (1.2882ms)
+✔ match editor conflict preserves local input and adopts only a verified latest aggregate (0.9ms)
+✔ match editor save action stays readable in enabled and disabled states (1.246ms)
+✔ OCR route reserves before the process gate and all external work (4.1461ms)
+✔ OCR reservation is durable, single-image and replay-first (1.3337ms)
+✔ submission approval durably transfers team-balance provenance into the match aggregate (1.0265ms)
+✔ ordinary match amendments cannot clear immutable team-balance provenance (0.4579ms)
+✔ web submission linkage revalidates draft ownership, lifecycle and selected layout in its transaction (0.4253ms)
+✔ match changed outbox carries team-balance provenance in its typed row and payload (0.206ms)
+✔ public match detail returns a not-found contract instead of a blank success (2.6398ms)
+✔ first submission prioritizes required information while optional fields and continuation stay available (11.2358ms)
+✔ a cancelled partial upload never displays unfinished images as a completed step (1.7602ms)
+✔ anonymous result continuation returns to the same submission after login (1.1995ms)
+✔ changing a continuation code or draft resets form identity while same-context refresh preserves edits (27.9198ms)
+✔ pending, rejected, suspended and password-reset accounts get recovery before filling the submission form (74.8628ms)
+✔ completed or rejected submissions show their result and recovery without impossible upload controls (6.7179ms)
+✔ submission lookup failure keeps the code for retry and is distinct from a missing submission (29.9507ms)
+✔ creating a submission locks mutations until the server route has committed and resets new-submission state (72.7953ms)
+✔ match submission accepts only an owner-verified selected team-balance draft (0.8298ms)
+✔ successful server selection remounts both draft workspaces without resetting local edits (0.1414ms)
+✔ 홈과 이미지 상세은 같은 접근 가능한 수동 캐러셀을 사용한다 (5.2672ms)
+✔ 캐러셀은 빈 상태를 안전하게 닫고 한 장에는 이동 컨트롤을 숨기며 여러 장에는 직접 이동을 제공한다 (1.579ms)
+✔ 캐러셀은 모바일 비율·44px 조작 영역·모션 감소 설정을 유지한다 (0.7205ms)
+✔ 홈 우승 사진은 FK 연결을 우선하고 엄격한 레거시 후보만 보강하며 실제 자산 URL을 사용한다 (0.842ms)
+✔ gallery image load failures keep a clear, accessible fallback in the reserved card area (4.0576ms)
+✔ migration journal has contiguous indices, increasing timestamps, and matching SQL tags (2.0136ms)
+✔ public MMR page exposes canonical allowlisted filters and bounded projection summaries (1.2888ms)
+✔ admin MMR workspace connects protected recalculate, adjustment, players and review states (1.1664ms)
+✔ team balance provider selects READY MMR before statistics fallback (1.4219ms)
+✔ MMR previous/next links reach later players and preserve validated search, position, and page size (24.2955ms)
+✔ first and last MMR pages expose only valid directions (6.3102ms)
+✔ selected position displays the score used to rank and that position's sample, including zero (7.0903ms)
+✔ empty projection, unmatched search, and out-of-range page have different recovery actions (6.4358ms)
+✔ invalid MMR address is rejected before loading and has a clean recovery link (5.8727ms)
+✔ MMR load failure retries the same bounded query without pretending the list is empty (1.4716ms)
+✔ unknown root addresses keep one complete public shell and recovery links (12.868ms)
+✔ public resource and invalid-query recovery uses the existing layout without nesting another shell (2.2278ms)
+✔ application error recovery keeps the public main landmark singular (7.1455ms)
+✔ admin not-found content stays behind its layout authorization and inside one admin shell (28.2463ms)
+✔ signed operation-form submit retains raw-body HMAC and durable replay boundaries (4.054ms)
+✔ admin mutation requires ADMIN session, same-origin, If-Match and idempotency (1.1863ms)
+✔ admin pages expose filtered empty/error/unavailable states and compatibility routes (1.8145ms)
+✔ operational diagnostics remain admin-only server rendering with no polling or mutation (6.1717ms)
+✔ public operations endpoints expose bounded settings and minimum health only (4.5751ms)
+✔ admin mutations and downloads retain strong server authorization boundaries (1.1452ms)
+✔ internal maintenance requires a signed job and never accepts session authorization (6.2484ms)
+✔ Vercel schedules destruction ratings, statistics, MMR, Riot and daily Kakao close through protected GET boundaries (1.892ms)
+✔ route groups are removed while concrete and dynamic segments become canonical URLs (31.9116ms)
+✔ route fixtures override parameter fixtures and every missing dynamic fixture fails immediately (1.2504ms)
+✔ recommendation query variants reject a malformed transcribed draft fixture (0.7304ms)
+✔ capture sessions are isolated by authentication boundary (0.1945ms)
+[capture-plan] 1 page files -> 4 capture targets at C:\Users\sjh11\AppData\Local\Temp\klol-capture-cli-jBTVUc\nested\capture-plan.json
+✔ the CLI contract reads a fixtures JSON file and creates its output directory (21.1617ms)
+✔ the repository plan covers every page once, resolves IDs and adds reviewed variants (320.8049ms)
+✔ 사용자·관리자 상세 화면은 저장소 오류 상태에서도 페이지 제목과 상태 의미를 유지한다 (5.8574ms)
+✔ 공용 미디어 편집 화면도 저장소 오류 상태에서 페이지 제목을 유지한다 (0.7389ms)
+✔ 챔피언 이미지 projection은 0025 적용 전에도 공개 통계·목록 조회를 유지한다 (7.6932ms)
+✔ 플레이어 공개 프로필은 실제 경기 KDA와 신청 포지션 배치·팀 밸런스 점수를 함께 설명한다 (12.1476ms)
+✔ 공개 Riot 읽기는 API·RSO 비밀 구성과 분리되고 UI가 미연동·대기·오류를 구분한다 (11.004ms)
+✔ 플레이어 검색어는 문자열·배열·미입력을 하나의 안전한 문자열로 정규화한다 (1.3012ms)
+✔ 중복 q 파라미터 배열은 첫 값으로 정규화되어 trim 오류를 만들지 않는다 (0.2116ms)
+✔ 검색 유스케이스는 PlayerRepository 포트를 통해 주입된 구현만 호출한다 (0.5743ms)
+✔ PWA manifest and layout publish the expected install contract (8.9103ms)
+✔ service worker caches static public assets only (1.0625ms)
+✔ install icons exist and are not empty (1.0872ms)
+✔ 공개 구인 카드와 API DTO는 참여자 표시 정보만 노출한다 (6.8243ms)
+✔ 내전 등록·상세 UI는 경기 시간을 입력하거나 표시하지 않는다 (3.2067ms)
+✔ 이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름을 독립 경로로 유지한다 (3.7116ms)
+✔ account pagination reports the filtered total and page range while retaining filters and page size (35.5374ms)
+✔ first and last job pages expose only valid navigation and preserve the status filter (6.1213ms)
+✔ log navigation retains its source and does not produce an incompatible account status (2.6907ms)
+✔ bulk preview remains a bounded first batch without ordinary page navigation or invented totals (1.6352ms)
+✔ a now-empty page can return to available results without displaying a nonexistent range (1.9808ms)
+✔ navigation respects the query ceiling and unavailable data never pretends there are zero accounts (5.469ms)
+✔ history chart server output preserves tooltip text for every chart mode (144.6753ms)
+✔ match growth server output preserves own and opponent tooltips without fabricated missing values (75.9889ms)
+✔ match summaries render identical Korean clock text across server and browser locale data (228.2812ms)
+✔ filter and chart date keys use fixed Korean calendar parts across locale data and year boundaries (77.6082ms)
+✔ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (53.4507ms)
+✔ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (7.2219ms)
+✔ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (4.9122ms)
+✔ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (6.4493ms)
+✔ Kakao pending API splits ADMIN reads from SUPER TOTP mutations (6.9068ms)
+✔ pending operator UI uses bounded filters, a player picker and revision-safe commands (1.3006ms)
+✔ public season applications expose Kakao-started recruit rounds without leaking pending identities (4.3063ms)
+✔ feature-gated site assistant is mounted globally and uses protected AI contracts (1.3672ms)
+✔ site feature access fails closed for missing or unreadable settings (5.7581ms)
+✔ registration feature protects both its page and mutation before credential work (0.9527ms)
+✔ match submission feature keeps reads available but guards every owner mutation (2.501ms)
+✔ Kakao help feature controls its public guide without exposing configuration (0.8263ms)
+✔ recruit guide teaches participation and guarded edits before optional creation (0.4081ms)
+✔ recommendation APIs keep owner/admin scope and the team-balance feature boundary (8.3542ms)
+✔ team-balance pages expose recommendation views and fail closed with the site switch (2.8716ms)
+✔ a lost create response retries the exact draft request with its original idempotency key (56.7283ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (37.2648ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (31.5011ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (1.9069ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (4.4507ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (3.3945ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (5.5226ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (1.7626ms)
+✔ 시작 페이지는 익명·계정 상태·승인 계정·관리자 진입을 구분한다 (1.7441ms)
+✔ Riot 도움말은 직접 연결과 별도 본인 인증, 공개·비공개 범위를 안내한다 (0.3346ms)
+✔ 설치 화면은 install prompt와 iOS·Android PWA·개인 캐시 금지를 구분한다 (1.0474ms)
+✔ 사용자 shell은 skip target, landmark, modal search, 모바일 5개 진입점을 제공한다 (11.3898ms)
+✔ 전체 메뉴는 목적별로 기능을 보여주고 필요한 계정 접근을 안내한다 (1.5845ms)
+✔ 일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다 (3.746ms)
+✔ V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다 (2.8474ms)
+✔ 사용자와 관리자 로그아웃 UI는 세션 폐기 성공 뒤에만 로그인 화면으로 이동한다 (2.9706ms)
+✖ 관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 축소하지 않는다 (2.4438ms)
+✔ 모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아웃을 제공한다 (2.5244ms)
+✔ 관리자 로그인은 비밀번호 후 원래 화면으로 이동하며 인증 코드 필드가 없다 (0.8839ms)
+✔ 계정 작업 UI는 stale revision에서 최신 projection을 읽고 안내를 유지한다 (2.4931ms)
+✔ 일회성 비밀번호는 숨김·BFCache 복귀·명시적 닫기에서 메모리와 안내를 함께 종료한다 (1.548ms)
+✔ 내 계정 플레이어 탭은 대기 claim과 거절 claim을 구분한다 (0.6901ms)
+✖ 내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기본 문구를 구분한다 (1.3029ms)
+✔ 계정 시각은 공통 Asia/Seoul 24시간 포맷터를 사용한다 (2.7236ms)
+✔ 가입·본인 비밀번호 변경 UI는 성공과 pagehide에서 비밀번호 fingerprint ref를 즉시 비운다 (2.5817ms)
+✔ 정적 마감 대상의 native button은 submit 여부를 명시한다 (307.2957ms)
+✔ 이벤트 운영 폼은 내부 UUID나 JSON 복사를 요구하지 않는다 (2.463ms)
+✔ 완성된 메뉴와 관리자 검색은 과거 단계 문구를 노출하지 않는다 (0.6585ms)
+✔ Riot ID의 게임 이름과 태그는 각각 이름을 가진다 (0.7641ms)
+✔ 화면 효과는 스트리밍 중인 React 하위 DOM을 변경하지 않는다 (8.8606ms)
+✔ 전역 효과 CSS는 감속 모드·정밀 포인터·강제 색상 경계를 유지한다 (0.8848ms)
+ℹ tests 487
+ℹ suites 0
+ℹ pass 485
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2376.0874
+
+✖ failing tests:
+
+test at tests\user-shell.test.mjs:87:1
+✖ 관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 축소하지 않는다 (2.4438ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /window\.location\.reload\(\)/. Input:
+
+  '"use client";\n' +
+    '\n' +
+    'import Link from "next/link";\n' +
+    'import { Database, RotateCcw } from "@/components/theme/theme-icons";\n' +
+    '\n' +
+    'import styles from "@/components/admin/players/admin-players.module.css";\n' +
+    '\n' +
+    'export default function AdminUserDetailError({ retry }: { retry: () => void }) {\n' +
+    '  return (\n' +
+    '    <main className={styles.page}>\n' +
+    '      <section className={styles.state} data-tone="error" role="alert">\n' +
+    '        <Database aria-hidden="true" />\n' +
+    '        <h2>계정 상세를 불러오지 못했습니다.</h2>\n' +
+    '\n' +
+    '        <button className={styles.primaryLink} type="button" onClick={retry}>\n' +
+    '          <RotateCcw aria-hidden="true" /> 다시 시도\n' +
+    '        </button>\n' +
+    '        <Link className={styles.ghostLink} href="/admin/users">계정 목록으로 이동</Link>\n' +
+    '      </section>\n' +
+    '    </main>\n' +
+    '  );\n' +
+    '}\n'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/user-shell.test.mjs:99:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '"use client";\n\nimport Link from "next/link";\nimport { Database, RotateCcw } from "@/components/theme/theme-icons";\n\nimport styles from "@/components/admin/players/admin-players.module.css";\n\nexport default function AdminUserDetailError({ retry }: { retry: () => void }) {\n  return (\n    <main className={styles.page}>\n      <section className={styles.state} data-tone="error" role="alert">\n        <Database aria-hidden="true" />\n        <h2>계정 상세를 불러오지 못했습니다.</h2>\n\n        <button className={styles.primaryLink} type="button" onClick={retry}>\n          <RotateCcw aria-hidden="true" /> 다시 시도\n        </button>\n        <Link className={styles.ghostLink} href="/admin/users">계정 목록으로 이동</Link>\n      </section>\n    </main>\n  );\n}\n',
+    expected: /window\.location\.reload\(\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\user-shell.test.mjs:200:1
+✖ 내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기본 문구를 구분한다 (1.3029ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /APPROVED: "전체 사용자 기능을 사용할 수 있습니다\."/. Input:
+
+  'import { createRouteMetadata } from "@/modules/seo/domain/site-seo";\n' +
+    'import Link from "next/link";\n' +
+    'import { AlertTriangle, CalendarCheck2, Gamepad2, Swords } from "@/components/theme/theme-icons";\n' +
+    '\n' +
+    'import { AccountLogoutButton } from "@/components/accounts/account-logout-button";\n' +
+    'import { AccountPlayerForm } from "@/components/accounts/account-player-form";\n' +
+    'import { AccountShell } from "@/components/accounts/account-shell";\n' +
+    'import styles from "@/components/accounts/account-access.module.css";\n' +
+    'import type { AccountSelfDto } from "@/modules/accounts/domain/account-contracts";\n' +
+    'import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";\n' +
+    'import { publicCompetitionStatusLabel, publicParticipationStatusLabel } from "@/modules/competitions/core";\n' +
+    'import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";\n' +
+    'import { requireAccountPage } from "@/modules/auth/infrastructure/server-authorization";\n' +
+    'import { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";\n' +
+    'import { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date-time";\n' +
+    '\n' +
+    'export const metadata = createRouteMetadata("/account");\n' +
+    'export const dynamic = "force-dynamic";\n' +
+    '\n' +
+    'const statusLabels = { PENDING: "승인 대기", APPROVED: "승인됨", REJECTED: "거절됨", SUSPENDED: "이용 제한" } as const;\n' +
+    '\n' +
+    'const defaultStatusMessages: Record<AccountSelfDto["status"], string> = {\n' +
+    '  PENDING: "관리자 검토를 기다리고 있습니다.",\n' +
+    '  APPROVED: "",\n' +
+    '  REJECTED: "계정 승인이 거절되었습니다. 안내 사유를 확인하거나 관리자에게 문의해 주세요.",\n' +
+    '  SUSPENDED: "계정 이용이 제한되어 있습니다. 안내 사유를 확인하거나 관리자에게 문의해 주세요.",\n' +
+    '};\n' +
+    '\n' +
+    'function participationStatusLabel(status: string) {\n' +
+    '  const [competition, application] = status.split(":", 2);\n' +
+    '  return [publicCompetitionStatusLabel(competition), application ? publicParticipationStatusLabel(application) : null].filter(Boolean).join(" · ");\n' +
+    '}\n' +
+    '\n' +
+    'function playerClaimMessage(claim: NonNullable<AccountSelfDto["playerClaim"]>) {\n' +
+    '  if (claim.status === "PENDING") {\n' +
+    '    return `기존 플레이어 ${claim.requestedRiotId} 연결을 수동 검토 중입니다. Riot 소유권이 확인된 상태가 아니며, 관리자 승인 전에는 연결되지 않습니다.`;\n' +
+    '  }\n' +
+    '  if (claim.status === "REJECTED") {\n' +
+    '    return `기존 플레이어 ${claim.requestedRiotId} 연결 검토가 종료되었습니다. 계정 상태의 안내 사유를 확인하거나 관리자에게 재검토를 요청해 주세요. 플레이어는 연결되지 않았습니다.`;\n' +
+    '  }\n' +
+    '  return `기존 플레이어 ${claim.requestedRiotId} 연결 기록을 확인하는 중입니다. 현재 플레이어 연결이 없으므로 관리자에게 상태 확인을 요청해 주세요.`;\n' +
+    '}\n' +
+    '\n' +
+    'export default async function AccountPage({ searchParams }: { searchParams: Promise<{ tab?: string | string[] }> }) {\n' +
+    '  const session = await requireAccountPage("/account");\n' +
+    '  const repository = getRuntimeAccountRepository();\n' +
+    '  const [account, participations, disciplineResult] = await Promise.all([\n' +
+    '    repository ? repository.findSelf(session.userId).catch(() => null) : null,\n' +
+    '    repository ? repository.findSelfParticipations(session.userId).catch(() => null) : null,\n' +
+    '    loadRuntimeDiscipline((service) => service.adapter.getOwnerOverview(session.userId)),\n' +
+    '  ]);\n' +
+    '  const rawTab = (await searchParams).tab;\n' +
+    '  const tab = (Array.isArray(rawTab) ? rawTab[0] : rawTab) === "player" ? "player" : "overview";\n' +
+    '  if (!account) {\n' +
+    '    return <AccountShell activeTab="overview" title="내 계정"><section className={styles.panel} role="alert"><h2>계정 정보를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section></AccountShell>;\n' +
+    '  }\n' +
+    '  return (\n' +
+    '    <AccountShell activeTab={tab} title={account.loginId} status={{ label: statusLabels[account.status], state: account.status }} action={<AccountLogoutButton />}>\n' +
+    '      {account.mustChangePassword ? <p className={styles.notice}>임시 비밀번호를 사용 중입니다. 다른 기능을 사용하기 전에 <Link href="/account/password?required=1">비밀번호를 변경해 주세요.</Link></p> : null}\n' +
+    '      <nav className="task-links" aria-label="내 활동 바로가기"><Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 제출 내역</Link><Link href="/tools/team-balance/drafts">내 저장 팀</Link><Link href="/help/contact">계정·탈퇴 문의</Link></nav>\n' +
+    '      {tab === "overview" ? (\n' +
+    '        <>\n' +
+    '          <section className={styles.panel}><h2>계정 상태</h2><dl className={styles.facts}><div><dt>상태</dt><dd>{statusLabels[account.status]}</dd></div><div><dt>역할</dt><dd>{accountRoleLabel(account.role)}</dd></div><div><dt>상태 변경</dt><dd>{formatOptionalKoreanDateTime(account.statusChangedAt)}</dd></div><div><dt>비밀번호 변경</dt><dd>{formatOptionalKoreanDateTime(account.passwordChangedAt)}</dd></div></dl>{account.statusReason || defaultStatusMessages[account.status] ? <p className={styles.notice}>{account.statusReason ?? defaultStatusMessages[account.status]}</p> : null}</section>\n' +
+    '          <section className={styles.panel} aria-labelledby="my-player-title">\n' +
+    '            <div className={styles.panelHeading}>\n' +
+    '              <div><span className={styles.eyebrow}><Gamepad2 aria-hidden="true" /> 내 플레이어</span><h2 id="my-player-title">이름·Riot ID·티어</h2></div>\n' +
+    '              <Link href="/account?tab=player">{account.status === "APPROVED" && account.player?.status === "ACTIVE" ? "이름·Riot ID·티어 변경" : "플레이어 정보 확인"}</Link>\n' +
+    '            </div>\n' +
+    '            {account.player ? <dl className={styles.facts}><div><dt>이름</dt><dd>{account.player.memberName}</dd></div><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl> : <p className={styles.notice}>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}\n' +
+    '          </section>\n' +
+    '          <section className={styles.panel} aria-labelledby="my-participations-title"><div className={styles.panelHeading}><div><span className={styles.eyebrow}><CalendarCheck2 aria-hidden="true" /> 내 활동</span><h2 id="my-participations-title">내 이벤트·내전 기록</h2></div><Link href="/matches">전체 내전 보기</Link></div>\n' +
+    '            {participations === null ? <p className={styles.notice} role="alert">참여 기록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p> : participations.length === 0 ? <p className={styles.empty}>연결된 플레이어의 공개 내전 또는 대회 참가 기록이 아직 없습니다.</p> : <div className={styles.activityGrid}>{participations.map((item) => {\n' +
+    '              const href = item.kind === "MATCH" ? `/matches/${item.id}` : item.kind === "EVENT" ? `/competitions/events/${item.id}` : `/competitions/destruction/${item.id}`;\n' +
+    '              const kindLabel = item.kind === "MATCH" ? "내전" : item.kind === "EVENT" ? "이벤트전" : "멸망전";\n' +
+    '              return <Link href={href} key={`${item.kind}-${item.id}`}><span>{item.kind === "MATCH" ? <Gamepad2 aria-hidden="true" /> : <Swords aria-hidden="true" />}{kindLabel} · {participationStatusLabel(item.status)}</span><strong>{item.title}</strong><small>{formatOptionalKoreanDateTime(item.occurredOn)} · 상세 보기</small></Link>;\n' +
+    '            })}</div>}\n' +
+    '          </section>\n' +
+    '          <section className={styles.panel} aria-labelledby="my-discipline-title"><div className={styles.panelHeading}><div><span className={styles.eyebrow}><AlertTriangle aria-hidden="true" /> 이용 상태</span><h2 id="my-discipline-title">현재 주의·경고·밴</h2></div><Link href="/account/discipline">상세·증빙 제출</Link></div>\n' +
+    '            {disciplineResult.state === "ready" ? <><dl className={styles.disciplineCounts}><div><dt>주의</dt><dd>{disciplineResult.data.activeCounts.CAUTION}</dd></div><div><dt>경고</dt><dd>{disciplineResult.data.activeCounts.WARNING}</dd></div><div><dt>밴</dt><dd>{disciplineResult.data.activeCounts.BAN}</dd></div></dl><p className={styles.notice}>{disciplineResult.data.records.length > 0 ? "현재 적용 중인 기록이 있습니다." : "현재 적용 중인 주의·경고·밴 기록이 없습니다."}</p></> : <p className={styles.notice} role={disciplineResult.state === "error" ? "alert" : "status"}>제재 상태를 불러오지 못했습니다. 경고·증빙 화면에서 다시 확인해 주세요.</p>}\n' +
+    '          </section>\n' +
+    '        </>\n' +
+    '      ) : (\n' +
+    '        <section className={styles.panel}><h2>연결 플레이어</h2>{account.player ? <><dl className={styles.facts}><div><dt>이름</dt><dd>{account.player.memberName}</dd></div><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>플레이어 상태</dt><dd>{account.player.status === "ACTIVE" ? "활성" : "비활성"}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl>{account.status === "APPROVED" && account.player.status === "ACTIVE" ? <AccountPlayerForm key={account.player.revision} player={account.player} /> : <p className={styles.notice}>승인된 활성 플레이어만 본인 정보를 수정할 수 있습니다.</p>}</> : account.playerClaim ? <p className={styles.notice}>{playerClaimMessage(account.playerClaim)}</p> : <p>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}</section>\n' +
+    '      )}\n' +
+    '    </AccountShell>\n' +
+    '  );\n' +
+    '}\n'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/user-shell.test.mjs:206:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import { createRouteMetadata } from "@/modules/seo/domain/site-seo";\nimport Link from "next/link";\nimport { AlertTriangle, CalendarCheck2, Gamepad2, Swords } from "@/components/theme/theme-icons";\n\nimport { AccountLogoutButton } from "@/components/accounts/account-logout-button";\nimport { AccountPlayerForm } from "@/components/accounts/account-player-form";\nimport { AccountShell } from "@/components/accounts/account-shell";\nimport styles from "@/components/accounts/account-access.module.css";\nimport type { AccountSelfDto } from "@/modules/accounts/domain/account-contracts";\nimport { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";\nimport { publicCompetitionStatusLabel, publicParticipationStatusLabel } from "@/modules/competitions/core";\nimport { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";\nimport { requireAccountPage } from "@/modules/auth/infrastructure/server-authorization";\nimport { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";\nimport { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date-time";\n\nexport const metadata = createRouteMetadata("/account");\nexport const dynamic = "force-dynamic";\n\nconst statusLabels = { PENDING: "승인 대기", APPROVED: "승인됨", REJECTED: "거절됨", SUSPENDED: "이용 제한" } as const;\n\nconst defaultStatusMessages: Record<AccountSelfDto["status"], string> = {\n  PENDING: "관리자 검토를 기다리고 있습니다.",\n  APPROVED: "",\n  REJECTED: "계정 승인이 거절되었습니다. 안내 사유를 확인하거나 관리자에게 문의해 주세요.",\n  SUSPENDED: "계정 이용이 제한되어 있습니다. 안내 사유를 확인하거나 관리자에게 문의해 주세요.",\n};\n\nfunction participationStatusLabel(status: string) {\n  const [competition, application] = status.split(":", 2);\n  return [publicCompetitionStatusLabel(competition), application ? publicParticipationStatusLabel(application) : null].filter(Boolean).join(" · ");\n}\n\nfunction playerClaimMessage(claim: NonNullable<AccountSelfDto["playerClaim"]>) {\n  if (claim.status === "PENDING") {\n    return `기존 플레이어 ${claim.requestedRiotId} 연결을 수동 검토 중입니다. Riot 소유권이 확인된 상태가 아니며, 관리자 승인 전에는 연결되지 않습니다.`;\n  }\n  if (claim.status === "REJECTED") {\n    return `기존 플레이어 ${claim.requestedRiotId} 연결 검토가 종료되었습니다. 계정 상태의 안내 사유를 확인하거나 관리자에게 재검토를 요청해 주세요. 플레이어는 연결되지 않았습니다.`;\n  }\n  return `기존 플레이어 ${claim.requestedRiotId} 연결 기록을 확인하는 중입니다. 현재 플레이어 연결이 없으므로 관리자에게 상태 확인을 요청해 주세요.`;\n}\n\nexport default async function AccountPage({ searchParams }: { searchParams: Promise<{ tab?: string | string[] }> }) {\n  const session = await requireAccountPage("/account");\n  const repository = getRuntimeAccountRepository();\n  const [account, participations, disciplineResult] = await Promise.all([\n    repository ? repository.findSelf(session.userId).catch(() => null) : null,\n    repository ? repository.findSelfParticipations(session.userId).catch(() => null) : null,\n    loadRuntimeDiscipline((service) => service.adapter.getOwnerOverview(session.userId)),\n  ]);\n  const rawTab = (await searchParams).tab;\n  const tab = (Array.isArray(rawTab) ? rawTab[0] : rawTab) === "player" ? "player" : "overview";\n  if (!account) {\n    return <AccountShell activeTab="overview" title="내 계정"><section className={styles.panel} role="alert"><h2>계정 정보를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section></AccountShell>;\n  }\n  return (\n    <AccountShell activeTab={tab} title={account.loginId} status={{ label: statusLabels[account.status], state: account.status }} action={<AccountLogoutButton />}>\n      {account.mustChangePassword ? <p className={styles.notice}>임시 비밀번호를 사용 중입니다. 다른 기능을 사용하기 전에 <Link href="/account/password?required=1">비밀번호를 변경해 주세요.</Link></p> : null}\n      <nav className="task-links" aria-label="내 활동 바로가기"><Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 제출 내역</Link><Link href="/tools/team-balance/drafts">내 저장 팀</Link><Link href="/help/contact">계정·탈퇴 문의</Link></nav>\n      {tab === "overview" ? (\n        <>\n          <section className={styles.panel}><h2>계정 상태</h2><dl className={styles.facts}><div><dt>상태</dt><dd>{statusLabels[account.status]}</dd></div><div><dt>역할</dt><dd>{accountRoleLabel(account.role)}</dd></div><div><dt>상태 변경</dt><dd>{formatOptionalKoreanDateTime(account.statusChangedAt)}</dd></div><div><dt>비밀번호 변경</dt><dd>{formatOptionalKoreanDateTime(account.passwordChangedAt)}</dd></div></dl>{account.statusReason || defaultStatusMessages[account.status] ? <p className={styles.notice}>{account.statusReason ?? defaultStatusMessages[account.status]}</p> : null}</section>\n          <section className={styles.panel} aria-labelledby="my-player-title">\n            <div className={styles.panelHeading}>\n              <div><span className={styles.eyebrow}><Gamepad2 aria-hidden="true" /> 내 플레이어</span><h2 id="my-player-title">이름·Riot ID·티어</h2></div>\n              <Link href="/account?tab=player">{account.status === "APPROVED" && account.player?.status === "ACTIVE" ? "이름·Riot ID·티어 변경" : "플레이어 정보 확인"}</Link>\n            </div>\n            {account.player ? <dl className={styles.facts}><div><dt>이름</dt><dd>{account.player.memberName}</dd></div><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl> : <p className={styles.notice}>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}\n          </section>\n          <section className={styles.panel} aria-labelledby="my-participations-title"><div className={styles.panelHeading}><div><span className={styles.eyebrow}><CalendarCheck2 aria-hidden="true" /> 내 활동</span><h2 id="my-participations-title">내 이벤트·내전 기록</h2></div><Link href="/matches">전체 내전 보기</Link></div>\n            {participations === null ? <p className={styles.notice} role="alert">참여 기록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p> : participations.length === 0 ? <p className={styles.empty}>연결된 플레이어의 공개 내전 또는 대회 참가 기록이 아직 없습니다.</p> : <div className={styles.activityGrid}>{participations.map((item) => {\n              const href = item.kind === "MATCH" ? `/matches/${item.id}` : item.kind === "EVENT" ? `/competitions/events/${item.id}` : `/competitions/destruction/${item.id}`;\n              const kindLabel = item.kind === "MATCH" ? "내전" : item.kind === "EVENT" ? "이벤트전" : "멸망전";\n              return <Link href={href} key={`${item.kind}-${item.id}`}><span>{item.kind === "MATCH" ? <Gamepad2 aria-hidden="true" /> : <Swords aria-hidden="true" />}{kindLabel} · {participationStatusLabel(item.status)}</span><strong>{item.title}</strong><small>{formatOptionalKoreanDateTime(item.occurredOn)} · 상세 보기</small></Link>;\n            })}</div>}\n          </section>\n          <section className={styles.panel} aria-labelledby="my-discipline-title"><div className={styles.panelHeading}><div><span className={styles.eyebrow}><AlertTriangle aria-hidden="true" /> 이용 상태</span><h2 id="my-discipline-title">현재 주의·경고·밴</h2></div><Link href="/account/discipline">상세·증빙 제출</Link></div>\n            {disciplineResult.state === "ready" ? <><dl className={styles.disciplineCounts}><div><dt>주의</dt><dd>{disciplineResult.data.activeCounts.CAUTION}</dd></div><div><dt>경고</dt><dd>{disciplineResult.data.activeCounts.WARNING}</dd></div><div><dt>밴</dt><dd>{disciplineResult.data.activeCounts.BAN}</dd></div></dl><p className={styles.notice}>{disciplineResult.data.records.length > 0 ? "현재 적용 중인 기록이 있습니다." : "현재 적용 중인 주의·경고·밴 기록이 없습니다."}</p></> : <p className={styles.notice} role={disciplineResult.state === "error" ? "alert" : "status"}>제재 상태를 불러오지 못했습니다. 경고·증빙 화면에서 다시 확인해 주세요.</p>}\n          </section>\n        </>\n      ) : (\n        <section className={styles.panel}><h2>연결 플레이어</h2>{account.player ? <><dl className={styles.facts}><div><dt>이름</dt><dd>{account.player.memberName}</dd></div><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>플레이어 상태</dt><dd>{account.player.status === "ACTIVE" ? "활성" : "비활성"}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl>{account.status === "APPROVED" && account.player.status === "ACTIVE" ? <AccountPlayerForm key={account.player.revision} player={account.player} /> : <p className={styles.notice}>승인된 활성 플레이어만 본인 정보를 수정할 수 있습니다.</p>}</> : account.playerClaim ? <p className={styles.notice}>{playerClaimMessage(account.playerClaim)}</p> : <p>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}</section>\n      )}\n    </AccountShell>\n  );\n}\n',
+    expected: /APPROVED: "전체 사용자 기능을 사용할 수 있습니다\."/,
+    operator: 'match',
+    diff: 'simple'
+  }

@@ -79,7 +79,7 @@ export default async function MatchDetailPage({
               </article>
             ))}
           </section>
-          <p className={styles.privacy}>닉네임, 챔피언, 포지션, KDA와 경기 결과를 확인할 수 있어요. MVP 산정 기준: {result.data.formulaVersion}.</p>
+          <p className={styles.privacy}>MVP 산정 기준: {result.data.formulaVersion}.</p>
         </>
       ) : null}
     </div>

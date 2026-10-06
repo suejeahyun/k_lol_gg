@@ -43,9 +43,9 @@ export default async function AdminDashboardPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> 관리자 대시보드</span>
-          <h1>운영 흐름을 한눈에 정리해요.</h1>
-          <p>계정, 경기, 대회와 운영 현황을 한곳에서 관리합니다.</p>
+
+          <h1>관리자 대시보드</h1>
+
         </div>
         <div className={styles.sessionCard}>
           <small>현재 로그인</small>
@@ -53,14 +53,6 @@ export default async function AdminDashboardPage() {
           <span>관리자 로그인 완료</span>
         </div>
       </header>
-
-      <section className={styles.notice} aria-labelledby="admin-foundation-title">
-        <div><ShieldCheck aria-hidden="true" /></div>
-        <div>
-          <h2 id="admin-foundation-title">관리자 보안</h2>
-          <p>중요한 작업은 관리자 권한과 로그인 상태를 다시 확인합니다.</p>
-        </div>
-      </section>
 
       <section className={styles.notice} aria-labelledby="admin-operations-title">
         <div><BookOpenCheck aria-hidden="true" /></div>
@@ -80,8 +72,8 @@ export default async function AdminDashboardPage() {
 
       <section className={styles.areas} aria-labelledby="admin-areas-title">
         <div className={styles.sectionHeading}>
-          <div><span>기능 영역</span><h2 id="admin-areas-title">업무 바로가기</h2></div>
-          <p>자주 사용하는 관리 메뉴로 이동하세요.</p>
+          <div><h2 id="admin-areas-title">업무 바로가기</h2></div>
+
         </div>
         <div className={styles.grid}>
           {areas.map((workspace) => {
@@ -89,9 +81,9 @@ export default async function AdminDashboardPage() {
             return (
             <Link href={workspace.href} id={workspace.id} className={styles.areaCard} key={workspace.id}>
               <div className={styles.icon}><Icon aria-hidden="true" /></div>
-              <span className={styles.stage}>{workspace.stage}</span>
+
               <h3>{workspace.label}</h3>
-              <p>{workspace.description}</p>
+
               <span className={styles.pending}>열기</span>
             </Link>
           );})}

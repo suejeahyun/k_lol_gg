@@ -17,8 +17,8 @@ test("operational diagnostics remain admin-only server rendering with no polling
   assert.match(reader, /lock_timeout = '1s'/u);
   assert.doesNotMatch(reader, /\.insert\(|\.update\(|\.delete\(|\.select\(\)/u);
   assert.doesNotMatch(publicHealth + publicSettings, /[Oo]perationalHealth|siteNotices|maintenanceRuns|riotSyncJobs/u);
-  assert.match(panel, /실제 휴대폰 수신은 미확인/u);
-  assert.match(panel, /빈 대기열 호출 기록/u);
+  assert.match(panel, /실제 휴대폰 수신 미확인/u);
+  assert.match(panel, /빈 대기열 호출은 기록 없어 미확인/u);
   assert.match(panel, /최근 인증 요청/u);
-  assert.match(panel, /외부로 장애 알림을 보내지 않습니다/u);
+  assert.match(panel, /외부 장애 알림 없음/u);
 });

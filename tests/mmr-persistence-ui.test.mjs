@@ -33,6 +33,13 @@ test("admin MMR workspace connects protected recalculate, adjustment, players an
   for (const contract of ["requirePageRole", 'tab === "players"', 'tab === "reviews"', 'raw.action === "recalculate"', "selectedReviewId", "selectedReview", "data-mmr-review-detail", "pendingSourceCount", "formulaTransition", "data-mmr-formula-transition", "MmrAdminActions", "?tab=balance"]) {
     assert.equal(page.includes(contract), true, contract);
   }
+  assert.match(page, /allowed=\{session\.role === "SUPER_ADMIN"\}/u);
+  assert.match(actions, /if \(!allowed\) return/u);
+  for (const route of ["recalculate", "adjustments"]) {
+    const handler = source(`../src/app/api/admin/balance-ai/${route}/route.ts`);
+    assert.match(handler, /requireMmrApiSession\("SUPER_ADMIN"\)/u);
+    assert.ok(handler.indexOf('requireMmrApiSession("SUPER_ADMIN")') < handler.indexOf("prepareMmrMutation(request"));
+  }
   for (const state of ['data-mmr-state="summary"', 'data-mmr-state="players"', 'data-mmr-state="reviews"']) {
     assert.equal(page.includes(state), true, state);
   }
@@ -40,7 +47,7 @@ test("admin MMR workspace connects protected recalculate, adjustment, players an
     'fetch(`/api/admin/balance-ai/${path}`',
     '"If-Match"',
     '"Idempotency-Key"',
-    "SUPER_ADMIN",
+    "최고 관리자",
     "전체 원장 재계산",
     'role="alertdialog"',
     'aria-modal="true"',

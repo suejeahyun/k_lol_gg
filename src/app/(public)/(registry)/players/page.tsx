@@ -42,9 +42,7 @@ export default async function PlayersPage({
       <section className="players-hero" aria-labelledby="players-title">
         <div>
           <Badge variant="secondary"><Sparkles size={13} aria-hidden="true" /> K-LOL · PLAYER REGISTRY</Badge>
-          <p>PLAYER REGISTRY</p>
           <h1 id="players-title">플레이어 찾기</h1>
-          <span>회원명·닉네임·Riot ID로 찾고, 원하는 티어만 모아볼 수 있어요.</span>
         </div>
         <UsersRound size={86} aria-hidden="true" />
       </section>
@@ -65,7 +63,7 @@ export default async function PlayersPage({
           <Button size="lg" type="submit">검색</Button>
         </div>
         {catalogQuery.tier ? <input type="hidden" name="tier" value={catalogQuery.tier} /> : null}
-        <small>회원명은 정확히 입력해 주세요. 검색 결과에는 공개 닉네임과 Riot ID만 표시합니다.</small>
+        <small>회원명은 정확히 일치할 때만 검색됩니다. 결과는 공개 닉네임·Riot ID로 표시합니다.</small>
         <nav className="player-tier-filters" aria-label="티어별 플레이어 필터">
           <Link
             href={playersHref(catalogQuery.query, null, 1)}
@@ -89,7 +87,6 @@ export default async function PlayersPage({
       <section className="player-results" aria-live="polite" aria-labelledby="results-title">
         <div className="player-results__heading">
           <div>
-            <p>SEARCH RESULT</p>
             <h2 id="results-title">
               {catalogQuery.query
                 ? `“${catalogQuery.query}”${catalogQuery.tier ? ` · ${playerTierLabel(catalogQuery.tier)}` : ""} 검색 결과`
@@ -117,7 +114,7 @@ export default async function PlayersPage({
           <div className="empty-state">
             <Search size={28} aria-hidden="true" />
             <strong>{catalogQuery.query || catalogQuery.tier ? "조건에 맞는 플레이어가 없어요." : "등록된 활성 플레이어가 없어요."}</strong>
-            <p>{catalogQuery.query || catalogQuery.tier ? "검색어를 확인하거나 다른 티어를 선택해 보세요." : "플레이어가 등록되면 이곳에 공개 목록이 표시됩니다."}</p>
+            {catalogQuery.query || catalogQuery.tier ? <p>검색어를 확인하거나 다른 티어를 선택해 보세요.</p> : null}
             {catalogQuery.query || catalogQuery.tier ? <Link className="empty-state__link" href="/players">검색 초기화</Link> : null}
           </div>
         ) : (

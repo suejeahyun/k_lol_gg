@@ -106,8 +106,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
         <div className="user-dialog__panel">
           <div className="user-dialog__heading">
             <div>
-              <span>COMMAND PALETTE</span>
-              <h2 id={titleId}>무엇을 찾고 있나요?</h2>
+              <h2 id={titleId}>전체 검색</h2>
             </div>
             <button type="button" aria-label="검색 닫기" onClick={() => closeDialog(dialog.current)}>
               <X size={20} aria-hidden="true" />
@@ -157,10 +156,9 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
                   else focusResult(index - 1);
                 }
               }}
-            ><span><small>{command.group}{command.access === "ACCOUNT" && !accountSignedIn ? " · 로그인 필요" : ""}</small><strong>{command.label}</strong><em>{command.description}</em></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <p className="command-palette-empty">일치하는 기능이 없어요. 다른 표현으로 검색하거나 플레이어 이름으로 찾아보세요.</p>}
+            ><span><small>{command.group}{command.access === "ACCOUNT" && !accountSignedIn ? " · 로그인 필요" : ""}</small><strong>{command.label}</strong></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <p className="command-palette-empty">검색 결과가 없습니다.</p>}
           </div>
           {playerHref ? <Link className="search-player-link" href={playerHref} onClick={() => closeDialog(dialog.current)}>“{query}” 플레이어 이름으로 검색 <ArrowRight className="theme-inline-icon" aria-hidden="true" /></Link> : null}
-          <p className="user-dialog__hint">Enter로 첫 기능을 열고, 방향키로 결과를 선택할 수 있어요. 로그인 필요한 기능도 먼저 살펴볼 수 있습니다.</p>
         </div>
       </dialog>
     </>
@@ -202,7 +200,6 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
         <div className="user-dialog__panel">
           <div className="user-dialog__heading">
             <div>
-              <span>ALL FEATURES</span>
               <h2 id={titleId}>전체 기능</h2>
             </div>
             <button type="button" aria-label="전체 메뉴 닫기" onClick={() => closeDialog(dialog.current)}>
@@ -210,9 +207,6 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
             </button>
           </div>
 
-          <p className="user-dialog__hint user-dialog__hint--top">
-            참가와 팀 만들기는 바로 선택하고, 다른 기능은 항목을 펼쳐 확인하세요.
-          </p>
           <div className="all-menu-grid" data-usage-context="menu">
             {[...userTaskGroups, { label: "내 활동", links: personalTaskLinks }, { label: "도움말·계정", links: [...helpLinks, ...(accountSignedIn ? [] : [{ href: "/login", label: "로그인" }, { href: "/signup", label: "회원가입" }])] }].map((group, groupIndex) => (
               <details className="all-menu-section" key={group.label} open={groupIndex < 2}>

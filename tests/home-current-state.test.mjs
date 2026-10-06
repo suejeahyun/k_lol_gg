@@ -89,7 +89,7 @@ test("홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST
   assert.match(guideArt, /src=\{webpSrc\}/);
   assert.match(guideArt, /hero-art__custom--fallback/);
   assert.doesNotMatch(home, /26\.18\.1/);
-  assert.match(home, /여성 챔피언 팬아트/);
+  assert.match(home, /alt=\{championPresentation\.localImageAlt/, "보조 설명 대신 이미지 자체의 대체 텍스트를 보존한다");
   assert.match(domain, /비공식 팬아트/);
 });
 

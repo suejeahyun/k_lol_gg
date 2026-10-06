@@ -24,7 +24,7 @@ export function YouTubePlayer({ youtubeId, title }: Readonly<{ youtubeId: string
     <button className={styles.playerPreview} type="button" onClick={() => setPlaying(true)} aria-label={`${title} 영상 재생`}>
       <Clapperboard aria-hidden="true" />
       <span>
-        <small>YOUTUBE HIGHLIGHT</small>
+
         <strong>{title}</strong>
         <em><Play aria-hidden="true" /> 영상 재생</em>
       </span>

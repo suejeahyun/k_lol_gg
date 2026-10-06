@@ -1,0 +1,35 @@
+✔ season, date and round changes replace application form state in both editable branches (170.797ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (39.3668ms)
+✔ a missing site application retains a direct path to recover Kakao member linking (10.0494ms)
+✔ event position labels remain readable while form values retain the API position codes (9.2527ms)
+✔ own status and public roster use the same Korean position labels as the application form (60.8098ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (10.1438ms)
+✔ destruction format choices distinguish match lengths and retain the selected canonical filter (46.7582ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (6.3213ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (4.3838ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.6359ms)
+✔ public competition pages expose list/detail/application states without administrator controls (2.8365ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (1.7119ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.5755ms)
+✔ ranking choices name all three rankings before the single slide and expose selection (80.3063ms)
+✔ direct ranking choice stops rotation and updates its single slide and full-ranking destination (23.1083ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (19.7479ms)
+✔ empty or single ranking does not expose impossible slide controls (21.1031ms)
+✔ 공개 구인 카드와 API DTO는 참여자 표시 정보만 노출한다 (2.6769ms)
+✔ 내전 등록·상세 UI는 경기 시간을 입력하거나 표시하지 않는다 (1.5536ms)
+✔ 이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름을 독립 경로로 유지한다 (1.6192ms)
+✔ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (46.9437ms)
+✔ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (6.2673ms)
+✔ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (7.6749ms)
+✔ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (4.7353ms)
+✔ Kakao pending API splits ADMIN reads from SUPER TOTP mutations (8.505ms)
+✔ pending operator UI uses bounded filters, a player picker and revision-safe commands (1.0805ms)
+✔ public season applications expose Kakao-started recruit rounds without leaking pending identities (2.222ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 681.3414

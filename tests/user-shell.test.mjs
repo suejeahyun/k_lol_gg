@@ -96,7 +96,10 @@ test("관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 
   assert.match(detailPage, /await repository\.findAdmin\(id, viewerRole\)/);
   assert.doesNotMatch(detailPage, /findAdmin\([^\n]+\.catch\(\(\) => null\)/);
   assert.match(detailError, /계정 상세를 불러오지 못했습니다/);
-  assert.match(detailError, /window\.location\.reload\(\)/);
+  assert.match(detailError, /href="\/admin\/users"/);
+  // route-error-recovery.test.mjs executes this control with the real Next
+  // boundary and verifies a fresh request, without requiring a full reload.
+  assert.match(detailError, /다시 시도/);
 });
 
 test("모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아웃을 제공한다", async () => {
@@ -203,7 +206,8 @@ test("내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기�
     "utf8",
   );
   assert.match(accountPage, /PENDING: "관리자 검토를 기다리고 있습니다\."/);
-  assert.match(accountPage, /APPROVED: "전체 사용자 기능을 사용할 수 있습니다\."/);
+  assert.match(accountPage, /APPROVED: "승인됨"/);
+  assert.match(accountPage, /status=\{\{ label: statusLabels\[account\.status\], state: account\.status \}\}/);
   assert.match(accountPage, /REJECTED: "계정 승인이 거절되었습니다\./);
   assert.match(accountPage, /SUSPENDED: "계정 이용이 제한되어 있습니다\./);
   assert.match(accountPage, /defaultStatusMessages\[account\.status\]/);

@@ -84,6 +84,18 @@ test("public resource and invalid-query recovery uses the existing layout withou
   assertPublicRecovery(renderToStaticMarkup(await resolveTree(tree)));
 });
 
+test("application error recovery keeps the public main landmark singular", async () => {
+  const applicationError = load("app/(public)/(applications)/applications/error.tsx", {
+    "@/components/theme/theme-icons": icons,
+    "./applications.module.css": { __esModule: true, default: { page: "page", stateCard: "state", error: "error" } },
+  });
+  const tree = publicLayout.default({ children: applicationError.default({ retry: () => undefined }) });
+  const html = renderToStaticMarkup(await resolveTree(tree));
+  assert.equal((html.match(/<main(?:\s|>)/gu) ?? []).length, 1);
+  assert.match(html, /role="alert"/u);
+  assert.match(html, /<button[^>]*>다시 시도<\/button>/u);
+});
+
 test("admin not-found content stays behind its layout authorization and inside one admin shell", async () => {
   const checks = [];
   const adminLayout = load("app/(admin)/admin/layout.tsx", {

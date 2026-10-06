@@ -1,0 +1,93 @@
+✖ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (36.0054ms)
+✖ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (8.5119ms)
+✖ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (4.3332ms)
+✖ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (4.3829ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 289.4755
+
+✖ failing tests:
+
+test at tests\route-error-recovery.test.mjs:38:3
+✖ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (36.0054ms)
+  AssertionError [ERR_ASSERTION]: Next retry must refresh, not only clear the previous error
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:48:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\route-error-recovery.test.mjs:38:3
+✖ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (8.5119ms)
+  AssertionError [ERR_ASSERTION]: Next retry must refresh, not only clear the previous error
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:48:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\route-error-recovery.test.mjs:38:3
+✖ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (4.3332ms)
+  AssertionError [ERR_ASSERTION]: Next retry must refresh, not only clear the previous error
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:48:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\route-error-recovery.test.mjs:38:3
+✖ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (4.3829ms)
+  file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:27
+      throw new Error(`Unexpected dependency: ${specifier}`);
+      ^
+
+  Error: Unexpected dependency: next/link
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:27:11)
+      at evalmachine.<anonymous>:6:16
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:22:6)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:44:18)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)

@@ -38,7 +38,7 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
   }
   return <section className={styles.actions} aria-labelledby="team-override-title">
     <header><h2 id="team-override-title">팀 편성 전용 보정</h2></header>
-    <p>MMR 원장과 별개로 팀 편성 점수에 한 번만 반영됩니다. 기존 경기·MMR·저장된 초안은 바꾸지 않습니다. 미설정은 0점이며, 해제할 때는 0점과 사유를 저장하세요.</p>
+    <p>팀 편성에만 1회 반영 · 기존 경기·MMR·저장 초안 유지 · 미설정 0점 · 해제: 0점과 사유 저장</p>
     <label>플레이어<BoundedPicker ariaLabel="팀 편성 보정 플레이어" value={playerId} options={[]} placeholder="닉네임 또는 Riot ID 검색" remoteEndpoint="/api/admin/matches/editor-options/players" onChange={(value) => { setPlayerId(value); setCurrent(null); setMessage(""); }} /></label>
     <button type="button" disabled={busy || !playerId} onClick={() => void load()}>현재 보정 확인</button>
     {current && current.playerId === playerId ? <form key={`${current.playerId}:${current.revision}`} onSubmit={save}>

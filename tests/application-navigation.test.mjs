@@ -12,7 +12,7 @@ function load(file, dependencies) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   const result = { exports: {} };
-  vm.runInNewContext(source, { exports: result.exports, URLSearchParams, require: (specifier) => {
+  vm.runInNewContext(source, { exports: result.exports, URL, URLSearchParams, require: (specifier) => {
     assert.ok(Object.hasOwn(dependencies, specifier), `Unexpected navigation dependency: ${specifier}`);
     return dependencies[specifier];
   } });
@@ -95,6 +95,45 @@ test("position-free rounds do not display a fabricated main/sub position in own 
   assert.match(rift, /부 없음/u);
 });
 
+test("a missing site application retains a direct path to recover Kakao member linking", () => {
+  const { ApplicationActions: Form } = load("app/(public)/(applications)/applications/application-actions.tsx", {
+    react: React,
+    "react/jsx-runtime": jsxRuntime,
+    "next/link": Link,
+    "next/navigation": { useRouter: () => ({ refresh() {} }) },
+    "@/components/usage/usage-actions": { recordUsageAction() {} },
+    "@/modules/seasons/domain/season": { SEASON_APPLICATION_POSITIONS: ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] },
+    "@/modules/seasons/application/client-mutation-key-store": { ClientMutationKeyStore: class {} },
+    "@/modules/seasons/application/client-application-positions": applicationPositions,
+    "./applications.module.css": css,
+  });
+  const data = hub();
+  const html = renderToStaticMarkup(React.createElement(Form, { initial: null, recruitNo: 1, applicantPlayer: data.applicantPlayer, applyDate: data.applyDate }));
+  assert.match(html, /href="\/help\/contact">카카오 신청 회원 연결 문의<\/a>/u);
+  assert.match(html, /name="mainPosition"/u);
+  assert.match(html, />참가 신청<\/button>/u);
+});
+
+test("event position labels remain readable while form values retain the API position codes", () => {
+  const display = load("modules/competitions/core/display-projection.ts", {});
+  const { EventApplicationActions: Form } = load("app/(public)/(competitions)/competitions/events/[eventId]/event-application-actions.tsx", {
+    react: React,
+    "react/jsx-runtime": jsxRuntime,
+    "next/link": Link,
+    "next/navigation": { useRouter: () => ({ refresh() {} }) },
+    "@/components/usage/usage-actions": { recordUsageAction() {} },
+    "@/modules/competitions/core/display-projection": display,
+    "../../events.module.css": css,
+  });
+  const html = renderToStaticMarkup(React.createElement(Form, { eventId: "synthetic-event", revision: 1, format: "POSITION", open: true, signedIn: true, approved: true, application: null }));
+  for (const value of ["TOP", "JGL", "MID", "ADC", "SUP"]) {
+    assert.match(html, new RegExp(`<option value="${value}"[^>]*>${display.competitionPositionLabel(value)}</option>`, "u"));
+    assert.match(html, new RegExp(`name="subPositions"[^>]*value="${value}"`, "u"));
+  }
+  assert.match(html, /name="mainPosition"/u);
+  assert.match(html, /type="submit">신청하기<\/button>/u);
+});
+
 test("own status and public roster use the same Korean position labels as the application form", async () => {
   for (const [position, label] of Object.entries(applicationPositions.APPLICATION_POSITION_LABELS)) {
     const data = hub();
@@ -137,4 +176,47 @@ test("ranking view and applied criteria replace stale unsaved filter inputs", as
   assert.equal(new Set([initial.key, byParticipation.key, changedMinimum.key, changedSeason.key]).size, 4);
   assert.equal(find(byParticipation, (node) => node.props.name === "minParticipation").props.defaultValue, 0);
   assert.equal(find(byParticipation, (node) => node.props.name === "view").props.value, "participation");
+});
+
+test("destruction format choices distinguish match lengths and retain the selected canonical filter", async () => {
+  const configuration = load("modules/competitions/destruction/configuration.ts", { "../core": {}, "../core/error": {} });
+  const contract = load("modules/competitions/destruction/http-contract.ts", { "node:crypto": {}, "./configuration": configuration });
+  const display = {
+    ...load("modules/competitions/core/display-projection.ts", {}),
+    ...load("modules/competitions/core/public-display-labels.ts", {}),
+  };
+  let requestedQuery;
+  const { DestructionCompetitionList } = load("app/(public)/(competitions)/competitions/competition-list-views.tsx", {
+    "react/jsx-runtime": jsxRuntime,
+    "next/link": Link,
+    "@/components/theme/theme-icons": icons,
+    "@/modules/competitions/core": display,
+    "@/modules/competitions/destruction": { ...configuration, ...contract },
+    "@/modules/competitions/destruction/runtime-destruction": { loadRuntimeDestruction: async (read) => ({ state: "ready", data: await read({ repository: { listPublic: async (query) => {
+      requestedQuery = query;
+      return { items: [{ id: "synthetic-tournament", status: "RECRUITING", preliminaryFormat: query.format, title: "합성 대회", teams: [], participantCount: 0 }], totalPages: 2 };
+    } } }) }) },
+    "@/modules/competitions/events": {},
+    "@/modules/competitions/events/infrastructure/runtime-event": {},
+    "./events.module.css": css,
+  });
+  for (const format of configuration.DESTRUCTION_PRELIMINARY_FORMATS) {
+    const html = renderToStaticMarkup(await DestructionCompetitionList({ searchParams: Promise.resolve({ format, q: "합성", status: "RECRUITING" }) }));
+    const select = html.match(/<select name="format">([\s\S]*?)<\/select>/u)?.[1];
+    assert.ok(select);
+    const options = [...select.matchAll(/<option value="([^"]+)"[^>]*>([^<]+)<\/option>/gu)];
+    assert.equal(new Set(options.map((option) => option[2])).size, configuration.DESTRUCTION_PRELIMINARY_FORMATS.length, "each supported format needs a distinguishable visible choice");
+    assert.deepEqual(options.map((option) => option[1]), [...configuration.DESTRUCTION_PRELIMINARY_FORMATS]);
+    for (const [, value, label] of options) assert.ok(label.endsWith(value.endsWith("BO3") ? "3판 2선승" : "단판"));
+    assert.match(select, new RegExp(`value="${format}" selected=""`, "u"));
+    assert.equal(requestedQuery.format, format);
+    assert.match(html, new RegExp(`<b>[^<]+${format.endsWith("BO3") ? "3판 2선승" : "단판"}<\\/b>`, "u"));
+    const nextHref = html.match(/href="([^"]+)">다음<\/a>/u)?.[1];
+    assert.ok(nextHref);
+    const nextQuery = contract.parseDestructionListQuery(`https://isolated.invalid${nextHref.replaceAll("&amp;", "&")}`);
+    assert.equal(nextQuery?.format, format);
+    assert.equal(nextQuery?.page, 2);
+    assert.equal(nextQuery?.query, "합성");
+    assert.equal(nextQuery?.status, "RECRUITING");
+  }
 });

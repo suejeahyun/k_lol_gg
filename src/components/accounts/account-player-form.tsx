@@ -96,7 +96,7 @@ function AccountTierField({
         )}
       </div>
       <small id={helpId} className={styles.tierHelp}>
-        아이언부터 챌린저까지 티어를 선택합니다. 다이아몬드 이하는 단계를 선택하고, 마스터 이상은 LP만 직접 입력합니다.
+        다이아몬드 이하: 단계 필수 · 마스터 이상: LP 필수
       </small>
     </fieldset>
   );
@@ -163,17 +163,17 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
     <form className={styles.form} onSubmit={submit} aria-busy={pending}>
       <label className={styles.field}>이름
         <input name="memberName" defaultValue={player.memberName} required minLength={2} maxLength={100} autoComplete="name" aria-describedby="account-player-name-help" />
-        <small id="account-player-name-help">사이트에서 사용할 이름을 2~100자로 입력하세요.</small>
+        <small id="account-player-name-help">2~100자</small>
       </label>
       <label className={styles.field}>Riot ID
         <input name="riotId" defaultValue={player.riotId} required maxLength={22} autoComplete="off" aria-describedby="account-player-riot-id-help account-player-riot-id-warning" />
-        <small id="account-player-riot-id-help">게임 이름은 최대 16자, 태그는 최대 5자이며 `닉네임#태그` 형식으로 입력합니다.</small>
+        <small id="account-player-riot-id-help">닉네임#태그 · 닉네임 최대 16자, 태그 최대 5자</small>
       </label>
       <div className={styles.playerTierGrid}>
         <AccountTierField label="현재 티어" name="currentTier" initialValue={player.currentTier} />
         <AccountTierField label="최고 티어" name="peakTier" initialValue={player.peakTier} />
       </div>
-      <p id="account-player-riot-id-warning" className={styles.notice}>Riot ID를 변경하면 기존 Riot 전적 연동이 자동 해제됩니다. 저장 후 새 Riot ID로 다시 연동해 주세요.</p>
+      <p id="account-player-riot-id-warning" className={styles.notice}>Riot ID 변경 시 기존 전적 연동이 해제됩니다. 저장 후 다시 연결해야 합니다.</p>
       <button className={styles.submit} type="submit" disabled={pending}>{pending ? "저장 중…" : "내 플레이어 정보 저장"}</button>
       {message ? <p className={styles.message} data-tone={tone} role={tone === "error" ? "alert" : "status"}>{message}</p> : null}
     </form>

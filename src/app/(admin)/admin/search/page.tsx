@@ -29,14 +29,14 @@ export default async function AdminSearchPage({ searchParams }: AdminSearchPageP
 
   return (
     <main className={styles.page}>
-      <header><span>권한 범위 내 검색</span><h1>관리자 작업 공간 찾기</h1><p>관리자 메뉴의 이름과 설명을 검색해 필요한 작업 공간으로 바로 이동합니다.</p></header>
+      <header><h1>관리자 작업 공간 찾기</h1></header>
       <form className={styles.search} role="search">
         <label htmlFor="admin-search">검색어</label>
         <div><Search aria-hidden="true" /><input id="admin-search" name="q" defaultValue={query} maxLength={80} placeholder="예: 경기, Riot, 징계" /><button type="submit">찾기</button></div>
       </form>
       <section aria-live="polite" aria-labelledby="admin-search-results">
         <h2 id="admin-search-results">{query ? `“${query}” 검색 결과 ${results.length}개` : "전체 작업 공간"}</h2>
-        {results.length ? <ul>{results.map((workspace) => <li key={workspace.id}><Link href={workspace.href}><strong>{workspace.label}</strong><span>{workspace.description}</span></Link></li>)}</ul> : <p className={styles.empty}>일치하는 작업 공간이 없습니다. 다른 단어로 다시 찾아보세요.</p>}
+        {results.length ? <ul>{results.map((workspace) => <li key={workspace.id}><Link href={workspace.href}><strong>{workspace.label}</strong></Link></li>)}</ul> : <p className={styles.empty}>일치하는 작업 공간이 없습니다. 다른 단어로 다시 찾아보세요.</p>}
       </section>
     </main>
   );

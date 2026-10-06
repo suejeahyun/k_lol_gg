@@ -54,7 +54,7 @@ export default async function AdminMatchesPage({
 
   return <main className={styles.page}>
     <section className={styles.hero}>
-      <div><p>A4 · MATCH OPERATIONS</p><h1>경기·결과</h1><p>초안, 공개, 무효화와 사용자 결과 접수를 한 작업대에서 관리합니다.</p></div>
+      <div><h1>경기·결과</h1></div>
       <Link href="/admin/matches/new"><FilePlus2 size={17} aria-hidden="true" /> 새 경기</Link>
     </section>
     <nav className={styles.tabs} aria-label="경기 관리 보기">

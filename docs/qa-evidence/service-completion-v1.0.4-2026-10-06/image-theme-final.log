@@ -1,0 +1,11 @@
+✔ every application icon import resolves to a generated image, including shared UI controls (1038.3123ms)
+✔ image icons preserve size, accessible names and decorative semantics (0.4065ms)
+✔ artwork files match their provenance, alpha grids and transfer budget (68.7687ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1793.2941

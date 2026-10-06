@@ -405,8 +405,6 @@ export function AdminAccountActions({
           <button type="submit" disabled={!targetAllowed || actionsUnavailable}>{busy?.startsWith("status") ? "처리 중…" : "상태 변경"}</button>
         </form>
 
-
-
         {actor.role === "SUPER_ADMIN" ? <form id="role-management" className={styles.actionPanel} onSubmit={(event) => {
           event.preventDefault();
           const data = new FormData(event.currentTarget);
@@ -429,7 +427,7 @@ export function AdminAccountActions({
           if (!requireTypedConfirmation(data)) return;
           void mutate("password-reset", `/api/admin/users/${account.id}/password-reset`, "PATCH", { internalReason: String(data.get("internalReason") ?? ""), confirmLoginId: String(data.get("confirmLoginId") ?? "") });
         }}>
-          <h3>임시 비밀번호</h3><p>응답에서 한 번만 표시되며 DB·감사·receipt에는 원문이 저장되지 않습니다.</p>
+          <h3>임시 비밀번호</h3><p>발급 직후 한 번만 표시</p>
           <label>내부 운영 사유<textarea name="internalReason" minLength={2} maxLength={1000} required /></label>
           <label>대상 확인<input name="confirmLoginId" autoComplete="off" placeholder={account.loginId} required /></label>
           <button type="submit" disabled={!superActiveAllowed || actionsUnavailable}>{busy === "password-reset" ? "발급 중…" : temporaryPassword ? "임시 비밀번호 확인 필요" : "임시 비밀번호 발급"}</button>
@@ -446,7 +444,7 @@ export function AdminAccountActions({
               clearTemporaryPassword("DISMISSED");
             }}>복사 완료 · 닫기</button></div>
             <p role="status" aria-live="polite">{secretMessage || "임시 비밀번호가 발급되었습니다. 보기 또는 복사를 선택하세요."}</p>
-            <small>닫거나 페이지를 떠난 뒤에는 다시 표시할 수 없습니다. 전달에 실패했다면 새 초기화 작업을 진행하세요.</small>
+            <small>닫거나 이동하면 재확인 불가 · 전달 실패 시 새 비밀번호 발급</small>
           </div> : null}
         </form>
 
@@ -464,7 +462,7 @@ export function AdminAccountActions({
         </form>
       </div>
       {account.deletedAt ? <p className={styles.inactiveNotice}>삭제 계정에서는 복구 외 상태·역할·비밀번호 작업을 실행할 수 없습니다.</p> : null}
-      <div className={styles.formMessage} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "작업은 revision·멱등성 키·감사·세션 폐기를 같은 트랜잭션에서 검증합니다."}</div>
+      {message ? <div className={styles.formMessage} data-tone={message.tone} role={message.tone === "error" ? "alert" : "status"} aria-live="polite">{message.text}</div> : null}
     </section>
   );
 }

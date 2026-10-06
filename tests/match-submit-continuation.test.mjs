@@ -157,7 +157,7 @@ test("completed or rejected submissions show their result and recovery without i
       assert.match(html, /href="\/help\/contact"/u);
     }
     if (status === "APPROVED") assert.ok(html.includes(`href="/matches/${draftId}"`));
-    if (status === "PENDING_REVIEW") assert.match(html, /이미지를 모두 제출했어요/u);
+    if (status === "PENDING_REVIEW") assert.match(html, /이미지 제출 완료 · 운영자 검토 후 전적 반영/u);
   }
 });
 

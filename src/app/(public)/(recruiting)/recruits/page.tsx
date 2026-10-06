@@ -34,7 +34,7 @@ export default async function RecruitsPage() {
   return (
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="recruit-title">
-        <div><p>PLAY TOGETHER</p><h1 id="recruit-title">오늘 같이 플레이해요</h1><span>카카오톡 봇과 사이트에서 등록된 진행 중 모집만 보여드려요.</span></div>
+        <div><h1 id="recruit-title">파티 모집</h1></div>
         <UsersRound aria-hidden="true" />
       </section>
 
@@ -46,7 +46,7 @@ export default async function RecruitsPage() {
       {result.state === "ready" && !empty ? (
         <>
           <section aria-labelledby="party-recruits-title">
-            <header className={styles.heading}><div><span>PARTY</span><h2 id="party-recruits-title">파티 모집</h2></div><p>참가 가능 {openCount}개 · 정원 마감 {parties.length - openCount}개</p></header>
+            <header className={styles.heading}><div><h2 id="party-recruits-title">현재 모집</h2></div><p>참가 가능 {openCount}개 · 정원 마감 {parties.length - openCount}개</p></header>
             {result.data.parties.length === 0 ? <div className={styles.inlineEmpty}>진행 중인 파티 모집이 없어요.</div> : (
               <div className={styles.cards}>
                 {parties.map((party) => <article
@@ -82,14 +82,14 @@ export default async function RecruitsPage() {
             )}
           </section>
           <section aria-labelledby="scrim-recruits-title">
-            <header className={styles.heading}><div><span>SCRIM</span><h2 id="scrim-recruits-title">기존 스크림 기록</h2></div><p>{result.data.scrims.length}개 기록</p></header>
+            <header className={styles.heading}><div><h2 id="scrim-recruits-title">기존 스크림 기록</h2></div><p>{result.data.scrims.length}개 기록</p></header>
             {result.data.scrims.length === 0 ? <div className={styles.inlineEmpty}>표시할 기존 스크림 기록이 없어요.</div> : (
               <div className={styles.cards}>
                 {result.data.scrims.map((scrim) => <article id={`scrim-${scrim.id}`} className={`${styles.card} recruit-card-target`} data-kind="scrim" data-status={scrim.status.toLowerCase()} key={scrim.id}>
                   <div className={styles.cardTop}><span>{scrim.status === "RECRUITING" ? "상대 모집 중" : scrim.status === "MATCHED" ? "매칭됨" : "확정"}</span><b>#{scrim.scrimNumber}</b></div>
                   <h3>{scrim.title ?? (scrim.bestOf ? `BO${scrim.bestOf} 스크림` : "스크림 기록")}</h3>
                   <dl><div><dt>요청 팀</dt><dd>{scrim.requesterTeamName ?? scrim.requesterTeamId?.slice(0, 8) ?? "기록 없음"}</dd></div><div><dt>예정</dt><dd>{timeLabel(scrim.scheduledAt)}</dd></div></dl>
-                  <p>기존 스크림 기록입니다. 새 참여는 파티 모집 또는 내전 신청을 이용해 주세요.</p><Link href="/applications">내전 신청 보기</Link>
+                  <p>신규 참가 종료</p><Link href="/applications">내전 신청 보기</Link>
                   <p className={styles.scrimLine}><Swords aria-hidden="true" /> {scrim.opponentTeamName ?? (scrim.opponentTeamId ? `상대 팀 ${scrim.opponentTeamId.slice(0, 8)}` : "상대 팀을 기다리고 있어요")}</p>
                 </article>)}
               </div>
@@ -97,11 +97,11 @@ export default async function RecruitsPage() {
           </section>
         </>
       ) : result.state === "ready" ? (
-        <section className={styles.state}><Sparkles aria-hidden="true" /><h2>지금은 열린 모집이 없어요.</h2><p>새 모집이 등록되면 이 화면에 바로 나타납니다.</p><Link href="/help/recruits">모집 방법 알아보기</Link></section>
+        <section className={styles.state}><Sparkles aria-hidden="true" /><h2>지금은 열린 모집이 없어요.</h2><Link href="/help/recruits">모집 방법 알아보기</Link></section>
       ) : result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><CalendarClock aria-hidden="true" /><h2>모집을 확인할 수 없어요.</h2><p>잠시 후 다시 확인해 주세요.</p><Link href="/recruits">다시 확인</Link></section>
+        <section className={styles.state} role="status"><CalendarClock aria-hidden="true" /><h2>모집을 확인할 수 없어요.</h2><Link href="/recruits">다시 확인</Link></section>
       ) : (
-        <section className={styles.state} role="alert"><CircleAlert aria-hidden="true" /><h2>모집을 불러오지 못했어요.</h2><p>잠시 후 다시 시도해 주세요.</p><Link href="/recruits">다시 시도</Link></section>
+        <section className={styles.state} role="alert"><CircleAlert aria-hidden="true" /><h2>모집을 불러오지 못했어요.</h2><Link href="/recruits">다시 시도</Link></section>
       )}
     </div>
   );

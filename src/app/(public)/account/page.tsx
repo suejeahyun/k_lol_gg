@@ -21,7 +21,7 @@ const statusLabels = { PENDING: "승인 대기", APPROVED: "승인됨", REJECTED
 
 const defaultStatusMessages: Record<AccountSelfDto["status"], string> = {
   PENDING: "관리자 검토를 기다리고 있습니다.",
-  APPROVED: "전체 사용자 기능을 사용할 수 있습니다.",
+  APPROVED: "",
   REJECTED: "계정 승인이 거절되었습니다. 안내 사유를 확인하거나 관리자에게 문의해 주세요.",
   SUSPENDED: "계정 이용이 제한되어 있습니다. 안내 사유를 확인하거나 관리자에게 문의해 주세요.",
 };
@@ -52,15 +52,15 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const rawTab = (await searchParams).tab;
   const tab = (Array.isArray(rawTab) ? rawTab[0] : rawTab) === "player" ? "player" : "overview";
   if (!account) {
-    return <AccountShell activeTab="overview" title="내 계정" description="계정 상태와 연결된 플레이어 정보를 관리하세요."><section className={styles.panel} role="alert"><h2>계정 정보를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section></AccountShell>;
+    return <AccountShell activeTab="overview" title="내 계정"><section className={styles.panel} role="alert"><h2>계정 정보를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section></AccountShell>;
   }
   return (
-    <AccountShell activeTab={tab} title={account.loginId} description="계정 상태와 연결된 플레이어 정보를 관리하세요." status={{ label: statusLabels[account.status], state: account.status }} action={<AccountLogoutButton />}>
+    <AccountShell activeTab={tab} title={account.loginId} status={{ label: statusLabels[account.status], state: account.status }} action={<AccountLogoutButton />}>
       {account.mustChangePassword ? <p className={styles.notice}>임시 비밀번호를 사용 중입니다. 다른 기능을 사용하기 전에 <Link href="/account/password?required=1">비밀번호를 변경해 주세요.</Link></p> : null}
       <nav className="task-links" aria-label="내 활동 바로가기"><Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 제출 내역</Link><Link href="/tools/team-balance/drafts">내 저장 팀</Link><Link href="/help/contact">계정·탈퇴 문의</Link></nav>
       {tab === "overview" ? (
         <>
-          <section className={styles.panel}><h2>계정 상태</h2><dl className={styles.facts}><div><dt>상태</dt><dd>{statusLabels[account.status]}</dd></div><div><dt>역할</dt><dd>{accountRoleLabel(account.role)}</dd></div><div><dt>상태 변경</dt><dd>{formatOptionalKoreanDateTime(account.statusChangedAt)}</dd></div><div><dt>비밀번호 변경</dt><dd>{formatOptionalKoreanDateTime(account.passwordChangedAt)}</dd></div></dl><p className={styles.notice}>{account.statusReason ?? defaultStatusMessages[account.status]}</p></section>
+          <section className={styles.panel}><h2>계정 상태</h2><dl className={styles.facts}><div><dt>상태</dt><dd>{statusLabels[account.status]}</dd></div><div><dt>역할</dt><dd>{accountRoleLabel(account.role)}</dd></div><div><dt>상태 변경</dt><dd>{formatOptionalKoreanDateTime(account.statusChangedAt)}</dd></div><div><dt>비밀번호 변경</dt><dd>{formatOptionalKoreanDateTime(account.passwordChangedAt)}</dd></div></dl>{account.statusReason || defaultStatusMessages[account.status] ? <p className={styles.notice}>{account.statusReason ?? defaultStatusMessages[account.status]}</p> : null}</section>
           <section className={styles.panel} aria-labelledby="my-player-title">
             <div className={styles.panelHeading}>
               <div><span className={styles.eyebrow}><Gamepad2 aria-hidden="true" /> 내 플레이어</span><h2 id="my-player-title">이름·Riot ID·티어</h2></div>
@@ -76,7 +76,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             })}</div>}
           </section>
           <section className={styles.panel} aria-labelledby="my-discipline-title"><div className={styles.panelHeading}><div><span className={styles.eyebrow}><AlertTriangle aria-hidden="true" /> 이용 상태</span><h2 id="my-discipline-title">현재 주의·경고·밴</h2></div><Link href="/account/discipline">상세·증빙 제출</Link></div>
-            {disciplineResult.state === "ready" ? <><dl className={styles.disciplineCounts}><div><dt>주의</dt><dd>{disciplineResult.data.activeCounts.CAUTION}</dd></div><div><dt>경고</dt><dd>{disciplineResult.data.activeCounts.WARNING}</dd></div><div><dt>밴</dt><dd>{disciplineResult.data.activeCounts.BAN}</dd></div></dl><p className={styles.notice}>{disciplineResult.data.records.length > 0 ? "현재 적용 중인 기록이 있습니다. 상세에서 사유와 해소 과제를 확인하고 필요한 사진을 제출해 주세요." : "현재 적용 중인 주의·경고·밴 기록이 없습니다."}</p></> : <p className={styles.notice} role={disciplineResult.state === "error" ? "alert" : "status"}>제재 상태를 불러오지 못했습니다. 경고·증빙 화면에서 다시 확인해 주세요.</p>}
+            {disciplineResult.state === "ready" ? <><dl className={styles.disciplineCounts}><div><dt>주의</dt><dd>{disciplineResult.data.activeCounts.CAUTION}</dd></div><div><dt>경고</dt><dd>{disciplineResult.data.activeCounts.WARNING}</dd></div><div><dt>밴</dt><dd>{disciplineResult.data.activeCounts.BAN}</dd></div></dl><p className={styles.notice}>{disciplineResult.data.records.length > 0 ? "현재 적용 중인 기록이 있습니다." : "현재 적용 중인 주의·경고·밴 기록이 없습니다."}</p></> : <p className={styles.notice} role={disciplineResult.state === "error" ? "alert" : "status"}>제재 상태를 불러오지 못했습니다. 경고·증빙 화면에서 다시 확인해 주세요.</p>}
           </section>
         </>
       ) : (

@@ -87,11 +87,14 @@ test("media editor and private asset administration expose the complete safe wor
   assert.match(form, /sessionStorage\.setItem\(galleryUploadReportKey\(created\.id\), JSON\.stringify\(report\)\)/u);
   assert.match(form, /failed=\$\{Math\.min\(5, report\.failedNames\.length\)\}/u);
   assert.match(form, /aria-label=\{`\$\{file\.name\} 선택 취소`\}/u);
-  assert.match(form, /일부 파일이 실패해도 성공한 파일은 READY 자산으로 보존합니다/u);
-  assert.match(form, /운영 비공개 저장소가 아직 연결되지 않아 업로드가 안전하게 닫혀 있습니다/u);
+  assert.match(form, /일부 실패 시 성공한 이미지는 유지/u);
+  assert.match(form, /!props\.uploadAvailable \? <p[^>]*role="status">이미지 저장소 미연결 · 업로드 불가<\/p> : <label/u);
   assert.doesNotMatch(form, /READY 자산 UUID|자산 ID<input/u);
   assert.match(pages, /DELETE_PENDING/u);
-  assert.match(pages, /권한 확인 후 원본 보기/u);
+  assert.match(pages, /asset\.status === "READY" \? <a[^>]*href=\{`\/api\/admin\/private-assets\/\$\{asset\.assetId\}`\}[^>]*>원본 보기<\/a> : <p/u);
+  assert.match(pages, /disabled=\{asset\.status === "DELETE_PENDING"\}/u);
+  assert.match(assetRoute, /requireMediaAdminSession\(\)/u);
+  assert.ok(assetRoute.indexOf("requireMediaAdminSession()") < assetRoute.indexOf("service.readPrivateBytes("));
   assert.match(assetRoute, /requestDeletion/u);
   assert.doesNotMatch([pages, assetRoute].join("\n"), /storageKey|sha256|signedUrl/u);
 });

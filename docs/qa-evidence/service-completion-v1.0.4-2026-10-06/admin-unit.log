@@ -1,0 +1,26 @@
+✔ invalid gallery files do not consume the five valid upload slots (1.4001ms)
+✔ gallery file planning applies remaining capacity after validation (0.1641ms)
+✔ short-lived gallery upload reports are bounded before display (0.3323ms)
+✔ V2 deterministic formula transition truthfully requires explicit admin recalculation (0.7839ms)
+✔ operational observations separate missing evidence, disabled flags and historical success (2.6973ms)
+✔ daily close follows the KST 06:00 operating boundary with a 15 minute grace (0.138ms)
+✔ bounded queue thresholds and unfinished jobs draw attention without claiming delivery (0.8429ms)
+✔ player write DTO is an allowlist with normalized validated values (2.0404ms)
+✔ legacy numeric ids accept only the positive PostgreSQL integer range (0.1624ms)
+✔ administrator player query rejects duplicates, unknown keys, and oversized values (0.4375ms)
+✔ mutation fingerprint is canonical and changes with revision or allowlisted input (0.174ms)
+✔ legacy detail mapping remains outside proxy and administrator APIs use the shared HTTP contract (3.0532ms)
+✔ administrator player pages present operational labels in Korean (1.2236ms)
+✔ usage route templates remove identifiers, queries and sensitive pages (1.5083ms)
+✔ event ingestion rejects arbitrary text, client identity and unreviewed targets (1.9454ms)
+✔ KST range respects midnight, calendar boundaries and bounded retention (1.8516ms)
+✔ collection requires explicit production configuration and filters recognizable bots (0.2662ms)
+✔ signed visitor cookies reject forgery and key changes (1.4162ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 266.1855

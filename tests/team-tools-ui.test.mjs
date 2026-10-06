@@ -161,7 +161,7 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   assert.equal(detail.includes("자동 추천 후보 비교"), false, "기존 세 후보 비교 제목은 노출하지 않는다");
   assert.equal(detail.includes("compactTeams"), false, "1·2·3안의 블루/레드 사진형 미리보기를 제거한다");
   assert.equal(detail.includes("<select"), false, "수동 배치에는 플레이어 드롭다운을 표시하지 않는다");
-  assert.equal(page.includes("가장 균형 잡힌 팀 배치 한 가지"), true, "시작 화면은 단일 추천을 안내한다");
+  assert.equal(detail.includes("autoCandidates.slice(0, 1)"), true, "실제 결과는 한 가지 추천만 표시한다");
   assert.equal(drafts.includes('createRouteMetadata("/tools/team-balance/drafts")'), true, "목록 metadata는 공용 운영 명칭을 사용한다");
   assert.equal(drafts.includes('"팀 밸런스 초안"}</h1>'), true, "목록 제목은 공용 운영 명칭을 사용한다");
   assert.equal(navigation.includes("저장한 팀"), true, "공용 팀 초안을 쉬운 명칭으로 안내한다");

@@ -47,7 +47,7 @@ test("public season applications expose Kakao-started recruit rounds without lea
   assert.match(actions, /subPositions: isRift \? subPositions : \[\], reserve/);
   assert.match(actions, /applicantPlayer\.displayName/);
   assert.match(actions, /applyDate/);
-  assert.match(actions, /운영진에게 회원 연결을 요청/);
+  assert.match(actions, /href="\/help\/contact">카카오 신청 회원 연결 문의<\/Link>/, "연결되지 않은 카카오 신청은 짧은 안내 대신 실제 문의 경로를 제공한다");
   assert.match(page, /applicantPlayer=\{result\.data\.applicantPlayer!\}/);
   assert.match(repository, /assertRecruitRoundExists/);
   assert.match(repository, /planSiteApplicationMerge\(current \?\? null\)/);

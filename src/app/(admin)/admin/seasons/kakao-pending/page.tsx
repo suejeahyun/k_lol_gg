@@ -51,12 +51,12 @@ export default async function KakaoPendingApplicationsPage({
 
   return <main className={styles.page} data-admin-season-view="kakao-pending">
     <header className={styles.header}>
-      <div><span>KAKAO REVIEW</span><h1>카카오 회원 연결</h1><p>카카오에서 이름으로 접수된 신청입니다. 회원 연결 전에도 카카오 명단과 인원수에 포함되며, 플레이어를 확인한 뒤 일반 시즌 신청으로 연결합니다.</p></div>
+      <div><h1>카카오 회원 연결</h1><p>카카오에서 이름으로 접수된 신청입니다. 회원 연결 전에도 카카오 명단과 인원수에 포함되며, 플레이어를 확인한 뒤 일반 시즌 신청으로 연결합니다.</p></div>
       <Link href="/admin/seasons">시즌·참가로 돌아가기</Link>
     </header>
     {result.state !== "ready" ? <section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Database aria-hidden="true" /><h2>보류 신청을 불러오지 못했습니다.</h2><p>운영 DB 연결을 확인한 뒤 다시 시도해 주세요.</p></section> : <>
       <section className={styles.panel}>
-        <div className={styles.panelHeading}><div><span>FILTERED QUEUE</span><h2>검토 목록</h2></div><strong>{result.data.pending.totalCount}건</strong></div>
+        <div className={styles.panelHeading}><div><h2>검토 목록</h2></div><strong>{result.data.pending.totalCount}건</strong></div>
         <form className={styles.filters} method="get" action="/admin/seasons/kakao-pending">
           <Filter aria-hidden="true" />
           <label><span>이름·Riot ID</span><input name="q" maxLength={80} defaultValue={query.query} /></label>

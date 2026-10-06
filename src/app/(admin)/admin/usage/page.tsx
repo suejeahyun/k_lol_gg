@@ -15,7 +15,7 @@ export default async function AdminUsagePage({ searchParams }: { searchParams: P
   try { if (process.env.V2_PUBLIC_DATA_SOURCE === "postgres") report = await usageRepository().report(range, excludedUsageUsers()); }
   catch { /* Show unavailable, never plausible-looking zero metrics. */ }
   return <main className={styles.page}>
-    <header className={styles.header}><span className={styles.eyebrow}>ADMIN · 이용 분석</span><h1>사이트 이용 현황</h1><p>실제 이용 회원, 방문 빈도와 사람들이 찾는 정보를 확인합니다.</p></header>
+    <header className={styles.header}><h1>사이트 이용 현황</h1></header>
     <form className={styles.filters} action="/admin/usage"><label>시작일<input type="date" name="from" defaultValue={range.from} required /></label><label>종료일<input type="date" name="to" defaultValue={range.to} required /></label><button type="submit">조회</button><Link href="/admin/usage">최근 30일</Link>{report && <a href={`/api/admin/usage/export?from=${range.from}&to=${range.to}`}>일별 CSV 내려받기</a>}</form>
     {report ? <UsageReportView report={report} range={range} enabled={usageEnabled(process.env)} /> : <section className={styles.notice} role="status">이용 통계 저장소를 사용할 수 없습니다. 연결과 통계 테이블 준비 상태를 확인해 주세요. 실제 방문자 수가 0명이라는 뜻은 아닙니다.</section>}
   </main>;

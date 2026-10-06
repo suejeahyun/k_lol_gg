@@ -157,7 +157,16 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
   assert.match(account, /랭크 없음/);
   assert.doesNotMatch(account, /Unranked/);
   assert.match(account, /이전 Riot 연동/);
-  assert.match(account, /현재 Riot 연동은 해제된 상태/);
+  assert.match(account, /const connected = link\?\.status === "CONNECTED"/);
+  assert.match(account, /\{!connected \? <p[^>]+>연동 해제됨 · 다시 연결 가능<\/p> : null\}/);
+  assert.match(account, /result\.data\.link\.method !== "RSO_VERIFIED" \? <p[^>]+>공개 전적 연결 · Riot 계정 소유권 미인증<\/p> : null/);
+  assert.match(account, /connected=\{connected\} rsoAvailable=\{rsoAvailable\}/);
+  const ownerActions = readFileSync(new URL("../src/components/riot/riot-owner-actions.tsx", import.meta.url), "utf8");
+  assert.match(ownerActions, /\{!connected \? \(/);
+  assert.match(ownerActions, /mutate\("\/api\/me\/riot", "POST", \{ gameName, tagLine \}, linkRevision\)/);
+  assert.match(ownerActions, /mutate\("\/api\/me\/riot", "DELETE", \{\}, linkRevision\)/);
+  assert.match(ownerActions, /disabled=\{pending \|\| !rsoAvailable\}/);
+  assert.match(ownerActions, /"If-Match"/);
   assert.match(admin, /표시할 연동 계정이 없습니다/);
   assert.match(admin, /data-riot-state="accounts"/);
   assert.match(admin, /data-riot-state="sync"/);

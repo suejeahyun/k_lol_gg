@@ -1,0 +1,19 @@
+✔ recruitment counters exclude withdrawn and rejected applications; transition identifies a missing lane (1.4855ms)
+✔ auction completion requires all five positions and refuses a paused auction (0.2623ms)
+✔ preview generation retains every legacy format and produces no self matches or duplicate fixture IDs (1.0197ms)
+✔ auction eligibility and server validation retain the minimum points for every unfilled slot (0.8498ms)
+✔ public progress reveals totals and standings without exposing applicant ownership or raw ballots (8.4798ms)
+✔ only a stale revision produces HTTP 412; business preconditions produce 409 (16.1769ms)
+✔ optional schedule preserves old snapshots and rejects reversed or invalid dates (1.7423ms)
+✔ positionless recruitment and auction preserve headcount and money without imposing roles (1.081ms)
+✔ r1에서 발급한 own r2 응답은 최신 projection과 일회성 비밀번호를 함께 유지한다 (0.8676ms)
+✔ r2 비밀번호 표시 중 외부 r3 projection이 도착하면 r2 비밀번호를 폐기한다 (0.1161ms)
+✔ r3 prop이 선반영된 뒤 도착한 늦은 r2 응답은 projection과 비밀번호 모두 거부한다 (0.1208ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 240.0853

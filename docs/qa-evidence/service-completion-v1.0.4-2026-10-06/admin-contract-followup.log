@@ -1,0 +1,27 @@
+✔ invalid gallery files do not consume the five valid upload slots (0.9275ms)
+✔ gallery file planning applies remaining capacity after validation (0.1171ms)
+✔ short-lived gallery upload reports are bounded before display (0.2321ms)
+✔ V4 installation identity exactly mirrors the phone HMAC contract (0.725ms)
+✔ one unified phone script shares one identity secret while RECRUIT and FEATURES keep distinct stable installation scopes (0.4095ms)
+✔ the server rejects cross-family commands before dispatch for both unified-script profiles (5.9822ms)
+✔ arbitrary installation IDs and cross-profile IDs fail closed (0.2303ms)
+✔ current and previous signing keys authenticate only their exact HMAC (0.7392ms)
+✔ two senders share one installation scope for create, cross-edit and finish (3.1861ms)
+✔ runtime identity configuration is bounded without inspecting real environment values (0.1478ms)
+✔ V4 signing keyring is isolated from V1 and rejects unsafe reuse (0.2024ms)
+✔ V4 route is registry-free and keeps the seven-field identity-free boundary (1.1992ms)
+✔ the unified V4 phone callback ignores room and channel values while routing both families (0.8801ms)
+✔ admin and architecture copy distinguish V4 installation scope from the legacy room registry (0.8231ms)
+✔ admin private asset query is bounded and rejects duplicate or unknown parameters (1.8123ms)
+✔ raw media upload preflight requires same origin, If-Match, bounded image MIME/size, SHA and safe name (16.0502ms)
+✔ unconfigured upload storage returns the specific fail-closed problem (0.7233ms)
+✔ media editor and private asset administration expose the complete safe workflow (1.0287ms)
+✔ gallery editor accepts only bounded bulk upload result counts (0.5075ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 284.7166

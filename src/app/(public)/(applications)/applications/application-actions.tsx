@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { recordUsageAction } from "@/components/usage/usage-actions";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   SEASON_APPLICATION_POSITIONS,
@@ -106,7 +107,7 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
     try {
       await mutate("DELETE", { recruitNo });
       recordUsageAction("application.cancelled");
-      setMessage("신청을 취소했어요. 이력은 안전하게 보관됩니다.");
+      setMessage("신청을 취소했어요.");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "취소를 처리하지 못했습니다.");
@@ -119,7 +120,6 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
     <section className={styles.actionCard} aria-labelledby="application-action-title">
       <div className={styles.sectionHeading}>
         <div>
-          <span>내 참가 신청</span>
           <h2 id="application-action-title">{reviewed || closed ? `내 ${recruitNo}회차 신청 상태` : reapplying ? `${recruitNo}회차 다시 참가 신청` : initial ? `내 ${recruitNo}회차 신청 수정` : `오늘 ${recruitNo}회차 참가 신청`}</h2>
         </div>
         {initial ? <strong data-status={initial.status}>{statusLabel(initial.status)}</strong> : null}
@@ -135,17 +135,15 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
         <div><dt>회차</dt><dd>{recruitNo}회차</dd></div>
         <div><dt>현재 출처</dt><dd>{initial?.source === "KAKAO" ? "카카오 연동" : "사이트"}</dd></div>
       </dl>
-      <p className={styles.mergeNotice}>
-        카카오에서 이름으로 먼저 접수했다면 운영진에게 회원 연결을 요청해주세요. 연결 후에는 이곳에서 같은 신청을 확인할 수 있어요.
-      </p>
-      {closed ? <p className={styles.liveMessage}>모집이 마감되었어요. 경기용 명단은 보관됩니다.</p> : null}
+      {!initial ? <Link className={styles.mergeNotice} href="/help/contact">카카오 신청 회원 연결 문의</Link> : null}
+      {closed ? <p className={styles.liveMessage}>모집 마감</p> : null}
       <fieldset disabled={pending !== null || reviewed || closed}>
         <legend>참가 구분</legend>
         <div className={styles.positionGrid}>
           <label data-selected={!reserve}><input type="radio" name="seat" checked={!reserve} disabled={full} onChange={() => setReserve(false)} />본 참가</label>
           <label data-selected={reserve}><input type="radio" name="seat" checked={reserve} onChange={() => setReserve(true)} />예비 참가</label>
         </div>
-        {full ? <p className={styles.positionHint}>본 참가 {capacity}명이 모였어요. 예비 참가를 선택해주세요.</p> : null}
+        {full ? <p className={styles.positionHint}>본 참가 {capacity}명 마감 · 예비 참가 가능</p> : null}
       </fieldset>
       {isRift ? <>
       <fieldset disabled={pending !== null || reviewed || closed}>
@@ -170,9 +168,9 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
       </fieldset>
 
       <fieldset disabled={pending !== null || mainPosition === null || mainPosition === "ALL" || reviewed || closed}>
-        <legend>부라인 <small>여러 개 선택 가능</small></legend>
+        <legend>부라인 <small>복수 선택</small></legend>
         {mainPosition === "ALL" ? (
-          <p className={styles.positionHint}>모든 라인이 가능하므로 부라인을 따로 고르지 않아도 돼요.</p>
+          <p className={styles.positionHint}>전체 가능 · 부라인 선택 불필요</p>
         ) : <div className={styles.positionGrid}>
           {availableSubPositions.map((position) => (
             <label key={position} data-selected={subPositions.includes(position)}>
@@ -209,10 +207,9 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
         ) : null}
       </div>
       {reviewed ? (
-        <p className={styles.liveMessage}>관리자 검토가 끝난 신청은 라인을 직접 수정할 수 없습니다.</p>
+        <p className={styles.liveMessage}>관리자 검토 완료 · 라인 수정 불가</p>
       ) : null}
       {message ? <p className={styles.liveMessage} role="status">{message}</p> : null}
-      <small className={styles.revision}>다른 탭에서 내용이 바뀌었다면 새로고침 후 다시 저장해 주세요.</small>
     </section>
   );
 }

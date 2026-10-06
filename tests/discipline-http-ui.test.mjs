@@ -34,7 +34,8 @@ test("regular administrators may read discipline details but only super administ
   assert.match(recordRoute, /GET[\s\S]*requireDisciplineApiSession\("ADMIN"\)/);
   assert.equal(recordRoute.match(/requireDisciplineApiSession\("SUPER_ADMIN"\)/g)?.length, 2);
   assert.match(detailPage, /canManage=\{session\.role === "SUPER_ADMIN"\}/);
-  assert.match(detailPage, /관리자 · 상세/);
+  assert.match(detailPage, /<h1>\{record\.targetName\}<\/h1>/);
+  assert.match(detailPage, /requirePageRole\("ADMIN",/);
   assert.match(detailPage, /typeLabel\[record\.type\]/);
   assert.match(detailPage, /taskStatusLabel\[record\.task\.status\]/);
   assert.doesNotMatch(detailPage, /ADMIN · DETAIL|>\{record\.type\}<|revision \{record\.revision\}/);
@@ -71,7 +72,8 @@ test("discipline administrator headings and status labels are readable Korean", 
   ]);
   assert.match(list, /typeLabel\[record\.type\]/);
   assert.match(detail, /evidenceStatusLabel\[item\.status\]/);
-  assert.match(create, /관리자 · 새 기록/);
+  assert.match(create, /<h1>징계 기록 등록<\/h1>/);
+  assert.match(create, /<AdminDisciplineCreateForm/);
   assert.match(actions, /최신 변경 버전과 관리자 로그인 상태/);
   assert.doesNotMatch(`${list}\n${detail}\n${create}\n${actions}`, /ADMIN · DISCIPLINE|ADMIN · DETAIL|ADMIN · NEW|최신 revision/);
 });

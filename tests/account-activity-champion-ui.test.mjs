@@ -54,11 +54,13 @@ test("event and destruction details retain actions while exposing readable lifec
 
   assert.match(event, /EventApplicationActions/);
   assert.match(event, /statusJourney/);
-  assert.match(event, /EVENT CHAMPION/);
+  assert.match(event, /aria-label="이벤트전 최종 결과"/);
+  assert.match(event, /<h2>\{event\.winnerTeamName\}<\/h2>/);
   assert.match(event, /fixtureScore/);
   assert.match(destruction, /DestructionOwnerActions/);
   assert.match(destruction, /statusJourney/);
-  assert.match(destruction, /DESTRUCTION CHAMPION/);
+  assert.match(destruction, /aria-label="멸망전 최종 결과"/);
+  assert.match(destruction, /<h2>\{destruction\.championTeamName\}<\/h2>/);
   assert.match(destruction, /DestructionFixture/);
   assert.match(destruction, /ResilientMediaImage/);
 });

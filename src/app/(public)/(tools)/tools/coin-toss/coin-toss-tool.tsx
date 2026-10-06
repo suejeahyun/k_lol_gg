@@ -118,19 +118,19 @@ export function CoinTossTool() {
 
   const label = sideLabel(state);
   const phaseCopy = state.phase === "idle"
-    ? { kicker: "READY", title: "어느 면이 나올까요?", body: "코인 던지기를 눌러 시작해요." }
+    ? { kicker: "준비", title: "어느 면이 나올까요?" }
     : state.phase === "playing"
-      ? { kicker: `ROUND ${state.round}`, title: "살랑살랑 날아가는 중", body: "잠시만 기다려 주세요." }
-      : { kicker: `ROUND ${state.round} RESULT`, title: `${label}!`, body: "결과가 정해졌어요. 한 번 더 던질 수도 있어요." };
+      ? { kicker: `${state.round}회`, title: "살랑살랑 날아가는 중" }
+      : { kicker: `${state.round}회 결과`, title: `${label}!` };
 
   return (
     <div className={styles.coinLayout}>
       <section className={styles.panel} aria-labelledby="coin-controls-title">
         <div className={styles.heading}>
-          <div><span>CONTROLS</span><h2 id="coin-controls-title">코인 던지기</h2></div>
+          <div><h2 id="coin-controls-title">코인 던지기</h2></div>
           <strong className={styles.count}>{state.round}회</strong>
         </div>
-        <p className={styles.stageHint}>매번 브라우저의 보안 난수로 앞면 또는 뒷면을 고릅니다. 애니메이션이 멈춰도 2초 안에 결과를 자동 공개해요.</p>
+
 
         {error ? <p className={styles.error} role="alert">{error}</p> : null}
 
@@ -173,7 +173,7 @@ export function CoinTossTool() {
         <div className={styles.coinText} role="status" aria-live="polite" aria-atomic="true">
           <span>{phaseCopy.kicker}</span>
           <h2 id="coin-result-title">{phaseCopy.title}</h2>
-          <p>{phaseCopy.body}</p>
+
         </div>
       </section>
     </div>

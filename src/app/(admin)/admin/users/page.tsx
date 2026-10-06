@@ -39,7 +39,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const result = parsed.ok && repository ? await repository.listAdmin(parsed.value, viewerRole).catch(() => null) : null;
   return (
     <main className={styles.page}>
-      <header className={styles.header}><div><span className={styles.eyebrow}><UsersRound aria-hidden="true" /> S01 · 계정 운영</span><h1>사용자 계정</h1><p>가입 승인, 역할, 복구 요청과 소프트 삭제를 한 곳에서 변경 버전으로 안전하게 관리합니다.</p></div><Link className={styles.ghostLink} href="/admin/players"><UserCheck aria-hidden="true" /> 플레이어 등록부</Link></header>
+      <header className={styles.header}><div><h1>사용자 계정</h1></div><Link className={styles.ghostLink} href="/admin/players"><UserCheck aria-hidden="true" /> 플레이어 등록부</Link></header>
       <form className={styles.search} action="/admin/users" method="get" role="search">
         <label>계정 검색<input name="q" type="search" maxLength={100} defaultValue={parsed.ok ? parsed.value.query : ""} placeholder="아이디, 회원명, Riot ID, V1 번호" /></label>
         <label>상태<select name="status" defaultValue={parsed.ok ? parsed.value.status : "ALL"}><option value="ALL">전체 상태</option><option value="PENDING">승인 대기</option><option value="APPROVED">승인됨</option><option value="REJECTED">거절됨</option><option value="SUSPENDED">이용 제한</option></select></label>

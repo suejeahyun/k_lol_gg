@@ -19,7 +19,7 @@ test("own player form keeps one idempotency key for an uncertain retry and expla
   assert.match(form, /useRef/);
   assert.match(form, /fingerprint/);
   assert.match(form, /idempotency\.current = null/);
-  assert.match(form, /기존 Riot 전적 연동이 자동 해제/);
+  assert.match(form, /Riot ID 변경 시 기존 전적 연동이 해제/);
   assert.match(form, /response\.status === 412/);
   assert.match(form, /router\.refresh\(\)/);
   assert.match(form, /maxLength=\{22\}/);
@@ -33,8 +33,8 @@ test("own player form keeps one idempotency key for an uncertain retry and expla
   assert.match(form, /min=\{0\}/);
   assert.match(form, /max=\{9999\}/);
   assert.match(form, /required/);
-  assert.match(form, /아이언부터 챌린저까지 티어를 선택/);
-  assert.match(form, /다이아몬드 이하는 단계를 선택/);
+  assert.match(form, /다이아몬드 이하: 단계 필수/);
+  assert.match(form, /마스터 이상: LP 필수/);
   assert.match(styles, /\.tierControls \{ display: grid; grid-template-columns:/);
   assert.match(styles, /@media \(max-width: 520px\)/);
   assert.match(styles, /\.promise, \.facts, \.playerTierGrid, \.activityGrid, \.accountGrid \{ grid-template-columns: 1fr; \}/);
@@ -54,7 +54,7 @@ test("account pages reuse the account shell and avoid decorative English heading
   assert.match(overview, /<AccountShell activeTab=/);
   assert.match(riot, /<AccountShell activeTab="riot"/);
   assert.match(discipline, /내 경고 해소 과제/);
-  assert.match(password, /비밀번호 보안/);
+  assert.ok(password.includes('<h1 id="password-title">비밀번호 변경</h1>'));
   assert.doesNotMatch(`${shell}\n${overview}\n${discipline}\n${password}`, /MY ACCOUNT|MY PLAYER|MY ACTIVITY|SAFETY STATUS|MY DISCIPLINE TASKS|PASSWORD SECURITY/);
 });
 

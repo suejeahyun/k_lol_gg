@@ -26,7 +26,7 @@ export function TeamBalanceRecommendationsPanel({
   hrefForTeam: (team: TeamBalanceTeam) => string;
 }) {
   if (recommendation.state === "NO_SELECTION") {
-    return <section className={styles.emptyState} role="status"><h2>추천할 팀 배치를 먼저 선택해 주세요</h2><p>자동 후보 또는 수동 배치를 선택하면 해당 팀을 기준으로 픽과 상대 밴 후보를 계산합니다.</p></section>;
+    return <section className={styles.emptyState} role="status"><h2>추천할 팀 배치를 먼저 선택해 주세요</h2></section>;
   }
   if (recommendation.state === "NO_PROJECTION") {
     return <section className={styles.emptyState} role="status"><h2>챔피언 통계를 준비하고 있어요</h2><p>아직 추천에 필요한 시즌 기록이 충분하지 않아요.</p></section>;
@@ -34,7 +34,7 @@ export function TeamBalanceRecommendationsPanel({
 
   return <section className={styles.recommendationBoard} aria-labelledby="recommendation-title">
     <header className={styles.recommendationHeader}>
-      <div><span>PICK · BAN</span><h2 id="recommendation-title">{recommendation.team} 팀 밴픽 추천</h2><p>{recommendation.projection?.seasonName} · 챔피언 기록 {recommendation.summary.championStatRowCount}개 분석</p></div>
+      <div><h2 id="recommendation-title">{recommendation.team} 팀 밴픽 추천</h2><p>{recommendation.projection?.seasonName} · 챔피언 기록 {recommendation.summary.championStatRowCount}개 분석</p></div>
       <nav className={styles.teamSwitch} aria-label="추천 기준 팀">
         {(["RED", "BLUE"] as const).map((team) => <Link key={team} aria-current={recommendation.team === team ? "page" : undefined} data-team={team} href={hrefForTeam(team)}>{team} 기준</Link>)}
       </nav>

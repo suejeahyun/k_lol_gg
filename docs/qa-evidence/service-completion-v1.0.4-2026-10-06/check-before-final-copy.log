@@ -1,0 +1,2075 @@
+
+> klol-gg-v2@0.1.0 check
+> npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build
+
+
+> klol-gg-v2@0.1.0 lint
+> eslint
+
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js
+   1:838   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+   5:130   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  32:231   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:79    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:196   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  34:274   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  35:200   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  36:66    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  44:347   warning  'n' is defined but never used  @typescript-eslint/no-unused-vars
+  54:409   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  56:71    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  59:168   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  60:318   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  65:1002  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  74:403   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:151   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:216   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:497   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  78:2934  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  79:8     warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  80:116   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  81:378   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V1_COMPAT.js
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
+    2:5  warning  'KLOL_V41_BUNDLE_START_SENTINEL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  369:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\integrations\messengerbot-r\v1-strict\KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_SOURCE_SHA256' is assigned a value but never used           @typescript-eslint/no-unused-vars
+     2:5   warning  'KLOL_V1_EXTRACTED_SHA256' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     3:5   warning  'KLOL_V1_SOURCE_FUNCTIONS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     6:5   warning  'KLOL_V1_TRANSPORT_SEAMS' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    38:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   131:10  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   228:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   239:46  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   304:10  warning  'ignoredJavaNormalizationError' is defined but never used            @typescript-eslint/no-unused-vars
+   314:10  warning  'parsePartyMemberMutationCommand' is defined but never used          @typescript-eslint/no-unused-vars
+   457:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   476:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   491:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   529:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   555:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   567:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   605:10  warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   609:29  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   609:35  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   609:43  warning  'imageBase64' is defined but never used                              @typescript-eslint/no-unused-vars
+   609:56  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   612:36  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   612:42  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   612:50  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   754:77  warning  'packageName' is defined but never used                              @typescript-eslint/no-unused-vars
+   765:10  warning  'ignoredImageError' is defined but never used                        @typescript-eslint/no-unused-vars
+   769:10  warning  'ignoredImageBase64Error' is defined but never used                  @typescript-eslint/no-unused-vars
+   782:10  warning  'ignoredImageBitmapError' is defined but never used                  @typescript-eslint/no-unused-vars
+  1798:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1800:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1830:10  warning  'response' is defined but never used                                 @typescript-eslint/no-unused-vars
+  1838:12  warning  'ignoredDiagnosticReply' is defined but never used                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\ux-discoverability-20261002\src\modules\matches\infrastructure\postgres-match-transaction-authorizer.ts
+  11:73  warning  '_now' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 58 problems (0 errors, 58 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+
+> klol-gg-v2@0.1.0 typecheck
+> tsc --noEmit
+
+
+> klol-gg-v2@0.1.0 db:erd:check
+> tsx scripts/database/generate-erd.ts --check
+
+[db:erd] up to date: 111 tables, 173 foreign keys, schema sha256 0601644420b7cbdc056c1f307d67aec845c6190d005d31c5143cc44cb0d4baa2
+
+> klol-gg-v2@0.1.0 test
+> npm run test:contracts && npm run test:unit
+
+
+> klol-gg-v2@0.1.0 test:contracts
+> node --test tests/*.test.mjs
+
+✔ public match and player detail use the same allowlisted champion portrait with a safe fallback (3.6939ms)
+✔ my account connects bounded participation and current discipline status to details and evidence (4.0517ms)
+✔ event and destruction details retain actions while exposing readable lifecycle and result hierarchy (1.4904ms)
+✔ own player mutation keeps approval, origin, revision and idempotency guards (3.8155ms)
+✔ own player form keeps one idempotency key for an uncertain retry and explains Riot relinking (1.7502ms)
+✔ account pages reuse the account shell and avoid decorative English headings (2.0127ms)
+✔ isolated account HTTP verification runs the real Chromium owner profile regression (1.7798ms)
+✔ 역할 변경 API는 same-origin 세션 검사 뒤 일반 ADMIN을 mutation parsing 전에 거부한다 (7.7435ms)
+✔ 역할 관리 UI와 목록 진입점은 SUPER_ADMIN에게만 노출된다 (16.1475ms)
+✔ 승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구하지 않는다 (3.1732ms)
+✔ 플레이어 상세는 연결 계정 revision으로 기존 SUPER_ADMIN 역할 API를 안전하게 재사용한다 (3.5085ms)
+✔ administrator balance status uses readable Korean operational labels (9.4049ms)
+✔ administrator balance navigation is a visible keyboard-focusable control (1.4788ms)
+✔ MMR 수동 조정은 raw UUID 대신 bounded 플레이어 선택기를 사용한다 (1.05ms)
+✔ Riot 작업은 현재 목록에서 플레이어와 link를 선택하고 revision을 자동 계산한다 (0.7819ms)
+✔ 징계 대상 선택은 관리자 전용 bounded endpoint의 allowlist metadata로 표시값을 채운다 (2.3894ms)
+✔ 공통 bounded picker는 원격 metadata를 문자열 allowlist로 제한한다 (0.6652ms)
+✔ the contracted match edit page reuses the guarded editor and preserves the AI review alias (4.3679ms)
+✔ season administration presents lifecycle, status, source, and position labels in Korean (3.8699ms)
+✔ account and settings administration avoid decorative English labels (1.7735ms)
+✔ admin HTTP guard matrix covers every canonical App Router page (78.8115ms)
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (5.1724ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (1.1994ms)
+✔ administrator drafts support recoverable archive and persisted match registration (9.3579ms)
+✔ season, date and round changes replace application form state in both editable branches (343.1403ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (119.0965ms)
+✔ a missing site application retains a direct path to recover Kakao member linking (48.9698ms)
+✔ event position labels remain readable while form values retain the API position codes (74.9961ms)
+✔ own status and public roster use the same Korean position labels as the application form (200.7655ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (50.7484ms)
+✔ capture fixture example resolves every repository page without placeholders (223.6742ms)
+✔ browser QA server emits setup credentials, actor identity and fail-fast dynamic source IDs (3.0986ms)
+✔ browser quality boundary accepts WCAG and performance values at their budgets (1.5468ms)
+✔ browser quality boundary reports semantic, keyboard, motion, axe and performance failures (0.3999ms)
+✔ compact standalone auth pages do not require a skip link or a single h1 (0.1475ms)
+✔ full-page capture uses stable light reduced-motion rendering and wakes lazy media (1.2046ms)
+✔ full-page capture fails visible repository error states even when HTTP is 200 (0.1555ms)
+✔ full-page capture accepts synthetic credentials through bounded stdin (0.1662ms)
+✔ champion administrator pages reuse the highlight content shell and keep safe mutations (6.1234ms)
+✔ champion read APIs keep public and administrator namespaces separated (1.6538ms)
+✔ Data Dragon version monitor discovers the upstream latest version without changing the pinned catalog (3.8955ms)
+✔ only documentation changed since the actual successful deployment can skip (1.5399ms)
+✔ first deployments, manual redeploys, missing history and mismatched checkout build (0.3426ms)
+✔ 핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상이다 (5.5341ms)
+✔ 기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다 (0.9874ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.8587ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (12.6248ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.6876ms)
+✔ public discipline API exposes aggregate statistics only (6.1902ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (2.5764ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (2.2343ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (1.3048ms)
+✔ discipline pages declare real empty, error, and unavailable states (2.6155ms)
+✔ discipline administrator headings and status labels are readable Korean (6.2359ms)
+✔ public competition pages expose list/detail/application states without administrator controls (9.8854ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (2.7023ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.8141ms)
+✔ the application menu marks exactly the selected application type, including query navigation (226.0219ms)
+✔ clearing or resetting a slow player search cancels the request and returns to idle (200.397ms)
+✔ a superseded request cannot clear the loading state of the newer search (83.1458ms)
+✔ full-page QA runner parses only tagged synthetic harness values (2.9157ms)
+✔ full-page QA summary fails count drift and any route issue (0.2649ms)
+✔ capture credentials use bounded stdin instead of command-line secrets (6.1621ms)
+✔ capture CLI rejects unknown stdin credential fields before opening files or Chromium (224.6659ms)
+✔ 홈과 데스크톱 메뉴는 이미 구현된 경기·팀 밸런스를 준비 중으로 표시하지 않는다 (2.2167ms)
+✔ 홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센다 (1.6188ms)
+✔ 홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 갤러리를 조회한다 (1.7337ms)
+✔ 홈 피드 공개 projection은 소유자·회원·Discord 필드를 선택하지 않는다 (8.3367ms)
+✔ 홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST 일일 안내 챔피언을 선택한다 (6.8762ms)
+✔ 홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다 (33.3276ms)
+✔ 홈은 소개·랭킹·바로가기·소식·내 활동·기록 순서로 안내한다 (1.7426ms)
+✔ ranking choices name all three rankings before the single slide and expose selection (134.743ms)
+✔ direct ranking choice stops rotation and updates its single slide and full-ranking destination (38.6968ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (22.6993ms)
+✔ empty or single ranking does not expose impossible slide controls (50.7063ms)
+✔ a rejected native install prompt reports recovery and accepts a new browser offer (126.181ms)
+✔ installation prevents duplicate native prompts and waits for actual appinstalled (28.1054ms)
+✔ a ready browser offer is not overwritten by initial environment detection (10.7223ms)
+✔ a late native choice cannot overwrite confirmed app installation (9.5811ms)
+✔ Kakao admin API splits ADMIN reads from SUPER TOTP mutations (11.3701ms)
+✔ legacy Kakao admin pages permanently redirect to canonical real-state tabs (20.6083ms)
+✔ every canonical Kakao handler checks the stored feature policy (20.2974ms)
+✔ owner image session creation honors site and Kakao feature switches (1.2276ms)
+✔ Kakao assistant routes share raw-body HMAC and durable read receipts (19.3706ms)
+✔ managed forms remain isolated while season snapshots and owner-bound images are durable (3.0476ms)
+✔ legacy Kakao paths execute the signed canonical POST handlers without redirects (18.186ms)
+✔ Kakao route capability policy is explicit for every phone endpoint (34.5868ms)
+✔ season member submissions and reads use the FEATURES room but force cancel has a trusted command gate (2.0121ms)
+✔ normal room authorization uses only canonical registry state and keeps environment bootstrap explicit (1.2937ms)
+✔ private installer generator preserves shared settings and creates one identity per Kakao room (613.0203ms)
+✔ Kakao routes are explicitly isolated between recruit and features installations (19.0245ms)
+✔ wrong-room failures remain short and actionable on the phone (1.8536ms)
+✔ recruit mutations expose PII-free stage timing for p50 and p95 aggregation (2.03ms)
+✔ companion is ES5 and below both editor character limits (56.5577ms)
+✔ exact status/version commands are local and preserve OFF, settings and the registered target (2.2565ms)
+✔ diagnostics ignore ordinary messages, slash variants and untrusted app callbacks (0.7884ms)
+✔ registration results use fixed Korean replies and never poll or expose secrets (2.8739ms)
+✔ OFF and repeated registration replies cannot enable polling or replace a session (0.9021ms)
+✔ installed response callback reports status and registration without queue delivery (1.2139ms)
+✔ no registration, disabled, wrong app/code, or another session cannot send (0.8065ms)
+✔ ACK loss retries ACK without sending again, including after restart (12.6244ms)
+✔ crash marker or ambiguous SDK result never resends automatically (3.0978ms)
+✔ ledger write failure, wrong target and stale lease fail closed before send (2.6365ms)
+✔ explicit SDK rejection is retryable after manual session renewal (0.6946ms)
+✔ whole installed runtime answers local diagnostics without credentials, network or registration (1.5818ms)
+✔ initialization failures leave version and fixed failure-stage diagnostics available (3.5799ms)
+✔ rejected callback contexts stay silent and record only fixed local diagnostic codes (0.7575ms)
+✔ reply failure and SDK rejection produce fixed local evidence without leaking exceptions (1.5792ms)
+✔ reported open-chat false group flag still answers version, diagnostics and status locally (2.6488ms)
+✔ false group flag requires exact one-use code and retains only explicitly registered session (0.8895ms)
+✔ false group flag never permits debug, missing-package or other-app registration (2.8501ms)
+✔ the ADR freezes every non-negotiable V1-exact adapter constraint (27.6579ms)
+✔ the reusable V4 text transport is one signed five-second request without bearer fallback (3.3994ms)
+✔ the V1 strict phone installer uses the current private artifact and omits public-only provenance (2.871ms)
+✔ installation profiles, not callback room or sender role, form the V4 text authorization boundary (2.5804ms)
+✔ V2 services can reserve a hidden DRAFT and legacy bearer routes remain closed (5.5835ms)
+✔ the existing image service is separately signed, bounded, and session-backed (3.8132ms)
+✔ canonical V40 R2 routes managed commands to site-first links, not the legacy image session creator (45.8244ms)
+✔ a clean V1-strict install keeps imageDB silent instead of inventing an unreachable UUID flow (8.353ms)
+✔ the dormant legacy image receiver remains secure for non-strict clients without reopening bearer access (2.6299ms)
+✔ builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact (391.5543ms)
+✔ Rhino audit detects functions that mix value and bare returns (1.085ms)
+✔ V1 strict routes organizer-only metadata activation forms with or without one slash (64.7476ms)
+✔ V1 strict routes scoped in-house finish commands as unchanged raw text (144.8135ms)
+✔ R23 retired scrim commands and forms reply locally without an HTTP request (116.1675ms)
+✔ R25 local help matches optional member linking, Rift lanes, protected editing and detail rereads (8.3016ms)
+✔ R24 compact copy forms keep complete success and pending envelopes in one signed request (170.2338ms)
+✔ R24 compact form routing leaves malformed references to the server and ignores prose (22.0324ms)
+✔ R24 actual server-rendered party and inhouse templates accept one name through the phone (395.934ms)
+✔ R23 copy-paste party and inhouse forms forward names and saved references unchanged (11.4225ms)
+✔ V1 strict routes the full organizer-only template returned by the production server (4.4545ms)
+✔ artifact excludes legacy HTTP, bearer, and embedded secret material (1.1375ms)
+✔ all response-reachable non-transport V1 executable lines are preserved without comments or blank spacers (68.8312ms)
+✔ strict adapter reuses the canonical V1 local dedupe storage keys (1.5045ms)
+✔ local replies, echo rules, events, and no-reply behavior equal the canonical V1 (14.2406ms)
+✔ R19 chooses one complete tone when the OpenChat entry guide appears (40.1852ms)
+✔ R19 consumes the raw join event and accepts only the OpenChat entry heading (8.1408ms)
+✔ approved party member mutations parse safely and use one RECRUIT gateway request (44.1764ms)
+✔ inhouse member shortcuts reach the matching profile gateway (93.5367ms)
+✔ reported inhouse loading echo is ignored while user commands and explicit member edits keep one reply (9.8968ms)
+✔ same MessengerBot logId replay suppresses only the duplicate visible reply (5.889ms)
+✔ ambiguous party member text never reaches the mutation gateway (29.9574ms)
+✔ local recruit help documents member commands and keeps full-form guidance (2.9869ms)
+✔ command and form predicates are byte-derived and behaviorally equal to V1 (13.4131ms)
+✔ one public command performs one five-second signed gateway request without room binding (9.9477ms)
+✔ recoverable season rows reach the gateway once even with whitespace numbering and partial fields (3.2504ms)
+✔ completed augment-ARAM in-house forms reach the FEATURES gateway and always reply (3.4008ms)
+✔ completed augment-ARAM metadata with ten empty name rows activates through FEATURES (3.334ms)
+✔ a complete empty season snapshot reaches the gateway once for authoritative cancellation (8.1639ms)
+✔ empty-snapshot gate rejects incomplete forms and ordinary conversation (12.024ms)
+✔ clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior (5.1465ms)
+✔ all seven active text seams preserve V1 success and empty replies while failures use safe common notices (65.1269ms)
+✔ literal transport failures distinguish settings, input, and connection errors without exposing values (38.5374ms)
+✔ both V40 R2 image seams stay inactive for every transport outcome (12.0873ms)
+✔ R26 text commands never probe notification images before their response (14.2971ms)
+✔ R26 speed diagnostic keeps the previous request timing across ordinary chat and bot echo (3.6162ms)
+✔ R27 local diagnostics bypass request state, deduplication and notification image reads (1.905ms)
+✔ R27 diagnostic distinguishes reply failure and tolerates unavailable logging (1.6106ms)
+✔ V1-strict keeps completion diagnostics but routes incomplete operation-form candidates (20.3281ms)
+✔ V1-strict candidate routing ignores ordinary label discussion (8.3157ms)
+✔ V1-strict ordinary label discussion performs no request or local dedupe write (17.2266ms)
+✔ V1-strict accepts standalone wrapper titles but ignores wrappers embedded in prose (15.4885ms)
+✔ V1-strict response forwards one incomplete form request to the FEATURES gateway (4.4018ms)
+✔ V1-strict canonicalizes tolerant label spelling before gateway classification (3.1781ms)
+✔ V1_STRICT fixture preserves the canonical V1 bytes across checkout line endings (2.0902ms)
+✔ V1_STRICT fixture contains no hard-coded credential value (1.9969ms)
+✔ V1_STRICT fixture remains ES5 and Rhino-static warning free (68.4615ms)
+✔ V1_STRICT executes the original bot-version reply with or without slash (6.6705ms)
+✔ V1_STRICT executes the original user help exactly (3.2565ms)
+✔ APPROVED_EXTENSIONS cannot be mislabeled as commands from the V1_STRICT oracle (9.7468ms)
+✔ [A01] the unified phone artifact is a readable ES5 single file below 40,000 characters (86.3104ms)
+✔ [A02] the final unified artifact has zero Rhino static warning candidates (15.6418ms)
+✔ [A03] the generated artifact classifies each command into exactly one server profile (4.8707ms)
+✔ [A04] callback room, channel and group values are neither read nor transmitted (6.4643ms)
+✔ [A05] text transport timeout is no more than five seconds (4.9967ms)
+✔ V4 source template is one thin command-family routing client (13.0868ms)
+✔ the generated unified phone file is standalone ES5 with one callback (64.8233ms)
+✔ builder owns the unified output and refreshes deprecated split fixtures (2.7007ms)
+✔ release docs lock one phone, one MessengerBot profile, and two Kakao rooms (2.941ms)
+✔ [C01] each entry sends its own static profile regardless of poisoned callback room values (33.9955ms)
+✔ [C02] RECRUIT ignores FEATURES commands locally without a server call (3.4738ms)
+✔ [C03] FEATURES ignores RECRUIT commands locally without a server call (1.9362ms)
+✔ [C03A] one unified phone bot routes both room command families exactly once (9.1408ms)
+✔ [C03C] party template commands including spaced aliases use exactly one server request for a V1 number (5.3928ms)
+✔ [C03D] a copied V1 party form without its number returns the exact local guidance (1.8207ms)
+✔ [C03B] unified bot version is one local reply and never reaches transport (5.2828ms)
+✔ [C04] malformed slash, URLs and middle slash are rejected before transport (32.2131ms)
+✔ [C05] no-logId boot counter gives every independent command a new event ID (1.7243ms)
+✔ [C06] one command performs one HTTP execute with a five-second maximum (1.9043ms)
+✔ [C05A] logId replay is stable in one boot and isolated across profiles and restarts (3.1209ms)
+✔ [C05C] phone settings are read from MessengerBot storage once within one request cache (5.0988ms)
+✔ [C05B] unified echo suppression checks both room-specific bot display names (3.4735ms)
+✔ [C07] one scrim command performs exactly one client-to-server send (2.3293ms)
+✔ [C08:WRONG_PROFILE] client exposes the WRONG_PROFILE error category (2.8787ms)
+✔ [C08:INVALID_SIGNATURE] client exposes the INVALID_SIGNATURE error category (1.1689ms)
+✔ [C08:REPLAY_CONFLICT] client exposes the REPLAY_CONFLICT error category (2.3318ms)
+✔ [C08:SERVER_UNAVAILABLE] client exposes the SERVER_UNAVAILABLE error category (2.194ms)
+✔ [C08:INVALID_FORM] client exposes the INVALID_FORM error category (2.3118ms)
+✔ [C08A] INVALID_FORM keeps the server parser detail and has a safe fallback (1.7043ms)
+✔ [P3-C01] FEATURES entry sends one request for 내전구인 (20.6772ms)
+✔ [P3-C02] FEATURES entry sends one request for 내전구인 협곡 2026-09-09 21:30 #2 10명 (3.0845ms)
+✔ [P3-C03] FEATURES entry sends one request for 내전구인 칼바람 2026-09-09 21:30 #3 10명 (1.7088ms)
+✔ [P3-C04] FEATURES entry sends one request for 내전구인 증바람 2026-09-09 21:30 #4 10명 (1.108ms)
+✔ [P3-C05] FEATURES entry sends one request for 내전현황 (3.137ms)
+✔ [P3-C06] FEATURES entry sends one request for 내전상세 2 (1.1441ms)
+✔ [P3-C07] FEATURES entry sends one request for 📢 내전하실분 #2 (1.848ms)
+✔ [P3-C08] RECRUIT entry sends one request for 스크림구인 (2.4355ms)
+✔ [P3-C09] RECRUIT entry sends one request for [K-LOL.GG 스크림 구인 양식] (2.0364ms)
+✔ [P3-C10] FEATURES entry sends one request for 지인 이름: 친구 (1.2363ms)
+✔ [P3-C11] FEATURES entry sends one request for 본인 이름 및 닉네임: 홍길동/테스터 (1.8521ms)
+✔ [P3-C12] FEATURES entry sends one request for 주최자 이름 및 닉네임: 홍길동/테스터 (2.2664ms)
+✔ [P3-C13] FEATURES entry sends one request for 이름 및 닉네임: 신청자/닉 (1.0359ms)
+✔ [P3-C14] FEATURES entry sends one request for 등록 (1.0154ms)
+✔ [P3-C15] FEATURES entry sends one request for 내전등록 (4.0154ms)
+✔ [P3-C16] FEATURES entry sends one request for 경고등록 (1.9039ms)
+✔ [P3-C17] FEATURES entry sends one request for 인증 (19.1114ms)
+✔ [P3-C18] FEATURES entry sends one request for 경고현황 (11.0779ms)
+✔ [P3-C19] FEATURES entry sends one request for 결과현황 (11.6875ms)
+✔ [P3-C20] FEATURES entry sends one request for 사진취소 (27.056ms)
+✔ [P3-C21] FEATURES entry sends one request for 자동공지 20 (21.4688ms)
+✔ [P4-C01] unified 봇버전 is client-only with exact local content (9.0003ms)
+✔ [P4-C02] unified 도움말 is client-only with exact local content (4.76ms)
+✔ [P4-C03] unified 구인도움말 is client-only with exact local content (2.5242ms)
+✔ [P4-C04] unified 구인웹도우미 is client-only with exact local content (3.01ms)
+✔ [P4-C05] every V1 PUBLIC alias is classified by the unified phone with at most one send (98.8338ms)
+✔ [P4-C06] malformed slash, URL and middle-slash inputs never enter public transport (192.9434ms)
+✔ [P4-I01] V2도움말 never enters public V4 transport (29.9831ms)
+✔ [P4-I02] V2진단 never enters public V4 transport (18.4681ms)
+✔ [P4-I03] V2연동확인 never enters public V4 transport (22.7053ms)
+✔ [P4-I04] 연동확인 never enters public V4 transport (13.3646ms)
+✔ [P4-I05] V2모집 never enters public V4 transport (10.9124ms)
+✔ [P4-I06] V2시즌 never enters public V4 transport (2.886ms)
+✔ [P4-I07] V2양식 never enters public V4 transport (2.7175ms)
+✔ [P4-I08] V2사진세션 never enters public V4 transport (13.7438ms)
+✔ [P4-I09] V2사진취소 never enters public V4 transport (7.8485ms)
+✔ [P4-A01] final unified phone artifact is synchronized ES5, under 40k and Rhino-static clean (54.2236ms)
+✔ [P4-C01] every public V1 alias passes the correct phone profile with zero-or-one slash (20.8355ms)
+✔ [P4-C02] local public replies are exact and never include V2 operator commands (7.0162ms)
+✔ [P4-C02A] all actual V41 public command samples pass the matching V4 phone profile (6.6098ms)
+✔ [P4-C03] photo and retired preview commands reply locally with no server transmission (3.5248ms)
+✔ [P4-C04] internal, unknown, and malformed inputs are rejected before transport (1.9528ms)
+✔ [P4-C05] unified entry preserves one send site, five-second timeout, and dynamic family split (1.4953ms)
+✔ [P4-C02B] member shortcuts tolerate mobile normalization and reject ambiguous mutations (3.6121ms)
+✔ V4 private generator creates one ignored paste-ready file without printing secrets (973.441ms)
+✔ [R01] V4 durable receipt and nonce schema is present in the ordered migration ledger (27.0895ms)
+✔ [R02] installation, canonical room, key and capability migrations match the runtime schema (91.5191ms)
+✔ [R03] V3 and V4 server intake coexist while one V4 entry binds profile-specific installation identity (46.4026ms)
+✔ [RESOLVED R04] V4 uses deterministic installation scope without a pairing command (29.2466ms)
+✔ [R05] documented Vercel variable names cover the V4 runtime without reading values (13.094ms)
+✔ contract fixture has traceable V1 evidence and all required domains (2.3503ms)
+✔ zero or exactly one leading slash routes to the same command (0.4242ms)
+✔ double slash, URL slash, separated slash, and middle slash are not commands (0.1437ms)
+✔ same installation scope members can edit and finish across sender identities (0.1808ms)
+✔ initial party form exposes the three activation fields without participant rows (0.2063ms)
+✔ full party forms are authoritative snapshots and allow A→B→A (0.2652ms)
+✔ party member shortcuts retain the full-form workflow and current-scope mutation boundary (0.1866ms)
+✔ Rift, ARAM, and Augment ARAM preserve their V1 field policies (0.2163ms)
+✔ scrim keeps full-form editing and V1 disabled manual lifecycle replies (0.841ms)
+✔ operation forms retain V1 labels, wrappers, missing-field reply, and echo guard (0.2095ms)
+✔ registration and warning guidance preserve exact V1 headings and destinations (0.1921ms)
+✔ user-facing help excludes V2 diagnostics and raw JSON commands (0.131ms)
+✔ representative record, recent, and ranking replies remain exact V1 fixtures (0.0712ms)
+✔ V40 구인도움말 문구와 줄바꿈을 그대로 유지한다 (16.3042ms)
+✔ V40 5인파티 생성 응답에 모집번호가 있는 편집 가능한 전체 양식을 유지한다 (8.2066ms)
+✔ V40 구인현황 제목과 상세 명령 CTA를 포함한 정확한 응답을 유지한다 (21.5342ms)
+✔ V40 bare 멸망전스크림 입력을 스크림 명령으로 분류한다 (12.1416ms)
+✔ V40 일반 도움말의 제목·항목·줄바꿈을 모든 별칭에서 그대로 유지한다 (36.6329ms)
+✔ V40 구인 웹 도우미와 구인 도움말을 서로 다른 응답으로 유지한다 (28.7005ms)
+✔ V40 등록 센터의 설명과 기존 링크를 모든 별칭에서 그대로 유지한다 (9.1408ms)
+▶ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다
+  ✔ 내전등록 (15.4627ms)
+  ✔ 경고등록 (33.7288ms)
+  ✔ 인증 (9.3682ms)
+  ✔ 경고현황 (4.3094ms)
+  ✔ 결과현황 (14.1689ms)
+✔ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다 (78.5282ms)
+▶ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다
+  ✔ 전적 (9.4067ms)
+  ✔ 최근 (30.4093ms)
+  ✔ 랭킹 (16.5762ms)
+✔ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다 (57.3508ms)
+✔ V40처럼 오픈채팅봇이 출력한 운영 양식은 재접수하지 않는다 (4.0804ms)
+✔ V40 운영 양식은 서버가 만든 접수 문구를 그대로 전달한다 (8.7813ms)
+✔ V40 사진취소 별칭의 사이트 우선 안내 동작을 그대로 유지한다 (23.2475ms)
+✔ V40 입장·퇴장·초대·서버 echo 동작을 유지한다 (4.7318ms)
+✔ V40 스크림구인은 자동배정 번호와 원래 줄바꿈을 가진 전체 양식을 반환한다 (14.8339ms)
+✔ V40 스크림현황은 파티 현황과 섞지 않고 한글 상태와 상세 명령을 표시한다 (5.1522ms)
+✔ V40 스크림현황 빈 상태 문구를 정확히 유지한다 (4.3186ms)
+✔ V40 스크림상세는 복사 가능한 전체 양식과 수정 안내를 그대로 반환한다 (4.3534ms)
+✔ V40 스크림 전체 양식 신규 제출은 즉시 한 번 저장하고 등록 완료만 응답한다 (14.3912ms)
+✔ V40 원본 양식은 멸망전번호 없이 서버의 단일 활성 대회 자동 판별을 사용한다 (17.9146ms)
+✔ V40 스크림 전체 양식 수정 제출은 별도 확인 없이 같은 번호를 교체 반영한다 (17.9084ms)
+✔ V40에서 사용 중단된 참가·확정·취소·수동 종료는 원래 안내만 하고 변경하지 않는다 (61.6163ms)
+✔ paste-ready V41 bot routes major commands only through the signed V2 transport (15.7114ms)
+✔ mobile installer has no Rhino CODE_HAS_NO_SIDE_EFFECTS statement candidates (91.6798ms)
+✔ phone transport renders actionable HTTP failure categories (5.1883ms)
+✔ Kakao pending slot lookup is lifecycle-neutral and only cancels ACTIVE rows (3.3249ms)
+✔ 자동 수집한 전체 명령 계약은 slash/무슬래시를 하나의 canonical command로 만든다 (41.1751ms)
+✔ V1 호환 파서는 모든 공개 V1 명령에서 slash/무슬래시 분류를 동일하게 유지한다 (15.7848ms)
+✔ canonical command 경계는 본문과 Riot ID를 보존하고 slash 오인식을 막는다 (2.0022ms)
+✔ 휴대폰 압축본의 V1 무통신 명령은 읽기 쉬운 전체본과 동일하게 응답한다 (33.8369ms)
+✔ room and channel callback fields are not used for installation scope (14.5705ms)
+✔ installation scope is stable across signing-key rotation and differs across installations (5.0038ms)
+✔ delivery identity ignores raw room and channel while binding installation, sender, log, and message (3.4185ms)
+✔ opaque sender uses userHash when available and display-name fallback is labeled (2.5536ms)
+✔ field diagnostics explicitly use installation scope and retain opaque sender (1.0517ms)
+✔ response stores a season preview and only the matching one-time code performs SYNC (28.0776ms)
+✔ response requires a complete authoritative snapshot scope and supports preview cancellation (21.9744ms)
+✔ response ignores server echoes and restores legacy guide aliases after full-width normalization (7.3873ms)
+✔ response preserves V40 room events, missing-number guidance, and parameterized managed shortcuts (16.1329ms)
+✔ response keeps an active image session when MessengerBot only exposes a placeholder (6.0933ms)
+✔ response routes legacy record, recent, and ranking commands through V2 data while preserving V1 replies (4.5936ms)
+✔ response formats scheduled notice aliases as read-only previews (2.6926ms)
+✔ response accepts bitmap fallback, reports image progress, and clears terminal or cancelled sessions (5.9454ms)
+✔ response exposes a secret-free V2 transport diagnostic (10.8472ms)
+✔ response scopes different senders to one installation and ignores broken room parser fields (6.2702ms)
+✔ response suppresses a duplicate callback with the same Kakao log identity (1.8524ms)
+✔ response entry point keeps representative V1 and V2 replies identical with or without slash (38.5367ms)
+✔ raw V2 recruiting JSON is explicitly marked for the server-side operator gate (5.1545ms)
+✔ response entry point does not treat slash-only, URL, middle slash, double slash, or slash-space as commands (5.1279ms)
+✔ V41 season output uses the site application fields and round-trips as bot input (14.6327ms)
+✔ V41 season input accepts the labeled site form and rejects invalid sub positions (3.4447ms)
+✔ V41 authoritative sync response reports create, update, cancel and review counts (4.1188ms)
+✔ V1 compatibility parser stays ES5, transport-free, and rejects unsafe input (15.1478ms)
+✔ all V40 party creation, finish, help, status, and detail aliases are classified (6.9684ms)
+✔ party form parser preserves metadata, positions, numbered members, and substitutes (6.5374ms)
+✔ party form metadata accepts line endings and colon variants without rewriting values (2.3359ms)
+✔ party form tolerates clipped headers, Markdown escapes, attached values, and controlled line wraps (1.7058ms)
+✔ inhouse aliases parse mode, date, time, recruit number, and capacity (6.0041ms)
+✔ scrim aliases and legacy full form are converted without a transport call (4.1927ms)
+✔ four operation forms become exact V2 payload shapes with sender fallbacks (4.6219ms)
+✔ four legacy 외출 wrappers parse identically and missing fields are explicit (10.8266ms)
+✔ registration, warning, result, evidence, status, and photo-cancel aliases are classified (16.225ms)
+✔ V1: 내전구인만 입력하면 종목 선택 안내를 정확히 보낸다 (21.4038ms)
+✔ V1: 알 수 없는 내전 종목에만 입력값을 포함한 오류와 선택 안내를 보낸다 (11.3483ms)
+✔ V1: 협곡 내전구인은 티어·라인과 빈 칸을 포함한 전체 양식을 정확히 보낸다 (28.7703ms)
+✔ V1: 칼바람 내전구인은 이름 전용 전체 양식을 정확히 보낸다 (5.095ms)
+✔ V1: 번호 없는 내전현황은 모든 회차 요약과 내전상세 명령을 정확히 보낸다 (8.904ms)
+✔ V1: 내전상세 번호는 참여자와 빈 칸을 포함한 편집 가능한 전체 양식을 정확히 보낸다 (11.2226ms)
+✔ V1: 작성한 전체 신청 양식은 확인 단계 없이 한 번 동기화하고 서버 답변을 그대로 보낸다 (10.7827ms)
+✔ V1: 같은 전체 신청 양식이 연속 수신되면 첫 반영 뒤 중복 요청과 중복 답변을 내지 않는다 (10.0055ms)
+✔ V1: 빈 전체 양식은 일반·ASCII slash·전각 slash 모두 0명 authoritative sync로 처리한다 (24.1173ms)
+✔ V1: 불완전한 빈 양식과 double·URL·중간 slash는 authoritative sync를 실행하지 않는다 (12.6713ms)
+✔ 외출 필수값 누락은 항목별 안내만 보내고 서버 제출을 실행하지 않는다 (4.0178ms)
+✔ 오류 제목이 이미 포함된 서버 상세는 K-LOL.GG 요청 실패 제목을 중복하지 않는다 (3.7595ms)
+✔ legacy party create suppresses a duplicate callback before a second V2 mutation (18.0572ms)
+✔ legacy full party form maps positions to slots and synchronizes the existing V2 party (16.6513ms)
+✔ slash and plain temporary/form flows share server-first metadata fallback and preserve free text (16.2329ms)
+✔ 99 재현, 지오, 97 기용 fixtures complete public create, form, and finish flows with or without slash (30.9794ms)
+✔ legacy party candidates stay separate from primary capacity (8.2859ms)
+✔ legacy finish suppresses a duplicate callback after the party leaves active status (14.1802ms)
+✔ same-room users can clear and finish another user's two-digit party while repeated forms stay idempotent (16.3648ms)
+✔ failed party mutations return the cause without fetching or appending status (3.2202ms)
+✔ successful sync, blank deletion, and finish explain a failed status refresh (5.2392ms)
+✔ legacy operation form, inhouse template, and scrim template stay available (8.2122ms)
+✔ legacy scrim full form is stored through the typed V2 mutation and replays safely (12.2768ms)
+✔ 숫자형 플레이어·미디어 상세는 존재 확인 뒤 canonical UUID로 이동한다 (26.0441ms)
+✔ 숫자형 이벤트전·멸망전은 존재 확인 뒤 canonical UUID로 이동한다 (43.4997ms)
+✔ 관리자 직접 가져오기는 파일·붙여넣기·비공개 미리보기·재시도 복구를 제공한다 (20.0753ms)
+✔ 관리자 로그아웃은 가져오기 복구 namespace만 best-effort로 지운다 (6.9996ms)
+✔ 직접 가져오기 API는 예약→bounded body→work gate→private finalize 순서를 지킨다 (3.1492ms)
+✔ 검토 UI는 fuzzy 자동 연결 없이 구조화 행별 사람 확인을 요구한다 (2.1161ms)
+✔ admin import cancellation is authorized only for ADMIN-source rows (1.1847ms)
+✔ match editor exposes only the structured form and traps the void confirmation dialog (23.9528ms)
+✔ picker status copy is outside the listbox and visual active row matches aria active descendant (15.0248ms)
+✔ submission reject dialog shares the accessible modal behavior (11.0631ms)
+✔ submission conflict keeps component identity and adopts only a verified latest revision (1.3951ms)
+✔ match editor conflict preserves local input and adopts only a verified latest aggregate (2.8955ms)
+✔ match editor save action stays readable in enabled and disabled states (2.0671ms)
+✔ OCR route reserves before the process gate and all external work (12.7552ms)
+✔ OCR reservation is durable, single-image and replay-first (10.2176ms)
+✔ submission approval durably transfers team-balance provenance into the match aggregate (1.4221ms)
+✔ ordinary match amendments cannot clear immutable team-balance provenance (0.1837ms)
+✔ web submission linkage revalidates draft ownership, lifecycle and selected layout in its transaction (0.4408ms)
+✔ match changed outbox carries team-balance provenance in its typed row and payload (0.2353ms)
+✔ public match detail returns a not-found contract instead of a blank success (4.335ms)
+✔ first submission prioritizes required information while optional fields and continuation stay available (14.0605ms)
+✔ a cancelled partial upload never displays unfinished images as a completed step (3.1214ms)
+✔ anonymous result continuation returns to the same submission after login (1.248ms)
+✔ changing a continuation code or draft resets form identity while same-context refresh preserves edits (38.8423ms)
+✔ pending, rejected, suspended and password-reset accounts get recovery before filling the submission form (127.7125ms)
+✔ completed or rejected submissions show their result and recovery without impossible upload controls (7.2243ms)
+✔ submission lookup failure keeps the code for retry and is distinct from a missing submission (41.539ms)
+✔ creating a submission locks mutations until the server route has committed and resets new-submission state (72.6859ms)
+✔ match submission accepts only an owner-verified selected team-balance draft (0.7619ms)
+✔ successful server selection remounts both draft workspaces without resetting local edits (0.1826ms)
+✔ 홈과 이미지 상세은 같은 접근 가능한 수동 캐러셀을 사용한다 (3.1317ms)
+✔ 캐러셀은 빈 상태를 안전하게 닫고 한 장에는 이동 컨트롤을 숨기며 여러 장에는 직접 이동을 제공한다 (7.7264ms)
+✔ 캐러셀은 모바일 비율·44px 조작 영역·모션 감소 설정을 유지한다 (1.1489ms)
+✔ 홈 우승 사진은 FK 연결을 우선하고 엄격한 레거시 후보만 보강하며 실제 자산 URL을 사용한다 (1.1125ms)
+✔ gallery image load failures keep a clear, accessible fallback in the reserved card area (6.2232ms)
+✔ migration journal has contiguous indices, increasing timestamps, and matching SQL tags (2.1114ms)
+✔ public MMR page exposes canonical allowlisted filters and bounded projection summaries (6.6501ms)
+✔ admin MMR workspace connects protected recalculate, adjustment, players and review states (1.8618ms)
+✔ team balance provider selects READY MMR before statistics fallback (2.566ms)
+✔ MMR previous/next links reach later players and preserve validated search, position, and page size (16.109ms)
+✔ first and last MMR pages expose only valid directions (7.2086ms)
+✔ selected position displays the score used to rank and that position's sample, including zero (15.743ms)
+✔ empty projection, unmatched search, and out-of-range page have different recovery actions (8.2036ms)
+✔ invalid MMR address is rejected before loading and has a clean recovery link (6.2323ms)
+✔ MMR load failure retries the same bounded query without pretending the list is empty (2.3141ms)
+✔ unknown root addresses keep one complete public shell and recovery links (10.1885ms)
+✔ public resource and invalid-query recovery uses the existing layout without nesting another shell (2.2574ms)
+✔ application error recovery keeps the public main landmark singular (8.2628ms)
+✔ admin not-found content stays behind its layout authorization and inside one admin shell (39.4783ms)
+✔ signed operation-form submit retains raw-body HMAC and durable replay boundaries (5.5622ms)
+✔ admin mutation requires ADMIN session, same-origin, If-Match and idempotency (2.6ms)
+✔ admin pages expose filtered empty/error/unavailable states and compatibility routes (2.8409ms)
+✔ operational diagnostics remain admin-only server rendering with no polling or mutation (13.376ms)
+✔ public operations endpoints expose bounded settings and minimum health only (12.0596ms)
+✔ admin mutations and downloads retain strong server authorization boundaries (7.0117ms)
+✔ internal maintenance requires a signed job and never accepts session authorization (2.4045ms)
+✔ Vercel schedules destruction ratings, statistics, MMR, Riot and daily Kakao close through protected GET boundaries (2.2323ms)
+✔ route groups are removed while concrete and dynamic segments become canonical URLs (44.0445ms)
+✔ route fixtures override parameter fixtures and every missing dynamic fixture fails immediately (1.2393ms)
+✔ recommendation query variants reject a malformed transcribed draft fixture (0.6672ms)
+✔ capture sessions are isolated by authentication boundary (0.2419ms)
+[capture-plan] 1 page files -> 4 capture targets at C:\Users\sjh11\AppData\Local\Temp\klol-capture-cli-IQ8EaY\nested\capture-plan.json
+✔ the CLI contract reads a fixtures JSON file and creates its output directory (37.524ms)
+✔ the repository plan covers every page once, resolves IDs and adds reviewed variants (444.0374ms)
+✔ 사용자·관리자 상세 화면은 저장소 오류 상태에서도 페이지 제목과 상태 의미를 유지한다 (5.5282ms)
+✔ 공용 미디어 편집 화면도 저장소 오류 상태에서 페이지 제목을 유지한다 (0.7773ms)
+✔ 챔피언 이미지 projection은 0025 적용 전에도 공개 통계·목록 조회를 유지한다 (3.5652ms)
+✔ 플레이어 공개 프로필은 실제 경기 KDA와 신청 포지션 배치·팀 밸런스 점수를 함께 설명한다 (2.7101ms)
+✔ 공개 Riot 읽기는 API·RSO 비밀 구성과 분리되고 UI가 미연동·대기·오류를 구분한다 (2.0275ms)
+✔ 플레이어 검색어는 문자열·배열·미입력을 하나의 안전한 문자열로 정규화한다 (0.6808ms)
+✔ 중복 q 파라미터 배열은 첫 값으로 정규화되어 trim 오류를 만들지 않는다 (0.1819ms)
+✔ 검색 유스케이스는 PlayerRepository 포트를 통해 주입된 구현만 호출한다 (0.6495ms)
+✔ PWA manifest and layout publish the expected install contract (7.4822ms)
+✔ service worker caches static public assets only (1.2959ms)
+✔ install icons exist and are not empty (1.2546ms)
+✔ 공개 구인 카드와 API DTO는 참여자 표시 정보만 노출한다 (3.5325ms)
+✔ 내전 등록·상세 UI는 경기 시간을 입력하거나 표시하지 않는다 (2.6506ms)
+✔ 이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름을 독립 경로로 유지한다 (3.1925ms)
+✔ account pagination reports the filtered total and page range while retaining filters and page size (39.3133ms)
+✔ first and last job pages expose only valid navigation and preserve the status filter (7.4272ms)
+✔ log navigation retains its source and does not produce an incompatible account status (2.7153ms)
+✔ bulk preview remains a bounded first batch without ordinary page navigation or invented totals (1.6994ms)
+✔ a now-empty page can return to available results without displaying a nonexistent range (1.8852ms)
+✔ navigation respects the query ceiling and unavailable data never pretends there are zero accounts (5.1263ms)
+✔ history chart server output preserves tooltip text for every chart mode (184.4361ms)
+✔ match growth server output preserves own and opponent tooltips without fabricated missing values (83.6513ms)
+✔ match summaries render identical Korean clock text across server and browser locale data (275.6092ms)
+✔ filter and chart date keys use fixed Korean calendar parts across locale data and year boundaries (87.0428ms)
+✔ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (62.3674ms)
+✔ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (7.7544ms)
+✔ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (6.265ms)
+✔ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (7.8836ms)
+✔ Kakao pending API splits ADMIN reads from SUPER TOTP mutations (15.8185ms)
+✔ pending operator UI uses bounded filters, a player picker and revision-safe commands (2.2757ms)
+✔ public season applications expose Kakao-started recruit rounds without leaking pending identities (3.239ms)
+✔ feature-gated site assistant is mounted globally and uses protected AI contracts (1.4305ms)
+✔ site feature access fails closed for missing or unreadable settings (4.4263ms)
+✔ registration feature protects both its page and mutation before credential work (0.6437ms)
+✔ match submission feature keeps reads available but guards every owner mutation (9.9428ms)
+✔ Kakao help feature controls its public guide without exposing configuration (2.9225ms)
+✔ recruit guide teaches participation and guarded edits before optional creation (0.4053ms)
+✔ recommendation APIs keep owner/admin scope and the team-balance feature boundary (13.4629ms)
+✔ team-balance pages expose recommendation views and fail closed with the site switch (5.6494ms)
+✔ a lost create response retries the exact draft request with its original idempotency key (61.6352ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (35.6727ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (34.8391ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (1.5985ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (6.1978ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (50.6519ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (17.0014ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (3.0108ms)
+✔ 시작 페이지는 익명·계정 상태·승인 계정·관리자 진입을 구분한다 (5.0569ms)
+✔ Riot 도움말은 직접 연결과 별도 본인 인증, 공개·비공개 범위를 안내한다 (0.3416ms)
+✔ 설치 화면은 install prompt와 iOS·Android PWA·개인 캐시 금지를 구분한다 (1.6725ms)
+✔ 사용자 shell은 skip target, landmark, modal search, 모바일 5개 진입점을 제공한다 (10.2341ms)
+✔ 전체 메뉴는 목적별로 기능을 보여주고 필요한 계정 접근을 안내한다 (1.2327ms)
+✔ 일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다 (4.3299ms)
+✔ V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다 (3.829ms)
+✔ 사용자와 관리자 로그아웃 UI는 세션 폐기 성공 뒤에만 로그인 화면으로 이동한다 (3.519ms)
+✔ 관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 축소하지 않는다 (1.6219ms)
+✔ 모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아웃을 제공한다 (1.5543ms)
+✔ 관리자 로그인은 비밀번호 후 원래 화면으로 이동하며 인증 코드 필드가 없다 (1.2244ms)
+✔ 계정 작업 UI는 stale revision에서 최신 projection을 읽고 안내를 유지한다 (3.6229ms)
+✔ 일회성 비밀번호는 숨김·BFCache 복귀·명시적 닫기에서 메모리와 안내를 함께 종료한다 (1.4189ms)
+✔ 내 계정 플레이어 탭은 대기 claim과 거절 claim을 구분한다 (0.8032ms)
+✔ 내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기본 문구를 구분한다 (1.3822ms)
+✔ 계정 시각은 공통 Asia/Seoul 24시간 포맷터를 사용한다 (2.0832ms)
+✔ 가입·본인 비밀번호 변경 UI는 성공과 pagehide에서 비밀번호 fingerprint ref를 즉시 비운다 (2.9108ms)
+✔ 정적 마감 대상의 native button은 submit 여부를 명시한다 (316.5923ms)
+✔ 이벤트 운영 폼은 내부 UUID나 JSON 복사를 요구하지 않는다 (2.43ms)
+✔ 완성된 메뉴와 관리자 검색은 과거 단계 문구를 노출하지 않는다 (0.7261ms)
+✔ Riot ID의 게임 이름과 태그는 각각 이름을 가진다 (0.6622ms)
+✔ 화면 효과는 스트리밍 중인 React 하위 DOM을 변경하지 않는다 (2.0949ms)
+✔ 전역 효과 CSS는 감속 모드·정밀 포인터·강제 색상 경계를 유지한다 (0.5895ms)
+ℹ tests 487
+ℹ suites 0
+ℹ pass 487
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3048.1499
+
+> klol-gg-v2@0.1.0 test:unit
+> tsx --test tests/*.test.ts
+
+✔ KST date-time formatting is deterministic and never uses AM/PM (1.1558ms)
+✔ one-time secret response is discarded after any hidden-page boundary (0.1383ms)
+✔ initial pageshow does not invalidate a request, while history restoration does (0.1812ms)
+✔ every account conflict reason has an explicit safe actionable HTTP problem (0.9789ms)
+✔ recovery response timing applies the same bounded floor with injectable time (0.3488ms)
+✔ signup is an exact agreement-bound contract with NFKC lowercase identities (2.0339ms)
+✔ login and password change reject extra keys, controls, reuse, and weak passwords (0.3689ms)
+✔ own player edit retains compatibility with Riot ID and supported tier fields (1.1354ms)
+✔ own player names are normalized, bounded and cannot target another account (0.6813ms)
+✔ claim approval requires an exact explicit manual-review acknowledgement shape (0.3968ms)
+✔ sensitive administrator mutations require an exact typed target login id (0.2643ms)
+✔ admin account list query is canonical, bounded, and rejects duplicates or controls (0.3897ms)
+✔ password verification identifies legacy bcrypt and new scrypt with dummy work for unusable hashes (182.5551ms)
+✔ safe next accepts only normalized same-origin paths (1.1068ms)
+✔ account next rejects ambiguity, browser normalization tricks, and administrator paths (0.3115ms)
+✔ login limiter caps attempts by normalized login and resets after its window (1.0662ms)
+✔ login work gate releases capacity exactly once (0.1808ms)
+✔ rate-limit IP keys trust only Vercel's anti-spoofing header on Vercel (22.8661ms)
+✔ mutation guard requires an exact same origin (2.605ms)
+✔ body guard stops reading after the byte limit (6.0527ms)
+✔ invalid gallery files do not consume the five valid upload slots (1.6803ms)
+✔ gallery file planning applies remaining capacity after validation (0.1462ms)
+✔ short-lived gallery upload reports are bounded before display (0.2419ms)
+✔ administrator parity ledger accounts for all 81 V1 pages exactly once (1.3284ms)
+✔ administrator transition decisions preserve the approved totals (0.1842ms)
+✔ runtime parity ledger cannot drift from the reviewed route map (2.358ms)
+✔ every destination stays inside the reviewed administrator or operations-doc boundary (0.6779ms)
+✔ legacy administrator routes resolve only to reviewed same-origin destinations (0.6412ms)
+✔ target interpolation rejects missing parameters and non-local destinations (0.4138ms)
+✔ 관리자 대상 선택기 검색은 bounded query와 선택 유지 ID만 허용한다 (1.607ms)
+✔ 관리자 대상 선택기는 짧은·중복·미허용·bidi·잘못된 include를 거부한다 (0.3361ms)
+✔ TOTP lifecycle payloads are self-only and accept exactly one six-digit code (0.9238ms)
+✔ generated TOTP secrets contain 160 random bits in canonical base32 form (0.3903ms)
+✔ TOTP credential fingerprint binds every encrypted envelope field (1.6324ms)
+✔ fixture authentication requires a live short-lived verifier proof on loopback (22.2463ms)
+✔ production session cookies are Secure even when transport inference is false (0.2843ms)
+✔ account and administrator elevation cookies coexist with purpose-bound lifetimes (0.1372ms)
+✔ JWT decode rejects oversized attacker input before JOSE parsing (0.3308ms)
+✔ administrator IA exposes exactly ten unique protected workspaces (1.7479ms)
+✔ every administrator workspace has a canonical App Router page (0.686ms)
+✔ active workspace matching does not make the dashboard match every route (0.1598ms)
+✔ dashboard leaves a real work destination available (0.1182ms)
+✔ operations exposes all four existing form routes and selects their lists and details consistently (1.2155ms)
+✔ versioned keyrings require explicit current 32-byte keys (2.2449ms)
+✔ database authentication fails closed when any required runtime value is missing (0.5452ms)
+✔ AES-256-GCM TOTP envelope binds ciphertext to account and key version (3.049ms)
+✔ session signing keyring writes current kid and still verifies retained prior keys (20.0527ms)
+✔ session codec round-trips only the minimal signed claims (17.8141ms)
+✔ session codec generates a unique required jti for every issuance (24.3137ms)
+✔ session codec rejects tampering, expiry, and a different secret (3.0611ms)
+✔ session codec requires iat and enforces the 30 minute lifetime contract (5.4887ms)
+✔ session codec pins issuer, audience, algorithm, and rejects future issuance (3.3707ms)
+✔ authorization requires an administrator session and role without TOTP (0.2821ms)
+✔ account sessions are limited by status and never become administrator elevation (0.5492ms)
+✔ codec accepts seven-day ACCOUNT sessions but rejects seven-day ADMIN sessions (1.4279ms)
+✔ session is revoked when account state, role, or authVersion changes (0.2021ms)
+✔ approved administrators log in using only a password, regardless of legacy TOTP enrollment or keys (441.7832ms)
+✔ administrator password login still rejects user roles, unapproved accounts and temporary passwords (424.1777ms)
+✔ login input rejects control characters and invalid legacy OTP fields (41.3349ms)
+✔ canonical selector parser preserves one reviewed value (1.225ms)
+✔ canonical selector parser rejects duplicates, unknown keys, and unreviewed values (0.1583ms)
+✔ legacy application and season review destinations render distinct canonical states (1.8433ms)
+✔ champion identity and public DTO are canonical and allowlisted (1.5211ms)
+✔ ADMIN TOTP create, update and deactivate preserve history (3.9654ms)
+✔ exact receipt replay returns before aggregate lock (0.4241ms)
+✔ authorization and immutable body tampering fail closed (0.56ms)
+✔ outbox failure rolls aggregate, audit and receipt back together (0.3749ms)
+✔ champion HTTP boundary binds exact input, session, revision and idempotency (28.9951ms)
+✔ 173-row V1 fixture maps every NULL portrait to a unique official URL (3.2627ms)
+✔ backfill blocks duplicate identities and unmatched rows (0.5174ms)
+✔ pinned Data Dragon catalog contains 173 unique official champions (1.8349ms)
+✔ home splash chain keeps high-resolution artwork ahead of icon and stored fallback (0.8566ms)
+✔ resolver uses official ids for canonical, legacy, numeric and Korean lookups (0.2307ms)
+✔ all generated portrait URLs use the pinned official version (0.2781ms)
+✔ candidate chain prefers official identity, then validated stored URL, then text fallback (0.2612ms)
+✔ champion list query is strict, bounded, and public status cannot be overridden (2.9333ms)
+✔ admin DTO exposes revision and status but no hidden account or storage fields (1.319ms)
+✔ event lifecycle follows its explicit path and restores only its recorded cancelled state (2.9278ms)
+✔ event lifecycle cannot complete without a confirmed final or leave a terminal state (0.1728ms)
+✔ destruction lifecycle gates auction, preliminary, four-team tournament, and final (0.286ms)
+✔ rosters enforce five unique players, positional coverage, ARAM semantics, and one captain (0.6892ms)
+✔ best-of results require an exact clinching score and a consistent winner (0.3464ms)
+✔ single elimination seeding is canonical and creates replayable bye/source-fixture structure (1.9578ms)
+✔ bracket advancement is deterministic, idempotent, and rejects overwrites or premature results (1.2365ms)
+✔ round robin schedules each pair exactly once without same-round double booking (0.5132ms)
+✔ group round robin is group-key canonical and prevents cross-group duplicates (0.3392ms)
+✔ standings rebuild from the full confirmed fixture set with V1-compatible canonical ties (0.8676ms)
+✔ command envelope and receipt validators bind actor purpose, optimistic revision, and digests (2.9674ms)
+✔ audit and outbox contracts reject secret-bearing or incoherent records (0.5198ms)
+✔ competition display projections prefer human labels and never fall back to raw identifiers (0.5888ms)
+✔ event result gallery can be linked only during or after play (3.6176ms)
+✔ POSITION applications upsert, retain identity, cancel, and reactivate only inside recruitment (1.3775ms)
+✔ ARAM applications reject position claims and accept positionless entries (0.3129ms)
+✔ admin import is atomic at the aggregate boundary and recruitment closes with exactly ten active entries (0.525ms)
+✔ event consumes the S06 balance port shape and validates two complete five-person rosters (1.6985ms)
+✔ seeded bracket derives the champion, supports correction, and completes with an event participant MVP (1.3087ms)
+✔ correcting an upstream result preserves the other branch and explicitly invalidates downstream results (0.8655ms)
+✔ cancellation recovery restores only the recorded phase and public DTOs omit private ownership data (1.0475ms)
+✔ command handler rechecks authorization in-transaction and commits aggregate, audit, outbox, then receipt (2.2774ms)
+✔ authorized idempotency replay skips aggregate work and a mismatched fingerprint fails closed (0.7417ms)
+✔ command handler rejects stale expected revisions before any aggregate write (0.3624ms)
+✔ command metadata cannot downgrade admin commands or detach owner intent from the player (0.4754ms)
+✔ competition saved views only accept one allowlisted type (1.0286ms)
+✔ event application deep link rejects unrelated and repeated values (0.2341ms)
+✔ destruction detail deep links retain only valid section-bound values (2.3785ms)
+✔ administrator live auction view requires the complete exact pair (0.3129ms)
+✔ requires the exact destructive cutover acknowledgement and PostgreSQL URL (0.9721ms)
+✔ orders read-only preflight, migration, and one repeatable-read import transaction (3.2243ms)
+✔ rolls back the import transaction and closes the pool on phase failure (0.4538ms)
+✔ rolls back read-only preflight before migration when the source check fails (0.2391ms)
+✔ V1 events preserve participant ownership, team membership and a canonical import revision (2.8587ms)
+✔ V1 event winners are replayed through the deterministic V2 bracket (1.4057ms)
+✔ V1 destruction preserves four validated rosters, applications and auction balances (3.1037ms)
+✔ lossy cancellation and in-flight auction states fail closed while gallery linking is deferred (1.0865ms)
+✔ empty source imports are rerunnable and never control the caller transaction (1.2753ms)
+✔ core record import is externally transactional and idempotent (3.3614ms)
+✔ core record import uses qualified V1 sources and the shared legacy UUID mapping (0.5119ms)
+✔ core integrity sends an escaped Data Dragon allowlist to PostgreSQL (0.5653ms)
+✔ integrity failure stops before the first write (0.5559ms)
+✔ imports supported discipline and public Riot projections (2.0773ms)
+✔ a clean rerun inserts no rows and still reconciles (0.7674ms)
+✔ rejects an actor that cannot own imported discipline records before writes (0.4726ms)
+✔ does not silently drop discipline task states that need evidence migration (0.2012ms)
+✔ rejects Riot summaries that cannot be represented without a safe link (0.2205ms)
+✔ throws when imported extension rows fail reconciliation (0.232ms)
+✔ imports V1 accounts and players through deterministic legacy mappings (2.083ms)
+✔ a clean rerun inserts nothing and still reconciles (0.2538ms)
+✔ fails before writes when source identity data is unsafe (0.4704ms)
+✔ throws on missing relationships so the caller transaction can roll back (1.017ms)
+✔ throws when target legacy IDs or core relationships do not reconcile (0.26ms)
+✔ imports public media URLs and inhouse private-asset metadata without secret blobs (2.3214ms)
+✔ legacy public URLs remain visible through the V2 media projection (0.3539ms)
+✔ a clean rerun inserts or relinks nothing and still reconciles (0.2743ms)
+✔ rejects unsafe gallery URLs before the first write (0.4807ms)
+✔ throws when imported metadata does not reconcile (0.2573ms)
+✔ projects only bounded Kakao feature settings and records excluded operational row counts (2.6446ms)
+✔ a clean rerun does not rewrite the already reconciled settings projection (0.1698ms)
+✔ rejects invalid_actor before any target mutation (0.3396ms)
+✔ rejects invalid_settings_root before any target mutation (0.1217ms)
+✔ rejects invalid_boolean_settings before any target mutation (0.1584ms)
+✔ rejects invalid_max_message_length before any target mutation (0.1164ms)
+✔ fails closed when the target does not exactly reconcile (0.2455ms)
+✔ the preservation policy explicitly excludes logs, secrets, transient jobs and caches (0.4245ms)
+✔ imports parties and normalized operation forms idempotently in the caller transaction (3.0708ms)
+✔ uses qualified V1 sources, full target UUID kinds, and parameterized reviewer identity (0.7662ms)
+✔ blocks malformed dates and members before any target write (0.6483ms)
+✔ rejects invalid or non-SUPER cutover actors (0.6245ms)
+✔ reconciliation failure asks the caller to roll back (0.3563ms)
+✔ documents V1 party, operation-form, and scrim schema gaps (0.204ms)
+✔ season applications, saved drafts, and MMR projections import idempotently (3.204ms)
+✔ uses fully-qualified source tables and deterministic full target UUID kinds (0.383ms)
+✔ unrepresentable source data fails before the first target write (0.5713ms)
+✔ preflight explicitly covers missing draft owners, nullable legacy game IDs, and review provenance (0.2376ms)
+✔ source/target count mismatch requests caller rollback (0.3757ms)
+✔ complete uses ADMIN intent, expectedRevision, one atomic audit/outbox/receipt commit, and replay (5.8121ms)
+✔ idempotency conflicts, stale revisions, account sessions, and scope drift fail closed (1.1971ms)
+✔ cancel and restore retain only the recorded lifecycle recovery state (1.0533ms)
+✔ public DTO is an explicit allowlist without cancellation reason, raw votes, audit, or session material (0.3222ms)
+✔ application port types retain JSON-safe public response material (0.3785ms)
+✔ one-off auction tiers apply sample shrinkage and bind captain points to the same valuation (1.4642ms)
+✔ Riot collection freezes the latest 100-ID window, resumes batches, excludes remakes and never mixes queues (24.2413ms)
+✔ upstream failures and missing data never turn into zero-win ratings (3.1658ms)
+✔ absolute lookup expands 90/180/365 days using valid games, fixed end and deduplicated details (2.1936ms)
+✔ absolute empty results try all three windows before declaring missing data (0.6984ms)
+✔ absolute collection stops expanding at twenty valid games and caps all windows at 100 details (28.0527ms)
+✔ HTTP callers cannot supply fabricated Riot records, grades, or arbitrary modes (0.657ms)
+✔ verified input requires mode, bounded counts and evidence without caller-supplied pricing/source (0.5547ms)
+✔ the eight preliminary configurations derive BO1/BO3 and enforce viable lane capacity (1.5739ms)
+✔ captain points use the versioned arithmetic boundary: subtract, round to ten, clamp (0.1979ms)
+✔ owner/admin cancellation intent is explicit and cannot cancel another user's application (0.3011ms)
+✔ captain confirmation and seeded auction preserve draw, balance, roster, and position invariants (2.9236ms)
+✔ preliminary standings always rebuild from the full fixture set and seed four finalists (1.7427ms)
+✔ a replacement changes only the current roster and cannot rewrite an existing fixture snapshot (2.5474ms)
+✔ match-wide MVP voting bans self votes, requires ten voters, and limits tie revotes (0.9599ms)
+✔ the common bracket can finish semifinal and final fixtures for destruction completion (0.5759ms)
+✔ captain preference is boolean-only, optional for legacy callers, and part of idempotency (3.4096ms)
+✔ destruction list query is an explicit single-value allowlist (0.7092ms)
+✔ destruction list accepts blank native GET controls without accepting invalid filters (0.3238ms)
+✔ admin parser covers lifecycle commands and rejects unknown or extra material (0.5991ms)
+✔ service binds owner identity, request fingerprint and SUPER-sensitive intent server-side (0.4958ms)
+✔ HTTP mutation boundary requires same origin, If-Match and Idempotency-Key (38.9784ms)
+✔ agreed 30/50/10/5/5 formula uses fixed absolute cutoffs and no participant percentiles (3.9959ms)
+✔ unknown data is neither a zero nor a redistributed weight; zero-weight components are excluded (1.6309ms)
+✔ solo rank bands and champion breadth avoid entrant-dependent ranks and cumulative-points dominance (0.4404ms)
+✔ support and damage contributions use fixed role targets; absent statistics remain unknown (0.5177ms)
+✔ automatic step persists partial collection, rate limits, missing data, and produces a score only when complete (2.9947ms)
+✔ Riot facts request normal APIs, validate source rows and never infer unranked or missing challenges as zero (24.0206ms)
+✔ challenge matching tolerates locale typography but rejects seasonal, inactive, duplicate and missing facts (7.4356ms)
+✔ cron authentication rejects unauthorized requests before touching data and exposes only counters (3.6429ms)
+✔ admin payload cannot inject weights, scores, source or arbitrary extra fields (1.5608ms)
+✔ self-reported total games ignore win rate, cap at 300 and distinguish zero from missing (1.3681ms)
+✔ new automatic evaluation combines numeric input with four sources without requesting ARAM (1.0846ms)
+✔ unfrozen old formulas drop the proxy, preserve other facts and weights; frozen auctions never change (0.6273ms)
+✔ recruitment counters exclude withdrawn and rejected applications; transition identifies a missing lane (1.7921ms)
+✔ auction completion requires all five positions and refuses a paused auction (0.285ms)
+✔ preview generation retains every legacy format and produces no self matches or duplicate fixture IDs (1.3334ms)
+✔ auction eligibility and server validation retain the minimum points for every unfilled slot (1.2206ms)
+✔ public progress reveals totals and standings without exposing applicant ownership or raw ballots (10.5269ms)
+✔ only a stale revision produces HTTP 412; business preconditions produce 409 (20.0165ms)
+✔ optional schedule preserves old snapshots and rejects reversed or invalid dates (1.742ms)
+✔ positionless recruitment and auction preserve headcount and money without imposing roles (1.0858ms)
+✔ owner submission rechecks authorization and binds a READY private asset atomically (4.8736ms)
+✔ exact replay returns the durable body without touching the task or asset (0.6347ms)
+✔ missing private asset and failed authorization use existence-masked errors (0.846ms)
+✔ outbox failure rolls task, audit, outbox and receipt back together (0.4358ms)
+✔ review requires an ADMIN-purpose TOTP recheck and approves the exact evidence batch (0.7054ms)
+✔ tampered immutable request body fails before the transaction (0.2846ms)
+✔ identity prioritizes account then player and normalizes direct identity (1.1232ms)
+✔ warning policy preserves V1 counts and deterministic oldest-first conversion (0.7668ms)
+✔ three active warnings create one review and an existing pending review suppresses duplicates (0.2177ms)
+✔ owner evidence submission reaches review only at the exact required count (0.581ms)
+✔ rejection creates a batch boundary and requires a complete fresh batch (0.1786ms)
+✔ stale, non-owner, duplicate, expired and invalid review operations fail closed (0.6194ms)
+✔ public discipline DTO contains aggregate counts only (1.3965ms)
+✔ discipline admin input parsers keep a closed field allowlist (1.4247ms)
+✔ review and cancellation bodies reject ambiguous shapes (0.2161ms)
+✔ event public query rejects duplicate and unknown filters (2.068ms)
+✔ event list accepts blank native GET controls without accepting invalid filters (0.5638ms)
+✔ event service creates a server-fingerprinted command and rejects unstable identifiers or even BO (2.3239ms)
+✔ own application requires a stable participant UUID so retry fingerprints cannot drift (0.6648ms)
+✔ ARAM application reaches the aggregate without fabricated position preferences (0.652ms)
+✔ event gallery command accepts only an exact nullable gallery identifier (0.5128ms)
+✔ 익명 검색에도 계정 기능을 발견할 수 있고 접근 필요 상태가 유지된다 (2.1302ms)
+✔ 팔레트 바로 가기는 실제 canonical 사용자 페이지 안에서만 구성된다 (1.645ms)
+✔ 로그인 전역 검색은 페이지·도구·콘텐츠·계정 키워드를 정규화해 찾는다 (2.6361ms)
+✔ 플레이어 검색은 공백을 정리하고 URL 구성요소를 안전하게 인코딩한다 (0.3844ms)
+✔ home prioritizes ongoing competitions before newer completed records without mutating input (12.3114ms)
+✔ home omits only placeholder-only titles, retaining meaningful titles containing test (0.4818ms)
+✔ 홈의 서로 다른 공개 피드는 시간 역순과 ID tie-break로 결정적으로 합쳐진다 (15.5671ms)
+✔ 홈 피드 제한은 음수와 비정수 값을 거부하고 0은 빈 피드를 만든다 (0.4467ms)
+✔ 홈 멸망전 우승 갤러리는 FK 연결을 우선해 중복 제거하고 게시일 역순과 최대 개수를 지킨다 (0.3155ms)
+✔ 오늘의 챔피언은 KST 날짜·활성 목록에 대해 SSR에서도 결정적이고 다음 날 변경된다 (10.7039ms)
+✔ 오늘의 챔피언 문구와 챔피언별 개별 재구성 이미지를 연결한다 (0.3928ms)
+✔ 홈 안내 허용 목록은 공식 매핑을 통과한 여성 챔피언 68명과 고유 문구를 갖는다 (0.391ms)
+✔ 특례 네 챔피언은 포함하고 Kindred와 남성·미확인 후보는 기본 거부한다 (0.1862ms)
+✔ 레거시 키는 표시 이름으로 canonicalize하며 같은 공식 챔피언을 한 번만 선택한다 (0.2825ms)
+✔ trace IDs accept only non-zero 32-digit hexadecimal values (2.3982ms)
+✔ traceparent parsing pins version 00 and rejects ambiguous or zero identifiers (0.4084ms)
+✔ validated trace extraction does not fall back around a malformed traceparent (17.2911ms)
+✔ public problem definitions reject unsafe public fields (2.7719ms)
+✔ problem responses expose only the fixed public contract and validated trace ID (5.5719ms)
+✔ forged problem objects fall back without leaking stack, SQL, or extra fields (1.0424ms)
+✔ no-store response helpers enforce API security headers over caller overrides (1.1583ms)
+✔ JSON content types allow UTF-8 JSON and structured +json only (0.2944ms)
+✔ JSON body reader preserves split UTF-8 code points and reports actual bytes (4.964ms)
+✔ JSON body reader separates media type, empty body, UTF-8, and JSON errors (3.8587ms)
+✔ JSON body reader rejects duplicate decoded object keys at every nesting level (4.8132ms)
+✔ JSON body reader enforces declared and streamed byte limits (0.8224ms)
+✔ JSON body reader rejects malformed and mismatched Content-Length (0.4598ms)
+✔ JSON body reader reports stream failures and rejects unsafe limit configuration (0.5337ms)
+✔ JSON body reader cancels a rejected unread stream without exposing its data (0.1958ms)
+✔ problem mappings keep parser failures on the reviewed public catalog (0.1732ms)
+✔ Idempotency-Key parsing is strict, bounded, and case preserving (0.2318ms)
+✔ idempotency hash material is deterministic and domain separated (0.3361ms)
+✔ revision parsing accepts canonical non-negative safe integers including schema default 0 (0.2352ms)
+✔ If-Match parsing requires one strong integer revision ETag (0.3417ms)
+✔ pagination parsing applies defaults and explicit upper bounds (0.299ms)
+✔ pagination rejects duplicate, ambiguous, oversized, and attack-shaped values (0.2683ms)
+✔ pagination rejects unsafe parser configuration (0.1609ms)
+✔ every application icon import resolves to a generated image, including shared UI controls (4206.9451ms)
+✔ image icons preserve size, accessible names and decorative semantics (0.4332ms)
+✔ artwork files match their provenance, alpha grids and transfer budget (79.6113ms)
+✔ Kakao operation settings accept only bounded secret-free fields (1.4167ms)
+✔ Kakao runtime configuration exposes booleans, never secret values (1.0012ms)
+✔ Kakao message policy normalizes before applying the stored length limit (0.1517ms)
+✔ Kakao admin tab query accepts only allowlisted keys for the selected tab (0.1835ms)
+✔ sensitive Kakao admin tabs require SUPER_ADMIN while operating tabs remain ADMIN (0.1246ms)
+✔ party member statistics search is normalized and bounded (0.3054ms)
+✔ Kakao assistant accepts only exact bounded search and read commands (2.3457ms)
+✔ Kakao season snapshots require exact bounded participant slots and positions (1.4552ms)
+✔ Kakao season command access keeps submit and status member-safe while force cancel stays trusted (0.1041ms)
+✔ managed forms route only the explicit operation-form command (0.1671ms)
+✔ Kakao image receive requires an owner-created opaque session and exact bounded fields (0.3735ms)
+✔ player search DTO is an explicit public allowlist (0.1301ms)
+✔ form codes are readable ASCII and normalize mobile fullwidth/lowercase input (1.289ms)
+✔ snapshot expiry is precisely the next 06:00 KST, including month/year boundaries (1.9606ms)
+✔ identical canonical snapshot objects reuse their hash while row order remains significant (1.0389ms)
+✔ snapshot storage rejects non-JSON, oversize and pathological nested originals before querying (9.866ms)
+✔ old-day, invalid scope and invalid code cannot read or issue snapshots (0.678ms)
+✔ guarded old name-only rows reach snapshot validation while new forms still require lanes (10.6701ms)
+✔ legacy copies preserve current lanes and protected rows and do not resurrect removed entries (1.7733ms)
+✔ name-only additions, replacements, moves and stale draft guesses never bypass mandatory lanes (0.2679ms)
+✔ legacy compatibility retains explicit deletion, replacement protection and field conflicts (0.3278ms)
+✔ latest formatter sorts reserve gaps, prints one start phrase and makes no-change distinct from new registration (1.4121ms)
+✔ modern form round-trips empty metadata and all requested Rift line syntaxes (10.7689ms)
+✔ Rift missing lines, duplicate names and incomplete copies never become mutations (4.0416ms)
+✔ detail preserves aliases and reserve gaps and closed details cannot act as editable forms (0.8175ms)
+✔ member guidance distinguishes no match, many matches and unverified match without claiming nonmembership (0.4157ms)
+✔ overview stays a list for one round, counts guests, and filled message uses mutation result only (0.708ms)
+✔ copy merge preserves concurrent additions, applies deletion and field edits, and protects SITE entries (0.7919ms)
+✔ editing a participant added after an empty form reports stale form, while latest form edits preserve other people (0.8781ms)
+✔ line errors are actionable without calling storage; saved result survives overview read failure (1.9842ms)
+✔ each inhouse mode saves once then returns all active modes instead of its copy form (1.8562ms)
+✔ inhouse description accepts editable labels, preserves omission and rejects conflicting metadata (3.3982ms)
+✔ R24 compact party form keeps the complete saved-result envelope copyable with one new name (10.4749ms)
+✔ R24 fresh party templates need only a name and retain unknown time explicitly (2.7587ms)
+✔ compact forms preserve jamo through parsing and storage and sort sparse reserve display slots (4.1578ms)
+✔ R24 compact party forms cannot fall back to unguarded legacy parsing when the code is removed (0.9363ms)
+✔ the full legacy party detail can add a name without changing existing members or its saved identity (2.1215ms)
+✔ copyable forms retain literal metadata, sparse reserve slots, and reserve display names (0.9277ms)
+✔ resubmitting the current unchanged full form preserves the aggregate and revision (1.7172ms)
+✔ line-party copies preserve stored slot names when old position metadata is missing or inconsistent (4.0654ms)
+✔ metadata mentioning another recruitment title does not become a second form title (1.4217ms)
+✔ custom stored titles remain visible in status while copy forms use the stored party type and capacity (2.5928ms)
+✔ detail header and summary identity conflicts are ambiguous and never canonicalize (7.4741ms)
+✔ out-of-range detail identifiers and capacities are rejected (1.8855ms)
+✔ ADR0011 overview includes all 99 numbers, bounds only summaries and keeps drafts private (9.8213ms)
+✔ ADR0011 blank numbered draft round-trips CRLF and an optional display separator (5.5211ms)
+✔ party parser keeps raw slot intent across Kakao punctuation variants (7.3851ms)
+✔ party parser accepts clipped headers and an adjacent wrapped slot value (3.1591ms)
+✔ display values keep compatibility jamo while form numbers and codes retain width compatibility (0.5768ms)
+✔ display separators never become metadata or a participant and blank rows remain explicit (1.256ms)
+✔ metadata is order independent, multiline, and keeps absent separate from empty (1.2735ms)
+✔ V1 line-party position fixtures keep canonical positions (1.2576ms)
+✔ duplicate, merged, missing, and multiple-number structures are diagnosed without last-wins parsing (1.568ms)
+✔ recoverable, rejected, and ordinary text decisions remain distinct (7.2339ms)
+✔ numbered primary rows must stay within the submitted capacity even when empty (5.8866ms)
+✔ saved form references require one concrete recruit number and cannot request automatic creation (13.0134ms)
+✔ only EXACT party forms become SYNC while parsed title and slot states reach canonical payload (3.0597ms)
+✔ metadata-only party activation forms accept slash and keep organizer separate from members (0.6031ms)
+✔ the reported #11 party template classifies as one metadata activation snapshot (1.4398ms)
+✔ generated operating day wins across the 06:00 boundary while legacy forms keep fallback behavior (1.2455ms)
+✔ 내전/스크림 번호ㅉ 명령은 slash 유무와 관계없이 현재 운영일 FINISH로 canonicalize된다 (11.9482ms)
+✔ 다른 sender도 같은 installation/room의 내전 번호를 마감하고 최신 내전현황을 받는다 (1.1784ms)
+✔ 다른 sender도 같은 installation/room의 스크림 번호를 마감하고 최신 스크림현황을 받는다 (1.2288ms)
+✔ 동일 event replay는 내전 마감 한 번과 스크림 종료 안내를 재사용한다 (0.9783ms)
+✔ room capability profiles are exclusive and exposed as authorization policies (1.167ms)
+✔ site notices are OFF by default and require an explicit target and identity (0.7218ms)
+✔ notice source scope matches the real FEATURES inhouse router and rejects PARTY scope (1.3105ms)
+✔ notice signatures bind action, exact target and installation with a separate protocol (0.4391ms)
+✔ bounded envelope rejects arbitrary payload, room names and malformed ACK (0.4635ms)
+✔ site notices expire by recruiting-day rollover and unverified filter is distinct (1.7134ms)
+✔ HTTP boundary authenticates before DB access, rejects replay and never caches (44.9603ms)
+✔ V1 strict record always shows season/tier and the canonical multi-game recent line (1.8275ms)
+✔ V1 strict recent, missing player, and empty ranking preserve the canonical copy (0.1907ms)
+✔ V1 strict operation and season empty replies keep public V1 labels (0.7434ms)
+✔ V1 strict season STATUS keeps canonical zero, one, and multiple-round results (0.2505ms)
+✔ V1 strict season DETAIL keeps the full existing form and empty missing result (0.1504ms)
+✔ V1 strict scrim time keeps an explicit M/D instead of forcing the operation date (5.5025ms)
+✔ V1 strict scrim time accepts 오전/오후 and H시 forms (1.1842ms)
+✔ V1 strict scrim time preserves free text without exposing its internal memo carrier (0.3934ms)
+✔ strict V1 and ordinary V4 reserve copyable drafts and return the overview after saving (5.1339ms)
+✔ strict V1 detail is the full copyable form without repeated command guidance (0.5667ms)
+✔ party overview keeps full, started and large parties in numeric order (1.1388ms)
+✔ strict V1 missing detail uses the canonical not-found reply (0.2168ms)
+✔ strict V1 missing scrim detail uses the canonical success reply while ordinary V4 stays not-found (1.0108ms)
+✔ strict V1 scrim status and detail preserve a free-text legacy start time (0.5889ms)
+✔ Kakao HTTP verification reports allowlisted internal reasons without weakening the generic boundary (32.8667ms)
+✔ V2 installation fingerprint is inside the HMAC material (1.0946ms)
+✔ V3 binds installation key id, delivery id, and bot version inside the HMAC material (1.4232ms)
+✔ legacy party and scrim mutations fail closed with an explicit V2 successor and no redirect (1.4133ms)
+✔ 내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백과 제한된 오타를 허용한다 (16.4332ms)
+✔ 협곡 내전 빠른 추가는 이름만 또는 티어·라인 전체 입력을 모두 허용한다 (2.6434ms)
+✔ 내전 전체 양식은 일반 명단과 예비 명단을 함께 동기화한다 (5.0068ms)
+✔ 빠른 추가·삭제는 명확한 번호와 한 명의 안전한 이름만 허용한다 (5.3027ms)
+✔ 내전 명령도 파티·스크림과 같은 오전 6시 운영일을 사용한다 (0.5757ms)
+✔ 내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번호가 든 양식만 응답한다 (3.6854ms)
+✔ 내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은 활성화 명령이 되지 않는다 (3.1625ms)
+✔ 내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고 최신 명단을 함께 응답한다 (4.2836ms)
+✔ classifier exposes a complete canonical/profile matrix (1.5912ms)
+✔ all 101 V41 parity samples classify with zero-or-one slash equivalence (28.7143ms)
+✔ the V1 compatibility fixture routes all classify into the six canonical families (8.5712ms)
+✔ double slash, URL slash, separated slash, and middle slash stay UNKNOWN (0.4051ms)
+✔ profile matrix routes recruit, features, and local commands explicitly (1.9892ms)
+✔ diagnostic and raw JSON commands are classified as internal, not user help (0.4282ms)
+✔ party, inhouse, and scrim full forms win over command parsing as SNAPSHOT (2.288ms)
+✔ party snapshot accepts metadata-only activation fields and legacy participant rows (1.4792ms)
+✔ R23 scrim retirement is structural and does not capture ordinary party names or game information (1.0745ms)
+✔ party member mutations require an explicit detail prefix and one safe single-line name (2.4845ms)
+✔ Kakao copy/paste party row variants still canonicalize to one SYNC member (5.6948ms)
+✔ full-width empty reserve punctuation and clock text never become party members (0.6314ms)
+✔ flexible party row parsing does not classify ordinary chat or generic number lists (1.1829ms)
+✔ party snapshot rejects truncated numeric and position templates (1.0756ms)
+✔ A→B→A identical text is reclassified without state or content-hash suppression (0.8452ms)
+✔ operation forms classify on FEATURES and reject the RECRUIT profile (1.0842ms)
+✔ V4 schema preserves the seven-field client and accepts only the exact V1 strict extension (1.7934ms)
+✔ slash boundary preserves zero-or-one leading slash parity (0.8808ms)
+✔ V4 signature covers the exact raw envelope and timestamp (1.4671ms)
+✔ profile authorization does not receive sender role or allowlist inputs (8.5868ms)
+✔ health, contract probes, and classified commands return deterministic replies without a runtime dispatcher (3.7085ms)
+✔ event ID is the idempotency boundary and mismatched reuse conflicts (0.795ms)
+✔ hot replay cache binds the verified raw request digest (1.5876ms)
+✔ R23 retires every old-phone scrim command and form without dispatching or writing (16.4024ms)
+✔ server help explains editable numbered copies and inhouse mode requirements (0.9498ms)
+✔ public error responses keep stable status and code contracts (29.2981ms)
+✔ V4 application errors normalize idempotency conflicts to public 409 only (1.0389ms)
+✔ 내전 빠른 명단 응답은 결과를 한 줄로 요약하고 본명과 닉네임을 표시한다 (1.4309ms)
+✔ 내전 빠른 추가 대상이 미등록이어도 이름과 접수 인원에 포함한다 (1.2159ms)
+✔ player record, recent matches, and ranking preserve exact V1-visible fields (2.216ms)
+✔ player and ranking boundary replies preserve V1 wording and percent formatting (1.487ms)
+✔ V4 event key is shared by recruiting and assistant durable receipts (4.1862ms)
+✔ party create reserves an invisible draft and returns all blank slots with its copy reference (8.1441ms)
+✔ the exact generated V1 party form activates with only organizer populated and applies metadata defaults (9.9605ms)
+✔ R24 party creation shows empty metadata, all slots and the code below the title (0.6981ms)
+✔ party copy saves return the overview while unchanged stale copies retain editable recovery (6.9958ms)
+✔ party copy save overview includes every active party including full parties (1.2723ms)
+✔ ADR0011 first registration names stay brief before the complete overview (0.524ms)
+✔ the reported metadata-only #11 form reaches one idempotent party activation (1.9343ms)
+✔ first completed automatic party form creates the party once (0.351ms)
+✔ explicit missing party number never falls back to creating a new party (0.3575ms)
+✔ closed party copies and repeated finish receive a scoped closed reply without mutation (0.3583ms)
+✔ copy edit conflicts and incomplete rows explain recovery and never report a save (0.8575ms)
+✔ a concurrent finish gets a closed reply while an active revision race asks for a retry (0.4453ms)
+✔ a copied form reference cannot be reused to create an automatic-number party (0.6896ms)
+✔ incomplete copied party forms and numberless inhouse detail return actionable guidance (2.2932ms)
+✔ existing party snapshots forward slot states without forwarding submitted type or capacity (0.5613ms)
+✔ party status and detail use one server status receipt and return the latest aggregate (0.3442ms)
+✔ party member shortcut classifications canonicalize to the current operating day (0.7359ms)
+✔ party member shortcut outcomes return confirmation followed by the latest full form (0.9383ms)
+✔ missing, ambiguous, and member-limit shortcut results stay concrete successful replies (0.5361ms)
+✔ party mutation and latest full form keep the signed instant across the 06:00 KST boundary (1.4208ms)
+✔ replayed sync, blank deletion, and finish disclose a failed post-mutation status refresh (1.1456ms)
+✔ party snapshot and finish resolve latest revision without owner or role inputs (1.6814ms)
+✔ missing current-operating-day party finish is a V1 success reply with the latest status and no mutation (0.2493ms)
+✔ scrim status requests only the scrim projection (0.6689ms)
+✔ season authoritative zero-person snapshot writes once then reads the overview (0.849ms)
+✔ season SYNC exposes the latest copy reply to both ordinary and strict clients (0.2801ms)
+✔ V1 strict season STATUS maps no active season to the canonical empty reply only (0.558ms)
+✔ scrim create and snapshot each issue one recruiting mutation (0.4861ms)
+✔ season status and detail each return one authoritative assistant result (0.1853ms)
+✔ scrim deprecated lifecycle commands use a static receipt without domain status queries (0.2111ms)
+✔ dispatcher fails closed when command domain and static profile differ (0.3252ms)
+✔ structural operation candidates with one empty value reach exact missingFields (12.9889ms)
+✔ colonless prose and label-only lists remain UNKNOWN (4.349ms)
+✔ party members are canonical by primary/reserve and slot number, independent of row order (3.0232ms)
+✔ inhouse copy requires explicit lanes for RIFT main/reserve rows and preserves save reference separately from notices (13.6123ms)
+✔ inhouse copy rejects malformed/duplicate save references and marks old forms as legacy (3.0382ms)
+✔ inhouse copy accepts valid lanes and rejects malformed lane input (0.229ms)
+✔ inhouse stale forms return the latest copy without retrying the mutation, and old days show today's rounds (2.281ms)
+✔ compact inhouse copies retain site-linked optional lanes and separate review rows from participants (2.7561ms)
+✔ copy delta preserves latest rows, merges only pure additions, and never revives removed originals (0.476ms)
+✔ old pending footers restore placeholders but never override a corrected body row (1.7014ms)
+✔ copy start text preserves free-form event descriptions without inventing a scheduled clock (1.8933ms)
+✔ pending name corrections require the original pending row to still be current (0.633ms)
+✔ pending corrections and concurrent additions preserve other saved and cancelled rows (0.4567ms)
+✔ real RIFT input recovers one missing position slash and accepts empty flexible rows (21.9752ms)
+✔ recovery is limited to two valid position aliases and records the failed field (0.5364ms)
+✔ legacy empty sub-position markers are accepted only in the sub-position field (0.4186ms)
+✔ mixed real-world rows keep valid entries, route partial rows to review, and use the last duplicate slot (16.0454ms)
+✔ a final empty duplicate row means cancellation while a missing numbered row is preserved (1.2613ms)
+✔ an incomplete duplicate footer cannot replace a valid slot while valid edits stay last-write-wins (2.1955ms)
+✔ numbered footer text after a complete empty roster cannot create a pending participant (3.0042ms)
+✔ valid edits and explicit cancellation after a complete roster remain last-write-wins (3.3506ms)
+✔ the former canonical failure maps to the exact public HTTP 400 document (31.4785ms)
+✔ [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle (1.8211ms)
+✔ [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member (15.0668ms)
+✔ [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot (7.3256ms)
+✔ [P0-PARTY-03] slash and comma in one reserve row stay in one display name (0.9759ms)
+✔ [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target (2.7265ms)
+✔ [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot (1.3995ms)
+✔ [P0-PARTY-06] member order is canonical and independent of pasted row order (2.8938ms)
+✔ [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved (3.7852ms)
+✔ [P0-PARTY-08] multiline metadata values match their single-line semantic values (2.781ms)
+✔ [P0-PARTY-09] an automatic-number empty draft never creates a recruit (1.6847ms)
+✔ [P0-OPS-01] all four forms preserve values continued on the following line (14.5932ms)
+✔ [P0-OPS-02] all four forms expose exact missing-field contracts without submission (1.009ms)
+✔ [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter (0.2707ms)
+✔ [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN (6.9056ms)
+✔ [P0-OPS-05:friends] field order does not alter the canonical payload (0.5314ms)
+✔ [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form (0.3891ms)
+✔ [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field (0.4446ms)
+✔ [P0-OPS-05:suggestions] field order does not alter the canonical payload (0.4333ms)
+✔ [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form (0.2611ms)
+✔ [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field (0.4949ms)
+✔ [P0-OPS-05:meetups] field order does not alter the canonical payload (0.4377ms)
+✔ [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form (0.3402ms)
+✔ [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field (0.4292ms)
+✔ [P0-OPS-05:leaves] field order does not alter the canonical payload (0.3953ms)
+✔ [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form (0.2491ms)
+✔ [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field (0.3272ms)
+✔ [P0-OPS-08] prose mentioning every label is not classified as a form (0.2005ms)
+✔ [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed (1.2953ms)
+✔ [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched (1.029ms)
+✔ [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch (0.8229ms)
+✔ [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server (0.1814ms)
+✔ [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker (0.2466ms)
+﹣ [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role (0.0497ms) # isolated PostgreSQL harness required
+✔ V4 installation identity exactly mirrors the phone HMAC contract (1.314ms)
+✔ one unified phone script shares one identity secret while RECRUIT and FEATURES keep distinct stable installation scopes (0.4881ms)
+✔ the server rejects cross-family commands before dispatch for both unified-script profiles (11.3474ms)
+✔ arbitrary installation IDs and cross-profile IDs fail closed (0.3405ms)
+✔ current and previous signing keys authenticate only their exact HMAC (1.6226ms)
+✔ two senders share one installation scope for create, cross-edit and finish (5.5971ms)
+✔ runtime identity configuration is bounded without inspecting real environment values (0.3301ms)
+✔ V4 signing keyring is isolated from V1 and rejects unsafe reuse (0.3314ms)
+✔ V4 route is registry-free and keeps the seven-field identity-free boundary (1.8982ms)
+✔ the unified V4 phone callback ignores room and channel values while routing both families (1.2609ms)
+✔ admin and architecture copy distinguish V4 installation scope from the legacy room registry (1.9797ms)
+✔ [P0-INHOUSE-LIVE-01] 동휘/김동휘 실양식은 Mid all을 복구해 같은 semantic payload로 dispatch한다 (14.4231ms)
+✔ [P0-INHOUSE-LIVE-02] slash 계약에 맞춘 MID 또는 ALL 입력은 이름과 무관하게 정상 payload를 만든다 (1.5532ms)
+✔ [P0-INHOUSE-LIVE-03] Mid all 복구는 mainPosition MID를 유지하고 나머지 네 부라인을 저장한다 (0.1489ms)
+✔ [P0-INHOUSE-METADATA-01] 독립 공지와 20시 시작을 전체 스냅샷 메타로 보존한다 (1.1483ms)
+✔ [P0-INHOUSE-METADATA-02] 시작 줄 tail 공지는 수용하고 슬롯 뒤 문장은 공지로 오인하지 않는다 (0.5642ms)
+✔ [P0-INHOUSE-METADATA-03] 공지가 없는 전체 스냅샷은 명시적인 null을 만든다 (0.4031ms)
+✔ [P0-INHOUSE-METADATA-04] 시작 줄 다음과 인원 줄 사이의 공지도 구조 필드와 분리해 저장한다 (1.8546ms)
+✔ operation field map is order independent and tolerates Kakao paste punctuation (2.5729ms)
+✔ person punctuation remains intact unless slash or pipe is explicit (0.4014ms)
+✔ same duplicate fields dedupe while conflicting duplicates block submission with diagnostics (0.2903ms)
+✔ leave scope reads only its selected field value, not room names in the footer (0.7946ms)
+✔ candidate detection is structural and does not require complete values (1.0762ms)
+✔ operation wrappers are candidates only when they occupy a title line (1.4451ms)
+✔ person fields are required and never fall back to an opaque sender identity (1.0822ms)
+✔ [P3-I01] FEATURES INHOUSE 내전구인 keeps exact V1 reply parity (9.3316ms)
+✔ [P3-I02] FEATURES INHOUSE 내전구인 양식 keeps exact V1 reply parity (1.7745ms)
+✔ [P3-I03] FEATURES INHOUSE 내전구인 협곡 2026-09-09 21:30 #2 10명 keeps exact V1 reply parity (1.6845ms)
+✔ [P3-I04] FEATURES INHOUSE 내전구인 칼바람 2026-09-09 21:30 #3 10명 keeps exact V1 reply parity (0.7502ms)
+✔ [P3-I05] FEATURES INHOUSE 내전구인 증바람 2026-09-09 21:30 #3 10명 keeps exact V1 reply parity (1.2507ms)
+✔ [P3-I06] FEATURES INHOUSE 내전현황 keeps exact V1 reply parity (0.4293ms)
+✔ [P3-I07] FEATURES INHOUSE 내전상세 2 keeps exact V1 reply parity (1.1455ms)
+✔ [P3-I07] INHOUSE authoritative snapshots preserve delete, zero and A→B→A revisions (10.7731ms)
+✔ [P3-I08] ARAM and AUGMENT_ARAM snapshots keep name-only authoritative arrays (1.6083ms)
+✔ [P3-S01] R23 SCRIM create returns retirement guidance without dispatch (1.1151ms)
+✔ [P3-S02] R23 SCRIM new full form cannot reach its former dispatcher (0.29ms)
+✔ [P3-S03] R23 SCRIM edit full form cannot reach its former dispatcher (0.9998ms)
+✔ [P3-S04] R23 SCRIM retirement does not depend on active tournament state NO_ACTIVE_TOURNAMENT (0.1837ms)
+✔ [P3-S05] R23 SCRIM retirement does not depend on active tournament state AMBIGUOUS_ACTIVE_TOURNAMENT (0.1067ms)
+✔ [P3-O01] OPERATIONS friends complete form dispatches once and passes through exact server reply (2.8689ms)
+✔ [P3-O02] OPERATIONS suggestions complete form dispatches once and passes through exact server reply (0.3507ms)
+✔ [P3-O03] OPERATIONS meetups complete form dispatches once and passes through exact server reply (0.7457ms)
+✔ [P3-O04] OPERATIONS leaves complete form dispatches once and passes through exact server reply (0.7521ms)
+✔ [P3-O05] OPERATIONS friends missing required values returns an explicit V1 error without dispatch (0.5317ms)
+✔ [P3-O06] OPERATIONS suggestions missing required values returns an explicit V1 error without dispatch (0.2573ms)
+✔ [P3-O07] OPERATIONS meetups missing required values returns an explicit V1 error without dispatch (0.3772ms)
+✔ [P3-O08] OPERATIONS leaves missing required values returns an explicit V1 error without dispatch (0.4123ms)
+✔ [P3-M01] OPERATIONS 등록 keeps exact V1 reply parity (0.9214ms)
+✔ [P3-M02] OPERATIONS 내전등록 keeps exact V1 reply parity (0.6129ms)
+✔ [P3-M03] OPERATIONS 경고등록 keeps exact V1 reply parity (0.2542ms)
+✔ [P3-M04] OPERATIONS 인증 keeps exact V1 reply parity (0.2904ms)
+✔ [P3-M05] OPERATIONS 경고현황 keeps exact V1 reply parity (0.2226ms)
+✔ [P3-M06] OPERATIONS 결과현황 keeps exact V1 reply parity (0.2112ms)
+✔ [P3-M07] OPERATIONS 사진취소 keeps exact V1 reply parity (0.1905ms)
+✔ [P3-M08] OPERATIONS 자동공지 20 keeps exact V1 reply parity (0.2169ms)
+✔ [P3-A01] Phase 3 authorization is installation/profile based and never receives room, sender or role (0.6191ms)
+✔ [P3-A02] two ordinary senders can use the same Phase 3 command without a sender allowlist (0.5036ms)
+✔ [P3-R01] identical eventId replays one successful Phase 3 mutation without a second dispatch (0.5316ms)
+✔ [P3-R02] same eventId with a conflicting body maps to public HTTP 409 REPLAY_CONFLICT (24.184ms)
+✔ Phase 3-A: 내전 모드 선택과 협곡·칼바람 복사 양식을 출력한다 (17.4361ms)
+✔ Phase 3-A: 내전 전체 현황과 회차 상세는 정확히 한 번 authoritative assistant를 호출한다 (0.9888ms)
+✔ Phase 3-A: 협곡 명단 A→B→A와 0명은 각 입력당 한 번의 authoritative snapshot이다 (9.4487ms)
+✔ R23: 스크림 양식·현황·상세는 종료 안내만 반환한다 (2.0107ms)
+✔ R23: 구형 스크림 신규 양식과 재전송은 저장 없이 종료 안내만 반환한다 (0.84ms)
+✔ R23: 구형 스크림 수정 양식은 기존 데이터와 대회 바인딩을 변경하지 않는다 (0.3719ms)
+✔ Phase 3-A: 번호 행 하나가 빠진 양식은 그 슬롯을 보존하고 나머지 행을 동기화한다 (0.6064ms)
+✔ four V1 operation forms become exact typed payloads (15.6169ms)
+✔ all four forms report their exact missing fields as INVALID_FORM commands (1.1966ms)
+✔ registration, result, warning, evidence, status and photo-cancel preserve V1 replies (5.3034ms)
+✔ scheduled notice uses one durable assistant request and preserves the V41 formatter (0.5274ms)
+✔ valid form submits one typed mutation in the shared V4 event scope (0.4429ms)
+✔ invalid form claims a durable receipt before exposing field-specific INVALID_FORM (24.4391ms)
+✔ operation forms reuse the same durable event identity as recruiting and assistant (0.4106ms)
+✔ fresh service instances replay the durable form result and reject a changed body (2.1062ms)
+✔ internal raw JSON and phone-local session commands do not become public canonical operations (0.8099ms)
+✔ [P4-S01] every V1 PUBLIC alias succeeds on its actual profile with exact zero/one slash parity (56.5752ms)
+✔ [P4-S02] every single-profile PUBLIC alias maps its opposite profile to HTTP 403 WRONG_PROFILE (52.465ms)
+✔ [P4-S03] authorization never receives room, sender, role or member allowlist fields (0.5891ms)
+✔ [P4-S04] unknown public input is INVALID_FORM instead of 501 ROUTER_NOT_ENABLED (1.2532ms)
+✔ [P4-S05] 사진상태 gives a site check path without claiming a nonexistent phone session is healthy (0.3017ms)
+✔ [P4-S06] 내전미리보기취소 returns a no-mutation discard notice (0.2493ms)
+✔ [P4-S07] 내전확인 ABCD1234 returns a no-mutation discard notice (0.2484ms)
+✔ [P4-S01] every public fixture alias has a local reply or canonical dispatcher route (41.1102ms)
+✔ [P4-S02] server fallback gives exact local help, photo guidance, and no-mutation preview notices (1.3877ms)
+✔ [P4-S01A] every actual V41 public sample has a local reply or canonical dispatcher route (8.1132ms)
+✔ [P4-S03] unknown and internal direct API inputs normalize to explicit HTTP 400 (26.9175ms)
+✔ [P4-S04] V4 command HTTP surface contains no 501 or router-not-enabled response (4.1897ms)
+✔ [S01] zero or one leading slash is equivalent for the complete V1 route fixture (1.9891ms)
+✔ [S02] malformed slash, URL and middle slash canonicalize to no command (0.2122ms)
+✔ [S03] two unregistered general users can create, cross-edit and cross-finish one recruit (8.1159ms)
+✔ [S04] full recruit snapshots delete names, accept zero people and preserve A→B→A (1.4427ms)
+✔ [S05] FEATURES ranking, record and recent commands return successful replies (2.5515ms)
+✔ [S06] a retired scrim command returns the R23 notice after authorization (0.2984ms)
+✔ [S07] duplicate mutation callback is applied once and replayed once (1.5751ms)
+✔ [S08] an event ID body conflict maps to public REPLAY_CONFLICT with HTTP 409 (26.2215ms)
+✔ [S09:NORMAL] normal V4 status returns a successful reply (21.184ms)
+✔ [S09:WRONG_PROFILE] wrong profile has an exact public code (0.2113ms)
+✔ [S09:INVALID_SIGNATURE] invalid signature has an exact public code (1.204ms)
+✔ [S09:REPLAY_CONFLICT] replay conflict has an exact public code (0.5203ms)
+✔ [S09:SERVER_UNAVAILABLE] server failure has an exact public code (0.3ms)
+✔ [S09:INVALID_FORM] invalid V1 form has an exact public code (0.0762ms)
+✔ [S10] V1 golden regression inventory remains present for the release run (1.0862ms)
+✔ legacy participation redirects preserve only reviewed query values (0.7946ms)
+✔ legacy 정수 ID는 양의 PostgreSQL int32 canonical 형식만 허용한다 (1.0926ms)
+✔ 대회 legacy UUID는 승인된 PostgreSQL cutover recipe와 일치한다 (0.2013ms)
+✔ 미디어 legacy resolver는 유효한 숫자만 공개 매핑 port로 전달한다 (0.7465ms)
+✔ legacy proxy는 GET/HEAD만 308로 이동하고 query allowlist를 적용한다 (5.9202ms)
+✔ UUID mapping이 없는 legacy player detail은 영구 redirect하지 않는다 (0.4711ms)
+✔ legacy account adapters preserve only reviewed canonical intent (1.4677ms)
+✔ legacy statistics routes use one allowlisted canonical ranking destination (1.0291ms)
+✔ reviewed administrator aliases resolve to their canonical integrated views (1.1479ms)
+✔ legacy 앱 로그인은 내부 next만 보존하고 중복·외부 주소는 계정으로 축소한다 (4.0505ms)
+✔ legacy 경기 목록은 canonical 공개 필터만 단일 값으로 보존한다 (0.4535ms)
+✔ 동적 legacy ID와 밸런스 추천 query는 path traversal과 미검토 값을 버린다 (0.3089ms)
+✔ 멸망전 참가자와 이미지 legacy deep link는 검증한 ID와 ordinal만 보존한다 (0.2328ms)
+✔ 멸망전 V1 이미지 route는 1-based 번호를 canonical 0-based query로 308 이동한다 (19.8729ms)
+✔ legacy redirect 응답은 상대 Location과 no-store를 사용한다 (0.3341ms)
+✔ USER_ROUTE_MAP의 redirect 32개와 통합 20개는 모두 한 버전 호환 진입점을 가진다 (4.9483ms)
+✔ admin match conflict parser accepts only a complete canonical aggregate (3.0937ms)
+✔ stored instant conversion is explicit and bounded by the recorded offset (0.1485ms)
+✔ admin import recovery stores only minimal expiring non-secret metadata (1.4469ms)
+✔ admin import recovery is best-effort when session storage is unavailable (0.2472ms)
+✔ admin import recovery rejects expired, corrupt and expanded state (0.2726ms)
+✔ ambiguous admin import failures preserve the exact upload key (1.7497ms)
+✔ a verified latest projection is the only conflict path that changes revision or opens review (0.1771ms)
+✔ latest projection parser rejects malformed or unknown state (0.2298ms)
+✔ definitive client rejection retains replay while allowing an explicit file reselection (0.1029ms)
+✔ picker keyboard navigation skips inactive and duplicate-disabled rows (0.721ms)
+✔ match client retries preserve one key for exact body and revision (0.8701ms)
+✔ submission continuation code is strict uppercase and canonical (0.8934ms)
+✔ offline legacy match ids use the exact PostgreSQL int32 compatibility range (0.1578ms)
+✔ MVP v1 formula is the only versioned score source (1.175ms)
+✔ MVP V1 compatibility tie-break is score, kills, deaths, assists, player id (0.4157ms)
+✔ participant display identity is server-captured and retained across unrelated amendments (0.8218ms)
+✔ KST date and explicit started-at offset are strict (0.1152ms)
+✔ complete match input rejects unknown keys, bidi text and incomplete rosters (0.544ms)
+✔ submission input has a bounded image/game count (0.7547ms)
+✔ private image validator fully decodes, checks bounds/container end and SHA (26.7753ms)
+✔ fake private adapters are exact development and non-Vercel only (0.4476ms)
+✔ deterministic match review passes a structurally consistent series (1.0813ms)
+✔ deterministic match review blocks stale aggregates and duplicate roster entries (0.3895ms)
+✔ owner Kakao image sessions retain canonical target codes while hashing stable request scopes (101.8451ms)
+✔ match JSON and image mutation headers reject malformed scopes with recoverable input problems (48.179ms)
+✔ match participant schema requires immutable display identity snapshots (1.5283ms)
+✔ match series and each recalculation event carry nullable team-balance provenance (0.6172ms)
+✔ submission audit snapshots retain a public rejection reason before reopen clears the live row (2.1473ms)
+✔ public match player DTO is an exact safe allowlist including inactive profile policy (1.3685ms)
+✔ match submit page accepts one canonical continuation or owned draft reference (2.1214ms)
+✔ public match query is exact, duplicate-safe and date bounded (3.6772ms)
+✔ admin match query separates match and submission filters (0.3803ms)
+✔ admin player picker query is bounded, canonical and duplicate-safe (0.6816ms)
+✔ literal substring filters escape SQL LIKE metacharacters (0.124ms)
+✔ admin player picker uses indexed prefix or exact combined Riot ID strategy (0.3326ms)
+✔ public match cursor is opaque, exact and coupled to sort/order (0.6573ms)
+✔ own submission history cursor is status-bound and reaches beyond the first page (1.4718ms)
+✔ own submission history accepts the native all-status filter and rejects invalid values (0.202ms)
+✔ native public search forms treat empty optional filters as unselected without weakening validation (0.403ms)
+✔ mutation and source hashes use a domain-separated HMAC pepper (13.6557ms)
+✔ admin direct import stays in the private submission saga and only produces review candidates (17.7924ms)
+✔ storage object is compensation-deleted when the DB attach fails (18.9753ms)
+✔ OCR timeout becomes a bounded FAILED candidate and manual review remains possible (6.8656ms)
+✔ a finalize replay never deletes the deterministic canonical storage object (4.4465ms)
+✔ a completed receipt replay returns before decode, storage and OCR work (1.6505ms)
+✔ delete failure leaves a durable DELETE_PENDING cleanup request (4.0547ms)
+✔ missing fake object after process restart fails closed instead of returning corrupt bytes (0.449ms)
+✔ image decode/OCR work is admitted through a bounded FIFO gate (0.4134ms)
+✔ image work queue times out without leaking an active lease (13.0351ms)
+✔ private storage keys bind the idempotency key while same-key retries remain stable (0.8568ms)
+✔ an abort-aware never-resolving storage stage times out and reaches durable cleanup (33.5484ms)
+✔ a late stage completion remains visibly DELETE_PENDING for the cleanup worker (74.9614ms)
+✔ an abort-aware OCR timeout becomes review-first FAILED without holding the request (50.2228ms)
+✔ OCR retry commits its durable preflight before storage and provider work (1.7956ms)
+✔ OCR receipt replay returns before private storage work (0.3449ms)
+✔ OCR retry deadline aborts the provider and durably finalizes a review-first failure (34.2096ms)
+✔ selected team-balance provenance requires the exact ten-player two-team layout (1.0291ms)
+✔ stalled upload body reaches an idle deadline and cancels its stream (45.3753ms)
+✔ exact upload body still joins chunks under the deadline (1.2232ms)
+✔ 빈 캐러셀과 한 장 캐러셀은 첫 위치를 유지한다 (0.7079ms)
+✔ 여러 장 캐러셀은 이전·다음 이동과 양 끝 순환을 결정적으로 계산한다 (0.1429ms)
+✔ 캐러셀 장수는 음수나 비정수일 수 없다 (0.4582ms)
+✔ 휠 이동은 양 끝에서 페이지 세로 스크롤로 빠져나갈 수 있도록 순환하지 않는다 (0.1845ms)
+✔ YouTube inputs canonicalize only supported HTTPS origins and paths (1.1415ms)
+✔ highlight uses canonical video data and explicit public DTO (0.839ms)
+✔ gallery validates one to five distinct storage assets (0.8195ms)
+✔ publication FSM archives without hard delete and restore returns to draft (0.2519ms)
+✔ home display is limited to published gallery and clears on unpublish (0.2508ms)
+✔ public gallery DTO resolves only reviewed asset identifiers (0.287ms)
+✔ gallery keeps one explicit display order across private and migrated external images (0.3619ms)
+✔ metadata edits preserve publication status, increment revision, and reject archived content (0.3336ms)
+✔ every document permits the privacy-enhanced YouTube player across client navigation while retaining other CSP boundaries (19.1394ms)
+✔ admin private asset query is bounded and rejects duplicate or unknown parameters (1.7632ms)
+✔ raw media upload preflight requires same origin, If-Match, bounded image MIME/size, SHA and safe name (27.2131ms)
+✔ unconfigured upload storage returns the specific fail-closed problem (1.2394ms)
+✔ media editor and private asset administration expose the complete safe workflow (1.2218ms)
+✔ gallery editor accepts only bounded bulk upload result counts (2.4223ms)
+✔ media list parsers are bounded and reject unknown query keys (1.7336ms)
+✔ media commands use the existing strict YouTube parser, exact bodies, If-Match revision, and deterministic fingerprints (14.3924ms)
+✔ gallery input permits only one to five distinct READY asset identifiers at the application boundary (1.5523ms)
+✔ gallery input accepts an explicit mixed image order without exposing arbitrary fields (0.6234ms)
+✔ published asset delivery checks publication/READY via its port and never returns the storage locator (1.7087ms)
+✔ V2 deterministic formula transition truthfully requires explicit admin recalculation (0.8631ms)
+✔ MMR public query accepts only singular canonical allowlisted filters (1.8557ms)
+✔ MMR integrated admin redirects drop unsafe and unknown query values (0.4178ms)
+✔ MMR cron authenticates the exact route before opening a database service (22.6051ms)
+✔ MMR cron runs one catch-up and allowlists fixed state and operational counters (8.2114ms)
+✔ MMR cron reports the required administrator formula transition without pretending it is idle (0.7799ms)
+✔ MMR cron sanitizes service initialization, database and lock timeout failures (2.5366ms)
+✔ MMR rebuild is deterministic and ignores source array order (3.2407ms)
+✔ voided and draft matches never affect profiles (0.1884ms)
+✔ winner and position performance update profiles within bounded scores (0.3353ms)
+✔ manual adjustments are immutable ordered events and clamp at profile bounds (0.2744ms)
+✔ public and team-balance DTOs expose only bounded score summaries (0.3985ms)
+✔ malformed rosters, duplicate sources and unsafe adjustments fail closed (1.1156ms)
+✔ r1에서 발급한 own r2 응답은 최신 projection과 일회성 비밀번호를 함께 유지한다 (0.8763ms)
+✔ r2 비밀번호 표시 중 외부 r3 projection이 도착하면 r2 비밀번호를 폐기한다 (0.1853ms)
+✔ r3 prop이 선반영된 뒤 도착한 늦은 r2 응답은 projection과 비밀번호 모두 거부한다 (0.1299ms)
+✔ OpenAI runtime configuration is explicit, bounded and all-or-nothing (2.4034ms)
+✔ Responses adapter uses the fixed official endpoint and aggregates output text safely (28.7417ms)
+✔ Responses adapter fails closed for budget, authorization, rate limit and malformed output (1.2503ms)
+✔ operation form payloads accept only their bounded allowlist (2.0436ms)
+✔ review transitions are monotonic and revision checked (1.4216ms)
+✔ delete is soft and the admin DTO excludes source, reviewer identity, and deletion metadata (0.2812ms)
+✔ Kakao operation form failures distinguish integration, room and capability without exposing identifiers (0.3035ms)
+✔ operational observations separate missing evidence, disabled flags and historical success (3.0557ms)
+✔ daily close follows the KST 06:00 operating boundary with a 15 minute grace (0.1903ms)
+✔ bounded queue thresholds and unfinished jobs draw attention without claiming delivery (1.0598ms)
+✔ site settings update is revision-bound and public DTO is allowlisted (1.6914ms)
+✔ AI is hard-disabled first, then checks approval, role, rate and prompt (0.2792ms)
+✔ CSV backup quotes fields and neutralizes spreadsheet formulas (0.3352ms)
+✔ operations HTTP input allowlists reject extra or privileged-looking fields (0.3186ms)
+✔ internal job signature is scoped, expiring and nonce replay aware (0.7398ms)
+✔ copy snapshot round-trips the original while retaining current authorization and identity context (2.0264ms)
+✔ concurrent numbered additions keep the latest roster and use the next vacant main slot (0.4629ms)
+✔ a free numbered slot is kept and a replay cannot add the same person twice (0.1547ms)
+✔ copy forms cannot delete, replace, move or demote an existing original member (0.387ms)
+✔ a participant removed after the copied original never reappears from a stale form (0.1695ms)
+✔ latest slot changes remain intact instead of restoring positions from the original (0.1344ms)
+✔ line-specific collisions reject the submission instead of assigning a different position (0.2619ms)
+✔ changing an existing line in the copy is treated as replacement, not a new signup (0.1318ms)
+✔ full main roster rejects concurrent additions without silently switching them to reserve (0.2493ms)
+✔ explicit reserves stay reserves and concurrent reserves receive an empty reserve slot (0.2167ms)
+✔ a signup already accepted concurrently is recognized by normalized name without moving that member (0.1941ms)
+✔ duplicate names across main and reserve are rejected after Unicode and whitespace normalization (0.1805ms)
+✔ the total 99-member bound applies even when a reserve slot appears available (0.4442ms)
+✔ editable copies accept already-applied draft metadata and merge a later signup (1.5381ms)
+✔ editable copies delete and replace explicit original slots without collapsing gaps (0.2061ms)
+✔ editable metadata merges different fields but rejects competing changes atomically (0.2743ms)
+✔ editable copies preserve concurrent members, move reserves and replay the same move (0.2065ms)
+✔ an editable stale copy cannot resurrect a removed participant by moving them (0.4127ms)
+✔ editable conflicting replacements reject all changes and preserve concurrent cancellation (0.2613ms)
+✔ editable simultaneous additions shift to free slots while explicit moves require their destination (0.2475ms)
+✔ editable copies reject duplicate results, capacity overflow and full reserve rosters (0.4817ms)
+▶ malformed snapshot envelopes cannot become a merge baseline
+  ✔ missing (0.138ms)
+  ✔ unsupported version (0.0604ms)
+  ✔ different target (0.188ms)
+  ✔ different type (0.0907ms)
+  ✔ changed capacity (0.059ms)
+  ✔ text revision (0.145ms)
+  ✔ fractional revision (0.2309ms)
+  ✔ negative revision (0.0568ms)
+  ✔ future revision (0.0577ms)
+  ✔ closed original (0.0503ms)
+  ✔ invalid start (0.2356ms)
+  ✔ empty start (0.1117ms)
+  ✔ oversize start (0.0715ms)
+  ✔ invalid game (0.0743ms)
+  ✔ empty game (0.072ms)
+  ✔ oversize game (0.0946ms)
+  ✔ invalid organizer (0.4704ms)
+  ✔ empty organizer (0.1417ms)
+  ✔ non-array members (1.0745ms)
+  ✔ non-object member (0.0725ms)
+  ✔ missing member name (0.0779ms)
+  ✔ empty member name (0.0554ms)
+  ✔ oversize member name (0.0686ms)
+  ✔ member control character (0.0686ms)
+  ✔ zero slot (0.0591ms)
+  ✔ negative slot (0.0936ms)
+  ✔ fractional slot (0.09ms)
+  ✔ out-of-capacity slot (0.0777ms)
+  ✔ out-of-range reserve (0.0692ms)
+  ✔ invalid substitute (0.0634ms)
+  ✔ invalid position (0.0575ms)
+  ✔ duplicate slot (0.084ms)
+  ✔ duplicate name (0.066ms)
+  ✔ duplicate normalized name (0.1975ms)
+  ✔ duplicate position (0.0852ms)
+  ✔ too many members (0.1338ms)
+✔ malformed snapshot envelopes cannot become a merge baseline (9.2459ms)
+✔ a reused empty draft cannot cancel a later join, but the returned current form can (0.1937ms)
+✔ player write DTO is an allowlist with normalized validated values (2.4572ms)
+✔ legacy numeric ids accept only the positive PostgreSQL integer range (0.193ms)
+✔ administrator player query rejects duplicates, unknown keys, and oversized values (0.6435ms)
+✔ mutation fingerprint is canonical and changes with revision or allowlisted input (0.2211ms)
+✔ legacy detail mapping remains outside proxy and administrator APIs use the shared HTTP contract (3.8068ms)
+✔ administrator player pages present operational labels in Korean (1.2365ms)
+✔ 공개 Riot 플레이어 ID는 canonical UUID만 받는다 (0.741ms)
+✔ 공개 Riot 조회는 없는 플레이어·미연동·동기화 대기·준비 완료를 구분한다 (3.4588ms)
+✔ 플레이어 목록 query는 검색어·페이지 길이와 범위를 제한한다 (1.4197ms)
+✔ 티어 query는 허용 목록만 받고 영문·한글 티어 표기를 같은 계열로 묶는다 (0.189ms)
+✔ 내정보 티어 선택값은 10개 티어와 다이아 이하 4단계 및 마스터 이상 점수 계약을 보존한다 (0.5831ms)
+✔ 목록·상세 유스케이스는 repository port를 통해 pagination과 404 계약을 지킨다 (0.3353ms)
+✔ fixture 목록도 회원명 검색과 티어 필터를 함께 적용하되 회원명은 반환하지 않는다 (0.3336ms)
+✔ 공개 플레이어 projection에는 금지된 회원·계정·Discord·내부 보정 필드가 없다 (0.1747ms)
+✔ 두 legacy redirect는 route별 query allowlist만 보존한다 (0.2248ms)
+✔ upload validation binds declared MIME, decoded dimensions, exact container, SHA-256, and a safe name (1.7246ms)
+✔ lifecycle is explicit and cleanup plans are deterministic, bounded, and DELETE_PENDING-only (13.1426ms)
+✔ purpose/resource and actor authorization form a closed allowlist (0.2349ms)
+✔ forbidden and absent are deliberately rendered with one outward problem (0.1332ms)
+✔ public and private DTOs never expose storage keys, URL locators, creator IDs, or SHA-256 (0.3648ms)
+✔ application saga rechecks ownership, blocks duplicates, finalizes only verified bytes, and reads READY only (2.3149ms)
+✔ failed staging enters DELETE_PENDING; cleanup is retryable and keeps the tombstone (8.0952ms)
+✔ a bounded worker sweep turns crash-abandoned STAGED rows into cleanup tombstones (0.527ms)
+✔ admin list is bounded and excludes SUPER-only purposes at the repository boundary (0.6695ms)
+✔ private storage mode is one fail-closed production policy (1.9117ms)
+✔ fake private storage can preload immutable local QA bytes without sharing caller buffers (166.7159ms)
+✔ official SDK seam uses private deterministic collision-safe put/get/delete options (5.2069ms)
+✔ connected private Blob credentials prefer OIDC and pass only the store-scoped SDK options (0.6678ms)
+✔ deterministic retries are idempotent only for the same digest and DELETE_PENDING cleanup is repeatable (0.8221ms)
+✔ adapter rejects traversal, mismatched digest, invalid containers and pre-aborted calls before SDK access (0.4586ms)
+✔ all application and Blob boundaries share the 4 MiB server upload ceiling (0.1127ms)
+✔ 공개 랭킹 세 분류는 명시된 동률 규칙으로 독립 정렬되고 원본을 바꾸지 않는다 (2.6891ms)
+✔ 홈 Top 3은 상세 탭과 같은 공개 정렬 계약을 사용한다 (0.9257ms)
+✔ 표시 승률이 66.7%로 같아도 667/1000은 2/3보다 정확히 앞선다 (0.2154ms)
+✔ 랭킹 분류 파서는 허용된 공개 뷰만 통과시킨다 (0.1441ms)
+✔ 랭킹 화면은 세 분류, 상태 안내, MMR 진입과 모바일 44px 계약을 제공한다 (2.4539ms)
+✔ R23 party copy reference rejects stale, reused-number identity and prior-day forms without mutations (10.532ms)
+✔ R24 latest copy rejects deletion and duplicate names atomically (1.0484ms)
+✔ R23 legacy copies are append-only for both member rows and metadata (2.0759ms)
+✔ R23 unchanged full copy preserves revision, metadata and scheduled timestamp (0.7614ms)
+✔ R23 blank draft activates with participant name only and no organizer (0.8339ms)
+✔ ADR0011 finishing a draft cancels once and replay preserves its record and audit (0.8511ms)
+✔ stored numbered copies allow deletions, replacements and reserve moves in one atomic save (2.3062ms)
+✔ stored numbered copies merge independent edits and preserve the latest scheduled time (2.263ms)
+✔ stored draft copies accept the same activated metadata and add the next participant (1.775ms)
+✔ stored numbered copies reject missing main, reserve and metadata fields without deleting members (3.9924ms)
+✔ copy headers cannot change the locked party type or capacity even when every original row remains (4.6024ms)
+✔ stored numbered explicit blanks clear metadata and roster while legacy copies remain append-only (1.0742ms)
+✔ BOT idempotency fingerprints bind the signed room, sender, and command source (0.3805ms)
+✔ party create, sync, status and finish use the domain while mutations commit in atomic order (1.142ms)
+✔ V4 slot patches preserve absent rows, delete explicit empty rows, and use stored party shape (0.725ms)
+✔ atomic party member commands compose on the locked latest revision and persist stable outcomes (1.7218ms)
+✔ scrim participant shortcuts compose on the locked latest revision across room members (16.0798ms)
+✔ party member command validation and ambiguous removal fail closed before persistence (3.2101ms)
+✔ party cancel and SUPER-only reset are distinct terminal commands (16.8668ms)
+✔ scrim create, join, reopen, confirm, complete and cancel enforce the state machine (14.3409ms)
+✔ legacy scrim form fields remain durable in the typed aggregate (0.661ms)
+✔ signed V1 scrim forms infer exactly one active destruction tournament inside the transaction (0.6789ms)
+✔ signed V1 scrim inference rejects zero or multiple active destruction tournaments atomically (0.4792ms)
+✔ full scrim sync is revision-bound, audited and idempotently replayed (0.9834ms)
+✔ durable receipt replay returns before load and same request key with another body conflicts (0.6297ms)
+✔ one signed Kakao delivery received by two installations mutates canonical room state once (1.1867ms)
+✔ server-clock party metadata fallback is identical on durable replay (0.4769ms)
+✔ signed V1 creates allocate the party number inside the mutation transaction (0.5686ms)
+✔ a malformed replay receipt is rejected even when its request hash matches (0.6661ms)
+✔ outbox failure rolls repository, audit, outbox, and receipt back together (0.445ms)
+✔ BOT body binding, JOB restriction, stale revision, and authorization failures happen before mutation (10.016ms)
+✔ public party and scrim DTOs expose only reviewed fields (0.2591ms)
+✔ V4 room scope allows cross-sender snapshots and finish while preserving durable event receipts (3.5319ms)
+✔ V4 automatic scrim number is allocated after receipt claim and replays before a second allocation (0.4925ms)
+✔ V4 scrim draft activates with one inferred tournament and a server-time fallback (0.7248ms)
+✔ V4 request fingerprint is stable across server-resolved revisions but changes with the signed body (0.4027ms)
+✔ KST recruit date is stable across the UTC day boundary (1.044ms)
+✔ KST recruit display time is stable across midnight (0.1673ms)
+✔ party metadata distinguishes absent preservation from explicit empty defaults (0.8088ms)
+✔ a Kakao V4 number reservation stays draft until the completed V1 form activates it (1.5657ms)
+✔ party slot patches use stored type and capacity while preserving absent and deleting explicit empty slots (0.3712ms)
+✔ canonical party sync returns the stored aggregate without increasing revision (0.1597ms)
+✔ party member mutation requires an active party and fills the first primary hole before reserve (0.4056ms)
+✔ party member no-ops preserve revision and removal preserves every remaining slot (0.2958ms)
+✔ request fingerprint is canonical and binds actor, action, key and body (0.21ms)
+✔ party sync enforces capacity, positions, slots and optimistic revision (0.3503ms)
+✔ Kakao recruit aggregates are visible and mutable only from their signed source room (0.1169ms)
+✔ party primary capacity excludes candidates while the total list remains bounded (0.1984ms)
+✔ party terminal transitions do not permit mutation or replay with a new command (0.1471ms)
+✔ auto finish respects scheduled protection and idle window (0.1518ms)
+✔ scrim follows recruiting, matched, confirmed and completed states (0.2071ms)
+✔ scrim opponent can be reopened but requester cannot join itself (0.1524ms)
+✔ full scrim sync replaces V1 form fields but binds date, number, tournament and revision (0.3656ms)
+✔ public party DTO excludes room, sender, notes and request keys by construction (0.1932ms)
+✔ Kakao command access separates public create/read/join from controller lifecycle changes (0.1746ms)
+✔ V1 room members may update and close shared forms without weakening raw V2 (0.0786ms)
+✔ Kakao creator, joined opponent leader, or trusted operator controls lifecycle commands (0.0932ms)
+✔ public scrim join binds the opponent leader and reopen clears that controller (0.0767ms)
+✔ recruiting JSON boundary accepts only reviewed create fields (1.348ms)
+✔ raw V2 recruit commands require an operator or explicit non-production development mode (0.1599ms)
+✔ signed V1 compatibility targets are exact while raw V2 cannot smuggle extra fields (0.757ms)
+✔ party member command boundary accepts exactly one bounded name (0.2108ms)
+✔ scrim boundary validates UUID seams and command allowlists (0.471ms)
+✔ command scope is bound to both actor and action (0.2469ms)
+✔ recruiting operating day changes exactly at 06:00 KST (2.5011ms)
+✔ signed party targets use the envelope instant and the 06:00 KST operating boundary (5.9138ms)
+✔ signed scrim templates and targets use the same 06:00 KST operating boundary (2.4049ms)
+✔ Kakao webhook binds HMAC to timestamp, nonce, room, sender, and raw body with key rotation (25.5638ms)
+✔ Kakao webhook rejects stale/replayed, forbidden room/sender, and bot-self requests (2.6487ms)
+✔ same allowed room accepts arbitrary members A/B/C without granting operator capabilities (3.0223ms)
+✔ malformed signatures and unsafe request structure fail closed (0.2223ms)
+✔ Riot cron rejects invalid requests before runtime access and noops when unconfigured (44.0987ms)
+✔ Riot cron signs one bounded consumer call with a fresh replay nonce and returns only safe counters (2.302ms)
+✔ disabled Riot cron is a safe noop; unexpected errors stay opaque (1.0005ms)
+✔ missing RSO never supplies state or verified identity (1.0268ms)
+✔ key probe requests only fixed KR status once, discards body, and exposes no credentials (1.1488ms)
+✔ probe HTTP authenticates exact empty request and rejects caller URLs before invocation (8.0867ms)
+✔ S12 schema exposes durable ledgers without OAuth token/code/request-log columns (2.2228ms)
+✔ 0014 migration and snapshot add only the S12 Riot schema (35.9365ms)
+✔ Riot production feature flag is exact and fail-closed by default (0.2386ms)
+✔ explicit fake runtime adapter connects application mutations to safe query DTOs (5.1894ms)
+✔ admin Riot query is bounded and rejects duplicate or unknown HTTP parameters (0.8287ms)
+✔ public, owner, admin HTTP routes and responsive UI states are present (6.7038ms)
+✔ scheduled sync queues one connected account, keeps direct links unverified and respects six hours (9.9019ms)
+✔ queued sync is cancelled after disconnect and stale exhausted leases cannot block later jobs (2.5826ms)
+✔ sync discards a provider response when owner disconnects during the network request (1.3534ms)
+✔ a provider rate limit pauses both queued consumption and scheduled account discovery (1.5807ms)
+✔ approved owner direct link/unlink is transactional, idempotent, and never leaks PUUID (1.2827ms)
+✔ direct and RSO links must match the player's canonical registry Riot ID (2.2498ms)
+✔ feature flag fails closed and outbox failure rolls link, audit, and receipt back together (0.696ms)
+✔ RSO callback is internal-return, expiring, one-time and exchange-idempotent across response replay (1.1931ms)
+✔ only SUPER_ADMIN can bulk/sync-all while owner is restricted to the owned link (2.6849ms)
+✔ SUPER bulk-link derives registry Riot IDs and atomically records exact replay (2.1146ms)
+✔ bulk-link rolls every successful link back when durable event recording fails (0.4349ms)
+✔ sync enforces cooldown, Retry-After, stale lease recovery and partial completion (2.382ms)
+✔ recent solo summary persists only when complete; missing data preserves rank and 429 retains retry (1.9595ms)
+✔ sync-all reuses active work and schedules cooling accounts without blocking the whole population (1.8327ms)
+✔ analytics persists useful partial facts during backoff, reuses its cache, and discards data after a concurrent identity change (3.632ms)
+✔ Riot IDs normalize NFKC and reject separators or oversized tags (1.8128ms)
+✔ RSO return path cannot escape origin (0.1896ms)
+✔ RSO state is owner-bound, expiring and one-time (0.3796ms)
+✔ disconnect clears encrypted PUUID and hides existence from another owner (0.2276ms)
+✔ sync jobs retry rate limits and transient failures with bounded backoff (0.4204ms)
+✔ last allowed transient attempt becomes terminal failure (0.1608ms)
+✔ last allowed rate-limited attempt retains its provider cooldown after terminal failure (0.1577ms)
+✔ stale RUNNING lease is recoverable and the old worker cannot finish it (0.1865ms)
+✔ invalid upstream Retry-After is rejected rather than creating an invalid schedule (0.1645ms)
+✔ permanent upstream failure never retries (1.318ms)
+✔ public Riot DTO excludes PUUID, owner and request-log provenance (0.1895ms)
+✔ analytics allowlists player and timeline facts, preserves missing stats, and discards provider identities (8.1574ms)
+✔ turret plates use the optional official challenge count and keep unavailable values separate from zero (7.1182ms)
+✔ known unsupported or aborted games do not trap the historical cursor, while malformed normal matches remain incomplete (41.411ms)
+✔ only verified public matchmaking is archived; custom, tutorial and unknown queues advance without disclosure (14.6247ms)
+✔ duplicate timeline frames merge deterministically, keeping legitimate same-millisecond item counts (1.4547ms)
+✔ analytics reuses a match across solo/recent pages, collects a timeline, then serves cache without detail refetch (2.2629ms)
+✔ timeline failures preserve match facts and a 429 stops all further provider requests with Retry-After (1.6797ms)
+✔ unsupported successful timelines do not starve older games while transport failures remain retryable (14.6579ms)
+✔ the history cursor advances only after a complete bounded older batch, and never erases earlier progress on failure (1.5403ms)
+✔ invalid match IDs, malformed cursors and a 25-second budget are bounded before more upstream work (0.5808ms)
+✔ a new non-overlapping latest page reopens completed or ongoing history and subsequently collects the hidden gap (26.3845ms)
+✔ a partial gap restart preserves a safe cursor across backoff and overlap keeps ordinary history progress (8.5488ms)
+✔ an already observed all-private latest page cannot repeatedly reset older public-game backfill (36.5848ms)
+✔ public analytics rejects invalid IDs, ambiguous and malformed cursors before storage access (105.3ms)
+✔ public match rejects extraneous queries and unsafe identifiers before storage access (26.6956ms)
+✔ public analytics and match distinguish unavailable, hidden and stored public data (76.2022ms)
+✔ match growth series compares the matching enemy lane and uses actual frame timestamps (4.7935ms)
+✔ match growth series does not count missing participants or statistics as zero (0.5222ms)
+✔ Report snapshots persist computed historical results and filters without raw matches or participant identities (4.9374ms)
+✔ Malformed browser snapshots are rejected rather than crashing the report view (1.1579ms)
+✔ Multiple patch selections use a union and still intersect with other filters (1.7646ms)
+✔ Purchase history removes undone purchases before classifying starting items and ordered cores (0.7425ms)
+✔ Build adoption denominator includes observed matches that ended before a second core but excludes missing timelines (0.5074ms)
+✔ Skill patterns preserve observed sequence and never infer missing level-ups (1.4295ms)
+✔ Special map items use the official map classification and mode-specific adoption denominators (0.4165ms)
+✔ Riot player filters compose over Korea dates, positions, patches and queues without changing the source (2.1306ms)
+✔ Riot aggregations exclude remakes, preserve unknown roles and do not turn missing provider statistics into zero (1.1855ms)
+✔ Riot KDA uses aggregate kills and deaths; per-minute values use each actual game duration (0.1515ms)
+✔ Champion turret-plate averages use observed values only, preserve real zero and exclude remakes (0.2252ms)
+✔ Observed rank coordinates remain continuous across promotion and do not fabricate missing ranks (1.2857ms)
+✔ Encounter summaries distinguish repeated same-team players from same-role opponent champions (0.5301ms)
+✔ Encounter names keep the same order when server and browser default locales differ (1.299ms)
+✔ Build aggregation treats reordered slots as one combination and excludes empty slots and trinkets (0.3066ms)
+✔ Laning and early participation reports require real timeline coverage rather than approximated results (0.7286ms)
+✔ PUUID encryption is authenticated, opaque and rotation-ready (4.5842ms)
+✔ Riot gateway resolves Riot ID and reads the SOLO queue through bounded official endpoints (35.2215ms)
+✔ Riot gateway classifies 429, 404, 5xx and malformed responses without exposing credentials (1.0648ms)
+✔ production API configuration is independent of optional RSO and binds the exact callback (0.8596ms)
+✔ RSO state is HMAC-bound and authorization URL never includes the client secret (1.3247ms)
+✔ 0020 adds only the protected exchange cache and signed sync consumer route (1.6164ms)
+✔ public Riot profile separates unlinked, connected, stale, temporary and rate-limited states (1.39ms)
+✔ recent solo uses queue 420, 20 matches, at most two concurrent requests and a summary-only result (145.9661ms)
+✔ empty history and explicit remakes are known zero samples while malformed or wrong-scope details are unavailable (1.1023ms)
+✔ rate limiting stops subsequent chunks and propagates bounded Retry-After (3.1651ms)
+✔ total time, response size, unsafe IDs and duplicate IDs are bounded before further provider reads (2.3321ms)
+✔ stored recent-solo summaries reject extra identity data, invalid counts and invalid numeric values (0.4987ms)
+✔ season domain normalizes names and produces stable canonical JSON (1.9402ms)
+✔ KST application date is independent of server timezone (22.7384ms)
+✔ only an active season inside its application window accepts applications (0.1825ms)
+✔ admin datetime-local values are converted to and from explicit KST instants (0.7433ms)
+✔ client idempotency keys stay stable until success and follow the payload fingerprint (0.3907ms)
+✔ application position UI never offers or preserves an ALL mixture (0.9007ms)
+✔ season commands require exact JSON keys, safe text and zoned ISO dates (2.7289ms)
+✔ admin season query parser rejects unknown, duplicate, noncanonical and unsafe values (0.6682ms)
+✔ SITE and completed administrator decisions deterministically win Kakao merges (0.2947ms)
+✔ Kakao pending filters are bounded and canonical (0.7903ms)
+✔ Kakao pending mutations carry SUPER intent, revision and deterministic fingerprint (0.7051ms)
+✔ statistics public queries accept only singular canonical allowlisted values (1.5201ms)
+✔ statistics recalculate command binds exact body, projection revision and idempotency identity (0.8486ms)
+✔ bounded statistics drain stops on idle, failure and hard event limit (0.9137ms)
+✔ season projection deterministically counts games, distinct series, stored MVP and dimensions (2.1667ms)
+✔ participation counts a multi-game series once and S05 never derives a missing MVP (0.5114ms)
+✔ canonical ranking uses exact rational win rate, stable identity and sequential rank (0.3489ms)
+✔ public ranking DTO is an exact allowlist (0.2201ms)
+✔ statistics cron rejects credentials, query overrides, wrong path and method before opening the database (25.0633ms)
+✔ authenticated empty queue is a no-op; a request never consumes more than ten events (2.397ms)
+✔ time budget finishes the current event and stops before claiming another (0.9034ms)
+✔ failed event stops the batch, returns retryable status and exposes no event or raw error (10.9394ms)
+✔ database setup, claim and release failures remain retryable without disclosing internals (2.4381ms)
+✔ affected seasons dedupe and lock in canonical order for every S04 action scope (1.714ms)
+✔ application passes old/new season rebuild scope to one atomic repository operation (0.2789ms)
+✔ application reports idle and releases a failed exact lease without touching READY data (0.2523ms)
+✔ statistics failure storage allowlists domain and SQLSTATE codes without copying raw errors (0.2392ms)
+✔ storage probe rejects invalid signature, route, query and body before any job dependency (30.1156ms)
+✔ storage probe uses a generated UUID and exposes only the matching anonymous trace (3.9064ms)
+✔ storage probe preserves replay/rate-limit status and hides job exceptions (2.2203ms)
+✔ storage probe reads exact bytes and removes only its new diagnostic object (2.1337ms)
+✔ ambiguous write failure is compensated and raw errors never escape (0.4587ms)
+✔ cleanup failure is visible and arbitrary keys are rejected before storage access (0.6155ms)
+✔ probe bytes pass the production image adapter and cleanup reads bypass the CDN (5.8295ms)
+✔ team balance vocabulary and neutral provider defaults are explicit (130.3373ms)
+✔ input rejects oversized, duplicate, missing-position, and invalid-score cases (1.2272ms)
+✔ the V1 global recommendation is one lossless 5:5 layout with every position exactly once (104.7486ms)
+✔ V1 global recommendation is deterministic regardless of request order (191.878ms)
+✔ mixed legacy and new player ids keep a total order across forward, reverse and rotate (1478.9673ms)
+✔ V1 search evaluates 126 anchored team splits and each team's best permutation (42.7299ms)
+✔ automatic and manual paths return the exact same scoring-kernel breakdown (38.7023ms)
+✔ position rating overrides overall and confidence shrinks unknown data toward 50 (53.1039ms)
+✔ positions omitted from the request remain legal V1 AUTO assignments (36.2515ms)
+✔ [V1 blueblack golden] score uses tier, inhouse, position experience and the data-missing path (1.0574ms)
+✔ share text keeps the V1 line order and excludes draft ids, account ids and links (60.7585ms)
+✔ manual evaluation rejects duplicate players and incomplete team-position coverage (0.3689ms)
+✔ team override HTTP binds origin, scope, revision and idempotency; response is private and replayable (31.6359ms)
+✔ override route and Korean control retain ADMIN read, SUPER mutation and optimistic concurrency (10.2994ms)
+✔ team-only overrides retain the existing -1000..1000 integer contract without touching MMR inputs (1.7691ms)
+✔ 팀 밸런스 초안 목록 query는 단일·제한된 페이지 값만 허용한다 (1.4313ms)
+✔ 팀 밸런스 후보 query는 플레이어 검색과 최근 신청 출처만 허용한다 (0.5038ms)
+✔ recommendation list and detail queries use exact draft/team allowlists (1.6149ms)
+✔ recommendation API requires one explicit RED or BLUE team (0.244ms)
+✔ team recommendations are deterministic, position ordered, and ban champions are unique (3.2899ms)
+✔ team recommendations keep selected lineup for an unavailable projection (0.2175ms)
+✔ team recommendations do not infer an unselected candidate (0.1422ms)
+✔ 랜덤 팀 legacy redirect는 mode와 PWA source allowlist만 보존한다 (0.8617ms)
+✔ 팀 밸런스 legacy redirect는 검토한 PWA source만 보존한다 (0.2924ms)
+✔ 코인 토스 legacy redirect는 PWA source만 보존한다 (0.156ms)
+✔ random-team parser accepts common numbered and bullet list forms (1.8929ms)
+✔ random-team parser reports exact participant counts (0.1869ms)
+✔ duplicate display names remain distinct slots and are disclosed (0.487ms)
+✔ seeded Fisher-Yates is replayable, non-mutating, and preserves every slot (0.3028ms)
+✔ uniform index rejects the modulo-bias tail (0.1266ms)
+✔ random teams remain a lossless 5:5 partition across seeds (1.9491ms)
+✔ simple tier mapping is the V2 1-to-10 contract (0.2966ms)
+✔ tier balance is deterministic and reaches the exhaustive minimum (1.5783ms)
+✔ tier balance rejects forged scores and duplicate slots (0.6587ms)
+✔ coin toss follows idle-playing-revealed and blocks illegal transitions (0.3944ms)
+✔ seeded coin toss reaches both sides and replays each seed (0.4991ms)
+✔ RFC 6238 SHA-1 vector produces the expected six digit suffix (1.1476ms)
+✔ TOTP verifier accepts only the configured time window (1.0364ms)
+✔ usage route templates remove identifiers, queries and sensitive pages (1.7519ms)
+✔ event ingestion rejects arbitrary text, client identity and unreviewed targets (1.1573ms)
+✔ KST range respects midnight, calendar boundaries and bounded retention (1.7597ms)
+✔ collection requires explicit production configuration and filters recognizable bots (0.7939ms)
+✔ signed visitor cookies reject forgery and key changes (0.5521ms)
+✔ USER_ROUTE_MAP canonical 사용자 경로 39개가 중복 없이 분류된다 (1.5956ms)
+✔ page-contract로 표시한 사용자 경로는 실제 App Router 페이지가 있다 (2.892ms)
+✔ 공지·뉴스·패치노트는 현재 V1 기능 계약에 없으므로 V2 canonical을 꾸며내지 않는다 (0.2145ms)
+✔ 현재 경로 표시는 홈을 하위 경로 전체에 오인 적용하지 않는다 (0.1436ms)
+✔ 전역 명령 팔레트는 검색 dialog·단축키·방향키 탐색 계약을 제공한다 (0.3066ms)
+✔ Every task can be found by plain Korean intent before login (3.99ms)
+✔ List return preserves exact filters and rejects external or sibling destinations (0.8126ms)
+✔ Support consent is explicit and unknown or oversized inputs fail closed (0.8438ms)
+✔ Route metadata covers public and protected pages without indexing private activity (1.1199ms)
+✔ Search Enter opens a matching task and offers an explicit player search separately (0.4015ms)
+✔ Vercel cron accepts only the exact timing-safe Bearer secret (0.911ms)
+✔ daily close identity changes at 06:00 KST and remains stable for delayed retries (2.1557ms)
+✔ invalid cron clocks fail closed before any repository input is made (0.3313ms)
+ℹ tests 1048
+ℹ suites 0
+ℹ pass 1047
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 7628.4543
+
+> klol-gg-v2@0.1.0 verify:home-guide-art
+> tsx scripts/home/verify-female-guide-art.ts
+
+여성 챔피언 68명 · 개별 이미지 68개 · 1672x940 · SHA-256 중복 0건
+
+> klol-gg-v2@0.1.0 build
+> next build
+
+▲ Next.js 16.3.8 (Turbopack)
+✓ Running next.config.ts took 32ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.5s
+  Running TypeScript ...
+  Finished TypeScript in 3.9s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/102) ...
+  Generating static pages using 15 workers (25/102)
+  Generating static pages using 15 workers (50/102)
+  Generating static pages using 15 workers (76/102)
+✓ Generating static pages using 15 workers (102/102) in 270ms
+  Finalizing page optimization ...
+
+Route (app)                                                             Revalidate  Expire
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /account
+├ ƒ /account/discipline
+├ ƒ /account/password
+├ ƒ /account/riot
+├ ƒ /account/tier
+├ ƒ /admin
+├ ƒ /admin/ai-requests
+├ ƒ /admin/balance
+├ ƒ /admin/balance-ai
+├ ƒ /admin/balance-ai/players
+├ ƒ /admin/balance-ai/recalculate
+├ ƒ /admin/balance-ai/reviews
+├ ƒ /admin/balance-ai/reviews/[reviewId]
+├ ƒ /admin/balance/drafts
+├ ƒ /admin/balance/drafts/[draftId]
+├ ƒ /admin/balance/drafts/[draftId]/recommendations
+├ ƒ /admin/balance/recommendations
+├ ƒ /admin/champions
+├ ƒ /admin/champions/[championId]/edit
+├ ƒ /admin/champions/new
+├ ƒ /admin/discipline
+├ ƒ /admin/discipline/[recordId]
+├ ƒ /admin/discipline/new
+├ ƒ /admin/highlights
+├ ƒ /admin/highlights/[highlightId]/edit
+├ ƒ /admin/highlights/new
+├ ƒ /admin/images
+├ ƒ /admin/images/[imageId]/edit
+├ ƒ /admin/images/new
+├ ƒ /admin/kakao
+├ ƒ /admin/kakao/operation-forms
+├ ƒ /admin/kakao/operation-forms/[formType]
+├ ƒ /admin/kakao/recruits
+├ ƒ /admin/kakao/recruits/logs
+├ ƒ /admin/kakao/recruits/settings
+├ ƒ /admin/kakao/rooms
+├ ƒ /admin/kakao/scrims
+├ ƒ /admin/kakao/season-apply
+├ ƒ /admin/kakao/settings
+├ ƒ /admin/kakao/stats
+├ ƒ /admin/login
+├ ƒ /admin/logs
+├ ƒ /admin/logs/kakao
+├ ƒ /admin/matches
+├ ƒ /admin/matches/[matchId]
+├ ƒ /admin/matches/[matchId]/ai-review
+├ ƒ /admin/matches/[matchId]/edit
+├ ƒ /admin/matches/new
+├ ƒ /admin/matches/submissions/[submissionId]
+├ ƒ /admin/operation-forms
+├ ƒ /admin/operation-forms/[formType]
+├ ƒ /admin/operation-forms/[formType]/[id]
+├ ƒ /admin/operation-forms/warnings
+├ ƒ /admin/players
+├ ƒ /admin/players/[playerId]
+├ ƒ /admin/players/[playerId]/balance
+├ ƒ /admin/players/[playerId]/edit
+├ ƒ /admin/players/[playerId]/riot
+├ ƒ /admin/players/new
+├ ƒ /admin/private-assets
+├ ƒ /admin/private-assets/[assetId]
+├ ƒ /admin/progress
+├ ƒ /admin/progress/destruction
+├ ƒ /admin/progress/destruction/[tournamentId]
+├ ƒ /admin/progress/destruction/new
+├ ƒ /admin/progress/event
+├ ƒ /admin/progress/event/[eventId]
+├ ƒ /admin/progress/event/new
+├ ƒ /admin/recruits
+├ ƒ /admin/riot
+├ ƒ /admin/search
+├ ƒ /admin/seasons
+├ ƒ /admin/seasons/kakao-pending
+├ ƒ /admin/seasons/kakao-pending/[pendingId]
+├ ƒ /admin/security
+├ ƒ /admin/site-settings
+├ ƒ /admin/usage
+├ ƒ /admin/users
+├ ƒ /admin/users/[userAccountId]
+├ ƒ /ai-balance
+├ ƒ /ai-balance/players
+├ ƒ /api/admin/ai-requests
+├ ƒ /api/admin/backups/[kind]
+├ ƒ /api/admin/balance-ai/adjustments
+├ ƒ /api/admin/balance-ai/players
+├ ƒ /api/admin/balance-ai/recalculate
+├ ƒ /api/admin/balance-ai/reviews
+├ ƒ /api/admin/balance-ai/summary
+├ ƒ /api/admin/balance-ai/team-overrides
+├ ƒ /api/admin/champions
+├ ƒ /api/admin/champions/[championId]
+├ ƒ /api/admin/competitions/destruction
+├ ƒ /api/admin/competitions/destruction/[tournamentId]
+├ ƒ /api/admin/competitions/events
+├ ƒ /api/admin/competitions/events/[eventId]
+├ ƒ /api/admin/dashboard
+├ ƒ /api/admin/discipline-records
+├ ƒ /api/admin/discipline-records/[recordId]
+├ ƒ /api/admin/discipline-records/target-options
+├ ƒ /api/admin/discipline-tasks/[taskId]/review
+├ ƒ /api/admin/discipline/assets/[assetId]
+├ ƒ /api/admin/highlights
+├ ƒ /api/admin/highlights/[highlightId]
+├ ƒ /api/admin/highlights/[highlightId]/assets
+├ ƒ /api/admin/images
+├ ƒ /api/admin/images/[imageId]
+├ ƒ /api/admin/images/[imageId]/assets
+├ ƒ /api/admin/images/[imageId]/home-display
+├ ƒ /api/admin/kakao/recruit-health
+├ ƒ /api/admin/kakao/rooms
+├ ƒ /api/admin/kakao/settings
+├ ƒ /api/admin/kakao/stats
+├ ƒ /api/admin/login
+├ ƒ /api/admin/logout
+├ ƒ /api/admin/logs
+├ ƒ /api/admin/logs/stats
+├ ƒ /api/admin/maintenance/admin-log-cleanup
+├ ƒ /api/admin/maintenance/rate-limit-cleanup
+├ ƒ /api/admin/matches
+├ ƒ /api/admin/matches/[matchId]
+├ ƒ /api/admin/matches/[matchId]/publish
+├ ƒ /api/admin/matches/[matchId]/restore
+├ ƒ /api/admin/matches/[matchId]/void
+├ ƒ /api/admin/matches/editor-options/players
+├ ƒ /api/admin/matches/import
+├ ƒ /api/admin/matches/integrity
+├ ƒ /api/admin/matches/submissions
+├ ƒ /api/admin/matches/submissions/[submissionId]
+├ ƒ /api/admin/matches/submissions/[submissionId]/approve
+├ ƒ /api/admin/matches/submissions/[submissionId]/cancel-import
+├ ƒ /api/admin/matches/submissions/[submissionId]/images/[imageId]
+├ ƒ /api/admin/matches/submissions/[submissionId]/images/[imageId]/ocr
+├ ƒ /api/admin/matches/submissions/[submissionId]/reject
+├ ƒ /api/admin/matches/submissions/[submissionId]/reopen
+├ ƒ /api/admin/matches/submissions/[submissionId]/review-draft
+├ ƒ /api/admin/operation-forms
+├ ƒ /api/admin/operation-forms/[formType]/[id]
+├ ƒ /api/admin/players
+├ ƒ /api/admin/players/[playerId]
+├ ƒ /api/admin/players/[playerId]/balance-profile
+├ ƒ /api/admin/players/[playerId]/password-reset
+├ ƒ /api/admin/players/[playerId]/reactivate
+├ ƒ /api/admin/private-assets
+├ ƒ /api/admin/private-assets/[assetId]
+├ ƒ /api/admin/private-assets/[assetId]/metadata
+├ ƒ /api/admin/recruits
+├ ƒ /api/admin/recruits/[recruitId]
+├ ƒ /api/admin/riot
+├ ƒ /api/admin/riot/bulk
+├ ƒ /api/admin/riot/bulk-link
+├ ƒ /api/admin/riot/link
+├ ƒ /api/admin/riot/retry
+├ ƒ /api/admin/riot/sync
+├ ƒ /api/admin/season-applications
+├ ƒ /api/admin/season-applications/[applicationId]/review
+├ ƒ /api/admin/season-kakao-pending
+├ ƒ /api/admin/season-kakao-pending/[pendingId]
+├ ƒ /api/admin/season-kakao-pending/[pendingId]/cancel
+├ ƒ /api/admin/season-kakao-pending/[pendingId]/resolve
+├ ƒ /api/admin/seasons
+├ ƒ /api/admin/seasons/[seasonId]
+├ ƒ /api/admin/seasons/[seasonId]/activate
+├ ƒ /api/admin/seasons/[seasonId]/clone
+├ ƒ /api/admin/seasons/[seasonId]/end
+├ ƒ /api/admin/security/totp
+├ ƒ /api/admin/security/totp/disable
+├ ƒ /api/admin/security/totp/enable
+├ ƒ /api/admin/security/totp/setup
+├ ƒ /api/admin/session
+├ ƒ /api/admin/site-settings
+├ ƒ /api/admin/stats/consistency
+├ ƒ /api/admin/stats/recalculate
+├ ƒ /api/admin/team-tools/drafts/[draftId]
+├ ƒ /api/admin/team-tools/drafts/[draftId]/archive
+├ ƒ /api/admin/team-tools/drafts/[draftId]/recommendations
+├ ƒ /api/admin/team-tools/drafts/[draftId]/reevaluate
+├ ƒ /api/admin/team-tools/drafts/[draftId]/restore
+├ ƒ /api/admin/team-tools/drafts/[draftId]/save
+├ ƒ /api/admin/team-tools/drafts/[draftId]/select
+├ ƒ /api/admin/usage/export
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[userAccountId]
+├ ƒ /api/admin/users/[userAccountId]/2fa-reset
+├ ƒ /api/admin/users/[userAccountId]/approve
+├ ƒ /api/admin/users/[userAccountId]/delete
+├ ƒ /api/admin/users/[userAccountId]/details
+├ ƒ /api/admin/users/[userAccountId]/password-reset
+├ ƒ /api/admin/users/[userAccountId]/reject
+├ ƒ /api/admin/users/[userAccountId]/reset
+├ ƒ /api/admin/users/[userAccountId]/reset-pending
+├ ƒ /api/admin/users/[userAccountId]/restore
+├ ƒ /api/admin/users/[userAccountId]/role
+├ ƒ /api/admin/users/[userAccountId]/suspend
+├ ƒ /api/ai/chat
+├ ƒ /api/applications/available
+├ ƒ /api/applications/season
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/me/player
+├ ƒ /api/auth/password
+├ ƒ /api/auth/password/forgot
+├ ƒ /api/auth/reset-requests
+├ ƒ /api/auth/signup
+├ ƒ /api/champions
+├ ƒ /api/champions/[championId]
+├ ƒ /api/competitions/destruction
+├ ƒ /api/competitions/destruction/[tournamentId]
+├ ƒ /api/competitions/destruction/[tournamentId]/application
+├ ƒ /api/competitions/destruction/[tournamentId]/mvp-vote
+├ ƒ /api/competitions/events
+├ ƒ /api/competitions/events/[eventId]
+├ ƒ /api/competitions/events/[eventId]/application
+├ ƒ /api/cron/destruction-ratings
+├ ƒ /api/cron/kakao-daily-close
+├ ƒ /api/cron/mmr-projection
+├ ƒ /api/cron/riot-sync
+├ ƒ /api/cron/statistics-projection
+├ ƒ /api/cron/support-retention
+├ ƒ /api/discipline/stats
+├ ƒ /api/health
+├ ƒ /api/highlights
+├ ƒ /api/highlights/[highlightId]
+├ ƒ /api/images
+├ ƒ /api/images/[imageId]
+├ ƒ /api/integrations/kakao/image-receive
+├ ƒ /api/integrations/kakao/managed-forms
+├ ƒ /api/integrations/kakao/openchat
+├ ƒ /api/integrations/kakao/operation-forms
+├ ƒ /api/integrations/kakao/pair-room
+├ ƒ /api/integrations/kakao/recruits
+├ ƒ /api/integrations/kakao/scheduled-notice
+├ ƒ /api/integrations/kakao/search-player
+├ ƒ /api/integrations/kakao/season-applications
+├ ƒ /api/integrations/kakao/site-notices
+├ ƒ /api/integrations/kakao/v4/commands
+├ ƒ /api/internal/jobs/discipline-assets-cleanup
+├ ƒ /api/internal/jobs/discipline-assets-recover
+├ ƒ /api/internal/jobs/kakao-daily-close
+├ ƒ /api/internal/jobs/maintenance
+├ ƒ /api/internal/jobs/riot-api-probe
+├ ƒ /api/internal/jobs/riot-sync
+├ ƒ /api/internal/jobs/storage-probe
+├ ƒ /api/kakao/destruction-scrim-recruits/[action]
+├ ƒ /api/kakao/image-receive
+├ ƒ /api/kakao/managed-forms
+├ ƒ /api/kakao/openchat
+├ ƒ /api/kakao/operation-forms
+├ ƒ /api/kakao/party-recruits/[action]
+├ ƒ /api/kakao/recruit/season-apply
+├ ƒ /api/kakao/recruit/season-apply/status
+├ ƒ /api/kakao/scheduled-notice
+├ ƒ /api/kakao/search-player
+├ ƒ /api/matches
+├ ƒ /api/matches/[matchId]
+├ ƒ /api/me/discipline/assets/[assetId]
+├ ƒ /api/me/discipline/tasks
+├ ƒ /api/me/discipline/tasks/[taskId]
+├ ƒ /api/me/discipline/tasks/[taskId]/evidence
+├ ƒ /api/me/discipline/tasks/[taskId]/evidence/[assetId]/submit
+├ ƒ /api/me/discipline/tasks/[taskId]/kakao-session
+├ ƒ /api/me/match-submissions
+├ ƒ /api/me/match-submissions/[code]
+├ ƒ /api/me/match-submissions/[code]/cancel
+├ ƒ /api/me/match-submissions/[code]/images
+├ ƒ /api/me/match-submissions/[code]/images/[imageId]
+├ ƒ /api/me/match-submissions/[code]/kakao-session
+├ ƒ /api/me/riot
+├ ƒ /api/me/riot/rso/callback
+├ ƒ /api/me/riot/rso/start
+├ ƒ /api/me/riot/sync
+├ ƒ /api/media/assets/[assetId]
+├ ƒ /api/rankings
+├ ƒ /api/rankings/mmr
+├ ƒ /api/recruits
+├ ƒ /api/riot/player/[playerId]/analytics
+├ ƒ /api/riot/player/[playerId]/matches/[matchId]
+├ ƒ /api/riot/player/[playerId]/summary
+├ ƒ /api/seasons
+├ ƒ /api/seasons/current
+├ ƒ /api/site-settings
+├ ƒ /api/stats/player/[playerId]/recent
+├ ƒ /api/stats/player/[playerId]/summary
+├ ƒ /api/stats/top
+├ ƒ /api/support
+├ ƒ /api/team-tools/candidates
+├ ƒ /api/team-tools/drafts
+├ ƒ /api/team-tools/drafts/[draftId]
+├ ƒ /api/team-tools/drafts/[draftId]/recommendations
+├ ƒ /api/team-tools/drafts/[draftId]/reevaluate
+├ ƒ /api/team-tools/drafts/[draftId]/save
+├ ƒ /api/team-tools/drafts/[draftId]/select
+├ ƒ /api/usage/events
+├ ƒ /app
+├ ƒ /app/account
+├ ƒ /app/coin-toss
+├ ƒ /app/install
+├ ƒ /app/login
+├ ƒ /app/matches
+├ ƒ /app/matches/[matchId]
+├ ƒ /app/me
+├ ƒ /app/me/riot
+├ ƒ /app/players
+├ ƒ /app/players/[legacyId]
+├ ƒ /app/progress/destruction/[tournamentId]
+├ ƒ /app/progress/destruction/[tournamentId]/mvp-vote
+├ ƒ /app/progress/event/[eventId]
+├ ƒ /app/random-team
+├ ƒ /app/rankings
+├ ƒ /app/recruits
+├ ƒ /applications
+├ ƒ /balance
+├ ƒ /coin-toss
+├ ƒ /competitions
+├ ƒ /competitions/destruction
+├ ƒ /competitions/destruction/[tournamentId]
+├ ƒ /competitions/events
+├ ƒ /competitions/events/[eventId]
+├ ƒ /destruction-auction-live/[tournamentId]
+├ ƒ /discipline
+├ ƒ /discipline/evidence
+├ ƒ /forbidden
+├ ƒ /forgot-password
+├ ƒ /help
+├ ƒ /help/contact
+├ ƒ /help/kakao
+├ ƒ /help/recruits
+├ ƒ /help/riot
+├ ƒ /highlights
+├ ƒ /highlights/[highlightId]
+├ ○ /icon.svg
+├ ƒ /images
+├ ƒ /images/[imageId]
+├ ƒ /install
+├ ƒ /kakao
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /matches
+├ ƒ /matches/[matchId]
+├ ƒ /matches/submissions
+├ ƒ /matches/submit
+├ ƒ /me/player
+├ ƒ /me/riot
+├ ƒ /participation
+├ ƒ /participation/destruction/[tournamentId]
+├ ƒ /participation/destruction/[tournamentId]/captain-points
+├ ƒ /participation/destruction/[tournamentId]/participants
+├ ƒ /participation/destruction/[tournamentId]/participants/[playerId]
+├ ƒ /participation/event/[eventId]
+├ ƒ /participation/season
+├ ƒ /players
+├ ƒ /players/[playerId]
+├ ƒ /players/[playerId]/riot
+├ ƒ /players/balance
+├ ƒ /players/balance/drafts
+├ ƒ /players/balance/drafts/[draftId]
+├ ƒ /players/balance/drafts/[draftId]/recommendations
+├ ƒ /players/balance/recommendations
+├ ƒ /privacy
+├ ƒ /progress
+├ ƒ /progress/destruction
+├ ƒ /progress/destruction/[tournamentId]
+├ ƒ /progress/destruction/[tournamentId]/images
+├ ƒ /progress/destruction/[tournamentId]/images/[imageIndex]
+├ ƒ /progress/destruction/[tournamentId]/mvp-vote
+├ ƒ /progress/event
+├ ƒ /progress/event/[eventId]
+├ ƒ /random-team
+├ ƒ /rankings
+├ ƒ /rankings/mmr
+├ ƒ /recruit
+├ ƒ /recruit-helper
+├ ƒ /recruits
+├ ƒ /riot-api
+├ ○ /robots.txt
+├ ƒ /signup
+├ ○ /sitemap.xml                                                                1h      1y
+├ ƒ /start
+├ ƒ /team-balance
+├ ƒ /team-balance/drafts/[draftId]
+├ ƒ /terms
+├ ƒ /tools/coin-toss
+├ ƒ /tools/random-team
+├ ƒ /tools/team-balance
+├ ƒ /tools/team-balance/drafts
+└ ƒ /tools/team-balance/drafts/[draftId]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

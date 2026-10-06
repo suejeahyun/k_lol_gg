@@ -1,0 +1,35 @@
+✔ administrator IA exposes exactly ten unique protected workspaces (1.168ms)
+✔ every administrator workspace has a canonical App Router page (0.496ms)
+✔ active workspace matching does not make the dashboard match every route (0.1169ms)
+✔ dashboard leaves a real work destination available (0.085ms)
+✔ operations exposes all four existing form routes and selects their lists and details consistently (0.6229ms)
+✔ V4 installation identity exactly mirrors the phone HMAC contract (0.769ms)
+✔ one unified phone script shares one identity secret while RECRUIT and FEATURES keep distinct stable installation scopes (0.3228ms)
+✔ the server rejects cross-family commands before dispatch for both unified-script profiles (8.0453ms)
+✔ arbitrary installation IDs and cross-profile IDs fail closed (0.3596ms)
+✔ current and previous signing keys authenticate only their exact HMAC (1.0844ms)
+✔ two senders share one installation scope for create, cross-edit and finish (3.334ms)
+✔ runtime identity configuration is bounded without inspecting real environment values (0.1851ms)
+✔ V4 signing keyring is isolated from V1 and rejects unsafe reuse (0.2595ms)
+✔ V4 route is registry-free and keeps the seven-field identity-free boundary (1.3112ms)
+✔ the unified V4 phone callback ignores room and channel values while routing both families (0.892ms)
+✔ admin and architecture copy distinguish V4 installation scope from the legacy room registry (1.337ms)
+✔ admin private asset query is bounded and rejects duplicate or unknown parameters (1.1207ms)
+✔ raw media upload preflight requires same origin, If-Match, bounded image MIME/size, SHA and safe name (16.819ms)
+✔ unconfigured upload storage returns the specific fail-closed problem (1.0734ms)
+✔ media editor and private asset administration expose the complete safe workflow (1.4299ms)
+✔ gallery editor accepts only bounded bulk upload result counts (0.6954ms)
+✔ player write DTO is an allowlist with normalized validated values (1.6799ms)
+✔ legacy numeric ids accept only the positive PostgreSQL integer range (0.1333ms)
+✔ administrator player query rejects duplicates, unknown keys, and oversized values (0.3634ms)
+✔ mutation fingerprint is canonical and changes with revision or allowlisted input (0.1281ms)
+✔ legacy detail mapping remains outside proxy and administrator APIs use the shared HTTP contract (2.1992ms)
+✔ administrator player pages present operational labels in Korean (0.9859ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 257.0048

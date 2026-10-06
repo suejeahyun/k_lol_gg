@@ -10,9 +10,7 @@ export function SiteFeatureStatePanel({ label, state }: { label: string; state: 
   return (
     <section className={styles.panel} role={unavailable ? "alert" : "status"} data-feature-state={state}>
       <span className={styles.icon}>{unavailable ? <RefreshCw aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}</span>
-      <p className={styles.eyebrow}>{unavailable ? "TEMPORARILY UNAVAILABLE" : "FEATURE PAUSED"}</p>
-      <h1>{unavailable ? `${label} 설정을 확인하고 있어요` : `${label} 기능이 잠시 쉬고 있어요`}</h1>
-      <p>{unavailable ? "안전을 위해 설정을 확인할 수 있을 때까지 기능을 열지 않습니다." : "운영 설정에서 다시 열리면 이 화면에서 바로 이용할 수 있습니다."}</p>
+      <h1>{unavailable ? `${label} 조회 실패` : `${label} 이용 중지`}</h1>
       <Link href="/">홈으로 돌아가기</Link>
     </section>
   );

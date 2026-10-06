@@ -18,7 +18,7 @@ export async function AdminOperationFormList({ selectedType, selectedStatus }: {
   const status = isOperationFormStatus(selectedStatus) ? selectedStatus : undefined;
   const result = await loadRuntimeOperationForms((service) => service.list({ formType, status }));
   return <main className={styles.page}>
-    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>{formType ? typeLabels[formType] : "운영 신청서"}</h1><p>카카오 운영 신청서와 사이트 문의를 확인하고 처리합니다. 사이트 문의는 건의사항에서 확인하고, 접수자가 남긴 연락 방법으로 직접 답변해 주세요.</p></div><Link className={styles.link} href="/admin/discipline">운영·감사</Link></header>
+    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>{formType ? typeLabels[formType] : "운영 신청서"}</h1><p>사이트 문의: 건의사항 · 답변: 접수 연락처로 직접 전달</p></div><Link className={styles.link} href="/admin/discipline">운영·감사</Link></header>
     <form className={styles.filters} method="get" action={formType ? `/admin/operation-forms/${formType}` : "/admin/operation-forms"}>
       {!formType ? <label>유형<select name="type" defaultValue=""><option value="">전체 유형</option>{OPERATION_FORM_TYPES.map((type) => <option key={type} value={type}>{typeLabels[type]}{result.state === "ready" ? ` (${result.data.counts[type]}건)` : ""}</option>)}</select></label> : null}
       <label>상태<select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{OPERATION_FORM_STATUSES.map((item) => <option key={item} value={item}>{operationFormStatusLabels[item]}</option>)}</select></label><button type="submit">필터 적용</button>

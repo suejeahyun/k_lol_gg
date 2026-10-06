@@ -1,0 +1,15 @@
+✔ 역할 변경 API는 same-origin 세션 검사 뒤 일반 ADMIN을 mutation parsing 전에 거부한다 (3.6524ms)
+✔ 역할 관리 UI와 목록 진입점은 SUPER_ADMIN에게만 노출된다 (1.5744ms)
+✔ 승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구하지 않는다 (1.4583ms)
+✔ 플레이어 상세는 연결 계정 revision으로 기존 SUPER_ADMIN 역할 API를 안전하게 재사용한다 (1.2606ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (3.1599ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (6.7077ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.4856ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 101.876

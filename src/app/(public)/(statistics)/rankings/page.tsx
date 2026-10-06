@@ -47,9 +47,7 @@ export default async function RankingsPage({
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="ranking-title">
         <div>
-          <p>SEASON RANKING</p>
           <h1 id="ranking-title">함께 쌓은 시즌 기록</h1>
-          <span>공개 경기만 반영한 승률·참여·MVP를 같은 기준으로 비교해요.</span>
         </div>
         <Trophy aria-hidden="true" />
       </section>
@@ -68,15 +66,15 @@ export default async function RankingsPage({
           </form>
 
           <section className={styles.explanation} aria-label="랭킹 반영 기준">
-            <span>참여 횟수는 게임 수가 아닌 내전 회차 기준입니다. 현재는 {minimumParticipation > 0 ? `시즌 참여 ${minimumParticipation}회 이상인 플레이어` : "모든 참가자"}를 표시합니다.</span>
+            <span>참여 = 내전 회차 · {minimumParticipation > 0 ? `시즌 참여 ${minimumParticipation}회 이상인 플레이어` : "모든 참가자"}</span>
             {minimumParticipation > 0 ? <Link href={{ pathname: "/rankings", query: { ...(result.data.ranking.season ? { seasonId: result.data.ranking.season.id } : {}), minParticipation: "0", view: requestedView } }}>전체 참가자 보기 · 참여 제한 없음</Link> : null}
             <span>마지막 집계: {formatOptionalKoreanDateTime(result.data.ranking.projection?.calculatedAt ?? null)} · 공개된 경기 결과가 반영됩니다.</span>
           </section>
 
           {result.data.ranking.season === null ? (
-            <section className={styles.state}><Sparkles /><h2>공개할 시즌이 아직 없어요.</h2><p>활성 또는 종료 시즌이 준비되면 랭킹을 확인할 수 있습니다.</p></section>
+            <section className={styles.state}><Sparkles /><h2>공개할 시즌이 아직 없어요.</h2></section>
           ) : result.data.ranking.projection?.status !== "READY" ? (
-            <section className={styles.state}><Gamepad2 /><h2>이 시즌 통계를 준비하고 있어요.</h2><p>경기 집계가 끝나면 자동으로 표시됩니다.</p></section>
+            <section className={styles.state}><Gamepad2 /><h2>이 시즌 통계를 준비하고 있어요.</h2></section>
           ) : result.data.ranking.rankings.length === 0 ? (
             <section className={styles.state}><UsersRound /><h2>랭킹 기준을 충족한 플레이어가 없어요.</h2><p>현재 기준은 시즌 참여 {minimumParticipation}회 이상입니다.</p></section>
           ) : (
@@ -104,7 +102,7 @@ export default async function RankingsPage({
                 ))}
               </section>
               <section className={styles.board} aria-labelledby="ranking-board-title">
-                <header><div><span>LEADERBOARD</span><h2 id="ranking-board-title">{selectedView.label} 전체 순위</h2></div><p>{selectedView.tieBreakDescription}</p></header>
+                <header><div><h2 id="ranking-board-title">{selectedView.label} 전체 순위</h2></div><p>{selectedView.tieBreakDescription}</p></header>
                 <ol>
                   {rankedRows.map((row, index) => (
                     <li key={row.playerId} data-rank={index + 1} data-own={row.playerId === result.data.ownPlayerId ? "true" : "false"}>
@@ -122,7 +120,7 @@ export default async function RankingsPage({
           )}
         </>
       ) : result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><Sparkles /><h2>랭킹 집계 환경을 준비하고 있어요.</h2><p>준비가 끝나면 승률·참여·MVP 순위를 확인할 수 있습니다.</p></section>
+        <section className={styles.state} role="status"><Sparkles /><h2>랭킹 집계 환경을 준비하고 있어요.</h2></section>
       ) : (
         <section className={styles.state} role="alert"><Sparkles /><h2>랭킹을 불러오지 못했어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>
       )}

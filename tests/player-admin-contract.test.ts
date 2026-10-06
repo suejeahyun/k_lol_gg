@@ -101,7 +101,7 @@ test("administrator player pages present operational labels in Korean", () => {
   const listPage = readFileSync(new URL("../src/app/(admin)/admin/players/page.tsx", import.meta.url), "utf8");
   const detailPage = readFileSync(new URL("../src/app/(admin)/admin/players/[playerId]/page.tsx", import.meta.url), "utf8");
 
-  assert.match(listPage, /S02 · 플레이어 등록부/);
+  assert.match(listPage, /<h1>플레이어 등록부<\/h1>/);
   assert.match(listPage, /accountRoleLabel\(player\.account\.role\)/);
   assert.match(detailPage, /변경 버전 \{player\.revision\}/);
   assert.match(detailPage, /MMR 계산 완료/);

@@ -64,9 +64,9 @@ export default async function MatchesPage({
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="matches-title">
         <div>
-          <p>MATCH ARCHIVE</p>
-          <h1 id="matches-title">우리의 내전 기록</h1>
-          <span>게임별 승패와 MVP, 공개 플레이어 기록을 한눈에 확인해요.</span>
+
+          <h1 id="matches-title">경기 결과</h1>
+
           <div className={styles.heroActions}>
             <Link href="/matches/submit"><FilePlus2 size={17} aria-hidden="true" /> 경기 결과 제출</Link>
             <Link href="/players"><Search size={17} aria-hidden="true" /> 플레이어 찾기</Link>
@@ -97,7 +97,7 @@ export default async function MatchesPage({
 
       <section aria-labelledby="match-list-title">
         <div className={styles.heading}>
-          <div><span>RESULTS</span><h2 id="match-list-title">경기 결과</h2></div>
+          <div><h2 id="match-list-title">경기 결과</h2></div>
           <strong>{result.state === "ready" ? `${result.data.total}개` : "—"}</strong>
         </div>
       </section>

@@ -27,7 +27,7 @@ export function AdminShell({ session, children }: { session: AuthSession; childr
         </Link>
         <div className={styles.mode}>
           <ShieldCheck aria-hidden="true" />
-          <span>보호된 관리자 공간</span>
+          <span>관리자</span>
         </div>
         <AdminWorkspaceNavigation />
         <div className={styles.account}>

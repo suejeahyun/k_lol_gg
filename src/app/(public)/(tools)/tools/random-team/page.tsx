@@ -1,5 +1,5 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
-import { Dices, Sparkles } from "@/components/theme/theme-icons";
+import { Dices } from "@/components/theme/theme-icons";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { TeamToolNav } from "../team-tool-nav";
@@ -21,9 +21,9 @@ export default async function RandomTeamPage({
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="random-team-title">
         <div>
-          <span className={styles.heroBadge}><Sparkles size={14} aria-hidden="true" /> TEAM PLAYGROUND</span>
-          <h1 id="random-team-title">10명이면, 팀 완성!</h1>
-          <p>이름만 붙여 넣으면 무작위로 섞거나 1~10점 티어 차이가 가장 작도록 두 팀을 만들어요.</p>
+
+          <h1 id="random-team-title">랜덤·티어별 팀 나누기</h1>
+
         </div>
         <Dices aria-hidden="true" />
       </section>

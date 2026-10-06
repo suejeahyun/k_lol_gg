@@ -98,11 +98,11 @@ export function SiteAiAssistant() {
       {open ? (
         <section className={styles.panel} role="dialog" aria-modal="false" aria-labelledby="site-ai-title">
           <header>
-            <div><Sparkles aria-hidden="true" /><span><strong id="site-ai-title">K-LOL 도우미</strong><small>현재 화면을 기준으로 안내해요</small></span></div>
+            <div><Sparkles aria-hidden="true" /><strong id="site-ai-title">K-LOL 도우미</strong></div>
             <button type="button" onClick={close} aria-label="AI 도우미 닫기"><X aria-hidden="true" /></button>
           </header>
           <div className={styles.messages} aria-live="polite">
-            {messages.length === 0 ? <p className={styles.welcome}>무엇을 찾고 있나요? 기능 위치나 이용 방법을 물어보세요.</p> : messages.map((message, index) => (
+            {messages.map((message, index) => (
               <p key={`${message.role}-${index}`} data-role={message.role}><span>{message.role === "USER" ? "나" : "도우미"}</span>{message.text}</p>
             ))}
             {busy ? <p data-role="ASSISTANT"><span>도우미</span>답변을 준비하고 있어요…</p> : null}
@@ -112,7 +112,7 @@ export function SiteAiAssistant() {
             <textarea ref={inputRef} id="site-ai-prompt" name="prompt" maxLength={1_800} rows={2} required placeholder="예: 내 경기 접수는 어디에서 확인해?" />
             <button type="submit" disabled={busy || !revision} aria-label="질문 보내기"><Send aria-hidden="true" /></button>
           </form>
-          <small className={styles.privacy}>입력 내용은 답변 생성 외 용도로 저장하지 않으며, 정확한 운영 상태는 해당 화면에서 확인해 주세요.</small>
+          <small className={styles.privacy}>입력 내용은 답변 생성 외 용도로 저장하지 않습니다.</small>
         </section>
       ) : null}
       <button ref={triggerRef} className={styles.trigger} type="button" onClick={() => setOpen(true)} aria-label="K-LOL.GG AI 도우미 열기" aria-expanded={open}>

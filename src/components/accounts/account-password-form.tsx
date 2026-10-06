@@ -109,7 +109,7 @@ export function AccountPasswordForm({ revision, nextPath = "/account" }: { revis
   return (
     <form className={styles.form} onSubmit={submit} noValidate>
       <label className={styles.field}>현재 비밀번호<input name="currentPassword" type="password" autoComplete="current-password" maxLength={256} required autoFocus /></label>
-      <label className={styles.field}>새 비밀번호<input name="newPassword" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /><small>문자와 숫자를 포함한 10자 이상이어야 합니다.</small></label>
+      <label className={styles.field}>새 비밀번호<input name="newPassword" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /><small>10자 이상 · 문자와 숫자 포함</small></label>
       <label className={styles.field}>새 비밀번호 확인<input name="confirmation" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
       <button className={styles.submit} type="submit" disabled={busy || requiresRelogin}>{busy ? "변경 중…" : "비밀번호 변경"}</button>
       {requiresRelogin ? <button className={styles.submit} type="button" onClick={() => router.replace(`/login?next=${encodeURIComponent(`/account/password?next=${encodeURIComponent(normalizeAccountNext(nextPath))}`)}`)}>다시 로그인</button> : null}

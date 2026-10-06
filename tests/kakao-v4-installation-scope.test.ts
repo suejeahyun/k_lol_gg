@@ -213,9 +213,12 @@ test("admin and architecture copy distinguish V4 installation scope from the leg
   const architecture = readFileSync(resolve(import.meta.dirname, "../docs/architecture/KAKAO_V4_COMMAND_GATEWAY.md"), "utf8");
 
   assert.match(hub, /레거시 방 권한/u);
-  assert.match(hub, /V1 strict R8\/V4는 프로필별 installation scope로 검증/u);
+  assert.match(hub, /V1 strict R8\/V4: 프로필별 권한 · 방 등록부: 레거시 전용/u);
+  assert.match(hub, /readOnly=\{session\.role !== "SUPER_ADMIN"\}/u);
   assert.match(rooms, /레거시 카카오 방·설치본 연결/u);
-  assert.match(rooms, /V4 command gateway[\s\S]+?raw room을 파싱하지 않고 프로필별 installation scope로 검증/u);
-  assert.match(rooms, /registry는 `\/api\/integrations\/kakao\/v4\/commands`의 권한이나 라우팅을 변경하지 않습니다/u);
+  assert.match(rooms, /레거시 V2\/V3 전용 · V1 strict R8\/V4 권한·라우팅에는 영향 없음/u);
+  assert.match(rooms, /V2\/V3 설치본당 방 1개만 연결 가능/u);
+  assert.match(rooms, /session\.role === "SUPER_ADMIN" \? <KakaoRoomActions/u);
+  assert.match(rooms, /getRuntimeKakaoRoomRegistry\(\)/u);
   assert.match(architecture, /현재 V4 command gateway는 room parser나 canonical room registry를 인증·라우팅에 사용하지 않는다/u);
 });

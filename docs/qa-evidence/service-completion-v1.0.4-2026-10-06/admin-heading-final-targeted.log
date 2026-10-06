@@ -1,0 +1,24 @@
+✔ administrator balance status uses readable Korean operational labels (3.0462ms)
+✔ administrator balance navigation is a visible keyboard-focusable control (0.8899ms)
+✔ 사용자 shell은 skip target, landmark, modal search, 모바일 5개 진입점을 제공한다 (4.8839ms)
+✔ 전체 메뉴는 목적별로 기능을 보여주고 필요한 계정 접근을 안내한다 (0.5354ms)
+✔ 일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다 (1.0355ms)
+✔ V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다 (1.3221ms)
+✔ 사용자와 관리자 로그아웃 UI는 세션 폐기 성공 뒤에만 로그인 화면으로 이동한다 (1.301ms)
+✔ 관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 축소하지 않는다 (0.9013ms)
+✔ 모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아웃을 제공한다 (1.1029ms)
+✔ 관리자 로그인은 비밀번호 후 원래 화면으로 이동하며 인증 코드 필드가 없다 (0.8483ms)
+✔ 계정 작업 UI는 stale revision에서 최신 projection을 읽고 안내를 유지한다 (1.5605ms)
+✔ 일회성 비밀번호는 숨김·BFCache 복귀·명시적 닫기에서 메모리와 안내를 함께 종료한다 (0.8721ms)
+✔ 내 계정 플레이어 탭은 대기 claim과 거절 claim을 구분한다 (0.5668ms)
+✔ 내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기본 문구를 구분한다 (0.69ms)
+✔ 계정 시각은 공통 Asia/Seoul 24시간 포맷터를 사용한다 (0.9844ms)
+✔ 가입·본인 비밀번호 변경 UI는 성공과 pagehide에서 비밀번호 fingerprint ref를 즉시 비운다 (1.0426ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111.4779

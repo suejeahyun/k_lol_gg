@@ -81,8 +81,8 @@ test("account pagination reports the filtered total and page range while retaini
   assert.equal(requestedQuery.page, 2);
   assert.match(html, /현재 필터 전체 <strong>63명<\/strong> · 26–50명 표시/u);
   assert.match(html, /2 \/ 3 페이지/u);
-  assert.match(html, /전체 동기화는 현재 필터·페이지와 관계없이 연결됨 상태의 모든 계정을 대상으로 합니다/u);
-  assert.match(html, /연결 안 됨·연결 해제·연결 취소 계정은 연결 후/u);
+  assert.match(html, /전체 동기화: 필터·페이지와 관계없이 모든 연결 계정/u);
+  assert.match(html, /연결 안 됨·연결 해제·연결 취소: 연결 후/u);
   const links = pageLinks(html);
   assert.deepEqual(links.map((item) => item.label), ["이전", "다음"]);
   for (const [index, { url }] of links.entries()) {

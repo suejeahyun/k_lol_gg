@@ -43,7 +43,7 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
     ? await loadRuntimeTeamBalance((service) => service.getDraft({ actorUserAccountId: session.userId, authorization: "ADMIN" }, teamBalanceDraftId))
     : { state: "ready" as const, data: null };
   if (teamBalanceDraftId && draftResult.state !== "ready") {
-    return <main className={styles.page}><Link href="/admin/balance/drafts"><ArrowLeft size={16} aria-hidden="true" /> 팀 초안 목록</Link><section className={styles.state} role="alert"><h1>팀 초안을 불러오지 못했습니다.</h1><p>빈 경기로 전환하지 않았습니다. 초안 상태를 확인한 뒤 다시 시도해 주세요.</p></section></main>;
+    return <main className={styles.page}><Link href="/admin/balance/drafts"><ArrowLeft size={16} aria-hidden="true" /> 팀 초안 목록</Link><section className={styles.state} role="alert"><h1>팀 초안을 불러오지 못했습니다.</h1><p>초안 상태를 확인한 뒤 다시 시도해 주세요.</p></section></main>;
   }
   if (teamBalanceDraftId && (!draftResult.data || draftResult.data.status === "ARCHIVED")) notFound();
   const selectedCandidate = draftResult.state === "ready" && draftResult.data?.selectedCandidateSignature
@@ -79,7 +79,7 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
     : [];
   return <main className={styles.page}>
     <Link href="/admin/matches"><ArrowLeft size={16} aria-hidden="true" /> 경기 목록</Link>
-    <section className={styles.hero}><div><p>NEW DRAFT</p><h1>새 경기 초안</h1><p>{selectedCandidate && draftResult.state === "ready" && draftResult.data ? `팀 초안 '${draftResult.data.title}'의 선택 배치를 불러왔습니다. 챔피언과 경기 결과를 입력해 주세요.` : "시즌·플레이어·챔피언을 선택해 구조화된 경기 기록을 만듭니다."}</p></div></section>
+    <section className={styles.hero}><div><h1>새 경기 초안</h1>{selectedCandidate && draftResult.state === "ready" && draftResult.data ? <p>적용한 팀 초안: {draftResult.data.title}</p> : null}</div></section>
     {result.state === "ready"
       ? <><AdminImportPanel seasons={result.data.seasons} playedOn={currentKstDate()} /><MatchEditor
           initialState={{ id: null, status: "DRAFT", revision: 0 }}

@@ -1,0 +1,46 @@
+✔ competition display projections prefer human labels and never fall back to raw identifiers (0.7702ms)
+✔ event result gallery can be linked only during or after play (3.4153ms)
+✔ POSITION applications upsert, retain identity, cancel, and reactivate only inside recruitment (1.5107ms)
+✔ ARAM applications reject position claims and accept positionless entries (0.3076ms)
+✔ admin import is atomic at the aggregate boundary and recruitment closes with exactly ten active entries (0.4855ms)
+✔ event consumes the S06 balance port shape and validates two complete five-person rosters (1.8948ms)
+✔ seeded bracket derives the champion, supports correction, and completes with an event participant MVP (1.7285ms)
+✔ correcting an upstream result preserves the other branch and explicitly invalidates downstream results (0.7769ms)
+✔ cancellation recovery restores only the recorded phase and public DTOs omit private ownership data (0.875ms)
+✔ command handler rechecks authorization in-transaction and commits aggregate, audit, outbox, then receipt (1.9962ms)
+✔ authorized idempotency replay skips aggregate work and a mismatched fingerprint fails closed (0.6965ms)
+✔ command handler rejects stale expected revisions before any aggregate write (0.4092ms)
+✔ command metadata cannot downgrade admin commands or detach owner intent from the player (0.6061ms)
+✔ competition saved views only accept one allowlisted type (0.8511ms)
+✔ event application deep link rejects unrelated and repeated values (0.185ms)
+✔ destruction detail deep links retain only valid section-bound values (0.8583ms)
+✔ administrator live auction view requires the complete exact pair (0.2652ms)
+✔ self-reported total games ignore win rate, cap at 300 and distinguish zero from missing (1.3138ms)
+✔ new automatic evaluation combines numeric input with four sources without requesting ARAM (1.3407ms)
+✔ unfrozen old formulas drop the proxy, preserve other facts and weights; frozen auctions never change (0.6616ms)
+✔ recruitment counters exclude withdrawn and rejected applications; transition identifies a missing lane (1.3839ms)
+✔ auction completion requires all five positions and refuses a paused auction (0.243ms)
+✔ preview generation retains every legacy format and produces no self matches or duplicate fixture IDs (1.0412ms)
+✔ auction eligibility and server validation retain the minimum points for every unfilled slot (0.9534ms)
+✔ public progress reveals totals and standings without exposing applicant ownership or raw ballots (7.1121ms)
+✔ only a stale revision produces HTTP 412; business preconditions produce 409 (13.73ms)
+✔ optional schedule preserves old snapshots and rejects reversed or invalid dates (1.1911ms)
+✔ positionless recruitment and auction preserve headcount and money without imposing roles (0.6855ms)
+✔ home prioritizes ongoing competitions before newer completed records without mutating input (9.2162ms)
+✔ home omits only placeholder-only titles, retaining meaningful titles containing test (0.3814ms)
+✔ 홈의 서로 다른 공개 피드는 시간 역순과 ID tie-break로 결정적으로 합쳐진다 (6.795ms)
+✔ 홈 피드 제한은 음수와 비정수 값을 거부하고 0은 빈 피드를 만든다 (0.3146ms)
+✔ 홈 멸망전 우승 갤러리는 FK 연결을 우선해 중복 제거하고 게시일 역순과 최대 개수를 지킨다 (0.2782ms)
+✔ 오늘의 챔피언은 KST 날짜·활성 목록에 대해 SSR에서도 결정적이고 다음 날 변경된다 (6.8824ms)
+✔ 오늘의 챔피언 문구와 챔피언별 개별 재구성 이미지를 연결한다 (0.292ms)
+✔ 홈 안내 허용 목록은 공식 매핑을 통과한 여성 챔피언 68명과 고유 문구를 갖는다 (0.2933ms)
+✔ 특례 네 챔피언은 포함하고 Kindred와 남성·미확인 후보는 기본 거부한다 (0.1417ms)
+✔ 레거시 키는 표시 이름으로 canonicalize하며 같은 공식 챔피언을 한 번만 선택한다 (0.1862ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 324.5455

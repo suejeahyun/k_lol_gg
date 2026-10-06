@@ -1,0 +1,74 @@
+[
+  {
+    "route": "/players",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "플레이어 찾기",
+    "width": 390
+  },
+  {
+    "route": "/rankings",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "불러오는 중",
+    "width": 390
+  },
+  {
+    "route": "/images",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "갤러리",
+    "width": 390
+  },
+  {
+    "route": "/discipline",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "주의·경고·이용 제한 현황",
+    "width": 390
+  },
+  {
+    "route": "/help/contact",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "운영팀에 문의하기",
+    "width": 390
+  },
+  {
+    "route": "/account/riot",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "내 Riot 계정",
+    "width": 390
+  },
+  {
+    "route": "/help/kakao",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "최신 명단으로 참가하고 수정해요",
+    "width": 390
+  },
+  {
+    "route": "/install",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "홈 화면에 앱 설치",
+    "width": 390
+  },
+  {
+    "route": "/account/password",
+    "brokenDescriptions": 0,
+    "main": 1,
+    "overflow": false,
+    "title": "비밀번호 변경",
+    "width": 390
+  }
+]

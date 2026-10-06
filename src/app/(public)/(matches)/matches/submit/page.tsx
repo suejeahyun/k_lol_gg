@@ -67,7 +67,7 @@ export default async function MatchSubmitPage({
   return (
     <div className={`page-wrap ${styles.page}`}>
       <Link className="back-link" href="/matches"><ArrowLeft size={16} aria-hidden="true" /> 경기 결과</Link>
-      <section className={styles.hero} aria-labelledby="submit-title"><p>함께한 경기의 기록</p><h1 id="submit-title">경기 결과 제출</h1><span>게임별 결과 화면을 올리면, 운영자가 확인한 뒤 전적에 반영해요.</span></section>
+      <section className={styles.hero} aria-labelledby="submit-title"><h1 id="submit-title">경기 결과 제출</h1></section>
       <SubmissionForm
         key={`${requestedCode ?? "new"}:${requestedTeamBalanceDraftId ?? "none"}`}
         viewer={viewer}

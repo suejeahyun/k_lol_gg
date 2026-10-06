@@ -1,0 +1,31 @@
+✔ unknown root addresses keep one complete public shell and recovery links (6.3474ms)
+✔ public resource and invalid-query recovery uses the existing layout without nesting another shell (1.286ms)
+✖ application error recovery keeps the public main landmark singular (4.6982ms)
+✔ admin not-found content stays behind its layout authorization and inside one admin shell (17.5452ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 325.9659
+
+✖ failing tests:
+
+test at tests\not-found-layout.test.mjs:87:1
+✖ application error recovery keeps the public main landmark singular (4.6982ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/not-found-layout.test.mjs:94:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

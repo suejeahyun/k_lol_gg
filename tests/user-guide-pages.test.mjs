@@ -37,7 +37,7 @@ test("설치 화면은 install prompt와 iOS·Android PWA·개인 캐시 금지�
   for (const contract of ["beforeinstallprompt", "appinstalled", "display-mode: standalone", "userChoice", 'aria-live="polite"']) {
     assert.equal(actions.includes(contract), true, contract);
   }
-  for (const contract of ["iPhone·iPad", "Android", "별도 APK 없이", "공식 설치 방식 · PWA", "로그인 정보", "개인 이미지"]) {
+  for (const contract of ["iPhone·iPad", "Android", "Safari의 공유 버튼", "홈 화면에 추가", "Chrome 메뉴", "로그인 정보", "개인 이미지"]) {
     assert.equal(page.includes(contract), true, contract);
   }
   assert.equal(page.includes('href="/apk"'), false);

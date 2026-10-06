@@ -39,5 +39,5 @@ export function DestructionLiveStatus({ tournamentId, revision, enabled = true, 
     return () => { stopped = true; controller?.abort(); window.clearInterval(timer); window.removeEventListener("online", online); window.removeEventListener("offline", offline); document.removeEventListener("visibilitychange", online); };
   }, [tournamentId, revision, enabled, busy, attempt, router]);
   if (!enabled) return null;
-  return <div className={styles.live} data-state={state}><span role="status">{busy ? "작업 반영 중" : state === "offline" ? "오프라인 · 연결되면 자동으로 다시 확인합니다." : state === "error" ? "갱신 실패 · 마지막 확인 내용을 표시합니다." : state === "checking" ? "최신 상태 확인 중…" : "연결됨 · 8초마다 자동 확인"}</span>{checkedAt ? <small>최근 확인 {checkedAt}</small> : null}<button type="button" disabled={busy} onClick={() => { router.refresh(); setAttempt((value) => value + 1); }}>지금 새로고침</button></div>;
+  return <div className={styles.live} data-state={state}><span role="status">{busy ? "작업 반영 중" : state === "offline" ? "오프라인" : state === "error" ? "갱신 실패 · 이전 확인 내용" : state === "checking" ? "최신 상태 확인 중…" : "연결됨"}</span>{checkedAt ? <small>최근 확인 {checkedAt}</small> : null}<button type="button" disabled={busy} onClick={() => { router.refresh(); setAttempt((value) => value + 1); }}>지금 새로고침</button></div>;
 }

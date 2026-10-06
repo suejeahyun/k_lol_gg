@@ -424,7 +424,7 @@ export function MatchEditor({
       </div>
     </section> : null}
     <section className={styles.panel} ref={editorPanelRef} tabIndex={-1}>
-      <div><h2>{state.id ? "경기 전체 교정" : "새 경기 초안"}</h2><p>시즌과 기본 정보를 입력한 뒤 게임별 10명 로스터를 완성해 주세요. 공개 경기 교정도 이전 revision과 통계 재계산 이벤트를 남깁니다.</p></div>
+      <div><h2>{state.id ? "경기 전체 교정" : "새 경기 초안"}</h2></div>
       <div className={styles.form}>
         <label>시즌<select value={form.seasonId} onChange={(event) => setForm((current) => ({ ...current, seasonId: event.target.value }))}><option value="">선택해 주세요</option>{catalog.seasons.map((season) => <option key={season.id} value={season.id} disabled={season.status === "RETIRED"}>{season.name} · {season.status === "ACTIVE" ? "진행 중" : season.status === "ENDED" ? "종료" : season.status === "DRAFT" ? "초안" : "폐기"}</option>)}</select></label>
         <label className={styles.wide}>경기 이름<input maxLength={160} value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="예: 9월 1주차 정기 내전" /></label>
@@ -437,7 +437,7 @@ export function MatchEditor({
           const usedPlayers = new Set(game.participants.map((participant) => participant.playerId).filter(Boolean));
           const usedChampions = new Set(game.participants.map((participant) => participant.championKey).filter(Boolean));
           return <article className={styles.gameEditor} key={gameIndex}>
-            <header className={styles.gameEditorHeader}><div><span>GAME {gameIndex + 1}</span><h3>{gameIndex + 1}게임</h3></div><div className={styles.compactControls}><label>승리 팀<select value={game.winnerTeam} onChange={(event) => updateGame(gameIndex, (current) => ({ ...current, winnerTeam: event.target.value as EditableGame["winnerTeam"] }))}><option value="BLUE">블루</option><option value="RED">레드</option></select></label>{form.games.length > 1 ? <button type="button" className={styles.iconButton} aria-label={`${gameIndex + 1}게임 삭제`} onClick={() => setForm((current) => ({ ...current, games: current.games.filter((_, index) => index !== gameIndex).map((item, index) => ({ ...item, gameNumber: index + 1 })) }))}><Trash2 size={17} aria-hidden="true" /></button> : null}</div></header>
+            <header className={styles.gameEditorHeader}><div><h3>{gameIndex + 1}게임</h3></div><div className={styles.compactControls}><label>승리 팀<select value={game.winnerTeam} onChange={(event) => updateGame(gameIndex, (current) => ({ ...current, winnerTeam: event.target.value as EditableGame["winnerTeam"] }))}><option value="BLUE">블루</option><option value="RED">레드</option></select></label>{form.games.length > 1 ? <button type="button" className={styles.iconButton} aria-label={`${gameIndex + 1}게임 삭제`} onClick={() => setForm((current) => ({ ...current, games: current.games.filter((_, index) => index !== gameIndex).map((item, index) => ({ ...item, gameNumber: index + 1 })) }))}><Trash2 size={17} aria-hidden="true" /></button> : null}</div></header>
             <div className={styles.rosterTable} role="group" aria-label={`${gameIndex + 1}게임 로스터`}>
               <div className={styles.rosterHead}><span>팀/포지션</span><span>플레이어</span><span>챔피언</span><span>K / D / A</span></div>
               {game.participants.map((participant, participantIndex) => <div className={styles.rosterRow} key={`${participant.team}-${participant.position}`}>
@@ -478,7 +478,7 @@ export function MatchEditor({
         <button type="button" className={styles.addGame} disabled={form.games.length >= 9} onClick={() => setForm((current) => ({ ...current, games: [...current.games, emptyGame(current.games.length + 1)] }))}><CirclePlus size={18} aria-hidden="true" /> 게임 추가</button>
       </div>
 
-      {errors.length ? <div className={styles.validation} role="alert"><strong>저장 전 확인</strong><ul>{errors.map((item) => <li key={item}>{item}</li>)}</ul></div> : <p className={styles.valid}><CopyCheck size={17} aria-hidden="true" /> 구조 검사가 통과되었습니다. MVP는 서버가 V1_COMPAT_1 공식으로 결정합니다.</p>}
+      {errors.length ? <div className={styles.validation} role="alert"><strong>저장 전 확인</strong><ul>{errors.map((item) => <li key={item}>{item}</li>)}</ul></div> : <p className={styles.valid}><CopyCheck size={17} aria-hidden="true" /> 구조 검사 통과 · MVP 자동 계산</p>}
       <div className={styles.actions}><button className={styles.action} type="button" disabled={busy || Boolean(serverConflict) || errors.length > 0} onClick={() => mutate("save")}>저장</button>{state.id && state.status === "DRAFT" ? <button type="button" disabled={busy || Boolean(serverConflict)} onClick={() => mutate("publish")}>공개</button> : null}{state.id && state.status === "PUBLISHED" ? <button data-danger="true" ref={voidTriggerRef} type="button" disabled={busy || Boolean(serverConflict)} onClick={openVoidDialog}>무효화</button> : null}{state.id && state.status === "VOIDED" ? <button type="button" disabled={busy || Boolean(serverConflict)} onClick={() => mutate("restore")}>복구</button> : null}</div>
     </section>
     </div>

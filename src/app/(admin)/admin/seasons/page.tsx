@@ -1,4 +1,4 @@
-import { CalendarCheck2, Database, Filter, ShieldCheck } from "@/components/theme/theme-icons";
+import { CalendarCheck2, Database, Filter } from "@/components/theme/theme-icons";
 import Link from "next/link";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
@@ -73,9 +73,9 @@ export default async function AdminSeasonsPage({
     <main className={styles.page} data-admin-season-view={queryError ? "invalid" : applicationView ? "applications" : "seasons"}>
       <header className={styles.header}>
         <div>
-          <span><ShieldCheck aria-hidden="true" /> 보호된 작업 공간 · A3</span>
+
           <h1>시즌·참가</h1>
-          <p>시즌 운영 단계와 사이트·카카오 참가 신청을 같은 작업 흐름에서 검토합니다.</p>
+
         </div>
         <b>관리자 / 최고 관리자</b>
       </header>
@@ -85,17 +85,17 @@ export default async function AdminSeasonsPage({
         <section className={styles.state} role={result.state === "error" ? "alert" : "status"}>
           <Database aria-hidden="true" />
           <h2>{result.state === "unavailable" ? "시즌 정보를 확인할 수 없습니다." : "시즌 작업 공간을 불러오지 못했습니다."}</h2>
-          <p>운영 데이터베이스나 샘플 데이터로 대체하지 않고 안전한 연결을 기다립니다.</p>
+          <p>연결 상태를 확인한 뒤 다시 시도해 주세요.</p>
         </section>
       ) : (
         <>
           <section className={styles.panel} aria-labelledby="create-season-title">
-            <div className={styles.panelHeading}><div><span>새 시즌</span><h2 id="create-season-title">초안 시즌 만들기</h2></div><CalendarCheck2 aria-hidden="true" /></div>
+            <div className={styles.panelHeading}><div><h2 id="create-season-title">초안 시즌 만들기</h2></div><CalendarCheck2 aria-hidden="true" /></div>
             <CreateSeasonForm />
           </section>
 
           <section className={styles.panel} aria-labelledby="season-list-title">
-            <div className={styles.panelHeading}><div><span>운영 단계</span><h2 id="season-list-title">시즌 목록</h2></div><strong>{result.data.seasons.length}개</strong></div>
+            <div className={styles.panelHeading}><div><h2 id="season-list-title">시즌 목록</h2></div><strong>{result.data.seasons.length}개</strong></div>
             {result.data.seasons.length === 0 ? <div className={styles.empty}>등록된 시즌이 없습니다.</div> : (
               <div className={styles.seasonList}>
                 {result.data.seasons.map((season) => (
@@ -116,7 +116,7 @@ export default async function AdminSeasonsPage({
           </section>
 
           <section className={styles.panel} aria-labelledby="application-review-title" data-focus={applicationView || undefined}>
-            <div className={styles.panelHeading}><div><span>검토 대기</span><h2 id="application-review-title">참가 신청 검토</h2></div><strong>{result.data.applicationTotalCount}건</strong></div>
+            <div className={styles.panelHeading}><div><h2 id="application-review-title">참가 신청 검토</h2></div><strong>{result.data.applicationTotalCount}건</strong></div>
             <form className={styles.filters} action="/admin/seasons" method="get">
               {applicationView ? <input type="hidden" name="view" value="applications" /> : null}
               <Filter aria-hidden="true" />

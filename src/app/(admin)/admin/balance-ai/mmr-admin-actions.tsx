@@ -61,7 +61,7 @@ export function MmrAdminActions({
     });
   }
 
-  if (!allowed) return <p className={styles.notice}>조회는 ADMIN, 전체 재계산과 수동 조정은 SUPER_ADMIN만 가능합니다.</p>;
+  if (!allowed) return <p className={styles.notice}>조회: 관리자 · 전체 재계산·조정: 최고 관리자</p>;
   return (
     <section className={styles.actions} aria-labelledby="mmr-actions-title">
       <header><h2 id="mmr-actions-title">보호된 MMR 작업</h2><button type="button" disabled={busy} onClick={() => setConfirmingRecalculation(true)}>전체 원장 재계산</button></header>

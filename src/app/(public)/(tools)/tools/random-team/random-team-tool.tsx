@@ -142,7 +142,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
     <div className={styles.workspace}>
       <form ref={formRef} className={styles.panel} onSubmit={(event) => { event.preventDefault(); createTeams(); }} noValidate>
         <div className={styles.heading}>
-          <div><span>PARTICIPANTS</span><h2>참가자 입력</h2></div>
+          <div><h2>참가자 입력</h2></div>
           <strong className={styles.count} aria-live="polite">{participants.length} / 10명</strong>
         </div>
 
@@ -163,11 +163,10 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
               clearFeedback();
             }}
             placeholder={"하늘여우\n별빛토끼\n구름고양이\n... 한 줄에 한 명"}
-            aria-describedby="random-team-input-hint"
             aria-invalid={Boolean(error && !parsed.ok)}
           />
         </label>
-        <p className={styles.fieldHint} id="random-team-input-hint">번호, 글머리표는 자동으로 제거해요. 같은 이름은 서로 다른 참가 슬롯으로 유지합니다.</p>
+
 
         {parsed.ok && parsed.value.duplicateNames.length > 0 ? (
           <p className={styles.notice} role="status">같은 이름이 있어요: {parsed.value.duplicateNames.join(", ")}. 입력 순서가 다른 참가자로 나눕니다.</p>
@@ -209,7 +208,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
 
       <section className={styles.resultPanel} aria-labelledby="random-team-result-title">
         <div className={styles.heading}>
-          <div><span>RESULT</span><h2 id="random-team-result-title" ref={resultHeadingRef} tabIndex={-1}>팀 결과</h2></div>
+          <div><h2 id="random-team-result-title" ref={resultHeadingRef} tabIndex={-1}>팀 결과</h2></div>
           {result ? <strong className={styles.count}>5 : 5</strong> : null}
         </div>
 
@@ -217,7 +216,6 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
           <div className={styles.emptyState} role="status">
             <UsersRound aria-hidden="true" />
             <h2>아직 만든 팀이 없어요</h2>
-            <p>참가자 10명을 입력하고 팀 만들기 버튼을 누르면 이곳에 결과가 나타납니다.</p>
           </div>
         ) : (
           <>

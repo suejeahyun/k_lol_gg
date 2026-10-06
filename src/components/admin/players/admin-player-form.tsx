@@ -141,7 +141,7 @@ export function AdminPlayerForm({
             value={values.memberName}
             onChange={(event) => setField("memberName", event.target.value)}
           />
-          <small>공개 목록과 공개 검색에는 포함되지 않습니다.</small>
+          <small>관리자 전용 · 공개 목록·검색 제외</small>
         </label>
         <label className={styles.field}>
           <span>V1 기존 번호</span>
@@ -155,7 +155,7 @@ export function AdminPlayerForm({
             value={values.legacyId}
             onChange={(event) => setField("legacyId", event.target.value)}
           />
-          <small>이관 대상에게만 지정하며 다른 플레이어와 중복될 수 없습니다.</small>
+          <small>이관 대상 전용 · 중복 불가</small>
         </label>
         <fieldset className={styles.identityGroup} aria-describedby="admin-player-riot-id-help">
           <legend>Riot ID</legend>
@@ -181,7 +181,7 @@ export function AdminPlayerForm({
               value={values.tagLine}
               onChange={(event) => setField("tagLine", event.target.value)}
             />
-            <small># 기호는 제외하고 입력합니다.</small>
+            <small># 제외</small>
           </label>
           <p id="admin-player-riot-id-help" className={styles.identityHelp} data-changed={riotIdChanged || undefined} role={riotIdChanged ? "status" : undefined}>
             {riotIdChanged
@@ -453,7 +453,7 @@ export function AdminPlayerReactivate({ player }: { player: AdminPlayer }) {
     <section className={styles.recovery} aria-labelledby="player-reactivate-title">
       <div>
         <h2 id="player-reactivate-title">명시적 재활성화</h2>
-        <p>보존된 UUID와 V1 기존 번호를 그대로 사용해 공개 목록·검색 연결을 복구합니다.</p>
+        <p>기존 식별자·경기 기록을 유지하며 공개 목록·검색에 복구</p>
       </div>
       {confirming ? (
         <div className={styles.confirmRow}>

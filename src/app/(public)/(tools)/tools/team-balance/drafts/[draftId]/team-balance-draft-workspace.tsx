@@ -148,12 +148,12 @@ export function TeamBalanceDraftWorkspace({
   return (
     <>
       <section className={styles.draftHeader} data-status={draft.status}>
-        <div><span>{mode === "ADMIN" ? "ADMIN REVIEW · " : ""}ROUND {draft.evaluationRound}</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>
+        <div><span>{mode === "ADMIN" ? "관리자 검토 · " : ""}평가 {draft.evaluationRound}회</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>
         <strong data-status={draft.status}>{draft.status === "ARCHIVED" ? "보관됨" : draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
       </section>
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
-        <div className={styles.heading}><div><span>추천 결과</span><h2 id="candidate-title">AI 최적 팀 추천</h2><p className={styles.stageHint}>전체 조합을 실력과 포지션으로 평가해 가장 높은 한 가지 결과를 바로 적용합니다.</p></div></div>
+        <div className={styles.heading}><div><h2 id="candidate-title">AI 최적 팀 추천</h2></div></div>
         {selectedCandidate ? <div className={styles.evaluationOverview} data-balance={differenceTone(selectedCandidate.score.teamStrength.difference)} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}
         <div className={styles.candidateGrid}>
           {autoCandidates.slice(0, 1).map((candidate) => {
@@ -172,7 +172,7 @@ export function TeamBalanceDraftWorkspace({
       </section>
 
       <section className={styles.manualSection} aria-labelledby="manual-title">
-        <div className={styles.heading}><div><span>MANUAL BOARD</span><h2 id="manual-title">수동 배치와 서버 재평가</h2></div></div>
+        <div className={styles.heading}><div><h2 id="manual-title">수동 팀 배치</h2></div></div>
         <div className={styles.manualTeams}>
           {TEAM_BALANCE_TEAMS.map((team) => <section key={team} data-team={team} aria-labelledby={`manual-${team.toLowerCase()}-title`}>
             <header><h3 id={`manual-${team.toLowerCase()}-title`}>{teamLabel[team]} 팀</h3><span>5명</span></header>
@@ -206,7 +206,7 @@ export function TeamBalanceDraftWorkspace({
             })}</div>
           </section>)}
         </div>
-        <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 팀 균형 기준으로 다시 평가합니다.</strong><small>직접 바꾼 팀의 실력 차이와 포지션 적합도를 확인하고 저장하세요.</small></div><button className={styles.secondaryButton} type="button" disabled={busy || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
+        <div className={styles.manualEvaluation}><button className={styles.secondaryButton} type="button" disabled={busy || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
       </section>
 
       <section className={styles.draftActions} data-pending={pending || (refreshing ? "refresh" : undefined)} aria-busy={busy} aria-label="초안 작업">

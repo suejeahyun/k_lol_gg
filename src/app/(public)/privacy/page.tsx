@@ -1,7 +1,6 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import { UsagePreference } from "@/components/usage/usage-preference";
 import Link from "next/link";
-import { ShieldCheck } from "@/components/theme/theme-icons";
 
 import styles from "@/components/accounts/account-access.module.css";
 import { ACCOUNT_PRIVACY_VERSION } from "@/modules/accounts/domain/account-policies";
@@ -10,7 +9,7 @@ export const metadata = createRouteMetadata("/privacy");
 
 export default function PrivacyPage() {
   return <div className={styles.page}><article className={styles.policy}>
-    <header><span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> PRIVACY NOTICE</span><h1>개인정보 처리 안내</h1><p>정책 식별자 {ACCOUNT_PRIVACY_VERSION} · 시행 2026년 10월 2일</p></header>
+    <header><h1>개인정보 처리 안내</h1><p>정책 식별자 {ACCOUNT_PRIVACY_VERSION} · 시행 2026년 10월 2일</p></header>
     <section><h2>1. 처리하는 정보</h2><p>가입 시 로그인 아이디, 비밀번호, 회원명, Riot ID, 약관·개인정보 안내 동의 시점과 버전을 처리합니다. 비밀번호 원문은 저장하지 않고 scrypt 해시만 저장합니다.</p></section>
     <section><h2>2. 이용 목적</h2><p>계정 인증, 가입·플레이어 연결 검토, 승인과 이용 제한, 비밀번호 복구, 관리자 보안, 요청 속도 제한, 오류 조사와 변경 감사에 사용합니다.</p></section>
     <section><h2>3. 세션과 보안 기록</h2><p>일반 계정 세션은 최대 7일, 비밀번호로 로그인한 관리자 세션은 최대 30분의 별도 HttpOnly 쿠키로 유지합니다. DB에는 세션 토큰 원문 대신 해시, 만료·폐기 시각과 권한 버전을 저장합니다. 보안 변경 시 모든 세션을 폐기합니다.</p></section>

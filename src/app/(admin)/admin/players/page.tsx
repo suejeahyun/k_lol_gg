@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Database, LockKeyhole, Search, UserPlus, UsersRound } from "@/components/theme/theme-icons";
+import { ChevronLeft, ChevronRight, Database, LockKeyhole, Search, UserPlus } from "@/components/theme/theme-icons";
 
 import { Button } from "@/components/ui/button";
 import styles from "@/components/admin/players/admin-players.module.css";
@@ -49,9 +49,9 @@ export default async function AdminPlayersPage({
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}><UsersRound aria-hidden="true" /> S02 · 플레이어 등록부</span>
+
           <h1>플레이어 등록부</h1>
-          <p>회원명은 이 관리자 경계 안에서만 조회하고, 공개 프로필은 UUID와 허용된 Riot 정보만 사용합니다.</p>
+
         </div>
         <Link className={styles.primaryLink} href="/admin/players/new"><UserPlus aria-hidden="true" /> 새 플레이어</Link>
       </header>
@@ -89,7 +89,7 @@ export default async function AdminPlayersPage({
         <section className={styles.state} data-tone="error" role="alert">
           <Database aria-hidden="true" />
           <h2>플레이어 등록부를 불러오지 못했습니다.</h2>
-          <p>잠시 후 다시 시도해 주세요. 서버 상세 오류와 회원 정보는 화면에 노출하지 않습니다.</p>
+          <p>잠시 후 다시 시도해 주세요.</p>
         </section>
       ) : result?.state === "ready" ? (
         <>
@@ -101,7 +101,7 @@ export default async function AdminPlayersPage({
             <section className={styles.state}>
               <Search aria-hidden="true" />
               <h2>{parsed.value.query ? "일치하는 플레이어가 없습니다." : "등록된 플레이어가 없습니다."}</h2>
-              <p>{parsed.value.query ? "회원명 또는 Riot ID 철자를 확인해 주세요." : "새 플레이어를 등록하면 감사 기록과 함께 이곳에 표시됩니다."}</p>
+              <p>{parsed.value.query ? "회원명 또는 Riot ID 철자를 확인해 주세요." : "새 플레이어 등록을 선택해 주세요."}</p>
             </section>
           ) : (
             <div className={styles.tableWrap}>

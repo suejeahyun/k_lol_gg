@@ -7,9 +7,9 @@ export const metadata = createRouteMetadata("/help/recruits");
 export default function RecruitHelpPage() {
   return <div className={`page-wrap ${styles.page}`}>
     <header className={styles.hero}>
-      <span>RECRUIT GUIDE</span>
+
       <h1>파티·내전 모집 이용 안내</h1>
-      <p>최신 명단 전체를 복사하고 이름과 필요한 라인을 적어 전송해주세요.</p>
+
     </header>
     <section id="find-room" className={styles.section}>
       <h2>모집방을 모르겠어요</h2>

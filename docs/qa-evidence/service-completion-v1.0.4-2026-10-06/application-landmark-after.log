@@ -1,0 +1,16 @@
+✔ unknown root addresses keep one complete public shell and recovery links (6.5404ms)
+✔ public resource and invalid-query recovery uses the existing layout without nesting another shell (1.4269ms)
+✔ application error recovery keeps the public main landmark singular (4.4905ms)
+✔ admin not-found content stays behind its layout authorization and inside one admin shell (16.8571ms)
+✔ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (36.8766ms)
+✔ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (5.2324ms)
+✔ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (3.7759ms)
+✔ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (4.5736ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 335.2753

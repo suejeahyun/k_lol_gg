@@ -23,7 +23,7 @@ export function AdminPrivateAssetDelete({ assetId, disabled }: { assetId: string
 
   return <div className={styles.deleteBox}>
     <button className={styles.dangerButton} disabled={disabled || busy} type="button" onClick={() => void requestDeletion()}>{busy ? "요청 중…" : disabled ? "이미 삭제 대기 중" : "안전 삭제 요청"}</button>
-    <p>즉시 지우지 않고 DELETE_PENDING으로 전환합니다. 실제 저장소 정리는 별도 작업자가 감사 기록과 함께 수행합니다.</p>
+    <p>삭제 대기로 전환 · 실제 파일은 정리 작업 후 삭제</p>
     {message ? <p className={styles.error} role="alert">{message}</p> : null}
   </div>;
 }

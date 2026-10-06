@@ -23,7 +23,7 @@ test("account and settings administration avoid decorative English labels", asyn
     source("src/app/(admin)/admin/site-settings/settings-form.tsx"),
     source("src/components/admin/admin-shell.tsx"),
   ]);
-  assert.match(list, /S01 · 계정 운영/);
+  assert.match(list, /<h1>사용자 계정<\/h1>/);
   assert.match(detail, /> 사용자 계정</);
   assert.match(detail, />변경 버전</);
   assert.match(settings, /변경 버전 \{settings\.revision\}/);

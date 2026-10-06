@@ -59,9 +59,9 @@ export default async function TeamBalanceDraftsPage({
       <TeamToolNav current="drafts" approved />
       <section className={styles.draftListHeader} aria-labelledby="draft-list-title">
         <div>
-          <span>{query?.view === "recommendations" ? "PICK · BAN" : "TEAM DRAFTS"}</span>
+
           <h1 id="draft-list-title">{query?.view === "recommendations" ? "저장 팀 밴픽 추천" : "팀 밸런스 초안"}</h1>
-          <p>{query?.view === "recommendations" ? "선택한 저장 배치와 최신 시즌 챔피언 통계로 픽·상대 밴 후보를 확인합니다." : "생성된 팀 배치를 다시 열고, 통계가 달라졌다면 재평가한 뒤 결과 등록으로 이어갈 수 있어요."}</p>
+
         </div>
         <Link className={styles.primaryLink} href={query?.view === "recommendations" ? "/tools/team-balance/drafts" : "/tools/team-balance/drafts?view=recommendations"}>{query?.view === "recommendations" ? "초안 목록" : "밴픽 추천"}</Link>
       </section>

@@ -327,19 +327,19 @@ export function TeamBalanceBuilder() {
   return (
     <form className={styles.balanceForm} data-complete={selectedRows.length === 10 ? "true" : undefined} aria-busy={pending} onSubmit={submit}>
       <div className={styles.heading}>
-        <div><span>NEW DRAFT</span><h2>두 단계로 팀 만들기</h2></div>
+        <div><h2>두 단계로 팀 만들기</h2></div>
         <strong className={styles.count}>{selectedRows.length} / 10명</strong>
       </div>
       <label className={styles.fieldLabel}>초안 이름<input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} required /></label>
 
       <section className={styles.balanceStep} aria-labelledby="balance-step-one-title">
         <button className={styles.balanceStepToggle} type="button" aria-expanded={stepOneOpen} onClick={() => setStepOneOpen((open) => !open)}>
-          <span><b>1</b><span><strong id="balance-step-one-title">참가자 고르기</strong><small>신청 그룹을 가져오거나 전체 플레이어를 검색하세요.</small></span></span>
+          <span><b>1</b><span><strong id="balance-step-one-title">참가자 고르기</strong></span></span>
           <ChevronDown aria-hidden="true" />
         </button>
         {stepOneOpen ? <div className={styles.balanceStepBody}>
           <div className={styles.candidateImport}>
-            <div className={styles.subheading}><div><span>SEASON APPLICATIONS</span><h3>시즌 신청자 가져오기</h3></div><RefreshCw aria-hidden="true" /></div>
+            <div className={styles.subheading}><div><h3>시즌 신청자 가져오기</h3></div><RefreshCw aria-hidden="true" /></div>
             <div className={styles.candidateFilters}>
               <label>출처<select value={origin} onChange={(event) => { setOrigin(event.target.value as CandidateOrigin); setSelectedDate(""); setSelectedRound(""); }}><option value="ALL">전체 신청</option><option value="KAKAO">카카오톡 신청</option><option value="SITE">사이트 신청</option></select></label>
               <label>날짜<select value={effectiveDate} disabled={candidateLoading || availableDates.length === 0} onChange={(event) => { setSelectedDate(event.target.value); setSelectedRound(""); }}>{availableDates.length ? availableDates.map((date) => <option value={date} key={date}>{date}</option>) : <option value="">최근 신청 없음</option>}</select></label>
@@ -369,7 +369,7 @@ export function TeamBalanceBuilder() {
 
       <section className={styles.balanceStep} aria-labelledby="balance-step-two-title">
         <button className={styles.balanceStepToggle} type="button" aria-expanded={stepTwoOpen} onClick={() => setStepTwoOpen((open) => !open)}>
-          <span><b>2</b><span><strong id="balance-step-two-title">포지션 확인</strong><small>신청 포지션을 확인하고 필요한 참가자만 펼쳐 수정하세요.</small></span></span>
+          <span><b>2</b><span><strong id="balance-step-two-title">포지션 확인</strong></span></span>
           <ChevronDown aria-hidden="true" />
         </button>
         {stepTwoOpen ? <div className={styles.balanceStepBody}>
@@ -417,7 +417,7 @@ export function TeamBalanceBuilder() {
       <div className={styles.actions}>
         <button className={styles.primaryButton} data-usage-action="team-balance.quick" type="submit" disabled={pending || selectedRows.length !== 10}><Scale size={18} aria-hidden="true" /> {pending ? "계산 중…" : "균형 잡힌 팀 만들기"}</button>
         <button className={styles.secondaryButton} type="button" disabled={pending} onClick={reset}><RotateCcw size={17} aria-hidden="true" /> 입력 초기화</button>
-        <span className={styles.stageHint}><Plus size={14} aria-hidden="true" /> 표본이 없으면 중립 점수 50으로 계산합니다.</span>
+        <span className={styles.stageHint}><Plus size={14} aria-hidden="true" /> 표본 없음: 중립 점수 50</span>
       </div>
     </form>
   );

@@ -1,0 +1,87 @@
+✖ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (36.5809ms)
+✖ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (8.9907ms)
+✖ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (4.0178ms)
+✖ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (4.5362ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 285.7357
+
+✖ failing tests:
+
+test at tests\route-error-recovery.test.mjs:39:3
+✖ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (36.5809ms)
+  AssertionError [ERR_ASSERTION]: Next retry must refresh, not only clear the previous error
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:49:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\route-error-recovery.test.mjs:39:3
+✖ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (8.9907ms)
+  AssertionError [ERR_ASSERTION]: Next retry must refresh, not only clear the previous error
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:49:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\route-error-recovery.test.mjs:39:3
+✖ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (4.0178ms)
+  AssertionError [ERR_ASSERTION]: Next retry must refresh, not only clear the previous error
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:49:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\route-error-recovery.test.mjs:39:3
+✖ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (4.5362ms)
+  ReferenceError: window is not defined
+      at Object.onClick (evalmachine.<anonymous>:10:717)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/route-error-recovery.test.mjs:48:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)

@@ -1,0 +1,14 @@
+✔ public discipline API exposes aggregate statistics only (3.3232ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (1.3797ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (1.8722ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (0.7165ms)
+✔ discipline pages declare real empty, error, and unavailable states (0.8081ms)
+✔ discipline administrator headings and status labels are readable Korean (0.8368ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.2658

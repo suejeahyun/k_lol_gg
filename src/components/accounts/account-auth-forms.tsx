@@ -78,9 +78,9 @@ export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
       <label className={styles.field}>아이디<input name="loginId" autoComplete="username" minLength={4} maxLength={64} required autoFocus /></label>
       <label className={styles.field}>비밀번호<input name="password" type="password" autoComplete="current-password" minLength={1} maxLength={256} required /></label>
       <button className={styles.submit} type="submit" disabled={busy}>{busy ? "확인 중…" : "로그인"}</button>
-      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">
-        {message?.text ?? "승인 대기·거절·이용 제한 계정도 상태 확인과 비밀번호 변경을 위해 로그인할 수 있습니다."}
-      </div>
+      {message ? <div className={styles.message} data-tone={message.tone} role={message.tone === "error" ? "alert" : "status"} aria-live="polite">
+        {message.text}
+      </div> : null}
       <div className={styles.links}><Link href={`/signup?next=${encodeURIComponent(safeNext)}`}>회원가입 후 계속하기</Link><Link href="/forgot-password">비밀번호 도움</Link><Link href="/admin/login">관리자 로그인</Link></div>
     </form>
   );
@@ -144,14 +144,14 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
 
   return (
     <form className={styles.form} onSubmit={submit} noValidate>
-      <label className={styles.field}>로그인 아이디<input name="loginId" autoComplete="username" minLength={4} maxLength={64} required autoFocus /><small>4~64자, 한글·영문·숫자와 . _ - 를 사용할 수 있습니다.</small></label>
-      <label className={styles.field}>비밀번호<input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /><small>문자와 숫자를 포함한 10자 이상으로 만들어 주세요.</small></label>
+      <label className={styles.field}>로그인 아이디<input name="loginId" autoComplete="username" minLength={4} maxLength={64} required autoFocus /><small>4~64자 · 한글, 영문, 숫자, . _ -</small></label>
+      <label className={styles.field}>비밀번호<input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /><small>10자 이상 · 문자와 숫자 포함</small></label>
       <label className={styles.field}>회원명<input name="memberName" autoComplete="name" minLength={2} maxLength={100} required /></label>
-      <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={22} required /><small>게임 이름은 최대 16자, 태그는 최대 5자입니다. 기존 플레이어와 일치하면 즉시 연결하지 않고 관리자 수동 검토를 거칩니다.</small></label>
+      <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={22} required /><small>게임 이름 최대 16자 · 태그 최대 5자</small></label>
       <label className={styles.check}><input name="termsAccepted" type="checkbox" required /><span><Link href="/terms" target="_blank">이용약관</Link>을 확인했고 계정 운영 규칙에 동의합니다.</span></label>
       <label className={styles.check}><input name="privacyAccepted" type="checkbox" required /><span><Link href="/privacy" target="_blank">개인정보 처리 안내</Link>에 따른 계정·회원명·Riot ID 처리에 동의합니다.</span></label>
       <button className={styles.submit} type="submit" disabled={busy}>{busy ? "가입 중…" : "가입하기"}</button>
-      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "새 Riot ID는 가입 즉시 승인됩니다. 기존 플레이어와 일치하면 안전한 연결을 위해 관리자 확인을 거칩니다."}</div>
+      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "신규 플레이어: 즉시 승인 · 기존 플레이어: 관리자 확인 후 연결"}</div>
       <div className={styles.links}><Link href={loginHref}>이미 계정이 있어요</Link></div>
     </form>
   );

@@ -153,14 +153,14 @@ export default async function PlayerDetailPage({
 
           {tab === "riot" ? (
             <section className="profile-summary" aria-labelledby="riot-summary-title">
-              <div className="section-heading"><div><p>RIOT</p><h2 id="riot-summary-title">공개 Riot 전적</h2></div><span>챔피언 · 포지션 · 경기 분석 · 날짜별 변화를 확인하세요.</span></div>
+              <div className="section-heading"><div><h2 id="riot-summary-title">공개 Riot 전적</h2></div></div>
               {riotResult ? <PublicRiotProfileState result={riotResult} analysisTab={analysisTab} /> : null}
             </section>
           ) : <>
           <section className="profile-summary" aria-labelledby="profile-summary-title">
             <div className="section-heading">
-              <div><p>PROFILE</p><h2 id="profile-summary-title">프로필 요약</h2></div>
-              <span>현재 티어와 주요 기록을 한눈에 확인하세요.</span>
+              <div><h2 id="profile-summary-title">프로필 요약</h2></div>
+
             </div>
             <div className="profile-summary__grid">
               <article><span>현재 티어</span><strong>{result.data.currentTier ?? "미등록"}</strong></article>
@@ -171,7 +171,7 @@ export default async function PlayerDetailPage({
 
           <section className="profile-records" aria-labelledby="profile-records-title">
             <div className="section-heading">
-              <div><p>RECORDS</p><h2 id="profile-records-title">시즌·포지션·챔피언 기록</h2></div>
+              <div><h2 id="profile-records-title">시즌·포지션·챔피언 기록</h2></div>
               <span>{statisticsResult.state === "ready" && statisticsResult.data?.season ? `${statisticsResult.data.season.name} · 마지막 집계: ${formatOptionalKoreanDateTime(statisticsResult.data.projection?.calculatedAt ?? null)}` : "공개 통계"}</span>
             </div>
             {statisticsResult.state === "unavailable" ? (

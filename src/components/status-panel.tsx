@@ -6,9 +6,9 @@ export function StatusPanel({
   description,
   children,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
-  description: string;
+  description?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -16,9 +16,9 @@ export function StatusPanel({
       <span className="status-panel__mark" aria-hidden="true">
         <Sparkles />
       </span>
-      <p className="status-panel__eyebrow">{eyebrow}</p>
+      {eyebrow ? <p className="status-panel__eyebrow">{eyebrow}</p> : null}
       <h1 id="status-title">{title}</h1>
-      <p className="status-panel__description">{description}</p>
+      {description ? <p className="status-panel__description">{description}</p> : null}
       {children ? <div className="status-panel__actions">{children}</div> : null}
     </section>
   );

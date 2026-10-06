@@ -40,13 +40,13 @@ export default async function AdminTeamBalanceDraftsPage({ searchParams }: { sea
 
   return <main className={`page-wrap ${styles.page}`}>
     <section className={styles.draftListHeader} aria-labelledby="admin-draft-list-title">
-      <div><span>{query?.view === "recommendations" ? "ADMIN PICK · BAN" : "ADMIN TEAM DRAFTS"}</span><h1 id="admin-draft-list-title">{query?.view === "recommendations" ? "전체 초안 밴픽 추천" : "전체 팀 밸런스 초안"}</h1><p>{query?.view === "recommendations" ? "선택된 배치와 실제 시즌 챔피언 통계를 관리자 범위에서 검수합니다." : "사용자가 저장한 배치를 검수하고, 선택 팀으로 경기를 등록하거나 안전하게 보관·복구합니다."}</p></div>
+      <div><h1 id="admin-draft-list-title">{query?.view === "recommendations" ? "전체 초안 밴픽 추천" : "전체 팀 밸런스 초안"}</h1></div>
       <Link className={styles.primaryLink} href={query?.view === "recommendations" ? "/admin/balance/drafts" : "/admin/balance/drafts?view=recommendations"}>{query?.view === "recommendations" ? "초안 목록" : "밴픽 추천"}</Link>
     </section>
     {query?.view === "recommendations" && result.state === "ready" && result.data.items.length > 0 ? <>
       <form className={styles.recommendationSelector} action="/admin/balance/drafts" method="get"><input type="hidden" name="view" value="recommendations"/><input type="hidden" name="team" value={query.team}/><label><span>검수 초안</span><select name="draftId" defaultValue={selectedDraftId ?? ""}>{result.data.items.map((draft) => <option key={draft.id} value={draft.id}>{draft.title} · {statusLabel[draft.status]}</option>)}</select></label><button type="submit">추천 불러오기</button></form>
-      {recommendation?.state === "ready" && recommendation.data ? <TeamBalanceRecommendationsPanel recommendation={recommendation.data} hrefForTeam={(team) => `/admin/balance/drafts?view=recommendations&draftId=${selectedDraftId}&team=${team}`}/> : <section className={styles.emptyState} role={recommendation?.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h2>관리자 추천을 불러올 수 없습니다.</h2><p>초안과 통계 projection 상태를 확인해 주세요.</p></section>}
-    </> : query?.view === "recommendations" && result.state === "ready" ? <section className={styles.emptyState}><FolderOpen aria-hidden="true"/><h2>검수할 팀 초안이 없습니다.</h2><p>사용자 초안이 생성되면 추천을 확인할 수 있습니다.</p></section>
+      {recommendation?.state === "ready" && recommendation.data ? <TeamBalanceRecommendationsPanel recommendation={recommendation.data} hrefForTeam={(team) => `/admin/balance/drafts?view=recommendations&draftId=${selectedDraftId}&team=${team}`}/> : <section className={styles.emptyState} role={recommendation?.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h2>관리자 추천을 불러올 수 없습니다.</h2></section>}
+    </> : query?.view === "recommendations" && result.state === "ready" ? <section className={styles.emptyState}><FolderOpen aria-hidden="true"/><h2>검수할 팀 초안이 없습니다.</h2></section>
     : result.state === "ready" && result.data.items.length > 0 ? <>
       <div className={styles.draftList} aria-live="polite">
         {result.data.items.map((draft) => <Link className={styles.draftListCard} href={`/admin/balance/drafts/${draft.id}`} key={draft.id}>
@@ -61,6 +61,6 @@ export default async function AdminTeamBalanceDraftsPage({ searchParams }: { sea
         {result.data.currentPage < result.data.totalPages ? <Link href={pageHref(result.data.currentPage + 1)} rel="next">다음 <ChevronRight size={16} aria-hidden="true" /></Link> : <span aria-disabled="true">다음 <ChevronRight size={16} aria-hidden="true" /></span>}
       </nav> : null}
     </> : result.state === "ready" ? <section className={styles.emptyState}><FolderOpen aria-hidden="true" /><h2>저장된 팀 초안이 없습니다.</h2><p>사용자가 팀 밸런스 초안을 만들면 이곳에 표시됩니다.</p></section>
-      : <section className={styles.emptyState} role={result.state === "error" ? "alert" : "status"}><FolderOpen aria-hidden="true" /><h2>전체 초안 목록을 불러올 수 없습니다.</h2><p>데이터베이스 연결과 페이지 값을 확인해 주세요.</p></section>}
+      : <section className={styles.emptyState} role={result.state === "error" ? "alert" : "status"}><FolderOpen aria-hidden="true" /><h2>전체 초안 목록을 불러올 수 없습니다.</h2></section>}
   </main>;
 }

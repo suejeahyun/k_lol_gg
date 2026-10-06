@@ -297,9 +297,9 @@ export function AdminMediaForm(props: Props) {
     <label>설명<textarea maxLength={4000} required value={description} onChange={(event) => setDescription(event.target.value)} /></label>
     {props.kind === "highlight" ? <div className={styles.split}><label>YouTube 주소<input type="url" required placeholder="https://youtu.be/..." value={youtubeUrl} onChange={(event) => setYoutubeUrl(event.target.value)} /></label><label>정렬 순서<input type="number" min="-100000" max="100000" value={sortOrder} onChange={(event) => setSortOrder(Number(event.target.value))} /></label></div> : null}
 
-    {!initial ? props.kind === "highlight" ? <p className={styles.notice}>먼저 초안을 만드세요. 다음 화면에서 파일을 안전하게 검사하고 바로 연결할 수 있습니다.</p> : <section className={styles.assetPanel} aria-labelledby="new-gallery-asset-heading">
-      <div><h2 id="new-gallery-asset-heading">이미지 한 번에 등록</h2><p>최대 5장을 선택하면 초안 생성, 안전 검사, READY 전환, 갤러리 연결을 순서대로 처리합니다.</p></div>
-      {!props.uploadAvailable ? <p className={styles.error} role="status">운영 비공개 저장소가 아직 연결되지 않아 업로드가 안전하게 닫혀 있습니다.</p> : <label className={styles.filePicker}>이미지 선택<input aria-describedby="new-gallery-file-help" disabled={busy} multiple type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+    {!initial ? props.kind === "highlight" ? <p className={styles.notice}>초안 생성 후 썸네일 등록 가능</p> : <section className={styles.assetPanel} aria-labelledby="new-gallery-asset-heading">
+      <div><h2 id="new-gallery-asset-heading">이미지 등록 (선택 · 최대 5장)</h2></div>
+      {!props.uploadAvailable ? <p className={styles.error} role="status">이미지 저장소 미연결 · 업로드 불가</p> : <label className={styles.filePicker}>이미지 선택<input aria-describedby="new-gallery-file-help" disabled={busy} multiple type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
         const files = [...(event.currentTarget.files ?? [])];
         const planned = planGalleryFiles(files, 5);
         const rejected = galleryFileProblemLabels(planned.rejected);
@@ -309,11 +309,11 @@ export function AdminMediaForm(props: Props) {
         setUploadReport(rejected.length > 0 ? `선택 제외: ${rejected.join(", ")}` : null);
         event.currentTarget.value = "";
       }} /><span id="new-gallery-file-help">PNG · JPEG · WebP / 장당 최대 4MiB / 최대 5장</span></label>}
-      {selectedGalleryFiles.length === 0 ? <p className={styles.hint}>이미지를 선택하지 않아도 빈 초안을 만들 수 있습니다.</p> : <ol className={styles.selectedFiles} aria-label="등록할 이미지 순서">{selectedGalleryFiles.map((file, index) => <li key={`${file.name}:${file.size}:${file.lastModified}:${index}`}><span><strong>{index + 1}. {file.name}</strong><small>{(file.size / 1024).toFixed(0)} KB</small></span><button aria-label={`${file.name} 선택 취소`} disabled={busy} type="button" onClick={() => setSelectedGalleryFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>선택 취소</button></li>)}</ol>}
-      <p className={styles.hint}>선택 순서가 공개 갤러리 표시 순서가 됩니다. 일부 파일이 실패해도 성공한 파일은 READY 자산으로 보존합니다.</p>
+      {selectedGalleryFiles.length === 0 ? null : <ol className={styles.selectedFiles} aria-label="등록할 이미지 순서">{selectedGalleryFiles.map((file, index) => <li key={`${file.name}:${file.size}:${file.lastModified}:${index}`}><span><strong>{index + 1}. {file.name}</strong><small>{(file.size / 1024).toFixed(0)} KB</small></span><button aria-label={`${file.name} 선택 취소`} disabled={busy} type="button" onClick={() => setSelectedGalleryFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>선택 취소</button></li>)}</ol>}
+      <p className={styles.hint}>선택 순서로 공개 · 일부 실패 시 성공한 이미지는 유지</p>
     </section> : <section className={styles.assetPanel} aria-labelledby="asset-heading">
-      <div><h2 id="asset-heading">{props.kind === "highlight" ? "썸네일" : `갤러리 이미지 ${galleryImages.length}/5`}</h2><p>{props.kind === "gallery" ? "비공개 자산과 이관된 외부 이미지는 아래 표시 순서를 함께 사용합니다." : "검사를 통과해 READY가 된 이미지만 초안에 연결됩니다."}</p></div>
-      {!editable ? <p className={styles.notice}>이미지를 바꾸려면 먼저 게시를 내리거나 보관된 초안을 복구해 주세요.</p> : !props.uploadAvailable ? <p className={styles.error} role="status">운영 비공개 저장소가 아직 연결되지 않아 업로드가 안전하게 닫혀 있습니다.</p> : <label className={styles.filePicker}>{props.kind === "gallery" ? "이미지 여러 장 선택" : "파일 선택"}<input disabled={busy || (props.kind === "gallery" && galleryImages.length >= 5)} multiple={props.kind === "gallery"} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+      <div><h2 id="asset-heading">{props.kind === "highlight" ? "썸네일" : `갤러리 이미지 ${galleryImages.length}/5`}</h2><p>{props.kind === "gallery" ? "업로드·외부 이미지 공통 표시 순서" : "READY 이미지 선택 가능"}</p></div>
+      {!editable ? <p className={styles.notice}>이미지 수정: 게시 내리기·초안 복구 필요</p> : !props.uploadAvailable ? <p className={styles.error} role="status">이미지 저장소 미연결 · 업로드 불가</p> : <label className={styles.filePicker}>{props.kind === "gallery" ? "이미지 여러 장 선택" : "파일 선택"}<input disabled={busy || (props.kind === "gallery" && galleryImages.length >= 5)} multiple={props.kind === "gallery"} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
         const files = [...(event.currentTarget.files ?? [])];
         event.currentTarget.value = "";
         if (props.kind === "gallery") void uploadSelectedFiles(files);
@@ -331,7 +331,6 @@ export function AdminMediaForm(props: Props) {
       {editable && assets.some((asset) => props.kind === "highlight" ? !assetIds.includes(asset.assetId) : !linkedGalleryAssetIds.includes(asset.assetId)) ? <div className={styles.assetSelector}><strong>이 초안의 기존 READY 이미지</strong>{assets.filter((asset) => props.kind === "highlight" ? !assetIds.includes(asset.assetId) : !linkedGalleryAssetIds.includes(asset.assetId)).map((asset) => <button disabled={busy || (props.kind === "gallery" && galleryImages.length >= 5)} key={asset.assetId} type="button" onClick={() => props.kind === "highlight" ? void saveAssets([asset.assetId]) : void saveGalleryImages([...galleryImages, { kind: "ASSET", assetId: asset.assetId }])}><span>{assetLabel(asset)}</span><b>연결</b></button>)}</div> : null}
     </section>}
 
-    <p className={styles.hint}>게시 시 서버가 자산 READY 상태·용도·개수와 최신 revision을 다시 확인합니다.</p>
     {uploadProgress ? <p className={styles.notice} aria-live="polite" role="status">{uploadProgress}</p> : null}
     {uploadReport ? <p className={styles.notice} aria-live="polite" role="status">{uploadReport}</p> : null}
     {message ? <p className={styles.error} role="alert">{message}</p> : null}

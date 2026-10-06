@@ -71,11 +71,12 @@ export function AdminBreadcrumb() {
   const formLink = ADMIN_OPERATION_FORM_LINKS.find((link) => link.formType === operationFormType);
   const operations = isAdminWorkspaceActive(pathname, "/admin/discipline");
   return <nav className={styles.breadcrumb} aria-label="관리자 위치" data-workspace={operations ? "operations" : undefined}>
-    <Link href="/admin">관리자</Link><span aria-hidden="true">/</span>
+    <Link href="/admin">관리자</Link>
     {operations ? <>
+      <span aria-hidden="true">/</span>
       <Link href="/admin/discipline">운영·감사</Link>
       <span aria-hidden="true">/</span><span aria-current="page">{pathname.startsWith("/admin/operation-forms") ? formLink?.label ?? "운영 신청서" : pathname === "/admin/usage" ? "사이트 이용 현황" : pathname === "/admin/logs" ? "운영 로그" : pathname === "/admin/ai-requests" ? "AI 요청 내역" : "징계"}</span>
-    </> : <span>보호된 작업 공간</span>}
+    </> : null}
   </nav>;
 }
 
