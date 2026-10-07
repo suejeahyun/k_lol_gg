@@ -1,0 +1,119 @@
+✖ completed and cancelled anonymous visitors see closed actions and a login link specifically for their own record (166.7796ms)
+✖ pending accounts see terminal state and account recovery only for own-application reading (75.4267ms)
+✖ recruitment keeps application login and approval recovery without promising early MVP voting (64.3636ms)
+✖ preliminary and tournament voting have their own login return target and approval recovery (65.0701ms)
+✖ approved terminal participants retain their stored application and mode record without mutation controls (53.4472ms)
+✔ existing recruitment submit/cancel and active MVP vote handlers preserve request identities and values (167.3458ms)
+✔ confirmed mode-record editing remains available during team building when the existing DTO allows it (57.7138ms)
+✔ application and MVP deep links still focus their visible region for each lifecycle and account state (1530.9137ms)
+✔ private-read failures and uncertain mutation recovery remain actionable (99.4513ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 4
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2543.8641
+
+✖ failing tests:
+
+test at tests\destruction-owner-lifecycle.test.mjs:62:1
+✖ completed and cancelled anonymous visitors see closed actions and a login link specifically for their own record (166.7796ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /내 신청 확인/u. Input:
+
+  '<div id="destruction-application" tabindex="-1" role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>로그인 필요</p><a href="/login?next=%2Fcompetitions%2Fdestruction%2F81000000-0000-4000-8000-000000000001%3Faction%3Dapply">로그인</a></div>'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-owner-lifecycle.test.mjs:65:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<div id="destruction-application" tabindex="-1" role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>로그인 필요</p><a href="/login?next=%2Fcompetitions%2Fdestruction%2F81000000-0000-4000-8000-000000000001%3Faction%3Dapply">로그인</a></div>',
+    expected: /내 신청 확인/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\destruction-owner-lifecycle.test.mjs:77:1
+✖ pending accounts see terminal state and account recovery only for own-application reading (75.4267ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /내 신청 확인/u. Input:
+
+  '<div id="destruction-application" tabindex="-1" role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>승인된 플레이어 계정 필요</p><a href="/account">내 계정 상태 확인</a></div>'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-owner-lifecycle.test.mjs:80:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<div id="destruction-application" tabindex="-1" role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>승인된 플레이어 계정 필요</p><a href="/account">내 계정 상태 확인</a></div>',
+    expected: /내 신청 확인/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\destruction-owner-lifecycle.test.mjs:88:1
+✖ recruitment keeps application login and approval recovery without promising early MVP voting (64.3636ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /MVP 투표 대기/u. Input:
+
+  '<div id="destruction-mvp" tabindex="-1" role="region" aria-labelledby="destruction-mvp-title"><h2 id="destruction-mvp-title">MVP 투표</h2><p>로그인 필요</p></div>'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-owner-lifecycle.test.mjs:93:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<div id="destruction-mvp" tabindex="-1" role="region" aria-labelledby="destruction-mvp-title"><h2 id="destruction-mvp-title">MVP 투표</h2><p>로그인 필요</p></div>',
+    expected: /MVP 투표 대기/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\destruction-owner-lifecycle.test.mjs:101:1
+✖ preliminary and tournament voting have their own login return target and approval recovery (65.0701ms)
+  AssertionError [ERR_ASSERTION]: voting login must return to the voting region, not the closed application form
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-owner-lifecycle.test.mjs:105:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\destruction-owner-lifecycle.test.mjs:113:1
+✖ approved terminal participants retain their stored application and mode record without mutation controls (53.4472ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /내 신청 확인/u. Input:
+
+  '<div id="destruction-application" tabindex="-1" role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>참가 확정 · 변경은 운영자에게 문의</p><p>본인 기재: 17승 9패 · 승패 수정 마감</p></div>'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-owner-lifecycle.test.mjs:116:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<div id="destruction-application" tabindex="-1" role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>참가 확정 · 변경은 운영자에게 문의</p><p>본인 기재: 17승 9패 · 승패 수정 마감</p></div>',
+    expected: /내 신청 확인/u,
+    operator: 'match',
+    diff: 'simple'
+  }

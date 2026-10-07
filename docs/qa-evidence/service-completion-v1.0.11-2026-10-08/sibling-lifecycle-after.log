@@ -1,0 +1,21 @@
+✔ season, date and round changes replace application form state in both editable branches (161.3136ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (38.0625ms)
+✔ closed season or round shows its lifecycle before new-application authentication and retains own status (212.3472ms)
+✔ open season keeps account recovery, selected-round login return and existing application state (47.1349ms)
+✔ a missing site application retains a direct path to recover Kakao member linking (10.8821ms)
+✔ event position labels remain readable while form values retain the API position codes (8.9649ms)
+✔ event lifecycle blocks impossible application prompts while open recruitment retains auth and own controls (13.2351ms)
+✔ own status and public roster use the same Korean position labels as the application form (60.9777ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (16.3698ms)
+✔ destruction format choices distinguish match lengths and retain the selected canonical filter (50.8737ms)
+✔ public competition pages expose list/detail/application states without administrator controls (2.5221ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (1.3084ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.5027ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 918.935

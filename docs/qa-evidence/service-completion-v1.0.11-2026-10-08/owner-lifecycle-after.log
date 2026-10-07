@@ -1,0 +1,20 @@
+✔ completed and cancelled anonymous visitors see closed actions and a login link specifically for their own record (308.8817ms)
+✔ pending accounts see terminal state and account recovery only for own-application reading (145.9703ms)
+✔ recruitment keeps application login and approval recovery without promising early MVP voting (201.5843ms)
+✔ preliminary and tournament voting have their own login return target and approval recovery (269.4442ms)
+✔ approved terminal participants retain their stored application and mode record without mutation controls (370.42ms)
+✔ existing recruitment submit/cancel and active MVP vote handlers preserve request identities and values (199.783ms)
+✔ confirmed mode-record editing remains available during team building when the existing DTO allows it (63.565ms)
+✔ application and MVP deep links still focus their visible region for each lifecycle and account state (1924.492ms)
+✔ private-read failures and uncertain mutation recovery remain actionable (143.5897ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.5116ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (3.4479ms)
+✔ API source keeps account owner and ADMIN boundaries separate (0.9375ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3977.4897

@@ -1,0 +1,52 @@
+✔ season, date and round changes replace application form state in both editable branches (168.9748ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (39.399ms)
+✖ closed season or round shows its lifecycle before new-application authentication and retains own status (10.047ms)
+✔ open season keeps account recovery, selected-round login return and existing application state (49.6021ms)
+✔ a missing site application retains a direct path to recover Kakao member linking (11.2013ms)
+✔ event position labels remain readable while form values retain the API position codes (10.9288ms)
+✖ event lifecycle blocks impossible application prompts while open recruitment retains auth and own controls (10.3746ms)
+✔ own status and public roster use the same Korean position labels as the application form (71.5347ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (11.5456ms)
+✔ destruction format choices distinguish match lengths and retain the selected canonical filter (47.1518ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 8
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 758.4699
+
+✖ failing tests:
+
+test at tests\application-navigation.test.mjs:98:1
+✖ closed season or round shows its lifecycle before new-application authentication and retains own status (10.047ms)
+  AssertionError [ERR_ASSERTION]: season/ANONYMOUS/false
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/application-navigation.test.mjs:108:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '<div class="page-wrap page" data-application-type="season"><section class="hero" aria-labelledby="applications-title"><div><h1 id="applications-title">참가 신청</h1></div></section><nav class="typeTabs" aria-label="참가 신청 종류"><a aria-current="page" href="/applications?type=season">오늘 내전</a><a href="/applications?type=event">이벤트전</a><a href="/applications?type=destruction">멸망전</a><a href="/recruits">파티 모집</a></nav><section class="overview" aria-labelledby="season-overview-title"><div class="sectionHeading"><div><h2 id="season-overview-title">합성 시즌</h2></div><strong data-open="false">모집 마감</strong></div><nav class="roundTabs" aria-label="오늘 모집 회차"><a aria-current="page" href="/applications?type=season&amp;recruitNo=1">1회차</a><a href="/applications?type=season&amp;recruitNo=2">2회차</a></nav><div class="stats"><article><span>본 참가</span><strong>1/10</strong></article><article><span>예비</span><strong>0</strong></article><article><span>확정</span><strong>0</strong></article></div></section><section class="loginCard"><div><h2>참가 신청은 로그인·승인 필요</h2></div><a href="/login?next=%2Fapplications%3Ftype%3Dseason%26recruitNo%3D1">로그인</a></section><section class="participants" aria-labelledby="participants-title"><div class="sectionHeading"><div><h2 id="participants-title">참가 현황</h2></div><strong>1명</strong></div><ul class="participantList"><li><span aria-hidden="true">합</span><div><strong>합성 참가자</strong><small>Synthetic#TEST</small></div><em>주 미드 · 부 없음</em><b data-status="APPLIED">신청</b></li></ul><small class="privacy">명단 공개 항목: 닉네임·Riot ID·선택 라인</small></section></div>',
+    expected: /신청 기간이 마감되었어요/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\application-navigation.test.mjs:188:1
+✖ event lifecycle blocks impossible application prompts while open recruitment retains auth and own controls (10.3746ms)
+  AssertionError [ERR_ASSERTION]: false/false/null
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/application-navigation.test.mjs:203:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '<section id="event-application" tabindex="-1" class="applicationDeepLink" aria-labelledby="event-application-title"><h2 id="event-application-title">참가 신청</h2><p class="applicationNotice">로그인·승인 계정 필요 <a href="/login?next=%2Fcompetitions%2Fevents%2Fsynthetic-event%3Faction%3Dapply">로그인하고 신청하기</a></p></section>',
+    expected: /참가 신청 기간 아님/u,
+    operator: 'match',
+    diff: 'simple'
+  }

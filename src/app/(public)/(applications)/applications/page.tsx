@@ -111,7 +111,13 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             {result.data.unlinkedCount > 0 ? <p className={styles.mergeNotice}>참가 인원 중 회원 연결 대기 {result.data.unlinkedCount}명</p> : null}
           </section>
 
-          {result.data.viewer === "RESTRICTED" ? (
+          {!result.data.currentSeason.applicationsOpen || result.data.round.closed ? (
+            <section className={styles.stateCard}>
+              <ShieldCheck aria-hidden="true" />
+              <h2>신청 기간이 마감되었어요.</h2>
+              <Link href="/recruits">다른 모집 보기</Link>
+            </section>
+          ) : result.data.viewer === "RESTRICTED" ? (
             <section className={styles.stateCard} role="status">
               <ShieldCheck aria-hidden="true" />
               <h2>현재 계정은 참가 신청이 제한되어 있어요.</h2>

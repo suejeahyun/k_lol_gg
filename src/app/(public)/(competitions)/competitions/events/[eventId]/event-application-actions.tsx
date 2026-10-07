@@ -54,9 +54,9 @@ export function EventApplicationActions({ eventId, revision, format, open, signe
   }
 
   const region = (children: React.ReactNode) => <section ref={regionRef} id="event-application" tabIndex={-1} className={styles.applicationDeepLink} aria-labelledby="event-application-title"><h2 id="event-application-title">참가 신청</h2>{children}</section>;
+  if (!open) return region(<p className={styles.applicationNotice}>참가 신청 기간 아님 <Link href="/applications?type=event">다른 이벤트 모집 보기</Link></p>);
   if (!signedIn) return region(<p className={styles.applicationNotice}>로그인·승인 계정 필요 <Link href={`/login?next=${encodeURIComponent(`/competitions/events/${eventId}?action=apply`)}`}>로그인하고 신청하기</Link></p>);
   if (!approved) return region(<p className={styles.applicationNotice}>계정 승인·활성 플레이어 연결 필요 <Link href="/account">내 계정 상태 확인</Link></p>);
-  if (!open) return region(<p className={styles.applicationNotice}>참가 신청 기간 아님 <Link href="/applications?type=event">다른 이벤트 모집 보기</Link></p>);
   return region(<form className={styles.application} onSubmit={submit}>
     {format === "POSITION" ? <><label>주 포지션<select name="mainPosition" defaultValue={application?.mainPosition ?? "TOP"}>{positions.map((position) => <option key={position} value={position}>{competitionPositionLabel(position)}</option>)}</select></label><fieldset><legend>부 포지션</legend>{positions.map((position) => <label key={position}><input type="checkbox" name="subPositions" value={position} defaultChecked={application?.subPositions.includes(position)} /> {competitionPositionLabel(position)}</label>)}</fieldset></> : <p>칼바람 · 포지션 구분 없음</p>}
     <div><button disabled={busy} type="submit">{application?.status === "ACTIVE" ? "신청 수정" : "신청하기"}</button>{application?.status === "ACTIVE" ? <button disabled={busy} type="button" className={styles.secondary} onClick={() => mutate("DELETE", {})}>신청 취소</button> : null}</div>

@@ -95,6 +95,57 @@ test("position-free rounds do not display a fabricated main/sub position in own 
   assert.match(rift, /부 없음/u);
 });
 
+test("closed season or round shows its lifecycle before new-application authentication and retains own status", async () => {
+  for (const closure of ["season", "round"]) {
+    for (const viewer of ["ANONYMOUS", "RESTRICTED", "APPROVED"]) {
+      for (const hasActivePlayer of [false, true]) {
+        const data = hub({ canApply: false });
+        Object.assign(data, { viewer, hasActivePlayer, myApplication: null });
+        if (closure === "season") data.currentSeason.applicationsOpen = false;
+        else data.round.closed = true;
+        const tree = await applicationPage(data);
+        const html = renderToStaticMarkup(tree);
+        assert.match(html, /신청 기간이 마감되었어요/u, `${closure}/${viewer}/${hasActivePlayer}`);
+        assert.match(html, /href="\/recruits">다른 모집 보기/u);
+        assert.doesNotMatch(html, /href="(?:\/login\?|\/account")|로그인·승인 필요|연결된 활성 플레이어가 필요/u);
+        assert.equal(find(tree, (node) => node.type === ApplicationActions), null);
+      }
+    }
+    for (const [status, label] of Object.entries({ APPLIED: "신청", RESERVE: "예비", CONFIRMED: "확정", REJECTED: "거절", CANCELLED: "취소" })) {
+      const data = hub({ canApply: false, recruitNo: 2 });
+      data.myApplication.status = status;
+      if (closure === "season") data.currentSeason.applicationsOpen = false;
+      else data.round.closed = true;
+      const tree = await applicationPage(data);
+      assert.equal(find(tree, (node) => node.props.id === "my-status-title").props.children, label);
+      assert.equal(find(tree, (node) => node.type === ApplicationActions), null, "closed records remain readable without mutation controls");
+      assert.match(renderToStaticMarkup(tree), /2026-10-05 · 2회차 · 주 미드/u);
+    }
+  }
+});
+
+test("open season keeps account recovery, selected-round login return and existing application state", async () => {
+  const anonymous = hub({ recruitNo: 2, canApply: false });
+  Object.assign(anonymous, { viewer: "ANONYMOUS", hasActivePlayer: false, myApplication: null });
+  const login = find(await applicationPage(anonymous), (node) => node.type === Link && node.props.href.startsWith("/login?"));
+  assert.equal(new URL(login.props.href, "https://isolated.invalid").searchParams.get("next"), "/applications?type=season&recruitNo=2");
+  for (const viewer of ["RESTRICTED", "APPROVED"]) {
+    const data = hub({ canApply: false });
+    Object.assign(data, { viewer, hasActivePlayer: false, myApplication: null });
+    const html = renderToStaticMarkup(await applicationPage(data));
+    assert.match(html, /href="\/account"/u);
+    assert.match(html, viewer === "RESTRICTED" ? /참가 신청이 제한/u : /연결된 활성 플레이어/u);
+    assert.doesNotMatch(html, /신청 기간이 마감/u);
+  }
+  for (const canApply of [true, false]) {
+    const data = hub({ canApply, recruitNo: 2 });
+    const form = find(await applicationPage(data), (node) => node.type === ApplicationActions);
+    assert.equal(form.props.initial, data.myApplication);
+    assert.equal(form.props.recruitNo, 2);
+    assert.equal(form.props.closed, false);
+  }
+});
+
 test("a missing site application retains a direct path to recover Kakao member linking", () => {
   const { ApplicationActions: Form } = load("app/(public)/(applications)/applications/application-actions.tsx", {
     react: React,
@@ -132,6 +183,38 @@ test("event position labels remain readable while form values retain the API pos
   }
   assert.match(html, /name="mainPosition"/u);
   assert.match(html, /type="submit">신청하기<\/button>/u);
+});
+
+test("event lifecycle blocks impossible application prompts while open recruitment retains auth and own controls", () => {
+  const { EventApplicationActions: Form } = load("app/(public)/(competitions)/competitions/events/[eventId]/event-application-actions.tsx", {
+    react: React,
+    "react/jsx-runtime": jsxRuntime,
+    "next/link": Link,
+    "next/navigation": { useRouter: () => ({ refresh() {} }) },
+    "@/components/usage/usage-actions": { recordUsageAction() {} },
+    "@/modules/competitions/core/display-projection": load("modules/competitions/core/display-projection.ts", {}),
+    "../../events.module.css": css,
+  });
+  const render = (props) => renderToStaticMarkup(React.createElement(Form, { eventId: "synthetic-event", revision: 1, format: "POSITION", open: false, signedIn: false, approved: false, application: null, ...props }));
+  for (const [signedIn, approved] of [[false, false], [true, false], [true, true]]) {
+    for (const status of [null, "ACTIVE", "CANCELLED"]) {
+      const application = signedIn && status ? { participantId: "synthetic-participant", mainPosition: "MID", subPositions: [], status } : null;
+      const html = render({ signedIn, approved, application });
+      assert.match(html, /참가 신청 기간 아님/u, `${signedIn}/${approved}/${status}`);
+      assert.match(html, /href="\/applications\?type=event">다른 이벤트 모집 보기/u);
+      assert.doesNotMatch(html, /href="(?:\/login\?|\/account")|<form|<button|계정 필요|플레이어 연결 필요/u);
+      assert.match(html, /id="event-application" tabindex="-1"/u);
+    }
+  }
+  const loginHref = render({ open: true }).match(/href="([^"]+)"/u)?.[1];
+  assert.equal(new URL(loginHref, "https://isolated.invalid").searchParams.get("next"), "/competitions/events/synthetic-event?action=apply");
+  assert.match(render({ open: true, signedIn: true }), /href="\/account">내 계정 상태 확인/u);
+  for (const status of [null, "ACTIVE", "CANCELLED"]) {
+    const html = render({ open: true, signedIn: true, approved: true, application: status ? { participantId: "synthetic-participant", mainPosition: "MID", subPositions: [], status } : null });
+    assert.match(html, status === "ACTIVE" ? /type="submit">신청 수정/u : /type="submit">신청하기/u);
+    assert.equal(html.includes("신청 취소</button>"), status === "ACTIVE");
+    if (status) assert.match(html, /value="MID" selected=""/u);
+  }
 });
 
 test("own status and public roster use the same Korean position labels as the application form", async () => {

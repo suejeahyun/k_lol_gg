@@ -30,6 +30,9 @@ export function DestructionOwnerActions({ tournamentId, revision, status, signed
   const [selectedFixtureId, setSelectedFixtureId] = useState("");
   const eligibleBallots = mvpBallots;
   const selectedBallot = eligibleBallots.find((ballot) => ballot.fixtureId === selectedFixtureId) ?? eligibleBallots[0];
+  const recruitmentOpen = status === "RECRUITING";
+  const votingOpen = ["PRELIMINARY", "TOURNAMENT"].includes(status);
+  const ended = ["COMPLETED", "CANCELLED"].includes(status);
 
   useLayoutEffect(() => {
     const target = focusTarget === "apply" ? applicationRef.current : focusTarget === "mvp" ? mvpRef.current : null;
@@ -41,9 +44,6 @@ export function DestructionOwnerActions({ tournamentId, revision, status, signed
 
   if (!available) return <section className={styles.application} role="alert"><p>내 신청·투표 정보를 불러오지 못했습니다.</p><button type="button" onClick={refresh}>다시 불러오기</button></section>;
 
-
-  if (!signedIn) return <section className={styles.application}><div ref={applicationRef} id="destruction-application" tabIndex={-1} role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>로그인 필요</p><Link href={`/login?next=${encodeURIComponent(`/competitions/destruction/${tournamentId}?action=apply`)}`}>로그인</Link></div><div ref={mvpRef} id="destruction-mvp" tabIndex={-1} role="region" aria-labelledby="destruction-mvp-title"><h2 id="destruction-mvp-title">MVP 투표</h2><p>로그인 필요</p></div></section>;
-  if (!approved) return <section className={styles.application} role="status"><div ref={applicationRef} id="destruction-application" tabIndex={-1} role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2><p>승인된 플레이어 계정 필요</p><Link href="/account">내 계정 상태 확인</Link></div><div ref={mvpRef} id="destruction-mvp" tabIndex={-1} role="region" aria-labelledby="destruction-mvp-title"><h2 id="destruction-mvp-title">MVP 투표</h2><p>계정 승인·활성 플레이어 연결 필요</p></div></section>;
 
   function submitApplication(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,8 +59,11 @@ export function DestructionOwnerActions({ tournamentId, revision, status, signed
   }
 
   return <section className={styles.application} aria-label="내 참가 신청과 MVP 투표">
-    <div ref={applicationRef} id="destruction-application" tabIndex={-1} role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2>
-      {(status === "RECRUITING" && application?.status !== "CONFIRMED") || application?.canEditModeRecord ? <form className={gameMode === "CLASSIC" ? undefined : styles.modeRecordForm} onSubmit={submitApplication}>
+    <div ref={applicationRef} id="destruction-application" tabIndex={-1} role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">{recruitmentOpen || status === "PLANNED" ? "참가 신청" : "내 신청 확인"}</h2>
+      {!recruitmentOpen ? <p>{ended ? "참가 신청 종료" : status === "PLANNED" ? "참가 신청 대기" : "참가 신청 마감"}</p> : null}
+      {!signedIn ? status !== "PLANNED" ? <>{recruitmentOpen ? <p>로그인 필요</p> : null}<Link href={`/login?next=${encodeURIComponent(`/competitions/destruction/${tournamentId}?action=apply`)}`}>{recruitmentOpen ? "로그인" : "로그인하고 내 신청 확인"}</Link></> : null
+        : !approved ? status !== "PLANNED" ? <><p>{recruitmentOpen ? "승인된 플레이어 계정 필요" : "내 신청 확인 · 계정 승인 필요"}</p><Link href="/account">내 계정 상태 확인</Link></> : null
+        : (recruitmentOpen && application?.status !== "CONFIRMED") || application?.canEditModeRecord ? <form className={gameMode === "CLASSIC" ? undefined : styles.modeRecordForm} onSubmit={submitApplication}>
         {gameMode === "CLASSIC" ? <label>주 포지션<select name="position" defaultValue={application?.position ?? "TOP"}>{positions.map((lane) => <option key={lane} value={lane}>{competitionPositionLabel(lane)}</option>)}</select></label> : <>
           <p>{application?.status === "CONFIRMED" ? "참가 확정 · 주장·팀 확정 전 승패 수정 가능" : "포지션 구분 없음"}</p>
           <ModeRecordFields key={application?.selfReportedRecord?.submittedAt ?? "new"} gameMode={gameMode} record={application?.selfReportedRecord} />
@@ -68,9 +71,12 @@ export function DestructionOwnerActions({ tournamentId, revision, status, signed
         {application?.status !== "CONFIRMED" ? <><label>참가 역할<select key={`${application?.applicationId ?? "new"}:${application?.captainVolunteer ?? false}`} name="captainVolunteer" defaultValue={String(application?.captainVolunteer ?? false)}><option value="false">일반 선수</option><option value="true">주장 지원</option></select></label><p>주장 지원 · 운영자 선정 필요</p></> : null}
         <button disabled={busy || retryAvailable}>{application?.status === "CONFIRMED" ? "승패 저장·점수 재계산" : application && ["APPLIED", "RESERVE"].includes(application.status) ? "신청 수정" : "참가 신청"}</button>
         {application && ["APPLIED", "RESERVE"].includes(application.status) ? <button className={styles.secondary} type="button" disabled={busy || retryAvailable} onClick={() => void mutate(`/api/competitions/destruction/${tournamentId}/application`, "DELETE", {})}>신청 취소</button> : null}
-      </form> : <><p>{application?.status === "CONFIRMED" ? "참가 확정 · 변경은 운영자에게 문의" : "참가 신청 기간 아님"}</p>{application?.selfReportedRecord ? <p>본인 기재: {application.selfReportedRecord.wins}승 {application.selfReportedRecord.losses}패 · 승패 수정 마감</p> : null}</>}
+      </form> : <>{application?.status === "CONFIRMED" ? <p>{ended ? "참가 확정" : "참가 확정 · 변경은 운영자에게 문의"}</p> : !application && status !== "PLANNED" ? <p>내 신청 내역 없음</p> : null}{application?.selfReportedRecord ? <p>본인 기재: {application.selfReportedRecord.wins}승 {application.selfReportedRecord.losses}패 · 승패 수정 마감</p> : null}</>}
     </div>
-    <div ref={mvpRef} id="destruction-mvp" tabIndex={-1} role="region" aria-labelledby="destruction-mvp-title"><h2 id="destruction-mvp-title">MVP 투표</h2>{["PRELIMINARY", "TOURNAMENT"].includes(status) && eligibleBallots.length ? <form onSubmit={submitVote}><label>투표할 경기<select value={selectedBallot?.fixtureId ?? ""} onChange={(event) => setSelectedFixtureId(event.target.value)}>{eligibleBallots.map((ballot) => <option key={ballot.fixtureId} value={ballot.fixtureId}>{ballot.fixtureName}</option>)}</select></label><label>MVP 후보<select key={selectedBallot?.fixtureId ?? "empty"} name="candidatePlayerId" required defaultValue=""><option value="" disabled>선수를 선택해 주세요</option>{selectedBallot?.candidates.map((candidate) => <option key={candidate.playerId} value={candidate.playerId}>{candidate.playerName}</option>)}</select></label><button disabled={busy || retryAvailable || !selectedBallot}>MVP 투표·재투표</button></form> : ["PRELIMINARY", "TOURNAMENT"].includes(status) ? <p>현재 내가 투표할 수 있는 경기가 없습니다.</p> : <p>{["COMPLETED", "CANCELLED"].includes(status) ? "MVP 투표 종료" : "MVP 투표 대기"}</p>}</div>
+    <div ref={mvpRef} id="destruction-mvp" tabIndex={-1} role="region" aria-labelledby="destruction-mvp-title"><h2 id="destruction-mvp-title">MVP 투표</h2>{!votingOpen ? <p>{ended ? "MVP 투표 종료" : "MVP 투표 대기"}</p>
+      : !signedIn ? <><p>로그인 필요</p><Link href={`/login?next=${encodeURIComponent(`/competitions/destruction/${tournamentId}?tab=mvp`)}`}>로그인하고 MVP 투표</Link></>
+      : !approved ? <><p>계정 승인·활성 플레이어 연결 필요</p><Link href="/account">내 계정 상태 확인</Link></>
+      : eligibleBallots.length ? <form onSubmit={submitVote}><label>투표할 경기<select value={selectedBallot?.fixtureId ?? ""} onChange={(event) => setSelectedFixtureId(event.target.value)}>{eligibleBallots.map((ballot) => <option key={ballot.fixtureId} value={ballot.fixtureId}>{ballot.fixtureName}</option>)}</select></label><label>MVP 후보<select key={selectedBallot?.fixtureId ?? "empty"} name="candidatePlayerId" required defaultValue=""><option value="" disabled>선수를 선택해 주세요</option>{selectedBallot?.candidates.map((candidate) => <option key={candidate.playerId} value={candidate.playerId}>{candidate.playerName}</option>)}</select></label><button disabled={busy || retryAvailable || !selectedBallot}>MVP 투표·재투표</button></form> : <p>현재 내가 투표할 수 있는 경기가 없습니다.</p>}</div>
     {retryAvailable ? <button type="button" disabled={busy} onClick={() => void retry()}>요청 결과 다시 확인</button> : null}
     <p role="status" aria-live="polite">{busy ? "처리 중…" : message || (application ? `내 신청: ${APPLICATION_STATUS_LABEL[application.status]} · ${application.captainVolunteer ? "주장 지원" : "일반 선수"}` : "")}</p>
   </section>;
