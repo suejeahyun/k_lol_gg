@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-10-07T03:59:44.998Z",
+  "source": "0716a60bf09654118cc40493481839d75269b3f7",
+  "deployment": "dpl_2AtaxyjrMir9CJEzsem1ZF3Afh4x",
+  "passed": true,
+  "method": "Vercel CLI deployment-protection access; application requests are anonymous read-only GET.",
+  "checks": [
+    {
+      "name": "health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "home",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "rankings",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "admin",
+      "status": 401,
+      "passed": true
+    }
+  ]
+}

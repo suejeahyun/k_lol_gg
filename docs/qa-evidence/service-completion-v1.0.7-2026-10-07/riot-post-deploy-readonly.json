@@ -1,0 +1,45 @@
+{
+  "deployment": {
+    "id": "dpl_73cLhShUqRnR9WcramzRNwDQRdAv",
+    "source": "0716a60bf09654118cc40493481839d75269b3f7",
+    "state": "READY",
+    "target": "production",
+    "canonical": "https://k-lol-gg.vercel.app",
+    "readyAt": "2026-10-07T04:01:16.976Z",
+    "aliasAssignedAt": "2026-10-07T04:01:17.261Z"
+  },
+  "transaction": {
+    "read_only": "on",
+    "isolation": "repeatable read",
+    "snapshot_at": "2026-10-07T04:06:09.891Z"
+  },
+  "windowStartInclusive": "2026-10-07T04:01:17.261Z",
+  "scope": "Aggregate only JOB-requested work newly requested after the later of production READY/alias assignment/explicit cutoff. Existing queued work, member/admin requests and the historical 19-job cohort are excluded.",
+  "databaseBinding": {
+    "earlierAuthenticatedEnvironmentMetadataUnchanged": true,
+    "earlierPublicMmrMatched": true,
+    "exactKnownStorageProbeMatchedAgain": true,
+    "priorProbeCompletedAt": "2026-10-05T23:40:50.692Z",
+    "limitation": "Environment metadata was authenticated earlier on 2026-10-07, not fetched by this DB-only probe."
+  },
+  "scheduledJobStatusCodes": [
+    {
+      "status": "SUCCEEDED",
+      "diagnostic_code": null,
+      "count": 1,
+      "oldest_requested_at": "2026-10-07T04:05:45.425Z",
+      "latest_completed_at": "2026-10-07T04:05:46.575Z"
+    }
+  ],
+  "observation": {
+    "totalJobs": 1,
+    "partialWithCode": 0,
+    "partialWithoutCode": 0,
+    "unrecognized": 0,
+    "outcome": "NO_NEW_PARTIAL_OBSERVED"
+  },
+  "externalApiCalls": 0,
+  "mutationsPerformed": false,
+  "rolledBack": true,
+  "limitation": "A bounded point-in-time aggregate, not proof that every connected account is complete. JOB category and the post-promotion time window do not identify the exact deployment of every worker; no individual job/identity/body is retained."
+}

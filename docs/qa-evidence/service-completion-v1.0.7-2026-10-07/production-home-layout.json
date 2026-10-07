@@ -1,0 +1,201 @@
+{
+  "checkedAt": "2026-10-07T04:02:05.858Z",
+  "source": "0716a60bf09654118cc40493481839d75269b3f7",
+  "canonical": "https://k-lol-gg.vercel.app",
+  "passed": true,
+  "scope": "Read-only actual rendered home with loaded fonts. Candidate then identical-source main promotion window; no real-device or click validation claim.",
+  "samples": [
+    {
+      "documentWidth": 305,
+      "fontStatus": "loaded",
+      "headingIds": [
+        "home-title",
+        "home-ranking-title",
+        "tasks-title",
+        "home-overview-title",
+        "home-personal-title",
+        "home-status-title"
+      ],
+      "names": [
+        {
+          "cardBottom": 725.21875,
+          "clipped": false,
+          "metricLeft": 196.375,
+          "metricTop": 643.625,
+          "nameBottom": 688.21875,
+          "nameRight": 188.375,
+          "rank": "1",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 861.59375,
+          "clipped": false,
+          "metricLeft": 46.609375,
+          "metricTop": 819.40625,
+          "nameBottom": 813.40625,
+          "nameRight": 136.5,
+          "rank": "2",
+          "textLength": 7,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 861.59375,
+          "clipped": false,
+          "metricLeft": 168.515625,
+          "metricTop": 819.40625,
+          "nameBottom": 813.40625,
+          "nameRight": 269,
+          "rank": "3",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        }
+      ],
+      "width": 320
+    },
+    {
+      "documentWidth": 375,
+      "fontStatus": "loaded",
+      "headingIds": [
+        "home-title",
+        "home-ranking-title",
+        "tasks-title",
+        "home-overview-title",
+        "home-personal-title",
+        "home-status-title"
+      ],
+      "names": [
+        {
+          "cardBottom": 711.84375,
+          "clipped": false,
+          "metricLeft": 247.234375,
+          "metricTop": 624.546875,
+          "nameBottom": 674.84375,
+          "nameRight": 237.234375,
+          "rank": "1",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 848.21875,
+          "clipped": false,
+          "metricLeft": 65.109375,
+          "metricTop": 806.03125,
+          "nameBottom": 800.03125,
+          "nameRight": 171.5,
+          "rank": "2",
+          "textLength": 7,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 848.21875,
+          "clipped": false,
+          "metricLeft": 220.015625,
+          "metricTop": 806.03125,
+          "nameBottom": 800.03125,
+          "nameRight": 337,
+          "rank": "3",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        }
+      ],
+      "width": 390
+    },
+    {
+      "documentWidth": 753,
+      "fontStatus": "loaded",
+      "headingIds": [
+        "home-title",
+        "home-ranking-title",
+        "tasks-title",
+        "home-overview-title",
+        "home-personal-title",
+        "home-status-title"
+      ],
+      "names": [
+        {
+          "cardBottom": 933.734375,
+          "clipped": false,
+          "metricLeft": 307.8125,
+          "metricTop": 845.140625,
+          "nameBottom": 812.140625,
+          "nameRight": 470.671875,
+          "rank": "1",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 933.734375,
+          "clipped": false,
+          "metricLeft": 101.171875,
+          "metricTop": 855.9375,
+          "nameBottom": 822.9375,
+          "nameRight": 224.3125,
+          "rank": "2",
+          "textLength": 7,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 933.734375,
+          "clipped": false,
+          "metricLeft": 551.859375,
+          "metricTop": 855.9375,
+          "nameBottom": 822.9375,
+          "nameRight": 686.984375,
+          "rank": "3",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        }
+      ],
+      "width": 768
+    },
+    {
+      "documentWidth": 1265,
+      "fontStatus": "loaded",
+      "headingIds": [
+        "home-title",
+        "home-ranking-title",
+        "tasks-title",
+        "home-overview-title",
+        "home-personal-title",
+        "home-status-title"
+      ],
+      "names": [
+        {
+          "cardBottom": 1042.984375,
+          "clipped": false,
+          "metricLeft": 563.8125,
+          "metricTop": 954.390625,
+          "nameBottom": 921.390625,
+          "nameRight": 764.453125,
+          "rank": "1",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 1042.984375,
+          "clipped": false,
+          "metricLeft": 286.53125,
+          "metricTop": 965.1875,
+          "nameBottom": 932.1875,
+          "nameRight": 442.53125,
+          "rank": "2",
+          "textLength": 7,
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 1042.984375,
+          "clipped": false,
+          "metricLeft": 878.5,
+          "metricTop": 965.1875,
+          "nameBottom": 932.1875,
+          "nameRight": 1046.484375,
+          "rank": "3",
+          "textLength": 4,
+          "whiteSpace": "normal"
+        }
+      ],
+      "width": 1280
+    }
+  ]
+}

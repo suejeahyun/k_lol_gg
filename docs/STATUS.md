@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-07 홈 이름·Riot 진단 1.0.7 운영 반영
+
+source `0716a60bf09654118cc40493481839d75269b3f7`, tag `service-completion-v1.0.7`, main `dpl_73cLhShUqRnR9WcramzRNwDQRdAv` READY·canonical alias·health를 확인했다. 홈 선수명 말줄임, Riot 부분 성공 원인 누락, 응답 본문 timeout 오분류, 실제 계정 연결 방식의 이름을 수정했다. 기존 홈 순서·랭킹 조작·생성 이미지 테마·migration0047 유지.
+
+필수 check·최종 타입·새 격리 DB·108페이지179HTTP조건과 로컬/운영 홈 네 폭 실제 렌더, 운영31HTTP조건을 통과했다. 마지막 독립 source 재검토에서 새 중대 문제나 명확한 과업 차단을 발견하지 못했다. 전체386경로·1141개 조작 소스 위치는 목록 대조 근거이며 모든 상태의 실제 클릭 완료가 아니다. [전체 원장](qa-evidence/service-completion-v1.0.7-2026-10-07/README.md), [배포·검증·복구·미확인 조건](qa-evidence/service-completion-v1.0.7-2026-10-07/production.md).
+
+실제 SUPER_ADMIN 로그인이 필요한 MMR 전환, native confirm 이후 클릭 도구 제약, 카카오/RSO/실기기 등은 미확인으로 유지한다. [배포 후 Riot 자연 예약1건 성공](qa-evidence/service-completion-v1.0.7-2026-10-07/riot-post-deploy-readonly.md)을 읽기 전용으로 확인했다. 이 관측창의 PARTIAL은0으로 새 진단 코드의 운영 저장 사례는 미관측이다. 기존 PARTIAL19건의 원인을 소급 복원하거나 전체 계정 수집 완료로 판단하지 않는다. 운영 회원·신청·경기를 시험 변경하지 않았다.
+
 ## 2026-10-07 서비스 이용·관리 흐름 1.0.6 운영 반영
 
 source `0277c327cb9054ef78ca2646982d0833e234f4db`, tag `service-completion-v1.0.6`, main `dpl_A9a7KUgUdaYdQe9S5vtM7sKSWyMX` READY와 canonical alias를 확인했다. 미디어 목록·공개 연결, 경기 검토 잠금/재시도/응답 확인과 현재 팀 명단 불러오기, 참가 전 이벤트 설정, 해소 과제 업로드 복구를 개선했다. 홈 여섯 영역·단일 랭킹·생성 이미지 테마와 migration0047 유지.

@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-07T04:04:58.100Z",
+  "source": "0716a60bf09654118cc40493481839d75269b3f7",
+  "origin": "https://k-lol-gg.vercel.app",
+  "requestedPath": "/account/riot",
+  "observed": {
+    "heading": "로그인",
+    "next": "/account/riot",
+    "ownerFormPresent": false,
+    "pathname": "/login"
+  },
+  "passed": true,
+  "scope": "Actual anonymous browser navigation completed at login with correct next; no credential entry or authenticated-owner claim."
+}

@@ -1,0 +1,93 @@
+{
+  "checkedAt": "2026-10-07T04:03:15.598Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "sourceCommit": "0716a60bf09654118cc40493481839d75269b3f7",
+  "deploymentId": "dpl_73cLhShUqRnR9WcramzRNwDQRdAv",
+  "version": "1.0.7",
+  "deploymentIdentityEvidence": "Exact source/deployment READY+canonical supplied by release owner; public HTTP does not independently resolve provider identity.",
+  "scope": "Anonymous GET only. No cookies, sign-in, cron, manual sync, mutations or shared browser.",
+  "checks": [
+    {
+      "name": "Home references deployed CSS with unclipped multiline ranking names",
+      "passed": true,
+      "page": {
+        "path": "/",
+        "status": 200,
+        "location": null,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "vercelRequestId": "icn1::iad1::t5724-1791345798118-e89f06788965",
+        "bytes": 110883
+      },
+      "referencedAssets": [
+        {
+          "path": "/_next/static/immutable/chunks/3yhtret3ggg30.css",
+          "status": 200,
+          "location": null,
+          "contentType": "text/css; charset=utf-8",
+          "cacheControl": "public,max-age=31536000,immutable",
+          "vercelRequestId": "icn1::t5724-1791345799270-8929a4b0eaca",
+          "bytes": 103207
+        },
+        {
+          "path": "/_next/static/immutable/chunks/08zqs7kj7tsag.css",
+          "status": 200,
+          "location": null,
+          "contentType": "text/css; charset=utf-8",
+          "cacheControl": "public,max-age=31536000,immutable",
+          "vercelRequestId": "icn1::t5724-1791345799284-dba78512cf67",
+          "bytes": 87017
+        }
+      ],
+      "changedCss": {
+        "path": "/_next/static/immutable/chunks/08zqs7kj7tsag.css",
+        "sha256": "a4941470010fdf446def177a0145926406722a7dd24258ea790589eb53f35b55",
+        "selector": ".home-ranking-carousel-module__eqzd0G__name",
+        "declarations": "color:#fff;white-space:normal;overflow-wrap:anywhere;text-align:center;width:100%;min-width:0;min-height:2.7em;font-size:18px;font-weight:800;line-height:1.35"
+      },
+      "note": "Code presence and HTML/CSS association only; no computed geometry, font or device claims."
+    },
+    {
+      "name": "Riot account page keeps anonymous login protection and the correct return path",
+      "passed": true,
+      "checkedAt": "2026-10-07T04:04:10.632Z",
+      "path": "/account/riot",
+      "status": 200,
+      "redirectDelivery": "Next.js streamed HTML meta and matching server redirect signal",
+      "redirectTarget": "/login?next=%2Faccount%2Friot",
+      "meta": "<meta id=\"__next-page-redirect\" http-equiv=\"refresh\" content=\"1;url=/login?next=%2Faccount%2Friot\"/>",
+      "ownerAccountDetailsRendered": false,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "contentType": "text/html; charset=utf-8",
+      "vercelRequestId": "icn1::iad1::grtnk-1791345852563-9b1e2017be75",
+      "bytes": 41699,
+      "note": "No browser navigation or sign-in performed. HTML delivery of a protected-page redirect is verified, not authentication completion."
+    },
+    {
+      "name": "Riot owner read API remains authenticated with no owner payload",
+      "passed": true,
+      "path": "/api/me/riot",
+      "status": 401,
+      "location": null,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0",
+      "vercelRequestId": "icn1::iad1::5gdc9-1791345799915-2ad0a935531b",
+      "bytes": 193,
+      "responseKeys": [
+        "type",
+        "title",
+        "status",
+        "detail",
+        "code"
+      ]
+    }
+  ],
+  "passed": true,
+  "completedAt": "2026-10-07T04:04:10.633Z",
+  "harnessCorrection": {
+    "initialResult": "post-deploy-independent-initial.json",
+    "cause": "307-only status assertion did not allow documented Next.js streaming redirect delivery. Actual HTTP200 contains the exact internal login redirect meta/server signal and no owner detail.",
+    "contract": "src/modules/auth/infrastructure/server-authorization.ts requireApprovedAccountPage -> requireAccountPage -> redirect; node_modules/next/dist/docs/01-app/03-api-reference/04-functions/redirect.md streaming context.",
+    "recheck": "Only account page check rerun with required meta/server-signal agreement, exact internal next, no-store, and owner-detail absence. Home/CSS and owner API successes retained."
+  }
+}
