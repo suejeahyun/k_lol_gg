@@ -1,0 +1,11 @@
+✔ browser capture closes its pool and preserves the original error when setup fails before the server exists (90.8234ms)
+✔ a new browser ACTIVE season receives only a missing display projection and coherent long-name top-three rows (15.292ms)
+✔ an existing READY generation remains untouched and unsafe databases are refused before capture writes (11.8826ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1077.7317

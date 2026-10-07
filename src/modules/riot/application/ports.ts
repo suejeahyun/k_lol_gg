@@ -232,7 +232,7 @@ export interface RiotGatewayPort {
   >;
   fetchRecentSolo?(input: Readonly<{ puuid: string }>): Promise<
     | Readonly<{ kind: "SUCCESS"; summary: import("../domain/recent-solo-summary").RiotRecentSoloSummary }>
-    | Readonly<{ kind: "UNAVAILABLE"; retryAfterSeconds?: number }>
+    | Readonly<{ kind: "UNAVAILABLE"; retryAfterSeconds?: number; partialCode?: import("../domain/riot-integration").RiotPartialCode }>
   >;
   fetchPlayerAnalytics?(input: Readonly<{
     puuid: string;

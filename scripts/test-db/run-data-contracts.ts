@@ -713,6 +713,7 @@ function base32(value: Buffer): string {
 async function runSeasonBrowserQaServer(connectionString: string): Promise<void> {
   assertSafeTestDatabase({ connectionString, nodeEnv: "test", testMode: "true" });
   const pool = new Pool({ connectionString, max: 2 });
+  try {
   const actorId = randomUUID();
   const playerId = randomUUID();
   let seasonId: string = randomUUID();
@@ -1231,6 +1232,8 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       ]);
       if (child.exitCode === null) child.kill("SIGKILL");
     }
+  }
+  } finally {
     await pool.end();
   }
 }

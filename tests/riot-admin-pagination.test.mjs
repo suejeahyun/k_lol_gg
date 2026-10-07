@@ -17,7 +17,7 @@ vm.runInNewContext(compile("../src/modules/riot/application/riot-query.ts"), {
 });
 const { parseAdminRiotQuery } = queryModule.exports;
 
-async function render(searchParams, total, count, state = "ready") {
+async function render(searchParams, total, count, state = "ready", partialCode = null) {
   const pageModule = { exports: {} };
   let requestedQuery;
   const modules = {
@@ -48,7 +48,7 @@ async function render(searchParams, total, count, state = "ready") {
               lastSyncStatus: null, failureCode: null, lastSyncedAt: null,
             })) : [],
             syncItems: query.tab === "sync" ? Array.from({ length: count }, (_, index) => ({
-              jobId: `synthetic-${index}`, displayName: "합성 플레이어", riotId: "Synthetic#TEST", status: "SUCCEEDED", failureCode: null,
+              jobId: `synthetic-${index}`, displayName: "합성 플레이어", riotId: "Synthetic#TEST", status: partialCode ? "PARTIAL" : "SUCCEEDED", failureCode: partialCode,
               requestedBy: "ADMIN", attemptCount: 1, maximumAttempts: 5, requestedAt: null, completedAt: null, availableAt: null,
             })) : [],
             logItems: query.tab === "logs" ? Array.from({ length: count }, (_, index) => ({
@@ -92,6 +92,12 @@ test("account pagination reports the filtered total and page range while retaini
     assert.ok(parseAdminRiotQuery(url.href));
   }
   assert.match(html, /type="hidden" name="pageSize" value="25"/u);
+});
+
+test("partial jobs expose their finite diagnostic next to the existing status", async () => {
+  const { html } = await render({ tab: "sync", status: "PARTIAL" }, 1, 1, "ready", "PARTIAL_PROVIDER_5XX");
+  assert.match(html, /<span class="status">PARTIAL<\/span><small>PARTIAL_PROVIDER_5XX<\/small>/u);
+  assert.doesNotMatch(html, /<span class="status">FAILED<\/span>|synthetic-private/u);
 });
 
 test("first and last job pages expose only valid navigation and preserve the status filter", async () => {

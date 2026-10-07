@@ -616,6 +616,8 @@ export class RiotApplicationService {
       outcome = result.outcome;
       snapshot = "snapshot" in result ? result.snapshot : undefined;
       rankSucceeded = outcome.kind === "SUCCESS";
+      const rankPartialCode = outcome.kind === "SUCCESS" && outcome.partial
+        ? outcome.partialCode ?? "PARTIAL_RANK_FIELDS" : undefined;
       if (outcome.kind === "SUCCESS" && this.dependencies.gateway.fetchPlayerAnalytics) {
         try {
           analytics = await this.dependencies.gateway.fetchPlayerAnalytics({ puuid,
@@ -624,20 +626,24 @@ export class RiotApplicationService {
             lastCollectedAt: claimed.analyticsState?.lastCollectedAt, now: this.now() });
           recentSolo = analytics.recentSolo;
           outcome = analytics.retryAfterSeconds !== undefined ? { kind: "RATE_LIMITED", retryAfterSeconds: analytics.retryAfterSeconds }
-            : { kind: "SUCCESS", partial: snapshot?.partial === true || analytics.partial };
-        } catch { outcome = { kind: "SUCCESS", partial: true }; }
+            : { kind: "SUCCESS", partial: snapshot?.partial === true || analytics.partial,
+              partialCode: rankPartialCode ?? analytics.partialCode };
+        } catch { outcome = { kind: "SUCCESS", partial: true, partialCode: rankPartialCode ?? "PARTIAL_ANALYTICS_EXCEPTION" }; }
       } else if (outcome.kind === "SUCCESS" && this.dependencies.gateway.fetchRecentSolo) {
         try {
           const recent = await this.dependencies.gateway.fetchRecentSolo({ puuid });
           if (recent.kind === "SUCCESS") recentSolo = recent.summary;
           else outcome = recent.retryAfterSeconds !== undefined
             ? { kind: "RATE_LIMITED", retryAfterSeconds: recent.retryAfterSeconds }
-            : { kind: "SUCCESS", partial: true };
+            : { kind: "SUCCESS", partial: true, partialCode: rankPartialCode ?? recent.partialCode ?? "PARTIAL_RECENT_UNAVAILABLE" };
         } catch {
           // Rank success remains usable; old recent-history data is preserved
           // with its original timestamp and eventually becomes unavailable.
-          outcome = { kind: "SUCCESS", partial: true };
+          outcome = { kind: "SUCCESS", partial: true, partialCode: rankPartialCode ?? "PARTIAL_RECENT_EXCEPTION" };
         }
+      }
+      if (outcome.kind === "SUCCESS" && outcome.partial && !outcome.partialCode && rankPartialCode) {
+        outcome = { ...outcome, partialCode: rankPartialCode };
       }
     } catch {
       outcome = { kind: "TRANSIENT_FAILURE", code: "NETWORK" };

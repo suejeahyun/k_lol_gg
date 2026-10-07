@@ -1,0 +1,46 @@
+✖ browser capture closes its pool and preserves the original error when setup fails before the server exists (64.3289ms)
+✖ a new browser ACTIVE season receives only a missing display projection and coherent long-name top-three rows (16.0302ms)
+✔ an existing READY generation remains untouched and unsafe databases are refused before capture writes (13.9915ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1120.3931
+
+✖ failing tests:
+
+test at tests\browser-qa-seed-lifecycle.test.ts:21:1
+✖ browser capture closes its pool and preserves the original error when setup fails before the server exists (64.3289ms)
+  AssertionError [ERR_ASSERTION]: password failure must release the pool before outer cluster shutdown
+
+  0 !== 1
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\browser-qa-seed-lifecycle.test.ts:35:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\browser-qa-seed-lifecycle.test.ts:65:1
+✖ a new browser ACTIVE season receives only a missing display projection and coherent long-name top-three rows (16.0302ms)
+  AssertionError [ERR_ASSERTION]: Home ranking capture requires the existing ACTIVE season's READY projection
+      at evalmachine.<anonymous>:38:26
+      at async Object.prepareRankingCaptureFixture (evalmachine.<anonymous>:32:5)
+      at async TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\browser-qa-seed-lifecycle.test.ts:67:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

@@ -4,7 +4,7 @@ import {
   type RiotIdentity,
   type RiotRankSnapshot,
 } from "../application/ports";
-import { canonicalRiotId } from "../domain/riot-integration";
+import { canonicalRiotId, type RiotPartialCode } from "../domain/riot-integration";
 import { recentSoloSample, summarizeRecentSolo } from "../domain/recent-solo-summary";
 import { excludedRiotMatchStartedAt, normalizeRiotMatch, normalizeRiotTimeline, RIOT_MATCH_ID_PATTERN } from "../domain/riot-match-normalizer";
 import { riotHistoryStart, type RiotAnalyticsCollection, type RiotMatchDto } from "../domain/riot-player-analytics";
@@ -33,6 +33,18 @@ const tiers = new Set([
   "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER",
 ]);
 const ranks = new Set(["I", "II", "III", "IV"]);
+
+function partialProviderCode(result: FetchResult): RiotPartialCode | undefined {
+  if (result.kind === "TRANSIENT") {
+    return result.code === "TIMEOUT" ? "PARTIAL_PROVIDER_TIMEOUT"
+      : result.code === "NETWORK" ? "PARTIAL_PROVIDER_NETWORK" : "PARTIAL_PROVIDER_5XX";
+  }
+  if (result.kind === "NOT_FOUND") return "PARTIAL_PROVIDER_NOT_FOUND";
+  if (result.kind === "UNAUTHORIZED") return "PARTIAL_PROVIDER_UNAUTHORIZED";
+  if (result.kind === "INVALID_RESPONSE") return "PARTIAL_PROVIDER_RESPONSE";
+  // 429 remains a real RATE_LIMITED outcome with its existing retry policy.
+  return undefined;
+}
 
 function retryAfterSeconds(value: string | null, now = Date.now()): number {
   if (!value) return 60;
@@ -152,7 +164,8 @@ export class RiotApiGateway implements RiotGatewayPort {
       losses,
       partial: !(tier && tiers.has(tier) && rank && ranks.has(rank) && leaguePoints !== null && wins !== null && losses !== null),
     };
-    return { outcome: { kind: "SUCCESS", partial: snapshot.partial }, snapshot };
+    return { outcome: { kind: "SUCCESS", partial: snapshot.partial,
+      ...(snapshot.partial ? { partialCode: "PARTIAL_RANK_FIELDS" } : {}) }, snapshot };
   }
 
   private unranked(): RiotRankSnapshot {
@@ -160,11 +173,13 @@ export class RiotApiGateway implements RiotGatewayPort {
   }
 
   async fetchRecentSolo(input: Readonly<{ puuid: string }>): ReturnType<NonNullable<RiotGatewayPort["fetchRecentSolo"]>> {
-    if (!boundedString(input.puuid, 128) || /\s/u.test(input.puuid)) return { kind: "UNAVAILABLE" };
+    if (!boundedString(input.puuid, 128) || /\s/u.test(input.puuid)) return { kind: "UNAVAILABLE", partialCode: "PARTIAL_INPUT_INVALID" };
     const clock = this.configuration.monotonicNow ?? (() => performance.now());
     const deadline = clock() + 25_000;
+    let partialCode: RiotPartialCode | undefined;
     const read = (url: URL, maximumBytes: number) => {
       const remaining = Math.floor(deadline - clock());
+      if (remaining <= 0) partialCode ??= "PARTIAL_BUDGET";
       return remaining > 0 ? this.fetchJson(url, maximumBytes, Math.min(this.timeoutMilliseconds, remaining))
         : Promise.resolve({ kind: "TRANSIENT", code: "TIMEOUT" } as const);
     };
@@ -173,8 +188,8 @@ export class RiotApiGateway implements RiotGatewayPort {
     idsUrl.searchParams.set("start", "0");
     idsUrl.searchParams.set("count", "20");
     const ids = await read(idsUrl, 8 * 1_024);
-    if (ids.kind !== "SUCCESS") return { kind: "UNAVAILABLE", ...(ids.kind === "RATE_LIMITED" ? { retryAfterSeconds: ids.retryAfterSeconds } : {}) };
-    if (!Array.isArray(ids.value) || ids.value.length > 20 || ids.value.some((id) => typeof id !== "string" || !/^[A-Z0-9]{2,8}_[0-9]{1,20}$/u.test(id)) || new Set(ids.value).size !== ids.value.length) return { kind: "UNAVAILABLE" };
+    if (ids.kind !== "SUCCESS") return { kind: "UNAVAILABLE", ...(ids.kind === "RATE_LIMITED" ? { retryAfterSeconds: ids.retryAfterSeconds } : { partialCode: partialCode ?? partialProviderCode(ids) }) };
+    if (!Array.isArray(ids.value) || ids.value.length > 20 || ids.value.some((id) => typeof id !== "string" || !/^[A-Z0-9]{2,8}_[0-9]{1,20}$/u.test(id)) || new Set(ids.value).size !== ids.value.length) return { kind: "UNAVAILABLE", partialCode: "PARTIAL_LIST_INVALID" };
     const samples: Exclude<ReturnType<typeof recentSoloSample>, "REMAKE" | null>[] = [];
     // Two concurrent reads at most; a failed chunk stops further provider calls.
     for (let index = 0; index < ids.value.length; index += 2) {
@@ -183,9 +198,9 @@ export class RiotApiGateway implements RiotGatewayPort {
       const limited = results.filter((result): result is Extract<FetchResult, { kind: "RATE_LIMITED" }> => result.kind === "RATE_LIMITED");
       if (limited.length) return { kind: "UNAVAILABLE", retryAfterSeconds: Math.max(...limited.map((result) => result.retryAfterSeconds)) };
       for (const [offset, result] of results.entries()) {
-        if (result.kind !== "SUCCESS") return { kind: "UNAVAILABLE" };
+        if (result.kind !== "SUCCESS") return { kind: "UNAVAILABLE", partialCode: partialCode ?? partialProviderCode(result) };
         const sample = recentSoloSample(result.value, chunk[offset]!, input.puuid);
-        if (!sample) return { kind: "UNAVAILABLE" };
+        if (!sample) return { kind: "UNAVAILABLE", partialCode: "PARTIAL_SOLO_INCOMPLETE" };
         if (sample !== "REMAKE") samples.push(sample);
       }
     }
@@ -201,12 +216,19 @@ export class RiotApiGateway implements RiotGatewayPort {
     const completedStarts = new Map(input.cachedMatches.map((match) => [match.matchId, Date.parse(match.startedAt)]));
     const changed = new Map<string, RiotMatchDto>();
     let historyBefore = input.historyBefore, historyComplete = input.historyComplete, partial = false;
+    let partialCode: RiotPartialCode | undefined;
+    const markPartial = (code: RiotPartialCode) => { partial = true; partialCode ??= code; };
     let retryAfterSeconds: number | undefined;
-    const read = async (url: URL, maximumBytes: number): Promise<FetchResult> => {
+    const read = async (url: URL, maximumBytes: number, allowNotFound = false): Promise<FetchResult> => {
       const remaining = Math.floor(deadline - clock());
-      if (remaining <= 0 || retryAfterSeconds !== undefined) return { kind: "TRANSIENT", code: "TIMEOUT" };
+      if (remaining <= 0 || retryAfterSeconds !== undefined) {
+        if (remaining <= 0) markPartial("PARTIAL_BUDGET");
+        return { kind: "TRANSIENT", code: "TIMEOUT" };
+      }
       const result = await this.fetchJson(url, maximumBytes, Math.min(this.timeoutMilliseconds, remaining));
       if (result.kind === "RATE_LIMITED") retryAfterSeconds = Math.max(retryAfterSeconds ?? 0, result.retryAfterSeconds);
+      const providerCode = partialProviderCode(result);
+      if (providerCode && !(allowNotFound && result.kind === "NOT_FOUND")) markPartial(providerCode);
       return result;
     };
     const list = async (scope: "solo" | "recent" | "history"): Promise<readonly string[] | null> => {
@@ -216,10 +238,11 @@ export class RiotApiGateway implements RiotGatewayPort {
       else url.searchParams.set("startTime", String(Math.floor(cutoff.getTime() / 1_000)));
       if (scope === "history" && historyBefore !== null) url.searchParams.set("endTime", String(historyBefore));
       const result = await read(url, 8 * 1_024);
-      if (result.kind !== "SUCCESS" || !Array.isArray(result.value) || result.value.length > (scope === "history" ? 10 : 20) || result.value.some((id) => typeof id !== "string" || !RIOT_MATCH_ID_PATTERN.test(id)) || new Set(result.value).size !== result.value.length) { partial = true; return null; }
+      if (result.kind !== "SUCCESS") { partial = true; return null; }
+      if (!Array.isArray(result.value) || result.value.length > (scope === "history" ? 10 : 20) || result.value.some((id) => typeof id !== "string" || !RIOT_MATCH_ID_PATTERN.test(id)) || new Set(result.value).size !== result.value.length) { markPartial("PARTIAL_LIST_INVALID"); return null; }
       return result.value as string[];
     };
-    if (!boundedString(input.puuid, 128) || /\s/u.test(input.puuid)) return { matches: [], historyBefore, historyComplete, partial: true, recentPageComplete: false };
+    if (!boundedString(input.puuid, 128) || /\s/u.test(input.puuid)) return { matches: [], historyBefore, historyComplete, partial: true, partialCode: "PARTIAL_INPUT_INVALID", recentPageComplete: false };
     const soloIds = await list("solo");
     const recentIds = retryAfterSeconds === undefined ? await list("recent") : null;
     let restartHistory = recentIds?.length === 20 && !recentIds.some((id) => cache.has(id)) &&
@@ -261,9 +284,13 @@ export class RiotApiGateway implements RiotGatewayPort {
             if (sample) soloSamples.set(id, sample);
             cache.set(id, match); completedStarts.set(id, Date.parse(match.startedAt)); if (new Date(match.startedAt) >= cutoff) changed.set(id, match);
           }
-          else partial = true;
+          else markPartial("PARTIAL_MATCH_INVALID");
         }
-        if (results.some((result) => result.kind !== "SUCCESS") || clock() >= deadline) { partial = true; break; }
+        const deadlineExpired = clock() >= deadline;
+        if (results.some((result) => result.kind !== "SUCCESS") || deadlineExpired) {
+          if (deadlineExpired) markPartial("PARTIAL_BUDGET");
+          partial = true; break;
+        }
       }
     };
     await collect([...(soloIds ?? []), ...(recentIds ?? [])]);
@@ -294,7 +321,7 @@ export class RiotApiGateway implements RiotGatewayPort {
       .sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 4);
     for (let index = 0; index < timelines.length && clock() < deadline && retryAfterSeconds === undefined; index += 2) {
       const chunk = timelines.slice(index, index + 2);
-      const results = await Promise.all(chunk.map((match) => read(new URL(`/lol/match/v5/matches/${encodeURIComponent(match.matchId)}/timeline`, this.configuration.regionalBaseUrl), 2 * 1_024 * 1_024)));
+      const results = await Promise.all(chunk.map((match) => read(new URL(`/lol/match/v5/matches/${encodeURIComponent(match.matchId)}/timeline`, this.configuration.regionalBaseUrl), 2 * 1_024 * 1_024, true)));
       for (const [offset, result] of results.entries()) {
         const match = chunk[offset]!;
         if (result.kind === "SUCCESS") {
@@ -304,7 +331,7 @@ export class RiotApiGateway implements RiotGatewayPort {
             // A structurally unsupported successful payload is deterministic;
             // retrying the newest four forever would starve all older timelines.
             changed.set(match.matchId, { ...match, timelineStatus: "UNAVAILABLE" });
-            partial = true;
+            markPartial("PARTIAL_TIMELINE_INVALID");
           }
         } else if (result.kind === "NOT_FOUND") changed.set(match.matchId, { ...match, timelineStatus: "UNAVAILABLE" });
         else partial = true;
@@ -312,8 +339,11 @@ export class RiotApiGateway implements RiotGatewayPort {
       if (results.some((result) => !["SUCCESS", "NOT_FOUND"].includes(result.kind))) break;
     }
     const soloComplete = soloIds !== null && soloIds.every((id) => soloSamples.has(id));
+    if (!soloComplete) markPartial("PARTIAL_SOLO_INCOMPLETE");
+    if (!recentComplete) markPartial("PARTIAL_RECENT_INCOMPLETE");
     return { matches: [...changed.values()], historyBefore, historyComplete,
       partial: partial || !soloComplete || !recentComplete, recentPageComplete: recentComplete,
+      ...(partialCode ? { partialCode } : {}),
       ...(soloComplete ? { recentSolo: summarizeRecentSolo(soloIds.map((id) => soloSamples.get(id)!).filter((sample): sample is Exclude<typeof sample, "REMAKE"> => sample !== "REMAKE")) } : {}),
       ...(retryAfterSeconds !== undefined ? { retryAfterSeconds } : {}),
     };
@@ -347,7 +377,7 @@ export class RiotApiGateway implements RiotGatewayPort {
       if (response.status >= 500) return { kind: "TRANSIENT", code: "UPSTREAM_5XX" };
       if (!response.ok) return { kind: "INVALID_RESPONSE" };
       try { return { kind: "SUCCESS", value: await readBoundedJson(response, maximumBytes) }; }
-      catch { return { kind: "INVALID_RESPONSE" }; }
+      catch { return controller.signal.aborted ? { kind: "TRANSIENT", code: "TIMEOUT" } : { kind: "INVALID_RESPONSE" }; }
     } catch {
       return { kind: "TRANSIENT", code: controller.signal.aborted ? "TIMEOUT" : "NETWORK" };
     } finally {

@@ -398,6 +398,13 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
       new Map(storedJobs.map((job) => [job.id, job.status])),
       new Map([[successJobId, "SUCCEEDED"], [partialJobId, "PARTIAL"], [failedJobId, "FAILED"]]),
     );
+    assert.equal(storedJobs.find((job) => job.id === partialJobId)?.failureCode, "PARTIAL_RANK_FIELDS");
+    assert.equal(storedJobs.find((job) => job.id === successJobId)?.failureCode, null);
+    assert.equal(storedJobs.find((job) => job.id === failedJobId)?.failureCode, "NOT_FOUND");
+    const diagnosticPage = await adapter.listAdmin({ tab: "sync", action: "NONE", status: "PARTIAL", source: "ALL", q: "", batchSize: 10, page: 1, pageSize: 25 });
+    assert.equal(diagnosticPage.syncItems.find((job) => job.jobId === partialJobId)?.failureCode, "PARTIAL_RANK_FIELDS");
+    const diagnosticLogs = await adapter.listAdmin({ tab: "logs", action: "NONE", status: "ALL", source: "API", q: "", batchSize: 10, page: 1, pageSize: 25 });
+    assert.ok(diagnosticLogs.logItems.some((row) => row.detail.includes("PARTIAL_RANK_FIELDS")));
     const publicSummary = await adapter.getPublicSummary(playerId);
     assert.deepEqual(Object.keys(publicSummary!).sort(), ["lastSyncedAt", "leaguePoints", "losses", "playerId", "riotId", "soloRank", "soloTier", "wins"]);
     assert.equal(JSON.stringify(publicSummary).includes("puuid"), false);

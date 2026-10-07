@@ -1,0 +1,18 @@
+✔ account pagination reports the filtered total and page range while retaining filters and page size (25.6829ms)
+✔ partial jobs expose their finite diagnostic next to the existing status (1.6018ms)
+✔ first and last job pages expose only valid navigation and preserve the status filter (3.5438ms)
+✔ log navigation retains its source and does not produce an incompatible account status (2.2146ms)
+✔ bulk preview remains a bounded first batch without ordinary page navigation or invented totals (1.8181ms)
+✔ a now-empty page can return to available results without displaying a nonexistent range (3.0439ms)
+✔ navigation respects the query ceiling and unavailable data never pretends there are zero accounts (3.7218ms)
+✔ owner renders a Korean partial cause with the existing sync action and no raw diagnostic (19.6803ms)
+✔ owner never renders an unknown diagnostic body or prototype key (34.0837ms)
+✔ real Riot link method values have concrete labels without claiming ownership for admin links (17.7818ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 450.0311

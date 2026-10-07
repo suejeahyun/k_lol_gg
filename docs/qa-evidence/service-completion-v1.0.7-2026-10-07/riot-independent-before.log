@@ -1,0 +1,32 @@
+✔ independent: concurrent usable match plus 429 preserves facts and rate-limit precedence (20.9666ms)
+✖ independent: timeout during response body keeps timeout cause and does not spend a new budget (1009.4608ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1207.7879
+
+✖ failing tests:
+
+test at .tmp\riot-diagnostic-independent.test.ts:30:1
+✖ independent: timeout during response body keeps timeout cause and does not spend a new budget (1009.4608ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'PARTIAL_PROVIDER_RESPONSE'
+  - 'PARTIAL_PROVIDER_TIMEOUT'
+                      ^
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\.tmp\riot-diagnostic-independent.test.ts:42:9)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PARTIAL_PROVIDER_RESPONSE',
+    expected: 'PARTIAL_PROVIDER_TIMEOUT',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

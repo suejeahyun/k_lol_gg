@@ -45,7 +45,7 @@ test("empty history and explicit remakes are known zero samples while malformed 
   assert.equal(recentSoloSample({ ...match("KR_1"), info: { ...match("KR_1").info, queueId: 440 } }, "KR_1", puuid), null);
   assert.equal(recentSoloSample(match("KR_1", { kills: -1 }), "KR_1", puuid), null);
   const result = await gateway(async (input) => Response.json(String(input).includes("/ids?") ? ["KR_1"] : match("KR_1", { kills: "6" }))).fetchRecentSolo({ puuid });
-  assert.deepEqual(result, { kind: "UNAVAILABLE" });
+  assert.deepEqual(result, { kind: "UNAVAILABLE", partialCode: "PARTIAL_SOLO_INCOMPLETE" });
 });
 
 test("rate limiting stops subsequent chunks and propagates bounded Retry-After", async () => {
@@ -62,13 +62,13 @@ test("rate limiting stops subsequent chunks and propagates bounded Retry-After",
 test("total time, response size, unsafe IDs and duplicate IDs are bounded before further provider reads", async () => {
   let clock = 0; let calls = 0;
   const result = await gateway(async () => { calls += 1; clock = 25_000; return Response.json(["KR_1", "KR_2"]); }, () => clock).fetchRecentSolo({ puuid });
-  assert.deepEqual(result, { kind: "UNAVAILABLE" }); assert.equal(calls, 1);
+  assert.deepEqual(result, { kind: "UNAVAILABLE", partialCode: "PARTIAL_BUDGET" }); assert.equal(calls, 1);
   for (const ids of [["../private"], ["KR_1", "KR_1"], Array.from({ length: 21 }, (_, index) => `KR_${index}`)]) {
     let reads = 0;
-    assert.deepEqual(await gateway(async () => { reads += 1; return Response.json(ids); }).fetchRecentSolo({ puuid }), { kind: "UNAVAILABLE" });
+    assert.deepEqual(await gateway(async () => { reads += 1; return Response.json(ids); }).fetchRecentSolo({ puuid }), { kind: "UNAVAILABLE", partialCode: "PARTIAL_LIST_INVALID" });
     assert.equal(reads, 1);
   }
-  assert.deepEqual(await gateway(async (input) => String(input).includes("/ids?") ? Response.json(["KR_1"]) : new Response("{}", { headers: { "content-length": "262145" } })).fetchRecentSolo({ puuid }), { kind: "UNAVAILABLE" });
+  assert.deepEqual(await gateway(async (input) => String(input).includes("/ids?") ? Response.json(["KR_1"]) : new Response("{}", { headers: { "content-length": "262145" } })).fetchRecentSolo({ puuid }), { kind: "UNAVAILABLE", partialCode: "PARTIAL_PROVIDER_RESPONSE" });
 });
 
 test("stored recent-solo summaries reject extra identity data, invalid counts and invalid numeric values", () => {

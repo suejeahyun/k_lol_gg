@@ -60,10 +60,10 @@
 .rank { color: #c8d9f1; font-size: 12px; font-weight: 750; letter-spacing: .12em; margin-bottom: 10px; }
 .place[data-rank="1"] .rank { color: #ffdc91; }
 .place[data-rank="3"] .rank { color: #efbea3; }
-.name, .riotId { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.name { font-size: 18px; color: #fff; font-weight: 800; }
+.name, .riotId { display: block; max-width: 100%; }
+.name { min-width: 0; width: 100%; min-height: 2.7em; font-size: 18px; line-height: 1.35; color: #fff; font-weight: 800; white-space: normal; overflow-wrap: anywhere; text-align: center; }
 .place[data-rank="1"] .name { font-size: 22px; }
-.riotId { color: #e8e2f2; font-size: 12px; margin-top: 3px; }
+.riotId { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #e8e2f2; font-size: 12px; margin-top: 3px; }
 .metric { display: flex; align-items: baseline; gap: 7px; margin: 12px 0 9px; }
 .metric strong { color: #fff; font-size: 29px; line-height: 1.2; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .metric > span { color: #e8e2f2; font-size: 12px; }
@@ -98,12 +98,15 @@
   .place[data-rank="1"] .medal { grid-column: 1; grid-row: 1 / 5; width: 44px; height: 44px; margin: 0; }
   .place[data-rank="1"] .medal svg { width: 30px; height: 30px; }
   .place[data-rank="1"] .rank { grid-column: 2; margin-bottom: 4px; font-size: 10px; }
-  .place[data-rank="1"] .name { grid-column: 2; font-size: 18px; }
+  .place[data-rank="1"] .name { grid-column: 2; font-size: 18px; text-align: left; }
   .place[data-rank="1"] .riotId { display: none; }
   .place[data-rank="1"] .metric { grid-column: 3; grid-row: 1 / 5; flex-direction: column; align-items: flex-end; gap: 3px; margin: 0; }
   .place[data-rank="1"] .metric strong { font-size: 30px; }
   .place[data-rank="1"] .profile { grid-column: 2; margin-top: 6px; }
   .name { font-size: 16px; }
+  .place:not([data-rank="1"]) { align-self: stretch; }
+  .place:not([data-rank="1"]) .player { height: 100%; }
+  .place:not([data-rank="1"]) .name { flex-grow: 1; }
   .place:not([data-rank="1"]) .medal, .place:not([data-rank="1"]) .riotId, .place:not([data-rank="1"]) .profile { display: none; }
   .rank { margin-bottom: 6px; }
   .medal { width: 32px; height: 32px; margin-bottom: 5px; }

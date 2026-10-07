@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-10-07T03:42:28.241Z",
+  "source": "0277c327cb9054ef78ca2646982d0833e234f4db",
+  "width": 320,
+  "names": [
+    {
+      "clientWidth": 106,
+      "clipped": false,
+      "rank": "1",
+      "scrollWidth": 106,
+      "textOverflow": "ellipsis",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "clientWidth": 101,
+      "clipped": true,
+      "rank": "2",
+      "scrollWidth": 105,
+      "textOverflow": "ellipsis",
+      "whiteSpace": "nowrap"
+    },
+    {
+      "clientWidth": 38,
+      "clipped": false,
+      "rank": "3",
+      "scrollWidth": 38,
+      "textOverflow": "ellipsis",
+      "whiteSpace": "nowrap"
+    }
+  ]
+}

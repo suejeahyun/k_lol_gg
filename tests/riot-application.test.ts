@@ -539,6 +539,7 @@ test("sync enforces cooldown, Retry-After, stale lease recovery and partial comp
   await service.runNextSync(harness.jobAuthorization());
   job = [...harness.snapshot.jobs.values()][0]!;
   assert.equal(job.status, "PARTIAL");
+  assert.equal(job.failureCode, "PARTIAL_RANK_FIELDS");
   assert.equal(harness.snapshot.projections.length, 1);
   assert.equal(harness.externalInsideTransaction, false);
 });
@@ -562,6 +563,7 @@ test("recent solo summary persists only when complete; missing data preserves ra
   assert.equal(harness.snapshot.projections.at(-1)?.soloTier, "DIAMOND");
   assert.equal(harness.snapshot.projections.at(-1)?.recentSolo, undefined);
   assert.equal([...harness.snapshot.jobs.values()].at(-1)?.status, "PARTIAL");
+  assert.equal([...harness.snapshot.jobs.values()].at(-1)?.failureCode, "PARTIAL_RECENT_UNAVAILABLE");
 
   harness.now = new Date(harness.now.getTime() + 301_000);
   harness.recentSoloResult = { kind: "UNAVAILABLE", retryAfterSeconds: 120 };
@@ -628,4 +630,32 @@ test("analytics persists useful partial facts during backoff, reuses its cache, 
   assert.equal(harness.snapshot.projections.length, projectionCount);
   assert.equal([...harness.snapshot.jobs.values()].at(-1)?.status, "CANCELLED");
   assert.equal(harness.externalInsideTransaction, false);
+});
+
+test("partial diagnostics survive application, audit and outbox while rank and retry policy stay intact", async () => {
+  for (const scenario of ["provider", "exception", "unspecified", "rank-first", "rate-limited"] as const) {
+    const { harness } = setup();
+    const match = normalizeRiotMatch(analyticsMatch("KR_100", harness.now.getTime()), "KR_100", analyticsPuuid)!;
+    harness.analyticsResult = { matches: [match], historyBefore: 1234, historyComplete: false, partial: true,
+      ...(scenario !== "unspecified" ? { partialCode: "PARTIAL_PROVIDER_5XX" as const } : {}),
+      ...(scenario === "rate-limited" ? { retryAfterSeconds: 90 } : {}) };
+    if (scenario === "exception") harness.analyticsHook = () => { throw new Error("synthetic-private-provider-text"); };
+    const service = harness.service();
+    await service.connectDirect({ context: harness.ownerContext("diagnostic-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
+    const linkId = [...harness.snapshot.links.keys()][0]!;
+    harness.gateway.registerRank("private-puuid-1", { tier: "GOLD", rank: "II", leaguePoints: 25, wins: 10, losses: scenario === "rank-first" ? null : 5, partial: scenario === "rank-first" });
+    await service.requestSync({ context: harness.ownerContext("diagnostic-request"), mode: "SINGLE", linkIds: [linkId] });
+    await service.runNextSync(harness.jobAuthorization());
+    const job = [...harness.snapshot.jobs.values()].at(-1)!;
+    const code = scenario === "exception" ? "PARTIAL_ANALYTICS_EXCEPTION" : scenario === "unspecified" ? "PARTIAL_UNSPECIFIED" : scenario === "rank-first" ? "PARTIAL_RANK_FIELDS" : scenario === "rate-limited" ? "RATE_LIMITED" : "PARTIAL_PROVIDER_5XX";
+    assert.equal(job.status, scenario === "rate-limited" ? "RETRY_WAIT" : "PARTIAL");
+    assert.equal(job.failureCode, code);
+    assert.equal(harness.snapshot.audits.at(-1)?.after.failureCode, code);
+    assert.equal(harness.snapshot.outbox.at(-1)?.payload.failureCode, code);
+    assert.doesNotMatch(JSON.stringify(harness.snapshot.audits.at(-1)), /synthetic-private-provider-text|private-puuid/);
+    assert.equal(harness.snapshot.projections.at(-1)?.soloTier, "GOLD");
+    assert.equal(harness.snapshot.projections.at(-1)?.analytics?.matches.length, scenario === "exception" ? undefined : 1);
+    assert.equal(harness.externalInsideTransaction, false);
+    if (scenario === "rate-limited") assert.equal(job.availableAt.getTime(), harness.now.getTime() + 90_000);
+  }
 });

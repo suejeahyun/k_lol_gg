@@ -1,0 +1,115 @@
+✖ partial diagnostics preserve bounded provider codes without response bodies (13.4232ms)
+✖ partial diagnostics distinguish the total budget from a failed provider payload (2.8802ms)
+✖ partial diagnostics distinguish invalid match and timeline while keeping usable facts (1.0493ms)
+✖ partial diagnostics identify incomplete cached solo samples without detail refetch (2.126ms)
+✔ partial diagnostics never replace rate-limit backoff or a genuine rank failure (1.1164ms)
+✖ domain only retains allowlisted partial codes and public snapshots keep their existing shape (0.347ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 1
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 208.9614
+
+✖ failing tests:
+
+test at tests\riot-partial-diagnostics.test.ts:15:1
+✖ partial diagnostics preserve bounded provider codes without response bodies (13.4232ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - 'PARTIAL_PROVIDER_NOT_FOUND'
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\riot-partial-diagnostics.test.ts:19:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'PARTIAL_PROVIDER_NOT_FOUND',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\riot-partial-diagnostics.test.ts:26:1
+✖ partial diagnostics distinguish the total budget from a failed provider payload (2.8802ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - 'PARTIAL_BUDGET'
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\riot-partial-diagnostics.test.ts:30:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'PARTIAL_BUDGET',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\riot-partial-diagnostics.test.ts:38:1
+✖ partial diagnostics distinguish invalid match and timeline while keeping usable facts (1.0493ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - 'PARTIAL_MATCH_INVALID'
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\riot-partial-diagnostics.test.ts:40:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'PARTIAL_MATCH_INVALID',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\riot-partial-diagnostics.test.ts:52:1
+✖ partial diagnostics identify incomplete cached solo samples without detail refetch (2.126ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - 'PARTIAL_SOLO_INCOMPLETE'
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\riot-partial-diagnostics.test.ts:58:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'PARTIAL_SOLO_INCOMPLETE',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\riot-partial-diagnostics.test.ts:70:1
+✖ domain only retains allowlisted partial codes and public snapshots keep their existing shape (0.347ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + null
+  - 'PARTIAL_PROVIDER_NETWORK'
+
+      at TestContext.<anonymous> (E:\k-LOL.GG\worktrees\ux-discoverability-20261002\tests\riot-partial-diagnostics.test.ts:75:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: 'PARTIAL_PROVIDER_NETWORK',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

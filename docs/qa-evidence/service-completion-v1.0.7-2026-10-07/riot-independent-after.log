@@ -1,0 +1,10 @@
+✔ independent: concurrent usable match plus 429 preserves facts and rate-limit precedence (20.2837ms)
+✔ independent: timeout during response body keeps timeout cause and does not spend a new budget (1001.4049ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1146.7423

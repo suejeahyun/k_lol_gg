@@ -74,6 +74,8 @@ export type RiotAnalyticsCollection = Readonly<{
   historyBefore: number | null;
   historyComplete: boolean;
   partial: boolean;
+  /** Private job diagnostic; never copied into the public analytics projection. */
+  partialCode?: import("./riot-integration").RiotPartialCode;
   /** Drives the private successful-observation watermark, independently of timeline/backfill failures. */
   recentPageComplete?: boolean;
   recentSolo?: RiotRecentSoloSummary;

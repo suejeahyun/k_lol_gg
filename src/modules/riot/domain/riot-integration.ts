@@ -2,6 +2,16 @@ export type RiotLinkMethod = "DIRECT_OWNER" | "RSO_VERIFIED" | "ADMIN";
 export type RiotLinkStatus = "CONNECTED" | "DISCONNECTED" | "REVOKED";
 export type RiotSyncJobStatus = "QUEUED" | "RUNNING" | "RETRY_WAIT" | "SUCCEEDED" | "PARTIAL" | "FAILED" | "CANCELLED";
 
+/** First observed partial-success cause; never provider text, identity, or a retry failure. */
+export const RIOT_PARTIAL_CODES = [
+  "PARTIAL_RANK_FIELDS", "PARTIAL_BUDGET", "PARTIAL_PROVIDER_TIMEOUT", "PARTIAL_PROVIDER_NETWORK",
+  "PARTIAL_PROVIDER_5XX", "PARTIAL_PROVIDER_NOT_FOUND", "PARTIAL_PROVIDER_UNAUTHORIZED", "PARTIAL_PROVIDER_RESPONSE",
+  "PARTIAL_LIST_INVALID", "PARTIAL_MATCH_INVALID", "PARTIAL_TIMELINE_INVALID", "PARTIAL_SOLO_INCOMPLETE",
+  "PARTIAL_RECENT_INCOMPLETE", "PARTIAL_ANALYTICS_EXCEPTION", "PARTIAL_RECENT_EXCEPTION", "PARTIAL_RECENT_UNAVAILABLE",
+  "PARTIAL_INPUT_INVALID", "PARTIAL_UNSPECIFIED",
+] as const;
+export type RiotPartialCode = typeof RIOT_PARTIAL_CODES[number];
+
 export type RiotAccountLink = Readonly<{
   id: string;
   revision: number;
@@ -44,7 +54,7 @@ export type RiotSyncJob = Readonly<{
 }>;
 
 export type RiotSyncOutcome =
-  | Readonly<{ kind: "SUCCESS"; partial: boolean }>
+  | Readonly<{ kind: "SUCCESS"; partial: boolean; partialCode?: RiotPartialCode }>
   | Readonly<{ kind: "RATE_LIMITED"; retryAfterSeconds: number }>
   | Readonly<{ kind: "TRANSIENT_FAILURE"; code: "TIMEOUT" | "UPSTREAM_5XX" | "NETWORK" }>
   | Readonly<{ kind: "PERMANENT_FAILURE"; code: "NOT_FOUND" | "UNAUTHORIZED" | "INVALID_RESPONSE" }>;
@@ -381,7 +391,11 @@ export function finishRiotSyncJob(input: Readonly<{
     throw new Error("INVALID_RIOT_RETRY_AFTER");
   }
   if (input.outcome.kind === "SUCCESS") {
-    return { ...input.job, revision: input.job.revision + 1, status: input.outcome.partial ? "PARTIAL" : "SUCCEEDED", lockedAt: null, leaseId: null, completedAt: input.now, failureCode: null };
+    const partialCode = input.outcome.partialCode;
+    const failureCode = input.outcome.partial
+      ? RIOT_PARTIAL_CODES.find((code) => code === partialCode) ?? "PARTIAL_UNSPECIFIED"
+      : null;
+    return { ...input.job, revision: input.job.revision + 1, status: input.outcome.partial ? "PARTIAL" : "SUCCEEDED", lockedAt: null, leaseId: null, completedAt: input.now, failureCode };
   }
   const failureCode = input.outcome.kind === "RATE_LIMITED" ? "RATE_LIMITED" : input.outcome.code;
   const exhausted = input.job.attemptCount >= input.job.maximumAttempts;

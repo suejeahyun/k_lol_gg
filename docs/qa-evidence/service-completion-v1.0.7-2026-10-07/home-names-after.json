@@ -1,0 +1,180 @@
+{
+  "checkedAt": "2026-10-07T03:54:11.218Z",
+  "origin": "http://127.0.0.1:61701",
+  "scope": "Optimized build with guarded synthetic display-only stats, win-rate visible slide. No real-device or carousel click claim.",
+  "passed": true,
+  "samples": [
+    {
+      "fontStatus": "loaded",
+      "names": [
+        {
+          "cardBottom": 746.8125,
+          "cardTop": 613.03125,
+          "clipped": false,
+          "metricLeft": 203.5,
+          "metricTop": 654.421875,
+          "name": "WWWWWWWWWWWWWWWW",
+          "nameBottom": 709.8125,
+          "nameRight": 195.5,
+          "rank": "1",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 904.78125,
+          "cardTop": 756.8125,
+          "clipped": false,
+          "metricLeft": 39.5625,
+          "metricTop": 862.59375,
+          "name": "가나다라마바사아자차카타파하가나",
+          "nameBottom": 856.59375,
+          "nameRight": 136.5,
+          "rank": "2",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 904.78125,
+          "cardTop": 756.8125,
+          "clipped": false,
+          "metricLeft": 172.0625,
+          "metricTop": 862.59375,
+          "name": "WW가나WW다라WW마바WW사아",
+          "nameBottom": 856.59375,
+          "nameRight": 269,
+          "rank": "3",
+          "whiteSpace": "normal"
+        }
+      ],
+      "scrollWidth": 305,
+      "width": 320
+    },
+    {
+      "fontStatus": "loaded",
+      "names": [
+        {
+          "cardBottom": 711.84375,
+          "cardTop": 594.25,
+          "clipped": false,
+          "metricLeft": 256.1875,
+          "metricTop": 624.546875,
+          "name": "WWWWWWWWWWWWWWWW",
+          "nameBottom": 674.84375,
+          "nameRight": 246.1875,
+          "rank": "1",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 848.21875,
+          "cardTop": 721.84375,
+          "clipped": false,
+          "metricLeft": 58.0625,
+          "metricTop": 806.03125,
+          "name": "가나다라마바사아자차카타파하가나",
+          "nameBottom": 800.03125,
+          "nameRight": 171.5,
+          "rank": "2",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 848.21875,
+          "cardTop": 721.84375,
+          "clipped": false,
+          "metricLeft": 223.5625,
+          "metricTop": 806.03125,
+          "name": "WW가나WW다라WW마바WW사아",
+          "nameBottom": 800.03125,
+          "nameRight": 337,
+          "rank": "3",
+          "whiteSpace": "normal"
+        }
+      ],
+      "scrollWidth": 375,
+      "width": 390
+    },
+    {
+      "fontStatus": "loaded",
+      "names": [
+        {
+          "cardBottom": 933.734375,
+          "cardTop": 628.75,
+          "clipped": false,
+          "metricLeft": 313.140625,
+          "metricTop": 845.140625,
+          "name": "WWWWWWWWWWWWWWWW",
+          "nameBottom": 812.140625,
+          "nameRight": 470.671875,
+          "rank": "1",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 933.734375,
+          "cardTop": 674.34375,
+          "clipped": false,
+          "metricLeft": 93.171875,
+          "metricTop": 855.9375,
+          "name": "가나다라마바사아자차카타파하가나",
+          "nameBottom": 822.9375,
+          "nameRight": 224.3125,
+          "rank": "2",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 933.734375,
+          "cardTop": 674.34375,
+          "clipped": false,
+          "metricLeft": 555.84375,
+          "metricTop": 855.9375,
+          "name": "WW가나WW다라WW마바WW사아",
+          "nameBottom": 822.9375,
+          "nameRight": 686.984375,
+          "rank": "3",
+          "whiteSpace": "normal"
+        }
+      ],
+      "scrollWidth": 753,
+      "width": 768
+    },
+    {
+      "fontStatus": "loaded",
+      "names": [
+        {
+          "cardBottom": 1042.984375,
+          "cardTop": 738,
+          "clipped": false,
+          "metricLeft": 569.140625,
+          "metricTop": 954.390625,
+          "name": "WWWWWWWWWWWWWWWW",
+          "nameBottom": 921.390625,
+          "nameRight": 764.453125,
+          "rank": "1",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 1042.984375,
+          "cardTop": 783.59375,
+          "clipped": false,
+          "metricLeft": 278.53125,
+          "metricTop": 965.1875,
+          "name": "가나다라마바사아자차카타파하가나",
+          "nameBottom": 932.1875,
+          "nameRight": 442.53125,
+          "rank": "2",
+          "whiteSpace": "normal"
+        },
+        {
+          "cardBottom": 1042.984375,
+          "cardTop": 783.59375,
+          "clipped": false,
+          "metricLeft": 882.484375,
+          "metricTop": 965.1875,
+          "name": "WW가나WW다라WW마바WW사아",
+          "nameBottom": 932.1875,
+          "nameRight": 1046.484375,
+          "rank": "3",
+          "whiteSpace": "normal"
+        }
+      ],
+      "scrollWidth": 1265,
+      "width": 1280
+    }
+  ]
+}
