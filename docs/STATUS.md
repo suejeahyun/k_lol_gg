@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-08 확정 진출·예선 경기 기록 1.0.10 운영 반영
+
+source `49f438ab3b2a2e1cf481d60e50d2806c658bcb25`, tag `service-completion-v1.0.10`, main `dpl_6pakqNCz22PdtQ5a49MxttpntnZT` READY·canonical alias·health를 확인했다. 과거 확정 진출과 현재 계산 상위 팀이 다를 때만 표를 경기 기록으로 표시하고 원래 진출팀·경기·우승 자료는 보존했다. 최종 check660계약/1068단위+skip1·운영31HTTP·실제 네 폭과 배포 전후 기록 해시 불변을 확인했다. [전체 원장과 변경 범위](qa-evidence/service-completion-v1.0.10-2026-10-08/README.md), [배포·검증·복구](qa-evidence/service-completion-v1.0.10-2026-10-08/production.md).
+
+MMR V2 정식 전환은 완료 상태를 유지한다. 관리자 세션 만료 후 재로그인을 요청했으며 운영 관리자 재조작과 외부/실기기 조건은 미확인이다. 완료 대회의 비로그인 신청·MVP 안내를 추가 검토 중이며 전체 완료는 선언하지 않는다.
+
 ## 2026-10-08 관리자 목록·확인창·모바일 필터 1.0.9 운영 반영
 
 source `c080ffba15dcc3f63e64242df87b31378bd63fa9`, tag `service-completion-v1.0.9`, main `dpl_AywtKdM1BhGGqj6WMnXBZmcyBpv3` READY·canonical alias·health를 확인했다. 대회/MMR/징계/로그 페이지 접근, 챔피언 필터 유지, MMR 포지션 표시, 세 확인창·이미지 확대 키보드와320px 대회 필터를 수정했다. 최종 check657계약/1068단위+skip1·격리 DB·108페이지179HTTP·실제 합성 저장/페이지·모바일 수정 전후·운영31HTTP를 구분해 기록했다. [전체 원장](qa-evidence/service-completion-final-2026-10-08/README.md), [배포·검증·복구](qa-evidence/service-completion-final-2026-10-08/production.md).

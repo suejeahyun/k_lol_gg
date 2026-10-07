@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-10-07T16:53:25.045Z",
+  "method": "Actual in-app browser CSS viewports; no physical device claim",
+  "observations": [
+    {
+      "allContainersFit": true,
+      "columns": [
+        6,
+        6
+      ],
+      "documentWidth": 305,
+      "qualifierBadges": 4,
+      "rankHeaders": 0,
+      "scrollWidth": 305,
+      "summaryConfirmed": true,
+      "tables": 2,
+      "width": 320
+    },
+    {
+      "allContainersFit": true,
+      "columns": [
+        6,
+        6
+      ],
+      "documentWidth": 375,
+      "qualifierBadges": 4,
+      "rankHeaders": 0,
+      "scrollWidth": 375,
+      "summaryConfirmed": true,
+      "tables": 2,
+      "width": 390
+    },
+    {
+      "allContainersFit": true,
+      "columns": [
+        6,
+        6
+      ],
+      "documentWidth": 753,
+      "qualifierBadges": 4,
+      "rankHeaders": 0,
+      "scrollWidth": 753,
+      "summaryConfirmed": true,
+      "tables": 2,
+      "width": 768
+    },
+    {
+      "allContainersFit": true,
+      "columns": [
+        6,
+        6
+      ],
+      "documentWidth": 1265,
+      "qualifierBadges": 4,
+      "rankHeaders": 0,
+      "scrollWidth": 1265,
+      "summaryConfirmed": true,
+      "tables": 2,
+      "width": 1280
+    }
+  ]
+}

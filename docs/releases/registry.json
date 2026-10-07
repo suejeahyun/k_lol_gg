@@ -2028,6 +2028,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "service-completion",
+      "version": "1.0.10",
+      "gitTag": "service-completion-v1.0.10",
+      "commit": "49f438ab3b2a2e1cf481d60e50d2806c658bcb25",
+      "releasedAt": "2026-10-07T16:54:24.475Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/service-completion-v1.0.10-2026-10-08/production.md",
+      "patchNotes": "docs/patch-notes/2026-10-08-service-completion-1.0.10.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_6pakqNCz22PdtQ5a49MxttpntnZT",
+        "url": "https://k-lol-p9ivfmnf1-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-07T16:54:24.475Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

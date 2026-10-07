@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-07T16:52:18.845Z",
+  "source": "49f438ab3b2a2e1cf481d60e50d2806c658bcb25",
+  "deployment": "dpl_8oSToz54JNgSQMTeLbPiAJRntktx",
+  "url": "https://k-lol-n1m3llw6p-tjdmswo11-3715s-projects.vercel.app",
+  "passed": true,
+  "method": "Vercel CLI deployment-protection access, anonymous application GET only; qualification assertions omit member/team identities",
+  "checks": [
+    {
+      "name": "health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "home",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "rankings",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "admin",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "name": "qualification",
+      "status": 200,
+      "passed": true
+    }
+  ]
+}

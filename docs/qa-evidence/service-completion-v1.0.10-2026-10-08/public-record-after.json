@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-07T16:52:50.294Z",
+  "status": 200,
+  "revision": 1,
+  "completed": true,
+  "groups": 2,
+  "qualifiers": 4,
+  "recordHash": "29b7e7ebeac482544bafea2cc78fe52dc3b62ba1de240a0e338152c666df3505",
+  "notes": "Public GET only; no names, IDs or raw production records saved. Hash covers the exact revision, status, standings, qualifiers, fixtures and champion.",
+  "unchanged": true
+}
