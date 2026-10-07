@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-07T03:10:33.978Z",
+  "deployment": {
+    "id": "dpl_HuMGR69n3o964U2CnZZicYHCKhW7",
+    "state": "READY",
+    "target": "production",
+    "source": "c9431b9e68b468c17d02c6ff7595de7e14a7c9c8",
+    "url": "https://k-lol-hhf457dov-tjdmswo11-3715s-projects.vercel.app"
+  },
+  "canonical": {
+    "url": "https://k-lol-gg.vercel.app",
+    "id": "dpl_HuMGR69n3o964U2CnZZicYHCKhW7",
+    "state": "READY"
+  },
+  "health": {
+    "httpStatus": 200,
+    "status": "ready",
+    "noStore": true
+  },
+  "mmr": {
+    "httpStatus": 200,
+    "summary": {
+      "status": "READY",
+      "generation": 1,
+      "formulaVersion": "V1_INTERNAL_MMR_1",
+      "formulaTransition": "ADMIN_RECALCULATION_REQUIRED",
+      "sourceMatchCount": 42,
+      "sourceGameCount": 91,
+      "sourceAdjustmentCount": 0,
+      "pendingSourceCount": 13,
+      "calculatedAt": "2026-09-07T15:36:32.075Z"
+    },
+    "playerRowsRetained": false
+  },
+  "mutationsPerformed": false
+}

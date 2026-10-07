@@ -5,19 +5,12 @@ import type { AdminMatchQuery } from "@/modules/matches/application/ports/match-
 import { parseAdminMatchQuery } from "@/modules/matches/infrastructure/match-query";
 import { loadRuntimeMatchData } from "@/modules/matches/infrastructure/runtime-match-data";
 
+import { SUBMISSION_STATUS_LABEL } from "./submission-labels";
 import styles from "./matches-admin.module.css";
 
 export const dynamic = "force-dynamic";
 
 const MATCH_STATUS_LABEL = { DRAFT: "초안", PUBLISHED: "공개", VOIDED: "무효화" } as const;
-const SUBMISSION_STATUS_LABEL = {
-  AWAITING_UPLOAD: "이미지 등록 중",
-  PENDING_REVIEW: "검토 대기",
-  APPROVED: "승인",
-  REJECTED: "거절",
-  CANCELLED: "사용자 취소",
-} as const;
-
 function queryUrl(input: Record<string, string | string[] | undefined>) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(input)) {

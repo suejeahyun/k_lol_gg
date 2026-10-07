@@ -1,0 +1,92 @@
+{
+  "checkedAt": "2026-10-07T03:10:33.979Z",
+  "source": "Vercel production request log samples; no cron route invoked by this audit.",
+  "queries": [
+    {
+      "since": "1h",
+      "limit": 1000
+    },
+    {
+      "since": "2026-10-06T20:55:00Z",
+      "until": "2026-10-06T21:10:00Z",
+      "limit": 250
+    },
+    {
+      "since": "2026-10-06T18:55:00Z",
+      "until": "2026-10-06T19:10:00Z",
+      "limit": 250
+    }
+  ],
+  "rawCronRows": 146,
+  "uniqueCronRequests": 146,
+  "dedupe": "deploymentId + exact requestPath + timestamp + responseStatusCode",
+  "groups": {
+    "/api/cron/destruction-ratings": {
+      "count": 90,
+      "statuses": {
+        "200": 90
+      },
+      "earliest": "2026-10-06T18:55:18.444Z",
+      "latest": "2026-10-07T03:09:18.263Z",
+      "deploymentIds": [
+        "dpl_HuMGR69n3o964U2CnZZicYHCKhW7"
+      ]
+    },
+    "/api/cron/riot-sync": {
+      "count": 18,
+      "statuses": {
+        "200": 18
+      },
+      "earliest": "2026-10-06T18:55:45.399Z",
+      "latest": "2026-10-07T03:05:45.212Z",
+      "deploymentIds": [
+        "dpl_HuMGR69n3o964U2CnZZicYHCKhW7"
+      ]
+    },
+    "/api/cron/statistics-projection": {
+      "count": 18,
+      "statuses": {
+        "200": 18
+      },
+      "earliest": "2026-10-06T18:55:15.249Z",
+      "latest": "2026-10-07T03:05:15.642Z",
+      "deploymentIds": [
+        "dpl_HuMGR69n3o964U2CnZZicYHCKhW7"
+      ]
+    },
+    "/api/cron/mmr-projection": {
+      "count": 18,
+      "statuses": {
+        "409": 18
+      },
+      "earliest": "2026-10-06T18:55:13.089Z",
+      "latest": "2026-10-07T03:05:13.269Z",
+      "deploymentIds": [
+        "dpl_HuMGR69n3o964U2CnZZicYHCKhW7"
+      ]
+    },
+    "/api/cron/kakao-daily-close": {
+      "count": 1,
+      "statuses": {
+        "200": 1
+      },
+      "earliest": "2026-10-06T21:00:16.561Z",
+      "latest": "2026-10-06T21:00:16.561Z",
+      "deploymentIds": [
+        "dpl_HuMGR69n3o964U2CnZZicYHCKhW7"
+      ]
+    },
+    "/api/cron/support-retention": {
+      "count": 1,
+      "statuses": {
+        "200": 1
+      },
+      "earliest": "2026-10-06T19:00:10.432Z",
+      "latest": "2026-10-06T19:00:10.432Z",
+      "deploymentIds": [
+        "dpl_HuMGR69n3o964U2CnZZicYHCKhW7"
+      ]
+    }
+  },
+  "limitation": "Bounded provider samples, not complete daily history or proof of scheduler identity. Status 0 is incomplete, not success."
+}

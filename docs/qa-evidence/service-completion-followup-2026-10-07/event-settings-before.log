@@ -1,0 +1,165 @@
+✖ actual admin rendering exposes settings only while planned with no participants, including cancelled participants (76.0369ms)
+✖ unchanged dates round-trip exactly through KST inputs across midnight independently of machine timezone (22.0325ms)
+✖ edited settings use the existing command shape and reject invalid recruitment dates before sending (22.5963ms)
+✖ lost response, server failure and unreadable success retry the same body, revision and idempotency key (15.4064ms)
+✖ same-tick submits and another lifecycle operation are blocked through the successful refresh (16.5019ms)
+✖ conflict preserves input until explicit reload; expired sessions return to this event after admin login (15.723ms)
+✖ correcting a rejected setting uses a distinct request identity (14.2726ms)
+✖ actual detail page resets local settings from the latest event revision after refresh (23.2494ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 0
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 456.8654
+
+✖ failing tests:
+
+test at tests\event-settings-edit.test.mjs:73:1
+✖ actual admin rendering exposes settings only while planned with no participants, including cancelled participants (76.0369ms)
+  AssertionError [ERR_ASSERTION]: missing settings task on an editable planned event
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:76:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\event-settings-edit.test.mjs:90:1
+✖ unchanged dates round-trip exactly through KST inputs across midnight independently of machine timezone (22.0325ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - '2026-10-08T00:30:12.345'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:92:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '2026-10-08T00:30:12.345',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\event-settings-edit.test.mjs:103:1
+✖ edited settings use the existing command shape and reject invalid recruitment dates before sending (22.5963ms)
+  AssertionError [ERR_ASSERTION]: missing title input
+      at Object.set (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:66:76)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:105:11)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\event-settings-edit.test.mjs:117:1
+✖ lost response, server failure and unreadable success retry the same body, revision and idempotency key (15.4064ms)
+  AssertionError [ERR_ASSERTION]: missing title input
+      at Object.set (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:66:76)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:124:11)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\event-settings-edit.test.mjs:131:1
+✖ same-tick submits and another lifecycle operation are blocked through the successful refresh (16.5019ms)
+  AssertionError [ERR_ASSERTION]: planned event needs editable settings
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:134:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\event-settings-edit.test.mjs:146:1
+✖ conflict preserves input until explicit reload; expired sessions return to this event after admin login (15.723ms)
+  AssertionError [ERR_ASSERTION]: missing title input
+      at Object.set (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:66:76)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:149:13)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\event-settings-edit.test.mjs:166:1
+✖ correcting a rejected setting uses a distinct request identity (14.2726ms)
+  AssertionError [ERR_ASSERTION]: planned event needs editable settings
+      at Object.submit (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:67:74)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:168:17)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\event-settings-edit.test.mjs:173:1
+✖ actual detail page resets local settings from the latest event revision after refresh (23.2494ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: '.5'
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:195:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '.5',
+    expected: '.5',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }

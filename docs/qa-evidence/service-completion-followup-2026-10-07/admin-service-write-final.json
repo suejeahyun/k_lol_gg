@@ -1,0 +1,484 @@
+{
+  "checkedAt": "2026-10-07T03:30:27.543Z",
+  "origin": "http://127.0.0.1:60426",
+  "runId": "64a04556-72fb-4f9e-a23c-495029b49640",
+  "scope": "Existing loopback disposable PostgreSQL + Next production fixture. Only newly created synthetic entities. Fake private image storage; no external provider delivery or browser UI claim.",
+  "passed": false,
+  "groups": [
+    {
+      "name": "support-to-admin-review",
+      "passed": true,
+      "steps": [
+        {
+          "name": "support-origin",
+          "status": 403,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-consent",
+          "status": 400,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-create",
+          "status": 201,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-concurrent-retry",
+          "status": 201,
+          "etag": null,
+          "replayed": true
+        },
+        {
+          "name": "support-key-mismatch",
+          "status": 409,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-private-anonymous",
+          "status": 401,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-admin-read",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-review-0",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "support-review-1",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-review-replay",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": true
+        },
+        {
+          "name": "support-review-persisted",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "support-delete",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "support-delete-replay",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": true
+        },
+        {
+          "name": "support-deleted-read",
+          "status": 404,
+          "etag": null,
+          "replayed": false
+        }
+      ]
+    },
+    {
+      "name": "event-create-revise-cancel-restore",
+      "passed": true,
+      "steps": [
+        {
+          "name": "event-create-1",
+          "status": 201,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "event-create-0",
+          "status": 201,
+          "etag": "\"1\"",
+          "replayed": true
+        },
+        {
+          "name": "event-settings-page",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "event-key-mismatch",
+          "status": 409,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "event-revise-0",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "event-revise-1",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "event-revised-read",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "event-cancel",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        },
+        {
+          "name": "event-cancel-replay",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": true
+        },
+        {
+          "name": "event-restore",
+          "status": 200,
+          "etag": "\"4\"",
+          "replayed": false
+        },
+        {
+          "name": "event-restored-read",
+          "status": 200,
+          "etag": "\"4\"",
+          "replayed": false
+        },
+        {
+          "name": "event-final-cancel",
+          "status": 200,
+          "etag": "\"5\"",
+          "replayed": false
+        },
+        {
+          "name": "event-cancelled-settings-hidden",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        }
+      ]
+    },
+    {
+      "name": "destruction-create-schedule-cancel-restore",
+      "passed": true,
+      "steps": [
+        {
+          "name": "destruction-create-0",
+          "status": 201,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "destruction-create-1",
+          "status": 201,
+          "etag": "\"1\"",
+          "replayed": true
+        },
+        {
+          "name": "destruction-schedule-0",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "destruction-schedule-1",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "destruction-schedule-read",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "destruction-cancel",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        },
+        {
+          "name": "destruction-cancel-replay",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": true
+        },
+        {
+          "name": "destruction-admin-restore-denied",
+          "status": 403,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "destruction-super-restore",
+          "status": 200,
+          "etag": "\"4\"",
+          "replayed": false
+        },
+        {
+          "name": "destruction-final-cancel",
+          "status": 200,
+          "etag": "\"5\"",
+          "replayed": false
+        }
+      ]
+    },
+    {
+      "name": "highlight-save-publish-archive",
+      "passed": true,
+      "steps": [
+        {
+          "name": "highlight-create-0",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": false
+        },
+        {
+          "name": "highlight-create-1",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": true
+        },
+        {
+          "name": "highlight-draft-private",
+          "status": 404,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "highlight-update-0",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "highlight-update-1",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "highlight-update-persisted",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "highlight-publish",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "highlight-public",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "highlight-archive",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        },
+        {
+          "name": "highlight-archive-replay",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": true
+        },
+        {
+          "name": "highlight-archived-private",
+          "status": 404,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "highlight-retained",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        }
+      ]
+    },
+    {
+      "name": "gallery-draft-upload-publish-archive",
+      "passed": true,
+      "steps": [
+        {
+          "name": "gallery-create",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-empty-publish-rejected",
+          "status": 409,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-upload",
+          "status": 201,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-attach",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-publish",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-public",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-stale-archive",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-archive",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        },
+        {
+          "name": "gallery-archived-private",
+          "status": 404,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "gallery-retained",
+          "status": 200,
+          "etag": "\"3\"",
+          "replayed": false
+        }
+      ]
+    },
+    {
+      "name": "discipline-create-update-cancel",
+      "passed": true,
+      "steps": [
+        {
+          "name": "discipline-create-0",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": false
+        },
+        {
+          "name": "discipline-create-1",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": true
+        },
+        {
+          "name": "discipline-anonymous-denied",
+          "status": 401,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "discipline-admin-update-denied",
+          "status": 403,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "discipline-update-0",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "discipline-update-1",
+          "status": 412,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "discipline-updated-read",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "discipline-cancel",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "discipline-cancel-replay",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": true
+        },
+        {
+          "name": "discipline-cancelled-read",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        }
+      ]
+    },
+    {
+      "name": "linked-team-submission-read",
+      "passed": false,
+      "steps": [
+        {
+          "name": "linked-team-account-login",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "linked-team-owner-read",
+          "status": 200,
+          "etag": "\"7\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-submission-create",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": false
+        }
+      ],
+      "error": "The input did not match the regular expression /^MR[0-9A-F]{16}$/u. Input:\n\n'MR29AF805C4E39AE72C'\n"
+    }
+  ]
+}

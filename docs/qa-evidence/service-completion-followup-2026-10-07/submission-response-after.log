@@ -1,0 +1,10 @@
+✔ unconfirmed review success cannot confirm a different submission, advance revision or consume retry identity (224.562ms)
+✔ unconfirmed OCR success preserves image revision and the exact retry key without refreshing (103.04ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 586.274

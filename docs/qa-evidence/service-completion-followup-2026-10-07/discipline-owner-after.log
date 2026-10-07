@@ -1,0 +1,14 @@
+✔ file-read errors release the task and expose a recoverable error (110.5425ms)
+✔ a lost attachment confirmation recovers through the existing READY asset without another raw upload (36.4566ms)
+✔ READY submission keeps the same request identity after network loss and authentication rejection (28.9413ms)
+✔ a READY submission with unreadable success reports uncertainty and releases its busy state (21.4236ms)
+✔ simultaneous READY clicks issue one submission (25.0217ms)
+✔ a partial batch advances revision and stops after an unconfirmed response (22.2903ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 467.1928

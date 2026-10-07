@@ -1,0 +1,48 @@
+✖ saving a reviewed roster cannot approve a different edit made before its response (64.6266ms)
+✖ uncertain review writes retry the exact body/revision with the same key (41.4209ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 686.2253
+
+✖ failing tests:
+
+test at tests\match-submission-review-handlers.test.mjs:62:1
+✖ saving a reviewed roster cannot approve a different edit made before its response (64.6266ms)
+  AssertionError [ERR_ASSERTION]: the submitted roster must stay the roster shown as saved
+
+  99 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/match-submission-review-handlers.test.mjs:69:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 99,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\match-submission-review-handlers.test.mjs:73:1
+✖ uncertain review writes retry the exact body/revision with the same key (41.4209ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'submission-review-draft-cd32730a-9e48-4c24-b78d-214276ffdf71-muxj50v7'
+  - 'submission-review-draft-6bd944e1-6d11-46bf-ad4c-e9ba9d7fabe2-muxj50va'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/match-submission-review-handlers.test.mjs:77:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'submission-review-draft-cd32730a-9e48-4c24-b78d-214276ffdf71-muxj50v7',
+    expected: 'submission-review-draft-6bd944e1-6d11-46bf-ad4c-e9ba9d7fabe2-muxj50va',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-07T03:26:58.374Z",
+  "baselineInventory": "docs/qa-evidence/service-completion-v1.0.4-2026-10-06/interface-inventory.json",
+  "sourceHead": "5c51fe5149074f686cd8900e42e821d1cf92226a",
+  "scope": "Read-only reconciliation of actual page/route/metadata files, route templates, explicit HTTP methods and configured cron definitions. Source changes and runtime execution evidence are separate.",
+  "counts": {
+    "page": 108,
+    "api": 212,
+    "compatibility-handler": 63,
+    "metadata": 3,
+    "all": 386
+  },
+  "missing": [],
+  "removed": [],
+  "routeDrift": [],
+  "methodDrift": [],
+  "scheduledJobsUnchanged": true,
+  "scheduledJobs": [
+    {
+      "path": "/api/cron/destruction-ratings",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/statistics-projection",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/kakao-daily-close",
+      "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/riot-sync",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/support-retention",
+      "schedule": "0 19 * * *"
+    }
+  ],
+  "changedRouteSources": [
+    "src/app/(public)/(tools)/tools/team-balance/drafts/[draftId]/page.tsx",
+    "src/app/(public)/(tools)/tools/team-balance/drafts/page.tsx",
+    "src/app/(admin)/admin/progress/event/[eventId]/page.tsx",
+    "src/app/(admin)/admin/operation-forms/[formType]/[id]/page.tsx",
+    "src/app/(admin)/admin/matches/page.tsx",
+    "src/app/(admin)/admin/matches/submissions/[submissionId]/page.tsx",
+    "src/app/(admin)/admin/balance/drafts/[draftId]/page.tsx",
+    "src/app/(admin)/admin/balance/drafts/page.tsx"
+  ],
+  "passed": true
+}

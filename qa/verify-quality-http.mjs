@@ -31,6 +31,13 @@ for (const path of ["/competitions/events", "/competitions/destruction"]) {
   }
 }
 targets.push({ ...targets.find(entry => entry.path === "/matches/submissions"), path: "/matches/submissions?status=", rejectText: "목록 조건이 올바르지 않아요." });
+for (const path of ["/admin/highlights", "/admin/images"]) {
+  const source = targets.find(entry => entry.path === path);
+  assert.ok(source);
+  for (const query of ["pageSize=1", "page=2&pageSize=1", "status=&pageSize=1", "status=PUBLISHED&pageSize=1", "page=0"]) {
+    targets.push({ ...source, path: `${path}?${query}`, rejectText: query === "page=0" ? undefined : "목록 조건을 확인해 주세요.", requireText: query === "page=0" ? "목록 초기화" : undefined });
+  }
+}
 const rows = [];
 for (const entry of targets) {
   let target = new URL(entry.path, origin);
@@ -49,6 +56,7 @@ for (const entry of targets) {
   if (response.status !== 200) issues.push(`HTTP_${response.status}`);
   if (/Application error:|Internal Server Error/.test(html)) issues.push("SERVER_ERROR");
   if (entry.rejectText && html.includes(entry.rejectText)) issues.push("VALID_FILTER_REJECTED");
+  if (entry.requireText && !html.includes(entry.requireText)) issues.push("MISSING_RECOVERY_CONTROL");
   if (!/<h1(?:\s|>)/.test(html)) issues.push("MISSING_H1");
   if (entry.session !== "anonymous" && target.pathname === "/admin/login") issues.push("UNEXPECTED_LOGIN");
   if (entry.expectedRedirect && redirects[0]?.status !== entry.expectedRedirect.status) issues.push("REDIRECT_STATUS");

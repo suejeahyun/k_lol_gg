@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-10-07T03:10:33.364Z",
+  "source": "Authenticated production environment metadata. Only allowlisted non-secret switches and presence booleans retained.",
+  "databaseEnvironmentUnchangedSinceAuthenticatedPriorProbe": true,
+  "settings": [
+    {
+      "key": "V2_RIOT_INTEGRATION_ENABLED",
+      "present": true,
+      "readableBoolean": false,
+      "booleanValue": null
+    },
+    {
+      "key": "V2_RIOT_FAKE_RUNTIME",
+      "present": true,
+      "readableBoolean": false,
+      "booleanValue": null
+    },
+    {
+      "key": "KAKAO_SITE_NOTICE_ENABLED",
+      "present": true,
+      "readableBoolean": false,
+      "booleanValue": null
+    }
+  ],
+  "requiredConfiguration": [
+    {
+      "key": "RIOT_API_KEY",
+      "present": true
+    },
+    {
+      "key": "RIOT_ENCRYPTION_KEYS",
+      "present": true
+    },
+    {
+      "key": "CRON_SECRET",
+      "present": true
+    },
+    {
+      "key": "OPERATIONS_JOB_SECRET",
+      "present": true
+    },
+    {
+      "key": "RIOT_RSO_CLIENT_ID",
+      "present": false
+    },
+    {
+      "key": "RIOT_RSO_CLIENT_SECRET",
+      "present": false
+    },
+    {
+      "key": "RIOT_RSO_STATE_SECRET",
+      "present": false
+    },
+    {
+      "key": "RIOT_RSO_REDIRECT_URI",
+      "present": true
+    }
+  ]
+}

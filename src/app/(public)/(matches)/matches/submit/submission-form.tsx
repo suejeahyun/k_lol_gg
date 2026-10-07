@@ -294,7 +294,7 @@ export function SubmissionForm({
       {recoveringCode ? null : !submission ? (
         <section className={styles.panel} aria-labelledby="new-submission-title">
           <h2 id="new-submission-title">새 결과 접수</h2>
-          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>연결된 팀</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"} · 참가자·팀 구성 연결</small></div> : null}
+          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>팀 초안 연결</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"}</small></div> : null}
           <form className={styles.form} onSubmit={createSubmission}>
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} placeholder="예: 화요일 저녁 내전" defaultValue={teamBalanceDraft?.title ?? ""} /></label>
             <label>주최자<input name="organizer" required maxLength={100} placeholder="경기를 진행한 사람의 닉네임" /></label>

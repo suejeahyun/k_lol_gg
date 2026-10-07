@@ -16,3 +16,5 @@
 .form .createFields label { display: grid; }
 .createFields legend { margin-bottom: .6rem; font-weight: 850; }
 @media(max-width:520px){.actionsGrid{grid-template-columns:minmax(0,1fr)}}
+.settingsForm{grid-column:1/-1}.settingsForm .createFields{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.settingsForm button{justify-self:start;min-height:44px}
+@media(max-width:520px){.settingsForm .createFields{grid-template-columns:minmax(0,1fr)}}

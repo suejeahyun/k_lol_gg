@@ -144,3 +144,5 @@
 @keyframes match-admin-dialog-in { from { opacity: 0; transform: translateY(6px) scale(.99); } }
 @media (prefers-reduced-motion: reduce) { .actions button:active:not(:disabled), .addGame:active:not(:disabled), .confirmRow:active:not(:disabled) { transform: none; } .dialogBackdrop, .dialog, .message, .validation, .valid { animation: none; } }
 @media (forced-colors: active) { .hero, .filters, .tableWrap, .panel, .gameEditor, .pickerList, .reviewPanel, .reviewFindings article, .image, .paste, .dialog, .message, .validation, .valid { border-color: CanvasText; box-shadow: none; } .filters:focus-within, .panel:focus-within, .gameEditor:focus-within, .dialog:focus-within, .table tbody tr:focus-within, .rosterRow:focus-within { outline: 2px solid Highlight; outline-offset: 2px; box-shadow: none; } }
+
+.reviewFields { display: grid; gap: 16px; min-width: 0; margin: 0; padding: 0; border: 0; }

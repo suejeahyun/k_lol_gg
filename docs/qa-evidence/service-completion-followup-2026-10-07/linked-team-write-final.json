@@ -1,0 +1,87 @@
+{
+  "checkedAt": "2026-10-07T03:31:14.417Z",
+  "origin": "http://127.0.0.1:60426",
+  "runId": "bfc01c92-8265-48f1-9189-cca34924a70e",
+  "scope": "Existing loopback disposable PostgreSQL + Next production fixture. Only newly created synthetic entities. Fake private image storage; no external provider delivery or browser UI claim.",
+  "passed": true,
+  "groups": [
+    {
+      "name": "linked-team-submission-read",
+      "passed": true,
+      "steps": [
+        {
+          "name": "linked-team-account-login",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "linked-team-owner-read",
+          "status": 200,
+          "etag": "\"7\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-submission-create",
+          "status": 201,
+          "etag": "\"0\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-before-upload-1",
+          "status": 200,
+          "etag": "\"0\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-upload-1",
+          "status": 201,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-before-upload-2",
+          "status": 200,
+          "etag": "\"1\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-upload-2",
+          "status": 201,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-complete-owner-read",
+          "status": 200,
+          "etag": "\"2\"",
+          "replayed": false
+        },
+        {
+          "name": "linked-team-real-admin-page-props",
+          "status": 200,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "linked-team-admin-api-anonymous-denied",
+          "status": 401,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "linked-team-admin-page-anonymous-denied",
+          "status": 307,
+          "etag": null,
+          "replayed": false
+        },
+        {
+          "name": "linked-team-fixture-unchanged",
+          "status": 200,
+          "etag": "\"7\"",
+          "replayed": false
+        }
+      ]
+    }
+  ]
+}

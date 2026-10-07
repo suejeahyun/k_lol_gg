@@ -1,0 +1,49 @@
+✖ explicitly loading the current linked team fills each game's empty slots without changing results and requires every row to be checked (82.6711ms)
+✖ loading a linked team never overwrites an existing player selection or bypasses a terminal review (46.9683ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 414.6774
+
+✖ failing tests:
+
+test at tests\match-submission-review-handlers.test.mjs:156:1
+✖ explicitly loading the current linked team fills each game's empty slots without changing results and requires every row to be checked (82.6711ms)
+  AssertionError [ERR_ASSERTION]: linked team needs an explicit initial-roster action
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/match-submission-review-handlers.test.mjs:160:59)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\match-submission-review-handlers.test.mjs:175:1
+✖ loading a linked team never overwrites an existing player selection or bypasses a terminal review (46.9683ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(priorButton)
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/match-submission-review-handlers.test.mjs:178:64)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

@@ -1,0 +1,20 @@
+✔ actual admin rendering exposes settings only while planned with no participants, including cancelled participants (135.0469ms)
+✔ unchanged dates round-trip exactly through KST inputs across midnight independently of machine timezone (43.6706ms)
+✔ edited settings use the existing command shape and reject invalid recruitment dates before sending (44.74ms)
+✔ lost response, server failure and unreadable success retry the same body, revision and idempotency key (37.0648ms)
+✔ same-tick submits and another lifecycle operation are blocked through the successful refresh (29.1154ms)
+✔ conflict preserves input until explicit reload; expired sessions return to this event after admin login (63.9186ms)
+✔ correcting a rejected setting uses a distinct request identity (25.5791ms)
+✔ unconfirmed success bodies retain the same request identity and never claim completion (191.9712ms)
+✔ actual detail page resets local settings from the latest event revision after refresh (51.699ms)
+✔ public competition pages expose list/detail/application states without administrator controls (3.8499ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (1.0177ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.533ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 904.7376

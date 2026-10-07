@@ -1,0 +1,18 @@
+✔ submission continuation code is strict uppercase and canonical (0.5554ms)
+✔ offline legacy match ids use the exact PostgreSQL int32 compatibility range (0.1098ms)
+✔ MVP v1 formula is the only versioned score source (0.7351ms)
+✔ MVP V1 compatibility tie-break is score, kills, deaths, assists, player id (0.2668ms)
+✔ participant display identity is server-captured and retained across unrelated amendments (0.5487ms)
+✔ KST date and explicit started-at offset are strict (0.0859ms)
+✔ complete match input rejects unknown keys, bidi text and incomplete rosters (0.3846ms)
+✔ submission input has a bounded image/game count (0.5219ms)
+✔ private image validator fully decodes, checks bounds/container end and SHA (7.0226ms)
+✔ fake private adapters are exact development and non-Vercel only (0.2667ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 203.5427

@@ -1,0 +1,14 @@
+✔ linked review reads current selected layout with ADMIN authorization and includes all ten players in the existing catalog (52.7244ms)
+✔ the optional team read never replaces a saved review or runs for terminal and unrelated submissions (26.1536ms)
+✔ archived, mismatched and invalid current layouts do not offer a roster import (39.4174ms)
+✔ missing or inactive players and unavailable team reads preserve the existing manual review (19.9551ms)
+✔ an unauthorized linked review stops before reading submissions, drafts or catalogs (5.0778ms)
+✔ selected team-balance provenance requires the exact ten-player two-team layout (0.7839ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1287.9736

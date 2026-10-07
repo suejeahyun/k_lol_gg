@@ -1,0 +1,22 @@
+✔ invalid gallery files do not consume the five valid upload slots (0.8768ms)
+✔ gallery file planning applies remaining capacity after validation (0.1142ms)
+✔ short-lived gallery upload reports are bounded before display (0.2511ms)
+✔ owner submission rechecks authorization and binds a READY private asset atomically (2.5928ms)
+✔ exact replay returns the durable body without touching the task or asset (0.6763ms)
+✔ missing private asset and failed authorization use existence-masked errors (0.8356ms)
+✔ outbox failure rolls task, audit, outbox and receipt back together (0.4237ms)
+✔ review requires an ADMIN-purpose TOTP recheck and approves the exact evidence batch (0.6894ms)
+✔ tampered immutable request body fails before the transaction (0.215ms)
+✔ media list parsers are bounded and reject unknown query keys (1.4368ms)
+✔ media commands use the existing strict YouTube parser, exact bodies, If-Match revision, and deterministic fingerprints (9.5995ms)
+✔ gallery input permits only one to five distinct READY asset identifiers at the application boundary (0.5825ms)
+✔ gallery input accepts an explicit mixed image order without exposing arbitrary fields (0.4343ms)
+✔ published asset delivery checks publication/READY via its port and never returns the storage locator (0.7486ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 192.4177

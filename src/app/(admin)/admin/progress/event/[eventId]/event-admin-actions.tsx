@@ -1,14 +1,22 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import type { CompetitionPlayerOption } from "@/modules/competitions/core";
-import type { EventAggregate } from "@/modules/competitions/events";
+import { competitionEventFormatLabel } from "@/modules/competitions/core/display-projection";
+import type { EventAggregate, EventSettings } from "@/modules/competitions/events";
+import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 import { BoundedPicker } from "../../../matches/bounded-picker";
 import styles from "../event-admin.module.css";
 
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
+
+function settingsInputs(settings: EventSettings) {
+  const localTime = (value: string) => new Date(Date.parse(value) + 9 * 60 * 60 * 1000).toISOString().slice(0, -1);
+  return { ...settings, description: settings.description ?? "", recruitmentOpensAt: localTime(settings.recruitmentOpensAt), recruitmentClosesAt: localTime(settings.recruitmentClosesAt) };
+}
 
 export function EventAdminActions({ event, playerOptions, playerLabels, galleryOptions }: Readonly<{
   event: EventAggregate;
@@ -17,7 +25,15 @@ export function EventAdminActions({ event, playerOptions, playerLabels, galleryO
   galleryOptions: readonly Readonly<{ id: string; title: string }>[];
 }>) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [refreshing, startRefresh] = useTransition();
+  const [recovery, setRecovery] = useState<"reload" | "login" | null>(null);
+  const [settingsDraft, setSettingsDraft] = useState(() => settingsInputs(event.settings));
+  const sending = useRef(false);
+  const mutationKeys = useRef(new ClientMutationKeyStore("event-admin")).current;
+  const busy = pending || refreshing;
+  const locked = busy || recovery !== null;
+  const settingsEditable = event.lifecycle.status === "PLANNED" && event.participants.length === 0;
   const [message, setMessage] = useState("");
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [importedPlayers, setImportedPlayers] = useState<ReadonlyArray<Readonly<{
@@ -33,18 +49,42 @@ export function EventAdminActions({ event, playerOptions, playerLabels, galleryO
   };
 
   async function command(type: string, payload: Record<string, unknown>) {
-    setBusy(true); setMessage("");
+    if (locked || sending.current) return;
+    sending.current = true;
+    setPending(true); setMessage("");
+    const request = { type, payload };
+    const ticket = mutationKeys.issue(type, event.revision, request);
     try {
-      const response = await fetch(`/api/admin/competitions/events/${event.id}`, { method: "PATCH", headers: { "Content-Type": "application/json", "If-Match": `"${event.revision}"`, "Idempotency-Key": `event-${type.toLocaleLowerCase()}-${crypto.randomUUID()}` }, body: JSON.stringify({ type, payload }) });
-      const body = await response.json() as { detail?: string; correctionPlan?: { invalidatedResultFixtureIds?: string[] } };
-      if (!response.ok) throw new Error(body.detail ?? "이벤트 작업을 완료하지 못했습니다.");
+      const response = await fetch(`/api/admin/competitions/events/${event.id}`, { method: "PATCH", headers: { "Content-Type": "application/json", "If-Match": `"${event.revision}"`, "Idempotency-Key": ticket.key }, body: JSON.stringify(request), signal: AbortSignal.timeout(15_000) });
+      if (!response.ok) {
+        const problem = await response.json().catch(() => null) as { detail?: string; title?: string } | null;
+        setRecovery(response.status === 412 ? "reload" : response.status === 401 ? "login" : null);
+        setMessage(problem?.detail ?? problem?.title ?? "이벤트 작업을 완료하지 못했습니다. 다시 시도해 주세요.");
+        return;
+      }
+      const body = await response.json() as { eventId?: string; commandType?: string; revision?: number; correctionPlan?: { invalidatedResultFixtureIds?: string[] } } | null;
+      if (!body || typeof body !== "object" || Array.isArray(body) || body.eventId !== event.id || body.commandType !== type || typeof body.revision !== "number" || !Number.isSafeInteger(body.revision) || body.revision <= event.revision) throw new Error("UNCONFIRMED_EVENT_COMMAND");
+      mutationKeys.complete(ticket);
       const invalidated = body.correctionPlan?.invalidatedResultFixtureIds?.length ?? 0;
       if (type === "IMPORT_PARTICIPANTS") setImportedPlayers([]);
       if (type === "ADD_PARTICIPANT") setSelectedPlayerId("");
       setMessage(invalidated ? `정정 완료: 하위 결과 ${invalidated}건을 무효화했습니다.` : "작업을 반영했습니다.");
-      router.refresh();
-    } catch (error) { setMessage(error instanceof Error ? error.message : "이벤트 작업을 완료하지 못했습니다."); }
-    finally { setBusy(false); }
+      startRefresh(() => router.refresh());
+    } catch { setMessage("이벤트 작업을 완료하지 못했습니다. 다시 시도해 주세요."); }
+    finally { sending.current = false; setPending(false); }
+  }
+
+  async function saveSettings(form: FormEvent<HTMLFormElement>) {
+    form.preventDefault();
+    if (!settingsEditable || locked || sending.current) return;
+    const opensAt = Date.parse(`${settingsDraft.recruitmentOpensAt}+09:00`);
+    const closesAt = Date.parse(`${settingsDraft.recruitmentClosesAt}+09:00`);
+    if (!Number.isFinite(opensAt) || !Number.isFinite(closesAt)) { setMessage("모집 시작과 마감 시간을 입력해 주세요."); return; }
+    if (closesAt <= opensAt) { setMessage("모집 마감은 시작보다 늦어야 합니다."); return; }
+    await command("REPLACE_SETTINGS", { settings: {
+      ...settingsDraft, description: settingsDraft.description || null,
+      recruitmentOpensAt: new Date(opensAt).toISOString(), recruitmentClosesAt: new Date(closesAt).toISOString(),
+    } });
   }
 
   function addParticipant(form: FormEvent<HTMLFormElement>) {
@@ -82,10 +122,22 @@ export function EventAdminActions({ event, playerOptions, playerLabels, galleryO
   }
 
   const status = event.lifecycle.status;
-  return <section className={styles.actions} aria-labelledby="event-actions-title"><h2 id="event-actions-title">현재 단계 작업</h2><div className={styles.actionsGrid}>
-    {status === "PLANNED" ? <button className={styles.primary} disabled={busy} onClick={() => command("START_RECRUITMENT", {})}>모집 시작</button> : null}
+  return <section className={styles.actions} aria-labelledby="event-actions-title" aria-busy={busy}><h2 id="event-actions-title">현재 단계 작업</h2><div className={styles.actionsGrid}>
+    {settingsEditable ? <form className={`${styles.form} ${styles.settingsForm}`} onSubmit={saveSettings}>
+      <fieldset className={styles.createFields} disabled={locked}>
+        <legend>이벤트 설정 수정</legend>
+        <label>이벤트 이름<input name="title" maxLength={120} required value={settingsDraft.title} onChange={(change) => setSettingsDraft({ ...settingsDraft, title: change.target.value })} /></label>
+        <label>설명<textarea name="description" maxLength={2000} rows={4} value={settingsDraft.description} onChange={(change) => setSettingsDraft({ ...settingsDraft, description: change.target.value })} /></label>
+        <label>방식<select name="format" value={settingsDraft.format} onChange={(change) => setSettingsDraft({ ...settingsDraft, format: change.target.value as EventSettings["format"] })}>{["POSITION", "ARAM"].map((format) => <option key={format} value={format}>{competitionEventFormatLabel(format)}</option>)}</select></label>
+        <label>모집 시작 (한국 시간)<input name="recruitmentOpensAt" type="datetime-local" step="0.001" required value={settingsDraft.recruitmentOpensAt} onChange={(change) => setSettingsDraft({ ...settingsDraft, recruitmentOpensAt: change.target.value })} /></label>
+        <label>모집 마감 (한국 시간)<input name="recruitmentClosesAt" type="datetime-local" step="0.001" required value={settingsDraft.recruitmentClosesAt} onChange={(change) => setSettingsDraft({ ...settingsDraft, recruitmentClosesAt: change.target.value })} /></label>
+        <label>대진 방식<select name="bracketBestOf" value={settingsDraft.bracketBestOf} onChange={(change) => setSettingsDraft({ ...settingsDraft, bracketBestOf: Number(change.target.value) })}>{[1, 3, 5, 7, 9].map((bestOf) => <option key={bestOf} value={bestOf}>{bestOf === 1 ? "단판" : `${bestOf}판 ${Math.ceil(bestOf / 2)}선승`}</option>)}</select></label>
+      </fieldset>
+      <button type="submit" disabled={locked}>설정 저장</button>
+    </form> : null}
+    {status === "PLANNED" ? <button className={styles.primary} disabled={locked} onClick={() => command("START_RECRUITMENT", {})}>모집 시작</button> : null}
     {status === "RECRUITING" ? <>
-      <form className={styles.form} onSubmit={addParticipant}><strong>참가자 추가</strong><label>선수 검색<BoundedPicker ariaLabel="이벤트 참가 선수" value={selectedPlayerId} options={playerOptions} disabledValues={usedPlayerIds} placeholder="닉네임 또는 태그 검색" remoteEndpoint="/api/admin/matches/editor-options/players" onChange={setSelectedPlayerId} /></label>{event.settings.format === "POSITION" ? <label>주 포지션<select name="mainPosition">{positions.map((position) => <option key={position}>{position}</option>)}</select></label> : null}<button disabled={busy || !selectedPlayerId}>추가</button></form>
+      <form className={styles.form} onSubmit={addParticipant}><strong>참가자 추가</strong><label>선수 검색<BoundedPicker ariaLabel="이벤트 참가 선수" value={selectedPlayerId} options={playerOptions} disabledValues={usedPlayerIds} placeholder="닉네임 또는 태그 검색" remoteEndpoint="/api/admin/matches/editor-options/players" onChange={setSelectedPlayerId} /></label>{event.settings.format === "POSITION" ? <label>주 포지션<select name="mainPosition">{positions.map((position) => <option key={position}>{position}</option>)}</select></label> : null}<button disabled={locked || !selectedPlayerId}>추가</button></form>
       <form className={styles.form} onSubmit={importParticipants}>
         <strong>여러 참가자 가져오기</strong>
         <p>활성 선수만 추가 가능 · 기존 참가자 제외</p>
@@ -93,16 +145,20 @@ export function EventAdminActions({ event, playerOptions, playerLabels, galleryO
           const selected = importedPlayers.find((item) => item.playerId === option.value);
           return <div key={option.value}><label><input type="checkbox" checked={Boolean(selected)} onChange={(change) => toggleImportedPlayer(option.value, change.target.checked)} />{option.label}</label>{selected && event.settings.format === "POSITION" ? <select aria-label={`${option.label} 주 포지션`} value={selected.mainPosition} onChange={(change) => setImportedPlayers((current) => current.map((item) => item.playerId === option.value ? { ...item, mainPosition: change.target.value as (typeof positions)[number] } : item))}>{positions.map((position) => <option key={position}>{position}</option>)}</select> : null}</div>;
         })}</div>
-        <button disabled={busy || importedPlayers.length === 0 || importedPlayers.length > 10 - activeParticipantCount}>선택한 {importedPlayers.length}명 가져오기</button>
+        <button disabled={locked || importedPlayers.length === 0 || importedPlayers.length > 10 - activeParticipantCount}>선택한 {importedPlayers.length}명 가져오기</button>
       </form>
-      <button className={styles.primary} disabled={busy || event.participants.filter((item) => item.status === "ACTIVE").length !== 10} onClick={() => command("CLOSE_RECRUITMENT", {})}>10명 모집 마감</button>
+      <button className={styles.primary} disabled={locked || event.participants.filter((item) => item.status === "ACTIVE").length !== 10} onClick={() => command("CLOSE_RECRUITMENT", {})}>10명 모집 마감</button>
     </> : null}
-    {status === "TEAM_BUILDING" && event.teams.length === 0 ? <button className={styles.primary} disabled={busy} onClick={() => command("BUILD_TEAMS", {})}>팀 자동 편성</button> : null}
-    {status === "TEAM_BUILDING" && event.teams.length > 0 ? <button className={styles.primary} disabled={busy} onClick={() => command("GENERATE_BRACKET", {})}>대진 생성</button> : null}
-    {status === "IN_PROGRESS" ? event.bracket?.fixtures.filter((fixture) => fixture.teamAId && fixture.teamBId).map((fixture) => <form className={styles.form} key={fixture.id} onSubmit={(form) => result(form, fixture.id, Boolean(fixture.result))}><strong>R{fixture.roundNumber} · {teamLabels.get(fixture.teamAId!) ?? "알 수 없는 팀"} vs {teamLabels.get(fixture.teamBId!) ?? "알 수 없는 팀"} · {fixture.result ? "결과 정정" : "결과 입력"}</strong><label>팀 A 점수<input name="teamAScore" type="number" min={0} max={9} defaultValue={fixture.result?.teamAScore ?? 0} required /></label><label>팀 B 점수<input name="teamBScore" type="number" min={0} max={9} defaultValue={fixture.result?.teamBScore ?? 0} required /></label><label>승리 팀<select name="winnerTeamId" defaultValue={fixture.result?.winnerTeamId ?? fixture.teamAId!}><option value={fixture.teamAId!}>{teamLabels.get(fixture.teamAId!) ?? "알 수 없는 팀"}</option><option value={fixture.teamBId!}>{teamLabels.get(fixture.teamBId!) ?? "알 수 없는 팀"}</option></select></label><button disabled={busy}>{fixture.result ? "정정" : "저장"}</button></form>) : null}
-    {status === "IN_PROGRESS" && event.bracket?.championTeamId ? <form className={styles.form} onSubmit={(form) => { form.preventDefault(); const data = new FormData(form.currentTarget); void command("COMPLETE_EVENT", { mvpParticipantId: data.get("mvpParticipantId") || null }); }}><strong>이벤트 완료</strong><label>MVP 선수 (선택)<select name="mvpParticipantId" defaultValue=""><option value="">선택하지 않음</option>{event.participants.filter((item) => item.status === "ACTIVE").map((item) => <option key={item.id} value={item.id}>{participantLabel(item.id)}</option>)}</select></label><button disabled={busy}>우승·완료 확정</button></form> : null}
-    {status === "IN_PROGRESS" || status === "COMPLETED" ? <form className={styles.form} onSubmit={(form) => { form.preventDefault(); const galleryId = String(new FormData(form.currentTarget).get("galleryId") ?? ""); void command("SET_MEDIA_GALLERY", { galleryId: galleryId || null }); }}><strong>이벤트 결과 갤러리</strong><label>게시 완료 갤러리<select name="galleryId" defaultValue={event.galleryId ?? ""}><option value="">연결하지 않음</option>{galleryOptions.map((gallery) => <option key={gallery.id} value={gallery.id}>{gallery.title}</option>)}</select></label><button disabled={busy}>갤러리 반영</button></form> : null}
-    {status !== "COMPLETED" && status !== "CANCELLED" ? <form className={styles.form} onSubmit={(form) => { form.preventDefault(); void command("CANCEL_EVENT", { reason: new FormData(form.currentTarget).get("reason") }); }}><strong>이벤트 취소</strong><label>취소 사유<input name="reason" maxLength={500} required /></label><button className={styles.danger} disabled={busy}>취소</button></form> : null}
-    {status === "CANCELLED" ? <button className={styles.primary} disabled={busy} onClick={() => command("RESTORE_EVENT", {})}>이전 단계로 복구</button> : null}
-  </div><p role="status" aria-live="polite">{busy ? "처리 중…" : message}</p></section>;
+    {status === "TEAM_BUILDING" && event.teams.length === 0 ? <button className={styles.primary} disabled={locked} onClick={() => command("BUILD_TEAMS", {})}>팀 자동 편성</button> : null}
+    {status === "TEAM_BUILDING" && event.teams.length > 0 ? <button className={styles.primary} disabled={locked} onClick={() => command("GENERATE_BRACKET", {})}>대진 생성</button> : null}
+    {status === "IN_PROGRESS" ? event.bracket?.fixtures.filter((fixture) => fixture.teamAId && fixture.teamBId).map((fixture) => <form className={styles.form} key={fixture.id} onSubmit={(form) => result(form, fixture.id, Boolean(fixture.result))}><strong>R{fixture.roundNumber} · {teamLabels.get(fixture.teamAId!) ?? "알 수 없는 팀"} vs {teamLabels.get(fixture.teamBId!) ?? "알 수 없는 팀"} · {fixture.result ? "결과 정정" : "결과 입력"}</strong><label>팀 A 점수<input name="teamAScore" type="number" min={0} max={9} defaultValue={fixture.result?.teamAScore ?? 0} required /></label><label>팀 B 점수<input name="teamBScore" type="number" min={0} max={9} defaultValue={fixture.result?.teamBScore ?? 0} required /></label><label>승리 팀<select name="winnerTeamId" defaultValue={fixture.result?.winnerTeamId ?? fixture.teamAId!}><option value={fixture.teamAId!}>{teamLabels.get(fixture.teamAId!) ?? "알 수 없는 팀"}</option><option value={fixture.teamBId!}>{teamLabels.get(fixture.teamBId!) ?? "알 수 없는 팀"}</option></select></label><button disabled={locked}>{fixture.result ? "정정" : "저장"}</button></form>) : null}
+    {status === "IN_PROGRESS" && event.bracket?.championTeamId ? <form className={styles.form} onSubmit={(form) => { form.preventDefault(); const data = new FormData(form.currentTarget); void command("COMPLETE_EVENT", { mvpParticipantId: data.get("mvpParticipantId") || null }); }}><strong>이벤트 완료</strong><label>MVP 선수 (선택)<select name="mvpParticipantId" defaultValue=""><option value="">선택하지 않음</option>{event.participants.filter((item) => item.status === "ACTIVE").map((item) => <option key={item.id} value={item.id}>{participantLabel(item.id)}</option>)}</select></label><button disabled={locked}>우승·완료 확정</button></form> : null}
+    {status === "IN_PROGRESS" || status === "COMPLETED" ? <form className={styles.form} onSubmit={(form) => { form.preventDefault(); const galleryId = String(new FormData(form.currentTarget).get("galleryId") ?? ""); void command("SET_MEDIA_GALLERY", { galleryId: galleryId || null }); }}><strong>이벤트 결과 갤러리</strong><label>게시 완료 갤러리<select name="galleryId" defaultValue={event.galleryId ?? ""}><option value="">연결하지 않음</option>{galleryOptions.map((gallery) => <option key={gallery.id} value={gallery.id}>{gallery.title}</option>)}</select></label><button disabled={locked}>갤러리 반영</button></form> : null}
+    {status !== "COMPLETED" && status !== "CANCELLED" ? <form className={styles.form} onSubmit={(form) => { form.preventDefault(); void command("CANCEL_EVENT", { reason: new FormData(form.currentTarget).get("reason") }); }}><strong>이벤트 취소</strong><label>취소 사유<input name="reason" maxLength={500} required /></label><button className={styles.danger} disabled={locked}>취소</button></form> : null}
+    {status === "CANCELLED" ? <button className={styles.primary} disabled={locked} onClick={() => command("RESTORE_EVENT", {})}>이전 단계로 복구</button> : null}
+  </div>
+    {recovery === "reload" ? <button className={styles.primary} type="button" disabled={busy} onClick={() => { setSettingsDraft(settingsInputs(event.settings)); setRecovery(null); setMessage(""); startRefresh(() => router.refresh()); }}>입력 버리고 최신 내용 불러오기</button> : null}
+    {recovery === "login" ? <Link href={`/admin/login?next=${encodeURIComponent(`/admin/progress/event/${event.id}`)}`}>관리자 로그인</Link> : null}
+    {busy || message ? <p role="status" aria-live="polite">{busy ? "처리 중…" : message}</p> : null}
+  </section>;
 }

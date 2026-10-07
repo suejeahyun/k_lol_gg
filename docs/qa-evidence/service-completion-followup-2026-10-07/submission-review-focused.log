@@ -1,0 +1,43 @@
+✔ 관리자 직접 가져오기는 파일·붙여넣기·비공개 미리보기·재시도 복구를 제공한다 (3.7732ms)
+✔ 관리자 로그아웃은 가져오기 복구 namespace만 best-effort로 지운다 (0.8955ms)
+✔ 직접 가져오기 API는 예약→bounded body→work gate→private finalize 순서를 지킨다 (0.9229ms)
+✔ 검토 UI는 fuzzy 자동 연결 없이 구조화 행별 사람 확인을 요구한다 (1.2763ms)
+✔ admin import cancellation is authorized only for ADMIN-source rows (1.0319ms)
+✔ match editor exposes only the structured form and traps the void confirmation dialog (5.2741ms)
+✔ picker status copy is outside the listbox and visual active row matches aria active descendant (1.9736ms)
+✔ submission reject dialog shares the accessible modal behavior (1.415ms)
+✔ submission conflict keeps component identity and adopts only a verified latest revision (0.8638ms)
+✔ match editor conflict preserves local input and adopts only a verified latest aggregate (1.1227ms)
+✔ match editor save action stays readable in enabled and disabled states (0.6511ms)
+✔ submission approval durably transfers team-balance provenance into the match aggregate (0.7784ms)
+✔ ordinary match amendments cannot clear immutable team-balance provenance (0.1671ms)
+✔ web submission linkage revalidates draft ownership, lifecycle and selected layout in its transaction (0.1996ms)
+✔ match changed outbox carries team-balance provenance in its typed row and payload (0.1673ms)
+✔ saving a reviewed roster cannot approve a different edit made before its response (83.3574ms)
+✔ uncertain review writes retry the exact body/revision with the same key (53.2523ms)
+✔ review inputs and repeat mutations stay locked through response and refreshed projection (52.9714ms)
+✔ a validation failure permits input correction with a new request identity (45.0123ms)
+✔ 412 preserves the local roster and requires explicit comparison before continuing (47.2345ms)
+✔ an uncertain approval retries its original command and locks the confirmed terminal state (35.4493ms)
+✔ review state uses readable labels while source comparison and real OCR warnings remain available (121.1053ms)
+✔ explicitly loading the current linked team fills each game's empty slots without changing results and requires every row to be checked (22.2677ms)
+✔ loading a linked team never overwrites an existing player selection or bypasses a terminal review (99.847ms)
+✔ unconfirmed review success cannot confirm a different submission, advance revision or consume retry identity (113.7666ms)
+✔ unconfirmed OCR success preserves image revision and the exact retry key without refreshing (73.5846ms)
+✔ confirmed OCR success and unavailable OCR results both advance only the image revision and require a fresh comparison (44.4465ms)
+✔ first submission prioritizes required information while optional fields and continuation stay available (7.5338ms)
+✔ a cancelled partial upload never displays unfinished images as a completed step (1.116ms)
+✔ anonymous result continuation returns to the same submission after login (0.8179ms)
+✔ changing a continuation code or draft resets form identity while same-context refresh preserves edits (23.1581ms)
+✔ pending, rejected, suspended and password-reset accounts get recovery before filling the submission form (41.765ms)
+✔ completed or rejected submissions show their result and recovery without impossible upload controls (4.4232ms)
+✔ submission lookup failure keeps the code for retry and is distinct from a missing submission (20.1541ms)
+✔ creating a submission locks mutations until the server route has committed and resets new-submission state (50.0049ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1119.1659

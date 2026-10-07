@@ -1,0 +1,52 @@
+✔ highlight: later pages remain reachable with status and page size (26.3775ms)
+✔ highlight: all-status native GET works and filtered empty state has a reset (29.5001ms)
+✔ highlight: boundaries use server-clamped current page without impossible directions (28.5644ms)
+✔ highlight: invalid parameters recover without loading or relaxing strict validation (45.3943ms)
+✔ highlight: load failure retries the same validated page and filter (12.7482ms)
+✔ highlight: publication labels are readable and a published editor opens its public page (34.3474ms)
+✖ highlight: filter controls remount when the applied page or filter changes (16.9153ms)
+✔ gallery: later pages remain reachable with status and page size (8.1282ms)
+✔ gallery: all-status native GET works and filtered empty state has a reset (18.833ms)
+✔ gallery: boundaries use server-clamped current page without impossible directions (13.823ms)
+✔ gallery: invalid parameters recover without loading or relaxing strict validation (37.0305ms)
+✔ gallery: load failure retries the same validated page and filter (6.7661ms)
+✔ gallery: publication labels are readable and a published editor opens its public page (31.1529ms)
+✖ gallery: filter controls remount when the applied page or filter changes (14.647ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 12
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 672.8239
+
+✖ failing tests:
+
+test at tests\admin-media-pagination.test.mjs:102:3
+✖ highlight: filter controls remount when the applied page or filter changes (16.9153ms)
+  AssertionError [ERR_ASSERTION]: unapplied select edits must not survive a new applied query
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:105:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: null,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:102:3
+✖ gallery: filter controls remount when the applied page or filter changes (14.647ms)
+  AssertionError [ERR_ASSERTION]: unapplied select edits must not survive a new applied query
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:105:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: null,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }

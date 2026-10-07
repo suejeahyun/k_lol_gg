@@ -1,0 +1,166 @@
+✖ file-read errors release the task and expose a recoverable error (73.6339ms)
+✖ a lost attachment confirmation recovers through the existing READY asset without another raw upload (16.9441ms)
+✖ READY submission keeps the same request identity after network loss and authentication rejection (18.2577ms)
+✖ a READY submission with unreadable success reports uncertainty and releases its busy state (10.9715ms)
+✖ simultaneous READY clicks issue one submission (14.461ms)
+✖ a partial batch advances revision and stops after an unconfirmed response (10.0533ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 377.268
+
+✖ failing tests:
+
+test at tests\discipline-owner-upload-recovery.test.mjs:53:1
+✖ file-read errors release the task and expose a recoverable error (73.6339ms)
+  node:internal/assert/utils:77
+      throw err;
+      ^
+
+  AssertionError [ERR_ASSERTION]: ../domain/season
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:142)
+      at evalmachine.<anonymous>:4:18
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:6)
+      at harness (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:39:64)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:54:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\discipline-owner-upload-recovery.test.mjs:62:1
+✖ a lost attachment confirmation recovers through the existing READY asset without another raw upload (16.9441ms)
+  node:internal/assert/utils:77
+      throw err;
+      ^
+
+  AssertionError [ERR_ASSERTION]: ../domain/season
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:142)
+      at evalmachine.<anonymous>:4:18
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:6)
+      at harness (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:39:64)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:63:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\discipline-owner-upload-recovery.test.mjs:73:1
+✖ READY submission keeps the same request identity after network loss and authentication rejection (18.2577ms)
+  node:internal/assert/utils:77
+      throw err;
+      ^
+
+  AssertionError [ERR_ASSERTION]: ../domain/season
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:142)
+      at evalmachine.<anonymous>:4:18
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:6)
+      at harness (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:39:64)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:74:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\discipline-owner-upload-recovery.test.mjs:83:1
+✖ a READY submission with unreadable success reports uncertainty and releases its busy state (10.9715ms)
+  node:internal/assert/utils:77
+      throw err;
+      ^
+
+  AssertionError [ERR_ASSERTION]: ../domain/season
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:142)
+      at evalmachine.<anonymous>:4:18
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:6)
+      at harness (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:39:64)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:84:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\discipline-owner-upload-recovery.test.mjs:90:1
+✖ simultaneous READY clicks issue one submission (14.461ms)
+  node:internal/assert/utils:77
+      throw err;
+      ^
+
+  AssertionError [ERR_ASSERTION]: ../domain/season
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:142)
+      at evalmachine.<anonymous>:4:18
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:6)
+      at harness (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:39:64)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:92:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\discipline-owner-upload-recovery.test.mjs:98:1
+✖ a partial batch advances revision and stops after an unconfirmed response (10.0533ms)
+  node:internal/assert/utils:77
+      throw err;
+      ^
+
+  AssertionError [ERR_ASSERTION]: ../domain/season
+      at require (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:142)
+      at evalmachine.<anonymous>:4:18
+      at Script.runInContext (node:vm:149:12)
+      at Script.runInNewContext (node:vm:154:17)
+      at Object.runInNewContext (node:vm:310:38)
+      at load (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:24:6)
+      at harness (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:39:64)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/discipline-owner-upload-recovery.test.mjs:99:19)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

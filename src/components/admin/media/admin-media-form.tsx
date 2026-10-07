@@ -385,7 +385,7 @@ export function AdminMediaForm(props: Props) {
     <div className={styles.actions}><button className={styles.submit} disabled={busy} type="submit">{busy ? uploadProgress ?? "처리 중…" : uncertainCreation ? "생성 결과 다시 확인" : initial ? "변경 저장" : props.kind === "gallery" && selectedGalleryFiles.length > 0 ? `초안 만들고 ${selectedGalleryFiles.length}장 등록` : "초안 만들기"}</button>
       {initial?.status === "DRAFT" ? <button disabled={busy} type="button" onClick={() => void send("PATCH", { action: "PUBLISH" }).then((result) => { if (result) router.refresh(); })}>게시</button> : null}
       {initial?.status === "PUBLISHED" ? <button disabled={busy} type="button" onClick={() => void send("PATCH", { action: "UNPUBLISH" }).then((result) => { if (result) router.refresh(); })}>게시 내리기</button> : null}
-      {initial?.status === "ARCHIVED" ? <button disabled={busy} type="button" onClick={() => void send("PATCH", { action: "RESTORE" }).then((result) => { if (result) router.refresh(); })}>draft 복구</button> : null}
+      {initial?.status === "ARCHIVED" ? <button disabled={busy} type="button" onClick={() => void send("PATCH", { action: "RESTORE" }).then((result) => { if (result) router.refresh(); })}>초안 복구</button> : null}
       {initial && initial.status !== "ARCHIVED" ? <button className={styles.danger} disabled={busy} type="button" onClick={() => void send("DELETE", {}).then((result) => { if (result) router.push(props.kind === "highlight" ? "/admin/highlights" : "/admin/images"); })}>보관</button> : null}
       {initialGallery?.status === "PUBLISHED" ? <button disabled={busy} type="button" onClick={() => {
         setBusy(true); setMessage(null);

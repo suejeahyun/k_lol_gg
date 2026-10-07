@@ -34,7 +34,7 @@ function childPath(root: string, supplied: string) {
 assert.equal(process.env.V2_DB_TEST_MODE, "true", "Explicit disposable QA mode is required");
 const readyPath = childPath(".tmp", process.argv[2] ?? ".tmp/completion-browser-before-ready.json");
 const outputPath = childPath("docs/qa-evidence", process.argv[3] ?? "docs/qa-evidence/service-completion-v1.0.5-2026-10-06/admin-service-write-http.json");
-const allowedGroups = ["support-to-admin-review", "event-create-revise-cancel-restore", "destruction-create-schedule-cancel-restore", "highlight-save-publish-archive", "gallery-draft-upload-publish-archive", "discipline-create-update-cancel"];
+const allowedGroups = ["support-to-admin-review", "event-create-revise-cancel-restore", "destruction-create-schedule-cancel-restore", "highlight-save-publish-archive", "gallery-draft-upload-publish-archive", "discipline-create-update-cancel", "linked-team-submission-read"];
 const selectedGroups = process.argv[4]?.split(",") ?? allowedGroups;
 assert.ok(selectedGroups.length > 0 && selectedGroups.every((name) => allowedGroups.includes(name)), "Unknown QA group");
 const ready = object(JSON.parse((await readFile(readyPath, "utf8")).replace(/^\uFEFF/u, "")));
@@ -149,6 +149,12 @@ await group("event-create-revise-cancel-restore", async () => {
   const settings = { title: `합성 이벤트 ${runId.slice(0, 8)}`, description: "HTTP 저장 검증", format: "ARAM", recruitmentOpensAt: new Date(Date.now() - 60_000).toISOString(), recruitmentClosesAt: new Date(Date.now() + 3_600_000).toISOString(), bracketBestOf: 1 };
   const body = { eventId, settings }, createKey = key("event-create");
   duplicate(await Promise.all([0, 1].map((i) => mutation(`event-create-${i}`, "/api/admin/competitions/events", "POST", body, 0, createKey))), 201, 1);
+  const editor = await fetch(`${origin}/admin/progress/event/${eventId}`, { headers: { cookie: superCookie }, redirect: "manual", signal: AbortSignal.timeout(20_000) });
+  assert.equal(editor.status, 200);
+  const editorHtml = await editor.text();
+  assert.ok(editorHtml.includes("이벤트 설정 수정") && editorHtml.includes('name="recruitmentOpensAt"'), "Eligible event exposes settings controls through the real authenticated page");
+  assert.ok(editorHtml.includes(new Date(Date.parse(settings.recruitmentOpensAt) + 9 * 3_600_000).toISOString().slice(0, -1)), "Event settings render the saved instant in Korean time");
+  steps.push({ name: "event-settings-page", status: editor.status, etag: null, replayed: false });
   success(await mutation("event-key-mismatch", "/api/admin/competitions/events", "POST", { ...body, settings: { ...settings, title: "변경된 이벤트" } }, 0, createKey), 409);
   const changed = ["A", "B"].map((suffix) => ({ ...settings, title: `${settings.title} ${suffix}` }));
   const results = await Promise.all(changed.map((value, index) => mutation(`event-revise-${index}`, path, "PATCH", { type: "REPLACE_SETTINGS", payload: { settings: value } }, 1)));
@@ -163,6 +169,10 @@ await group("event-create-revise-cancel-restore", async () => {
   const restored = await request("event-restored-read", path, { headers: { cookie: superCookie } });
   assert.equal(object(object(restored.body.event).lifecycle).status, "PLANNED");
   success(await mutation("event-final-cancel", path, "PATCH", cancelBody, 4), 200, 5);
+  const cancelledEditor = await fetch(`${origin}/admin/progress/event/${eventId}`, { headers: { cookie: superCookie }, redirect: "manual", signal: AbortSignal.timeout(20_000) });
+  assert.equal(cancelledEditor.status, 200);
+  assert.ok(!(await cancelledEditor.text()).includes("이벤트 설정 수정"), "Cancelled event must not expose settings mutation controls");
+  steps.push({ name: "event-cancelled-settings-hidden", status: cancelledEditor.status, etag: null, replayed: false });
 });
 
 await group("destruction-create-schedule-cancel-restore", async () => {
@@ -250,6 +260,99 @@ await group("discipline-create-update-cancel", async () => {
   success(replay, 200, 2); assert.equal(replay.replayed, true);
   const retained = await request("discipline-cancelled-read", path, { headers: { cookie: superCookie } });
   assert.equal(retained.body.active, false);
+});
+
+await group("linked-team-submission-read", async () => {
+  const draftId = uuid(object(object(ready.fixtures).sourceIds).draftId);
+  const accountLogin = await fetch(`${origin}/api/auth/login`, { method: "POST", redirect: "manual", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ loginId: text(ready.loginId), password }), signal: AbortSignal.timeout(20_000) });
+  assert.equal(accountLogin.status, 200, "Synthetic ACCOUNT login must succeed");
+  const accountCookie = accountLogin.headers.getSetCookie().find((value) => value.startsWith("klol_v2_account_session="))?.split(";")[0];
+  assert.ok(accountCookie, "Synthetic ACCOUNT session must be returned");
+  steps.push({ name: "linked-team-account-login", status: accountLogin.status, etag: null, replayed: false });
+  const before = await request("linked-team-owner-read", `/api/team-tools/drafts/${draftId}`, { headers: { cookie: accountCookie } });
+  success(before, 200);
+  const draft = object(before.body.draft);
+  assert.equal(draft.ownerUserAccountId, ready.actorUserAccountId, "The existing fixture draft belongs to the authenticated synthetic actor");
+  assert.notEqual(draft.status, "ARCHIVED");
+  assert.ok(Array.isArray(draft.candidates));
+  const candidate = draft.candidates.map(object).find((entry) => entry.signature === draft.selectedCandidateSignature && entry.source === draft.selectedCandidateSource && entry.evaluationRound === draft.evaluationRound);
+  assert.ok(candidate && Array.isArray(candidate.assignments), "The fixture has a currently selected complete layout");
+  const assignments = candidate.assignments.map(object);
+  assert.equal(assignments.length, 10);
+  const playerIds = assignments.map((assignment) => uuid(assignment.playerId));
+  assert.equal(new Set(playerIds).size, 10);
+
+  const created = await mutation("linked-team-submission-create", "/api/me/match-submissions", "POST", {
+    requestId: randomUUID(), seasonId: uuid(ready.seasonId), title: `합성 팀 연결 ${runId.slice(0, 8)}`,
+    organizer: "격리 HTTP 검증", seriesNumber: 1, note: null, playedOn: new Date().toISOString().slice(0, 10),
+    startedAt: null, expectedGameCount: 2, teamBalanceDraftId: draftId,
+  }, 0, key("linked-team-create"), accountCookie);
+  success(created, 201);
+  const submissionId = uuid(created.body.submissionId), publicCode = text(created.body.publicCode);
+  // Canonical WEB codes: domain/match.ts and createSubmission use MR2 + 8-byte hex.
+  assert.match(publicCode, /^MR2[0-9A-F]{16}$/u);
+  const ownPath = `/api/me/match-submissions/${publicCode}`;
+  for (const gameNumber of [1, 2]) {
+    const current = await request(`linked-team-before-upload-${gameNumber}`, ownPath, { headers: { cookie: accountCookie } });
+    success(current, 200);
+    const revision = object(current.body.submission).revision;
+    assert.ok(typeof revision === "number" && Number.isSafeInteger(revision));
+    const bytes = await sharp({ create: { width: 960, height: 540, channels: 3, background: gameNumber === 1 ? "#428acd" : "#ac5291" } }).png().toBuffer();
+    const uploaded = await request(`linked-team-upload-${gameNumber}`, `${ownPath}/images`, { method: "POST", headers: {
+      cookie: accountCookie, origin, "content-type": "image/png", "if-match": `"${revision}"`, "idempotency-key": key("linked-team-image"),
+      "x-content-sha256": createHash("sha256").update(bytes).digest("hex"), "x-match-game-number": String(gameNumber), "x-upload-file-name": "synthetic-linked-team.png",
+    }, body: new Uint8Array(bytes) });
+    success(uploaded, 201);
+  }
+  const complete = await request("linked-team-complete-owner-read", ownPath, { headers: { cookie: accountCookie } });
+  success(complete, 200);
+  const submission = object(complete.body.submission);
+  assert.equal(submission.status, "PENDING_REVIEW");
+  assert.equal(submission.teamBalanceDraftId, draftId);
+  assert.deepEqual(submission.receivedGameNumbers, [1, 2]);
+  const adminPath = `/admin/matches/submissions/${submissionId}`;
+  const page = await fetch(`${origin}${adminPath}`, { headers: { cookie: adminCookie }, redirect: "manual", signal: AbortSignal.timeout(20_000) });
+  assert.equal(page.status, 200);
+  const html = await page.text();
+  assert.ok(html.includes("현재 팀 배치 불러오기"), "The real ADMIN page exposes the explicit linked-team action");
+  const flight = [...html.matchAll(/self\.__next_f\.push\((\[[\s\S]*?\])\)<\/script>/gu)]
+    .flatMap((match) => { const frame: unknown = JSON.parse(match[1]!); return Array.isArray(frame) && typeof frame[1] === "string" ? [frame[1]] : []; }).join("");
+  function pageProp(name: string) {
+    const marker = `"${name}":`, index = flight.indexOf(marker);
+    assert.ok(index >= 0, `The real page serializes ${name}`);
+    const start = index + marker.length;
+    assert.equal(flight[start], "{", `Expected inline ${name} props`);
+    let depth = 0, quoted = false, escaped = false;
+    for (let offset = start; offset < flight.length; offset++) {
+      const character = flight[offset];
+      if (quoted) { if (escaped) escaped = false; else if (character === "\\") escaped = true; else if (character === '"') quoted = false; continue; }
+      if (character === '"') quoted = true;
+      else if (character === "{") depth++;
+      else if (character === "}" && --depth === 0) return object(JSON.parse(flight.slice(start, offset + 1)));
+    }
+    throw new Error(`Incomplete ${name} page props`);
+  }
+  const linkedTeam = pageProp("linkedTeam"), catalog = pageProp("catalog");
+  assert.equal(linkedTeam.draftId, draftId);
+  assert.equal(linkedTeam.revision, draft.revision);
+  assert.ok(Array.isArray(linkedTeam.assignments) && Array.isArray(catalog.players));
+  assert.equal(linkedTeam.assignments.length, 10);
+  for (const playerId of playerIds) {
+    assert.ok(linkedTeam.assignments.some((row) => object(row).playerId === playerId), "Current selected player is included in linked-team props");
+    assert.ok(catalog.players.some((row) => object(row).id === playerId && object(row).status === "ACTIVE"), "Current selected player is included in the active review catalog");
+  }
+  steps.push({ name: "linked-team-real-admin-page-props", status: page.status, etag: null, replayed: false });
+  success(await request("linked-team-admin-api-anonymous-denied", `/api/admin/matches/submissions/${submissionId}`), 401);
+  const anonymous = await fetch(`${origin}${adminPath}`, { redirect: "manual", signal: AbortSignal.timeout(20_000) });
+  assert.ok([303, 307].includes(anonymous.status), "Anonymous review page must redirect to administrator login");
+  const destination = new URL(anonymous.headers.get("location") ?? "", origin);
+  assert.equal(destination.origin, origin);
+  assert.equal(destination.pathname, "/admin/login");
+  assert.equal(destination.searchParams.get("next"), adminPath);
+  steps.push({ name: "linked-team-admin-page-anonymous-denied", status: anonymous.status, etag: null, replayed: false });
+  const after = await request("linked-team-fixture-unchanged", `/api/team-tools/drafts/${draftId}`, { headers: { cookie: accountCookie } });
+  success(after, 200);
+  assert.equal(object(after.body.draft).revision, draft.revision, "Reading linked teams must not mutate the existing fixture draft");
 });
 
 await mkdir(resolve(outputPath, ".."), { recursive: true });

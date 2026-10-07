@@ -1,0 +1,184 @@
+✖ highlight: later pages remain reachable with status and page size (21.1581ms)
+✖ highlight: all-status native GET works and filtered empty state has a reset (11.0911ms)
+✖ highlight: boundaries use server-clamped current page without impossible directions (10.048ms)
+✖ highlight: invalid parameters recover without loading or relaxing strict validation (8.6037ms)
+✖ highlight: load failure retries the same validated page and filter (10.2593ms)
+✖ gallery: later pages remain reachable with status and page size (12.5124ms)
+✖ gallery: all-status native GET works and filtered empty state has a reset (7.1953ms)
+✖ gallery: boundaries use server-clamped current page without impossible directions (7.7626ms)
+✖ gallery: invalid parameters recover without loading or relaxing strict validation (6.5192ms)
+✖ gallery: load failure retries the same validated page and filter (6.2523ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 0
+ℹ fail 10
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 537.3044
+
+✖ failing tests:
+
+test at tests\admin-media-pagination.test.mjs:47:3
+✖ highlight: later pages remain reachable with status and page size (21.1581ms)
+  AssertionError [ERR_ASSERTION]: 이전
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:51:48)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:58:3
+✖ highlight: all-status native GET works and filtered empty state has a reset (11.0911ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:60:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:67:3
+✖ highlight: boundaries use server-clamped current page without impossible directions (10.048ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:69:61)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:75:3
+✖ highlight: invalid parameters recover without loading or relaxing strict validation (8.6037ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /목록 조건을 확인해 주세요/. Input:
+
+  '<main class="page"><header class="header"><div><h1>하이라이트 관리</h1></div><a href="/admin/highlights/new"> 새 하이라이트</a></header><nav class="tabs" aria-label="콘텐츠·자료 관리"><a aria-current="page" data-active="true" href="/admin/highlights">하이라이트</a><a data-active="false" href="/admin/images">갤러리</a><a data-active="false" href="/admin/private-assets">비공개 자산</a><a data-active="false" href="/admin/champions">챔피언</a></nav><form class="filters" action="/admin/highlights"><label>게시 상태<select name="status"><option value="" selected="">전체</option><option value="DRAFT">DRAFT</option><option value="PUBLISHED">PUBLISHED</option><option value="ARCHIVED">ARCHIVED</option></select></label><input type="hidden" name="pageSize" value="20"/><button type="submit" class="submit">적용</button></form><section class="state" role="alert"><h2>하이라이트 데이터를 불러오지 못했습니다.</h2></section></main>'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:78:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<main class="page"><header class="header"><div><h1>하이라이트 관리</h1></div><a href="/admin/highlights/new"> 새 하이라이트</a></header><nav class="tabs" aria-label="콘텐츠·자료 관리"><a aria-current="page" data-active="true" href="/admin/highlights">하이라이트</a><a data-active="false" href="/admin/images">갤러리</a><a data-active="false" href="/admin/private-assets">비공개 자산</a><a data-active="false" href="/admin/champions">챔피언</a></nav><form class="filters" action="/admin/highlights"><label>게시 상태<select name="status"><option value="" selected="">전체</option><option value="DRAFT">DRAFT</option><option value="PUBLISHED">PUBLISHED</option><option value="ARCHIVED">ARCHIVED</option></select></label><input type="hidden" name="pageSize" value="20"/><button type="submit" class="submit">적용</button></form><section class="state" role="alert"><h2>하이라이트 데이터를 불러오지 못했습니다.</h2></section></main>',
+    expected: /목록 조건을 확인해 주세요/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:82:3
+✖ highlight: load failure retries the same validated page and filter (10.2593ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(url)
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:84:57)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:47:3
+✖ gallery: later pages remain reachable with status and page size (12.5124ms)
+  AssertionError [ERR_ASSERTION]: 이전
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:51:48)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:58:3
+✖ gallery: all-status native GET works and filtered empty state has a reset (7.1953ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:60:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:67:3
+✖ gallery: boundaries use server-clamped current page without impossible directions (7.7626ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:69:61)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:75:3
+✖ gallery: invalid parameters recover without loading or relaxing strict validation (6.5192ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /목록 조건을 확인해 주세요/. Input:
+
+  '<main class="page"><header class="header"><div><h1>갤러리 관리</h1></div><a href="/admin/images/new"> 새 갤러리</a></header><nav class="tabs" aria-label="콘텐츠·자료 관리"><a data-active="false" href="/admin/highlights">하이라이트</a><a aria-current="page" data-active="true" href="/admin/images">갤러리</a><a data-active="false" href="/admin/private-assets">비공개 자산</a><a data-active="false" href="/admin/champions">챔피언</a></nav><form class="filters" action="/admin/images"><label>게시 상태<select name="status"><option value="" selected="">전체</option><option value="DRAFT">DRAFT</option><option value="PUBLISHED">PUBLISHED</option><option value="ARCHIVED">ARCHIVED</option></select></label><input type="hidden" name="pageSize" value="20"/><button type="submit" class="submit">적용</button></form><section class="state" role="alert"><h2>갤러리 데이터를 불러오지 못했습니다.</h2></section></main>'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:78:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<main class="page"><header class="header"><div><h1>갤러리 관리</h1></div><a href="/admin/images/new"> 새 갤러리</a></header><nav class="tabs" aria-label="콘텐츠·자료 관리"><a data-active="false" href="/admin/highlights">하이라이트</a><a aria-current="page" data-active="true" href="/admin/images">갤러리</a><a data-active="false" href="/admin/private-assets">비공개 자산</a><a data-active="false" href="/admin/champions">챔피언</a></nav><form class="filters" action="/admin/images"><label>게시 상태<select name="status"><option value="" selected="">전체</option><option value="DRAFT">DRAFT</option><option value="PUBLISHED">PUBLISHED</option><option value="ARCHIVED">ARCHIVED</option></select></label><input type="hidden" name="pageSize" value="20"/><button type="submit" class="submit">적용</button></form><section class="state" role="alert"><h2>갤러리 데이터를 불러오지 못했습니다.</h2></section></main>',
+    expected: /목록 조건을 확인해 주세요/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\admin-media-pagination.test.mjs:82:3
+✖ gallery: load failure retries the same validated page and filter (6.2523ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(url)
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-media-pagination.test.mjs:84:57)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

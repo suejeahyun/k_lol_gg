@@ -1,0 +1,20 @@
+✔ highlight: later pages remain reachable with status and page size (25.9308ms)
+✔ highlight: all-status native GET works and filtered empty state has a reset (25.9389ms)
+✔ highlight: boundaries use server-clamped current page without impossible directions (23.7523ms)
+✔ highlight: invalid parameters recover without loading or relaxing strict validation (44.3056ms)
+✔ highlight: load failure retries the same validated page and filter (11.2246ms)
+✔ highlight: publication labels are readable and a published editor opens its public page (33.8159ms)
+✔ gallery: later pages remain reachable with status and page size (7.755ms)
+✔ gallery: all-status native GET works and filtered empty state has a reset (15.5092ms)
+✔ gallery: boundaries use server-clamped current page without impossible directions (15.2957ms)
+✔ gallery: invalid parameters recover without loading or relaxing strict validation (31.922ms)
+✔ gallery: load failure retries the same validated page and filter (5.705ms)
+✔ gallery: publication labels are readable and a published editor opens its public page (28.9459ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 604.8802

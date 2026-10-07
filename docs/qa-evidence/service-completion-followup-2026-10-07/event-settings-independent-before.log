@@ -1,0 +1,32 @@
+✖ independent malformed success is not confirmed and keeps the same request key (115.0207ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 364.2094
+
+✖ failing tests:
+
+test at .tmp\event-settings-independent-review.test.mjs:201:1
+✖ independent malformed success is not confirmed and keeps the same request key (115.0207ms)
+  AssertionError [ERR_ASSERTION]: unconfirmed body must not refresh as success: {}
+  + actual - expected
+
+  + [
+  +   'refresh'
+  + ]
+  - []
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/event-settings-independent-review.test.mjs:205:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'refresh' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
