@@ -1,0 +1,125 @@
+{
+  "checkedAt": "2026-10-07T17:08:19.242Z",
+  "source": "c419097174f34ceb2da102c2e31fe034c8611a1c",
+  "method": "Anonymous actual browser read/navigation; no sign-in or write; CSS viewport simulation, not physical devices",
+  "seasonClosed": {
+    "closed": true,
+    "closedHeading": true,
+    "incorrectApplicationPrompt": false,
+    "recovery": [
+      "/recruits"
+    ]
+  },
+  "responsive": [
+    {
+      "closed": true,
+      "documentWidth": 305,
+      "incorrectPrompt": false,
+      "page": "closed-season",
+      "scrollWidth": 305,
+      "width": 320
+    },
+    {
+      "closed": true,
+      "documentWidth": 375,
+      "incorrectPrompt": false,
+      "page": "closed-season",
+      "scrollWidth": 375,
+      "width": 390
+    },
+    {
+      "closed": true,
+      "documentWidth": 753,
+      "incorrectPrompt": false,
+      "page": "closed-season",
+      "scrollWidth": 753,
+      "width": 768
+    },
+    {
+      "closed": true,
+      "documentWidth": 1265,
+      "incorrectPrompt": false,
+      "page": "closed-season",
+      "scrollWidth": 1265,
+      "width": 1280
+    },
+    {
+      "documentWidth": 305,
+      "page": "closed-event",
+      "region": "참가 신청참가 신청 기간 아님 다른 이벤트 모집 보기",
+      "scrollWidth": 305,
+      "width": 320
+    },
+    {
+      "documentWidth": 375,
+      "page": "closed-event",
+      "region": "참가 신청참가 신청 기간 아님 다른 이벤트 모집 보기",
+      "scrollWidth": 375,
+      "width": 390
+    },
+    {
+      "documentWidth": 753,
+      "page": "closed-event",
+      "region": "참가 신청참가 신청 기간 아님 다른 이벤트 모집 보기",
+      "scrollWidth": 753,
+      "width": 768
+    },
+    {
+      "documentWidth": 1265,
+      "page": "closed-event",
+      "region": "참가 신청참가 신청 기간 아님 다른 이벤트 모집 보기",
+      "scrollWidth": 1265,
+      "width": 1280
+    },
+    {
+      "application": "내 신청 확인참가 신청 종료로그인하고 내 신청 확인",
+      "documentWidth": 305,
+      "page": "completed-destruction",
+      "recordTablePreserved": true,
+      "scrollWidth": 305,
+      "vote": "MVP 투표MVP 투표 종료",
+      "width": 320
+    },
+    {
+      "application": "내 신청 확인참가 신청 종료로그인하고 내 신청 확인",
+      "documentWidth": 375,
+      "page": "completed-destruction",
+      "recordTablePreserved": true,
+      "scrollWidth": 375,
+      "vote": "MVP 투표MVP 투표 종료",
+      "width": 390
+    },
+    {
+      "application": "내 신청 확인참가 신청 종료로그인하고 내 신청 확인",
+      "documentWidth": 753,
+      "page": "completed-destruction",
+      "recordTablePreserved": true,
+      "scrollWidth": 753,
+      "vote": "MVP 투표MVP 투표 종료",
+      "width": 768
+    },
+    {
+      "application": "내 신청 확인참가 신청 종료로그인하고 내 신청 확인",
+      "documentWidth": 1265,
+      "page": "completed-destruction",
+      "recordTablePreserved": true,
+      "scrollWidth": 1265,
+      "vote": "MVP 투표MVP 투표 종료",
+      "width": 1280
+    }
+  ],
+  "returns": [
+    {
+      "flow": "completed tournament own record",
+      "correctReturn": true
+    },
+    {
+      "flow": "completed tournament back and reload",
+      "correctReturn": true
+    },
+    {
+      "flow": "open season round one",
+      "correctReturn": true
+    }
+  ]
+}

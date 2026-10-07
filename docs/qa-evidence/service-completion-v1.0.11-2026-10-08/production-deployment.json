@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-07T17:09:47.412Z",
+  "id": "dpl_5som3xAwEzW3Bqk1NMNMWHHhUNdW",
+  "url": "https://k-lol-5wt00cumj-tjdmswo11-3715s-projects.vercel.app",
+  "readyState": "READY",
+  "source": "c419097174f34ceb2da102c2e31fe034c8611a1c",
+  "branch": "main",
+  "aliases": [
+    "k-lol-gg.vercel.app",
+    "k-lol-gg-tjdmswo11-3715s-projects.vercel.app",
+    "k-lol-gg-git-main-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ready",
+      "checkedAt": "2026-10-07T17:09:46.694Z"
+    }
+  },
+  "candidate": "dpl_BdwkiK2oLFxRyPPJ6sYVMjdyAX89",
+  "rollback": "dpl_6pakqNCz22PdtQ5a49MxttpntnZT"
+}

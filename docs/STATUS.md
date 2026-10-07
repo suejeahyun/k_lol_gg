@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-08 마감 모집·로그인 목적 1.0.11 운영 반영
+
+source `c419097174f34ceb2da102c2e31fe034c8611a1c`, tag `service-completion-v1.0.11`, main `dpl_5som3xAwEzW3Bqk1NMNMWHHhUNdW` READY·canonical alias·health를 확인했다. 종료된 멸망전·이벤트전·내전에서 신청/투표 로그인 유도를 먼저 표시하던 P2를 수정했다. 본인 기록 조회·정상 모집 로그인 복귀·서버 정책은 유지했다. check672계약/1068단위+skip1·운영31HTTP·실제3화면×4폭12조건과 클릭/뒤로가기/새로고침을 확인했다. [전체386경로·1203조작 위치](qa-evidence/service-completion-v1.0.11-2026-10-08/interface-inventory.json), [배포·검증·복구·남은 조건](qa-evidence/service-completion-v1.0.11-2026-10-08/production.md).
+
+MMR V2 정식 운영 전환은 완료했다. 변경 범위 독립 검토와 운영 재점검에서 새 중대/명확한 과업 차단은 발견되지 않았다. 다만 관리자 세션 재로그인이 없어 관리자 확인창/목록의 운영 재조작은 미확인이며, native confirm 도구·외부 기기/권한 조건도 분리한다. 전체 완료 판정은 보류한다. 지연됐던1.0.10 문서 커밋도 이번 Git push로 함께 반영했다.
+
 ## 2026-10-08 확정 진출·예선 경기 기록 1.0.10 운영 반영
 
 source `49f438ab3b2a2e1cf481d60e50d2806c658bcb25`, tag `service-completion-v1.0.10`, main `dpl_6pakqNCz22PdtQ5a49MxttpntnZT` READY·canonical alias·health를 확인했다. 과거 확정 진출과 현재 계산 상위 팀이 다를 때만 표를 경기 기록으로 표시하고 원래 진출팀·경기·우승 자료는 보존했다. 최종 check660계약/1068단위+skip1·운영31HTTP·실제 네 폭과 배포 전후 기록 해시 불변을 확인했다. [전체 원장과 변경 범위](qa-evidence/service-completion-v1.0.10-2026-10-08/README.md), [배포·검증·복구](qa-evidence/service-completion-v1.0.10-2026-10-08/production.md).
