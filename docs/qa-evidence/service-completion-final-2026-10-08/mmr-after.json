@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "mode": "after",
+  "status": "PASS",
+  "checkedAt": "2026-10-07T15:58:08.686Z",
+  "snapshot": {
+    "at": "2026-10-07T15:58:02.020Z",
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "timezone": "UTC",
+    "endedWith": "ROLLBACK"
+  },
+  "targetFingerprint": "c5918218dd171001",
+  "sourceEvidence": {
+    "mapperSha256": "c33b23f04bd950a0b431b9ebfa1f72630c73a44fdf29e89073819a93dc93b522",
+    "canonicalJsonSha256": "db93dfc205930bdd06d3ef4479a7a4776d1e3419f99b3dd0651a93aedc0f116b",
+    "calculatorSha256": "9cf830b0a009aa6a09eadd0e90b9d2c9a1f5721e4882c2d331c2d068b7c7f444"
+  },
+  "summary": {
+    "status": "READY",
+    "generation": 2,
+    "formulaVersion": "V2_DETERMINISTIC_1",
+    "formulaTransition": null,
+    "sourceMatchCount": 47,
+    "sourceGameCount": 104,
+    "sourceAdjustmentCount": 0,
+    "pendingSourceCount": 0,
+    "calculatedAt": "2026-10-07T15:57:52.679Z"
+  },
+  "ledgerChecksum": "4b1d75c617c8694e51bff49a331358a67f76bce259a981e1b1fe5c178aed874d",
+  "preview": {
+    "sourceMatchCount": 47,
+    "sourceGameCount": 104,
+    "sourceAdjustmentCount": 0,
+    "profileCount": 93,
+    "positionCount": 465,
+    "eventCount": 1040
+  },
+  "generationOne": {
+    "player_profiles": {
+      "count": 81,
+      "sha256": "00e6c235f63b4aea0268855db397e960d484cec0b401cfe7c602c1f64a841681"
+    },
+    "player_position_profiles": {
+      "count": 405,
+      "sha256": "d73a3029b0d23b20d43cb6c7c65ace343601557488cf670aabc1d360d922e38f"
+    },
+    "match_result_events": {
+      "count": 910,
+      "sha256": "19eaf13fc18ab1f152d4ab01af8015b5f4282d623b5b7a98ea9a952c118554f2"
+    },
+    "projection_runs": {
+      "count": 1,
+      "sha256": "fcb74ea8ea1f8590f2945ab7c5478e7d99c5cd77e8d52ae91bb7bf7df20e7213"
+    }
+  },
+  "manualAdjustments": {
+    "count": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "pendingEvents": {
+    "count": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "checks": {
+    "ready": true,
+    "pendingCountConsistent": true,
+    "sameCalculationSource": true,
+    "generationAdvancedOnce": true,
+    "newFormulaActive": true,
+    "generationOnePreserved": true,
+    "manualAdjustmentsUnchanged": true,
+    "sourceLedgerUnchangedSinceBefore": true,
+    "publishedChecksumMatchesReplay": true,
+    "sourceCountsMatchReplay": true,
+    "pendingZero": true,
+    "profilesMatchReplay": true,
+    "positionsMatchReplay": true,
+    "eventsMatchReplay": true,
+    "adminRun": true,
+    "runChecksumAndCounts": true,
+    "beforePendingConsumedExactly": true,
+    "auditAndOutboxLinked": true,
+    "successfulAdminCommandReceipt": true,
+    "sameSnapshotSummaryUnchanged": true
+  },
+  "verification": {
+    "publishedProfiles": {
+      "count": 93,
+      "sha256": "8e510c2edba791ca1c7f3f72ef7a9e742686856ffd6f995e1a354eba32847f92"
+    },
+    "publishedPositions": {
+      "count": 465,
+      "sha256": "a6b4210bbab5cabd3feb2ea9f86f571cd94dae936fe5586b8357838ad588c6ba"
+    },
+    "publishedEvents": {
+      "count": 1040,
+      "sha256": "e40ce0c39dcc601a4988c5d9401c925fa5ae0da910c3a7064bf87e16c54a2c90"
+    },
+    "consumedEvents": {
+      "count": 13,
+      "sha256": "3b4fed62ec36ecd3809e6fd2ba9fce5c992ebc310ddcb7e9919a1f8cc11d0da0"
+    },
+    "adminRunCount": 1,
+    "linkedAuditCount": 1,
+    "successfulCommandReceiptCount": 1
+  },
+  "limitations": [
+    "Only aggregate counts and SHA256 digests are retained; source rows and identities stay in process memory.",
+    "An after check fails closed if source events or generation changed after the before snapshot; inspect concurrency before diagnosing a product failure.",
+    "Current actor role is checked at verification time; no session, credential or authorization data is changed.",
+    "Provider cron execution must be checked separately; this script invokes no cron or mutation."
+  ]
+}

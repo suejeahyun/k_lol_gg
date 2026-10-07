@@ -1,0 +1,70 @@
+✖ selected bulk sync: modal Tab from its last control must stay inside (79.2984ms)
+✖ bulk account link: modal Tab from its last control must stay inside (24.5188ms)
+✖ bulk account link: Escape must respect the same pending lock as Cancel (23.1899ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 381.0698
+
+✖ failing tests:
+
+test at .tmp\riot-modal-independent.test.mjs:28:3
+✖ selected bulk sync: modal Tab from its last control must stay inside (79.2984ms)
+  AssertionError [ERR_ASSERTION]: a div modal has no native Tab containment; the last control currently falls through to background controls
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/riot-modal-independent.test.mjs:36:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\riot-modal-independent.test.mjs:28:3
+✖ bulk account link: modal Tab from its last control must stay inside (24.5188ms)
+  AssertionError [ERR_ASSERTION]: a div modal has no native Tab containment; the last control currently falls through to background controls
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/riot-modal-independent.test.mjs:36:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\riot-modal-independent.test.mjs:39:1
+✖ bulk account link: Escape must respect the same pending lock as Cancel (23.1899ms)
+  AssertionError [ERR_ASSERTION]: Escape currently dismisses a dialog whose Cancel button is deliberately disabled during its pending request
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/riot-modal-independent.test.mjs:51:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,30 +1,16 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseEnv } from "node:util";
-import vm from "node:vm";
-import { asc, eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
-import ts from "typescript";
 import * as schema from "../src/platform/db/schema/index";
 import type { V2Database } from "../src/platform/db/database";
-import { matchGames, matchParticipants, matchSeries } from "../src/platform/db/schema/matches";
-import { mmrManualAdjustments, mmrPlayerProfiles, mmrPlayerPositionProfiles } from "../src/platform/db/schema/mmr";
+import { mmrPlayerProfiles, mmrPlayerPositionProfiles } from "../src/platform/db/schema/mmr";
 import { players } from "../src/platform/db/schema/registry";
 import { PostgresMmrRepository } from "../src/modules/mmr/infrastructure/postgres-mmr-repository";
-import { MMR_FORMULA_VERSION, MMR_POSITIONS, rebuildMmrProjection, type MmrMatchSource, type MmrManualAdjustmentSource } from "../src/modules/mmr/domain/mmr-projection";
-
-const repositoryFile = new URL("../src/modules/mmr/infrastructure/postgres-mmr-repository.ts", import.meta.url);
-const repositorySource = readFileSync(repositoryFile, "utf8");
-// Invoke the exact existing private read mapper without exporting or changing product code.
-const mapperSource = repositorySource.slice(repositorySource.indexOf("async function loadLedger("), repositorySource.indexOf("async function pendingSourceRows("));
-assert.match(mapperSource, /^async function loadLedger/u);
-assert.doesNotMatch(mapperSource, /\.(?:insert|update|delete|execute)\(/u);
-const mapperModule = { exports: {} as { loadLedger: (database: V2Database) => Promise<{ matches: MmrMatchSource[]; adjustments: MmrManualAdjustmentSource[] }> } };
-vm.runInNewContext(ts.transpileModule(`${mapperSource}\nexports.loadLedger = loadLedger;`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText, {
-  exports: mapperModule.exports, asc, eq, inArray, matchSeries, matchGames, matchParticipants, mmrManualAdjustments,
-});
+import { MMR_FORMULA_VERSION, MMR_POSITIONS, rebuildMmrProjection } from "../src/modules/mmr/domain/mmr-projection";
+import { loadMmrReadonlyLedger, mmrReadonlySourceEvidence } from "./mmr-readonly-source";
 
 function changeSummary(values: number[], divisor = 1) {
   return {
@@ -56,7 +42,7 @@ async function main() {
     const repository = new PostgresMmrRepository(database);
     const before = await repository.getSummary();
     assert.equal(before.status, "READY");
-    const ledger = await mapperModule.exports.loadLedger(database);
+    const ledger = await loadMmrReadonlyLedger(database);
     const projected = rebuildMmrProjection({ generation: before.generation + 1, matches: ledger.matches, manualAdjustments: ledger.adjustments });
     const oldProfiles = await database.select({ playerId: mmrPlayerProfiles.playerId, overallScoreBp: mmrPlayerProfiles.overallScoreBp, sampleSize: mmrPlayerProfiles.sampleSize, confidenceBp: mmrPlayerProfiles.confidenceBp }).from(mmrPlayerProfiles).where(eq(mmrPlayerProfiles.generation, before.generation));
     const oldPositions = await database.select({ playerId: mmrPlayerPositionProfiles.playerId, position: mmrPlayerPositionProfiles.position, scoreBp: mmrPlayerPositionProfiles.scoreBp, sampleSize: mmrPlayerPositionProfiles.sampleSize }).from(mmrPlayerPositionProfiles).where(eq(mmrPlayerPositionProfiles.generation, before.generation));
@@ -85,7 +71,7 @@ async function main() {
       mode: "READ_ONLY_PREVIEW_NO_PUBLICATION",
       databaseBinding: "Existing production binding previously verified by matching authenticated storage-probe runId; connection details omitted",
       snapshot: { at: settings.snapshot_at, readOnly: settings.read_only === "on", isolation: settings.isolation, endedWith: "ROLLBACK" },
-      sourceEvidence: { mapperSha256: createHash("sha256").update(mapperSource).digest("hex"), calculatorSha256: createHash("sha256").update(readFileSync(new URL("../src/modules/mmr/domain/mmr-projection.ts", import.meta.url))).digest("hex"), mapper: "Exact private loadLedger implementation extracted from current repository; SELECT only", summary: "Actual PostgresMmrRepository.getSummary", rankOrdering: "ACTIVE profiles only; overall score descending, overall sample descending, playerId ascending; same as repository listPlayers" },
+      sourceEvidence: { ...mmrReadonlySourceEvidence, mapper: "Exact private loadLedger implementation extracted from current repository; SELECT only", summary: "Actual PostgresMmrRepository.getSummary", rankOrdering: "ACTIVE profiles only; overall score descending, overall sample descending, playerId ascending; same as repository listPlayers" },
       before,
       preview: { generation: projected.generation, formulaVersion: MMR_FORMULA_VERSION, sourceMatchCount: projected.sourceMatchCount, sourceGameCount: projected.sourceGameCount, sourceAdjustmentCount: projected.sourceAdjustmentCount, profileCount: projected.profiles.length, playerMatchResultEventCount: projected.matchEvents.length },
       coverage: { beforeProfiles: oldProfiles.length, afterProfiles: projected.profiles.length, commonProfiles: common.length, addedProfiles: projected.profiles.filter((row) => !oldById.has(row.playerId)).length, removedProfiles: oldProfiles.filter((row) => !newById.has(row.playerId)).length, activeBefore: activeBefore.length, activeAfter: activeAfter.length, sharedActive: sharedActive.length },

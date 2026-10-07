@@ -1,0 +1,198 @@
+{
+  "checkedAt": "2026-10-07T16:31:22.671Z",
+  "method": "Real CUA viewport rendering on isolated optimized build; CSS widths, not physical devices",
+  "rows": [
+    {
+      "path": "/admin/progress/event?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 320,
+      "hasError": false,
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 306,
+      "viewport": 305
+    },
+    {
+      "path": "/admin/progress/destruction?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 320,
+      "hasError": false,
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 306,
+      "viewport": 305
+    },
+    {
+      "path": "/admin/balance-ai?tab=players&position=TOP&pageSize=10",
+      "width": 320,
+      "hasError": false,
+      "heading": "MMR 관리",
+      "scrollWidth": 305,
+      "viewport": 305
+    },
+    {
+      "path": "/admin/champions?q=MMR&status=ACTIVE&pageSize=1&page=2",
+      "width": 320,
+      "hasError": false,
+      "heading": "챔피언 관리",
+      "scrollWidth": 305,
+      "viewport": 305
+    },
+    {
+      "path": "/admin/logs?view=events&eventsPage=2",
+      "width": 320,
+      "hasError": false,
+      "heading": "운영 로그 센터",
+      "scrollWidth": 305,
+      "viewport": 305
+    },
+    {
+      "path": "/admin/discipline?tab=tasks",
+      "width": 320,
+      "hasError": false,
+      "heading": "징계 관리",
+      "scrollWidth": 305,
+      "viewport": 305
+    },
+    {
+      "path": "/admin/progress/event?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 390,
+      "hasError": false,
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "path": "/admin/progress/destruction?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 390,
+      "hasError": false,
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "path": "/admin/balance-ai?tab=players&position=TOP&pageSize=10",
+      "width": 390,
+      "hasError": false,
+      "heading": "MMR 관리",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "path": "/admin/champions?q=MMR&status=ACTIVE&pageSize=1&page=2",
+      "width": 390,
+      "hasError": false,
+      "heading": "챔피언 관리",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "path": "/admin/logs?view=events&eventsPage=2",
+      "width": 390,
+      "hasError": false,
+      "heading": "운영 로그 센터",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "path": "/admin/discipline?tab=tasks",
+      "width": 390,
+      "hasError": false,
+      "heading": "징계 관리",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "path": "/admin/progress/event?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 768,
+      "hasError": false,
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "path": "/admin/progress/destruction?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 768,
+      "hasError": false,
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "path": "/admin/balance-ai?tab=players&position=TOP&pageSize=10",
+      "width": 768,
+      "hasError": false,
+      "heading": "MMR 관리",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "path": "/admin/champions?q=MMR&status=ACTIVE&pageSize=1&page=2",
+      "width": 768,
+      "hasError": false,
+      "heading": "챔피언 관리",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "path": "/admin/logs?view=events&eventsPage=2",
+      "width": 768,
+      "hasError": false,
+      "heading": "운영 로그 센터",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "path": "/admin/discipline?tab=tasks",
+      "width": 768,
+      "hasError": false,
+      "heading": "징계 관리",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "path": "/admin/progress/event?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 1280,
+      "hasError": false,
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 1280,
+      "viewport": 1280
+    },
+    {
+      "path": "/admin/progress/destruction?q=%ED%8E%98%EC%9D%B4%EC%A7%80%20%EA%B2%80%EC%A6%9D&page=2&pageSize=12",
+      "width": 1280,
+      "hasError": false,
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 1280,
+      "viewport": 1280
+    },
+    {
+      "path": "/admin/balance-ai?tab=players&position=TOP&pageSize=10",
+      "width": 1280,
+      "hasError": false,
+      "heading": "MMR 관리",
+      "scrollWidth": 1265,
+      "viewport": 1265
+    },
+    {
+      "path": "/admin/champions?q=MMR&status=ACTIVE&pageSize=1&page=2",
+      "width": 1280,
+      "hasError": false,
+      "heading": "챔피언 관리",
+      "scrollWidth": 1280,
+      "viewport": 1280
+    },
+    {
+      "path": "/admin/logs?view=events&eventsPage=2",
+      "width": 1280,
+      "hasError": false,
+      "heading": "운영 로그 센터",
+      "scrollWidth": 1265,
+      "viewport": 1265
+    },
+    {
+      "path": "/admin/discipline?tab=tasks",
+      "width": 1280,
+      "hasError": false,
+      "heading": "징계 관리",
+      "scrollWidth": 1280,
+      "viewport": 1280
+    }
+  ]
+}

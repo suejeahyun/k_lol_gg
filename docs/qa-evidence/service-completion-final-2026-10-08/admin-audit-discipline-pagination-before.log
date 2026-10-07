@@ -1,0 +1,163 @@
+✖ discipline reaches records 51–101 and returns without losing the selected classification (82.1963ms)
+✖ logs keeps each ledger's page and filters while requesting only the displayed ledger (20.8267ms)
+✖ log filters reset their own page while preserving the other ledger context (13.3134ms)
+✖ discipline: out-of-range page recovers without calling it an empty data set (16.0012ms)
+✖ discipline: empty, unavailable and error states provide truthful recovery (15.3455ms)
+✖ logs: out-of-range page recovers without calling it an empty data set (11.0616ms)
+✖ logs: empty, unavailable and error states provide truthful recovery (8.4734ms)
+✖ invalid or duplicated queries never start list reads and both pages retain the ADMIN guard (13.9634ms)
+✖ the accepted upper page has a previous action but never emits a page outside the bound (13.4105ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 0
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 444.995
+
+✖ failing tests:
+
+test at tests\admin-audit-discipline-pagination.test.mjs:46:1
+✖ discipline reaches records 51–101 and returns without losing the selected classification (82.1963ms)
+  AssertionError [ERR_ASSERTION]: 다음 should be available
+      at hrefFor (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:12:106)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:50:24)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:59:1
+✖ logs keeps each ledger's page and filters while requesting only the displayed ledger (20.8267ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(events.includes("합성 감사 · 51"))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:63:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:77:1
+✖ log filters reset their own page while preserving the other ledger context (13.3134ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(form)
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:80:110)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:88:3
+✖ discipline: out-of-range page recovers without calling it an empty data set (16.0012ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(html.includes("현재 페이지에 기록이 없습니다."))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:89:60)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:94:3
+✖ discipline: empty, unavailable and error states provide truthful recovery (15.3455ms)
+  AssertionError [ERR_ASSERTION]: 다시 불러오기 should be available
+      at hrefFor (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:12:106)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:100:29)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:88:3
+✖ logs: out-of-range page recovers without calling it an empty data set (11.0616ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(html.includes("현재 페이지에 기록이 없습니다."))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:89:60)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:94:3
+✖ logs: empty, unavailable and error states provide truthful recovery (8.4734ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(empty.includes("기록이 없습니다."))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:96:80)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:106:1
+✖ invalid or duplicated queries never start list reads and both pages retain the ADMIN guard (13.9634ms)
+  AssertionError [ERR_ASSERTION]: discipline {"page":"0"}
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:113:81)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-audit-discipline-pagination.test.mjs:119:1
+✖ the accepted upper page has a previous action but never emits a page outside the bound (13.4105ms)
+  AssertionError [ERR_ASSERTION]: 이전 should be available
+      at hrefFor (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:12:106)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-audit-discipline-pagination.test.mjs:122:15)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

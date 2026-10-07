@@ -1,0 +1,100 @@
+✔ event administrators can reach records 13–25 and return without losing filters (208.4118ms)
+✔ event search keeps page size, starts at page one and retains canonical filter values (97.6493ms)
+✔ event out-of-range empty page returns to the same filtered first page (71.7213ms)
+✔ event empty filtered and initial states differ, and failed loads can retry the same query (221.512ms)
+✔ event invalid pagination avoids accidental unfiltered reads and provides recovery (294.2943ms)
+✔ event pagination never emits a page outside the existing parser limit (52.5213ms)
+✔ destruction administrators can reach records 13–25 and return without losing filters (53.6639ms)
+✔ destruction search keeps page size, starts at page one and retains canonical filter values (50.0073ms)
+✔ destruction out-of-range empty page returns to the same filtered first page (45.5716ms)
+✔ destruction empty filtered and initial states differ, and failed loads can retry the same query (138.5137ms)
+✔ destruction invalid pagination avoids accidental unfiltered reads and provides recovery (234.3836ms)
+✔ destruction pagination never emits a page outside the existing parser limit (54.9736ms)
+✔ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (239.1031ms)
+✔ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (121.1966ms)
+✔ the connected admin detail already uses the same Korean stages and format without changing canonical stage links (165.7056ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.3173ms)
+✖ administrator destruction workspaces expose the full staged lifecycle (3.1365ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.5267ms)
+✔ public competition pages expose list/detail/application states without administrator controls (3.602ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (1.7675ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.5977ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 20
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1808.9858
+
+✖ failing tests:
+
+test at tests\destruction-ui-contract.test.mjs:30:1
+✖ administrator destruction workspaces expose the full staged lifecycle (3.1365ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /role=\{result\.state === "error"/. Input:
+  
+  'import Link from "next/link";\n' +
+    'import { Plus } from "@/components/theme/theme-icons";\n' +
+    '\n' +
+    'import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";\n' +
+    'import { competitionPreliminaryFormatLabel } from "@/modules/competitions/core/display-projection";\n' +
+    'import { DESTRUCTION_PRELIMINARY_FORMATS, DESTRUCTION_PUBLIC_STATUSES, parseDestructionListQuery } from "@/modules/competitions/destruction";\n' +
+    'import { loadRuntimeDestruction } from "@/modules/competitions/destruction/runtime-destruction";\n' +
+    'import { DESTRUCTION_STATUS_LABEL } from "@/modules/competitions/destruction/workflow";\n' +
+    '\n' +
+    'import styles from "../event/event-admin.module.css";\n' +
+    '\n' +
+    'export const dynamic = "force-dynamic";\n' +
+    '\n' +
+    'export default async function AdminDestructionPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {\n' +
+    '  await requirePageRole("ADMIN", "/admin/progress/destruction");\n' +
+    '  const raw = await searchParams;\n' +
+    '  const url = new URL("https://v2.invalid/admin/progress/destruction");\n' +
+    '  for (const [key, value] of Object.entries(raw)) {\n' +
+    '    if (Array.isArray(value)) value.forEach((entry) => url.searchParams.append(key, entry));\n' +
+    '    else if (typeof value === "string") url.searchParams.set(key, value);\n' +
+    '  }\n' +
+    '  const query = parseDestructionListQuery(url.href);\n' +
+    '  const result = query ? await loadRuntimeDestruction(({ repository }) => repository.listAdmin(query)) : { state: "invalid" as const };\n' +
+    '  const pageHref = (page: number) => {\n' +
+    '    const params = new URLSearchParams({ page: String(page), pageSize: String(query?.pageSize ?? 12) });\n' +
+    '    if (query?.query) params.set("q", query.query);\n' +
+    '    if (query?.status) params.set("status", query.status);\n' +
+    '    if (query?.format) params.set("format", query.format);\n' +
+    '    return `/admin/progress/destruction?${params}`;\n' +
+    '  };\n' +
+    '  const resetHref = `/admin/progress/destruction?pageSize=${query?.pageSize ?? 12}`;\n' +
+    '  const filtered = Boolean(query?.query || query?.status || query?.format);\n' +
+    '  const pageCount = result.state === "ready" ? Math.min(10_000, result.data.totalPages) : 0;\n' +
+    '\n' +
+    '  return <main className={styles.page}>\n' +
+    '    <nav className={styles.competitionKinds} aria-label="분리된 대회 관리"><Link href="/admin/progress/event">이벤트 대회 관리</Link><Link aria-current="page" href="/admin/progress/destruction">멸망전 관리</Link></nav>\n' +
+    '    <header className={styles.hero}><div><h1>멸망전 작업 공간</h1></div><Link href="/admin/progress/destruction/new"><Plus aria-hidden="true" /> 새 멸망전</Link></header>\n' +
+    '    <form key={JSON.stringify(query)} className={styles.filters} action="/admin/progress/destruction" method="get"><input type="hidden" name="pageSize" value={query?.pageSize ?? 12} /><label>이름 검색<input name="q" defaultValue={query?.query ?? ""} maxLength={64} /></label><label>상태<select name="status" defaultValue={query?.status ?? ""}><option value="">전체</option>{DESTRUCTION_PUBLIC_STATUSES.map((status) => <option key={status} value={status}>{DESTRUCTION_STATUS_LABEL[status]}</option>)}</select></label><label>예선 방식<select name="format" defaultValue={query?.format ?? ""}><option value="">전체</option>{DESTRUCTION_PRELIMINARY_FORMATS.map((format) => <option key={format} value={format}>{competitionPreliminaryFormatLabel(format)}</option>)}</select></label><button type="submit">조회</button></form>\n' +
+    '    {filtered ? <p><Link href={resetHref}>검색 초기화</Link></p> : null}\n' +
+    '    {result.state === "ready" ? result.data.items.length ? <>\n' +
+    '      <section className={styles.list}>{result.data.items.map((item) => <Link href={`/admin/progress/destruction/${item.id}`} key={item.id}><div><strong>{item.title}</strong><span>{competitionPreliminaryFormatLabel(item.preliminaryFormat)} · {DESTRUCTION_STATUS_LABEL[item.status]}</span></div><b>{item.participantCount}/{item.teams.length ? item.teams.length * 5 : "-"}</b><small>변경 버전 {item.revision}</small></Link>)}</section>\n' +
+    '      {pageCount > 1 ? <nav className="pagination" aria-label="멸망전 관리 목록 페이지">\n' +
+    '        {result.data.page > 1 ? <Link href={pageHref(result.data.page - 1)} rel="prev">이전</Link> : <span aria-disabled="true">이전</span>}\n' +
+    '        <strong aria-current="page">{result.data.page} / {pageCount}</strong>\n' +
+    '        {result.data.page < pageCount ? <Link href={pageHref(result.data.page + 1)} rel="next">다음</Link> : <span aria-disabled="true">다음</span>}\n' +
+    '      </nav> : null}\n' +
+    '    </> : <section className={styles.state} role="status"><h2>{result.data.total > 0 ? "현재 페이지에 대회가 없습니다." : filtered ? "조건에 맞는 멸망전이 없습니다." : "등록된 멸망전이 없습니다."}</h2>{result.data.total > 0 || (query?.page ?? 1) > 1 ? <Link href={pageHref(1)}>첫 페이지로</Link> : filtered ? <Link href={resetHref}>검색 초기화</Link> : <Link href="/admin/progress/destruction/new">새 멸망전</Link>}</section> : <section className={styles.state} role={result.state === "unavailable" ? "status" : "alert"}><h2>{result.state === "invalid" ? "목록 조건을 확인해 주세요." : "멸망전 정보를 불러올 수 없습니다."}</h2>{query ? <a href={pageHref(query.page)}>다시 불러오기</a> : <Link href="/admin/progress/destruction">목록 초기화</Link>}</section>}\n' +
+    '  </main>;\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-ui-contract.test.mjs:37:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import Link from "next/link";\nimport { Plus } from "@/components/theme/theme-icons";\n\nimport { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";\nimport { competitionPreliminaryFormatLabel } from "@/modules/competitions/core/display-projection";\nimport { DESTRUCTION_PRELIMINARY_FORMATS, DESTRUCTION_PUBLIC_STATUSES, parseDestructionListQuery } from "@/modules/competitions/destruction";\nimport { loadRuntimeDestruction } from "@/modules/competitions/destruction/runtime-destruction";\nimport { DESTRUCTION_STATUS_LABEL } from "@/modules/competitions/destruction/workflow";\n\nimport styles from "../event/event-admin.module.css";\n\nexport const dynamic = "force-dynamic";\n\nexport default async function AdminDestructionPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {\n  await requirePageRole("ADMIN", "/admin/progress/destruction");\n  const raw = await searchParams;\n  const url = new URL("https://v2.invalid/admin/progress/destruction");\n  for (const [key, value] of Object.entries(raw)) {\n    if (Array.isArray(value)) value.forEach((entry) => url.searchParams.append(key, entry));\n    else if (typeof value === "string") url.searchParams.set(key, value);\n  }\n  const query = parseDestructionListQuery(url.href);\n  const result = query ? await loadRuntimeDestruction(({ repository }) => repository.listAdmin(query)) : { state: "invalid" as const };\n  const pageHref = (page: number) => {\n    const params = new URLSearchParams({ page: String(page), pageSize: String(query?.pageSize ?? 12) });\n    if (query?.query) params.set("q", query.query);\n    if (query?.status) params.set("status", query.status);\n    if (query?.format) params.set("format", query.format);\n    return `/admin/progress/destruction?${params}`;\n  };\n  const resetHref = `/admin/progress/destruction?pageSize=${query?.pageSize ?? 12}`;\n  const filtered = Boolean(query?.query || query?.status || query?.format);\n  const pageCount = result.state === "ready" ? Math.min(10_000, result.data.totalPages) : 0;\n\n  return <main className={styles.page}>\n    <nav className={styles.competitionKinds} aria-label="분리된 대회 관리"><Link href="/admin/progress/event">이벤트 대회 관리</Link><Link aria-current="page" href="/admin/progress/destruction">멸망전 관리</Link></nav>\n    <header className={styles.hero}><div><h1>멸망전 작업 공간</h1></div><Link href="/admin/progress/destruction/new"><Plus aria-hidden="true" /> 새 멸망전</Link></header>\n    <form key={JSON.stringify(query)} className={styles.filters} action="/admin/progress/destruction" method="get"><input type="hidden" name="pageSize" value={query?.pageSize ?? 12} /><label>이름 검색<input name="q" defaultValue={query?.query ?? ""} maxLength={64} /></label><label>상태<select name="status" defaultValue={query?.status ?? ""}><option value="">전체</option>{DESTRUCTION_PUBLIC_STATUSES.map((status) => <option key={status} value={status}>{DESTRUCTION_STATUS_LABEL[status]}</option>)}</select></label><label>예선 방식<select name="format" defaultValue={query?.format ?? ""}><option value="">전체</option>{DESTRUCTION_PRELIMINARY_FORMATS.map((format) => <option key={format} value={format}>{competitionPreliminaryFormatLabel(format)}</option>)}</select></label><button type="submit">조회</button></form>\n    {filtered ? <p><Link href={resetHref}>검색 초기화</Link></p> : null}\n    {result.state === "ready" ? result.data.items.length ? <>\n      <section className={styles.list}>{result.data.items.map((item) => <Link href={`/admin/progress/destruction/${item.id}`} key={item.id}><div><strong>{item.title}</strong><span>{competitionPreliminaryFormatLabel(item.preliminaryFormat)} · {DESTRUCTION_STATUS_LABEL[item.status]}</span></div><b>{item.participantCount}/{item.teams.length ? item.teams.length * 5 : "-"}</b><small>변경 버전 {item.revision}</small></Link>)}</section>\n      {pageCount > 1 ? <nav className="pagination" aria-label="멸망전 관리 목록 페이지">\n        {result.data.page > 1 ? <Link href={pageHref(result.data.page - 1)} rel="prev">이전</Link> : <span aria-disabled="true">이전</span>}\n        <strong aria-current="page">{result.data.page} / {pageCount}</strong>\n        {result.data.page < pageCount ? <Link href={pageHref(result.data.page + 1)} rel="next">다음</Link> : <span aria-disabled="true">다음</span>}\n      </nav> : null}\n    </> : <section className={styles.state} role="status"><h2>{result.data.total > 0 ? "현재 페이지에 대회가 없습니다." : filtered ? "조건에 맞는 멸망전이 없습니다." : "등록된 멸망전이 없습니다."}</h2>{result.data.total > 0 || (query?.page ?? 1) > 1 ? <Link href={pageHref(1)}>첫 페이지로</Link> : filtered ? <Link href={resetHref}>검색 초기화</Link> : <Link href="/admin/progress/destruction/new">새 멸망전</Link>}</section> : <section className={styles.state} role={result.state === "unavailable" ? "status" : "alert"}><h2>{result.state === "invalid" ? "목록 조건을 확인해 주세요." : "멸망전 정보를 불러올 수 없습니다."}</h2>{query ? <a href={pageHref(query.page)}>다시 불러오기</a> : <Link href="/admin/progress/destruction">목록 초기화</Link>}</section>}\n  </main>;\n}\n',
+    expected: /role=\{result\.state === "error"/,
+    operator: 'match',
+    diff: 'simple'
+  }

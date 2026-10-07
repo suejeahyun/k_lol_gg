@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "mode": "before",
+  "status": "PASS",
+  "checkedAt": "2026-10-07T15:56:29.355Z",
+  "snapshot": {
+    "at": "2026-10-07T15:56:24.061Z",
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "timezone": "UTC",
+    "endedWith": "ROLLBACK"
+  },
+  "targetFingerprint": "c5918218dd171001",
+  "sourceEvidence": {
+    "mapperSha256": "c33b23f04bd950a0b431b9ebfa1f72630c73a44fdf29e89073819a93dc93b522",
+    "canonicalJsonSha256": "db93dfc205930bdd06d3ef4479a7a4776d1e3419f99b3dd0651a93aedc0f116b",
+    "calculatorSha256": "9cf830b0a009aa6a09eadd0e90b9d2c9a1f5721e4882c2d331c2d068b7c7f444"
+  },
+  "summary": {
+    "status": "READY",
+    "generation": 1,
+    "formulaVersion": "V1_INTERNAL_MMR_1",
+    "formulaTransition": "ADMIN_RECALCULATION_REQUIRED",
+    "sourceMatchCount": 42,
+    "sourceGameCount": 91,
+    "sourceAdjustmentCount": 0,
+    "pendingSourceCount": 13,
+    "calculatedAt": "2026-09-07T15:36:32.075Z"
+  },
+  "ledgerChecksum": "4b1d75c617c8694e51bff49a331358a67f76bce259a981e1b1fe5c178aed874d",
+  "preview": {
+    "sourceMatchCount": 47,
+    "sourceGameCount": 104,
+    "sourceAdjustmentCount": 0,
+    "profileCount": 93,
+    "positionCount": 465,
+    "eventCount": 1040
+  },
+  "generationOne": {
+    "player_profiles": {
+      "count": 81,
+      "sha256": "00e6c235f63b4aea0268855db397e960d484cec0b401cfe7c602c1f64a841681"
+    },
+    "player_position_profiles": {
+      "count": 405,
+      "sha256": "d73a3029b0d23b20d43cb6c7c65ace343601557488cf670aabc1d360d922e38f"
+    },
+    "match_result_events": {
+      "count": 910,
+      "sha256": "19eaf13fc18ab1f152d4ab01af8015b5f4282d623b5b7a98ea9a952c118554f2"
+    },
+    "projection_runs": {
+      "count": 1,
+      "sha256": "fcb74ea8ea1f8590f2945ab7c5478e7d99c5cd77e8d52ae91bb7bf7df20e7213"
+    }
+  },
+  "manualAdjustments": {
+    "count": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "pendingEvents": {
+    "count": 13,
+    "sha256": "3b4fed62ec36ecd3809e6fd2ba9fce5c992ebc310ddcb7e9919a1f8cc11d0da0"
+  },
+  "checks": {
+    "ready": true,
+    "pendingCountConsistent": true,
+    "legacyGenerationOne": true,
+    "legacyProfilesExist": true,
+    "transitionRequired": true,
+    "sameSnapshotSummaryUnchanged": true
+  },
+  "verification": {},
+  "limitations": [
+    "Only aggregate counts and SHA256 digests are retained; source rows and identities stay in process memory.",
+    "An after check fails closed if source events or generation changed after the before snapshot; inspect concurrency before diagnosing a product failure.",
+    "Current actor role is checked at verification time; no session, credential or authorization data is changed.",
+    "Provider cron execution must be checked separately; this script invokes no cron or mutation."
+  ]
+}

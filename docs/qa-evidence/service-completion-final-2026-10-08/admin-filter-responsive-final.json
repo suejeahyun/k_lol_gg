@@ -1,0 +1,365 @@
+{
+  "checkedAt": "2026-10-07T16:35:55.348Z",
+  "rows": [
+    {
+      "width": 320,
+      "path": "/admin/progress/event",
+      "cardRight": 289,
+      "controls": [
+        {
+          "right": 272,
+          "tag": "LABEL",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "INPUT",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "LABEL",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "SELECT",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "LABEL",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "SELECT",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "BUTTON",
+          "width": 239
+        }
+      ],
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 305,
+      "viewport": 305
+    },
+    {
+      "width": 320,
+      "path": "/admin/progress/destruction",
+      "cardRight": 289,
+      "controls": [
+        {
+          "right": 272,
+          "tag": "LABEL",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "INPUT",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "LABEL",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "SELECT",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "LABEL",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "SELECT",
+          "width": 239
+        },
+        {
+          "right": 272,
+          "tag": "BUTTON",
+          "width": 239
+        }
+      ],
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 305,
+      "viewport": 305
+    },
+    {
+      "width": 390,
+      "path": "/admin/progress/event",
+      "cardRight": 359,
+      "controls": [
+        {
+          "right": 342,
+          "tag": "LABEL",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "INPUT",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "LABEL",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "SELECT",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "LABEL",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "SELECT",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "BUTTON",
+          "width": 309
+        }
+      ],
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "width": 390,
+      "path": "/admin/progress/destruction",
+      "cardRight": 359,
+      "controls": [
+        {
+          "right": 342,
+          "tag": "LABEL",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "INPUT",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "LABEL",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "SELECT",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "LABEL",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "SELECT",
+          "width": 309
+        },
+        {
+          "right": 342,
+          "tag": "BUTTON",
+          "width": 309
+        }
+      ],
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "width": 768,
+      "path": "/admin/progress/event",
+      "cardRight": 729.96875,
+      "controls": [
+        {
+          "right": 370.90625,
+          "tag": "LABEL",
+          "width": 330.875
+        },
+        {
+          "right": 370.90625,
+          "tag": "INPUT",
+          "width": 330.875
+        },
+        {
+          "right": 712.96875,
+          "tag": "LABEL",
+          "width": 330.875
+        },
+        {
+          "right": 712.96875,
+          "tag": "SELECT",
+          "width": 330.875
+        },
+        {
+          "right": 370.90625,
+          "tag": "LABEL",
+          "width": 330.875
+        },
+        {
+          "right": 370.90625,
+          "tag": "SELECT",
+          "width": 330.875
+        },
+        {
+          "right": 712.96875,
+          "tag": "BUTTON",
+          "width": 330.875
+        }
+      ],
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "width": 768,
+      "path": "/admin/progress/destruction",
+      "cardRight": 729.96875,
+      "controls": [
+        {
+          "right": 370.90625,
+          "tag": "LABEL",
+          "width": 330.875
+        },
+        {
+          "right": 370.90625,
+          "tag": "INPUT",
+          "width": 330.875
+        },
+        {
+          "right": 712.96875,
+          "tag": "LABEL",
+          "width": 330.875
+        },
+        {
+          "right": 712.96875,
+          "tag": "SELECT",
+          "width": 330.875
+        },
+        {
+          "right": 370.90625,
+          "tag": "LABEL",
+          "width": 330.875
+        },
+        {
+          "right": 370.90625,
+          "tag": "SELECT",
+          "width": 330.875
+        },
+        {
+          "right": 712.96875,
+          "tag": "BUTTON",
+          "width": 330.875
+        }
+      ],
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 753,
+      "viewport": 753
+    },
+    {
+      "width": 1280,
+      "path": "/admin/progress/event",
+      "cardRight": 1241.609375,
+      "controls": [
+        {
+          "right": 729.828125,
+          "tag": "LABEL",
+          "width": 402.4375
+        },
+        {
+          "right": 729.828125,
+          "tag": "INPUT",
+          "width": 402.4375
+        },
+        {
+          "right": 942.234375,
+          "tag": "LABEL",
+          "width": 201.21875
+        },
+        {
+          "right": 942.234375,
+          "tag": "SELECT",
+          "width": 201.21875
+        },
+        {
+          "right": 1154.640625,
+          "tag": "LABEL",
+          "width": 201.21875
+        },
+        {
+          "right": 1154.640625,
+          "tag": "SELECT",
+          "width": 201.21875
+        },
+        {
+          "right": 1224.609375,
+          "tag": "BUTTON",
+          "width": 58.78125
+        }
+      ],
+      "heading": "이벤트전 작업 공간",
+      "scrollWidth": 1280,
+      "viewport": 1280
+    },
+    {
+      "width": 1280,
+      "path": "/admin/progress/destruction",
+      "cardRight": 1241.609375,
+      "controls": [
+        {
+          "right": 729.828125,
+          "tag": "LABEL",
+          "width": 402.4375
+        },
+        {
+          "right": 729.828125,
+          "tag": "INPUT",
+          "width": 402.4375
+        },
+        {
+          "right": 942.234375,
+          "tag": "LABEL",
+          "width": 201.21875
+        },
+        {
+          "right": 942.234375,
+          "tag": "SELECT",
+          "width": 201.21875
+        },
+        {
+          "right": 1154.640625,
+          "tag": "LABEL",
+          "width": 201.21875
+        },
+        {
+          "right": 1154.640625,
+          "tag": "SELECT",
+          "width": 201.21875
+        },
+        {
+          "right": 1224.609375,
+          "tag": "BUTTON",
+          "width": 58.78125
+        }
+      ],
+      "heading": "멸망전 작업 공간",
+      "scrollWidth": 1280,
+      "viewport": 1280
+    }
+  ]
+}

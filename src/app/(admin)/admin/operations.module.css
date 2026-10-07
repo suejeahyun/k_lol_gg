@@ -10,7 +10,7 @@
 .form { display: grid; gap: 1rem; max-width: 48rem; }
 .field { display: grid; gap: .35rem; }
 .field span { font-weight: 750; }
-.field input, .field textarea { border: 1px solid #cad7e8; border-radius: .7rem; padding: .75rem; font: inherit; }
+.field input, .field select, .field textarea { min-height: 2.75rem; border: 1px solid #cad7e8; border-radius: .7rem; padding: .75rem; font: inherit; }
 .checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
 .check { display: flex; align-items: center; gap: .5rem; border: 1px solid #e0e7f1; border-radius: .7rem; padding: .65rem; }
 .actions { display: flex; gap: .6rem; flex-wrap: wrap; }

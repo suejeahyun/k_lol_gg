@@ -60,7 +60,9 @@ test("discipline pages declare real empty, error, and unavailable states", async
     assert.match(page, /role="alert"/);
   }
   assert.match(pages[0], /징계 현황을 확인할 수 없어요/);
-  assert.match(pages[2], /필터를 바꾸거나 새 기록을 등록해 주세요/);
+  // Administrator empty-page recovery and error/unavailable retries are exercised
+  // by the real Page cases in admin-audit-discipline-pagination.test.mjs.
+  // Keep this declaration check independent of editorial guidance wording.
 });
 
 test("discipline administrator headings and status labels are readable Korean", async () => {

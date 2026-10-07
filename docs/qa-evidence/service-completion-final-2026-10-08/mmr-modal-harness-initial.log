@@ -1,0 +1,140 @@
+✔ successful HTTP status without the published generation is not claimed as completed (150.5815ms)
+✖ response-loss retry preserves the same adjustment idempotency key and body (33.1874ms)
+✔ player selection and pending state guard the actual adjustment form and same-tick submits (29.7014ms)
+✖ successful adjustment remains locked until the refreshed generation arrives (20.7683ms)
+✖ corrupt success responses for both commands remain uncertain and replay the original request (198.079ms)
+✖ unreadable JSON, transient errors and throttling keep the frozen request retryable (21.6988ms)
+✖ expired or insufficient sessions preserve the request through a separate admin login (21.9792ms)
+✖ generation conflicts require an explicit refresh and clear the selected adjustment player (21.0625ms)
+✔ definitive input rejection preserves editable input and does not announce success (21.0008ms)
+✔ admin without SUPER role sees no mutation form and valid recalculation requests retain preconditions (16.002ms)
+✔ recalculation modal starts at cancel and Escape restores the trigger without submitting (19.1392ms)
+✔ recalculation modal cycles Tab in both directions and handles direct confirmation links (17.6873ms)
+✔ opening a recalculation modal immediately locks background adjustments and cancel preserves input (35.0389ms)
+✔ confirming the modal once closes it and retains the existing request and refresh lock (21.0243ms)
+✔ public MMR page exposes canonical allowlisted filters and bounded projection summaries (1.6954ms)
+✔ admin MMR workspace connects protected recalculate, adjustment, players and review states (2.3706ms)
+✔ team balance provider selects READY MMR before statistics fallback (0.7769ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 11
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 886.2268
+
+✖ failing tests:
+
+test at tests\mmr-admin-recovery.test.mjs:110:1
+✖ response-loss retry preserves the same adjustment idempotency key and body (33.1874ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'refresh'
+  - ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:123:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'refresh' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:150:1
+✖ successful adjustment remains locked until the refreshed generation arrives (20.7683ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'refresh'
+  - ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:153:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'refresh' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:164:1
+✖ corrupt success responses for both commands remain uncertain and replay the original request (198.079ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'refresh'
+  - ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:176:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'refresh' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:181:1
+✖ unreadable JSON, transient errors and throttling keep the frozen request retryable (21.6988ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'refresh'
+  - ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:191:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'refresh' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:195:1
+✖ expired or insufficient sessions preserve the request through a separate admin login (21.9792ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'refresh'
+  - ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:205:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'refresh' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:209:1
+✖ generation conflicts require an explicit refresh and clear the selected adjustment player (21.0625ms)
+  TypeError: adjustmentForm.current?.reset is not a function
+      at Object.onClick (evalmachine.<anonymous>:183:3157)
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:215:55)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)

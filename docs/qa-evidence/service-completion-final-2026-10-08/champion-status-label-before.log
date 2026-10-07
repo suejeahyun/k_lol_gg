@@ -1,0 +1,28 @@
+✖ champion status choices and badges use Korean labels while retaining canonical filter values (21.037ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 356.734
+
+✖ failing tests:
+
+test at tests\admin-mmr-champion-pagination.test.mjs:124:1
+✖ champion status choices and badges use Korean labels while retaining canonical filter values (21.037ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /<option value="ACTIVE" selected="">활성<\/option>/u. Input:
+  
+  '<main class="page"><header class="header"><div><h1>챔피언 관리</h1></div><a href="/admin/champions/new"> 새 챔피언</a></header><form class="filters" action="/admin/champions"><label>검색<input maxLength="80" placeholder="이름 또는 고정 키" name="q" value=""/></label><label>상태<select name="status"><option value="">전체</option><option value="ACTIVE" selected="">ACTIVE</option><option value="INACTIVE">INACTIVE</option></select></label><input type="hidden" name="pageSize" value="1"/><button type="submit" class="submit">적용</button><a href="/admin/champions?pageSize=1">검색 초기화</a></form><section class="list" aria-label="챔피언 목록"><a class="item" href="/admin/champions/synthetic-1/edit"><div class="championMeta"><div><h2>합성 이름 1</h2><p class="code">고정 키 · synthetic-1</p></div></div><span class="badge" data-state="KEY_FALLBACK">공식 이미지 대체</span><span class="badge" data-state="ACTIVE">ACTIVE</span><span>rev. 2</span></a></section></main>'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-mmr-champion-pagination.test.mjs:127:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<main class="page"><header class="header"><div><h1>챔피언 관리</h1></div><a href="/admin/champions/new"> 새 챔피언</a></header><form class="filters" action="/admin/champions"><label>검색<input maxLength="80" placeholder="이름 또는 고정 키" name="q" value=""/></label><label>상태<select name="status"><option value="">전체</option><option value="ACTIVE" selected="">ACTIVE</option><option value="INACTIVE">INACTIVE</option></select></label><input type="hidden" name="pageSize" value="1"/><button type="submit" class="submit">적용</button><a href="/admin/champions?pageSize=1">검색 초기화</a></form><section class="list" aria-label="챔피언 목록"><a class="item" href="/admin/champions/synthetic-1/edit"><div class="championMeta"><div><h2>합성 이름 1</h2><p class="code">고정 키 · synthetic-1</p></div></div><span class="badge" data-state="KEY_FALLBACK">공식 이미지 대체</span><span class="badge" data-state="ACTIVE">ACTIVE</span><span>rev. 2</span></a></section></main>',
+    expected: /<option value="ACTIVE" selected="">활성<\/option>/u,
+    operator: 'match',
+    diff: 'simple'
+  }

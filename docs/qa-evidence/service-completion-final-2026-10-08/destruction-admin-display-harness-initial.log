@@ -1,0 +1,72 @@
+✖ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (173.4678ms)
+✖ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (67.0462ms)
+✖ the connected admin detail already uses the same Korean stages and format without changing canonical stage links (121.3494ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 659.6248
+
+✖ failing tests:
+
+test at tests\destruction-admin-display.test.mjs:83:1
+✖ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (173.4678ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      '전체',
+  +   'PLANNED',
+  +   'RECRUITING',
+  +   'TEAM_BUILDING',
+  +   'AUCTION',
+  +   'PRELIMINARY',
+  +   'TOURNAMENT',
+  +   'COMPLETED',
+  +   'CANCELLED'
+  -   '대회 준비',
+  -   '참가 모집',
+  -   '주장·포인트 확정',
+  -   '선수 경매',
+  -   '예선',
+  -   '본선',
+  -   '종료',
+  -   '취소'
+    ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-admin-display.test.mjs:87:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '전체', 'PLANNED', 'RECRUITING', 'TEAM_BUILDING', 'AUCTION', 'PRELIMINARY', 'TOURNAMENT', 'COMPLETED', 'CANCELLED' ],
+    expected: [ '전체', '대회 준비', '참가 모집', '주장·포인트 확정', '선수 경매', '예선', '본선', '종료', '취소' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\destruction-admin-display.test.mjs:106:1
+✖ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (67.0462ms)
+  AssertionError [ERR_ASSERTION]: card 1 needs readable format and status
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-admin-display.test.mjs:114:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\destruction-admin-display.test.mjs:121:1
+✖ the connected admin detail already uses the same Korean stages and format without changing canonical stage links (121.3494ms)
+  TypeError: (0 , destruction_1.isDestructionUuid) is not a function
+      at Object.AdminDestructionDetailPage [as default] (evalmachine.<anonymous>:28:61)
+      at async Object.detail (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-admin-display.test.mjs:71:50)
+      at async TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-admin-display.test.mjs:122:16)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)

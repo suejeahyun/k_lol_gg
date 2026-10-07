@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-10-07T16:24:06.312Z",
+  "environment": "Synthetic real-page render with stubbed repositories",
+  "baseline": "HEAD logs page before local pagination change",
+  "results": [
+    {
+      "version": "before",
+      "view": "events",
+      "repositoryCalls": [
+        "events",
+        "stats",
+        "ai-requests"
+      ],
+      "callCount": 3
+    },
+    {
+      "version": "before",
+      "view": "ai-requests",
+      "repositoryCalls": [
+        "events",
+        "stats",
+        "ai-requests"
+      ],
+      "callCount": 3
+    },
+    {
+      "version": "before",
+      "view": "stats",
+      "repositoryCalls": [
+        "events",
+        "stats",
+        "ai-requests"
+      ],
+      "callCount": 3
+    },
+    {
+      "version": "after",
+      "view": "events",
+      "repositoryCalls": [
+        "events"
+      ],
+      "callCount": 1
+    },
+    {
+      "version": "after",
+      "view": "ai-requests",
+      "repositoryCalls": [
+        "ai-requests"
+      ],
+      "callCount": 1
+    },
+    {
+      "version": "after",
+      "view": "stats",
+      "repositoryCalls": [
+        "stats"
+      ],
+      "callCount": 1
+    }
+  ],
+  "limitation": "Repository invocation counts only; no live database latency, query planner, browser rendering, or throughput measurement."
+}

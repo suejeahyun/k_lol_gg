@@ -1,0 +1,27 @@
+✔ MMR 수동 조정은 raw UUID 대신 bounded 플레이어 선택기를 사용한다 (1.0217ms)
+✔ Riot 작업은 현재 목록에서 플레이어와 link를 선택하고 revision을 자동 계산한다 (0.3151ms)
+✔ 징계 대상 선택은 관리자 전용 bounded endpoint의 allowlist metadata로 표시값을 채운다 (1.2724ms)
+✔ 공통 bounded picker는 원격 metadata를 문자열 allowlist로 제한한다 (0.5953ms)
+✔ account pagination reports the filtered total and page range while retaining filters and page size (37.6575ms)
+✔ partial jobs expose their finite diagnostic next to the existing status (2.758ms)
+✔ first and last job pages expose only valid navigation and preserve the status filter (5.5188ms)
+✔ log navigation retains its source and does not produce an incompatible account status (4.8762ms)
+✔ bulk preview remains a bounded first batch without ordinary page navigation or invented totals (6.3403ms)
+✔ a now-empty page can return to available results without displaying a nonexistent range (2.4086ms)
+✔ navigation respects the query ceiling and unavailable data never pretends there are zero accounts (5.8883ms)
+✔ sync: cancel focus, both Tab boundaries, Escape and trigger restoration execute without requests (120.4406ms)
+✔ link: cancel focus, both Tab boundaries, Escape and trigger restoration execute without requests (38.0536ms)
+✔ sync: open preview locks background submissions and freezes the selected request until explicit confirmation (42.449ms)
+✔ link: pending Escape stays locked, errors remain in the modal and a completed request restores focus (32.8798ms)
+✔ 정적 마감 대상의 native button은 submit 여부를 명시한다 (407.3873ms)
+✔ 이벤트 운영 폼은 내부 UUID나 JSON 복사를 요구하지 않는다 (1.9848ms)
+✔ 완성된 메뉴와 관리자 검색은 과거 단계 문구를 노출하지 않는다 (1.3483ms)
+✔ Riot ID의 게임 이름과 태그는 각각 이름을 가진다 (0.2294ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 740.7588

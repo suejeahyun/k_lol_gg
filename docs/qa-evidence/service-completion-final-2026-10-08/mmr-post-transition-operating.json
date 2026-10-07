@@ -1,0 +1,140 @@
+{
+  "checkedAt": "2026-10-07T16:02:00.474Z",
+  "status": "PASS",
+  "runtime": {
+    "origin": "https://k-lol-gg.vercel.app",
+    "deploymentId": "dpl_BTfa4hYSa6ZR19K4Lfszsu88Lhr2",
+    "source": "653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6",
+    "readyAt": "2026-10-07T13:54:26.070Z"
+  },
+  "afterVerification": {
+    "path": "docs/qa-evidence/service-completion-final-2026-10-08/mmr-after.json",
+    "status": "PASS",
+    "checkCount": 20,
+    "allChecksPass": true,
+    "calculatedAt": "2026-10-07T15:57:52.679Z"
+  },
+  "publicMmr": {
+    "httpStatus": 200,
+    "summary": {
+      "status": "READY",
+      "generation": 2,
+      "formulaVersion": "V2_DETERMINISTIC_1",
+      "formulaTransition": null,
+      "sourceMatchCount": 47,
+      "sourceGameCount": 104,
+      "sourceAdjustmentCount": 0,
+      "pendingSourceCount": 0,
+      "calculatedAt": "2026-10-07T15:57:52.679Z"
+    },
+    "matchesVerifiedAfterSnapshot": true,
+    "playerRowsRetained": false
+  },
+  "providerCron": {
+    "source": "Existing authenticated Vercel production request logs",
+    "since": "2026-10-07T15:57:52.679Z",
+    "until": "2026-10-07T16:00:30.532Z",
+    "limit": 250,
+    "providerRowCount": 87,
+    "exactMmrRequestCount": 1,
+    "requests": [
+      {
+        "at": "2026-10-07T16:00:13.328Z",
+        "deploymentId": "dpl_BTfa4hYSa6ZR19K4Lfszsu88Lhr2",
+        "httpStatus": 200
+      }
+    ],
+    "rawLogsPrivatePath": ".private/mmr-post-transition-20261008/provider.raw.jsonl",
+    "manualCronInvocations": 0,
+    "limitation": "One bounded post-transition request sample aligned with the natural five-minute schedule; provider request metadata does not prove scheduler identity or expose the response kind."
+  },
+  "database": {
+    "transaction": {
+      "read_only": "on",
+      "isolation": "repeatable read",
+      "timezone": "UTC",
+      "snapshot_at": "2026-10-07T16:01:57.102Z",
+      "rolledBack": true
+    },
+    "boundToFreshEnvironmentEvidence": true,
+    "exactStorageProbeMatched": true,
+    "state": {
+      "generation": 2,
+      "status": "READY",
+      "formulaVersion": "V2_DETERMINISTIC_1",
+      "sourceMatchCount": 47,
+      "sourceGameCount": 104,
+      "sourceAdjustmentCount": 0,
+      "checksum": "4b1d75c617c8694e51bff49a331358a67f76bce259a981e1b1fe5c178aed874d",
+      "calculatedAt": "2026-10-07T15:57:52.679Z"
+    },
+    "pendingSourceCount": 0,
+    "projectionRuns": [
+      {
+        "trigger": "BOOTSTRAP",
+        "baseGeneration": 0,
+        "resultGeneration": 1,
+        "count": 1
+      },
+      {
+        "trigger": "ADMIN",
+        "baseGeneration": 1,
+        "resultGeneration": 2,
+        "count": 1
+      }
+    ],
+    "newerGenerationRunCount": 0,
+    "manualAdjustmentCount": 0,
+    "generationTwoReceiptCount": 13,
+    "currentPublicMatches": true,
+    "matchesVerifiedAfterSnapshot": true
+  },
+  "operatingConclusion": {
+    "generationUnchanged": true,
+    "calculatedAtUnchanged": true,
+    "sourceChecksumUnchanged": true,
+    "pendingZero": true,
+    "noNewProjectionRun": true,
+    "interpretation": "The successful scheduled-window request plus unchanged READY V2 generation, zero pending events and no new projection run are consistent with the repository catchUp IDLE branch. IDLE response body was not observed directly.",
+    "source": "src/modules/mmr/infrastructure/postgres-mmr-repository.ts:catchUp"
+  },
+  "riotObservation": {
+    "source": "Aggregate-only SELECT in the same bound READ ONLY snapshot",
+    "recent24hByRequestedAt": [
+      {
+        "status": "SUCCEEDED",
+        "failureCode": null,
+        "count": 270,
+        "earliestRequestedAt": "2026-10-06T16:05:45.482Z",
+        "latestCompletedAt": "2026-10-07T16:00:48.693Z"
+      },
+      {
+        "status": "PARTIAL",
+        "failureCode": "PARTIAL_MATCH_INVALID",
+        "count": 10,
+        "earliestRequestedAt": "2026-10-07T05:10:45.588Z",
+        "latestCompletedAt": "2026-10-07T15:45:48.797Z"
+      },
+      {
+        "status": "PARTIAL",
+        "failureCode": null,
+        "count": 8,
+        "earliestRequestedAt": "2026-10-06T16:35:45.276Z",
+        "latestCompletedAt": "2026-10-07T01:05:48.431Z"
+      }
+    ],
+    "partialMatchInvalidCompletedSinceDeployment": {
+      "count": 3,
+      "earliestCompletedAt": "2026-10-07T15:00:48.731Z",
+      "latestCompletedAt": "2026-10-07T15:45:48.797Z",
+      "requestedSinceDeploymentCount": 3
+    },
+    "conclusion": "The new PARTIAL_MATCH_INVALID diagnostic is now observed in persisted production jobs; this verifies diagnostic visibility, not recovery of upstream invalid match data."
+  },
+  "auditWrites": {
+    "productionMutations": 0,
+    "manualExternalJobs": 0,
+    "accountChanges": 0,
+    "rawPersonalDataRetained": false
+  }
+}

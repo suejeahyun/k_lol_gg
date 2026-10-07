@@ -1,0 +1,65 @@
+{
+  "checkedAt": "2026-10-07T15:53:09.348Z",
+  "status": "PASS_WITH_SENSITIVE_VALUE_LIMITATION",
+  "runtime": {
+    "origin": "https://k-lol-gg.vercel.app",
+    "deploymentId": "dpl_BTfa4hYSa6ZR19K4Lfszsu88Lhr2",
+    "readyState": "READY",
+    "target": "production",
+    "source": "653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6",
+    "canonicalAliasListed": true,
+    "providerReadPerformedToday": true,
+    "healthHttpStatus": 200,
+    "healthStatus": "ready"
+  },
+  "databaseEnvironment": {
+    "environmentId": "TCZKGgqlkfCkOrjK",
+    "type": "sensitive",
+    "updatedAt": "2026-05-06T12:11:33.392Z",
+    "target": [
+      "production"
+    ],
+    "refreshedProviderMetadataMatchesHistoricalAuthenticatedProbe": true,
+    "directValueAvailable": false,
+    "directUrlEqualityVerified": false,
+    "limitation": "Vercel sensitive environment GET omits the value; direct plaintext URL equality is unavailable. Fresh environment identity/update metadata plus an exact authenticated historical runtime marker and current public summary are independently cross-checked."
+  },
+  "databaseBinding": {
+    "matched": true,
+    "method": "Fresh production environment metadata identity/update unchanged; exact storage-probe marker re-read in known DB; current public MMR summary matches current read-only DB snapshot.",
+    "previousOperationalMatchedFlagUsed": false,
+    "currentTargetFingerprint": "c5918218dd171001",
+    "historicalProbeReReadMatched": true,
+    "historicalProbeCompletedAt": "2026-10-05T23:40:50.692Z",
+    "currentPublicMmrMatches": true
+  },
+  "transaction": {
+    "read_only": "on",
+    "isolation": "repeatable read",
+    "timezone": "UTC",
+    "snapshot_at": "2026-10-07T15:53:07.302Z",
+    "rolledBack": true
+  },
+  "currentMmrSummary": {
+    "status": "READY",
+    "generation": 1,
+    "formulaVersion": "V1_INTERNAL_MMR_1",
+    "formulaTransition": "ADMIN_RECALCULATION_REQUIRED",
+    "sourceMatchCount": 42,
+    "sourceGameCount": 91,
+    "sourceAdjustmentCount": 0,
+    "pendingSourceCount": 13,
+    "calculatedAt": "2026-09-07T15:36:32.075Z"
+  },
+  "writes": {
+    "productionMutations": 0,
+    "backupsExecuted": 0,
+    "restoresExecuted": 0,
+    "credentialsOrSettingsChanged": false,
+    "existingEnvFilesOverwritten": false
+  },
+  "followup": {
+    "manualCronInvocationAllowed": false,
+    "procedure": "After the coordinator confirms an actual UI transition, read public summary and the same bound DB in a new READ ONLY snapshot, then inspect provider logs after one natural five-minute MMR schedule; do not invoke the cron endpoint."
+  }
+}

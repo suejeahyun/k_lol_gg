@@ -1,0 +1,80 @@
+✖ gallery deep link starts a native modal at its close action (95.0543ms)
+✖ gallery modal contains Tab and Shift+Tab within its one close control (36.4874ms)
+✖ Escape follows the same gallery close link without replacing browser history (28.5142ms)
+✖ close or browser-back cleanup restores scrolling and the original image link (30.9858ms)
+✔ gallery keeps the existing image, ordinal, accessible name and URL paths (27.2883ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 1
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 476.9394
+
+✖ failing tests:
+
+test at tests\destruction-gallery-dialog.test.mjs:76:1
+✖ gallery deep link starts a native modal at its close action (95.0543ms)
+  AssertionError [ERR_ASSERTION]: a declared aria-modal aside does not make the background inert
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:78:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\destruction-gallery-dialog.test.mjs:82:1
+✖ gallery modal contains Tab and Shift+Tab within its one close control (36.4874ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:88:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\destruction-gallery-dialog.test.mjs:92:1
+✖ Escape follows the same gallery close link without replacing browser history (28.5142ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:97:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\destruction-gallery-dialog.test.mjs:100:1
+✖ close or browser-back cleanup restores scrolling and the original image link (30.9858ms)
+  AssertionError [ERR_ASSERTION]: the source image link needs a stable focus target after query navigation
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:106:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

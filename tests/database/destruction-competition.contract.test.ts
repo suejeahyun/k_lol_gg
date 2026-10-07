@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import type { TransactionSessionActor } from "../../src/modules/auth/domain/transaction-session";
 import { DestructionService, type DestructionCommandContext } from "../../src/modules/competitions/destruction";
@@ -60,6 +60,8 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
   const galleryId = randomUUID();
   let previousFeatures: Record<string, boolean> | undefined;
   let settingsChanged = false;
+  let previousMmrState: typeof mmrProjectionStates.$inferSelect | undefined;
+  let mmrFixtureChanged = false;
   const emptyGalleryId = randomUUID();
   const galleryAssetId = randomUUID();
   const now = new Date();
@@ -269,6 +271,8 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     settingsChanged = true;
     const linkId = randomUUID();
     await database.insert(riotAccountLinks).values({ id: linkId, playerId: playerIds[0]!, ownerUserAccountId: ownerIds[0]!, gameName: "RatingQA", tagLine: "KR1", normalizedKey: "ratingqa#kr1", protectedPuuid: await protector.protect(puuid), method: "DIRECT_OWNER", status: "CONNECTED", linkedAt: now });
+    previousMmrState = (await database.select().from(mmrProjectionStates).where(eq(mmrProjectionStates.key, "GLOBAL")))[0];
+    mmrFixtureChanged = true;
     await database.insert(mmrProjectionStates).values({ key: "GLOBAL", generation: 1, status: "READY", formulaVersion: MMR_FORMULA_VERSION, sourceChecksum: Buffer.alloc(32, 1), calculatedAt: now }).onConflictDoUpdate({ target: mmrProjectionStates.key, set: { generation: 1, status: "READY", formulaVersion: MMR_FORMULA_VERSION, sourceChecksum: Buffer.alloc(32, 1), calculatedAt: now } });
     await database.insert(mmrPlayerProfiles).values({ generation: 1, playerId: playerIds[0]!, overallScoreBp: 7000, confidenceBp: 10000, sampleSize: 40, formulaVersion: MMR_FORMULA_VERSION, calculatedAt: now });
     const calls: string[] = [];
@@ -477,10 +481,30 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "DESTRUCTION"))).length, receipts.length + workerEvents.length);
     await assert.rejects(database.delete(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)));
   } finally {
-    if (settingsChanged) {
-      if (previousFeatures) await database.update(siteSettings).set({ featuresJson: previousFeatures }).where(eq(siteSettings.id, 1));
-      else await database.delete(siteSettings).where(eq(siteSettings.id, 1));
+    try {
+      if (mmrFixtureChanged) {
+        // The automatic-rating fixture borrows the shared GLOBAL projection.
+        // Preserve the MMR contract's history and release only this test's rows.
+        await database.transaction(async (transaction) => {
+          await transaction.delete(mmrPlayerProfiles).where(and(eq(mmrPlayerProfiles.playerId, playerIds[0]!), eq(mmrPlayerProfiles.generation, 1)));
+          if (previousMmrState) {
+            await transaction.insert(mmrProjectionStates).values(previousMmrState).onConflictDoUpdate({ target: mmrProjectionStates.key, set: previousMmrState });
+          } else {
+            await transaction.delete(mmrProjectionStates).where(eq(mmrProjectionStates.key, "GLOBAL"));
+          }
+        });
+        const restoredMmrState = (await database.select().from(mmrProjectionStates).where(eq(mmrProjectionStates.key, "GLOBAL")))[0];
+        assert.deepEqual(restoredMmrState, previousMmrState, "automatic-rating fixtures must restore the complete shared MMR state");
+        assert.equal((await database.select().from(mmrPlayerProfiles).where(eq(mmrPlayerProfiles.playerId, playerIds[0]!))).length, 0, "automatic-rating fixture profiles must not enter later MMR projections");
+        const maximumRun = await pool.query<{ generation: number }>("SELECT coalesce(max(result_generation),0)::int AS generation FROM mmr.projection_runs");
+        assert.equal(restoredMmrState?.generation ?? 0, maximumRun.rows[0]?.generation, "restored GLOBAL generation must retain the latest published MMR run");
+      }
+      if (settingsChanged) {
+        if (previousFeatures) await database.update(siteSettings).set({ featuresJson: previousFeatures }).where(eq(siteSettings.id, 1));
+        else await database.delete(siteSettings).where(eq(siteSettings.id, 1));
+      }
+    } finally {
+      await pool.end();
     }
-    await pool.end();
   }
 });

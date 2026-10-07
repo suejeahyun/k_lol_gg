@@ -1,0 +1,27 @@
+✖ manual MMR position labels are readable while canonical values reach the adjustment request (111.151ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 336.7357
+
+✖ failing tests:
+
+test at tests\mmr-admin-recovery.test.mjs:101:1
+✖ manual MMR position labels are readable while canonical values reach the adjustment request (111.151ms)
+  AssertionError [ERR_ASSERTION]: TOP needs a Korean option label
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:108:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

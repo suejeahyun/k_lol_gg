@@ -1,0 +1,37 @@
+✔ MMR players retain query, position and page size across page navigation and show the score used for ordering (77.975ms)
+✔ MMR review pagination uses its independent query contract and detail close retains the current page (42.5174ms)
+✔ MMR invalid and duplicated queries do not silently display an unrelated first page; empty pages recover within their tab (234.2888ms)
+✔ champion previous and next retain search, status and size, while edited filters reset to page one (18.6314ms)
+✔ champion status choices and badges use Korean labels while retaining canonical filter values (13.1614ms)
+✔ champion invalid, unavailable, unmatched and out-of-range pages each have a valid recovery (61.5891ms)
+✔ champion administrator pages reuse the highlight content shell and keep safe mutations (4.3137ms)
+✔ champion read APIs keep public and administrator namespaces separated (2.1674ms)
+✔ manual MMR position labels are readable while canonical values reach the adjustment request (363.2ms)
+✔ successful HTTP status without the published generation is not claimed as completed (69.0869ms)
+✔ response-loss retry preserves the same adjustment idempotency key and body (38.7506ms)
+✔ player selection and pending state guard the actual adjustment form and same-tick submits (37.1129ms)
+✔ successful adjustment remains locked until the refreshed generation arrives (30.8114ms)
+✔ corrupt success responses for both commands remain uncertain and replay the original request (463.0708ms)
+✔ unreadable JSON, transient errors and throttling keep the frozen request retryable (90.4254ms)
+✔ expired or insufficient sessions preserve the request through a separate admin login (58.0808ms)
+✔ generation conflicts require an explicit refresh and clear the selected adjustment player (32.9556ms)
+✔ definitive input rejection preserves editable input and does not announce success (28.2107ms)
+✔ admin without SUPER role sees no mutation form and valid recalculation requests retain preconditions (23.3554ms)
+✔ recalculation modal starts at cancel and Escape restores the trigger without submitting (22.6333ms)
+✔ recalculation modal cycles Tab in both directions and handles direct confirmation links (22.5238ms)
+✔ opening a recalculation modal immediately locks background adjustments and cancel preserves input (36.5615ms)
+✔ confirming the modal once closes it and retains the existing request and refresh lock (26.1263ms)
+✔ MMR previous/next links reach later players and preserve validated search, position, and page size (12.4093ms)
+✔ first and last MMR pages expose only valid directions (6.2929ms)
+✔ selected position displays the score used to rank and that position's sample, including zero (6.688ms)
+✔ empty projection, unmatched search, and out-of-range page have different recovery actions (4.8444ms)
+✔ invalid MMR address is rejected before loading and has a clean recovery link (4.9523ms)
+✔ MMR load failure retries the same bounded query without pretending the list is empty (1.2968ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1662.5741

@@ -1,0 +1,14 @@
+✔ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (222.8569ms)
+✔ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (100.8768ms)
+✔ the connected admin detail already uses the same Korean stages and format without changing canonical stage links (153.2803ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.168ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (3.452ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.4131ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 778.3523

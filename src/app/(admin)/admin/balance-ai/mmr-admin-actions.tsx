@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useRef, useState, useTransition } from "react";
+import { FormEvent, useEffect, useRef, useState, useTransition, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { MMR_POSITIONS } from "@/modules/mmr";
+import { competitionPositionLabel } from "@/modules/competitions/core/display-projection";
 import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 import { BoundedPicker } from "../matches/bounded-picker";
 
@@ -42,9 +43,66 @@ export function MmrAdminActions({
   const confirmedGeneration = useRef<number | null>(null);
   const mutationKeys = useRef(new ClientMutationKeyStore("mmr-admin")).current;
   const adjustmentForm = useRef<HTMLFormElement>(null);
+  const actionsRef = useRef<HTMLElement>(null);
+  const recalculateTriggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const confirmationOpen = useRef(startWithRecalculateConfirmation);
   const busy = pending || refreshing;
   const awaitingGeneration = completedGeneration !== null && generation < completedGeneration;
   const locked = busy || awaitingGeneration || retryRequest !== null || recovery !== null;
+
+  useEffect(() => {
+    if (!allowed || !confirmingRecalculation) return;
+    returnFocusRef.current ??= recalculateTriggerRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const frame = window.requestAnimationFrame(() => cancelRef.current?.focus());
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [allowed, confirmingRecalculation]);
+
+  function openRecalculationDialog() {
+    if (locked || sending.current || confirmationOpen.current) return;
+    returnFocusRef.current = recalculateTriggerRef.current ??
+      (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    confirmationOpen.current = true;
+    setConfirmingRecalculation(true);
+  }
+
+  function closeRecalculationDialog() {
+    if (busy || sending.current) return;
+    confirmationOpen.current = false;
+    setConfirmingRecalculation(false);
+    const returnTarget = returnFocusRef.current;
+    window.requestAnimationFrame(() => {
+      if (returnTarget?.isConnected && !returnTarget.hasAttribute("disabled")) returnTarget.focus();
+      else actionsRef.current?.focus();
+    });
+  }
+
+  function trapRecalculationDialogFocus(event: ReactKeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeRecalculationDialog();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled)')];
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (!first || !last) { event.preventDefault(); return; }
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault(); first.focus();
+    }
+  }
 
   async function command(path: PendingMmrCommand["path"], body: PendingMmrCommand["body"], expectedGeneration = generation) {
     if (!allowed || sending.current || busy || (confirmedGeneration.current !== null && generation < confirmedGeneration.current)) return;
@@ -106,7 +164,7 @@ export function MmrAdminActions({
 
   function submitAdjustment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (locked || sending.current || !playerId) return;
+    if (locked || sending.current || confirmationOpen.current || !playerId) return;
     const data = new FormData(event.currentTarget);
     void command("adjustments", {
       playerId,
@@ -119,12 +177,12 @@ export function MmrAdminActions({
 
   if (!allowed) return <p className={styles.notice}>조회: 관리자 · 전체 재계산·조정: 최고 관리자</p>;
   return (
-    <section className={styles.actions} aria-labelledby="mmr-actions-title" aria-busy={busy}>
-      <header><h2 id="mmr-actions-title">보호된 MMR 작업</h2><button type="button" disabled={locked} onClick={() => { if (!locked && !sending.current) setConfirmingRecalculation(true); }}>전체 원장 재계산</button></header>
+    <section className={styles.actions} aria-labelledby="mmr-actions-title" aria-busy={busy} ref={actionsRef} tabIndex={-1}>
+      <header><h2 id="mmr-actions-title">보호된 MMR 작업</h2><button ref={recalculateTriggerRef} type="button" disabled={locked || confirmingRecalculation} onClick={openRecalculationDialog}>전체 원장 재계산</button></header>
       <form ref={adjustmentForm} onSubmit={submitAdjustment}>
-        <fieldset className={styles.adjustmentFields} disabled={locked} aria-label="MMR 수동 조정">
+        <fieldset className={styles.adjustmentFields} disabled={locked || confirmingRecalculation} aria-label="MMR 수동 조정">
         <label><span>플레이어</span><BoundedPicker ariaLabel="MMR 수동 조정 플레이어" value={playerId} options={[]} placeholder="닉네임 또는 Riot ID 검색" remoteEndpoint="/api/admin/matches/editor-options/players" onChange={setPlayerId} /></label>
-        <label>포지션<select name="position"><option value="">종합</option>{MMR_POSITIONS.map((position) => <option key={position}>{position}</option>)}</select></label>
+        <label>포지션<select name="position"><option value="">종합</option>{MMR_POSITIONS.map((position) => <option key={position} value={position}>{competitionPositionLabel(position)}</option>)}</select></label>
         <label>조정값(bp)<input name="deltaBp" type="number" min={-1000} max={1000} required /></label>
         <label>사유 코드<input name="reasonCode" pattern="[A-Za-z][A-Za-z0-9_]{0,63}" required /></label>
         <label className={styles.note}>공개 설명<input name="publicNote" maxLength={300} required /></label>
@@ -138,12 +196,12 @@ export function MmrAdminActions({
       <p role="status" aria-live="polite">{busy ? "처리 중…" : message}</p>
       {confirmingRecalculation ? (
         <div className={styles.dialogBackdrop} role="presentation">
-          <section className={styles.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="mmr-recalculate-title" aria-describedby="mmr-recalculate-description">
+          <section ref={dialogRef} className={styles.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="mmr-recalculate-title" aria-describedby="mmr-recalculate-description" onKeyDown={trapRecalculationDialogFocus}>
             <h3 id="mmr-recalculate-title">전체 MMR 원장을 다시 계산할까요?</h3>
             <p id="mmr-recalculate-description">{formulaTransition === "ADMIN_RECALCULATION_REQUIRED" ? `현재 게시 generation ${generation}의 ${formulaVersion ?? "기존"} 공식에서 V2_DETERMINISTIC_1 공식으로 전환합니다. 자동 전환은 없으며, 확인하면 새 generation을 계산해 게시합니다.` : "공개된 모든 경기와 수동 조정 원장을 처음부터 재생합니다. 현재 generation이 바뀐 경우 작업은 안전하게 거부됩니다."}</p>
             <div>
-              <button type="button" className={styles.cancelButton} disabled={busy} onClick={() => setConfirmingRecalculation(false)}>취소</button>
-              <button type="button" disabled={locked} autoFocus onClick={() => { if (locked || sending.current) return; setConfirmingRecalculation(false); void command("recalculate", {}); }}>확인 후 재계산</button>
+              <button ref={cancelRef} type="button" className={styles.cancelButton} disabled={busy} onClick={closeRecalculationDialog}>취소</button>
+              <button type="button" disabled={locked} onClick={() => { if (locked || sending.current) return; closeRecalculationDialog(); void command("recalculate", {}); }}>확인 후 재계산</button>
             </div>
           </section>
         </div>

@@ -1,0 +1,23 @@
+✔ discipline reaches records 51–101 and returns without losing the selected classification (105.2207ms)
+✔ logs keeps each ledger's page and filters while requesting only the displayed ledger (38.0305ms)
+✔ log filters reset their own page while preserving the other ledger context (30.6191ms)
+✔ discipline: out-of-range page recovers without calling it an empty data set (10.6714ms)
+✔ discipline: empty, unavailable and error states provide truthful recovery (27.281ms)
+✔ logs: out-of-range page recovers without calling it an empty data set (16.1138ms)
+✔ logs: empty, unavailable and error states provide truthful recovery (39.2649ms)
+✔ invalid or duplicated queries never start list reads and both pages retain the ADMIN guard (206.2067ms)
+✔ the accepted upper page has a previous action but never emits a page outside the bound (33.7084ms)
+✔ public discipline API exposes aggregate statistics only (4.7936ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (1.4558ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (2.9818ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (1.1004ms)
+✔ discipline pages declare real empty, error, and unavailable states (0.8591ms)
+✔ discipline administrator headings and status labels are readable Korean (0.9356ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 787.3415

@@ -12,7 +12,7 @@ import ts from "typescript";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const subjectPath = "src/app/(admin)/admin/balance-ai/mmr-admin-actions.tsx";
 const playerId = "a30b6b22-1822-4c90-b6d6-2f3d76c392ed";
-const props = { generation: 3, formulaVersion: "V2_DETERMINISTIC_1", formulaTransition: null, allowed: true, startWithRecalculateConfirmation: true };
+const props = { generation: 3, formulaVersion: "V2_DETERMINISTIC_1", formulaTransition: null, allowed: true, startWithRecalculateConfirmation: false };
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 const adjustment = { position: "MID", deltaBp: "100", reasonCode: "REVIEWED", publicNote: "합성 조정 근거" };
 const success = (kind) => ({ ok: true, status: kind === "adjustments" ? 201 : 200, json: async () => ({ revision: 4, generation: 4, ...(kind === "adjustments" ? { playerId } : { consumedEventCount: 0 }) }) });
@@ -25,18 +25,48 @@ function find(tree, predicate) {
 const button = (tree, label) => find(tree, (node) => node.type === "button" && node.props.children === label);
 function harness(send) {
   const slots = [], requests = [], navigation = [], transitions = [], modules = new Map();
+  const effects = [], frames = new Map(), elements = new Map();
+  const document = { body: { style: { overflow: "auto" } }, activeElement: null };
+  let frameId = 0;
+  class Element {
+    isConnected = true;
+    disabled = false;
+    children = [];
+    focus() { document.activeElement = this; }
+    reset() {}
+    hasAttribute(name) { return Boolean(this.props[name]); }
+    contains(element) { return this === element || this.children.some((child) => child.contains(element)); }
+    querySelectorAll() { return this.children.flatMap((child) => [...(child.type === "button" && !child.disabled ? [child] : []), ...child.querySelectorAll()]); }
+  }
+  function mount(tree, address = "root") {
+    if (!React.isValidElement(tree)) return null;
+    const id = tree.props.role ?? (tree.type === "button" ? tree.props.children : tree.props["aria-label"] ?? address);
+    const element = elements.get(id) ?? new Element();
+    elements.set(id, element);
+    element.props = tree.props; element.type = tree.type; element.disabled = Boolean(tree.props.disabled);
+    element.children = React.Children.toArray(tree.props.children).map((child, index) => mount(child, `${address}.${index}`)).filter(Boolean);
+    if (tree.props.ref && typeof tree.props.ref === "object") tree.props.ref.current = element;
+    return element;
+  }
   let cursor = 0;
   const hooks = {
     useState(initial) { const index = cursor++; if (!(index in slots)) slots[index] = typeof initial === "function" ? initial() : initial; return [slots[index], (value) => { slots[index] = typeof value === "function" ? value(slots[index]) : value; }]; },
     useRef(initial) { return slots[cursor++] ??= { current: initial }; },
     useTransition() { const [pending, setPending] = hooks.useState(false); return [pending, (operation) => { setPending(true); operation(); transitions.push(() => setPending(false)); }]; },
+    useEffect(callback, deps) {
+      const index = cursor++, previous = slots[index];
+      if (!previous || deps.some((value, position) => !Object.is(value, previous.deps[position]))) {
+        effects.push(() => { previous?.cleanup?.(); slots[index] = { deps, cleanup: callback() }; });
+      }
+    },
   };
   function load(filename) {
     if (modules.has(filename)) return modules.get(filename).exports;
     const loaded = { exports: {} }; modules.set(filename, loaded);
     const code = ts.transpileModule(readFileSync(filename, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
     vm.runInNewContext(code, {
-      exports: loaded.exports, crypto: webcrypto, AbortSignal, Error,
+      exports: loaded.exports, crypto: webcrypto, AbortSignal, Error, document, HTMLElement: Element,
+      window: { requestAnimationFrame(callback) { frames.set(++frameId, callback); return frameId; }, cancelAnimationFrame(id) { frames.delete(id); } },
       FormData: class { constructor(values) { this.values = values; } get(name) { return this.values[name]; } },
       fetch: async (url, options) => { requests.push({ url, ...options }); return send(requests.length, options, url); },
       require(specifier) {
@@ -44,7 +74,7 @@ function harness(send) {
         if (specifier === "react/jsx-runtime") return jsx;
         if (specifier === "next/navigation") return { useRouter: () => ({ refresh: () => navigation.push("refresh") }) };
         if (specifier === "next/link") return { __esModule: true, default: () => null };
-        if (specifier === "@/modules/mmr") return { MMR_POSITIONS: ["TOP", "JUNGLE", "MID", "ADC", "SUPPORT"] };
+        if (specifier === "@/modules/mmr") return load(path.join(root, "src/modules/mmr/domain/mmr-projection.ts"));
         if (specifier.endsWith("/bounded-picker")) return { BoundedPicker: () => null };
         if (specifier.endsWith(".module.css")) return { __esModule: true, default: new Proxy({}, { get: (_, name) => String(name) }) };
         const resolved = specifier.startsWith("@/") ? path.join(root, "src", specifier.slice(2)) : path.resolve(path.dirname(filename), specifier);
@@ -55,16 +85,33 @@ function harness(send) {
   }
   const loaded = load(path.join(root, subjectPath));
   const subject = {
-    requests, navigation,
-    render(values = props) { cursor = 0; return loaded.MmrAdminActions(values); },
+    requests, navigation, document,
+    render(values = props) { cursor = 0; const tree = loaded.MmrAdminActions(values); mount(tree); effects.splice(0).forEach((effect) => effect()); return tree; },
+    element(label) { return elements.get(label); },
+    flushFrames() { const callbacks = [...frames.values()]; frames.clear(); callbacks.forEach((callback) => callback()); },
     selectPlayer() { find(subject.render(), (node) => node.props.ariaLabel === "MMR 수동 조정 플레이어").props.onChange(playerId); },
-    submit() { const form = find(subject.render(), (node) => node.type === "form"); form.props.onSubmit({ preventDefault() {}, currentTarget: adjustment }); },
+    submit(values = adjustment) { const form = find(subject.render(), (node) => node.type === "form"); form.props.onSubmit({ preventDefault() {}, currentTarget: values }); },
     retry() { const tree = subject.render(); const retry = button(tree, "같은 요청 다시 확인") ?? button(tree, "로그인 후 같은 요청 다시 확인"); assert.ok(retry, "an uncertain request needs an explicit retry"); retry.props.onClick(); },
     recalculate() { const tree = subject.render(); (button(tree, "확인 후 재계산") ?? (() => { button(tree, "전체 원장 재계산").props.onClick(); return button(subject.render(), "확인 후 재계산"); })()).props.onClick(); },
     finishRefresh() { transitions.splice(0).forEach((finish) => finish()); },
   };
   return subject;
 }
+
+test("manual MMR position labels are readable while canonical values reach the adjustment request", async () => {
+  const expected = [["TOP", "탑"], ["JGL", "정글"], ["MID", "미드"], ["ADC", "원거리 딜러"], ["SUP", "서포터"]];
+  for (const [position, label] of expected) {
+    const subject = harness(() => success("adjustments"));
+    const select = find(subject.render(), (node) => node.type === "select" && node.props.name === "position");
+    assert.ok(select);
+    const option = find(select, (node) => node.type === "option" && node.props.children === label);
+    assert.ok(option, `${position} needs a Korean option label`);
+    assert.equal(option.props.value, position);
+    subject.selectPlayer(); subject.submit({ ...adjustment, position }); await tick();
+    assert.equal(subject.requests.length, 1);
+    assert.equal(JSON.parse(subject.requests[0].body).position, position);
+  }
+});
 
 test("successful HTTP status without the published generation is not claimed as completed", async () => {
   for (const kind of ["recalculate", "adjustments"]) {
@@ -205,4 +252,71 @@ test("admin without SUPER role sees no mutation form and valid recalculation req
   assert.equal(subject.requests[0].headers["If-Match"], '"3"');
   assert.equal(subject.requests[0].body, "{}");
   assert.deepEqual(subject.navigation, ["refresh"]);
+});
+
+test("recalculation modal starts at cancel and Escape restores the trigger without submitting", () => {
+  const subject = harness(() => success("recalculate"));
+  button(subject.render(), "전체 원장 재계산").props.onClick();
+  const tree = subject.render(); subject.flushFrames();
+  assert.equal(subject.document.activeElement, subject.element("취소"), "initial focus must make cancellation easy");
+  assert.equal(subject.document.body.style.overflow, "hidden");
+  const dialog = find(tree, (node) => node.props.role === "alertdialog");
+  let prevented = false;
+  dialog.props.onKeyDown?.({ key: "Escape", preventDefault() { prevented = true; } });
+  assert.equal(find(subject.render(), (node) => node.props.role === "alertdialog"), null);
+  subject.flushFrames();
+  assert.equal(prevented, true);
+  assert.equal(subject.document.activeElement, subject.element("전체 원장 재계산"));
+  assert.equal(subject.document.body.style.overflow, "auto");
+  assert.equal(subject.requests.length, 0);
+});
+
+test("recalculation modal cycles Tab in both directions and handles direct confirmation links", () => {
+  const subject = harness(() => success("recalculate"));
+  const tree = subject.render({ ...props, startWithRecalculateConfirmation: true }); subject.flushFrames();
+  const dialog = find(tree, (node) => node.props.role === "alertdialog");
+  assert.equal(subject.document.activeElement, subject.element("취소"));
+  for (const [start, shiftKey, end] of [["확인 후 재계산", false, "취소"], ["취소", true, "확인 후 재계산"]]) {
+    subject.element(start).focus(); let prevented = false;
+    dialog.props.onKeyDown?.({ key: "Tab", shiftKey, preventDefault() { prevented = true; } });
+    assert.equal(prevented, true, "focus must not escape the modal boundary");
+    assert.equal(subject.document.activeElement, subject.element(end));
+  }
+  button(tree, "취소").props.onClick(); subject.render(); subject.flushFrames();
+  assert.equal(subject.document.activeElement, subject.element("전체 원장 재계산"), "direct entry also has a safe return target");
+  assert.equal(subject.requests.length, 0);
+});
+
+test("opening a recalculation modal immediately locks background adjustments and cancel preserves input", async () => {
+  const subject = harness(() => success("adjustments"));
+  subject.selectPlayer();
+  const before = subject.render();
+  const staleSubmit = find(before, (node) => node.type === "form").props.onSubmit;
+  button(before, "전체 원장 재계산").props.onClick();
+  staleSubmit({ preventDefault() {}, currentTarget: adjustment });
+  const opened = subject.render();
+  assert.equal(find(opened, (node) => node.type === "fieldset").props.disabled, true);
+  subject.submit(); await tick();
+  assert.equal(subject.requests.length, 0, "neither same-tick nor current background handler may submit");
+  button(subject.render(), "취소").props.onClick();
+  const closed = subject.render(); subject.flushFrames();
+  assert.equal(find(closed, (node) => node.type === "fieldset").props.disabled, false);
+  assert.equal(find(closed, (node) => node.props.ariaLabel === "MMR 수동 조정 플레이어").props.value, playerId);
+  subject.submit(); await tick(); assert.equal(subject.requests.length, 1);
+});
+
+test("confirming the modal once closes it and retains the existing request and refresh lock", async () => {
+  let finish;
+  const subject = harness(() => new Promise((resolve) => { finish = resolve; }));
+  button(subject.render(), "전체 원장 재계산").props.onClick();
+  const confirm = button(subject.render(), "확인 후 재계산").props.onClick;
+  confirm(); confirm();
+  const pending = subject.render(); subject.flushFrames();
+  assert.equal(find(pending, (node) => node.props.role === "alertdialog"), null);
+  assert.equal(subject.requests.length, 1);
+  assert.equal(find(pending, (node) => node.type === "fieldset").props.disabled, true);
+  assert.equal(subject.document.activeElement, subject.element("root"), "disabled trigger returns focus to the work section");
+  finish(success("recalculate")); await tick(); subject.render(); subject.finishRefresh();
+  assert.equal(button(subject.render(), "전체 원장 재계산").props.disabled, true);
+  assert.equal(button(subject.render({ ...props, generation: 4 }), "전체 원장 재계산").props.disabled, false);
 });

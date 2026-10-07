@@ -16,7 +16,9 @@ test("public destruction detail keeps owner application, vote and explicit unava
   assert.match(page, /rosterPlayers/);
   assert.match(page, /teamAName/);
   assert.match(page, /championTeamName/);
-  for (const token of ["parseDestructionDetailView", "captain-points", "participants", "gallery", "imageIndex", "role=\"dialog\"", "ResilientMediaImage"]) assert.match(page, new RegExp(token));
+  for (const token of ["parseDestructionDetailView", "captain-points", "participants", "gallery", "imageIndex", "DestructionGalleryLightbox", "ResilientMediaImage"]) assert.match(page, new RegExp(token));
+  // Native modal, keyboard containment, image/URL preservation and focus return
+  // are exercised through the actual page/client in destruction-gallery-dialog.test.mjs.
   assert.match(actions, /UPSERT|application/);
   assert.match(actions, /mvp-vote/);
   assert.match(actions, /aria-live="polite"/);

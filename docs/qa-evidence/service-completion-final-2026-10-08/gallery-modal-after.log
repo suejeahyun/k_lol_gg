@@ -1,0 +1,16 @@
+✔ gallery deep link starts a native modal at its close action (111.8896ms)
+✔ gallery modal contains Tab and Shift+Tab within its one close control (37.0607ms)
+✔ Escape follows the same gallery close link without replacing browser history (33.4555ms)
+✔ close or browser-back cleanup restores scrolling and the original image link (30.7699ms)
+✔ gallery keeps the existing image, ordinal, accessible name and URL paths (24.2068ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.8419ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (4.9715ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.4546ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 525.7797

@@ -1,0 +1,1978 @@
+✖ recalculation modal starts at cancel and Escape restores the trigger without submitting (110.1357ms)
+✖ recalculation modal cycles Tab in both directions and handles direct confirmation links (32.49ms)
+✖ opening a recalculation modal immediately locks background adjustments and cancel preserves input (34.8711ms)
+✖ confirming the modal once closes it and retains the existing request and refresh lock (52.8928ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 496.7788
+
+✖ failing tests:
+
+test at tests\mmr-admin-recovery.test.mjs:241:1
+✖ recalculation modal starts at cancel and Escape restores the trigger without submitting (110.1357ms)
+  AssertionError [ERR_ASSERTION]: initial focus must make cancellation easy
+  + actual - expected
+  
+  + null
+  - Element {
+  -   children: [],
+  -   disabled: false,
+  -   isConnected: true,
+  -   props: {
+  -     children: '취소',
+  -     className: 'cancelButton',
+  -     disabled: false,
+  -     onClick: [Function: onClick],
+  -     type: 'button'
+  -   },
+  -   type: 'button'
+  - }
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:245:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: [Element],
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:258:1
+✖ recalculation modal cycles Tab in both directions and handles direct confirmation links (32.49ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + null
+  - Element {
+  -   children: [],
+  -   disabled: false,
+  -   isConnected: true,
+  -   props: {
+  -     children: '취소',
+  -     className: 'cancelButton',
+  -     disabled: false,
+  -     onClick: [Function: onClick],
+  -     type: 'button'
+  -   },
+  -   type: 'button'
+  - }
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:262:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: [Element],
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:274:1
+✖ opening a recalculation modal immediately locks background adjustments and cancel preserves input (34.8711ms)
+  AssertionError [ERR_ASSERTION]: neither same-tick nor current background handler may submit
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:284:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\mmr-admin-recovery.test.mjs:292:1
+✖ confirming the modal once closes it and retains the existing request and refresh lock (52.8928ms)
+  AssertionError [ERR_ASSERTION]: disabled trigger returns focus to the work section
+  + actual - expected
+  
+  + null
+  - Element {
+  -   children: [
+  -     Element {
+  -       children: [
+  -         Element {
+  -           children: [],
+  -           disabled: false,
+  -           isConnected: true,
+  -           props: {
+  -             children: '보호된 MMR 작업',
+  -             id: 'mmr-actions-title'
+  -           },
+  -           type: 'h2'
+  -         },
+  -         Element {
+  -           children: [],
+  -           disabled: true,
+  -           isConnected: true,
+  -           props: {
+  -             children: '전체 원장 재계산',
+  -             disabled: true,
+  -             onClick: [Function: onClick],
+  -             type: 'button'
+  -           },
+  -           type: 'button'
+  -         }
+  -       ],
+  -       disabled: false,
+  -       isConnected: true,
+  -       props: {
+  -         children: [
+  -           {
+  -             '$$typeof': Symbol(react.transitional.element),
+  -             _owner: null,
+  -             _store: {},
+  -             key: null,
+  -             props: {
+  -               children: '보호된 MMR 작업',
+  -               id: 'mmr-actions-title'
+  -             },
+  -             type: 'h2'
+  -           },
+  -           {
+  -             '$$typeof': Symbol(react.transitional.element),
+  -             _owner: null,
+  -             _store: {},
+  -             key: null,
+  -             props: {
+  -               children: '전체 원장 재계산',
+  -               disabled: true,
+  -               onClick: [Function: onClick],
+  -               type: 'button'
+  -             },
+  -             type: 'button'
+  -           }
+  -         ]
+  -       },
+  -       type: 'header'
+  -     },
+  -     <ref *1> Element {
+  -       children: [
+  -         Element {
+  -           children: [
+  -             Element {
+  -               children: [
+  -                 Element {
+  -                   children: [],
+  -                   disabled: false,
+  -                   isConnected: true,
+  -                   props: {
+  -                     children: '플레이어'
+  -                   },
+  -                   type: 'span'
+  -                 },
+  -                 Element {
+  -                   children: [],
+  -                   disabled: false,
+  -                   isConnected: true,
+  -                   props: {
+  -                     ariaLabel: 'MMR 수동 조정 플레이어',
+  -                     onChange: [Function (anonymous)],
+  -                     options: [],
+  -                     placeholder: '닉네임 또는 Riot ID 검색',
+  -                     remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                     value: ''
+  -                   },
+  -                   type: [Function: BoundedPicker]
+  -                 }
+  -               ],
+  -               disabled: false,
+  -               isConnected: true,
+  -               props: {
+  -                 children: [
+  -                   {
+  -                     '$$typeof': Symbol(react.transitional.element),
+  -                     _owner: null,
+  -                     _store: {},
+  -                     key: null,
+  -                     props: {
+  -                       children: '플레이어'
+  -                     },
+  -                     type: 'span'
+  -                   },
+  -                   {
+  -                     '$$typeof': Symbol(react.transitional.element),
+  -                     _owner: null,
+  -                     _store: {},
+  -                     key: null,
+  -                     props: {
+  -                       ariaLabel: 'MMR 수동 조정 플레이어',
+  -                       onChange: [Function (anonymous)],
+  -                       options: [],
+  -                       placeholder: '닉네임 또는 Riot ID 검색',
+  -                       remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                       value: ''
+  -                     },
+  -                     type: [Function: BoundedPicker]
+  -                   }
+  -                 ]
+  -               },
+  -               type: 'label'
+  -             },
+  -             Element {
+  -               children: [
+  -                 Element {
+  -                   children: [
+  -                     Element {
+  -                       children: [],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: '종합',
+  -                         value: ''
+  -                       },
+  -                       type: 'option'
+  -                     },
+  -                     Element {
+  -                       children: [],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: 'TOP'
+  -                       },
+  -                       type: 'option'
+  -                     },
+  -                     Element {
+  -                       children: [],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: 'JUNGLE'
+  -                       },
+  -                       type: 'option'
+  -                     },
+  -                     Element {
+  -                       children: [],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: 'MID'
+  -                       },
+  -                       type: 'option'
+  -                     },
+  -                     Element {
+  -                       children: [],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: 'ADC'
+  -                       },
+  -                       type: 'option'
+  -                     },
+  -                     Element {
+  -                       children: [],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: 'SUPPORT'
+  -                       },
+  -                       type: 'option'
+  -                     }
+  -                   ],
+  -                   disabled: false,
+  -                   isConnected: true,
+  -                   props: {
+  -                     children: [
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: '종합',
+  -                           value: ''
+  -                         },
+  -                         type: 'option'
+  -                       },
+  -                       [
+  -                         {
+  -                           '$$typeof': Symbol(react.transitional.element),
+  -                           _owner: null,
+  -                           _store: {},
+  -                           key: 'TOP',
+  -                           props: {
+  -                             children: 'TOP'
+  -                           },
+  -                           type: 'option'
+  -                         },
+  -                         {
+  -                           '$$typeof': Symbol(react.transitional.element),
+  -                           _owner: null,
+  -                           _store: {},
+  -                           key: 'JUNGLE',
+  -                           props: {
+  -                             children: 'JUNGLE'
+  -                           },
+  -                           type: 'option'
+  -                         },
+  -                         {
+  -                           '$$typeof': Symbol(react.transitional.element),
+  -                           _owner: null,
+  -                           _store: {},
+  -                           key: 'MID',
+  -                           props: {
+  -                             children: 'MID'
+  -                           },
+  -                           type: 'option'
+  -                         },
+  -                         {
+  -                           '$$typeof': Symbol(react.transitional.element),
+  -                           _owner: null,
+  -                           _store: {},
+  -                           key: 'ADC',
+  -                           props: {
+  -                             children: 'ADC'
+  -                           },
+  -                           type: 'option'
+  -                         },
+  -                         {
+  -                           '$$typeof': Symbol(react.transitional.element),
+  -                           _owner: null,
+  -                           _store: {},
+  -                           key: 'SUPPORT',
+  -                           props: {
+  -                             children: 'SUPPORT'
+  -                           },
+  -                           type: 'option'
+  -                         }
+  -                       ]
+  -                     ],
+  -                     name: 'position'
+  -                   },
+  -                   type: 'select'
+  -                 }
+  -               ],
+  -               disabled: false,
+  -               isConnected: true,
+  -               props: {
+  -                 children: [
+  -                   '포지션',
+  -                   {
+  -                     '$$typeof': Symbol(react.transitional.element),
+  -                     _owner: null,
+  -                     _store: {},
+  -                     key: null,
+  -                     props: {
+  -                       children: [
+  -                         {
+  -                           '$$typeof': Symbol(react.transitional.element),
+  -                           _owner: null,
+  -                           _store: {},
+  -                           key: null,
+  -                           props: {
+  -                             children: '종합',
+  -                             value: ''
+  -                           },
+  -                           type: 'option'
+  -                         },
+  -                         [
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: 'TOP',
+  -                             props: {
+  -                               children: 'TOP'
+  -                             },
+  -                             type: 'option'
+  -                           },
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: 'JUNGLE',
+  -                             props: {
+  -                               children: 'JUNGLE'
+  -                             },
+  -                             type: 'option'
+  -                           },
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: 'MID',
+  -                             props: {
+  -                               children: 'MID'
+  -                             },
+  -                             type: 'option'
+  -                           },
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: 'ADC',
+  -                             props: {
+  -                               children: 'ADC'
+  -                             },
+  -                             type: 'option'
+  -                           },
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: 'SUPPORT',
+  -                             props: {
+  -                               children: 'SUPPORT'
+  -                             },
+  -                             type: 'option'
+  -                           }
+  -                         ]
+  -                       ],
+  -                       name: 'position'
+  -                     },
+  -                     type: 'select'
+  -                   }
+  -                 ]
+  -               },
+  -               type: 'label'
+  -             },
+  -             Element {
+  -               children: [
+  -                 Element {
+  -                   children: [],
+  -                   disabled: false,
+  -                   isConnected: true,
+  -                   props: {
+  -                     max: 1000,
+  -                     min: -1000,
+  -                     name: 'deltaBp',
+  -                     required: true,
+  -                     type: 'number'
+  -                   },
+  -                   type: 'input'
+  -                 }
+  -               ],
+  -               disabled: false,
+  -               isConnected: true,
+  -               props: {
+  -                 children: [
+  -                   '조정값(bp)',
+  -                   {
+  -                     '$$typeof': Symbol(react.transitional.element),
+  -                     _owner: null,
+  -                     _store: {},
+  -                     key: null,
+  -                     props: {
+  -                       max: 1000,
+  -                       min: -1000,
+  -                       name: 'deltaBp',
+  -                       required: true,
+  -                       type: 'number'
+  -                     },
+  -                     type: 'input'
+  -                   }
+  -                 ]
+  -               },
+  -               type: 'label'
+  -             },
+  -             Element {
+  -               children: [
+  -                 Element {
+  -                   children: [],
+  -                   disabled: false,
+  -                   isConnected: true,
+  -                   props: {
+  -                     name: 'reasonCode',
+  -                     pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                     required: true
+  -                   },
+  -                   type: 'input'
+  -                 }
+  -               ],
+  -               disabled: false,
+  -               isConnected: true,
+  -               props: {
+  -                 children: [
+  -                   '사유 코드',
+  -                   {
+  -                     '$$typeof': Symbol(react.transitional.element),
+  -                     _owner: null,
+  -                     _store: {},
+  -                     key: null,
+  -                     props: {
+  -                       name: 'reasonCode',
+  -                       pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                       required: true
+  -                     },
+  -                     type: 'input'
+  -                   }
+  -                 ]
+  -               },
+  -               type: 'label'
+  -             },
+  -             Element {
+  -               children: [
+  -                 Element {
+  -                   children: [],
+  -                   disabled: false,
+  -                   isConnected: true,
+  -                   props: {
+  -                     maxLength: 300,
+  -                     name: 'publicNote',
+  -                     required: true
+  -                   },
+  -                   type: 'input'
+  -                 }
+  -               ],
+  -               disabled: false,
+  -               isConnected: true,
+  -               props: {
+  -                 children: [
+  -                   '공개 설명',
+  -                   {
+  -                     '$$typeof': Symbol(react.transitional.element),
+  -                     _owner: null,
+  -                     _store: {},
+  -                     key: null,
+  -                     props: {
+  -                       maxLength: 300,
+  -                       name: 'publicNote',
+  -                       required: true
+  -                     },
+  -                     type: 'input'
+  -                   }
+  -                 ],
+  -                 className: 'note'
+  -               },
+  -               type: 'label'
+  -             },
+  -             Element {
+  -               children: [],
+  -               disabled: true,
+  -               isConnected: true,
+  -               props: {
+  -                 children: '조정 원장 추가',
+  -                 disabled: true,
+  -                 type: 'submit'
+  -               },
+  -               type: 'button'
+  -             }
+  -           ],
+  -           disabled: true,
+  -           isConnected: true,
+  -           props: {
+  -             'aria-label': 'MMR 수동 조정',
+  -             children: [
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         children: '플레이어'
+  -                       },
+  -                       type: 'span'
+  -                     },
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         ariaLabel: 'MMR 수동 조정 플레이어',
+  -                         onChange: [Function (anonymous)],
+  -                         options: [],
+  -                         placeholder: '닉네임 또는 Riot ID 검색',
+  -                         remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                         value: ''
+  -                       },
+  -                       type: [Function: BoundedPicker]
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '포지션',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         children: [
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               children: '종합',
+  -                               value: ''
+  -                             },
+  -                             type: 'option'
+  -                           },
+  -                           [
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'TOP',
+  -                               props: {
+  -                                 children: 'TOP'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'JUNGLE',
+  -                               props: {
+  -                                 children: 'JUNGLE'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'MID',
+  -                               props: {
+  -                                 children: 'MID'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'ADC',
+  -                               props: {
+  -                                 children: 'ADC'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'SUPPORT',
+  -                               props: {
+  -                                 children: 'SUPPORT'
+  -                               },
+  -                               type: 'option'
+  -                             }
+  -                           ]
+  -                         ],
+  -                         name: 'position'
+  -                       },
+  -                       type: 'select'
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '조정값(bp)',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         max: 1000,
+  -                         min: -1000,
+  -                         name: 'deltaBp',
+  -                         required: true,
+  -                         type: 'number'
+  -                       },
+  -                       type: 'input'
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '사유 코드',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         name: 'reasonCode',
+  -                         pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                         required: true
+  -                       },
+  -                       type: 'input'
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '공개 설명',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         maxLength: 300,
+  -                         name: 'publicNote',
+  -                         required: true
+  -                       },
+  -                       type: 'input'
+  -                     }
+  -                   ],
+  -                   className: 'note'
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: '조정 원장 추가',
+  -                   disabled: true,
+  -                   type: 'submit'
+  -                 },
+  -                 type: 'button'
+  -               }
+  -             ],
+  -             className: 'adjustmentFields',
+  -             disabled: true
+  -           },
+  -           type: 'fieldset'
+  -         }
+  -       ],
+  -       disabled: false,
+  -       isConnected: true,
+  -       props: {
+  -         children: {
+  -           '$$typeof': Symbol(react.transitional.element),
+  -           _owner: null,
+  -           _store: {},
+  -           key: null,
+  -           props: {
+  -             'aria-label': 'MMR 수동 조정',
+  -             children: [
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         children: '플레이어'
+  -                       },
+  -                       type: 'span'
+  -                     },
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         ariaLabel: 'MMR 수동 조정 플레이어',
+  -                         onChange: [Function (anonymous)],
+  -                         options: [],
+  -                         placeholder: '닉네임 또는 Riot ID 검색',
+  -                         remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                         value: ''
+  -                       },
+  -                       type: [Function: BoundedPicker]
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '포지션',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         children: [
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               children: '종합',
+  -                               value: ''
+  -                             },
+  -                             type: 'option'
+  -                           },
+  -                           [
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'TOP',
+  -                               props: {
+  -                                 children: 'TOP'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'JUNGLE',
+  -                               props: {
+  -                                 children: 'JUNGLE'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'MID',
+  -                               props: {
+  -                                 children: 'MID'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'ADC',
+  -                               props: {
+  -                                 children: 'ADC'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: 'SUPPORT',
+  -                               props: {
+  -                                 children: 'SUPPORT'
+  -                               },
+  -                               type: 'option'
+  -                             }
+  -                           ]
+  -                         ],
+  -                         name: 'position'
+  -                       },
+  -                       type: 'select'
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '조정값(bp)',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         max: 1000,
+  -                         min: -1000,
+  -                         name: 'deltaBp',
+  -                         required: true,
+  -                         type: 'number'
+  -                       },
+  -                       type: 'input'
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '사유 코드',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         name: 'reasonCode',
+  -                         pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                         required: true
+  -                       },
+  -                       type: 'input'
+  -                     }
+  -                   ]
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: [
+  -                     '공개 설명',
+  -                     {
+  -                       '$$typeof': Symbol(react.transitional.element),
+  -                       _owner: null,
+  -                       _store: {},
+  -                       key: null,
+  -                       props: {
+  -                         maxLength: 300,
+  -                         name: 'publicNote',
+  -                         required: true
+  -                       },
+  -                       type: 'input'
+  -                     }
+  -                   ],
+  -                   className: 'note'
+  -                 },
+  -                 type: 'label'
+  -               },
+  -               {
+  -                 '$$typeof': Symbol(react.transitional.element),
+  -                 _owner: null,
+  -                 _store: {},
+  -                 key: null,
+  -                 props: {
+  -                   children: '조정 원장 추가',
+  -                   disabled: true,
+  -                   type: 'submit'
+  -                 },
+  -                 type: 'button'
+  -               }
+  -             ],
+  -             className: 'adjustmentFields',
+  -             disabled: true
+  -           },
+  -           type: 'fieldset'
+  -         },
+  -         onSubmit: [Function: submitAdjustment],
+  -         ref: {
+  -           current: [Circular *1]
+  -         }
+  -       },
+  -       type: 'form'
+  -     },
+  -     Element {
+  -       children: [],
+  -       disabled: false,
+  -       isConnected: true,
+  -       props: {
+  -         'aria-live': 'polite',
+  -         children: '처리 중…',
+  -         role: 'status'
+  -       },
+  -       type: 'p'
+  -     }
+  -   ],
+  -   disabled: false,
+  -   isConnected: true,
+  -   props: {
+  -     'aria-busy': true,
+  -     'aria-labelledby': 'mmr-actions-title',
+  -     children: [
+  -       {
+  -         '$$typeof': Symbol(react.transitional.element),
+  -         _owner: null,
+  -         _store: {},
+  -         key: null,
+  -         props: {
+  -           children: [
+  -             {
+  -               '$$typeof': Symbol(react.transitional.element),
+  -               _owner: null,
+  -               _store: {},
+  -               key: null,
+  -               props: {
+  -                 children: '보호된 MMR 작업',
+  -                 id: 'mmr-actions-title'
+  -               },
+  -               type: 'h2'
+  -             },
+  -             {
+  -               '$$typeof': Symbol(react.transitional.element),
+  -               _owner: null,
+  -               _store: {},
+  -               key: null,
+  -               props: {
+  -                 children: '전체 원장 재계산',
+  -                 disabled: true,
+  -                 onClick: [Function: onClick],
+  -                 type: 'button'
+  -               },
+  -               type: 'button'
+  -             }
+  -           ]
+  -         },
+  -         type: 'header'
+  -       },
+  -       {
+  -         '$$typeof': Symbol(react.transitional.element),
+  -         _owner: null,
+  -         _store: {},
+  -         key: null,
+  -         props: <ref *2> {
+  -           children: {
+  -             '$$typeof': Symbol(react.transitional.element),
+  -             _owner: null,
+  -             _store: {},
+  -             key: null,
+  -             props: {
+  -               'aria-label': 'MMR 수동 조정',
+  -               children: [
+  -                 {
+  -                   '$$typeof': Symbol(react.transitional.element),
+  -                   _owner: null,
+  -                   _store: {},
+  -                   key: null,
+  -                   props: {
+  -                     children: [
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: '플레이어'
+  -                         },
+  -                         type: 'span'
+  -                       },
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           ariaLabel: 'MMR 수동 조정 플레이어',
+  -                           onChange: [Function (anonymous)],
+  -                           options: [],
+  -                           placeholder: '닉네임 또는 Riot ID 검색',
+  -                           remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                           value: ''
+  -                         },
+  -                         type: [Function: BoundedPicker]
+  -                       }
+  -                     ]
+  -                   },
+  -                   type: 'label'
+  -                 },
+  -                 {
+  -                   '$$typeof': Symbol(react.transitional.element),
+  -                   _owner: null,
+  -                   _store: {},
+  -                   key: null,
+  -                   props: {
+  -                     children: [
+  -                       '포지션',
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: [
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: null,
+  -                               props: {
+  -                                 children: '종합',
+  -                                 value: ''
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             [
+  -                               {
+  -                                 '$$typeof': Symbol(react.transitional.element),
+  -                                 _owner: null,
+  -                                 _store: {},
+  -                                 key: 'TOP',
+  -                                 props: {
+  -                                   children: 'TOP'
+  -                                 },
+  -                                 type: 'option'
+  -                               },
+  -                               {
+  -                                 '$$typeof': Symbol(react.transitional.element),
+  -                                 _owner: null,
+  -                                 _store: {},
+  -                                 key: 'JUNGLE',
+  -                                 props: {
+  -                                   children: 'JUNGLE'
+  -                                 },
+  -                                 type: 'option'
+  -                               },
+  -                               {
+  -                                 '$$typeof': Symbol(react.transitional.element),
+  -                                 _owner: null,
+  -                                 _store: {},
+  -                                 key: 'MID',
+  -                                 props: {
+  -                                   children: 'MID'
+  -                                 },
+  -                                 type: 'option'
+  -                               },
+  -                               {
+  -                                 '$$typeof': Symbol(react.transitional.element),
+  -                                 _owner: null,
+  -                                 _store: {},
+  -                                 key: 'ADC',
+  -                                 props: {
+  -                                   children: 'ADC'
+  -                                 },
+  -                                 type: 'option'
+  -                               },
+  -                               {
+  -                                 '$$typeof': Symbol(react.transitional.element),
+  -                                 _owner: null,
+  -                                 _store: {},
+  -                                 key: 'SUPPORT',
+  -                                 props: {
+  -                                   children: 'SUPPORT'
+  -                                 },
+  -                                 type: 'option'
+  -                               }
+  -                             ]
+  -                           ],
+  -                           name: 'position'
+  -                         },
+  -                         type: 'select'
+  -                       }
+  -                     ]
+  -                   },
+  -                   type: 'label'
+  -                 },
+  -                 {
+  -                   '$$typeof': Symbol(react.transitional.element),
+  -                   _owner: null,
+  -                   _store: {},
+  -                   key: null,
+  -                   props: {
+  -                     children: [
+  -                       '조정값(bp)',
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           max: 1000,
+  -                           min: -1000,
+  -                           name: 'deltaBp',
+  -                           required: true,
+  -                           type: 'number'
+  -                         },
+  -                         type: 'input'
+  -                       }
+  -                     ]
+  -                   },
+  -                   type: 'label'
+  -                 },
+  -                 {
+  -                   '$$typeof': Symbol(react.transitional.element),
+  -                   _owner: null,
+  -                   _store: {},
+  -                   key: null,
+  -                   props: {
+  -                     children: [
+  -                       '사유 코드',
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           name: 'reasonCode',
+  -                           pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                           required: true
+  -                         },
+  -                         type: 'input'
+  -                       }
+  -                     ]
+  -                   },
+  -                   type: 'label'
+  -                 },
+  -                 {
+  -                   '$$typeof': Symbol(react.transitional.element),
+  -                   _owner: null,
+  -                   _store: {},
+  -                   key: null,
+  -                   props: {
+  -                     children: [
+  -                       '공개 설명',
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           maxLength: 300,
+  -                           name: 'publicNote',
+  -                           required: true
+  -                         },
+  -                         type: 'input'
+  -                       }
+  -                     ],
+  -                     className: 'note'
+  -                   },
+  -                   type: 'label'
+  -                 },
+  -                 {
+  -                   '$$typeof': Symbol(react.transitional.element),
+  -                   _owner: null,
+  -                   _store: {},
+  -                   key: null,
+  -                   props: {
+  -                     children: '조정 원장 추가',
+  -                     disabled: true,
+  -                     type: 'submit'
+  -                   },
+  -                   type: 'button'
+  -                 }
+  -               ],
+  -               className: 'adjustmentFields',
+  -               disabled: true
+  -             },
+  -             type: 'fieldset'
+  -           },
+  -           onSubmit: [Function: submitAdjustment],
+  -           ref: {
+  -             current: <ref *1> Element {
+  -               children: [
+  -                 Element {
+  -                   children: [
+  -                     Element {
+  -                       children: [
+  -                         Element {
+  -                           children: [],
+  -                           disabled: false,
+  -                           isConnected: true,
+  -                           props: {
+  -                             children: '플레이어'
+  -                           },
+  -                           type: 'span'
+  -                         },
+  -                         Element {
+  -                           children: [],
+  -                           disabled: false,
+  -                           isConnected: true,
+  -                           props: {
+  -                             ariaLabel: 'MMR 수동 조정 플레이어',
+  -                             onChange: [Function (anonymous)],
+  -                             options: [],
+  -                             placeholder: '닉네임 또는 Riot ID 검색',
+  -                             remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                             value: ''
+  -                           },
+  -                           type: [Function: BoundedPicker]
+  -                         }
+  -                       ],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: [
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               children: '플레이어'
+  -                             },
+  -                             type: 'span'
+  -                           },
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               ariaLabel: 'MMR 수동 조정 플레이어',
+  -                               onChange: [Function (anonymous)],
+  -                               options: [],
+  -                               placeholder: '닉네임 또는 Riot ID 검색',
+  -                               remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                               value: ''
+  -                             },
+  -                             type: [Function: BoundedPicker]
+  -                           }
+  -                         ]
+  -                       },
+  -                       type: 'label'
+  -                     },
+  -                     Element {
+  -                       children: [
+  -                         Element {
+  -                           children: [
+  -                             Element {
+  -                               children: [],
+  -                               disabled: false,
+  -                               isConnected: true,
+  -                               props: {
+  -                                 children: '종합',
+  -                                 value: ''
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             Element {
+  -                               children: [],
+  -                               disabled: false,
+  -                               isConnected: true,
+  -                               props: {
+  -                                 children: 'TOP'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             Element {
+  -                               children: [],
+  -                               disabled: false,
+  -                               isConnected: true,
+  -                               props: {
+  -                                 children: 'JUNGLE'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             Element {
+  -                               children: [],
+  -                               disabled: false,
+  -                               isConnected: true,
+  -                               props: {
+  -                                 children: 'MID'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             Element {
+  -                               children: [],
+  -                               disabled: false,
+  -                               isConnected: true,
+  -                               props: {
+  -                                 children: 'ADC'
+  -                               },
+  -                               type: 'option'
+  -                             },
+  -                             Element {
+  -                               children: [],
+  -                               disabled: false,
+  -                               isConnected: true,
+  -                               props: {
+  -                                 children: 'SUPPORT'
+  -                               },
+  -                               type: 'option'
+  -                             }
+  -                           ],
+  -                           disabled: false,
+  -                           isConnected: true,
+  -                           props: {
+  -                             children: [
+  -                               {
+  -                                 '$$typeof': Symbol(react.transitional.element),
+  -                                 _owner: null,
+  -                                 _store: {},
+  -                                 key: null,
+  -                                 props: {
+  -                                   children: '종합',
+  -                                   value: ''
+  -                                 },
+  -                                 type: 'option'
+  -                               },
+  -                               [
+  -                                 {
+  -                                   '$$typeof': Symbol(react.transitional.element),
+  -                                   _owner: null,
+  -                                   _store: {},
+  -                                   key: 'TOP',
+  -                                   props: {
+  -                                     children: 'TOP'
+  -                                   },
+  -                                   type: 'option'
+  -                                 },
+  -                                 {
+  -                                   '$$typeof': Symbol(react.transitional.element),
+  -                                   _owner: null,
+  -                                   _store: {},
+  -                                   key: 'JUNGLE',
+  -                                   props: {
+  -                                     children: 'JUNGLE'
+  -                                   },
+  -                                   type: 'option'
+  -                                 },
+  -                                 {
+  -                                   '$$typeof': Symbol(react.transitional.element),
+  -                                   _owner: null,
+  -                                   _store: {},
+  -                                   key: 'MID',
+  -                                   props: {
+  -                                     children: 'MID'
+  -                                   },
+  -                                   type: 'option'
+  -                                 },
+  -                                 {
+  -                                   '$$typeof': Symbol(react.transitional.element),
+  -                                   _owner: null,
+  -                                   _store: {},
+  -                                   key: 'ADC',
+  -                                   props: {
+  -                                     children: 'ADC'
+  -                                   },
+  -                                   type: 'option'
+  -                                 },
+  -                                 {
+  -                                   '$$typeof': Symbol(react.transitional.element),
+  -                                   _owner: null,
+  -                                   _store: {},
+  -                                   key: 'SUPPORT',
+  -                                   props: {
+  -                                     children: 'SUPPORT'
+  -                                   },
+  -                                   type: 'option'
+  -                                 }
+  -                               ]
+  -                             ],
+  -                             name: 'position'
+  -                           },
+  -                           type: 'select'
+  -                         }
+  -                       ],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: [
+  -                           '포지션',
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               children: [
+  -                                 {
+  -                                   '$$typeof': Symbol(react.transitional.element),
+  -                                   _owner: null,
+  -                                   _store: {},
+  -                                   key: null,
+  -                                   props: {
+  -                                     children: '종합',
+  -                                     value: ''
+  -                                   },
+  -                                   type: 'option'
+  -                                 },
+  -                                 [
+  -                                   {
+  -                                     '$$typeof': Symbol(react.transitional.element),
+  -                                     _owner: null,
+  -                                     _store: {},
+  -                                     key: 'TOP',
+  -                                     props: {
+  -                                       children: 'TOP'
+  -                                     },
+  -                                     type: 'option'
+  -                                   },
+  -                                   {
+  -                                     '$$typeof': Symbol(react.transitional.element),
+  -                                     _owner: null,
+  -                                     _store: {},
+  -                                     key: 'JUNGLE',
+  -                                     props: {
+  -                                       children: 'JUNGLE'
+  -                                     },
+  -                                     type: 'option'
+  -                                   },
+  -                                   {
+  -                                     '$$typeof': Symbol(react.transitional.element),
+  -                                     _owner: null,
+  -                                     _store: {},
+  -                                     key: 'MID',
+  -                                     props: {
+  -                                       children: 'MID'
+  -                                     },
+  -                                     type: 'option'
+  -                                   },
+  -                                   {
+  -                                     '$$typeof': Symbol(react.transitional.element),
+  -                                     _owner: null,
+  -                                     _store: {},
+  -                                     key: 'ADC',
+  -                                     props: {
+  -                                       children: 'ADC'
+  -                                     },
+  -                                     type: 'option'
+  -                                   },
+  -                                   {
+  -                                     '$$typeof': Symbol(react.transitional.element),
+  -                                     _owner: null,
+  -                                     _store: {},
+  -                                     key: 'SUPPORT',
+  -                                     props: {
+  -                                       children: 'SUPPORT'
+  -                                     },
+  -                                     type: 'option'
+  -                                   }
+  -                                 ]
+  -                               ],
+  -                               name: 'position'
+  -                             },
+  -                             type: 'select'
+  -                           }
+  -                         ]
+  -                       },
+  -                       type: 'label'
+  -                     },
+  -                     Element {
+  -                       children: [
+  -                         Element {
+  -                           children: [],
+  -                           disabled: false,
+  -                           isConnected: true,
+  -                           props: {
+  -                             max: 1000,
+  -                             min: -1000,
+  -                             name: 'deltaBp',
+  -                             required: true,
+  -                             type: 'number'
+  -                           },
+  -                           type: 'input'
+  -                         }
+  -                       ],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: [
+  -                           '조정값(bp)',
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               max: 1000,
+  -                               min: -1000,
+  -                               name: 'deltaBp',
+  -                               required: true,
+  -                               type: 'number'
+  -                             },
+  -                             type: 'input'
+  -                           }
+  -                         ]
+  -                       },
+  -                       type: 'label'
+  -                     },
+  -                     Element {
+  -                       children: [
+  -                         Element {
+  -                           children: [],
+  -                           disabled: false,
+  -                           isConnected: true,
+  -                           props: {
+  -                             name: 'reasonCode',
+  -                             pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                             required: true
+  -                           },
+  -                           type: 'input'
+  -                         }
+  -                       ],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: [
+  -                           '사유 코드',
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               name: 'reasonCode',
+  -                               pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                               required: true
+  -                             },
+  -                             type: 'input'
+  -                           }
+  -                         ]
+  -                       },
+  -                       type: 'label'
+  -                     },
+  -                     Element {
+  -                       children: [
+  -                         Element {
+  -                           children: [],
+  -                           disabled: false,
+  -                           isConnected: true,
+  -                           props: {
+  -                             maxLength: 300,
+  -                             name: 'publicNote',
+  -                             required: true
+  -                           },
+  -                           type: 'input'
+  -                         }
+  -                       ],
+  -                       disabled: false,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: [
+  -                           '공개 설명',
+  -                           {
+  -                             '$$typeof': Symbol(react.transitional.element),
+  -                             _owner: null,
+  -                             _store: {},
+  -                             key: null,
+  -                             props: {
+  -                               maxLength: 300,
+  -                               name: 'publicNote',
+  -                               required: true
+  -                             },
+  -                             type: 'input'
+  -                           }
+  -                         ],
+  -                         className: 'note'
+  -                       },
+  -                       type: 'label'
+  -                     },
+  -                     Element {
+  -                       children: [],
+  -                       disabled: true,
+  -                       isConnected: true,
+  -                       props: {
+  -                         children: '조정 원장 추가',
+  -                         disabled: true,
+  -                         type: 'submit'
+  -                       },
+  -                       type: 'button'
+  -                     }
+  -                   ],
+  -                   disabled: true,
+  -                   isConnected: true,
+  -                   props: {
+  -                     'aria-label': 'MMR 수동 조정',
+  -                     children: [
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: [
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: null,
+  -                               props: {
+  -                                 children: '플레이어'
+  -                               },
+  -                               type: 'span'
+  -                             },
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: null,
+  -                               props: {
+  -                                 ariaLabel: 'MMR 수동 조정 플레이어',
+  -                                 onChange: [Function (anonymous)],
+  -                                 options: [],
+  -                                 placeholder: '닉네임 또는 Riot ID 검색',
+  -                                 remoteEndpoint: '/api/admin/matches/editor-options/players',
+  -                                 value: ''
+  -                               },
+  -                               type: [Function: BoundedPicker]
+  -                             }
+  -                           ]
+  -                         },
+  -                         type: 'label'
+  -                       },
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: [
+  -                             '포지션',
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: null,
+  -                               props: {
+  -                                 children: [
+  -                                   {
+  -                                     '$$typeof': Symbol(react.transitional.element),
+  -                                     _owner: null,
+  -                                     _store: {},
+  -                                     key: null,
+  -                                     props: {
+  -                                       children: '종합',
+  -                                       value: ''
+  -                                     },
+  -                                     type: 'option'
+  -                                   },
+  -                                   [
+  -                                     {
+  -                                       '$$typeof': Symbol(react.transitional.element),
+  -                                       _owner: null,
+  -                                       _store: {},
+  -                                       key: 'TOP',
+  -                                       props: {
+  -                                         children: 'TOP'
+  -                                       },
+  -                                       type: 'option'
+  -                                     },
+  -                                     {
+  -                                       '$$typeof': Symbol(react.transitional.element),
+  -                                       _owner: null,
+  -                                       _store: {},
+  -                                       key: 'JUNGLE',
+  -                                       props: {
+  -                                         children: 'JUNGLE'
+  -                                       },
+  -                                       type: 'option'
+  -                                     },
+  -                                     {
+  -                                       '$$typeof': Symbol(react.transitional.element),
+  -                                       _owner: null,
+  -                                       _store: {},
+  -                                       key: 'MID',
+  -                                       props: {
+  -                                         children: 'MID'
+  -                                       },
+  -                                       type: 'option'
+  -                                     },
+  -                                     {
+  -                                       '$$typeof': Symbol(react.transitional.element),
+  -                                       _owner: null,
+  -                                       _store: {},
+  -                                       key: 'ADC',
+  -                                       props: {
+  -                                         children: 'ADC'
+  -                                       },
+  -                                       type: 'option'
+  -                                     },
+  -                                     {
+  -                                       '$$typeof': Symbol(react.transitional.element),
+  -                                       _owner: null,
+  -                                       _store: {},
+  -                                       key: 'SUPPORT',
+  -                                       props: {
+  -                                         children: 'SUPPORT'
+  -                                       },
+  -                                       type: 'option'
+  -                                     }
+  -                                   ]
+  -                                 ],
+  -                                 name: 'position'
+  -                               },
+  -                               type: 'select'
+  -                             }
+  -                           ]
+  -                         },
+  -                         type: 'label'
+  -                       },
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: [
+  -                             '조정값(bp)',
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: null,
+  -                               props: {
+  -                                 max: 1000,
+  -                                 min: -1000,
+  -                                 name: 'deltaBp',
+  -                                 required: true,
+  -                                 type: 'number'
+  -                               },
+  -                               type: 'input'
+  -                             }
+  -                           ]
+  -                         },
+  -                         type: 'label'
+  -                       },
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: [
+  -                             '사유 코드',
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: null,
+  -                               props: {
+  -                                 name: 'reasonCode',
+  -                                 pattern: '[A-Za-z][A-Za-z0-9_]{0,63}',
+  -                                 required: true
+  -                               },
+  -                               type: 'input'
+  -                             }
+  -                           ]
+  -                         },
+  -                         type: 'label'
+  -                       },
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: [
+  -                             '공개 설명',
+  -                             {
+  -                               '$$typeof': Symbol(react.transitional.element),
+  -                               _owner: null,
+  -                               _store: {},
+  -                               key: null,
+  -                               props: {
+  -                                 maxLength: 300,
+  -                                 name: 'publicNote',
+  -                                 required: true
+  -                               },
+  -                               type: 'input'
+  -                             }
+  -                           ],
+  -                           className: 'note'
+  -                         },
+  -                         type: 'label'
+  -                       },
+  -                       {
+  -                         '$$typeof': Symbol(react.transitional.element),
+  -                         _owner: null,
+  -                         _store: {},
+  -                         key: null,
+  -                         props: {
+  -                           children: '조정 원장 추가',
+  -                           disabled: true,
+  -                           type: 'submit'
+  -                         },
+  -                         type: 'button'
+  -                       }
+  -                     ],
+  -                     className: 'adjustmentFields',
+  -                     disabled: true
+  -                   },
+  -                   type: 'fieldset'
+  -                 }
+  -               ],
+  -               disabled: false,
+  -               isConnected: true,
+  -               props: [Circular *2],
+  -               type: 'form'
+  -             }
+  -           }
+  -         },
+  -         type: 'form'
+  -       },
+  -       null,
+  -       null,
+  -       null,
+  -       null,
+  -       {
+  -         '$$typeof': Symbol(react.transitional.element),
+  -         _owner: null,
+  -         _store: {},
+  -         key: null,
+  -         props: {
+  -           'aria-live': 'polite',
+  -           children: '처리 중…',
+  -           role: 'status'
+  -         },
+  -         type: 'p'
+  -       },
+  -       null
+  -     ],
+  -     className: 'actions'
+  -   },
+  -   type: 'section'
+  - }
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/mmr-admin-recovery.test.mjs:302:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: [Element],
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

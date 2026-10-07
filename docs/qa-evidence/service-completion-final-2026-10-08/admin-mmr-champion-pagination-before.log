@@ -1,0 +1,97 @@
+✖ MMR players retain query, position and page size across page navigation and show the score used for ordering (26.2532ms)
+✖ MMR review pagination uses its independent query contract and detail close retains the current page (29.8154ms)
+✖ MMR invalid and duplicated queries do not silently display an unrelated first page; empty pages recover within their tab (16.802ms)
+✖ champion previous and next retain search, status and size, while edited filters reset to page one (10.9595ms)
+✖ champion invalid, unavailable, unmatched and out-of-range pages each have a valid recovery (8.7773ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 450.7031
+
+✖ failing tests:
+
+test at tests\admin-mmr-champion-pagination.test.mjs:66:1
+✖ MMR players retain query, position and page size across page navigation and show the score used for ordering (26.2532ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /76\.25/u. Input:
+  
+  '<main class="page"><header class="hero"><div><h1>MMR 관리</h1></div></header><nav class="tabs" aria-label="MMR 관리자 탭"><a href="/admin/balance-ai">요약</a><a href="/admin/balance-ai?tab=players" aria-current="page">플레이어</a><a href="/admin/balance-ai?tab=reviews">조정 이력</a></nav><section class="summary"><article><span>generation</span><strong>3</strong></article><article><span>경기 / 게임</span><strong>5 / 10</strong></article><article><span>독립 반영 대기</span><strong>0</strong></article><article><span>수동 조정</span><strong>31</strong></article></section><section class="list" data-mmr-state="players"><header><h2> 현재 플레이어 프로필</h2></header><article><div><a href="/admin/players/synthetic-11?tab=balance"><strong>합성 이름 11</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-12?tab=balance"><strong>합성 이름 12</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-13?tab=balance"><strong>합성 이름 13</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-14?tab=balance"><strong>합성 이름 14</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-15?tab=balance"><strong>합성 이름 15</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-16?tab=balance"><strong>합성 이름 16</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-17?tab=balance"><strong>합성 이름 17</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-18?tab=balance"><strong>합성 이름 18</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-19?tab=balance"><strong>합성 이름 19</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-20?tab=balance"><strong>합성 이름 20</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article></section></main>'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-mmr-champion-pagination.test.mjs:68:50)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<main class="page"><header class="hero"><div><h1>MMR 관리</h1></div></header><nav class="tabs" aria-label="MMR 관리자 탭"><a href="/admin/balance-ai">요약</a><a href="/admin/balance-ai?tab=players" aria-current="page">플레이어</a><a href="/admin/balance-ai?tab=reviews">조정 이력</a></nav><section class="summary"><article><span>generation</span><strong>3</strong></article><article><span>경기 / 게임</span><strong>5 / 10</strong></article><article><span>독립 반영 대기</span><strong>0</strong></article><article><span>수동 조정</span><strong>31</strong></article></section><section class="list" data-mmr-state="players"><header><h2> 현재 플레이어 프로필</h2></header><article><div><a href="/admin/players/synthetic-11?tab=balance"><strong>합성 이름 11</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-12?tab=balance"><strong>합성 이름 12</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-13?tab=balance"><strong>합성 이름 13</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-14?tab=balance"><strong>합성 이름 14</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-15?tab=balance"><strong>합성 이름 15</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-16?tab=balance"><strong>합성 이름 16</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-17?tab=balance"><strong>합성 이름 17</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-18?tab=balance"><strong>합성 이름 18</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-19?tab=balance"><strong>합성 이름 19</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article><article><div><a href="/admin/players/synthetic-20?tab=balance"><strong>합성 이름 20</strong></a><small>Synthetic#QA</small></div><b>53.24</b><div><span>신뢰도 80%</span><p>표본 20</p></div></article></section></main>',
+    expected: /76\.25/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\admin-mmr-champion-pagination.test.mjs:82:1
+✖ MMR review pagination uses its independent query contract and detail close retains the current page (29.8154ms)
+  AssertionError [ERR_ASSERTION]: 이전
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-mmr-champion-pagination.test.mjs:86:53)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-mmr-champion-pagination.test.mjs:96:1
+✖ MMR invalid and duplicated queries do not silently display an unrelated first page; empty pages recover within their tab (16.802ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-mmr-champion-pagination.test.mjs:98:62)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-mmr-champion-pagination.test.mjs:112:1
+✖ champion previous and next retain search, status and size, while edited filters reset to page one (10.9595ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  null !== '합성 & 키'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-mmr-champion-pagination.test.mjs:118:44)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: '합성 & 키',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\admin-mmr-champion-pagination.test.mjs:124:1
+✖ champion invalid, unavailable, unmatched and out-of-range pages each have a valid recovery (8.7773ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /목록 조건을 확인/u. Input:
+  
+  '<main class="page"><header class="header"><div><h1>챔피언 관리</h1></div><a href="/admin/champions/new"> 새 챔피언</a></header><form class="filters" action="/admin/champions"><label>검색<input maxLength="80" placeholder="이름 또는 고정 키" name="q" value=""/></label><label>상태<select name="status"><option value="" selected="">전체</option><option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option></select></label><input type="hidden" name="pageSize" value="30"/><button type="submit" class="submit">적용</button></form><section class="state" role="alert"><h2>챔피언 목록을 불러오지 못했습니다.</h2></section></main>'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-mmr-champion-pagination.test.mjs:126:92)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<main class="page"><header class="header"><div><h1>챔피언 관리</h1></div><a href="/admin/champions/new"> 새 챔피언</a></header><form class="filters" action="/admin/champions"><label>검색<input maxLength="80" placeholder="이름 또는 고정 키" name="q" value=""/></label><label>상태<select name="status"><option value="" selected="">전체</option><option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option></select></label><input type="hidden" name="pageSize" value="30"/><button type="submit" class="submit">적용</button></form><section class="state" role="alert"><h2>챔피언 목록을 불러오지 못했습니다.</h2></section></main>',
+    expected: /목록 조건을 확인/u,
+    operator: 'match',
+    diff: 'simple'
+  }

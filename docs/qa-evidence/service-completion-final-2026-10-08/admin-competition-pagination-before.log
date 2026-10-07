@@ -1,0 +1,214 @@
+✖ event administrators can reach records 13–25 and return without losing filters (171.4649ms)
+✖ event search keeps page size, starts at page one and retains canonical filter values (76.1172ms)
+✖ event out-of-range empty page returns to the same filtered first page (68.277ms)
+✖ event empty filtered and initial states differ, and failed loads can retry the same query (59.7725ms)
+✖ event invalid pagination avoids accidental unfiltered reads and provides recovery (62.5193ms)
+✖ event pagination never emits a page outside the existing parser limit (50.9779ms)
+✖ destruction administrators can reach records 13–25 and return without losing filters (59.6376ms)
+✖ destruction search keeps page size, starts at page one and retains canonical filter values (61.7241ms)
+✖ destruction out-of-range empty page returns to the same filtered first page (47.4316ms)
+✖ destruction empty filtered and initial states differ, and failed loads can retry the same query (58.4544ms)
+✖ destruction invalid pagination avoids accidental unfiltered reads and provides recovery (45.7868ms)
+✖ destruction pagination never emits a page outside the existing parser limit (55.5116ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 0
+ℹ fail 12
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1079.7444
+
+✖ failing tests:
+
+test at tests\admin-competition-pagination.test.mjs:74:3
+✖ event administrators can reach records 13–25 and return without losing filters (171.4649ms)
+  AssertionError [ERR_ASSERTION]: more than twelve records require a discoverable next-page action
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:79:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:91:3
+✖ event search keeps page size, starts at page one and retains canonical filter values (76.1172ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /<input[^>]*type="hidden"[^>]*name="pageSize"[^>]*value="24"/u. Input:
+  
+  '<form class="filters" action="/admin/progress/event"><label>이름 검색<input maxLength="64" name="q" value="합성 &amp; 오래된 대회"/></label><label>상태<select name="status"><option value="">전체</option><option>PLANNED</option><option>RECRUITING</option><option>TEAM_BUILDING</option><option selected="">IN_PROGRESS</option><option>COMPLETED</option><option>CANCELLED</option></select></label><label>방식<select name="format"><option value="">전체</option><option>POSITION</option><option selected="">ARAM</option></select></label><button type="submit">조회</button></form>'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:94:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<form class="filters" action="/admin/progress/event"><label>이름 검색<input maxLength="64" name="q" value="합성 &amp; 오래된 대회"/></label><label>상태<select name="status"><option value="">전체</option><option>PLANNED</option><option>RECRUITING</option><option>TEAM_BUILDING</option><option selected="">IN_PROGRESS</option><option>COMPLETED</option><option>CANCELLED</option></select></label><label>방식<select name="format"><option value="">전체</option><option>POSITION</option><option selected="">ARAM</option></select></label><button type="submit">조회</button></form>',
+    expected: /<input[^>]*type="hidden"[^>]*name="pageSize"[^>]*value="24"/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:103:3
+✖ event out-of-range empty page returns to the same filtered first page (68.277ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(html.includes("현재 페이지에 대회가 없습니다."))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:105:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:112:3
+✖ event empty filtered and initial states differ, and failed loads can retry the same query (59.7725ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(filteredHtml.includes(`조건에 맞는 ${config.label}이 없습니다.`))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:115:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:125:3
+✖ event invalid pagination avoids accidental unfiltered reads and provides recovery (62.5193ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(html.includes("목록 조건을 확인해 주세요."))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:128:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:134:3
+✖ event pagination never emits a page outside the existing parser limit (50.9779ms)
+  AssertionError [ERR_ASSERTION]: the highest accepted page must have a reachable previous page
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:138:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:74:3
+✖ destruction administrators can reach records 13–25 and return without losing filters (59.6376ms)
+  AssertionError [ERR_ASSERTION]: more than twelve records require a discoverable next-page action
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:79:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:91:3
+✖ destruction search keeps page size, starts at page one and retains canonical filter values (61.7241ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /<input[^>]*type="hidden"[^>]*name="pageSize"[^>]*value="24"/u. Input:
+  
+  '<form class="filters" action="/admin/progress/destruction"><label>이름 검색<input maxLength="64" name="q" value="합성 &amp; 오래된 대회"/></label><label>상태<select name="status"><option value="">전체</option><option value="PLANNED">대회 준비</option><option value="RECRUITING">참가 모집</option><option value="TEAM_BUILDING">주장·포인트 확정</option><option value="AUCTION">선수 경매</option><option value="PRELIMINARY">예선</option><option value="TOURNAMENT" selected="">본선</option><option value="COMPLETED">종료</option><option value="CANCELLED">취소</option></select></label><label>예선 방식<select name="format"><option value="">전체</option><option value="FULL_ROUND_ROBIN_BO3">전체 풀리그 · 3판 2선승</option><option value="FULL_ROUND_ROBIN_BO1">전체 풀리그 · 단판</option><option value="GROUP_ROUND_ROBIN_BO3">조별 풀리그 · 3판 2선승</option><option value="GROUP_ROUND_ROBIN_BO1">조별 풀리그 · 단판</option><option value="SWISS_ROUND_BO3">스위스 라운드 · 3판 2선승</option><option value="SWISS_ROUND_BO1" selected="">스위스 라운드 · 단판</option><option value="RANDOM_ROUNDS_BO3">랜덤 라운드 · 3판 2선승</option><option value="RANDOM_ROUNDS_BO1">랜덤 라운드 · 단판</option></select></label><button type="submit">조회</button></form>'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:94:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<form class="filters" action="/admin/progress/destruction"><label>이름 검색<input maxLength="64" name="q" value="합성 &amp; 오래된 대회"/></label><label>상태<select name="status"><option value="">전체</option><option value="PLANNED">대회 준비</option><option value="RECRUITING">참가 모집</option><option value="TEAM_BUILDING">주장·포인트 확정</option><option value="AUCTION">선수 경매</option><option value="PRELIMINARY">예선</option><option value="TOURNAMENT" selected="">본선</option><option value="COMPLETED">종료</option><option value="CANCELLED">취소</option></select></label><label>예선 방식<select name="format"><option value="">전체</option><option value="FULL_ROUND_ROBIN_BO3">전체 풀리그 · 3판 2선승</option><option value="FULL_ROUND_ROBIN_BO1">전체 풀리그 · 단판</option><option value="GROUP_ROUND_ROBIN_BO3">조별 풀리그 · 3판 2선승</option><option value="GROUP_ROUND_ROBIN_BO1">조별 풀리그 · 단판</option><option value="SWISS_ROUND_BO3">스위스 라운드 · 3판 2선승</option><option value="SWISS_ROUND_BO1" selected="">스위스 라운드 · 단판</option><option value="RANDOM_ROUNDS_BO3">랜덤 라운드 · 3판 2선승</option><option value="RANDOM_ROUNDS_BO1">랜덤 라운드 · 단판</option></select></label><button type="submit">조회</button></form>',
+    expected: /<input[^>]*type="hidden"[^>]*name="pageSize"[^>]*value="24"/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:103:3
+✖ destruction out-of-range empty page returns to the same filtered first page (47.4316ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(html.includes("현재 페이지에 대회가 없습니다."))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:105:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:112:3
+✖ destruction empty filtered and initial states differ, and failed loads can retry the same query (58.4544ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(filteredHtml.includes(`조건에 맞는 ${config.label}이 없습니다.`))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:115:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:125:3
+✖ destruction invalid pagination avoids accidental unfiltered reads and provides recovery (45.7868ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(html.includes("목록 조건을 확인해 주세요."))
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:128:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\admin-competition-pagination.test.mjs:134:3
+✖ destruction pagination never emits a page outside the existing parser limit (55.5116ms)
+  AssertionError [ERR_ASSERTION]: the highest accepted page must have a reachable previous page
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/admin-competition-pagination.test.mjs:138:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

@@ -1,0 +1,63 @@
+✖ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (238.5967ms)
+✖ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (90.8567ms)
+✔ the connected admin detail already uses the same Korean stages and format without changing canonical stage links (137.1551ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 1
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 752.5475
+
+✖ failing tests:
+
+test at tests\destruction-admin-display.test.mjs:84:1
+✖ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (238.5967ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      '전체',
+  +   'PLANNED',
+  +   'RECRUITING',
+  +   'TEAM_BUILDING',
+  +   'AUCTION',
+  +   'PRELIMINARY',
+  +   'TOURNAMENT',
+  +   'COMPLETED',
+  +   'CANCELLED'
+  -   '대회 준비',
+  -   '참가 모집',
+  -   '주장·포인트 확정',
+  -   '선수 경매',
+  -   '예선',
+  -   '본선',
+  -   '종료',
+  -   '취소'
+    ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-admin-display.test.mjs:88:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '전체', 'PLANNED', 'RECRUITING', 'TEAM_BUILDING', 'AUCTION', 'PRELIMINARY', 'TOURNAMENT', 'COMPLETED', 'CANCELLED' ],
+    expected: [ '전체', '대회 준비', '참가 모집', '주장·포인트 확정', '선수 경매', '예선', '본선', '종료', '취소' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\destruction-admin-display.test.mjs:107:1
+✖ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (90.8567ms)
+  AssertionError [ERR_ASSERTION]: card 1 needs readable format and status
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-admin-display.test.mjs:115:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

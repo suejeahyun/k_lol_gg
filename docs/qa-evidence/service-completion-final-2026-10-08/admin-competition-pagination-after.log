@@ -1,0 +1,29 @@
+✔ event administrators can reach records 13–25 and return without losing filters (224.5541ms)
+✔ event search keeps page size, starts at page one and retains canonical filter values (101.6939ms)
+✔ event out-of-range empty page returns to the same filtered first page (73.4724ms)
+✔ event empty filtered and initial states differ, and failed loads can retry the same query (196.0128ms)
+✔ event invalid pagination avoids accidental unfiltered reads and provides recovery (296.0067ms)
+✔ event pagination never emits a page outside the existing parser limit (51.6241ms)
+✔ destruction administrators can reach records 13–25 and return without losing filters (53.3282ms)
+✔ destruction search keeps page size, starts at page one and retains canonical filter values (53.2917ms)
+✔ destruction out-of-range empty page returns to the same filtered first page (44.6559ms)
+✔ destruction empty filtered and initial states differ, and failed loads can retry the same query (143.5636ms)
+✔ destruction invalid pagination avoids accidental unfiltered reads and provides recovery (236.4668ms)
+✔ destruction pagination never emits a page outside the existing parser limit (52.2476ms)
+✔ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (263.7066ms)
+✔ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (119.0772ms)
+✔ the connected admin detail already uses the same Korean stages and format without changing canonical stage links (147.8764ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.5184ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (3.7358ms)
+✔ API source keeps account owner and ADMIN boundaries separate (2.1303ms)
+✔ public competition pages expose list/detail/application states without administrator controls (3.9054ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (2.922ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (0.8934ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1845.0442

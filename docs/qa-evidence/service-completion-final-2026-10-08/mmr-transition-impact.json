@@ -1,0 +1,221 @@
+{
+  "checkedAt": "2026-10-07T15:56:27.961Z",
+  "mode": "READ_ONLY_PREVIEW_NO_PUBLICATION",
+  "databaseBinding": "Existing production binding previously verified by matching authenticated storage-probe runId; connection details omitted",
+  "snapshot": {
+    "at": "2026-10-07T15:56:24.074Z",
+    "readOnly": true,
+    "isolation": "repeatable read",
+    "endedWith": "ROLLBACK"
+  },
+  "sourceEvidence": {
+    "mapperSha256": "c33b23f04bd950a0b431b9ebfa1f72630c73a44fdf29e89073819a93dc93b522",
+    "canonicalJsonSha256": "db93dfc205930bdd06d3ef4479a7a4776d1e3419f99b3dd0651a93aedc0f116b",
+    "calculatorSha256": "9cf830b0a009aa6a09eadd0e90b9d2c9a1f5721e4882c2d331c2d068b7c7f444",
+    "mapper": "Exact private loadLedger implementation extracted from current repository; SELECT only",
+    "summary": "Actual PostgresMmrRepository.getSummary",
+    "rankOrdering": "ACTIVE profiles only; overall score descending, overall sample descending, playerId ascending; same as repository listPlayers"
+  },
+  "before": {
+    "status": "READY",
+    "generation": 1,
+    "formulaVersion": "V1_INTERNAL_MMR_1",
+    "formulaTransition": "ADMIN_RECALCULATION_REQUIRED",
+    "sourceMatchCount": 42,
+    "sourceGameCount": 91,
+    "sourceAdjustmentCount": 0,
+    "pendingSourceCount": 13,
+    "calculatedAt": "2026-09-07T15:36:32.075Z"
+  },
+  "preview": {
+    "generation": 2,
+    "formulaVersion": "V2_DETERMINISTIC_1",
+    "sourceMatchCount": 47,
+    "sourceGameCount": 104,
+    "sourceAdjustmentCount": 0,
+    "profileCount": 93,
+    "playerMatchResultEventCount": 1040
+  },
+  "coverage": {
+    "beforeProfiles": 81,
+    "afterProfiles": 93,
+    "commonProfiles": 81,
+    "addedProfiles": 12,
+    "removedProfiles": 0,
+    "activeBefore": 79,
+    "activeAfter": 91,
+    "sharedActive": 79
+  },
+  "commonProfileChanges": {
+    "overallScorePoints": {
+      "compared": 81,
+      "changed": 65,
+      "increased": 25,
+      "decreased": 40,
+      "unchanged": 16,
+      "minimum": -10.17,
+      "maximum": 7.39,
+      "mean": -0.188
+    },
+    "sample": {
+      "compared": 81,
+      "changed": 17,
+      "increased": 17,
+      "decreased": 0,
+      "unchanged": 64,
+      "minimum": 0,
+      "maximum": 10,
+      "mean": 0.9259
+    },
+    "confidencePercentagePoints": {
+      "compared": 81,
+      "changed": 39,
+      "increased": 19,
+      "decreased": 20,
+      "unchanged": 42,
+      "minimum": -0.33,
+      "maximum": 26.67,
+      "mean": 1.7619
+    }
+  },
+  "activeRankChanges": {
+    "signConvention": "positive = rank improved; includes effects of newly included players",
+    "compared": 79,
+    "changed": 77,
+    "increased": 7,
+    "decreased": 70,
+    "unchanged": 2,
+    "minimum": -47,
+    "maximum": 32,
+    "mean": -6.8608
+  },
+  "positionChanges": [
+    {
+      "position": "TOP",
+      "scorePoints": {
+        "compared": 81,
+        "changed": 25,
+        "increased": 13,
+        "decreased": 12,
+        "unchanged": 56,
+        "minimum": -10.2,
+        "maximum": 9.75,
+        "mean": 0.1515
+      },
+      "sample": {
+        "compared": 81,
+        "changed": 75,
+        "increased": 1,
+        "decreased": 74,
+        "unchanged": 6,
+        "minimum": -56,
+        "maximum": 1,
+        "mean": -8.7407
+      }
+    },
+    {
+      "position": "JGL",
+      "scorePoints": {
+        "compared": 81,
+        "changed": 24,
+        "increased": 8,
+        "decreased": 16,
+        "unchanged": 57,
+        "minimum": -4.32,
+        "maximum": 2.06,
+        "mean": -0.1332
+      },
+      "sample": {
+        "compared": 81,
+        "changed": 77,
+        "increased": 1,
+        "decreased": 76,
+        "unchanged": 4,
+        "minimum": -50,
+        "maximum": 1,
+        "mean": -8.8148
+      }
+    },
+    {
+      "position": "MID",
+      "scorePoints": {
+        "compared": 81,
+        "changed": 33,
+        "increased": 12,
+        "decreased": 21,
+        "unchanged": 48,
+        "minimum": -6.9,
+        "maximum": 4.76,
+        "mean": -0.1121
+      },
+      "sample": {
+        "compared": 81,
+        "changed": 69,
+        "increased": 2,
+        "decreased": 67,
+        "unchanged": 12,
+        "minimum": -55,
+        "maximum": 1,
+        "mean": -8.8272
+      }
+    },
+    {
+      "position": "ADC",
+      "scorePoints": {
+        "compared": 81,
+        "changed": 28,
+        "increased": 11,
+        "decreased": 17,
+        "unchanged": 53,
+        "minimum": -4.85,
+        "maximum": 6.99,
+        "mean": -0.0128
+      },
+      "sample": {
+        "compared": 81,
+        "changed": 73,
+        "increased": 1,
+        "decreased": 72,
+        "unchanged": 8,
+        "minimum": -58,
+        "maximum": 1,
+        "mean": -8.8519
+      }
+    },
+    {
+      "position": "SUP",
+      "scorePoints": {
+        "compared": 81,
+        "changed": 33,
+        "increased": 11,
+        "decreased": 22,
+        "unchanged": 48,
+        "minimum": -6.71,
+        "maximum": 5,
+        "mean": -0.1416
+      },
+      "sample": {
+        "compared": 81,
+        "changed": 68,
+        "increased": 2,
+        "decreased": 66,
+        "unchanged": 13,
+        "minimum": -50,
+        "maximum": 3,
+        "mean": -8.7778
+      }
+    }
+  ],
+  "verification": {
+    "sameSnapshotSummaryUnchanged": true,
+    "pureReplayDeterministic": true,
+    "operationalMutationCalled": false,
+    "operationalAuthenticationMutated": false,
+    "rawPersonalDataWritten": false
+  },
+  "limitations": [
+    "This preview combines formula change and previously unconsumed published match data; it does not isolate formula-only impact.",
+    "The execution may see later source events; refresh this read-only preview before a delayed approval.",
+    "No new generation or receipt was published. Production still requires actual authorized SUPER_ADMIN command execution."
+  ]
+}

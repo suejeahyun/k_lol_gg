@@ -1,0 +1,17 @@
+✔ discipline reaches records 51–101 and returns without losing the selected classification (97.7061ms)
+✔ logs keeps each ledger's page and filters while requesting only the displayed ledger (32.2922ms)
+✔ log filters reset their own page while preserving the other ledger context (29.8409ms)
+✔ discipline: out-of-range page recovers without calling it an empty data set (10.1843ms)
+✔ discipline: empty, unavailable and error states provide truthful recovery (26.9952ms)
+✔ logs: out-of-range page recovers without calling it an empty data set (13.1089ms)
+✔ logs: empty, unavailable and error states provide truthful recovery (34.4841ms)
+✔ invalid or duplicated queries never start list reads and both pages retain the ADMIN guard (183.6675ms)
+✔ the accepted upper page has a previous action but never emits a page outside the bound (31.638ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 726.5122

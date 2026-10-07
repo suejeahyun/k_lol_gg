@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-07T16:09:25.899Z",
+  "environment": "ISOLATED_LOOPBACK_ONLY",
+  "httpOrigin": "http://127.0.0.1:64377",
+  "databaseLoopbackPort": 64185,
+  "postgresLogSource": ".tmp/postgres-tests/klol-v2-pg-sQM0k9/postgres.log",
+  "publicHttpStatus": 200,
+  "currentSummary": {
+    "status": "READY",
+    "generation": 1,
+    "formulaVersion": "V1_INTERNAL_MMR_1",
+    "formulaTransition": "ADMIN_RECALCULATION_REQUIRED",
+    "sourceMatchCount": 2,
+    "sourceGameCount": 2,
+    "sourceAdjustmentCount": 1,
+    "pendingSourceCount": 0,
+    "calculatedAt": "2026-10-07T16:04:46.725Z"
+  },
+  "actualConstraintErrors": [
+    {
+      "at": "2026-10-08 01:06:34.566 KST",
+      "constraint": "mmr_projection_runs_generation_uidx",
+      "resultGeneration": 2
+    }
+  ],
+  "conclusion": "Local server reported result_generation unique collision, not command receipt key collision. Shared destruction fixture resets GLOBAL to generation 1 after MMR contract leaves generation 1..4 history; the next publish attempts generation 2.",
+  "directDatabaseSelect": {
+    "performed": false,
+    "reason": "Current runner retains a random ephemeral database credential only in process memory; bootstrap password file was deleted and ready artifact omits the connection. No production environment or authentication configuration was used."
+  },
+  "productionAccess": false,
+  "mutations": 0,
+  "rawPersonalDataOrCredentialsRetained": false
+}
