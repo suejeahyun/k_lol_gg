@@ -1,6 +1,6 @@
 # 관리자 표시·MMR 요청 복구 1.0.8 검증·배포
 
-배포 전 기록이다. 현재 운영은1.0.7 source `0716a60bf09654118cc40493481839d75269b3f7`, `dpl_73cLhShUqRnR9WcramzRNwDQRdAv`이다.1.0.8의 source/tag/provider READY와 운영 확인은 완료 후 아래에 기록한다.
+2026-10-07 운영 반영을 확인했다. source `653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6`, tag `service-completion-v1.0.8`, main `dpl_BTfa4hYSa6ZR19K4Lfszsu88Lhr2` READY다. 운영 주소는 https://k-lol-gg.vercel.app 이며 immutable URL은 https://k-lol-5ajghfd47-tjdmswo11-3715s-projects.vercel.app 이다. [provider·health 근거](production-deployment.json).
 
 [문제·전체 기능 원장](README.md), [MMR 회귀](mmr-admin-recovery.md), [이벤트 표시](event-admin-display.md), [독립 재검토](independent-review.md), [이전 빌드 실제 조작 후속](../service-completion-interactions-2026-10-07/browser-journeys.md).
 
@@ -14,9 +14,17 @@
 
 ## 배포·복구
 
-운영 반영은 PENDING이다. 후보 source/READY 검증과 읽기 smoke 후 승격하고, main source/alias/health를 대조한다. 새5xx·관리 작업 차단·권한 회귀·이전 결과를 잘못 완료로 알리는 문제가 확인되면 직전1.0.7 배포 `dpl_73cLhShUqRnR9WcramzRNwDQRdAv`를 재승격하고 health와 영향 경로를 재검증한다. 이번 패치는 API·서버 권한·MMR 공식·migration0047을 변경하지 않는다. 이후 별도 운영 MMR 전환을 실행한다면 웹 배포 복구가 DB 계산 버전을 되돌리는 것은 아니며, 그 시점의 검증된 백업/전진 복구 절차를 별도로 따른다.
+후보 `dpl_CowR2S74wPx37H59eFxo9QFusndk`의 source/READY를 확인하고 [4개 익명 읽기 검사](candidate-http.json) 뒤 운영 승격을 완료했다. branch/main/tag atomic push 후 같은 source의 main READY·canonical alias·health를 확인했다. [운영 HTTP31조건](production-http.json)은 홈 순서·로그인 복귀·MMR·랭킹 집계·익명 권한 경계를 통과했다. 운영 회원의 자료를 시험 변경하지 않았다.
+
+[첫 배포와 복구](deployment-attempts.json): 최초 CLI 요청은 Not authorized로 거절됐다. CLI 로그인·프로젝트 조회·팀 OWNER 권한을 확인한 뒤 같은 팀을 명시한 재시도가 성공했다. 최초 거절의 정확한 provider 원인은 확정하지 않았으며 권한/인증/보호 설정을 바꾸지 않았다. 후보 HTTP 최초 판독은 health curl 프로세스가 끝나기 전에 실행해 상태 값이 없었으므로 실패했고, 실제 exit0 뒤 네 응답을 판독해 통과했다. 제품 실패로 혼동하지 않는다.
+
+[별도 배포 후 재검토](post-deploy-independent.md)는 공개 읽기·로그인 경계를 확인했다. 실제 인증된 관리자 화면 조작을 대신하지 않는다. 기존 실제 UI는 [1.0.7 빌드의 후속 조작](../service-completion-interactions-2026-10-07/browser-journeys.md)에만 기록했다. 새 빌드의 이벤트/MMR 실제 브라우저 렌더·모바일·포커스·저장 조작은 확인창 도구 제한으로 미확인이다.
+
+복구 기준:  새5xx·관리 작업 차단·권한 회귀·이전 결과를 잘못 완료로 알리는 문제가 확인되면 직전1.0.7 배포 `dpl_73cLhShUqRnR9WcramzRNwDQRdAv`를 재승격하고 health와 영향 경로를 재검증한다. 이번 패치는 API·서버 권한·MMR 공식·migration0047을 변경하지 않는다. 이후 별도 운영 MMR 전환을 실행한다면 웹 배포 복구가 DB 계산 버전을 되돌리는 것은 아니며, 그 시점의 검증된 백업/전진 복구 절차를 별도로 따른다.
 
 ## 미완료 조건
+
+배포 후 독립 검사 초기의 홈 제목 기대값과 로컬 CSS 파일명 가정은 QA 오류였다. 실제 운영 HTML이 참조하는 CSS는200이었다. 통합 담당자의 [제목 원인 대조](heading-qa-reconciliation.json)에서 운영 h1은 `우리 같이<span>롤하자~</span>`이며 소스와 정확히 일치한다. JSX 개행의 공백 제거와 span의 시각적 줄 구분을 단일 문자열 공백으로 가정한 검사였다. 초기 실패 결과를 보존하며, 확인한 원인을 제품 변경이나 기대값만 변경한 테스트로 숨기지 않는다. 실제 브라우저 배치 검증과는 별도다.
 
 운영 사용자가 로그인한 실제 역할은 ADMIN으로 확인되어 SUPER_ADMIN 전환은 미실행이다. 임의 권한 승격·세션 위조·운영 데이터 테스트를 하지 않았다. 최신 영향 분석과 백업 runner는 준비했지만 인증 전에 재실행하지 않았다.
 

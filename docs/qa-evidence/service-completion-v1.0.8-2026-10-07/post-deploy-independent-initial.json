@@ -1,0 +1,90 @@
+{
+  "checkedAt": "2026-10-07T13:54:43.139Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "source": "653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6",
+  "sourceEvidence": "Coordinator-provided release source, cross-checked against local candidate provider metadata; canonical responses themselves do not disclose a commit SHA.",
+  "candidate": {
+    "id": "dpl_CowR2S74wPx37H59eFxo9QFusndk",
+    "readyState": "READY",
+    "source": "653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6"
+  },
+  "canonicalPromotionEvidence": "Coordinator reports candidate promoted; final Git main deployment metadata is recorded separately by coordinator.",
+  "requestCount": 5,
+  "methods": [
+    "GET"
+  ],
+  "credentialUsed": false,
+  "rawResponsesPersisted": false,
+  "passed": false,
+  "rows": [
+    {
+      "path": "/api/health",
+      "checkedAt": "2026-10-07T13:54:40.554Z",
+      "status": 200,
+      "checks": {
+        "http200": true,
+        "ready": true,
+        "noStore": true
+      },
+      "passed": true
+    },
+    {
+      "path": "/",
+      "checkedAt": "2026-10-07T13:54:41.550Z",
+      "status": 200,
+      "checks": {
+        "http200": true,
+        "publicHomeHeading": false,
+        "noServerErrorMarker": true
+      },
+      "passed": false
+    },
+    {
+      "path": "/admin/balance-ai",
+      "checkedAt": "2026-10-07T13:54:41.932Z",
+      "status": 307,
+      "checks": {
+        "guardedLoginRedirect": true,
+        "preservedMmrDestination": true,
+        "noMutationForm": true,
+        "noServerErrorMarker": true
+      },
+      "passed": true,
+      "redirectMode": "HTTP_LOCATION",
+      "expectedDestination": "/admin/login?next=%2Fadmin%2Fbalance-ai"
+    },
+    {
+      "path": "/api/admin/balance-ai/summary",
+      "checkedAt": "2026-10-07T13:54:42.699Z",
+      "status": 401,
+      "checks": {
+        "unauthorized401": true,
+        "noStore": true,
+        "noSummaryData": true,
+        "noGenerationData": true
+      },
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/3_eqmney3vv1n.css",
+      "checkedAt": "2026-10-07T13:54:43.139Z",
+      "status": 404,
+      "checks": {
+        "http200": false,
+        "cssContentType": false,
+        "changedFieldsetClass": false,
+        "subgridRule": false,
+        "exactLocalBuildBytes": false
+      },
+      "passed": false,
+      "assetSha256": "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5",
+      "localBuildSha256": "29dcf79b9c42f42f387134af786692389517b0d41ef7f6d7c8b5bbee4c42ad60"
+    }
+  ],
+  "limitations": [
+    "No authenticated ADMIN/SUPER_ADMIN page or mutation was exercised.",
+    "No hydrated browser DOM, keyboard, mobile layout, relogin popup or refresh interaction was exercised.",
+    "Served CSS equality confirms the changed asset is accessible, not authenticated form rendering or canonical commit identity.",
+    "The real MMR formula transition and latest production backup/restore remain separate pending work."
+  ]
+}

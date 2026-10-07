@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-07T13:51:19.620Z",
+  "source": "653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6",
+  "first": {
+    "exit": 1,
+    "message": "Not authorized",
+    "deploymentIdReturned": false
+  },
+  "readOnlyDiagnosis": {
+    "cliLogin": true,
+    "projectReadable": true,
+    "teamMembership": "OWNER",
+    "membershipConfirmed": true
+  },
+  "retry": {
+    "exit": 0,
+    "scopeExplicit": true,
+    "id": "dpl_CowR2S74wPx37H59eFxo9QFusndk",
+    "stateObserved": "BUILDING"
+  },
+  "note": "Exact provider cause of first authorization failure is not established. Same project/team/source and explicit scope succeeded; no role, credential or protection change. Debug log remains private."
+}

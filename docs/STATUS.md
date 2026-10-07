@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-07 관리자 표시·MMR 요청 복구 1.0.8 운영 반영
+
+source `653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6`, tag `service-completion-v1.0.8`, main `dpl_BTfa4hYSa6ZR19K4Lfszsu88Lhr2` READY·canonical alias·health를 확인했다. 이벤트 단계/포지션/출처/상태 표시, MMR 성공 응답 검증·같은 요청 복구·즉시 중복 차단·새 계산 버전 확인 잠금을 수정했다. 서버 권한·API·공식·migration0047·홈 순서·생성 이미지 테마는 유지한다.
+
+필수 check613계약/1068단위+skip1·새 격리 DB·108페이지179HTTP조건·운영31HTTP조건이 통과했다. 별도 재검토에서 발견한 응답 버전 경계를 수정 후 동일 회귀로 확인했다. [전체386경로·1145조작 위치 원장](qa-evidence/service-completion-v1.0.8-2026-10-07/README.md), [배포·검증·복구](qa-evidence/service-completion-v1.0.8-2026-10-07/production.md). 구조/HTTP/대역 검사를 실제 모든 버튼의 클릭으로 세지 않는다.
+
+실제 미디어·이벤트 설정·해소 과제 승인·저장 팀에서 경기 검토안 저장까지의 후속 조작은1.0.7 빌드로 확인했다. native confirm 도구 재정지 때문에 최종 경기 공개/취소·재신청 및 새1.0.8 실제 UI 검증은 미완료다. 운영 로그인은 ADMIN으로 확인되어 SUPER_ADMIN MMR 전환·최신 백업 재실행은 미실행이며 임의 권한 승격을 하지 않았다. 카카오/RSO/실기기·실제 OCR/외부 복원 등은 별도 조건으로 유지한다. 전체 완료를 선언하지 않는다.
+
 ## 2026-10-07 홈 이름·Riot 진단 1.0.7 운영 반영
 
 source `0716a60bf09654118cc40493481839d75269b3f7`, tag `service-completion-v1.0.7`, main `dpl_73cLhShUqRnR9WcramzRNwDQRdAv` READY·canonical alias·health를 확인했다. 홈 선수명 말줄임, Riot 부분 성공 원인 누락, 응답 본문 timeout 오분류, 실제 계정 연결 방식의 이름을 수정했다. 기존 홈 순서·랭킹 조작·생성 이미지 테마·migration0047 유지.

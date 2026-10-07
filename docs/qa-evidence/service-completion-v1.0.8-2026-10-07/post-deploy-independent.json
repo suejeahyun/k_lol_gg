@@ -1,0 +1,106 @@
+{
+  "checkedAt": "2026-10-07T13:56:03.041Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "source": "653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6",
+  "sourceEvidence": "Coordinator-provided source and final main deployment, independently cross-checked against locally saved provider metadata. HTTP responses do not expose commit SHA.",
+  "deployment": {
+    "id": "dpl_BTfa4hYSa6ZR19K4Lfszsu88Lhr2",
+    "readyState": "READY",
+    "target": "production",
+    "source": "653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6",
+    "canonicalAliasListed": true,
+    "readyAt": "2026-10-07T13:54:26.070Z"
+  },
+  "requestCount": 7,
+  "initialGetCount": 5,
+  "correctiveGetCount": 2,
+  "methods": [
+    "GET"
+  ],
+  "credentialUsed": false,
+  "rawResponsesPersisted": false,
+  "passed": false,
+  "rows": [
+    {
+      "path": "/api/health",
+      "checkedAt": "2026-10-07T13:54:40.554Z",
+      "status": 200,
+      "checks": {
+        "http200": true,
+        "ready": true,
+        "noStore": true
+      },
+      "passed": true
+    },
+    {
+      "path": "/admin/balance-ai",
+      "checkedAt": "2026-10-07T13:54:41.932Z",
+      "status": 307,
+      "checks": {
+        "guardedLoginRedirect": true,
+        "preservedMmrDestination": true,
+        "noMutationForm": true,
+        "noServerErrorMarker": true
+      },
+      "passed": true,
+      "redirectMode": "HTTP_LOCATION",
+      "expectedDestination": "/admin/login?next=%2Fadmin%2Fbalance-ai"
+    },
+    {
+      "path": "/api/admin/balance-ai/summary",
+      "checkedAt": "2026-10-07T13:54:42.699Z",
+      "status": 401,
+      "checks": {
+        "unauthorized401": true,
+        "noStore": true,
+        "noSummaryData": true,
+        "noGenerationData": true
+      },
+      "passed": true
+    },
+    {
+      "path": "/",
+      "checkedAt": "2026-10-07T13:56:03.024Z",
+      "status": 200,
+      "checks": {
+        "http200": true,
+        "normalizedRenderedHeading": false,
+        "noServerErrorMarker": true
+      },
+      "passed": false,
+      "headingCheckScope": "Server-rendered h1 markup with comments/tags removed and whitespace normalized; not hydrated browser DOM."
+    },
+    {
+      "path": "/_next/static/immutable/chunks/3yhtret3ggg30.css",
+      "checkedAt": "2026-10-07T13:56:03.040Z",
+      "status": 200,
+      "checks": {
+        "http200": true,
+        "cssContentType": true,
+        "nonemptyCss": true,
+        "advertisedByCurrentCanonicalHtml": true
+      },
+      "passed": true,
+      "assetSha256": "f631f4f1d25d6e6c1be178d4110a66fa3f7ae344fe4b47e230432fe9ff57ce5e"
+    }
+  ],
+  "initialProbeEvidence": "post-deploy-independent-initial.json",
+  "initialQaAssumptions": [
+    "The initial contiguous raw-HTML heading check ignored the source h1 span and trailing tilde. A subsequent normalized h1 check still did not match; the response body was not retained, so semantic heading rendering remains unconfirmed and is not marked passed.",
+    "The initial CSS URL was a local build filename, not advertised by canonical HTML; its 404 is not evidence of a broken published asset. The correction fetched one stylesheet advertised by canonical HTML."
+  ],
+  "limitations": [
+    "The normalized homepage h1 assertion did not match. HTTP 200 and no server error marker were observed, but this probe does not establish the rendered heading text or a product defect.",
+    "No authenticated ADMIN/SUPER_ADMIN MMR or event page, UI handler, or production mutation was exercised.",
+    "The served stylesheet is a public homepage asset; changed authenticated MMR form CSS/rendering remains unverified by this probe.",
+    "No hydrated browser DOM, mobile layout, keyboard, relogin popup or refresh interaction was exercised; the shared browser tool remains blocked by a native confirmation dialog.",
+    "Real MMR formula transition and the latest production backup/restore remain separate pending work."
+  ],
+  "status": "PARTIAL",
+  "coordinatorReconciliation": {
+    "evidence": "heading-qa-reconciliation.json",
+    "scope": "A separate coordinator GET confirmed source-matching h1 markup; independent failed assertions remain preserved.",
+    "headingProductDefectConfirmed": false,
+    "qaHeadingAssumptionResolved": true
+  }
+}

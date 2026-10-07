@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-07 관리자 표시·MMR 요청 복구 1.0.8 운영 반영**: 이벤트 단계·참가자 표시를 한국어로 정리하고 MMR 응답 확인·동일 요청 재시도·중복 전송/갱신 중 잠금을 보완했습니다. [전체 기능 원장](docs/qa-evidence/service-completion-v1.0.8-2026-10-07/README.md), [배포·검증·미확인 조건](docs/qa-evidence/service-completion-v1.0.8-2026-10-07/production.md), [변경 안내](docs/patch-notes/2026-10-07-service-completion-1.0.8.md). 실제 최고관리자 인증·확인창 뒤 조작·외부 계정/기기가 남아 전체 완료는 보류입니다.
+
 **2026-10-07 홈 이름·Riot 진단 1.0.7 운영 반영**: 좁은 화면의 긴 선수명, Riot 부분 동기화의 원인 기록, 응답 시간 초과 분류와 실제 연결 방식 표시를 보완했습니다. [현재 전체 원장](docs/qa-evidence/service-completion-v1.0.7-2026-10-07/README.md), [배포·검증·미확인 조건](docs/qa-evidence/service-completion-v1.0.7-2026-10-07/production.md), [변경 안내](docs/patch-notes/2026-10-07-service-completion-1.0.7.md). 전체 완료 판정은 실제 최고관리자 인증·브라우저 조작 제약·외부 기기/계정 확인과 분리합니다.
 
 **2026-10-07 서비스 이용·관리 흐름 1.0.6 운영 반영**: 미디어 페이지 이동·전체 필터, 경기 검토 저장/재시도·현재 팀 명단 불러오기, 준비 중 이벤트 설정과 해소 과제 업로드 복구를 개선했습니다. [전체 기능군·문제 원장](docs/qa-evidence/service-completion-followup-2026-10-07/README.md), [배포·검증·남은 조건](docs/qa-evidence/service-completion-followup-2026-10-07/production.md), [변경 안내](docs/patch-notes/2026-10-07-service-completion-1.0.6.md). 아래는 이전 릴리스 기록입니다.
