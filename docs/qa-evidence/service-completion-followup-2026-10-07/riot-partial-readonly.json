@@ -1,0 +1,82 @@
+{
+  "transaction": {
+    "read_only": "on",
+    "isolation": "repeatable read",
+    "snapshot_at": "2026-10-07T03:35:13.869Z"
+  },
+  "sourceReviewed": "0277c327cb9054ef78ca2646982d0833e234f4db",
+  "historicalCohort": {
+    "fromInclusive": "2026-10-06T03:10:37.785Z",
+    "toInclusive": "2026-10-07T03:10:37.785Z"
+  },
+  "databaseBinding": {
+    "earlierAuthenticatedEnvironmentMetadataUnchanged": true,
+    "earlierPublicMmrMatched": true,
+    "exactKnownStorageProbeMatchedAgain": true,
+    "priorProbeCompletedAt": "2026-10-05T23:40:50.692Z",
+    "limitation": "Environment identity was verified earlier today, not refreshed by another provider API call in this probe."
+  },
+  "externalApiCalls": 0,
+  "mutationsPerformed": false,
+  "retainedFields": "Only status, failure code, requester category, attempt number, counts and timestamps; no identity, raw request/response, account, match, or JSON analytics data.",
+  "historical24hStatusCodes": [
+    {
+      "status": "SUCCEEDED",
+      "failure_code": null,
+      "count": 269
+    },
+    {
+      "status": "PARTIAL",
+      "failure_code": null,
+      "count": 19
+    }
+  ],
+  "partial19Breakdown": [
+    {
+      "requested_by": "ADMIN",
+      "attempt_count": 1,
+      "failure_code": null,
+      "count": 1,
+      "oldest_requested_at": "2026-10-06T05:10:12.380Z",
+      "latest_completed_at": "2026-10-06T05:15:48.210Z"
+    },
+    {
+      "requested_by": "JOB",
+      "attempt_count": 1,
+      "failure_code": null,
+      "count": 18,
+      "oldest_requested_at": "2026-10-06T03:45:45.154Z",
+      "latest_completed_at": "2026-10-07T01:05:48.431Z"
+    }
+  ],
+  "partial19LaterJobs": [
+    {
+      "has_later_success": false,
+      "has_later_partial": false,
+      "count": 6
+    },
+    {
+      "has_later_success": false,
+      "has_later_partial": true,
+      "count": 13
+    }
+  ],
+  "current24hStatusCodes": [
+    {
+      "status": "SUCCEEDED",
+      "failure_code": null,
+      "count": 269
+    },
+    {
+      "status": "PARTIAL",
+      "failure_code": null,
+      "count": 19
+    }
+  ],
+  "currentPendingCodes": [],
+  "latestSummaryTimes": {
+    "latest_rank_synced_at": "2026-10-07T03:30:48.245Z",
+    "latest_recent_solo_synced_at": "2026-10-07T03:30:48.245Z"
+  },
+  "rolledBack": true
+}

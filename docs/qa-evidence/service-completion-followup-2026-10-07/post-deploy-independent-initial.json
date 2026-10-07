@@ -1,0 +1,104 @@
+{
+  "checkedAt": "2026-10-07T03:37:58.410Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "sourceCommit": "0277c327cb9054ef78ca2646982d0833e234f4db",
+  "featureVersion": "1.0.6",
+  "deploymentContextFromRoot": {
+    "promotedCandidate": "dpl_CE5PjNswZYuQFvWnU2G89B9Rtrde",
+    "sameSourceMainDeploymentAtDispatch": "dpl_A9a7KUgUdaYdQe9S5vtM7sKSWyMX",
+    "note": "Deployment IDs supplied by release owner, not independently resolved by this HTTP probe."
+  },
+  "method": "Anonymous GET only; no cookies, authentication or mutations",
+  "checks": [
+    {
+      "name": "health read is ready and not shared-cacheable",
+      "passed": true,
+      "path": "/api/health",
+      "status": 200,
+      "location": null,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8",
+      "vercelRequestId": "icn1::iad1::lxhk9-1791344280953-6543abf88671",
+      "bytes": 57
+    },
+    {
+      "name": "malformed admin media query stays behind anonymous login protection",
+      "passed": true,
+      "path": "/admin/images?page=0&status=INVALID&pageSize=1",
+      "status": 307,
+      "location": "/admin/login?next=%2Fadmin%2Fimages%3Fpage%3D0%26status%3DINVALID%26pageSize%3D1",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "contentType": "text/html; charset=utf-8",
+      "vercelRequestId": "icn1::iad1::grtnk-1791344281715-538abb7abbac",
+      "bytes": 18173
+    },
+    {
+      "name": "submission review preserves a local login return and rejects external next",
+      "passed": true,
+      "protectedReview": {
+        "path": "/admin/matches/submissions/d7c20000-1000-4000-8000-000000000007",
+        "status": 307,
+        "location": "/admin/login?next=%2Fadmin%2Fmatches%2Fsubmissions%2Fd7c20000-1000-4000-8000-000000000007",
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "vercelRequestId": "icn1::iad1::p4pqw-1791344282792-8eb2f4e58e26",
+        "bytes": 19153
+      },
+      "validReturn": {
+        "path": "/admin/login?next=%2Fadmin%2Fmatches%2Fsubmissions%2Fd7c20000-1000-4000-8000-000000000007",
+        "status": 200,
+        "location": null,
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "vercelRequestId": "icn1::iad1::fcjlj-1791344283337-9e0733bcc2ab",
+        "bytes": 24934
+      },
+      "externalReturn": {
+        "path": "/admin/login?next=%2F%2Fexample.invalid%2Fescape",
+        "status": 200,
+        "location": null,
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "vercelRequestId": "icn1::iad1::fcjlj-1791344283630-d750760d3788",
+        "bytes": 24642,
+        "safeNext": "/admin"
+      }
+    },
+    {
+      "name": "event admin read API rejects anonymous access before synthetic id lookup",
+      "passed": true,
+      "path": "/api/admin/competitions/events/d7c20000-1000-4000-8000-000000000007",
+      "status": 401,
+      "location": null,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "vercelRequestId": "icn1::iad1::fcjlj-1791344283885-42c258f5af62",
+      "bytes": 186,
+      "responseKeys": [
+        "type",
+        "title",
+        "status",
+        "detail",
+        "code"
+      ]
+    },
+    {
+      "name": "anonymous result submission preserves the synthetic resume code in its login link",
+      "passed": true,
+      "path": "/matches/submit?code=MR20000000000001007",
+      "status": 200,
+      "location": null,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "contentType": "text/html; charset=utf-8",
+      "vercelRequestId": "icn1::iad1::m7q24-1791344284146-3b97e7f7d0d4",
+      "bytes": 45053,
+      "expectedLocalReturn": "/matches/submit?code=MR20000000000001007"
+    },
+    {
+      "name": "currently served submit chunk contains the 1.0.6 changed UI and matches the verified build bytes",
+      "passed": false,
+      "error": "AssertionError [ERR_ASSERTION]: page must reference a local verified chunk containing changed copy"
+    }
+  ],
+  "passed": false
+}

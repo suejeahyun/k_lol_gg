@@ -1,0 +1,135 @@
+{
+  "checkedAt": "2026-10-07T03:36:13.325Z",
+  "source": "0277c327cb9054ef78ca2646982d0833e234f4db",
+  "scope": "Browser viewport rendering, no real device or click completion claim",
+  "layouts": [
+    {
+      "brokenLoadedImages": 0,
+      "mainCount": 1,
+      "scrollWidth": 305,
+      "sections": [
+        {
+          "id": "home-title",
+          "y": 94
+        },
+        {
+          "id": "home-ranking-title",
+          "y": 354
+        },
+        {
+          "id": "tasks-title",
+          "y": 946
+        },
+        {
+          "id": "home-overview-title",
+          "y": 1304
+        },
+        {
+          "id": "home-personal-title",
+          "y": 2568
+        },
+        {
+          "id": "home-status-title",
+          "y": 2934
+        }
+      ],
+      "width": 320
+    },
+    {
+      "brokenLoadedImages": 0,
+      "mainCount": 1,
+      "scrollWidth": 375,
+      "sections": [
+        {
+          "id": "home-title",
+          "y": 94
+        },
+        {
+          "id": "home-ranking-title",
+          "y": 335
+        },
+        {
+          "id": "tasks-title",
+          "y": 933
+        },
+        {
+          "id": "home-overview-title",
+          "y": 1270
+        },
+        {
+          "id": "home-personal-title",
+          "y": 2587
+        },
+        {
+          "id": "home-status-title",
+          "y": 2953
+        }
+      ],
+      "width": 390
+    },
+    {
+      "brokenLoadedImages": 0,
+      "mainCount": 1,
+      "scrollWidth": 753,
+      "sections": [
+        {
+          "id": "home-title",
+          "y": 94
+        },
+        {
+          "id": "home-ranking-title",
+          "y": 335
+        },
+        {
+          "id": "tasks-title",
+          "y": 1048
+        },
+        {
+          "id": "home-overview-title",
+          "y": 1385
+        },
+        {
+          "id": "home-personal-title",
+          "y": 2855
+        },
+        {
+          "id": "home-status-title",
+          "y": 3221
+        }
+      ],
+      "width": 768
+    },
+    {
+      "brokenLoadedImages": 0,
+      "mainCount": 1,
+      "scrollWidth": 1265,
+      "sections": [
+        {
+          "id": "home-title",
+          "y": 94
+        },
+        {
+          "id": "home-ranking-title",
+          "y": 333
+        },
+        {
+          "id": "tasks-title",
+          "y": 1046
+        },
+        {
+          "id": "home-overview-title",
+          "y": 1279
+        },
+        {
+          "id": "home-personal-title",
+          "y": 2256
+        },
+        {
+          "id": "home-status-title",
+          "y": 2509
+        }
+      ],
+      "width": 1280
+    }
+  ]
+}

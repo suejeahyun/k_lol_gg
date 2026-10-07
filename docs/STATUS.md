@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-07 서비스 이용·관리 흐름 1.0.6 운영 반영
+
+source `0277c327cb9054ef78ca2646982d0833e234f4db`, tag `service-completion-v1.0.6`, main `dpl_A9a7KUgUdaYdQe9S5vtM7sKSWyMX` READY와 canonical alias를 확인했다. 미디어 목록·공개 연결, 경기 검토 잠금/재시도/응답 확인과 현재 팀 명단 불러오기, 참가 전 이벤트 설정, 해소 과제 업로드 복구를 개선했다. 홈 여섯 영역·단일 랭킹·생성 이미지 테마와 migration0047 유지.
+
+필수 check·인증 HTTP·새 격리 PostgreSQL·108페이지179조건, 관리자 실제 저장6그룹과 새 팀 연결 HTTP, 운영31HTTP/홈 네 폭 렌더가 통과했다. 기준1.0.5의 실제 문의 검토/메모/완료·미디어/경기 접수·징계 과업도 확인했다. [전체 기능군](qa-evidence/service-completion-followup-2026-10-07/README.md), [배포/복구/미확인 조건](qa-evidence/service-completion-followup-2026-10-07/production.md).
+
+전체 완료는 아직 보류다. native confirm 이후 최종 브라우저 클릭이 막힌 도구 조건, 실제 SUPER_ADMIN 로그인이 필요한 MMR 전환, 카카오/RSO/실기기가 남는다. 추가 readonly 조사로 Riot PARTIAL19건의 이유가 보존되지 않는 진단 공백을 확인해 후속 patch를 진행한다. 운영 회원·신청·경기 자료를 시험 변경하지 않았다.
+
 ## 2026-10-06 핵심 과업·저장 복구 1.0.5 운영 반영
 
 source `c9431b9e68b468c17d02c6ff7595de7e14a7c9c8`, tag `service-completion-v1.0.5`, Vercel main `dpl_HuMGR69n3o964U2CnZZicYHCKhW7` READY와 canonical alias `https://k-lol-gg.vercel.app`를 확인했다. 수동 팀과 저장/복사/접수의 불일치, 문의 관리 ETag, 이벤트 동시 저장, 이벤트·멸망전·징계·미디어의 응답 유실 재시도/완료 이동 잠금, 갤러리 연결 성공 오표시를 수정했다. 대비와 긴 이름 랭킹을 보완하고 홈 순서·이미지 테마를 유지했다.
