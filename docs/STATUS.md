@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-08 관리자 목록·확인창·모바일 필터 1.0.9 운영 반영
+
+source `c080ffba15dcc3f63e64242df87b31378bd63fa9`, tag `service-completion-v1.0.9`, main `dpl_AywtKdM1BhGGqj6WMnXBZmcyBpv3` READY·canonical alias·health를 확인했다. 대회/MMR/징계/로그 페이지 접근, 챔피언 필터 유지, MMR 포지션 표시, 세 확인창·이미지 확대 키보드와320px 대회 필터를 수정했다. 최종 check657계약/1068단위+skip1·격리 DB·108페이지179HTTP·실제 합성 저장/페이지·모바일 수정 전후·운영31HTTP를 구분해 기록했다. [전체 원장](qa-evidence/service-completion-final-2026-10-08/README.md), [배포·검증·복구](qa-evidence/service-completion-final-2026-10-08/production.md).
+
+실제 최고관리자 로그인으로 MMR V2 전환도 완료했다. 최신 백업·격리 복원 후 generation2·47회차104게임·대기0, 실제 저장/순수계산 일치20조건과 다음 자연 cron을 확인했다. 이전 문서의 SUPER_ADMIN 대기 상태를 이 근거가 대체한다.
+
+배포 후 관리자 인증이 유지되지 않아 재로그인을 요청했고 운영 관리자 재조작은 대기다. 공개 재검토에서 과거 대회의 동률 계산 순위와 확정 진출 표시가 상충하는 P2를 추가 발견해1.0.10 표시 수정으로 진행한다. 원래 확정 대진·데이터는 보존한다. 카카오/RSO/실기기/native confirm 도구 등 미확인 조건은 분리하며 전체 완료를 선언하지 않는다.
+
 ## 2026-10-07 관리자 표시·MMR 요청 복구 1.0.8 운영 반영
 
 source `653023b0f8dd1640b42afebf5e1fa3e2c7a3bee6`, tag `service-completion-v1.0.8`, main `dpl_BTfa4hYSa6ZR19K4Lfszsu88Lhr2` READY·canonical alias·health를 확인했다. 이벤트 단계/포지션/출처/상태 표시, MMR 성공 응답 검증·같은 요청 복구·즉시 중복 차단·새 계산 버전 확인 잠금을 수정했다. 서버 권한·API·공식·migration0047·홈 순서·생성 이미지 테마는 유지한다.
