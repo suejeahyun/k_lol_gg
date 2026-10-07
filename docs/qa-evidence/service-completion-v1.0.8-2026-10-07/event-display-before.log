@@ -1,0 +1,42 @@
+✖ actual admin page identifies each event mode and current lifecycle stage in Korean without losing links or authority (74.3214ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 295.4692
+
+✖ failing tests:
+
+test at tests\event-settings-edit.test.mjs:227:1
+✖ actual admin page identifies each event mode and current lifecycle stage in Korean without losing links or authority (74.3214ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'PLANNED',
+  +   'RECRUITING',
+  +   'TEAM_BUILDING',
+  +   'IN_PROGRESS',
+  +   'COMPLETED',
+  +   'CANCELLED'
+  -   '준비 중',
+  -   '참가 모집',
+  -   '팀 편성',
+  -   '진행 중',
+  -   '완료',
+  -   '취소'
+    ]
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:236:14)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'PLANNED', 'RECRUITING', 'TEAM_BUILDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED' ],
+    expected: [ '준비 중', '참가 모집', '팀 편성', '진행 중', '완료', '취소' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

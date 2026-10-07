@@ -1,0 +1,2064 @@
+{
+  "checkedAt": "2026-10-07T13:48:14.908Z",
+  "origin": "http://127.0.0.1:64186",
+  "pageCount": 108,
+  "targetCount": 179,
+  "missingFixtures": 0,
+  "passed": true,
+  "rows": [
+    {
+      "route": "/",
+      "path": "/",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/",
+      "redirects": [],
+      "responseMs": 136,
+      "htmlBytes": 110953,
+      "issues": []
+    },
+    {
+      "route": "/account",
+      "path": "/account",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account",
+      "redirects": [],
+      "responseMs": 126,
+      "htmlBytes": 56420,
+      "issues": []
+    },
+    {
+      "route": "/account/discipline",
+      "path": "/account/discipline",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account/discipline",
+      "redirects": [],
+      "responseMs": 22,
+      "htmlBytes": 42826,
+      "issues": []
+    },
+    {
+      "route": "/account/password",
+      "path": "/account/password",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account/password",
+      "redirects": [],
+      "responseMs": 18,
+      "htmlBytes": 42315,
+      "issues": []
+    },
+    {
+      "route": "/account/riot",
+      "path": "/account/riot",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account/riot",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 47394,
+      "issues": []
+    },
+    {
+      "route": "/admin",
+      "path": "/admin",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin",
+      "redirects": [],
+      "responseMs": 40,
+      "htmlBytes": 68858,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance",
+      "path": "/admin/balance",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance",
+      "redirects": [],
+      "responseMs": 23,
+      "htmlBytes": 97591,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance-ai",
+      "path": "/admin/balance-ai",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance-ai",
+      "redirects": [],
+      "responseMs": 23,
+      "htmlBytes": 39759,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance/drafts",
+      "path": "/admin/balance/drafts",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance/drafts",
+      "redirects": [],
+      "responseMs": 21,
+      "htmlBytes": 47188,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance/drafts/[draftId]",
+      "path": "/admin/balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789",
+      "redirects": [],
+      "responseMs": 19,
+      "htmlBytes": 57402,
+      "issues": []
+    },
+    {
+      "route": "/admin/champions",
+      "path": "/admin/champions",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/champions",
+      "redirects": [],
+      "responseMs": 22,
+      "htmlBytes": 89248,
+      "issues": []
+    },
+    {
+      "route": "/admin/champions/[championId]/edit",
+      "path": "/admin/champions/v1-1/edit",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/champions/v1-1/edit",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 36283,
+      "issues": []
+    },
+    {
+      "route": "/admin/champions/new",
+      "path": "/admin/champions/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/champions/new",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 35014,
+      "issues": []
+    },
+    {
+      "route": "/admin/discipline",
+      "path": "/admin/discipline",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline",
+      "redirects": [],
+      "responseMs": 21,
+      "htmlBytes": 35738,
+      "issues": []
+    },
+    {
+      "route": "/admin/discipline/[recordId]",
+      "path": "/admin/discipline/f6e5d000-5772-4867-a24b-64fb2752c20a",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline/f6e5d000-5772-4867-a24b-64fb2752c20a",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 43639,
+      "issues": []
+    },
+    {
+      "route": "/admin/discipline/new",
+      "path": "/admin/discipline/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline/new",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 36848,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights",
+      "path": "/admin/highlights",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 36640,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights/[highlightId]/edit",
+      "path": "/admin/highlights/a4e5b0d4-c972-4ff8-b539-a8b0475a7fe5/edit",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights/a4e5b0d4-c972-4ff8-b539-a8b0475a7fe5/edit",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 38052,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights/new",
+      "path": "/admin/highlights/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights/new",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 35072,
+      "issues": []
+    },
+    {
+      "route": "/admin/images",
+      "path": "/admin/images",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 40859,
+      "issues": []
+    },
+    {
+      "route": "/admin/images/[imageId]/edit",
+      "path": "/admin/images/b036f57e-dc7a-41cd-991a-ec283c536a99/edit",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images/b036f57e-dc7a-41cd-991a-ec283c536a99/edit",
+      "redirects": [],
+      "responseMs": 17,
+      "htmlBytes": 38398,
+      "issues": []
+    },
+    {
+      "route": "/admin/images/new",
+      "path": "/admin/images/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images/new",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 35324,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao",
+      "path": "/admin/kakao",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao",
+      "redirects": [],
+      "responseMs": 23,
+      "htmlBytes": 54536,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/rooms",
+      "path": "/admin/kakao/rooms",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao/rooms",
+      "redirects": [],
+      "responseMs": 16,
+      "htmlBytes": 56367,
+      "issues": []
+    },
+    {
+      "route": "/admin/login",
+      "path": "/admin/login",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/admin/login",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 23997,
+      "issues": []
+    },
+    {
+      "route": "/admin/logs",
+      "path": "/admin/logs",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/logs",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 67375,
+      "issues": []
+    },
+    {
+      "route": "/admin/matches",
+      "path": "/admin/matches",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches",
+      "redirects": [],
+      "responseMs": 15,
+      "htmlBytes": 54256,
+      "issues": []
+    },
+    {
+      "route": "/admin/matches/[matchId]",
+      "path": "/admin/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766",
+      "redirects": [],
+      "responseMs": 32,
+      "htmlBytes": 88634,
+      "issues": []
+    },
+    {
+      "route": "/admin/matches/[matchId]/edit",
+      "path": "/admin/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766/edit",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766/edit",
+      "redirects": [],
+      "responseMs": 27,
+      "htmlBytes": 89143,
+      "issues": []
+    },
+    {
+      "route": "/admin/matches/new",
+      "path": "/admin/matches/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches/new",
+      "redirects": [],
+      "responseMs": 22,
+      "htmlBytes": 88352,
+      "issues": []
+    },
+    {
+      "route": "/admin/matches/submissions/[submissionId]",
+      "path": "/admin/matches/submissions/cab89cfe-e948-492f-9137-702e77151fbc",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches/submissions/cab89cfe-e948-492f-9137-702e77151fbc",
+      "redirects": [],
+      "responseMs": 48,
+      "htmlBytes": 106586,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms",
+      "path": "/admin/operation-forms",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms",
+      "redirects": [],
+      "responseMs": 16,
+      "htmlBytes": 39401,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms/[formType]",
+      "path": "/admin/operation-forms/suggestions",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms?type=suggestions",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/operation-forms?type=suggestions"
+        }
+      ],
+      "responseMs": 13,
+      "htmlBytes": 38563,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms/[formType]/[id]",
+      "path": "/admin/operation-forms/suggestions/afbb5f93-3354-4fb7-b2ba-107350549cd2",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms/suggestions/afbb5f93-3354-4fb7-b2ba-107350549cd2",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 37762,
+      "issues": []
+    },
+    {
+      "route": "/admin/players",
+      "path": "/admin/players",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players",
+      "redirects": [],
+      "responseMs": 18,
+      "htmlBytes": 100056,
+      "issues": []
+    },
+    {
+      "route": "/admin/players/[playerId]",
+      "path": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb",
+      "redirects": [],
+      "responseMs": 13,
+      "htmlBytes": 51464,
+      "issues": []
+    },
+    {
+      "route": "/admin/players/new",
+      "path": "/admin/players/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players/new",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 46051,
+      "issues": []
+    },
+    {
+      "route": "/admin/private-assets",
+      "path": "/admin/private-assets",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/private-assets",
+      "redirects": [],
+      "responseMs": 29,
+      "htmlBytes": 51763,
+      "issues": []
+    },
+    {
+      "route": "/admin/private-assets/[assetId]",
+      "path": "/admin/private-assets/8f0ccc06-9cd5-4c8d-8566-628a56e979fb",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/private-assets/8f0ccc06-9cd5-4c8d-8566-628a56e979fb",
+      "redirects": [],
+      "responseMs": 13,
+      "htmlBytes": 37186,
+      "issues": []
+    },
+    {
+      "route": "/admin/progress/destruction",
+      "path": "/admin/progress/destruction",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/destruction",
+      "redirects": [],
+      "responseMs": 16,
+      "htmlBytes": 40466,
+      "issues": []
+    },
+    {
+      "route": "/admin/progress/destruction/[tournamentId]",
+      "path": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+      "redirects": [],
+      "responseMs": 25,
+      "htmlBytes": 100054,
+      "issues": []
+    },
+    {
+      "route": "/admin/progress/destruction/new",
+      "path": "/admin/progress/destruction/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/destruction/new",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 36897,
+      "issues": []
+    },
+    {
+      "route": "/admin/progress/event",
+      "path": "/admin/progress/event",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/event",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 38567,
+      "issues": []
+    },
+    {
+      "route": "/admin/progress/event/[eventId]",
+      "path": "/admin/progress/event/fd530007-2bd5-4cdc-921f-a3258ad0ed91",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/event/fd530007-2bd5-4cdc-921f-a3258ad0ed91",
+      "redirects": [],
+      "responseMs": 17,
+      "htmlBytes": 51571,
+      "issues": []
+    },
+    {
+      "route": "/admin/progress/event/new",
+      "path": "/admin/progress/event/new",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/event/new",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 35117,
+      "issues": []
+    },
+    {
+      "route": "/admin/riot",
+      "path": "/admin/riot",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/riot",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 38182,
+      "issues": []
+    },
+    {
+      "route": "/admin/search",
+      "path": "/admin/search",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/search",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 35947,
+      "issues": []
+    },
+    {
+      "route": "/admin/seasons",
+      "path": "/admin/seasons",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons",
+      "redirects": [],
+      "responseMs": 27,
+      "htmlBytes": 175338,
+      "issues": []
+    },
+    {
+      "route": "/admin/seasons/kakao-pending",
+      "path": "/admin/seasons/kakao-pending",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons/kakao-pending",
+      "redirects": [],
+      "responseMs": 21,
+      "htmlBytes": 76162,
+      "issues": []
+    },
+    {
+      "route": "/admin/seasons/kakao-pending/[pendingId]",
+      "path": "/admin/seasons/kakao-pending/15050c60-86b9-4a40-8f06-270b366fdc4e",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons/kakao-pending/15050c60-86b9-4a40-8f06-270b366fdc4e",
+      "redirects": [],
+      "responseMs": 13,
+      "htmlBytes": 40022,
+      "issues": []
+    },
+    {
+      "route": "/admin/site-settings",
+      "path": "/admin/site-settings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/site-settings",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 34744,
+      "issues": []
+    },
+    {
+      "route": "/admin/usage",
+      "path": "/admin/usage",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/usage",
+      "redirects": [],
+      "responseMs": 25,
+      "htmlBytes": 63436,
+      "issues": []
+    },
+    {
+      "route": "/admin/users",
+      "path": "/admin/users",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/users",
+      "redirects": [],
+      "responseMs": 22,
+      "htmlBytes": 88626,
+      "issues": []
+    },
+    {
+      "route": "/admin/users/[userAccountId]",
+      "path": "/admin/users/5567047a-5b58-4d04-a008-c5658d100659",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/users/5567047a-5b58-4d04-a008-c5658d100659",
+      "redirects": [],
+      "responseMs": 15,
+      "htmlBytes": 47642,
+      "issues": []
+    },
+    {
+      "route": "/applications",
+      "path": "/applications",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/applications",
+      "redirects": [],
+      "responseMs": 19,
+      "htmlBytes": 52114,
+      "issues": []
+    },
+    {
+      "route": "/competitions",
+      "path": "/competitions",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 45868,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction",
+      "path": "/competitions/destruction",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 69933,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b",
+      "redirects": [],
+      "responseMs": 21,
+      "htmlBytes": 95345,
+      "issues": []
+    },
+    {
+      "route": "/competitions/events",
+      "path": "/competitions/events",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 64600,
+      "issues": []
+    },
+    {
+      "route": "/competitions/events/[eventId]",
+      "path": "/competitions/events/fd530007-2bd5-4cdc-921f-a3258ad0ed91",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events/fd530007-2bd5-4cdc-921f-a3258ad0ed91",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 56405,
+      "issues": []
+    },
+    {
+      "route": "/discipline",
+      "path": "/discipline",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/discipline",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 47328,
+      "issues": []
+    },
+    {
+      "route": "/forbidden",
+      "path": "/forbidden",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/forbidden",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 41309,
+      "issues": []
+    },
+    {
+      "route": "/forgot-password",
+      "path": "/forgot-password",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/forgot-password",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 40751,
+      "issues": []
+    },
+    {
+      "route": "/help",
+      "path": "/help",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 45732,
+      "issues": []
+    },
+    {
+      "route": "/help/contact",
+      "path": "/help/contact",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/contact",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 42605,
+      "issues": []
+    },
+    {
+      "route": "/help/kakao",
+      "path": "/help/kakao",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/kakao",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 56276,
+      "issues": []
+    },
+    {
+      "route": "/help/recruits",
+      "path": "/help/recruits",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/recruits",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 59000,
+      "issues": []
+    },
+    {
+      "route": "/help/riot",
+      "path": "/help/riot",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/help/riot",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 57682,
+      "issues": []
+    },
+    {
+      "route": "/highlights",
+      "path": "/highlights",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/highlights",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 48213,
+      "issues": []
+    },
+    {
+      "route": "/highlights/[highlightId]",
+      "path": "/highlights/a4e5b0d4-c972-4ff8-b539-a8b0475a7fe5",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/highlights/a4e5b0d4-c972-4ff8-b539-a8b0475a7fe5",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 50172,
+      "issues": []
+    },
+    {
+      "route": "/images",
+      "path": "/images",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/images",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 48842,
+      "issues": []
+    },
+    {
+      "route": "/images/[imageId]",
+      "path": "/images/b036f57e-dc7a-41cd-991a-ec283c536a99",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/images/b036f57e-dc7a-41cd-991a-ec283c536a99",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 49334,
+      "issues": []
+    },
+    {
+      "route": "/install",
+      "path": "/install",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/install",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 55380,
+      "issues": []
+    },
+    {
+      "route": "/login",
+      "path": "/login",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/login",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 40580,
+      "issues": []
+    },
+    {
+      "route": "/matches",
+      "path": "/matches",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/matches",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 63601,
+      "issues": []
+    },
+    {
+      "route": "/matches/[matchId]",
+      "path": "/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 61144,
+      "issues": []
+    },
+    {
+      "route": "/matches/submissions",
+      "path": "/matches/submissions",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/matches/submissions",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 45210,
+      "issues": []
+    },
+    {
+      "route": "/matches/submit",
+      "path": "/matches/submit",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/matches/submit",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 49490,
+      "issues": []
+    },
+    {
+      "route": "/players",
+      "path": "/players",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/players",
+      "redirects": [],
+      "responseMs": 15,
+      "htmlBytes": 165311,
+      "issues": []
+    },
+    {
+      "route": "/players/[playerId]",
+      "path": "/players/5f93af89-e572-490e-911c-6917892d0eeb",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/players/5f93af89-e572-490e-911c-6917892d0eeb",
+      "redirects": [],
+      "responseMs": 30,
+      "htmlBytes": 61091,
+      "issues": []
+    },
+    {
+      "route": "/privacy",
+      "path": "/privacy",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/privacy",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 50498,
+      "issues": []
+    },
+    {
+      "route": "/rankings",
+      "path": "/rankings",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/rankings",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 66903,
+      "issues": []
+    },
+    {
+      "route": "/rankings/mmr",
+      "path": "/rankings/mmr",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/rankings/mmr",
+      "redirects": [],
+      "responseMs": 18,
+      "htmlBytes": 61410,
+      "issues": []
+    },
+    {
+      "route": "/recruits",
+      "path": "/recruits",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/recruits",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 179187,
+      "issues": []
+    },
+    {
+      "route": "/signup",
+      "path": "/signup",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/signup",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 43197,
+      "issues": []
+    },
+    {
+      "route": "/start",
+      "path": "/start",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/start",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 52101,
+      "issues": []
+    },
+    {
+      "route": "/terms",
+      "path": "/terms",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/terms",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 45668,
+      "issues": []
+    },
+    {
+      "route": "/tools/coin-toss",
+      "path": "/tools/coin-toss",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/tools/coin-toss",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 50496,
+      "issues": []
+    },
+    {
+      "route": "/tools/random-team",
+      "path": "/tools/random-team",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/tools/random-team",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 50472,
+      "issues": []
+    },
+    {
+      "route": "/tools/team-balance",
+      "path": "/tools/team-balance",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 54639,
+      "issues": []
+    },
+    {
+      "route": "/tools/team-balance/drafts",
+      "path": "/tools/team-balance/drafts",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 49131,
+      "issues": []
+    },
+    {
+      "route": "/tools/team-balance/drafts/[draftId]",
+      "path": "/tools/team-balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 69833,
+      "issues": []
+    },
+    {
+      "route": "/account",
+      "path": "/account?tab=player",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/account?tab=player",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 53542,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance-ai",
+      "path": "/admin/balance-ai?tab=players",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance-ai?tab=players",
+      "redirects": [],
+      "responseMs": 15,
+      "htmlBytes": 49306,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance-ai",
+      "path": "/admin/balance-ai?tab=reviews",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance-ai?tab=reviews",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 41160,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance-ai",
+      "path": "/admin/balance-ai?tab=reviews&review=ff06eda1-fe92-44f9-a1df-f3b7a0ae1276",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance-ai?tab=reviews&review=ff06eda1-fe92-44f9-a1df-f3b7a0ae1276",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 43582,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance-ai",
+      "path": "/admin/balance-ai?action=recalculate",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance-ai?action=recalculate",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 40578,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance/drafts",
+      "path": "/admin/balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=RED",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=RED",
+      "redirects": [],
+      "responseMs": 19,
+      "htmlBytes": 41484,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance/drafts",
+      "path": "/admin/balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=BLUE",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=BLUE",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 41487,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance/drafts/[draftId]",
+      "path": "/admin/balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=RED",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=RED",
+      "redirects": [],
+      "responseMs": 13,
+      "htmlBytes": 41549,
+      "issues": []
+    },
+    {
+      "route": "/admin/balance/drafts/[draftId]",
+      "path": "/admin/balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=BLUE",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=BLUE",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 41552,
+      "issues": []
+    },
+    {
+      "route": "/admin/discipline",
+      "path": "/admin/discipline?tab=tasks",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline?tab=tasks",
+      "redirects": [],
+      "responseMs": 15,
+      "htmlBytes": 35786,
+      "issues": []
+    },
+    {
+      "route": "/admin/discipline",
+      "path": "/admin/discipline?tab=reviews",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline?tab=reviews",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 34222,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao",
+      "path": "/admin/kakao?tab=recruits",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=recruits",
+      "redirects": [],
+      "responseMs": 17,
+      "htmlBytes": 54593,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao",
+      "path": "/admin/kakao?tab=scrims",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=scrims",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 43188,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao",
+      "path": "/admin/kakao?tab=stats",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=stats",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 41846,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao",
+      "path": "/admin/kakao?tab=settings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=settings",
+      "redirects": [],
+      "responseMs": 15,
+      "htmlBytes": 35999,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao",
+      "path": "/admin/kakao?tab=logs",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=logs",
+      "redirects": [],
+      "responseMs": 15,
+      "htmlBytes": 48446,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao",
+      "path": "/admin/kakao?tab=health",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=health",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 38413,
+      "issues": []
+    },
+    {
+      "route": "/admin/logs",
+      "path": "/admin/logs?view=stats",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/logs?view=stats",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 35040,
+      "issues": []
+    },
+    {
+      "route": "/admin/logs",
+      "path": "/admin/logs?view=ai-requests",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/logs?view=ai-requests",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 35221,
+      "issues": []
+    },
+    {
+      "route": "/admin/matches",
+      "path": "/admin/matches?view=submissions",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches?view=submissions",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 49795,
+      "issues": []
+    },
+    {
+      "route": "/admin/matches/[matchId]",
+      "path": "/admin/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766?tab=ai-review",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/matches/49c0a1e8-066c-445f-9b6d-c2b306d2c766?tab=ai-review",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 43436,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms",
+      "path": "/admin/operation-forms?type=friends",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms?type=friends",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 35372,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms",
+      "path": "/admin/operation-forms?type=leaves",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms?type=leaves",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 35302,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms",
+      "path": "/admin/operation-forms?type=meetups",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms?type=meetups",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 35307,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms",
+      "path": "/admin/operation-forms?type=suggestions",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms?type=suggestions",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 38563,
+      "issues": []
+    },
+    {
+      "route": "/admin/players/[playerId]",
+      "path": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb?mode=edit",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb?mode=edit",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 52761,
+      "issues": []
+    },
+    {
+      "route": "/admin/players/[playerId]",
+      "path": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb?tab=balance",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb?tab=balance",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 44594,
+      "issues": []
+    },
+    {
+      "route": "/admin/players/[playerId]",
+      "path": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb?tab=riot",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/players/5f93af89-e572-490e-911c-6917892d0eeb?tab=riot",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 44349,
+      "issues": []
+    },
+    {
+      "route": "/admin/private-assets",
+      "path": "/admin/private-assets?status=READY",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/private-assets?status=READY",
+      "redirects": [],
+      "responseMs": 21,
+      "htmlBytes": 50866,
+      "issues": []
+    },
+    {
+      "route": "/admin/private-assets",
+      "path": "/admin/private-assets?status=DELETE_PENDING",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/private-assets?status=DELETE_PENDING",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 38315,
+      "issues": []
+    },
+    {
+      "route": "/admin/progress/destruction/[tournamentId]",
+      "path": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=auction&mode=live",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/progress/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=auction&mode=live",
+      "redirects": [],
+      "responseMs": 14,
+      "htmlBytes": 101201,
+      "issues": []
+    },
+    {
+      "route": "/admin/riot",
+      "path": "/admin/riot?tab=sync",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/riot?tab=sync",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 35631,
+      "issues": []
+    },
+    {
+      "route": "/admin/riot",
+      "path": "/admin/riot?tab=logs",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/riot?tab=logs",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 35083,
+      "issues": []
+    },
+    {
+      "route": "/admin/riot",
+      "path": "/admin/riot?tab=accounts&action=bulk-link&q=QA&batchSize=10",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/riot?tab=accounts&action=bulk-link&q=QA&batchSize=10",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 36316,
+      "issues": []
+    },
+    {
+      "route": "/admin/seasons",
+      "path": "/admin/seasons?view=applications",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons?view=applications",
+      "redirects": [],
+      "responseMs": 17,
+      "htmlBytes": 175649,
+      "issues": []
+    },
+    {
+      "route": "/applications",
+      "path": "/applications?type=season",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/applications?type=season",
+      "redirects": [],
+      "responseMs": 17,
+      "htmlBytes": 52168,
+      "issues": []
+    },
+    {
+      "route": "/applications",
+      "path": "/applications?type=season&source=pwa",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/applications?type=season&source=pwa",
+      "redirects": [],
+      "responseMs": 13,
+      "htmlBytes": 52337,
+      "issues": []
+    },
+    {
+      "route": "/applications",
+      "path": "/applications?type=event",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/applications?type=event",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 47541,
+      "issues": []
+    },
+    {
+      "route": "/applications",
+      "path": "/applications?type=destruction",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/applications?type=destruction",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 44133,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?action=apply",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?action=apply",
+      "redirects": [],
+      "responseMs": 12,
+      "htmlBytes": 95424,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=captain-points",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=captain-points",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 66527,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants",
+      "redirects": [],
+      "responseMs": 16,
+      "htmlBytes": 74258,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants&player=31fa9c10-2bb5-4a8a-89fa-2b0d79d06cc4",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=participants&player=31fa9c10-2bb5-4a8a-89fa-2b0d79d06cc4",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 74557,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 66394,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery&imageIndex=0",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=gallery&imageIndex=0",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 68536,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "path": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=mvp",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction/4c885a5c-f8b0-4391-a305-b0a9b6099f4b?tab=mvp",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 75523,
+      "issues": []
+    },
+    {
+      "route": "/competitions/events/[eventId]",
+      "path": "/competitions/events/fd530007-2bd5-4cdc-921f-a3258ad0ed91?action=apply",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events/fd530007-2bd5-4cdc-921f-a3258ad0ed91?action=apply",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 56478,
+      "issues": []
+    },
+    {
+      "route": "/players/[playerId]",
+      "path": "/players/5f93af89-e572-490e-911c-6917892d0eeb?tab=riot",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/players/5f93af89-e572-490e-911c-6917892d0eeb?tab=riot",
+      "redirects": [],
+      "responseMs": 17,
+      "htmlBytes": 52048,
+      "issues": []
+    },
+    {
+      "route": "/rankings/mmr",
+      "path": "/rankings/mmr?view=players",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/rankings/mmr?view=players",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 61484,
+      "issues": []
+    },
+    {
+      "route": "/tools/random-team",
+      "path": "/tools/random-team?mode=tier",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/tools/random-team?mode=tier",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 50542,
+      "issues": []
+    },
+    {
+      "route": "/tools/team-balance/drafts",
+      "path": "/tools/team-balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=RED",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=RED",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 53661,
+      "issues": []
+    },
+    {
+      "route": "/tools/team-balance/drafts",
+      "path": "/tools/team-balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=BLUE",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts?view=recommendations&draftId=883ca2d7-82de-43c8-89d9-ede84ccfb789&team=BLUE",
+      "redirects": [],
+      "responseMs": 11,
+      "htmlBytes": 53664,
+      "issues": []
+    },
+    {
+      "route": "/tools/team-balance/drafts/[draftId]",
+      "path": "/tools/team-balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=RED",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=RED",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 54616,
+      "issues": []
+    },
+    {
+      "route": "/tools/team-balance/drafts/[draftId]",
+      "path": "/tools/team-balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=BLUE",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/tools/team-balance/drafts/883ca2d7-82de-43c8-89d9-ede84ccfb789?tab=recommendations&team=BLUE",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 54619,
+      "issues": []
+    },
+    {
+      "route": "/admin/ai-requests",
+      "path": "/admin/ai-requests",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/logs?view=ai-requests",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/logs?view=ai-requests"
+        }
+      ],
+      "responseMs": 10,
+      "htmlBytes": 35221,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/operation-forms",
+      "path": "/admin/kakao/operation-forms",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/operation-forms"
+        }
+      ],
+      "responseMs": 9,
+      "htmlBytes": 39401,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/operation-forms/[formType]",
+      "path": "/admin/kakao/operation-forms/suggestions",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/operation-forms?type=suggestions",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/operation-forms?type=suggestions"
+        }
+      ],
+      "responseMs": 8,
+      "htmlBytes": 38563,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/recruits",
+      "path": "/admin/kakao/recruits",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=recruits",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=recruits"
+        }
+      ],
+      "responseMs": 13,
+      "htmlBytes": 54593,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/recruits/logs",
+      "path": "/admin/kakao/recruits/logs",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=logs",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=logs"
+        }
+      ],
+      "responseMs": 13,
+      "htmlBytes": 48446,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/recruits/settings",
+      "path": "/admin/kakao/recruits/settings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=health",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=health"
+        }
+      ],
+      "responseMs": 9,
+      "htmlBytes": 38413,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/scrims",
+      "path": "/admin/kakao/scrims",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=scrims",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=scrims"
+        }
+      ],
+      "responseMs": 9,
+      "htmlBytes": 43188,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/season-apply",
+      "path": "/admin/kakao/season-apply",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/seasons/kakao-pending",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/seasons/kakao-pending"
+        }
+      ],
+      "responseMs": 14,
+      "htmlBytes": 76162,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/settings",
+      "path": "/admin/kakao/settings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=settings",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=settings"
+        }
+      ],
+      "responseMs": 9,
+      "htmlBytes": 35999,
+      "issues": []
+    },
+    {
+      "route": "/admin/kakao/stats",
+      "path": "/admin/kakao/stats",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=stats",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=stats"
+        }
+      ],
+      "responseMs": 10,
+      "htmlBytes": 41846,
+      "issues": []
+    },
+    {
+      "route": "/admin/logs/kakao",
+      "path": "/admin/logs/kakao",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=logs",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=logs"
+        }
+      ],
+      "responseMs": 12,
+      "htmlBytes": 48446,
+      "issues": []
+    },
+    {
+      "route": "/admin/operation-forms/warnings",
+      "path": "/admin/operation-forms/warnings",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/discipline",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/discipline"
+        }
+      ],
+      "responseMs": 12,
+      "htmlBytes": 35738,
+      "issues": []
+    },
+    {
+      "route": "/admin/recruits",
+      "path": "/admin/recruits",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/kakao?tab=recruits",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/admin/kakao?tab=recruits"
+        }
+      ],
+      "responseMs": 9,
+      "htmlBytes": 54593,
+      "issues": []
+    },
+    {
+      "route": "/admin/security",
+      "path": "/admin/security",
+      "session": "setup",
+      "status": 200,
+      "finalPath": "/admin",
+      "redirects": [
+        {
+          "status": 307,
+          "destination": "/admin"
+        }
+      ],
+      "responseMs": 29,
+      "htmlBytes": 68640,
+      "issues": []
+    },
+    {
+      "route": "/app",
+      "path": "/app",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/"
+        }
+      ],
+      "responseMs": 17,
+      "htmlBytes": 110953,
+      "issues": []
+    },
+    {
+      "route": "/app/players",
+      "path": "/app/players",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/players",
+      "redirects": [
+        {
+          "status": 308,
+          "destination": "/players"
+        }
+      ],
+      "responseMs": 13,
+      "htmlBytes": 165311,
+      "issues": []
+    },
+    {
+      "route": "/competitions/events",
+      "path": "/competitions/events?q=&status=&format=",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events?q=&status=&format=",
+      "redirects": [],
+      "responseMs": 13,
+      "htmlBytes": 64758,
+      "issues": []
+    },
+    {
+      "route": "/competitions/events",
+      "path": "/competitions/events?q=&status=RECRUITING&format=",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events?q=&status=RECRUITING&format=",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 57056,
+      "issues": []
+    },
+    {
+      "route": "/competitions/events",
+      "path": "/competitions/events?status=UNKNOWN",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/events?status=UNKNOWN",
+      "redirects": [],
+      "responseMs": 5,
+      "htmlBytes": 44090,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction",
+      "path": "/competitions/destruction?q=&status=&format=",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction?q=&status=&format=",
+      "redirects": [],
+      "responseMs": 10,
+      "htmlBytes": 70091,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction",
+      "path": "/competitions/destruction?q=&status=RECRUITING&format=",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction?q=&status=RECRUITING&format=",
+      "redirects": [],
+      "responseMs": 5,
+      "htmlBytes": 52276,
+      "issues": []
+    },
+    {
+      "route": "/competitions/destruction",
+      "path": "/competitions/destruction?status=UNKNOWN",
+      "session": "anonymous",
+      "status": 200,
+      "finalPath": "/competitions/destruction?status=UNKNOWN",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 44125,
+      "issues": []
+    },
+    {
+      "route": "/matches/submissions",
+      "path": "/matches/submissions?status=",
+      "session": "account",
+      "status": 200,
+      "finalPath": "/matches/submissions?status=",
+      "redirects": [],
+      "responseMs": 13,
+      "htmlBytes": 45252,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights",
+      "path": "/admin/highlights?pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights?pageSize=1",
+      "redirects": [],
+      "responseMs": 9,
+      "htmlBytes": 36688,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights",
+      "path": "/admin/highlights?page=2&pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights?page=2&pageSize=1",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 36735,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights",
+      "path": "/admin/highlights?status=&pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights?status=&pageSize=1",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 36738,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights",
+      "path": "/admin/highlights?status=PUBLISHED&pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights?status=PUBLISHED&pageSize=1",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 36780,
+      "issues": []
+    },
+    {
+      "route": "/admin/highlights",
+      "path": "/admin/highlights?page=0",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/highlights?page=0",
+      "redirects": [],
+      "responseMs": 5,
+      "htmlBytes": 37039,
+      "issues": []
+    },
+    {
+      "route": "/admin/images",
+      "path": "/admin/images?pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images?pageSize=1",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 37251,
+      "issues": []
+    },
+    {
+      "route": "/admin/images",
+      "path": "/admin/images?page=2&pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images?page=2&pageSize=1",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 37418,
+      "issues": []
+    },
+    {
+      "route": "/admin/images",
+      "path": "/admin/images?status=&pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images?status=&pageSize=1",
+      "redirects": [],
+      "responseMs": 7,
+      "htmlBytes": 37301,
+      "issues": []
+    },
+    {
+      "route": "/admin/images",
+      "path": "/admin/images?status=PUBLISHED&pageSize=1",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images?status=PUBLISHED&pageSize=1",
+      "redirects": [],
+      "responseMs": 8,
+      "htmlBytes": 37386,
+      "issues": []
+    },
+    {
+      "route": "/admin/images",
+      "path": "/admin/images?page=0",
+      "session": "admin",
+      "status": 200,
+      "finalPath": "/admin/images?page=0",
+      "redirects": [],
+      "responseMs": 6,
+      "htmlBytes": 36979,
+      "issues": []
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+✖ actual participant rows distinguish position, registration source and cancelled participation without leaking unknown codes (72.3385ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 285.9135
+
+✖ failing tests:
+
+test at tests\event-settings-edit.test.mjs:248:1
+✖ actual participant rows distinguish position, registration source and cancelled participation without leaking unknown codes (72.3385ms)
+  AssertionError [ERR_ASSERTION]: 탑 · 직접 신청
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/event-settings-edit.test.mjs:259:169)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

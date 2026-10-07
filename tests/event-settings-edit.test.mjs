@@ -183,30 +183,82 @@ test("unconfirmed success bodies retain the same request identity and never clai
   }
 });
 
-test("actual detail page resets local settings from the latest event revision after refresh", async () => {
-  let current = event;
+function detailPage(initial = event) {
+  let current = initial;
+  const authorization = [];
   const Actions = () => null;
   const loaded = { exports: {} };
   const code = ts.transpileModule(readFileSync(path.join(root, "src/app/(admin)/admin/progress/event/[eventId]/page.tsx"), "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
   vm.runInNewContext(code, { exports: loaded.exports, require(specifier) {
     if (specifier === "react/jsx-runtime") return jsx;
-    if (specifier === "next/link") return () => null;
+    if (specifier === "next/link") return ({ children, ...props }) => jsx.jsx("a", { ...props, children });
     if (specifier === "next/navigation") return { notFound() { throw new Error("unexpected not found"); } };
     if (specifier.endsWith("/theme-icons")) return { ArrowLeft: () => null, Trophy: () => null };
-    if (specifier.endsWith("/server-authorization")) return { requirePageRole: async () => {} };
+    if (specifier.endsWith("/server-authorization")) return { requirePageRole: async (...args) => { authorization.push(args); } };
     if (specifier.endsWith("/events")) return { isEventUuid: () => true };
-    if (specifier.endsWith("/runtime-event")) return { getRuntimeEvent: () => ({ repository: { getAdminWorkspace: async () => ({ event: current, playerOptions: [], playerLabels: {}, galleryOptions: [] }) } }) };
+    if (specifier.endsWith("/runtime-event")) return { getRuntimeEvent: () => ({ repository: { getAdminWorkspace: async () => ({ event: current, playerOptions: [], playerLabels: Object.fromEntries(current.participants.map((participant, index) => [participant.playerId, `합성 선수 ${index + 1}`])), galleryOptions: [] }) } }) };
     if (specifier.endsWith("/legacy-user-redirects") || specifier.endsWith("/legacy-identifiers")) return {};
     if (specifier === "./event-admin-actions") return { EventAdminActions: Actions };
     if (specifier.endsWith(".module.css")) return { __esModule: true, default: {} };
+    if (specifier.endsWith("/public-display-labels") || specifier.endsWith("/display-projection")) {
+      const dependency = { exports: {} };
+      const source = readFileSync(path.join(root, "src", `${specifier.slice(2)}.ts`), "utf8");
+      vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: dependency.exports });
+      return dependency.exports;
+    }
     throw new Error(`unexpected detail dependency: ${specifier}`);
   } });
   const render = () => loaded.exports.default({ params: Promise.resolve({ eventId: event.id }) });
-  const before = find(await render(), (node) => node.type === Actions);
-  current = { ...event, revision: 4, settings: { ...event.settings, title: "다른 운영자가 저장한 제목" } };
-  const after = find(await render(), (node) => node.type === Actions);
+  return { Actions, authorization, render, setEvent(value) { current = value; } };
+}
+
+test("actual detail page resets local settings from the latest event revision after refresh", async () => {
+  const subject = detailPage();
+  const before = find(await subject.render(), (node) => node.type === subject.Actions);
+  const current = { ...event, revision: 4, settings: { ...event.settings, title: "다른 운영자가 저장한 제목" } };
+  subject.setEvent(current);
+  const after = find(await subject.render(), (node) => node.type === subject.Actions);
   assert.notEqual(before.key, after.key);
   const refreshed = harness(() => ({ ...success, json: async () => ({ eventId: event.id, commandType: "REPLACE_SETTINGS", revision: 5 }) }), after.props.event);
   assert.equal(field(refreshed.render(), "title").props.value, current.settings.title);
   await refreshed.submit(); assert.equal(refreshed.requests[0].headers["If-Match"], '"4"');
+});
+
+test("actual admin page identifies each event mode and current lifecycle stage in Korean without losing links or authority", async () => {
+  const statuses = { PLANNED: "준비 중", RECRUITING: "참가 모집", TEAM_BUILDING: "팀 편성", IN_PROGRESS: "진행 중", COMPLETED: "완료", CANCELLED: "취소" };
+  const subject = detailPage();
+  for (const [format, formatLabel] of Object.entries({ POSITION: "포지션 드래프트", ARAM: "칼바람" })) {
+    for (const [status, statusLabel] of Object.entries(statuses)) {
+      subject.setEvent({ ...event, settings: { ...event.settings, format }, lifecycle: { status } });
+      const tree = await subject.render();
+      const html = renderToStaticMarkup(tree);
+      const stages = find(tree, (node) => node.props["aria-label"] === "이벤트 진행 단계");
+      assert.deepEqual(React.Children.toArray(stages.props.children).map((node) => node.props.children), Object.values(statuses));
+      assert.equal(find(stages, (node) => node.props["aria-current"] === "step").props.children, statusLabel);
+      assert.match(html, new RegExp(formatLabel, "u"));
+      assert.doesNotMatch(html, /POSITION|ARAM|PLANNED|RECRUITING|TEAM_BUILDING|IN_PROGRESS|COMPLETED|CANCELLED/u);
+      assert.equal(find(tree, (node) => node.props.children === "공개 화면").props.href, `/competitions/events/${event.id}`);
+      assert.equal(find(tree, (node) => node.type === subject.Actions).props.event.lifecycle.status, status);
+    }
+  }
+  assert.equal(subject.authorization.length, 12);
+  assert.ok(subject.authorization.every(([role, destination]) => role === "ADMIN" && destination === `/admin/progress/event/${event.id}`));
+});
+
+test("actual participant rows distinguish position, registration source and cancelled participation without leaking unknown codes", async () => {
+  const participants = [
+    { mainPosition: "TOP", source: "USER_APPLICATION", status: "ACTIVE" },
+    { mainPosition: "MID", source: "ADMIN_IMPORT", status: "ACTIVE" },
+    { mainPosition: null, source: "ADMIN_MANUAL", status: "CANCELLED" },
+    { mainPosition: "FUTURE_POSITION", source: "FUTURE_SOURCE", status: "FUTURE_STATUS" },
+  ].map((row, index) => ({ ...row, id: `participant-${index}`, playerId: `player-${index}`, ownerUserAccountId: null, subPositions: [] }));
+  const subject = detailPage({ ...event, participants });
+  const tree = await subject.render();
+  const panel = find(tree, (node) => node.type === "article" && Boolean(find(node, (child) => child.type === "h2" && child.props.children === "참가자")));
+  const html = renderToStaticMarkup(panel);
+  for (const label of ["합성 선수 1", "합성 선수 2", "합성 선수 3", "합성 선수 4", "탑 · 직접 신청", "미드 · 명단 가져오기", "포지션 구분 없음 · 관리자 등록", "참가 취소", "포지션 미정 · 출처 확인 필요", "상태 확인 필요"]) assert.ok(html.includes(label), label);
+  assert.equal((html.match(/<b>참가<\/b>/gu) ?? []).length, 2);
+  assert.doesNotMatch(html, /TOP|MID|ARAM|USER_APPLICATION|ADMIN_IMPORT|ADMIN_MANUAL|ACTIVE|CANCELLED|FUTURE_/u);
+  assert.match(renderToStaticMarkup(tree), /<strong>2\/10<\/strong>/u);
+  assert.equal(find(tree, (node) => node.type === subject.Actions).props.event.participants, participants);
 });

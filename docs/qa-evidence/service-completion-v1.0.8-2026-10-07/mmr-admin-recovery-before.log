@@ -1,0 +1,89 @@
+✖ successful HTTP status without the published generation is not claimed as completed (49.7933ms)
+✖ response-loss retry preserves the same adjustment idempotency key and body (12.5472ms)
+✖ same-tick adjustment submits issue at most one request (9.2501ms)
+✖ successful adjustment remains locked until the refreshed generation arrives (8.2732ms)
+✔ admin without SUPER role sees no mutation form and valid recalculation requests retain preconditions (6.7857ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 1
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 293.4124
+
+✖ failing tests:
+
+test at .tmp\mmr-admin-recovery-review.test.mjs:68:1
+✖ successful HTTP status without the published generation is not claimed as completed (49.7933ms)
+  AssertionError [ERR_ASSERTION]: recalculate: malformed success must not refresh or announce completion
+  + actual - expected
+  
+  + [
+  +   'refresh'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/mmr-admin-recovery-review.test.mjs:74:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'refresh' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\mmr-admin-recovery-review.test.mjs:78:1
+✖ response-loss retry preserves the same adjustment idempotency key and body (12.5472ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'mmr-adjustments-2c5dbcad-3a4d-4ee5-ab9c-de1b28259aaf'
+  - 'mmr-adjustments-797acee0-4c26-4d9a-bdac-fcc6a918d18a'
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/mmr-admin-recovery-review.test.mjs:90:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'mmr-adjustments-2c5dbcad-3a4d-4ee5-ab9c-de1b28259aaf',
+    expected: 'mmr-adjustments-797acee0-4c26-4d9a-bdac-fcc6a918d18a',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\mmr-admin-recovery-review.test.mjs:94:1
+✖ same-tick adjustment submits issue at most one request (9.2501ms)
+  AssertionError [ERR_ASSERTION]: same-tick submit needs an immediate guard, not only a render-time disabled attribute
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/mmr-admin-recovery-review.test.mjs:100:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at .tmp\mmr-admin-recovery-review.test.mjs:103:1
+✖ successful adjustment remains locked until the refreshed generation arrives (8.2732ms)
+  AssertionError [ERR_ASSERTION]: router.refresh does not synchronously replace stale generation props
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/.tmp/mmr-admin-recovery-review.test.mjs:107:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

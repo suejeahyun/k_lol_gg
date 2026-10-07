@@ -11,7 +11,8 @@ test("MMR 수동 조정은 raw UUID 대신 bounded 플레이어 선택기를 사
   assert.equal(mmr.includes("<BoundedPicker"), true);
   assert.equal(mmr.includes('remoteEndpoint="/api/admin/matches/editor-options/players"'), true);
   assert.equal(mmr.includes("플레이어 UUID<input"), false);
-  assert.equal(mmr.includes("busy || !playerId"), true);
+  // Selection and pending-state guards are exercised through the actual
+  // component handlers in mmr-admin-recovery.test.mjs.
 });
 
 test("Riot 작업은 현재 목록에서 플레이어와 link를 선택하고 revision을 자동 계산한다", () => {

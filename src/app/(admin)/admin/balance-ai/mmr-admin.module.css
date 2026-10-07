@@ -33,6 +33,7 @@
 .reviewDrawer dd { margin: .2rem 0 0; font-weight: 800; overflow-wrap: anywhere; }
 .reviewDrawer a { color: #315eaa; font-weight: 800; }
 .actions form { display: grid; grid-template-columns: repeat(4,minmax(120px,1fr)); gap: .7rem; padding: 1rem; }
+.actions .adjustmentFields { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; gap: .7rem; min-width: 0; margin: 0; padding: 0; border: 0; }
 .actions label { display: grid; gap: .35rem; color: #61718a; font-size: .72rem; font-weight: 800; }
 .actions input,.actions select { min-height: 2.6rem; border: 1px solid #dce6f4; border-radius: .7rem; padding: .55rem; }
 .actions .note { grid-column: span 3; }

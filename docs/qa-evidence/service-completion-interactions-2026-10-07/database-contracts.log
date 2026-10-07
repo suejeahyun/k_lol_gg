@@ -1,0 +1,448 @@
+[db-contract] isolated PostgreSQL 18 cluster started
+✔ all journaled migrations install idempotently on a distinct empty PostgreSQL 18 database (800.5555ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1454.2966
+✔ four guards reject unsafe database targets (0.8351ms)
+▶ migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18
+  ✔ forward migration preserves existing player rows and is idempotent (1005.8582ms)
+  ✔ auth and TOTP constraints fail closed (106.4495ms)
+  ✔ database auth repository persists durable session, TOTP, and rate-limit state (200.5635ms)
+  ✔ registry uniqueness and lifecycle constraints are enforced (5.663ms)
+  ✔ PostgresPlayerRepository returns only public active projections (23.0998ms)
+  ✔ domain change and audit append commit or roll back atomically (7.5952ms)
+✔ migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18 (1355.3223ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2014.5837
+✔ usage storage: idempotency, KST days, visits, identity transitions, staff exclusions and durable limits (226.0361ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 886.1905
+✔ 0041 fresh install, populated 0040 upgrade and reapply preserve enrollment history (2567.1355ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3210.3343
+▶ administrator TOTP lifecycle is serialized, audited, and rolled back atomically
+  ✔ a TOTP setup session that expires while queued cannot mutate security state (536.0114ms)
+  ✔ pending setup never rotates silently and explicit cancellation is auditable (14.997ms)
+  ✔ concurrent enable has one winner and revokes every session in its transaction (14.4566ms)
+  ✔ audit insertion failure rolls credential, version, and revocation back (11.7818ms)
+  ✔ concurrent self-disable deletes the factor and revokes all sessions exactly once (17.0892ms)
+  ✔ USER is rejected while SUPER_ADMIN self-setup remains allowed (6.2291ms)
+✔ administrator TOTP lifecycle is serialized, audited, and rolled back atomically (686.6828ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1333.5271
+✔ S02 player mutations, legacy mapping, privacy, replay, and rollback hold on PostgreSQL 18 (1119.0322ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1836.8794
+▶ season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18
+  ✔ retired lifecycle timestamps reject activated or ended history (3.1356ms)
+  ✔ concurrent activation leaves exactly one active season (148.7177ms)
+  ✔ clone creates a draft and stale clone revision is rejected (9.0148ms)
+  ✔ Kakao provenance hash and position invariants are enforced by PostgreSQL (221.8476ms)
+  ✔ SUPER resolves or cancels pending Kakao applications with idempotency, merge policy and safe team handoff (258.3556ms)
+  ✔ SITE upsert reuses the same player/date/round row imported from Kakao (15.7809ms)
+  ✔ command receipts expire after 24 hours and an expired key is safely reusable (7.5799ms)
+  ✔ season audit snapshots retain lifecycle and schedule field diffs (11.1521ms)
+  ✔ clone and cancellation roll back with their audit event (9.1509ms)
+  ✔ owner cancellation, resubmission and admin review honor revisions (77.6769ms)
+  ✔ public DTO excludes member, login, Discord and internal review fields (5.8417ms)
+  ✔ public status counts cover the full roster while the projection is capped at 200 (45.8864ms)
+  ✔ viewer approval and active-player capability are rechecked from the database (27.7642ms)
+  ✔ non-approved account is rechecked inside the mutation transaction (0.8353ms)
+  ✔ ACCOUNT and ADMIN purposes cannot cross-authorize season commands (3.5269ms)
+  ✔ ADMIN and SUPER_ADMIN roles may use approved user actions only through ACCOUNT sessions (19.1796ms)
+  ✔ session revocation wins over a queued ACCOUNT mutation (157.1857ms)
+  ✔ optional TOTP removal preserves a valid password-only ADMIN session (171.8223ms)
+  ✔ soft-deleted account is rejected again inside the mutation transaction (1.3803ms)
+  ✔ reviewer history restricts hard deletion of the reviewer account (5.8684ms)
+  ✔ audit failure rolls the season and idempotency receipt back together (3.3402ms)
+  ✔ ending and retirement preserve history instead of cascading deletion (7.2679ms)
+✔ season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18 (1308.584ms)
+✔ site and Kakao serialize the last seat, allow explicit reserves and block closed rounds (293.7389ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2314.1001
+▶ site capacity transition queue is atomic, scoped, replay-safe and offline tolerant
+  ✔ UNVERIFIED matches only one-candidate review items (12.1564ms)
+  ✔ website roster ignores legacy pending in another scope or mode (76.3541ms)
+  ✔ 9 to 10, retry and unchanged 10 create a single notification (41.8582ms)
+  ✔ failed application transaction rolls back its notification (23.4709ms)
+  ✔ another scope or target cannot claim and replay is refused (11.6572ms)
+  ✔ offline lease expires, concurrent polls claim once, ACK is idempotent (27.3308ms)
+  ✔ uncertain send is terminal; a newer 9 to 10 transition remains separate (43.6639ms)
+  ✔ expiry, failure bound and retention are enforced (26.0315ms)
+✔ site capacity transition queue is atomic, scoped, replay-safe and offline tolerant (348.0638ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1011.7886
+✔ S01 account lifecycle, recovery security, races, replay, and rollback hold on PostgreSQL 18 (3836.511ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7990.2097
+▶ S04 stores participant display identity and rejection reasons as durable history
+  ✔ published detail keeps ten KDA rows and exposes a real API 404/fallback contract (47.0774ms)
+  ✔ registry rename does not rewrite a recorded participant or its archived revision (238.507ms)
+  ✔ reject after and reopen before audit snapshots retain the cleared public reason (17.0137ms)
+  ✔ web submission accepts only the owner's current valid selected team draft (21.9012ms)
+  ✔ admin match creation rechecks and persists the exact selected team draft (19.779ms)
+  ✔ submission approval carries team-balance provenance through match history and outbox (34.7568ms)
+✔ S04 stores participant display identity and rejection reasons as durable history (622.4068ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1287.9749
+▶ match writes accept password-only administrators and enforce current session boundaries
+  ✔ ADMIN without TOTP (19.6826ms)
+  ✔ SUPER_ADMIN without TOTP (2.5717ms)
+  ✔ existing TOTP session (2.9213ms)
+  ✔ ACCOUNT cookie cannot authorize admin import (2.5529ms)
+  ✔ ordinary member (1.7776ms)
+  ✔ revoked session (2.0398ms)
+  ✔ expired session despite earlier request time (2.191ms)
+  ✔ stale auth version (1.775ms)
+  ✔ changed role (2.248ms)
+  ✔ suspended account (1.6898ms)
+  ✔ deleted account (1.6394ms)
+  ✔ password reset required (1.5867ms)
+  ✔ fixture session cannot write (1.8873ms)
+  ✔ approved member submission (1.8315ms)
+✔ match writes accept password-only administrators and enforce current session boundaries (132.8005ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 775.6636
+✔ S05 rebuilds PUBLISHED match statistics atomically and receipts make replay idempotent (371.3706ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1047.2048
+✔ S10 media publication requires a live admin session and is idempotent, asset-safe, auditable, and soft archived (277.6565ms)
+✔ S10 admin upload persists STAGED to READY, lists by exact draft, attaches safely, and tombstones unused assets (229.1473ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1249.6796
+✔ team internal experience counts published games only and converges after void and restore (225.2189ms)
+✔ team-only override requires a live SUPER session and recent solo provider requires connected fresh identity (255.2297ms)
+✔ S06 draft lifecycle is owner/admin authorized, append-only, transactional, and idempotent (588.2787ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1771.4008
+✔ S05-B persists canonical full-ledger MMR replay without competing for the S04 outbox (2480.4191ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3191.5052
+✔ S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomically with owner/session checks (339.8128ms)
+✔ party member statistics are bounded and count distinct parties and primary companions (83.0389ms)
+✔ S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity (88.5892ms)
+✔ Kakao aggregate controllers block confused-deputy lifecycle mutations (132.2482ms)
+✔ V4 scrim finish completes only the active same-room target and replays without duplicate writes (95.405ms)
+✔ concurrent V4 party member commands serialize on the locked latest aggregate (255.8202ms)
+✔ concurrent V4 scrim participant commands compose after the database row lock (144.4347ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1827.8625
+✔ S09 operation forms persist signed submissions and ADMIN TOTP mutations atomically (251.3185ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 897.8079
+✔ signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room (152.0249ms)
+✔ in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room (286.5058ms)
+✔ authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes (273.757ms)
+✔ signed Kakao season snapshots match exact players and preserve unresolved entries for review (149.818ms)
+✔ recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks (119.7486ms)
+✔ in-house shortcuts and full snapshots enforce integrated SITE capacity while preserving confirmed decisions (177.8331ms)
+✔ in-house finish preserves every roster row, hides the round, and replays without writes (114.429ms)
+✔ editable inhouse forms count unlinked names, merge concurrent additions, protect SITE rows and retain closed rosters (402.0024ms)
+✔ name-first in-house copies keep pending slots and merge metadata without overwriting newer edits (182.8349ms)
+✔ in-house copy forms reopen a vacated reserve slot and preserve the remaining roster (141.7116ms)
+✔ owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke (131.2891ms)
+✔ Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox (158.0701ms)
+✔ inhouse roster matching uses bounded lookups for ten members and guests (230.1416ms)
+ℹ {"label":"1-members-save","queries":31,"memberLookups":1,"applicationLookups":1,"elapsedMs":12}
+ℹ {"label":"1-members-unchanged","queries":26,"memberLookups":0,"applicationLookups":0,"elapsedMs":13}
+ℹ {"label":"10-members-save","queries":40,"memberLookups":1,"applicationLookups":1,"elapsedMs":16}
+ℹ {"label":"10-members-unchanged","queries":26,"memberLookups":0,"applicationLookups":0,"elapsedMs":9}
+ℹ {"label":"10-guests-save","queries":39,"memberLookups":1,"applicationLookups":0,"elapsedMs":14}
+ℹ {"label":"10-guests-unchanged","queries":27,"memberLookups":1,"applicationLookups":0,"elapsedMs":10}
+✔ inhouse overview projects all three modes and excludes other rooms, closed rounds and drafts (99.3796ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3430.9562
+▶ Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST
+  ✔ scope, kind, target and operating-day binding are mandatory (5.7098ms)
+  ✔ concurrent readers reuse a single durable original (63.7905ms)
+  ✔ transaction rollback does not leave an issued code behind (3.216ms)
+  ✔ database constraints fail closed even when application validation is bypassed (104.1752ms)
+  ✔ midnight preserves the code but the exact 06:00 boundary rejects it (51.9573ms)
+  ✔ bounded retention cleanup never removes a live original (24.5734ms)
+✔ Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST (356.1201ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 999.3067
+✔ one installation maps to exactly one canonical room without room parsing or sender allowlists (257.7534ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 899.8529
+✔ ADR0011 lists more than twenty parties without snapshots and reads scoped active/draft details directly (139.7549ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 815.9437
+✔ [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle (1.0697ms)
+✔ [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member (7.1229ms)
+✔ [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot (3.5305ms)
+✔ [P0-PARTY-03] slash and comma in one reserve row stay in one display name (0.3775ms)
+✔ [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target (1.1451ms)
+✔ [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot (0.6305ms)
+✔ [P0-PARTY-06] member order is canonical and independent of pasted row order (0.6309ms)
+✔ [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved (1.0749ms)
+✔ [P0-PARTY-08] multiline metadata values match their single-line semantic values (0.9008ms)
+✔ [P0-PARTY-09] an automatic-number empty draft never creates a recruit (0.776ms)
+✔ [P0-OPS-01] all four forms preserve values continued on the following line (3.1086ms)
+✔ [P0-OPS-02] all four forms expose exact missing-field contracts without submission (0.6595ms)
+✔ [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter (0.191ms)
+✔ [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN (0.8444ms)
+✔ [P0-OPS-05:friends] field order does not alter the canonical payload (0.5551ms)
+✔ [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form (0.2357ms)
+✔ [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field (0.3072ms)
+✔ [P0-OPS-05:suggestions] field order does not alter the canonical payload (0.2026ms)
+✔ [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form (0.1463ms)
+✔ [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field (0.2151ms)
+✔ [P0-OPS-05:meetups] field order does not alter the canonical payload (0.2925ms)
+✔ [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form (0.1984ms)
+✔ [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field (0.2803ms)
+✔ [P0-OPS-05:leaves] field order does not alter the canonical payload (0.2621ms)
+✔ [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form (0.1828ms)
+✔ [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field (0.3161ms)
+✔ [P0-OPS-08] prose mentioning every label is not classified as a form (0.2183ms)
+✔ [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed (0.6736ms)
+✔ [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched (0.6839ms)
+✔ [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch (0.4829ms)
+✔ [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server (0.1437ms)
+✔ [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker (0.2122ms)
+✔ [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role (250.7749ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1006.8671
+(node:23976) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ S07 event adapter persists exact-ten lifecycle, S06 teams, correction invalidation and owner-safe reads (867.689ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1608.5707
+✔ S08 adapter persists recruitment, seeded auction, BO stages, roster history, MVP revote and atomic receipts (4295.2798ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5070.4358
+✔ S13 settings, AI ledger and signed maintenance preserve authorization and idempotency contracts (358.975ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1030.8766
+✔ storage probe atomically limits concurrent jobs, rejects replay, and records synthetic storage success and failure (148.2964ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 798.6522
+✔ admin diagnostics aggregate only current notice scope and fixed operational evidence in a bounded read-only transaction (256.2771ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 901.259
+✔ 0045 fresh, populated 0044 upgrade and replay preserve existing Riot links and summaries (2862.2714ms)
+✔ Riot analytics archive deduplicates, pages without upstream access, retains daily observations and hides changed connections (237.0823ms)
+✔ S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit and outbox atomic (352.3115ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4125.4036
+✔ production RSO cache and signed sync job survive application retry without persisting credentials (346.332ms)
+✔ scheduled Riot repository excludes ineligible identities and duplicate/recent work (119.5491ms)
+✔ Riot key probe persists only safe outcomes and rejects replay, rapid retry, invalid signature and disabled flag (85.0019ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1224.0777
+✔ S11 discipline records and private evidence persist with masked ownership, replay, and exact review state (419.4557ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1156.0669
+✔ S10 champion catalog keeps live ADMIN session mutations, replay and durable ledgers atomic (260.9966ms)
+✔ S10 champion image backfill applies and rolls back all 173 NULL fixture rows (179.0518ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1125.3714
+{"kind":"isolated-postgresql-recovery","archiveBytes":1143308,"archiveSha256":"b5286290a6c1b05533e54adc9b14a4c1f24fd54df4a94d8bdb244383de981157","migrationCount":48,"migrationHead":"0047_usage_analytics","tableCount":112,"schemaDefinitionCount":3607,"exactTableCountsMatched":true,"fixtureRelationMatched":true,"foreignKeysValidated":true,"migrationReplayNoop":true,"failedMigrationRolledBack":true}
+✔ PostgreSQL custom archive restores the complete schema, data and migration head (2887.7132ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3539.5904
+✔ bounded maintenance deletes only expired rows and records an atomic replayable result (132.1841ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 802.2165
+[browser-qa-ready] http://127.0.0.1:50249; synthetic credentials retained only in ignored .tmp file
+[browser-qa-command] ready | code | empty | season-error | season-restore | account-error | account-restore | sessions-error | sessions-restore | bump-approved | stop
+[db-contract] cluster stopped and disposable workspace path removed
+
+Harness exit 0 (exec session 1651)

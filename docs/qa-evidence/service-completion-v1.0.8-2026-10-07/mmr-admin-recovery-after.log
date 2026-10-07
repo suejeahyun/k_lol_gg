@@ -1,0 +1,21 @@
+✔ successful HTTP status without the published generation is not claimed as completed (119.7837ms)
+✔ response-loss retry preserves the same adjustment idempotency key and body (25.3364ms)
+✔ same-tick adjustment submits issue at most one request (27.3146ms)
+✔ successful adjustment remains locked until the refreshed generation arrives (22.9833ms)
+✔ corrupt success responses for both commands remain uncertain and replay the original request (285.4692ms)
+✔ unreadable JSON, transient errors and throttling keep the frozen request retryable (61.2332ms)
+✔ expired or insufficient sessions preserve the request through a separate admin login (31.538ms)
+✔ generation conflicts require an explicit refresh and clear the selected adjustment player (12.5647ms)
+✔ definitive input rejection preserves editable input and does not announce success (18.6293ms)
+✔ admin without SUPER role sees no mutation form and valid recalculation requests retain preconditions (11.9922ms)
+✔ public MMR page exposes canonical allowlisted filters and bounded projection summaries (1.2931ms)
+✔ admin MMR workspace connects protected recalculate, adjustment, players and review states (0.9226ms)
+✔ team balance provider selects READY MMR before statistics fallback (0.7309ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 882.359

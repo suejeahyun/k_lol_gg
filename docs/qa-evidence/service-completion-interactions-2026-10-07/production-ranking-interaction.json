@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-07T13:28:35.057Z",
+  "source": "0716a60bf09654118cc40493481839d75269b3f7",
+  "origin": "https://k-lol-gg.vercel.app",
+  "passed": true,
+  "observed": [
+    "click participation -> 02/03 and participation heading/links",
+    "click MVP -> 03/03 and MVP heading/links",
+    "Left key on MVP -> 02/03 participation",
+    "click win rate -> 01/03 win rate"
+  ],
+  "scope": "Real public UI interaction after old local confirm tab was closed. No production data mutations, no new real-device claim."
+}
