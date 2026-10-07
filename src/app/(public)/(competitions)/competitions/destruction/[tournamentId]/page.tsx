@@ -114,7 +114,7 @@ export default async function DestructionDetailPage({ params, searchParams }: { 
     <section className={styles.facts} aria-label="멸망전 요약">
       <article><UsersRound aria-hidden="true" /><div><span>팀·확정 로스터</span><strong>{destruction.teams.length}팀 · {participantCount}명</strong></div></article>
       <article><Swords aria-hidden="true" /><div><span>예선 방식</span><strong>{publicPreliminaryFormatLabel(destruction.preliminaryFormat)} · BO{destruction.preliminaryBestOf}</strong></div></article>
-      <article><Sparkles aria-hidden="true" /><div><span>본선 진출</span><strong>상위 {destruction.advanceTeamCount}팀</strong></div></article>
+      <article><Sparkles aria-hidden="true" /><div><span>본선 진출</span><strong>{destruction.qualifiedTeamIds.length ? `${destruction.qualifiedTeamIds.length}팀 확정` : `상위 ${destruction.advanceTeamCount}팀`}</strong></div></article>
       <article><Crown aria-hidden="true" /><div><span>우승 팀</span><strong>{destruction.championTeamName ?? "아직 결정 전"}</strong></div></article>
     </section>
     <nav className={styles.detailTabs} aria-label="멸망전 상세 메뉴">

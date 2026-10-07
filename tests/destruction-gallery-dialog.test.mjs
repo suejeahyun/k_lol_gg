@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const pagePath = "src/app/(public)/(competitions)/competitions/destruction/[tournamentId]/page.tsx";
 const tournamentId = "41c9a56a-657d-4cda-a27b-ec49e512d6c6";
 const image = { assetId: "synthetic-gallery-image", ordinal: 0, url: "https://example.invalid/synthetic-gallery-image.webp" };
-const fixture = { id: tournamentId, revision: 1, title: "합성 대회", status: "COMPLETED", gameMode: "CLASSIC", teams: [], unassignedPlayers: [], recruitment: [], preliminaryFixtures: [], tournamentFixtures: [], preliminaryBestOf: 1, preliminaryFormat: "ROUND_ROBIN", advanceTeamCount: 0, mvpResults: [], championTeamName: null, gallery: { title: "합성 갤러리", description: "", images: [image] } };
+const fixture = { id: tournamentId, revision: 1, title: "합성 대회", status: "COMPLETED", gameMode: "CLASSIC", teams: [], unassignedPlayers: [], recruitment: [], preliminaryFixtures: [], tournamentFixtures: [], qualifiedTeamIds: [], preliminaryBestOf: 1, preliminaryFormat: "ROUND_ROBIN", advanceTeamCount: 0, mvpResults: [], championTeamName: null, gallery: { title: "합성 갤러리", description: "", images: [image] } };
 function find(tree, predicate) { if (!React.isValidElement(tree)) return null; if (predicate(tree)) return tree; for (const child of React.Children.toArray(tree.props.children)) { const result = find(child, predicate); if (result) return result; } return null; }
 
 async function renderPage() {

@@ -1,0 +1,19 @@
+✔ gallery deep link starts a native modal at its close action (101.8248ms)
+✔ gallery modal contains Tab and Shift+Tab within its one close control (35.9837ms)
+✔ Escape follows the same gallery close link without replacing browser history (34.2678ms)
+✔ close or browser-back cleanup restores scrolling and the original image link (28.5758ms)
+✔ gallery keeps the existing image, ordinal, accessible name and URL paths (27.0963ms)
+✔ a recorded bracket that differs from calculated qualifiers preserves all records without claiming a final rank (219.2007ms)
+✔ matching and unpublished qualifiers retain calculated ranks and normal advancement criteria (102.7737ms)
+✔ the public detail summary distinguishes actual confirmed teams from a future qualification threshold (146.7535ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.0773ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (2.6602ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.6936ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 772.4286

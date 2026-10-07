@@ -1,0 +1,66 @@
+✖ gallery deep link starts a native modal at its close action (101.1246ms)
+✖ gallery modal contains Tab and Shift+Tab within its one close control (34.6253ms)
+✖ Escape follows the same gallery close link without replacing browser history (30.1848ms)
+✖ close or browser-back cleanup restores scrolling and the original image link (24.0195ms)
+✖ gallery keeps the existing image, ordinal, accessible name and URL paths (21.4468ms)
+✔ a recorded bracket that differs from calculated qualifiers preserves all records without claiming a final rank (203.6418ms)
+✔ matching and unpublished qualifiers retain calculated ranks and normal advancement criteria (88.0945ms)
+✔ the public detail summary distinguishes actual confirmed teams from a future qualification threshold (120.8986ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (2.0948ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (3.5688ms)
+✔ API source keeps account owner and ADMIN boundaries separate (1.4838ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 6
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 681.7617
+
+✖ failing tests:
+
+test at tests\destruction-gallery-dialog.test.mjs:76:1
+✖ gallery deep link starts a native modal at its close action (101.1246ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at Object.DestructionDetailPage [as default] (evalmachine.<anonymous>:117:3145)
+      at async renderPage (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:70:16)
+      at async TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:77:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+
+test at tests\destruction-gallery-dialog.test.mjs:82:1
+✖ gallery modal contains Tab and Shift+Tab within its one close control (34.6253ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at Object.DestructionDetailPage [as default] (evalmachine.<anonymous>:117:3145)
+      at async renderPage (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:70:16)
+      at async TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:83:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at tests\destruction-gallery-dialog.test.mjs:92:1
+✖ Escape follows the same gallery close link without replacing browser history (30.1848ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at Object.DestructionDetailPage [as default] (evalmachine.<anonymous>:117:3145)
+      at async renderPage (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:70:16)
+      at async TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:93:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at tests\destruction-gallery-dialog.test.mjs:100:1
+✖ close or browser-back cleanup restores scrolling and the original image link (24.0195ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at Object.DestructionDetailPage [as default] (evalmachine.<anonymous>:117:3145)
+      at async renderPage (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:70:16)
+      at async TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:101:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at tests\destruction-gallery-dialog.test.mjs:109:1
+✖ gallery keeps the existing image, ordinal, accessible name and URL paths (21.4468ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at Object.DestructionDetailPage [as default] (evalmachine.<anonymous>:117:3145)
+      at async renderPage (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:70:16)
+      at async TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/ux-discoverability-20261002/tests/destruction-gallery-dialog.test.mjs:110:19)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
