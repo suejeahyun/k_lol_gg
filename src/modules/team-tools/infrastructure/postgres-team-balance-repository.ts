@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 
+import { isAdminRole } from "@/modules/auth/domain/auth-session";
 import {
   ADMIN_MUTATION_SESSION_POLICY,
   APPROVED_ACCOUNT_MUTATION_SESSION_POLICY,
@@ -239,11 +240,11 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
 
   async setPlayerOverride(envelope: TeamBalanceCommandEnvelope, expectedRevision: number, input: TeamBalanceOverrideInput, now = new Date()): Promise<TeamBalanceMutationResult> {
     const validated = parseTeamBalanceOverride(input);
-    if (envelope.actorSession.role !== "SUPER_ADMIN" || envelope.authorization !== "ADMIN_MUTATION") throw new TeamBalanceServiceError("FORBIDDEN", "최고 관리자만 팀 편성 보정을 변경할 수 있습니다.");
+    if (!isAdminRole(envelope.actorSession.role) || envelope.authorization !== "ADMIN_MUTATION") throw new TeamBalanceServiceError("FORBIDDEN", "관리자만 팀 편성 보정을 변경할 수 있습니다.");
     if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0 || envelope.scope !== "admin:team-balance:override") throw new TeamBalanceServiceError("INVALID_INPUT", "보정 revision 또는 명령 범위가 올바르지 않습니다.");
     return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
-      // The existing idempotent helper rechecks the exact SUPER role and TOTP
-      // session before receipt replay. Player locking also serializes first insert.
+      // The idempotent helper rechecks the live admin session before receipt replay.
+      // Player locking also serializes first insert.
       const player = (await transaction.select({ id: players.id, status: players.status }).from(players).where(eq(players.id, validated.playerId)).for("update").limit(1))[0];
       if (!player || player.status !== "ACTIVE") throw new TeamBalanceServiceError("NOT_FOUND", "활성 플레이어를 찾을 수 없습니다.");
       const before = (await transaction.select().from(teamBalancePlayerOverrides).where(eq(teamBalancePlayerOverrides.playerId, validated.playerId)).for("update").limit(1))[0];

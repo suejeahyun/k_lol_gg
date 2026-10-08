@@ -21,6 +21,7 @@ class CdpClient {
   private nextId = 1;
   private readonly pending = new Map<number, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
   private readonly waiters = new Map<string, CdpWaiter[]>();
+  readonly runtimeErrors: string[] = [];
 
   constructor(webSocketUrl: string) {
     this.socket = new WebSocket(webSocketUrl);
@@ -46,6 +47,10 @@ class CdpClient {
         return;
       }
       if (!message.method || !message.params) return;
+      if (message.method === "Runtime.exceptionThrown") {
+        const details = message.params.exceptionDetails as { text?: string; exception?: { description?: string } } | undefined;
+        this.runtimeErrors.push(details?.exception?.description ?? details?.text ?? "Unknown browser exception");
+      }
       const methodWaiters = this.waiters.get(message.method) ?? [];
       for (const waiter of [...methodWaiters]) {
         if (!waiter.predicate(message.params)) continue;
@@ -194,6 +199,7 @@ export class IsolatedChromium {
       const client = new CdpClient(target.webSocketDebuggerUrl);
       await client.open();
       await Promise.all([client.call("Page.enable"), client.call("Network.enable"), client.call("Runtime.enable")]);
+      await client.call("Page.bringToFront");
       return new IsolatedChromium(origin, profileDirectory, child, client);
     } catch (error) {
       child.kill("SIGKILL");
@@ -210,6 +216,23 @@ export class IsolatedChromium {
     await this.client.call("Emulation.setDeviceMetricsOverride", {
       width, height, deviceScaleFactor: 1, mobile: false,
     });
+  }
+
+  async setOffline(offline: boolean) {
+    await this.client.call("Network.emulateNetworkConditions", {
+      offline, latency: 0, downloadThroughput: -1, uploadThroughput: -1,
+    });
+  }
+
+  async captureScreenshot() {
+    const { data } = await this.client.call<{ data: string }>("Page.captureScreenshot", {
+      format: "png", captureBeyondViewport: false,
+    });
+    return Buffer.from(data, "base64");
+  }
+
+  getRuntimeErrors() {
+    return [...this.client.runtimeErrors];
   }
 
   async setCookie(cookie: string) {

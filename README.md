@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-08 내전 팀 편성 점수 관리자 편집 (로컬 변경)**: 일반 관리자 점수 저장 권한과 검색·점수 비교·초기화·재시도 화면을 개선했습니다. 운영 미배포. [검증 근거](docs/qa-evidence/team-balance-admin-2026-10-08/README.md).
+
 **2026-10-07 관리자 표시·MMR 요청 복구 1.0.8 운영 반영**: 이벤트 단계·참가자 표시를 한국어로 정리하고 MMR 응답 확인·동일 요청 재시도·중복 전송/갱신 중 잠금을 보완했습니다. [전체 기능 원장](docs/qa-evidence/service-completion-v1.0.8-2026-10-07/README.md), [배포·검증·미확인 조건](docs/qa-evidence/service-completion-v1.0.8-2026-10-07/production.md), [변경 안내](docs/patch-notes/2026-10-07-service-completion-1.0.8.md). 실제 최고관리자 인증·확인창 뒤 조작·외부 계정/기기가 남아 전체 완료는 보류입니다.
 
 **2026-10-07 홈 이름·Riot 진단 1.0.7 운영 반영**: 좁은 화면의 긴 선수명, Riot 부분 동기화의 원인 기록, 응답 시간 초과 분류와 실제 연결 방식 표시를 보완했습니다. [현재 전체 원장](docs/qa-evidence/service-completion-v1.0.7-2026-10-07/README.md), [배포·검증·미확인 조건](docs/qa-evidence/service-completion-v1.0.7-2026-10-07/production.md), [변경 안내](docs/patch-notes/2026-10-07-service-completion-1.0.7.md). 전체 완료 판정은 실제 최고관리자 인증·브라우저 조작 제약·외부 기기/계정 확인과 분리합니다.

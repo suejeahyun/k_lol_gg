@@ -94,7 +94,7 @@ test("team internal experience counts published games only and converges after v
   } finally { await pool.end(); }
 });
 
-test("team-only override requires a live SUPER session and recent solo provider requires connected fresh identity", async () => {
+test("team-only override requires a live admin session and recent solo provider requires connected fresh identity", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
@@ -105,10 +105,12 @@ test("team-only override requires a live SUPER session and recent solo provider 
   const adminId = randomUUID();
   const superSessionId = randomUUID();
   const adminSessionId = randomUUID();
+  const ownerSessionId = randomUUID();
   const linkId = randomUUID();
   const now = new Date();
   const superActor = { userAccountId: superId, sessionId: superSessionId, role: "SUPER_ADMIN", authVersion: 0 } as const;
   const adminActor = { userAccountId: adminId, sessionId: adminSessionId, role: "ADMIN", authVersion: 0 } as const;
+  const ownerActor = { userAccountId: ownerId, sessionId: ownerSessionId, role: "USER", authVersion: 0 } as const;
   const repository = new PostgresTeamBalanceRepository(database);
   const provider = new PostgresTeamBalanceRatingProvider(() => now);
   const input = { playerId, score: 25, reason: "운영자가 확인한 팀 편성 보조 조정" };
@@ -126,6 +128,8 @@ test("team-only override requires a live SUPER session and recent solo provider 
       id: actor.sessionId, tokenHash: randomBytes(32), userAccountId: actor.userAccountId, authVersion: 0, role: actor.role,
       purpose: "ADMIN" as const, totpVerifiedAt: now, issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000),
     })));
+    await database.insert(authSessions).values({ id: ownerSessionId, tokenHash: randomBytes(32), userAccountId: ownerId,
+      authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000) });
     await database.insert(players).values({ id: playerId, userAccountId: ownerId, memberName: "Aux contract", memberNameNormalized: `aux-${playerId}`,
       nickname: "AuxPlayer", nicknameNormalized: `aux${playerId}`, tagLine: "KR1", tagLineNormalized: "kr1" });
     const initial = (await provider.load(database, [playerId])).ratings.get(playerId)?.v1;
@@ -141,7 +145,23 @@ test("team-only override requires a live SUPER session and recent solo provider 
     const audit = (await database.select().from(auditEvents).where(and(eq(auditEvents.action, "TEAM_BALANCE_OVERRIDE_SET"), eq(auditEvents.targetId, playerId))))[0]!;
     assert.equal(audit.afterJson?.score, 25);
     assert.equal(audit.metadataJson?.affectsMmr, false);
-    await assert.rejects(repository.setPlayerOverride(command(adminActor, "admin"), 1, input, now), serviceError("FORBIDDEN"));
+    const adminCommand = command(adminActor, "admin", 1);
+    assert.equal((await repository.setPlayerOverride(adminCommand, 1, input, now)).revision, 2);
+    assert.equal((await repository.setPlayerOverride(adminCommand, 1, input, now)).replayed, true);
+    const adminAudits = await database.select().from(auditEvents).where(and(eq(auditEvents.action, "TEAM_BALANCE_OVERRIDE_SET"), eq(auditEvents.targetId, playerId), eq(auditEvents.actorUserAccountId, adminId)));
+    assert.equal(adminAudits.length, 1, "ADMIN replay does not append another audit event");
+    assert.equal(adminAudits[0]?.beforeJson?.revision, 1);
+    assert.equal(adminAudits[0]?.afterJson?.revision, 2);
+    assert.equal(adminAudits[0]?.metadataJson?.affectsMmr, false);
+    await assert.rejects(repository.setPlayerOverride(command(ownerActor, "user", 2), 2, input, now), serviceError("FORBIDDEN"));
+    for (const actor of [adminActor, superActor]) {
+      const accountActor = { ...actor, sessionId: randomUUID() };
+      await database.insert(authSessions).values({ id: accountActor.sessionId, tokenHash: randomBytes(32), userAccountId: actor.userAccountId,
+        authVersion: 0, role: actor.role, purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000) });
+      await assert.rejects(repository.setPlayerOverride(command(accountActor, `account-${actor.role}`, 2), 2, input, now), serviceError("SESSION_STALE"));
+      const accountCommand = { ...command(accountActor, `account-auth-${actor.role}`, 2), authorization: "APPROVED_ACCOUNT_MUTATION" as const };
+      await assert.rejects(repository.setPlayerOverride(accountCommand, 2, input, now), serviceError("FORBIDDEN"));
+    }
     await assert.rejects(repository.setPlayerOverride(command(superActor, "stale"), 0, input, now), serviceError("PRECONDITION_FAILED"));
     const changed = { ...input, score: 40 };
     await assert.rejects(repository.setPlayerOverride(command(superActor, "set", 0, changed), 0, changed, now), serviceError("IDEMPOTENCY_MISMATCH"));
@@ -167,6 +187,21 @@ test("team-only override requires a live SUPER session and recent solo provider 
     await assert.rejects(database.update(teamBalancePlayerOverrides).set({ score: 1001 }).where(eq(teamBalancePlayerOverrides.playerId, playerId)), (error: unknown) => (error as { cause?: { constraint?: string } }).cause?.constraint === "team_balance_override_score_range");
     await database.update(authSessions).set({ totpVerifiedAt: null }).where(eq(authSessions.id, superSessionId));
     assert.equal((await repository.setPlayerOverride(original, 0, input, now)).replayed, true);
+    await database.update(authSessions).set({ totpVerifiedAt: null }).where(eq(authSessions.id, adminSessionId));
+    assert.equal((await repository.setPlayerOverride(adminCommand, 1, input, now)).replayed, true);
+    for (const changedAccount of [{ role: "USER" as const }, { status: "SUSPENDED" as const }, { authVersion: 1 }]) {
+      await database.update(userAccounts).set(changedAccount).where(eq(userAccounts.id, adminId));
+      await assert.rejects(repository.setPlayerOverride(adminCommand, 1, input, now), serviceError("SESSION_STALE"));
+      await database.update(userAccounts).set({ role: "ADMIN", status: "APPROVED", authVersion: 0 }).where(eq(userAccounts.id, adminId));
+    }
+    for (const changedSession of [{ role: "SUPER_ADMIN" as const }, { issuedAt: new Date(now.getTime() - 3_600_000), expiresAt: new Date(now.getTime() - 1) }, { revokedAt: now }]) {
+      await database.update(authSessions).set(changedSession).where(eq(authSessions.id, adminSessionId));
+      await assert.rejects(repository.setPlayerOverride(adminCommand, 1, input, now), serviceError("SESSION_STALE"));
+      await database.update(authSessions).set({ role: "ADMIN", issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000), revokedAt: null }).where(eq(authSessions.id, adminSessionId));
+    }
+    assert.equal((await repository.setPlayerOverride(adminCommand, 1, input, now)).replayed, true);
+    assert.equal((await repository.getPlayerOverride(playerId)).revision, 2, "denied and replayed commands never mutate the override");
+    assert.equal((await database.select().from(auditEvents).where(and(eq(auditEvents.action, "TEAM_BALANCE_OVERRIDE_SET"), eq(auditEvents.targetId, playerId)))).length, 2);
     await database.update(authSessions).set({ revokedAt: now }).where(eq(authSessions.id, superSessionId));
     await assert.rejects(repository.setPlayerOverride(original, 0, input, now), serviceError("SESSION_STALE"));
     await database.update(authSessions).set({ revokedAt: null }).where(eq(authSessions.id, superSessionId));

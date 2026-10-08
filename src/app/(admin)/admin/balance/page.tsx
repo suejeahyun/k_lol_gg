@@ -29,7 +29,7 @@ export default async function AdminBalancePage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <div><h1>통계·랭킹 상태</h1></div>
-        <nav aria-label="밸런스 관리 화면"><Link href="/admin/balance/drafts">저장 초안</Link><Link href="/admin/balance-ai">MMR 작업대</Link></nav>
+        <nav aria-label="밸런스 관리 화면"><Link href="/admin/balance/drafts">저장 초안</Link><Link href="/admin/balance-ai#team-score">내전 점수 · MMR 관리</Link></nav>
       </header>
 
       {result.state === "ready" ? (

@@ -1,5 +1,9 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-08 내전 팀 편성 점수 관리자 편집 (로컬 변경)
+
+`team-balance-admin@1.0.0`, `NOT_DEPLOYED`. 일반 관리자도 팀 편성 보정을 저장할 수 있고, 페이지 상단에서 선수 검색·현재값 비교·0점 초기화·충돌/연결 복구를 처리한다. MMR 조정·재계산은 최고 관리자 전용이다. 계약672·보정HTTP/도메인4·격리DB3, 타입·변경 lint·빌드와 실제 Chromium PC/390/320px 검증을 통과했다. commit/tag/배포는 만들지 않았다. [검증 근거](qa-evidence/team-balance-admin-2026-10-08/README.md).
+
 ## 2026-10-08 마감 모집·로그인 목적 1.0.11 운영 반영
 
 source `c419097174f34ceb2da102c2e31fe034c8611a1c`, tag `service-completion-v1.0.11`, main `dpl_5som3xAwEzW3Bqk1NMNMWHHhUNdW` READY·canonical alias·health를 확인했다. 종료된 멸망전·이벤트전·내전에서 신청/투표 로그인 유도를 먼저 표시하던 P2를 수정했다. 본인 기록 조회·정상 모집 로그인 복귀·서버 정책은 유지했다. check672계약/1068단위+skip1·운영31HTTP·실제3화면×4폭12조건과 클릭/뒤로가기/새로고침을 확인했다. [전체386경로·1203조작 위치](qa-evidence/service-completion-v1.0.11-2026-10-08/interface-inventory.json), [배포·검증·복구·남은 조건](qa-evidence/service-completion-v1.0.11-2026-10-08/production.md).

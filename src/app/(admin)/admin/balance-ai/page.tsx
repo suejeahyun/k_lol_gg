@@ -55,7 +55,8 @@ export default async function AdminBalanceAiPage({ searchParams }: {
 
   return (
     <main className={styles.page}>
-      <header className={styles.hero}><div><h1>MMR 관리</h1></div><Database aria-hidden="true" /></header>
+      <header className={styles.hero}><div><h1>내전 점수 · MMR 관리</h1></div><Database aria-hidden="true" /></header>
+      <TeamBalanceOverrideActions allowed={session.role === "ADMIN" || session.role === "SUPER_ADMIN"} />
       <nav className={styles.tabs} aria-label="MMR 관리자 탭"><Link href="/admin/balance-ai" aria-current={tab === "summary" ? "page" : undefined}>요약</Link><Link href={tabHref("players")} aria-current={tab === "players" ? "page" : undefined}>플레이어</Link><Link href={tabHref("reviews")} aria-current={tab === "reviews" ? "page" : undefined}>조정 이력</Link></nav>
       {tab !== "summary" ? <form key={`${tab}:${query?.page ?? "invalid"}:${playerQuery?.query ?? ""}:${playerQuery?.position ?? ""}:${query?.pageSize ?? 20}`} className={listStyles.filters} action="/admin/balance-ai" method="get">
         <input type="hidden" name="tab" value={tab} />
@@ -75,7 +76,6 @@ export default async function AdminBalanceAiPage({ searchParams }: {
           allowed={session.role === "SUPER_ADMIN"}
           startWithRecalculateConfirmation={action === "recalculate"}
         />
-        <TeamBalanceOverrideActions allowed={session.role === "SUPER_ADMIN"} />
       </> : <section className={styles.state} role={result.state === "invalid" || result.state === "error" ? "alert" : "status"}><h2>{result.state === "invalid" ? "목록 조건을 확인해 주세요." : "MMR 저장소를 불러올 수 없습니다."}</h2>{result.state === "invalid" ? <Link href={resetHref}>목록 초기화</Link> : <a href={pageHref(query?.page ?? 1)}>다시 불러오기</a>}</section>}
     </main>
   );

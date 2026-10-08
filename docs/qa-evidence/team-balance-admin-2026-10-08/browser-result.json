@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "actorRole": "ADMIN",
+  "syntheticDataOnly": true,
+  "checks": [
+    "ordinary-admin-login",
+    "keyboard-search-auto-load",
+    "save-plus-25",
+    "db-persisted",
+    "reload",
+    "desktop-mobile-narrow-overflow",
+    "concurrent-412-reload",
+    "offline-preserved-draft-retry",
+    "clear-zero"
+  ],
+  "screenshots": [
+    "desktop.png",
+    "mobile.png",
+    "narrow.png"
+  ]
+}

@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireTeamBalanceApiSession("SUPER_ADMIN", request);
+  const auth = await requireTeamBalanceApiSession("ADMIN", request);
   if (!auth.ok) return auth.response;
   const prepared = await prepareTeamBalanceMutation(request, scope, auth.session);
   if (!prepared.ok) return prepared.response;
