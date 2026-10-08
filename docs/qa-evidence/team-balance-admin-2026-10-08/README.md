@@ -2,8 +2,9 @@
 
 - 기능 버전: `team-balance-admin@1.0.0`
 - 확인일: 2026-10-08 (Asia/Seoul)
-- 상태: `NOT_DEPLOYED` - 로컬 소스와 검증만 존재하며 운영 배포하지 않음
-- Git commit/tag: 이 변경을 위한 commit과 tag는 생성하지 않음
+- 상태: `PRODUCTION` - 2026-10-09 KST 운영 반영 및 상태 확인
+- Git commit/tag: `69d8336609b585f302c761042efa5f8f0362c172` / `team-balance-admin-v1.0.0`
+- [운영 배포·복구 근거](production.md)
 - migration head: `0047_usage_analytics`; 스키마와 migration 변경 없음
 - [한국어 패치 노트](../../patch-notes/2026-10-08-team-balance-admin.md)
 
@@ -45,4 +46,4 @@ npm run test:db
 
 ## 남은 확인
 
-운영 배포 ID·URL·health/smoke 근거가 없으므로 이 문서는 운영 반영을 증명하지 않는다. commit과 tag가 아직 없어 릴리스 registry에는 등록하지 않았다.
+운영 READY·동일 source·alias·health와 익명 31개 HTTP 점검을 확인했다. 실제 운영 관리자 계정의 로그인 후 저장은 재실행하지 않았다. 점수 저장·변경 충돌·재시도는 격리 합성 ADMIN 브라우저 및 DB 테스트 근거다. 운영 플레이어 점수와 MMR을 시험으로 변경하지 않았다.

@@ -2068,6 +2068,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "team-balance-admin",
+      "version": "1.0.0",
+      "gitTag": "team-balance-admin-v1.0.0",
+      "commit": "69d8336609b585f302c761042efa5f8f0362c172",
+      "releasedAt": "2026-10-08T16:34:16.063Z",
+      "migrationHead": "0047_usage_analytics",
+      "qaEvidence": "docs/qa-evidence/team-balance-admin-2026-10-08/production.md",
+      "patchNotes": "docs/patch-notes/2026-10-08-team-balance-admin.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_xSQWNy5KRhVQwcBvZCtE1XbmuVGP",
+        "url": "https://k-lol-jeo8m0wdr-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-08T16:34:16.063Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

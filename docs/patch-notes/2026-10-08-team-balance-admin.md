@@ -1,7 +1,7 @@
 # 내전 팀 편성 점수 관리자 권한과 화면 개선
 
 - 기능 버전: `team-balance-admin@1.0.0`
-- 상태: `NOT_DEPLOYED` - 로컬 변경, 운영 미배포
+- 상태: `PRODUCTION` - 2026-10-09 KST 운영 반영
 - [QA 근거](../qa-evidence/team-balance-admin-2026-10-08/README.md)
 
 ## 소스 변경 사항
@@ -16,4 +16,4 @@
 
 보정 도메인·HTTP 4개, 격리 PostgreSQL DB 계약 3개, 전체 계약 테스트 672개가 통과했다. 변경 범위 lint, 타입 검사, diff 검사와 프로덕션 빌드를 통과했다. 실제 Chromium에서 일반 관리자 저장·초기화·충돌·연결 복구와 PC·390px·320px 화면을 확인했다.
 
-이 변경을 위한 Git commit/tag와 운영 배포는 생성하지 않았다.
+source `69d83366`, tag `team-balance-admin-v1.0.0`을 운영에 배포했다. READY·운영 주소·health와 31개 HTTP 점검을 확인했다. [배포·복구 기록](../qa-evidence/team-balance-admin-2026-10-08/production.md).

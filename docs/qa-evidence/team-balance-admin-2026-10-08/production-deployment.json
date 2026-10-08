@@ -1,0 +1,28 @@
+{
+  "verifiedAt": "2026-10-08T16:34:16.063Z",
+  "source": "69d8336609b585f302c761042efa5f8f0362c172",
+  "gitTag": "team-balance-admin-v1.0.0",
+  "deploymentId": "dpl_xSQWNy5KRhVQwcBvZCtE1XbmuVGP",
+  "url": "https://k-lol-jeo8m0wdr-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://k-lol-gg.vercel.app",
+  "readyState": "READY",
+  "branch": "main",
+  "healthStatus": "ready",
+  "checks": [
+    {
+      "path": "/admin/balance-ai",
+      "status": 307,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/balance-ai/team-overrides?playerId=33333333-3333-4333-8333-333333333333",
+      "status": 401,
+      "passed": true
+    }
+  ],
+  "rollback": {
+    "deploymentId": "dpl_5som3xAwEzW3Bqk1NMNMWHHhUNdW",
+    "url": "https://k-lol-5wt00cumj-tjdmswo11-3715s-projects.vercel.app"
+  },
+  "notes": "Same source as validated candidate; production health/anonymous access checked. Authenticated ADMIN writes were tested only against the isolated synthetic database."
+}
