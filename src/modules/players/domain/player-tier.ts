@@ -79,7 +79,12 @@ export function playerTierEditState(value: string | null): PlayerTierEditState {
   const family = playerTierFamily(value);
   if (!family) return { tier: "", detail: "" };
   const numericPart = value?.match(/[0-9]{1,4}/u)?.[0] ?? "";
-  if (isPlayerMasterPlusTier(family)) return { tier: family, detail: numericPart };
+  if (isPlayerMasterPlusTier(family)) {
+    const legacyFloor = family === "MASTER"
+      ? value?.normalize("NFKC").trim().match(/^마스터\s*(10|[1-9])층$/u)?.[1]
+      : undefined;
+    return { tier: family, detail: legacyFloor ? String((Number(legacyFloor) - 1) * 100) : numericPart };
+  }
 
   const rankPart = value
     ?.normalize("NFKC")

@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "actorRole": "ADMIN",
+  "syntheticDataOnly": true,
+  "checks": [
+    "ordinary-admin-login",
+    "keyboard-search-auto-load",
+    "canonical-tier-score",
+    "unsaved-final-score-preview",
+    "large-change-confirmation",
+    "save-plus-25",
+    "history-refreshed",
+    "configured-list",
+    "actual-tier-mean-median",
+    "db-persisted",
+    "reload",
+    "desktop-mobile-narrow-overflow",
+    "concurrent-412-reload",
+    "offline-conflict-reload-preserved-draft",
+    "offline-preserved-draft-retry",
+    "clear-zero"
+  ],
+  "screenshots": [
+    "desktop.png",
+    "details-desktop.png",
+    "tiers-desktop.png",
+    "mobile.png",
+    "details-mobile.png",
+    "tiers-mobile.png",
+    "narrow.png",
+    "details-narrow.png",
+    "tiers-narrow.png"
+  ]
+}

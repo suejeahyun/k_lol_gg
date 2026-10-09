@@ -57,7 +57,7 @@ export default async function AdminBalanceAiPage({ searchParams }: {
     <main className={styles.page}>
       <header className={styles.hero}><div><h1>내전 점수 · MMR 관리</h1></div><Database aria-hidden="true" /></header>
       <TeamBalanceOverrideActions allowed={session.role === "ADMIN" || session.role === "SUPER_ADMIN"} />
-      <nav className={styles.tabs} aria-label="MMR 관리자 탭"><Link href="/admin/balance-ai" aria-current={tab === "summary" ? "page" : undefined}>요약</Link><Link href={tabHref("players")} aria-current={tab === "players" ? "page" : undefined}>플레이어</Link><Link href={tabHref("reviews")} aria-current={tab === "reviews" ? "page" : undefined}>조정 이력</Link></nav>
+      <nav className={styles.tabs} aria-label="MMR 관리자 탭"><Link href="/admin/balance-ai" aria-current={tab === "summary" ? "page" : undefined}>MMR 요약</Link><Link href={tabHref("players")} aria-current={tab === "players" ? "page" : undefined}>MMR 플레이어</Link><Link href={tabHref("reviews")} aria-current={tab === "reviews" ? "page" : undefined}>MMR 조정 이력</Link></nav>
       {tab !== "summary" ? <form key={`${tab}:${query?.page ?? "invalid"}:${playerQuery?.query ?? ""}:${playerQuery?.position ?? ""}:${query?.pageSize ?? 20}`} className={listStyles.filters} action="/admin/balance-ai" method="get">
         <input type="hidden" name="tab" value={tab} />
         {tab === "players" ? <><label>플레이어 검색<input name="q" defaultValue={playerQuery?.query ?? ""} maxLength={64} placeholder="닉네임 또는 태그" /></label><label>기준 포지션<select name="position" defaultValue={playerQuery?.position ?? ""}><option value="">종합</option>{MMR_POSITIONS.map((position) => <option key={position} value={position}>{competitionPositionLabel(position)}</option>)}</select></label></> : null}

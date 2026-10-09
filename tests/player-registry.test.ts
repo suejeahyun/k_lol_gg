@@ -55,7 +55,10 @@ test("내정보 티어 선택값은 10개 티어와 다이아 이하 4단계 및
 
   assert.deepEqual(playerTierEditState("골드 2"), { tier: "GOLD", detail: "II" });
   assert.deepEqual(playerTierEditState("DIAMOND IV"), { tier: "DIAMOND", detail: "IV" });
-  assert.deepEqual(playerTierEditState("마스터 3층"), { tier: "MASTER", detail: "3" });
+  assert.deepEqual(playerTierEditState("마스터 3층"), { tier: "MASTER", detail: "200" });
+  assert.deepEqual(playerTierEditState("마스터 1층"), { tier: "MASTER", detail: "0" });
+  assert.deepEqual(playerTierEditState("마스터 10층"), { tier: "MASTER", detail: "900" });
+  assert.deepEqual(playerTierEditState("MASTER 3"), { tier: "MASTER", detail: "3" });
   assert.deepEqual(playerTierEditState("MASTER 0"), { tier: "MASTER", detail: "0" });
   assert.deepEqual(playerTierEditState("그랜드마스터 450"), { tier: "GRANDMASTER", detail: "450" });
   assert.deepEqual(playerTierEditState("CHALLENGER 9999"), { tier: "CHALLENGER", detail: "9999" });

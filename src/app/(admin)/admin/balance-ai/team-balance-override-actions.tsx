@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, RefreshCw, RotateCcw, Save, Scale } from "@/components/theme/theme-icons";
 import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 import { BoundedPicker, type BoundedPickerOption } from "../matches/bounded-picker";
+import { TeamScoreDetails, TeamScoreOverview } from "./team-score-panels";
 import styles from "./team-balance-override.module.css";
 
 type Override = { playerId: string; score: number; reason: string; revision: number; configured: boolean; updatedAt: string | null };
@@ -33,6 +34,8 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
   const [error, setError] = useState(false);
   const [recovery, setRecovery] = useState<"reload" | "login" | null>(null);
   const [retryRequest, setRetryRequest] = useState<SaveRequest | null>(null);
+  const [confirmedChange, setConfirmedChange] = useState("");
+  const [referenceRevision, setReferenceRevision] = useState(0);
   const requestId = useRef(0);
   const loadController = useRef<AbortController | null>(null);
   const sending = useRef(false);
@@ -49,6 +52,10 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
   const numericScore = Number(score);
   const validScore = score.trim() !== "" && Number.isSafeInteger(numericScore) && Math.abs(numericScore) <= 1000;
   const changed = current !== null && (numericScore !== current.score || reason.trim() !== current.reason);
+  const confirmationKey = JSON.stringify([current?.playerId, current?.revision, numericScore, reason.trim()]);
+  const needsConfirmation = current !== null && validScore && changed &&
+    (Math.abs(numericScore) >= 10 || Math.abs(numericScore - current.score) >= 10);
+  const confirmed = !needsConfirmation || confirmedChange === confirmationKey;
 
   async function load(playerId: string, preserveDraft = false) {
     if (sending.current || uncertain.current) return;
@@ -57,7 +64,7 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
     loadController.current = controller;
     const id = ++requestId.current;
     preserveDraftOnReload.current = preserveDraft;
-    setPhase("loading"); setMessage(""); setRecovery(null); setError(false); setCurrent(null);
+    setPhase("loading"); setMessage(""); setRecovery(null); setError(false); setCurrent(null); setConfirmedChange("");
     try {
       const response = await fetch(`/api/admin/balance-ai/team-overrides?playerId=${encodeURIComponent(playerId)}`, {
         cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]),
@@ -70,6 +77,7 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
       }
       const loaded = readOverride(result, playerId);
       setCurrent(loaded);
+      if (preserveDraft) setReferenceRevision((value) => value + 1);
       if (!preserveDraft) { setScore(String(loaded.score)); setReason(loaded.reason); }
       preserveDraftOnReload.current = false;
     } catch (cause) {
@@ -122,6 +130,7 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
       mutationKeys.complete(ticket);
       uncertain.current = null; setRetryRequest(null);
       setCurrent(saved); setScore(String(saved.score)); setReason(saved.reason);
+      setReferenceRevision((value) => value + 1);
       setMessage(`${points(saved.score)} 저장 완료. 새 계산 또는 초안 재평가부터 적용됩니다.`);
     } catch {
       uncertain.current = request; setRetryRequest(request); setError(true);
@@ -131,13 +140,13 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!current || locked || recovery || !validScore || !changed || reason.trim().length < 3 || reason.trim().length > 300) return;
+    if (!current || locked || recovery || !validScore || !changed || !confirmed || reason.trim().length < 3 || reason.trim().length > 300) return;
     void save({ playerId: current.playerId, score: numericScore, reason: reason.trim(), revision: current.revision });
   }
 
   return <section id="team-score" className={styles.section} aria-labelledby="team-override-title">
     <header className={styles.header}>
-      <div><Scale size={22} /><h2 id="team-override-title">내전 팀 편성 점수</h2></div>
+      <div><Scale size={22} /><h2 id="team-override-title" tabIndex={-1}>내전 팀 편성 점수</h2></div>
       <span className={styles.access}>관리자 수정 가능</span>
     </header>
     <div className={styles.workspace}>
@@ -161,19 +170,29 @@ export function TeamBalanceOverrideActions({ allowed }: { allowed: boolean }) {
           <label className={styles.label} htmlFor="team-override-reason">변경 사유</label>
           <input className={styles.reasonInput} id="team-override-reason" name="reason" type="text" minLength={3} maxLength={300} value={reason} required placeholder="최근 내전 경기력 반영" onChange={(event) => { setReason(event.target.value); setMessage(""); }} />
           <div className={styles.reasonMeta}><span>3자 이상</span><span>{reason.length}/300</span></div>
+          {needsConfirmation ? <div className={styles.confirmation}>
+            <p id="team-score-confirm-note">보정값 또는 변경량이 10점 이상입니다.</p>
+            <label htmlFor="team-score-confirm"><input id="team-score-confirm" type="checkbox" checked={confirmedChange === confirmationKey} aria-describedby="team-score-confirm-note" onChange={(event) => setConfirmedChange(event.target.checked ? confirmationKey : "")} /><span>{points(current!.score)}에서 {points(numericScore)}으로 변경하는 내용을 확인했습니다.</span></label>
+          </div> : null}
         </fieldset>
         <div className={styles.footer}>
           <div className={styles.preview} aria-label="저장 전후 보정 점수"><span>{current ? points(current.score) : "미선택"}</span><ArrowRight size={18} /><strong>{current && validScore ? points(numericScore) : "—"}</strong></div>
-          <button className={styles.save} type="submit" disabled={!allowed || !current || locked || recovery !== null || !validScore || !changed || reason.trim().length < 3}><Save size={18} />{phase === "saving" ? "저장 중…" : "보정 점수 저장"}</button>
+          <button className={styles.save} type="submit" disabled={!allowed || !current || locked || recovery !== null || !validScore || !changed || !confirmed || reason.trim().length < 3}><Save size={18} />{phase === "saving" ? "저장 중…" : "보정 점수 저장"}</button>
         </div>
       </form>
     </div>
     <p className={styles.scope}>팀 편성 전용 보정 · 새 팀 계산·초안 재평가 시 적용 · 기존 경기와 MMR 유지</p>
     <div className={styles.feedback}>
-      <p role={error ? "alert" : "status"} aria-live="polite" className={error ? styles.error : styles.success}>{message && !error ? <CheckCircle2 size={18} /> : null}{phase === "loading" ? "현재 보정값을 확인하고 있습니다." : message}</p>
+      <p id="team-score-feedback" role={error ? "alert" : "status"} aria-live="polite" className={error ? styles.error : styles.success}>{message && !error ? <CheckCircle2 size={18} /> : null}{phase === "loading" ? "현재 보정값을 확인하고 있습니다." : message}</p>
       {recovery === "login" ? <Link href="/admin/login?next=%2Fadmin%2Fbalance-ai%23team-score" target="_blank" rel="noopener noreferrer">관리자 로그인</Link> : null}
       {retryRequest ? <button type="button" disabled={busy} onClick={() => void save(retryRequest)}><RefreshCw size={16} />저장 결과 다시 확인</button> : null}
       {!retryRequest && selected && (!current || recovery === "reload") ? <button type="button" disabled={busy} onClick={() => void load(selected.value, preserveDraftOnReload.current)}><RefreshCw size={16} />{recovery === "reload" ? "최신 점수 확인" : "다시 불러오기"}</button> : null}
     </div>
+    {current && selected ? <TeamScoreDetails key={current.playerId} playerId={current.playerId} currentScore={current.score} currentRevision={current.revision} draftScore={validScore ? numericScore : null} refreshRevision={referenceRevision} reloadDisabled={locked} onReload={() => void load(current.playerId, true)} /> : null}
+    <TeamScoreOverview refreshRevision={referenceRevision} selectedPlayerId={selected?.value ?? ""} disabled={phase === "saving" || retryRequest !== null} onSelect={(option) => {
+      selectPlayer(option.value, option);
+      document.getElementById("team-score")?.scrollIntoView({ block: "start" });
+      document.getElementById("team-override-title")?.focus({ preventScroll: true });
+    }} />
   </section>;
 }

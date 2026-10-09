@@ -1,7 +1,7 @@
 export const TEAM_BALANCE_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 export const TEAM_BALANCE_TEAMS = ["BLUE", "RED"] as const;
 export const TEAM_BALANCE_PREFERENCES = ["MAIN", "SUB", "AUTO"] as const;
-export const TEAM_BALANCE_V1_FORMULA_VERSION = "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
+export const TEAM_BALANCE_V1_FORMULA_VERSION = "V1_BLUEBLACK_AI_GLOBAL_2026_10_10";
 
 export type TeamBalancePosition = (typeof TEAM_BALANCE_POSITIONS)[number];
 export type TeamBalanceTeam = (typeof TEAM_BALANCE_TEAMS)[number];
@@ -84,6 +84,24 @@ export type TeamBalancePlayer = Readonly<{
   rating: TeamBalanceRatingProviderDto | null;
 }>;
 
+export type TeamBalancePlayerPositionScore = Readonly<{
+  position: TeamBalancePosition;
+  preference: TeamBalancePreference;
+  baseScore: number;
+  soloForm: number;
+  positionSkill: number;
+  mmrBonus: number;
+  rolePenalty: number;
+  overrideScore: number;
+  effectiveScore: number;
+}>;
+
+export type TeamBalancePlayerScoreBreakdown = Readonly<{
+  baseScore: number;
+  overrideScore: number;
+  positions: readonly TeamBalancePlayerPositionScore[];
+}>;
+
 export type TeamBalanceLayoutEntry = Readonly<{
   playerId: string;
   team: TeamBalanceTeam;
@@ -111,7 +129,7 @@ export type TeamBalancePositionBreakdown = Readonly<{
 }>;
 
 export type TeamBalanceV1ScoreBreakdown = Readonly<{
-  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION;
+  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION | "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
   qualityScore: number;
   recommendationScore: number;
   predictedRedWinRate: number;
@@ -336,29 +354,31 @@ function normalizeRating(playerId: string, value: TeamBalanceRatingProviderDto |
 }
 
 function extractLp(raw: string) {
-  const match = raw.replace(/\s/gu, "").match(/(\d+)\s*(p|P|lp|LP|점)/u);
+  const compact = raw.normalize("NFKC").replace(/\s/gu, "").toLowerCase();
+  const match = compact.match(/(\d+)(?:lp|p|점)/u)
+    ?? compact.match(/^(?:master|grandmaster|challenger|마스터|그랜드마스터|챌린저)(\d+)$/u);
   return match ? Number(match[1]) : null;
 }
 
 function extractDivision(raw: string) {
-  const compact = raw.replace(/\s/gu, "").toLowerCase();
+  const compact = raw.normalize("NFKC").replace(/\s/gu, "").toLowerCase();
   for (const pattern of [
-    /(?:다이아몬드|다이아|다|diamond|d)([1-4])$/u,
-    /(?:에메랄드|에메|에|emerald|e)([1-4])$/u,
-    /(?:플래티넘|플레티넘|플레|플|platinum|p)([1-4])$/u,
-    /(?:골드|골|gold|g)([1-4])$/u,
-    /(?:실버|실|silver|s)([1-4])$/u,
-    /(?:브론즈|브|bronze|b)([1-4])$/u,
-    /(?:아이언|아|iron|i)([1-4])$/u,
+    /(?:다이아몬드|다이아|다|diamond|d)(iv|iii|ii|i|[1-4])$/u,
+    /(?:에메랄드|에메|에|emerald|e)(iv|iii|ii|i|[1-4])$/u,
+    /(?:플래티넘|플레티넘|플레|플|platinum|p)(iv|iii|ii|i|[1-4])$/u,
+    /(?:골드|골|gold|g)(iv|iii|ii|i|[1-4])$/u,
+    /(?:실버|실|silver|s)(iv|iii|ii|i|[1-4])$/u,
+    /(?:브론즈|브|bronze|b)(iv|iii|ii|i|[1-4])$/u,
+    /(?:아이언|아|iron|i)(iv|iii|ii|i|[1-4])$/u,
   ]) {
     const match = compact.match(pattern);
-    if (match) return Number(match[1]);
+    if (match) return ({ i: 1, ii: 2, iii: 3, iv: 4 } as Readonly<Record<string, number>>)[match[1]!] ?? Number(match[1]);
   }
   return null;
 }
 
 function tierScore(raw: string | null) {
-  const value = raw?.trim() ?? "";
+  const value = raw?.normalize("NFKC").trim() ?? "";
   const compact = value.replace(/\s/gu, "").toLowerCase();
   const matches = (aliases: readonly string[]) => aliases.some((alias) => compact === alias || compact.startsWith(alias));
   const division = extractDivision(value);
@@ -399,32 +419,34 @@ function v1BaseScore(v1: TeamBalanceV1RatingInputs) {
   return round(peakScore * 0.6 + currentScore * 0.3 + inhouse * 0.1);
 }
 
+function normalizePlayer(player: TeamBalancePlayer): NormalizedPlayer {
+  const playerId = player.playerId.trim();
+  if (!playerId) throw new TeamBalanceDomainError("INVALID_PLAYER_ID");
+  if (player.eligiblePositions.length === 0) throw new TeamBalanceDomainError("MISSING_ELIGIBLE_POSITION", playerId);
+  const preferences = new Map<TeamBalancePosition, TeamBalancePreference>();
+  for (const eligible of player.eligiblePositions) {
+    if (!isPosition(eligible.position)) throw new TeamBalanceDomainError("INVALID_POSITION", playerId);
+    if (!isPreference(eligible.preference)) throw new TeamBalanceDomainError("INVALID_PREFERENCE", playerId);
+    if (preferences.has(eligible.position)) throw new TeamBalanceDomainError("DUPLICATE_ELIGIBLE_POSITION", playerId);
+    preferences.set(eligible.position, eligible.preference);
+  }
+  for (const position of TEAM_BALANCE_POSITIONS) if (!preferences.has(position)) preferences.set(position, "AUTO");
+  const rating = normalizeRating(playerId, player.rating);
+  const finalBaseScore = rating.v1 ? v1BaseScore(rating.v1) : round(50 + (rating.overall - 50) * rating.confidence);
+  const peakScore = tierScore(rating.v1?.peakTier ?? null) ?? 0;
+  return {
+    playerId,
+    eligiblePositions: preferences,
+    rating,
+    finalBaseScore,
+    sTierBonus: peakScore >= 118 ? 10 : peakScore >= 112 ? 8 : peakScore >= 82 ? 5 : 0,
+    highTier: Math.max(tierScore(rating.v1?.currentTier ?? null) ?? 0, peakScore) >= 74,
+  };
+}
+
 function normalizePlayers(input: readonly TeamBalancePlayer[]): readonly NormalizedPlayer[] {
   if (input.length !== 10) throw new TeamBalanceDomainError("PARTICIPANT_COUNT", String(input.length));
-  const normalized = input.map((player) => {
-    const playerId = player.playerId.trim();
-    if (!playerId) throw new TeamBalanceDomainError("INVALID_PLAYER_ID");
-    if (player.eligiblePositions.length === 0) throw new TeamBalanceDomainError("MISSING_ELIGIBLE_POSITION", playerId);
-    const preferences = new Map<TeamBalancePosition, TeamBalancePreference>();
-    for (const eligible of player.eligiblePositions) {
-      if (!isPosition(eligible.position)) throw new TeamBalanceDomainError("INVALID_POSITION", playerId);
-      if (!isPreference(eligible.preference)) throw new TeamBalanceDomainError("INVALID_PREFERENCE", playerId);
-      if (preferences.has(eligible.position)) throw new TeamBalanceDomainError("DUPLICATE_ELIGIBLE_POSITION", playerId);
-      preferences.set(eligible.position, eligible.preference);
-    }
-    for (const position of TEAM_BALANCE_POSITIONS) if (!preferences.has(position)) preferences.set(position, "AUTO");
-    const rating = normalizeRating(playerId, player.rating);
-    const finalBaseScore = rating.v1 ? v1BaseScore(rating.v1) : round(50 + (rating.overall - 50) * rating.confidence);
-    const peakScore = tierScore(rating.v1?.peakTier ?? null) ?? 0;
-    return {
-      playerId,
-      eligiblePositions: preferences,
-      rating,
-      finalBaseScore,
-      sTierBonus: peakScore >= 118 ? 10 : peakScore >= 112 ? 8 : peakScore >= 82 ? 5 : 0,
-      highTier: Math.max(tierScore(rating.v1?.currentTier ?? null) ?? 0, peakScore) >= 74,
-    };
-  });
+  const normalized = input.map(normalizePlayer);
   normalized.sort((left, right) => comparePlayerOrder(
     left.rating.v1?.legacyPlayerId ?? null,
     left.playerId,
@@ -453,17 +475,22 @@ function reliabilityRate(count: number, bands: readonly (readonly [number, numbe
   return 0;
 }
 
-function resolveRating(player: NormalizedPlayer, position: TeamBalancePosition): InternalAssignment["rating"] {
+function effectiveScoreFromComponents(score: Omit<TeamBalancePlayerPositionScore, "effectiveScore">) {
+  return round(Math.max(0, score.baseScore + score.soloForm + score.positionSkill + score.mmrBonus + score.overrideScore - score.rolePenalty));
+}
+
+function resolvePlayerPositionScore(player: NormalizedPlayer, position: TeamBalancePosition): TeamBalancePlayerPositionScore {
   const positionRating = player.rating.positions[position];
   const hasPositionScore = positionRating?.score !== null && positionRating?.score !== undefined;
   const rawScore = hasPositionScore ? positionRating.score! : player.rating.overall;
   const confidence = positionRating?.confidence ?? player.rating.confidence;
-  const sampleSize = hasPositionScore ? positionRating!.sampleSize : player.rating.sampleSize;
+  const role = preference(player, position);
   if (!player.rating.v1) {
-    return { source: hasPositionScore ? "POSITION" : player.rating.overallSource, rawScore, effectiveScore: round(50 + (rawScore - 50) * confidence), confidence, sampleSize };
+    const components = { position, preference: role, baseScore: round(50 + (rawScore - 50) * confidence), soloForm: 0,
+      positionSkill: 0, mmrBonus: 0, overrideScore: 0, rolePenalty: 0 };
+    return { ...components, effectiveScore: effectiveScoreFromComponents(components) };
   }
   const v1 = player.rating.v1;
-  const role = preference(player, position);
   const tierMax = Math.max(tierScore(v1.currentTier) ?? 0, tierScore(v1.peakTier) ?? 0);
   const rolePenalty = role === "MAIN" ? 0 : tierMax >= 82 ? (role === "SUB" ? 18 : 35) : tierMax >= 74 ? (role === "SUB" ? 12 : 25) : role === "SUB" ? 5 : 10;
   const solo = v1.recentSolo;
@@ -495,8 +522,42 @@ function resolveRating(player: NormalizedPlayer, position: TeamBalancePosition):
   const positionSkill = round(clamp(internalPositionBonus + soloPositionBonus + soloApplyBonus, -3, 3));
   const positionMmr = v1.mmr.positions[position] ?? v1.mmr.overall;
   const mmrBonus = round(clamp(((v1.mmr.overall - 50) * 0.08 + (positionMmr - 50) * 0.12) * v1.mmr.confidence, -6, 6));
-  const effectiveScore = round(Math.max(0, player.finalBaseScore + soloForm + positionSkill + mmrBonus + v1.balanceOverrideScore - rolePenalty));
-  return { source: "V1", rawScore, effectiveScore, confidence, sampleSize };
+  const components = { position, preference: role, baseScore: player.finalBaseScore, soloForm, positionSkill, mmrBonus,
+    overrideScore: v1.balanceOverrideScore, rolePenalty };
+  return { ...components, effectiveScore: effectiveScoreFromComponents(components) };
+}
+
+function resolveRating(player: NormalizedPlayer, position: TeamBalancePosition): InternalAssignment["rating"] {
+  const positionRating = player.rating.positions[position];
+  const hasPositionScore = positionRating?.score !== null && positionRating?.score !== undefined;
+  return {
+    source: player.rating.v1 ? "V1" : hasPositionScore ? "POSITION" : player.rating.overallSource,
+    rawScore: hasPositionScore ? positionRating.score! : player.rating.overall,
+    effectiveScore: resolvePlayerPositionScore(player, position).effectiveScore,
+    confidence: positionRating?.confidence ?? player.rating.confidence,
+    sampleSize: hasPositionScore ? positionRating!.sampleSize : player.rating.sampleSize,
+  };
+}
+
+export function evaluateTeamBalancePlayerScore(player: TeamBalancePlayer): TeamBalancePlayerScoreBreakdown {
+  const normalized = normalizePlayer(player);
+  return {
+    baseScore: normalized.finalBaseScore,
+    overrideScore: normalized.rating.v1?.balanceOverrideScore ?? 0,
+    positions: TEAM_BALANCE_POSITIONS.map((position) => resolvePlayerPositionScore(normalized, position)),
+  };
+}
+
+export function withTeamBalancePlayerOverride(score: TeamBalancePlayerScoreBreakdown, overrideScore: number): TeamBalancePlayerScoreBreakdown {
+  if (!Number.isSafeInteger(overrideScore) || Math.abs(overrideScore) > 1_000) throw new TeamBalanceDomainError("INVALID_SCORE", "balanceOverrideScore");
+  return {
+    ...score,
+    overrideScore,
+    positions: score.positions.map((position) => {
+      const components = { ...position, overrideScore };
+      return { ...components, effectiveScore: effectiveScoreFromComponents(components) };
+    }),
+  };
 }
 
 function permute<T>(items: readonly T[]): T[][] {
@@ -653,7 +714,9 @@ function evaluateCandidate(red: PreparedTeam, blue: PreparedTeam): CandidateMetr
   const withQuality = { ...base, qualityScore };
   const recommendationScore = getRecommendationScore(withQuality);
   const warningMessages = [
-    highTierPriorityPenalty > 0 ? "고티어 주포지션 이탈이 있습니다." : null,
+    highTierRolePenalty > 0 ? "고티어 주포지션 이탈이 있습니다." : null,
+    highTierSplitPenalty > 0 ? "고티어 인원 분포 차이가 있습니다." : null,
+    highTierLinePenalty > 0 ? "고티어 상대 라인 전력 차이가 있습니다." : null,
     red.autoCount + blue.autoCount > 0 ? `AUTO 배정 ${red.autoCount + blue.autoCount}명` : null,
     maxLineDiff >= 12 ? `최대 라인 차이 ${maxLineDiff.toFixed(1)}점` : null,
     midJglDiff >= 10 ? `미드-정글 합산 차이 ${midJglDiff.toFixed(1)}점` : null,

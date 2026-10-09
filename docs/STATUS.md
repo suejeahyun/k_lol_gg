@@ -1,5 +1,9 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-10 내전 점수 계산·관리 자료 1.1.0 검증
+
+티어 단계·LP 해석, 구형 마스터 층 왕복, 고티어 경고를 수정하고 점수 미리보기·큰 보정 재확인·변경 이력·보정 목록·티어별 실제 분포를 구현했다. 전체 check(계약673·단위1082/skip1), 격리 DB5, 복구2, 합성 ADMIN 브라우저 검증을 통과했다. 기존 MMR·운영 점수·저장 초안·migration0047 유지. [검증 근거](qa-evidence/team-score-insights-2026-10-10/README.md), [배포 상태·복구](qa-evidence/team-score-insights-2026-10-10/production.md), [실계정·외부 조건](qa-evidence/team-score-insights-2026-10-10/external-conditions.md).
+
 ## 2026-10-09 내전 팀 편성 점수 관리자 편집 1.0.0 운영 반영
 
 `team-balance-admin@1.0.0`, source `69d8336609b585f302c761042efa5f8f0362c172`, tag `team-balance-admin-v1.0.0`. 일반 관리자도 팀 편성 보정을 저장할 수 있고, 페이지 상단에서 선수 검색·현재값 비교·0점 초기화·충돌/연결 복구를 처리한다. MMR 조정·재계산은 최고 관리자 전용이다. 전체 check(계약672·단위1069/skip1), 격리DB3·합성 ADMIN 실제 브라우저·운영31HTTP를 통과했다. main 배포 `dpl_xSQWNy5KRhVQwcBvZCtE1XbmuVGP` READY·동일 SHA·운영 alias·health를 확인했다. 실제 운영 계정으로 점수를 시험 저장하지는 않았다. [배포·검증·복구](qa-evidence/team-balance-admin-2026-10-08/production.md).

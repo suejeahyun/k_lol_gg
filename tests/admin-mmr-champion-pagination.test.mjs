@@ -89,7 +89,7 @@ test("MMR review pagination uses its independent query contract and detail close
   }
   assert.match(result.html, /aria-label="MMR 조정 이력 페이지"/u);
   assert.doesNotMatch(result.html, /name="q"|name="position"/u);
-  const [playersTab] = links(result.html, "플레이어");
+  const [playersTab] = links(result.html, "MMR 플레이어");
   const query = parseMmrUrl(playersTab, "players"); assert.equal(query.page, 1); assert.equal(query.pageSize, 10);
 });
 

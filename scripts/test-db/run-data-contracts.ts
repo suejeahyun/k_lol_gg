@@ -455,6 +455,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/statistics-projection.contract.test.ts",
     "tests/database/media.contract.test.ts",
     "tests/database/team-balance-draft.contract.test.ts",
+    "tests/database/team-score.contract.test.ts",
     "tests/database/mmr-projection.contract.test.ts",
     "tests/database/recruiting.contract.test.ts",
     "tests/database/operation-forms.contract.test.ts",
@@ -480,7 +481,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     accounts: ["tests/database/account-lifecycle.contract.test.ts"],
     matches: ["tests/database/match-snapshot.contract.test.ts", "tests/database/match-authorization.contract.test.ts"],
     statistics: ["tests/database/statistics-projection.contract.test.ts"],
-    "team-tools": ["tests/database/team-balance-draft.contract.test.ts"],
+    "team-tools": ["tests/database/team-balance-draft.contract.test.ts", "tests/database/team-score.contract.test.ts"],
     mmr: ["tests/database/mmr-projection.contract.test.ts"],
     recruiting: ["tests/database/inhouse-migration.contract.test.ts", "tests/database/recruiting.contract.test.ts", "tests/database/operation-forms.contract.test.ts", "tests/database/kakao-assistant.contract.test.ts", "tests/database/kakao-form-snapshots.contract.test.ts", "tests/database/kakao-room-registry.contract.test.ts", "tests/database/kakao-party-overview.contract.test.ts", "tests/database/season-platform.contract.test.ts", "tests/database/kakao-site-notices.contract.test.ts", "tests/kakao-v4-input-tolerance-p0.test.ts"],
     "kakao-v4": ["tests/kakao-v4-input-tolerance-p0.test.ts"],
@@ -1238,7 +1239,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
   }
 }
 
-async function main(): Promise<void> {
+export async function runDataContracts(): Promise<void> {
   const useCiService =
     process.env.CI === "true" && process.env.V2_USE_CI_POSTGRES_SERVICE === "true";
 
@@ -1303,4 +1304,4 @@ async function main(): Promise<void> {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await runDataContracts();

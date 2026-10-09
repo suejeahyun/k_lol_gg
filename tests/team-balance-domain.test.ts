@@ -262,7 +262,7 @@ test("[V1 blueblack golden] score uses tier, inhouse, position experience and th
 
   assert.equal(player.rating.source, "V1");
   assert.equal(player.rating.effectiveScore, 66.7);
-  assert.equal(evaluated.score.v1?.formulaVersion, "V1_BLUEBLACK_AI_GLOBAL_2026_09_11");
+  assert.equal(evaluated.score.v1?.formulaVersion, "V1_BLUEBLACK_AI_GLOBAL_2026_10_10");
   assert.deepEqual(evaluated.score.v1?.missingSources, ["RECENT_SOLO", "BALANCE_OVERRIDE"]);
 });
 

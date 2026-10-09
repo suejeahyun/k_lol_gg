@@ -54,7 +54,7 @@ for (const [apiKey, view] of [["winRate", "win-rate"], ["participation", "partic
   const expected = buildPublicRankingView(ranking.rankings, view).filter(row => view !== "mvp" || row.mvpCount > 0).slice(0, 3).map(row => row.playerId);
   assert.deepEqual(top[apiKey].map((row: { playerId: string }) => row.playerId), expected, `${view} API matches common order`);
 }
-for (const path of ["/api/admin/users", "/api/admin/matches", "/api/me/match-submissions", "/api/cron/mmr-projection", "/api/cron/riot-sync", "/api/cron/support-retention"]) await get(path, 401);
+for (const path of ["/api/admin/users", "/api/admin/matches", "/api/admin/balance-ai/team-overrides", "/api/admin/balance-ai/team-scores", "/api/me/match-submissions", "/api/cron/mmr-projection", "/api/cron/riot-sync", "/api/cron/support-retention"]) await get(path, 401);
 assert.equal(JSON.parse((await get("/api/health")).body).status, "ready");
 await writeFile(output, JSON.stringify({ checkedAt: new Date().toISOString(), origin: origin.origin, passed: true, mmrTotal: mmr.players.total, checks, notes: "HTTP timings are single-run observations, not Web Vitals or a performance benchmark. All requests were anonymous GET." }, null, 2) + "\n");
 console.log(`PASS: ${checks.length} read-only HTTP checks, home order, submission return, MMR pages and common ranking order`);

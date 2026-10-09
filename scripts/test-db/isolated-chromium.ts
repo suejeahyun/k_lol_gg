@@ -318,6 +318,13 @@ export class IsolatedChromium {
     await this.client.call("Input.dispatchKeyEvent", { type: "keyUp", ...event });
   }
 
+  async pressSpace() {
+    const event = { key: " ", code: "Space", windowsVirtualKeyCode: 32, nativeVirtualKeyCode: 32 };
+    await this.client.call("Input.dispatchKeyEvent", { type: "rawKeyDown", ...event });
+    await this.client.call("Input.dispatchKeyEvent", { type: "char", ...event, text: " ", unmodifiedText: " " });
+    await this.client.call("Input.dispatchKeyEvent", { type: "keyUp", ...event });
+  }
+
   async waitFor(expression: string, description: string, timeoutMs = 15_000) {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {

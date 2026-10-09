@@ -21,6 +21,8 @@ const section = 'section[aria-labelledby="team-override-title"]';
 const scoreSelector = `${section} input[name="score"]`;
 const reasonSelector = `${section} input[name="reason"]`;
 const submitSelector = `${section} button[type="submit"]`;
+const confirmSelector = "#team-score-confirm";
+const feedbackSelector = "#team-score-feedback";
 const endpoint = "/api/admin/balance-ai/team-overrides";
 const previewRequested = process.argv.includes("--preview");
 
@@ -117,6 +119,11 @@ try {
     id: playerId, nickname, nicknameNormalized: nickname, tagLine: "QA", tagLineNormalized: "qa",
     memberName: "합성검증회원", memberNameNormalized: "합성검증회원", currentTier: "GOLD II", peakTier: "PLATINUM I",
   });
+  await database.insert(players).values(["I", "III"].map((rank) => ({
+    id: randomUUID(), nickname: `분포검증${rank}`, nicknameNormalized: `분포검증${rank.toLowerCase()}`,
+    tagLine: "QA", tagLineNormalized: "qa", memberName: "합성분포회원", memberNameNormalized: "합성분포회원",
+    currentTier: `GOLD ${rank}`, peakTier: `GOLD ${rank}`,
+  })));
   const port = await availablePort();
   const origin = `http://127.0.0.1:${port}`;
   app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
@@ -148,6 +155,14 @@ try {
     const response = await fetch(`${origin}${endpoint}?playerId=${playerId}`, { headers: { cookie } });
     assert.equal(response.status, 200);
     return await response.json() as { score: number; revision: number; reason: string };
+  };
+  const readInsights = async () => {
+    const response = await fetch(`${origin}/api/admin/balance-ai/team-scores?playerId=${playerId}`, { headers: { cookie } });
+    assert.equal(response.status, 200);
+    return await response.json() as {
+      breakdown: { baseScore: number; overrideScore: number; positions: { effectiveScore: number }[] };
+      history: { items: { beforeScore: number | null; afterScore: number; actorLabel: string; reason: string }[]; total: number };
+    };
   };
   const concurrentSave = async (revision: number, score: number) => {
     const response = await fetch(`${origin}${endpoint}`, {
@@ -181,21 +196,48 @@ try {
       return input && !input.matches(':disabled') && input.value !== '';
     })()`, "automatic current score load after player selection");
   };
+  const confirmLargeChange = async () => {
+    assert.ok(browser);
+    if (await browser.evaluate(`Boolean(document.querySelector(${JSON.stringify(confirmSelector)}))`)) {
+      assert.equal(await browser.evaluate(`document.querySelector(${JSON.stringify(submitSelector)}).disabled`), true, "large change must require renewed confirmation");
+      await browser.focus(confirmSelector);
+      await browser.pressSpace();
+      await browser.waitFor(`document.querySelector(${JSON.stringify(confirmSelector)})?.checked === true`, "large adjustment acknowledgement");
+    }
+  };
   const submit = async (status: number) => {
     assert.ok(browser);
     const response = browser.waitForResponse(endpoint, status);
     await browser.focus(submitSelector);
     await browser.pressEnter();
     await response;
-    await browser.waitFor(`document.querySelector(${JSON.stringify(`${section} [role="status"]`)})?.textContent.includes('저장')`, "save completion");
+    await browser.waitFor(`document.querySelector(${JSON.stringify(feedbackSelector)})?.textContent.includes('저장')`, "save completion");
   };
   await selectPlayer();
   assert.equal(await browser.evaluate(`document.querySelector(${JSON.stringify(scoreSelector)}).value`), "0");
+  await browser.waitFor(`document.querySelector('[aria-labelledby="team-score-breakdown-title"]')?.textContent.includes('51.8')`, "canonical tier base score and position preview");
+  assert.equal((await readInsights()).breakdown.baseScore, 51.8);
   await replaceField(browser, scoreSelector, "25");
   await replaceField(browser, reasonSelector, "합성 내전 점수 추가 검증");
+  await browser.waitFor(`document.querySelector('[aria-labelledby="team-score-breakdown-title"]')?.textContent.includes('76.8')`, "unsaved override updates position preview");
+  await confirmLargeChange();
   await submit(200);
   assert.equal((await readCurrent()).score, 25);
   assert.equal((await database.select().from(teamBalancePlayerOverrides).where(eq(teamBalancePlayerOverrides.playerId, playerId)))[0]?.score, 25);
+  const savedInsights = await readInsights();
+  assert.equal(savedInsights.breakdown.baseScore, 51.8);
+  assert.equal(savedInsights.breakdown.overrideScore, 25);
+  assert.ok(savedInsights.breakdown.positions.every((position) => position.effectiveScore === 76.8));
+  assert.equal(savedInsights.history.items[0]?.afterScore, 25);
+  assert.equal(savedInsights.history.items[0]?.beforeScore, null);
+  assert.ok(savedInsights.history.items[0]?.actorLabel);
+  await browser.waitFor(`document.querySelector('[aria-labelledby="team-score-history-title"]')?.textContent.includes('합성 내전 점수 추가 검증')`, "saved history refresh");
+  const overviewResponse = await fetch(`${origin}/api/admin/balance-ai/team-scores`, { headers: { cookie } });
+  assert.equal(overviewResponse.status, 200);
+  const overview = await overviewResponse.json() as { activePlayerCount: number; configured: { total: number }; tiers: { tier: string; playerCount: number; averageBaseScore: number; medianBaseScore: number }[] };
+  assert.equal(overview.activePlayerCount, 3);
+  assert.equal(overview.configured.total, 1);
+  assert.deepEqual(overview.tiers.find((tier) => tier.tier === "GOLD"), { tier: "GOLD", tierLabel: "골드", playerCount: 3, averageBaseScore: 47, medianBaseScore: 46.4 });
   process.stdout.write("[team-balance-browser] ADMIN keyboard search and +25 save passed\n");
 
   const viewports: { width: number; height: number; file: string }[] = [
@@ -213,6 +255,15 @@ try {
       return rect.width === 0 || rect.left >= -1 && rect.right <= innerWidth + 1;
     }))()`), true, `override controls must fit ${viewport.width}px viewport`);
     await writeFile(resolve(outputDirectory, viewport.file), await browser.captureScreenshot());
+    await browser.evaluate("document.getElementById('team-score-breakdown-title').scrollIntoView({ block: 'start' })");
+    await writeFile(resolve(outputDirectory, `details-${viewport.file}`), await browser.captureScreenshot());
+    await activateButton(browser, "티어별 기준 점수");
+    await browser.waitFor("document.querySelector('[aria-label=\"현재 티어별 기준 점수 통계\"]')?.textContent.includes('46.4')", "actual tier statistics tab");
+    await browser.evaluate("document.getElementById('team-score-tiers-title').scrollIntoView({ block: 'start' })");
+    assert.equal(await browser.evaluate("document.documentElement.scrollWidth <= innerWidth"), true, `tier statistics must fit ${viewport.width}px viewport`);
+    await writeFile(resolve(outputDirectory, `tiers-${viewport.file}`), await browser.captureScreenshot());
+    await activateButton(browser, "보정 관리 목록");
+    await browser.waitFor(`document.querySelector('button[aria-pressed="true"]')?.textContent.includes(${JSON.stringify(nickname)})`, "configured player selection reflected in list");
   }
   await browser.setViewport(1440, 1000);
   await browser.navigate("/admin/balance-ai");
@@ -222,6 +273,7 @@ try {
   await concurrentSave((await readCurrent()).revision, 40);
   await replaceField(browser, scoreSelector, "50");
   await replaceField(browser, reasonSelector, "충돌 후 재확인 검증");
+  await confirmLargeChange();
   const conflictResponse = browser.waitForResponse(endpoint, 412);
   await browser.focus(submitSelector);
   await browser.pressEnter();
@@ -230,36 +282,38 @@ try {
   assert.equal((await readCurrent()).score, 40, "stale browser edit must not overwrite concurrent score");
   await browser.setOffline(true);
   await activateButton(browser, "최신 점수 확인");
-  await browser.waitFor(`document.querySelector(${JSON.stringify(`${section} [role="alert"]`)}) && [...document.querySelectorAll(${JSON.stringify(`${section} button`)})].some((button) => button.textContent.includes('다시 불러오기') && !button.disabled)`, "offline conflict reload recovery");
+  await browser.waitFor(`document.querySelector(${JSON.stringify(feedbackSelector)})?.getAttribute('role') === 'alert' && [...document.querySelectorAll(${JSON.stringify(`${section} button`)})].some((button) => button.textContent.includes('다시 불러오기') && !button.disabled)`, "offline conflict reload recovery");
   assert.equal(await browser.evaluate(`document.querySelector(${JSON.stringify(scoreSelector)}).value`), "50", "failed conflict refresh must retain unsaved score");
   await browser.setOffline(false);
   await activateButton(browser, "다시 불러오기");
-  await browser.waitFor(`document.querySelector(${JSON.stringify(submitSelector)})?.disabled === false`, "conflict recovery fetch");
+  await browser.waitFor(`document.querySelector(${JSON.stringify(scoreSelector)})?.matches(':disabled') === false`, "conflict recovery fetch");
   assert.equal(await browser.evaluate(`document.querySelector(${JSON.stringify(scoreSelector)}).value`), "50", "conflict recovery must preserve unsaved score");
 
   await replaceField(browser, scoreSelector, "60");
   await replaceField(browser, reasonSelector, "연결 복구 재시도 검증");
+  await confirmLargeChange();
   await browser.setOffline(true);
   await browser.focus(submitSelector);
   await browser.pressEnter();
-  await browser.waitFor(`document.querySelector(${JSON.stringify(`${section} [role="alert"]`)}) && [...document.querySelectorAll(${JSON.stringify(`${section} button`)})].some((button) => button.textContent.includes('저장 결과 다시 확인') && !button.disabled)`, "offline error with retained form");
+  await browser.waitFor(`document.querySelector(${JSON.stringify(feedbackSelector)})?.getAttribute('role') === 'alert' && [...document.querySelectorAll(${JSON.stringify(`${section} button`)})].some((button) => button.textContent.includes('저장 결과 다시 확인') && !button.disabled)`, "offline error with retained form");
   await browser.setOffline(false);
   assert.equal(await browser.evaluate(`document.querySelector(${JSON.stringify(scoreSelector)}).value`), "60", "network error must preserve draft score");
   const retryResponse = browser.waitForResponse(endpoint, 200);
   await activateButton(browser, "저장 결과 다시 확인");
   await retryResponse;
-  await browser.waitFor(`document.querySelector(${JSON.stringify(`${section} [role="status"]`)})?.textContent.includes('저장')`, "network retry completion");
+  await browser.waitFor(`document.querySelector(${JSON.stringify(feedbackSelector)})?.textContent.includes('저장')`, "network retry completion");
   assert.equal((await readCurrent()).score, 60);
 
   await activateButton(browser, "0점으로 초기화");
   await browser.waitFor(`document.querySelector(${JSON.stringify(scoreSelector)})?.value === '0'`, "clear action sets zero");
   await replaceField(browser, reasonSelector, "합성 내전 점수 해제 검증");
+  await confirmLargeChange();
   await submit(200);
   assert.equal((await readCurrent()).score, 0);
   await writeFile(resolve(outputDirectory, "result.json"), JSON.stringify({
     passed: true, actorRole: "ADMIN", syntheticDataOnly: true,
-    checks: ["ordinary-admin-login", "keyboard-search-auto-load", "save-plus-25", "db-persisted", "reload", "desktop-mobile-narrow-overflow", "concurrent-412-reload", "offline-conflict-reload-preserved-draft", "offline-preserved-draft-retry", "clear-zero"],
-    screenshots: viewports.map(({ file }) => file),
+    checks: ["ordinary-admin-login", "keyboard-search-auto-load", "canonical-tier-score", "unsaved-final-score-preview", "large-change-confirmation", "save-plus-25", "history-refreshed", "configured-list", "actual-tier-mean-median", "db-persisted", "reload", "desktop-mobile-narrow-overflow", "concurrent-412-reload", "offline-conflict-reload-preserved-draft", "offline-preserved-draft-retry", "clear-zero"],
+    screenshots: viewports.flatMap(({ file }) => [file, `details-${file}`, `tiers-${file}`]),
   }, null, 2));
   process.stdout.write(`[team-balance-browser] ADMIN search/save/reload/conflict/offline retry/clear passed; screenshots: ${outputDirectory}\n`);
   if (previewRequested) {

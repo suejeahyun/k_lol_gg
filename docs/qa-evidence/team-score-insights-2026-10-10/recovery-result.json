@@ -1,0 +1,22 @@
+{
+  "verifiedDateKst": "2026-10-10",
+  "command": "npm run verify:recovery",
+  "source": "Summary transcribed from the successful command output; not a raw log.",
+  "exitCode": 0,
+  "passedTests": 2,
+  "syntheticDataOnly": true,
+  "clusterRemoved": true,
+  "archiveBytes": 472928,
+  "archiveSha256": "27ecc5c84980f5969fb5a6ddfbe17f2ca82b24bd1ad08bbb983bf58f8c44b14d",
+  "migrationCount": 48,
+  "migrationHead": "0047_usage_analytics",
+  "tableCount": 112,
+  "schemaDefinitionCount": 3607,
+  "exactTableCountsMatched": true,
+  "fixtureRelationMatched": true,
+  "foreignKeysValidated": true,
+  "migrationReplayNoop": true,
+  "failedMigrationRolledBack": true,
+  "providerPitrTested": false,
+  "productionDatabaseRestored": false
+}
