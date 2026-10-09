@@ -1,6 +1,6 @@
 # K-LOL.GG V2
 
-**2026-10-10 내전 점수 관리 1.1.0 소스·검증 완료**: 티어·LP 계산, 점수 미리보기·입력 확인·변경 이력·관리 목록·티어별 실제 평균/중앙값을 개선했습니다. [검증](docs/qa-evidence/team-score-insights-2026-10-10/README.md), [운영 반영 상태](docs/qa-evidence/team-score-insights-2026-10-10/production.md), [남은 외부 조건](docs/qa-evidence/team-score-insights-2026-10-10/external-conditions.md). 아래는 이전 릴리스의 시점별 기록입니다.
+**2026-10-10 내전 점수 관리 1.1.0 운영 반영**: 티어·LP 계산, 점수 미리보기·입력 확인·변경 이력·관리 목록·티어별 실제 평균/중앙값을 개선했습니다. source `8ce5e7aa`, main READY·동일 SHA·운영 도메인·health와 HTTP33조건 확인. [검증](docs/qa-evidence/team-score-insights-2026-10-10/README.md), [배포·복구](docs/qa-evidence/team-score-insights-2026-10-10/production.md), [남은 외부 조건](docs/qa-evidence/team-score-insights-2026-10-10/external-conditions.md). 아래는 이전 릴리스의 시점별 기록입니다.
 
 **2026-10-09 내전 팀 편성 점수 관리자 편집 1.0.0 운영 반영**: 일반 관리자 점수 저장 권한과 검색·점수 비교·초기화·재시도 화면을 개선했습니다. source `69d83366`, 운영 READY·health·31개 HTTP 점검 확인. [배포·검증·복구](docs/qa-evidence/team-balance-admin-2026-10-08/production.md).
 

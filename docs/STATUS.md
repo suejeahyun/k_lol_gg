@@ -1,8 +1,8 @@
 # K-LOL.GG V2 상태
 
-## 2026-10-10 내전 점수 계산·관리 자료 1.1.0 검증
+## 2026-10-10 내전 점수 계산·관리 자료 1.1.0 운영 반영
 
-티어 단계·LP 해석, 구형 마스터 층 왕복, 고티어 경고를 수정하고 점수 미리보기·큰 보정 재확인·변경 이력·보정 목록·티어별 실제 분포를 구현했다. 전체 check(계약673·단위1082/skip1), 격리 DB5, 복구2, 합성 ADMIN 브라우저 검증을 통과했다. 기존 MMR·운영 점수·저장 초안·migration0047 유지. [검증 근거](qa-evidence/team-score-insights-2026-10-10/README.md), [배포 상태·복구](qa-evidence/team-score-insights-2026-10-10/production.md), [실계정·외부 조건](qa-evidence/team-score-insights-2026-10-10/external-conditions.md).
+티어 단계·LP 해석, 구형 마스터 층 왕복, 고티어 경고를 수정하고 점수 미리보기·큰 보정 재확인·변경 이력·보정 목록·티어별 실제 분포를 구현했다. 전체 check(계약673·단위1082/skip1), 격리 DB5, 복구2, 합성 ADMIN 브라우저 검증을 통과했다. source `8ce5e7aa9171732edf4f47eb6b548e884f14a14c`, tag `team-balance-admin-v1.1.0`, main `dpl_7sTiDeiGCTk9mhh689b54UXiJySu` READY·동일 SHA·운영 alias·health를 확인했고 운영 HTTP33조건을 통과했다. 기존 MMR·운영 점수·저장 초안·migration0047 유지. [검증 근거](qa-evidence/team-score-insights-2026-10-10/README.md), [배포·복구](qa-evidence/team-score-insights-2026-10-10/production.md), [실계정·외부 조건](qa-evidence/team-score-insights-2026-10-10/external-conditions.md).
 
 ## 2026-10-09 내전 팀 편성 점수 관리자 편집 1.0.0 운영 반영
 

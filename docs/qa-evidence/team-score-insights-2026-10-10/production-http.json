@@ -1,0 +1,207 @@
+{
+  "checkedAt": "2026-10-09T15:52:33.776Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "passed": true,
+  "mmrTotal": 91,
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "durationMs": 835,
+      "bytes": 113422
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "durationMs": 497,
+      "bytes": 52282
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "durationMs": 276,
+      "bytes": 70068
+    },
+    {
+      "path": "/matches",
+      "status": 200,
+      "durationMs": 703,
+      "bytes": 92654
+    },
+    {
+      "path": "/competitions/events?q=&status=&format=",
+      "status": 200,
+      "durationMs": 507,
+      "bytes": 58151
+    },
+    {
+      "path": "/competitions/destruction?q=&status=&format=",
+      "status": 200,
+      "durationMs": 295,
+      "bytes": 59290
+    },
+    {
+      "path": "/rankings",
+      "status": 200,
+      "durationMs": 269,
+      "bytes": 78968
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "durationMs": 263,
+      "bytes": 51147
+    },
+    {
+      "path": "/tools/random-team",
+      "status": 200,
+      "durationMs": 244,
+      "bytes": 51085
+    },
+    {
+      "path": "/highlights",
+      "status": 200,
+      "durationMs": 277,
+      "bytes": 56092
+    },
+    {
+      "path": "/images",
+      "status": 200,
+      "durationMs": 255,
+      "bytes": 54135
+    },
+    {
+      "path": "/help",
+      "status": 200,
+      "durationMs": 238,
+      "bytes": 46493
+    },
+    {
+      "path": "/start",
+      "status": 200,
+      "durationMs": 238,
+      "bytes": 53813
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "durationMs": 245,
+      "bytes": 41391
+    },
+    {
+      "path": "/matches/submit?code=MR20000000000000000",
+      "status": 200,
+      "durationMs": 269,
+      "bytes": 45053
+    },
+    {
+      "path": "/api/rankings/mmr?pageSize=10",
+      "status": 200,
+      "durationMs": 291,
+      "bytes": 3926
+    },
+    {
+      "path": "/rankings/mmr?pageSize=10",
+      "status": 200,
+      "durationMs": 420,
+      "bytes": 61170
+    },
+    {
+      "path": "/rankings/mmr?page=2&pageSize=10&position=TOP",
+      "status": 200,
+      "durationMs": 274,
+      "bytes": 61578
+    },
+    {
+      "path": "/rankings/mmr?page=10000&pageSize=10",
+      "status": 200,
+      "durationMs": 233,
+      "bytes": 51370
+    },
+    {
+      "path": "/rankings/mmr?q=NoPlayerFixture20261005",
+      "status": 200,
+      "durationMs": 233,
+      "bytes": 51314
+    },
+    {
+      "path": "/rankings/mmr?page=bad",
+      "status": 200,
+      "durationMs": 228,
+      "bytes": 48881
+    },
+    {
+      "path": "/api/rankings/mmr?page=bad",
+      "status": 400,
+      "durationMs": 208,
+      "bytes": 202
+    },
+    {
+      "path": "/api/rankings",
+      "status": 200,
+      "durationMs": 260,
+      "bytes": 3551
+    },
+    {
+      "path": "/api/stats/top",
+      "status": 200,
+      "durationMs": 227,
+      "bytes": 2235
+    },
+    {
+      "path": "/api/admin/users",
+      "status": 401,
+      "durationMs": 236,
+      "bytes": 195
+    },
+    {
+      "path": "/api/admin/matches",
+      "status": 401,
+      "durationMs": 435,
+      "bytes": 177
+    },
+    {
+      "path": "/api/admin/balance-ai/team-overrides",
+      "status": 401,
+      "durationMs": 242,
+      "bytes": 200
+    },
+    {
+      "path": "/api/admin/balance-ai/team-scores",
+      "status": 401,
+      "durationMs": 221,
+      "bytes": 200
+    },
+    {
+      "path": "/api/me/match-submissions",
+      "status": 401,
+      "durationMs": 229,
+      "bytes": 177
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "status": 401,
+      "durationMs": 413,
+      "bytes": 184
+    },
+    {
+      "path": "/api/cron/riot-sync",
+      "status": 401,
+      "durationMs": 226,
+      "bytes": 26
+    },
+    {
+      "path": "/api/cron/support-retention",
+      "status": 401,
+      "durationMs": 234,
+      "bytes": 24
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "durationMs": 213,
+      "bytes": 57
+    }
+  ],
+  "notes": "HTTP timings are single-run observations, not Web Vitals or a performance benchmark. All requests were anonymous GET."
+}

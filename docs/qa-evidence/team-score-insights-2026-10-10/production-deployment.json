@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-10-09T15:54:22.168Z",
+  "passed": true,
+  "deploymentId": "dpl_7sTiDeiGCTk9mhh689b54UXiJySu",
+  "sourceSha": "8ce5e7aa9171732edf4f47eb6b548e884f14a14c",
+  "readyState": "READY",
+  "immutableUrl": "https://k-lol-ib6v62lf6-tjdmswo11-3715s-projects.vercel.app",
+  "origin": "https://k-lol-gg.vercel.app",
+  "canonicalAliasVerified": true,
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200
+    },
+    {
+      "path": "/admin/balance-ai",
+      "status": 307
+    },
+    {
+      "path": "/api/admin/balance-ai/team-overrides",
+      "status": 401
+    },
+    {
+      "path": "/api/admin/balance-ai/team-scores",
+      "status": 401
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "status": 401
+    }
+  ],
+  "notes": "Authenticated saves were verified only with isolated synthetic data. All live application requests were anonymous GET."
+}

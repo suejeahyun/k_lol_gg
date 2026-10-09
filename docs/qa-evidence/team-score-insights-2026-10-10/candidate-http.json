@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-09T15:50:50.991Z",
+  "passed": true,
+  "deploymentId": "dpl_6imDeVmYGC8E5C7HLwDGswRyJtw3",
+  "sourceSha": "8ce5e7aa9171732edf4f47eb6b548e884f14a14c",
+  "readyState": "READY",
+  "immutableUrl": "https://k-lol-ifymuuv7g-tjdmswo11-3715s-projects.vercel.app",
+  "origin": "https://k-lol-ifymuuv7g-tjdmswo11-3715s-projects.vercel.app",
+  "deploymentAccess": "AUTHENTICATED_VERCEL_CLI",
+  "canonicalAliasVerified": false,
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200
+    },
+    {
+      "path": "/admin/balance-ai",
+      "status": 307
+    },
+    {
+      "path": "/api/admin/balance-ai/team-overrides",
+      "status": 401
+    },
+    {
+      "path": "/api/admin/balance-ai/team-scores",
+      "status": 401
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "status": 401
+    }
+  ],
+  "notes": "Authenticated application saves were verified only with isolated synthetic data. Live application requests were GET without an application login. Deployment protection was not disabled."
+}
