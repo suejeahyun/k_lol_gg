@@ -27,23 +27,70 @@ test("Riot cron rejects invalid requests before runtime access and noops when un
   assert.deepEqual(await noop.json(), { job: "riot-sync", state: "UNCONFIGURED", processed: 0 });
 });
 
-test("Riot cron signs one bounded consumer call with a fresh replay nonce and returns only safe counters", async () => {
+test("Riot cron drains a bounded sequential batch with a fresh nonce for each job and safe counters", async () => {
   const nonces = new Set<string>();
   let calls = 0;
+  let active = false;
   const dependencies = { cronSecret, jobSecret: secret, getService: () => ({ runNextSync: async (input: Parameters<import("../src/modules/riot/application/riot-application").RiotApplicationService["runNextSync"]>[0]) => {
+    assert.equal(active, false, "consumer calls must never overlap");
+    active = true;
     calls++;
     assert.equal(input.queueDue, true);
     const intent = input.authorizationIntent;
     assert.equal(verifyJobRequest({ request: { method: "POST", path: "/api/internal/jobs/riot-sync", ...intent }, secret, now: new Date(), nonceAlreadyUsed: false }).ok, true);
     assert.equal(nonces.has(intent.nonce), false);
     nonces.add(intent.nonce);
+    await Promise.resolve();
+    active = false;
     return { status: "PROCESSED" as const, body: { status: "SUCCEEDED", privateIdentifier: "never-echo" } };
   } }) };
   for (let attempt = 0; attempt < 2; attempt++) {
     const response = await handleRiotSyncCron(cronRequest(), dependencies);
-    assert.deepEqual(await response.json(), { job: "riot-sync", state: "PROCESSED", processed: 1, outcome: "SUCCEEDED" });
+    assert.deepEqual(await response.json(), { job: "riot-sync", state: "PROCESSED", processed: 4, stopped: "LIMIT", outcome: "SUCCEEDED" });
   }
-  assert.equal(calls, 2);
+  assert.equal(calls, 8);
+});
+
+test("Riot cron stops on idle, admission deadline and provider retry/partial/failure outcomes", async () => {
+  for (const stop of ["IDLE", "TIME_BUDGET", "RETRY_WAIT", "PARTIAL", "FAILED"] as const) {
+    let elapsed = 0;
+    let calls = 0;
+    const response = await handleRiotSyncCron(cronRequest(), {
+      cronSecret, jobSecret: secret, monotonicNow: () => elapsed,
+      getService: () => ({ runNextSync: async (): ReturnType<import("../src/modules/riot/application/riot-application").RiotApplicationService["runNextSync"]> => {
+        calls++;
+        if (calls === 1) {
+          if (stop === "TIME_BUDGET") elapsed = 20_000;
+          return { status: "PROCESSED" as const, body: { status: "SUCCEEDED" } };
+        }
+        assert.equal(calls, 2, "no additional work may follow a stopping outcome");
+        return stop === "IDLE" ? { status: "IDLE" as const }
+          : { status: "PROCESSED" as const, body: { status: stop, failureCode: "RATE_LIMITED", privateIdentifier: "not-public" } };
+      } }),
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.stopped, stop);
+    assert.equal(body.processed, ["IDLE", "TIME_BUDGET"].includes(stop) ? 1 : 2);
+    assert.equal(calls, stop === "TIME_BUDGET" ? 1 : 2);
+    assert.equal(JSON.stringify(body).includes("not-public"), false);
+    assert.equal(JSON.stringify(body).includes("RATE_LIMITED"), false);
+  }
+});
+
+test("Riot cron preserves the processed count if a later job fails or the feature is disabled", async () => {
+  for (const failure of [new Error("provider-secret"), new RiotApplicationError("FEATURE_DISABLED", "disabled")]) {
+    let calls = 0;
+    const response = await handleRiotSyncCron(cronRequest(), { cronSecret, jobSecret: secret, getService: () => ({ runNextSync: async () => {
+      if (++calls === 2) throw failure;
+      return { status: "PROCESSED" as const, body: { status: "SUCCEEDED" } };
+    } }) });
+    const body = await response.json();
+    assert.equal(body.processed, 1);
+    assert.equal(calls, 2);
+    assert.equal(response.status, failure instanceof RiotApplicationError ? 200 : 503);
+    assert.equal(JSON.stringify(body).includes("provider-secret"), false);
+  }
 });
 
 test("disabled Riot cron is a safe noop; unexpected errors stay opaque", async () => {

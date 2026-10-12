@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import { MediaServiceError, parseMediaPublicListQuery, toPublicHighlightDto } from "@/modules/media";
 import { mediaErrorResponse, mediaReadResponse, mediaUnavailableResponse } from "@/modules/media/infrastructure/media-http";
 import { getRuntimeMediaService } from "@/modules/media/infrastructure/runtime-media";
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
   try {
     const result = await service.listPublicHighlights(query);
     return mediaReadResponse({
-      items: result.items.map((item) => toPublicHighlightDto(item, (id) => `/api/media/assets/${id}`)),
+      items: result.items.map((item) => toPublicHighlightDto(item, publicMediaAssetUrl)),
       nextCursor: result.nextCursor,
     }, undefined, traceId);
   } catch (error) { return mediaErrorResponse(error, traceId); }

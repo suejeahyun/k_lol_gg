@@ -464,7 +464,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     assert.equal(JSON.stringify(publicDto).includes("userAccountId"), false);
     assert.equal(JSON.stringify(publicDto).includes("auctionSeed"), false);
     assert.equal(publicDto?.gallery?.id, galleryId);
-    assert.equal(publicDto?.gallery?.images[0]?.url, `/api/media/assets/${galleryAssetId}`);
+    assert.equal(publicDto?.gallery?.images[0]?.url, `/api/media/assets/${galleryAssetId}?v=2`);
     assert.equal(JSON.stringify(publicDto).includes("storageKey"), false);
     assert.equal(JSON.stringify(publicDto).includes("sha256"), false);
     result = await service.executeAdmin(context(adminActor, "ADMIN", "gallery-clear"), tournamentId, revision, { type: "SET_MEDIA_GALLERY", payload: { galleryId: null } }); revision = result.revision;

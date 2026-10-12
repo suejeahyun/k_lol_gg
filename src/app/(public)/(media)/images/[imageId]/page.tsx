@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { BackToList } from "@/components/navigation/list-return";
@@ -32,6 +33,6 @@ export default async function GalleryDetail({ params }: { params: Promise<{ imag
   const imageId = rawImageId; const result = await loadDetail(imageId);
   if (result.state === "ready" && !result.data) notFound();
   if (result.state !== "ready") return <div className={`page-wrap ${styles.detail}`}><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Sparkles /><h1>갤러리를 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>;
-  const gallery = toPublicGalleryDto(result.data!, (id) => `/api/media/assets/${id}`);
+  const gallery = toPublicGalleryDto(result.data!, publicMediaAssetUrl);
   return <article className={`page-wrap ${styles.detail}`}><header className={styles.detailHeader}><h1>{gallery.title}</h1><p>{gallery.description}</p></header><MediaCarousel label={`${gallery.title} 사진`} sizes="(max-width: 640px) 100vw, min(1120px, 100vw)" slides={gallery.images.map((image, index) => ({ id: image.assetId, src: image.url, alt: `${gallery.title} ${index + 1}번째 이미지` }))} /><div><BackToList className={styles.back} href="/images"><ArrowLeft size={17} /> 목록으로</BackToList></div></article>;
 }

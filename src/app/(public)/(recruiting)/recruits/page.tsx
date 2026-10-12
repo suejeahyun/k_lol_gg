@@ -1,4 +1,5 @@
 import { RecruitInstructions } from "@/components/navigation/recruit-instructions";
+import { LiveViewRefresh } from "@/components/navigation/live-view-refresh";
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { Bot, CalendarClock, CircleAlert, Gamepad2, Sparkles, Swords, UsersRound } from "@/components/theme/theme-icons";
@@ -37,6 +38,8 @@ export default async function RecruitsPage() {
         <div><h1 id="recruit-title">파티 모집</h1></div>
         <UsersRound aria-hidden="true" />
       </section>
+
+      <LiveViewRefresh checkedAt={result.state === "ready" ? new Date().toISOString() : null} />
 
       <nav className={styles.guides} aria-label="모집 도움말">
         <Link href="/help/recruits"><Gamepad2 aria-hidden="true" /> 모집 이용 방법</Link>

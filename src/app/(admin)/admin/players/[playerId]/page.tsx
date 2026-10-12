@@ -93,7 +93,7 @@ export default async function AdminPlayerDetailPage({
 
       {editMode ? (
         <section className={styles.formCard}>
-          <AdminPlayerForm key={player.revision} mode="edit" player={player} />
+          <AdminPlayerForm key={player.id} mode="edit" player={player} />
         </section>
       ) : tab === "balance" ? (
         <section className={styles.integrationCard}>

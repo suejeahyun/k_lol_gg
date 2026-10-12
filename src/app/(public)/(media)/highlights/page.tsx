@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { Clapperboard, CloudSun, Play, Sparkles } from "@/components/theme/theme-icons";
@@ -16,7 +17,7 @@ export default async function HighlightsPage({ searchParams }: { searchParams: P
   for (const [key, value] of Object.entries(raw)) { if (Array.isArray(value)) value.forEach((entry) => params.append(key, entry)); else if (typeof value === "string") params.set(key, value); }
   const query = parseMediaPublicListQuery(`http://local/highlights?${params}`);
   const result = query ? await loadRuntimeMedia((service) => service.listPublicHighlights(query)) : { state: "error" as const };
-  const items = result.state === "ready" ? result.data.items.map((item) => toPublicHighlightDto(item, (id) => `/api/media/assets/${id}`)) : [];
+  const items = result.state === "ready" ? result.data.items.map((item) => toPublicHighlightDto(item, publicMediaAssetUrl)) : [];
   return <div className={`page-wrap ${styles.page}`}>
     <section className={styles.hero}><div className={styles.heroText}><h1>하이라이트</h1></div><Clapperboard aria-hidden="true" /></section>
     <div className={styles.heading}><div><h2>최신 하이라이트</h2></div><strong>{result.state === "ready" ? `${items.length}개` : "—"}</strong></div>

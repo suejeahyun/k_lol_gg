@@ -1,0 +1,325 @@
+{
+  "mode": "isolated-contracts-only",
+  "files": 35,
+  "tests": 168,
+  "pass": 167,
+  "fail": 1,
+  "skipped": 0,
+  "results": [
+    {
+      "file": "tests/database/fresh-install.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1902
+    },
+    {
+      "file": "tests/database/data-platform.contract.test.ts",
+      "exitCode": 0,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2514
+    },
+    {
+      "file": "tests/database/usage.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1157
+    },
+    {
+      "file": "tests/database/inhouse-migration.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4421
+    },
+    {
+      "file": "tests/database/auth-totp-lifecycle.contract.test.ts",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1613
+    },
+    {
+      "file": "tests/database/player-admin.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2034
+    },
+    {
+      "file": "tests/database/season-platform.contract.test.ts",
+      "exitCode": 0,
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2811
+    },
+    {
+      "file": "tests/database/kakao-site-notices.contract.test.ts",
+      "exitCode": 0,
+      "tests": 9,
+      "pass": 9,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1274
+    },
+    {
+      "file": "tests/database/account-lifecycle.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 8742
+    },
+    {
+      "file": "tests/database/match-snapshot.contract.test.ts",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1545
+    },
+    {
+      "file": "tests/database/match-authorization.contract.test.ts",
+      "exitCode": 0,
+      "tests": 15,
+      "pass": 15,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1011
+    },
+    {
+      "file": "tests/database/statistics-projection.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1342
+    },
+    {
+      "file": "tests/database/media.contract.test.ts",
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1790
+    },
+    {
+      "file": "tests/database/team-balance-draft.contract.test.ts",
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 3277
+    },
+    {
+      "file": "tests/database/team-score.contract.test.ts",
+      "exitCode": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2277
+    },
+    {
+      "file": "tests/database/mmr-projection.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 3544
+    },
+    {
+      "file": "tests/database/mmr-history.contract.test.ts",
+      "exitCode": 1,
+      "tests": 3,
+      "pass": 2,
+      "fail": 1,
+      "skipped": 0,
+      "durationMs": 7935
+    },
+    {
+      "file": "tests/database/recruiting.contract.test.ts",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 2315
+    },
+    {
+      "file": "tests/database/operation-forms.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1261
+    },
+    {
+      "file": "tests/database/kakao-assistant.contract.test.ts",
+      "exitCode": 0,
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4234
+    },
+    {
+      "file": "tests/database/kakao-form-snapshots.contract.test.ts",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1313
+    },
+    {
+      "file": "tests/database/kakao-room-registry.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1207
+    },
+    {
+      "file": "tests/database/kakao-party-overview.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1046
+    },
+    {
+      "file": "tests/kakao-v4-input-tolerance-p0.test.ts",
+      "exitCode": 0,
+      "tests": 33,
+      "pass": 33,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1236
+    },
+    {
+      "file": "tests/database/event-competition.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1927
+    },
+    {
+      "file": "tests/database/destruction-competition.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 6307
+    },
+    {
+      "file": "tests/database/operations.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1378
+    },
+    {
+      "file": "tests/database/storage-probe.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1114
+    },
+    {
+      "file": "tests/database/operational-health.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1367
+    },
+    {
+      "file": "tests/database/riot.contract.test.ts",
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4689
+    },
+    {
+      "file": "tests/database/riot-production.contract.test.ts",
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1640
+    },
+    {
+      "file": "tests/database/discipline.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1644
+    },
+    {
+      "file": "tests/database/champion-catalog.contract.test.ts",
+      "exitCode": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1498
+    },
+    {
+      "file": "tests/database/database-recovery.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 3987
+    },
+    {
+      "file": "tests/database/cleanup-readiness.contract.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 1046
+    }
+  ]
+}

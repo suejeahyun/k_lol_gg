@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 import type { AccountPlayerDto } from "@/modules/accounts/domain/account-contracts";
 import {
@@ -111,10 +112,14 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"success" | "error">("success");
+  const [editingRevision, setEditingRevision] = useState(player.revision);
+  const [conflict, setConflict] = useState(false);
+  const [resetVersion, setResetVersion] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending || conflict) return;
     setPending(true);
     setMessage("");
     const form = new FormData(event.currentTarget);
@@ -124,7 +129,7 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
       peakTier: form.get("peakTier") || null,
       currentTier: form.get("currentTier") || null,
     };
-    const fingerprint = JSON.stringify({ revision: player.revision, payload });
+    const fingerprint = JSON.stringify({ revision: editingRevision, payload });
     if (idempotency.current?.fingerprint !== fingerprint) {
       idempotency.current = { fingerprint, key: newIdempotencyKey() };
     }
@@ -133,22 +138,24 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "If-Match": `"${player.revision}"`,
+          "If-Match": `"${editingRevision}"`,
           "Idempotency-Key": idempotency.current.key,
         },
         body: JSON.stringify(payload),
       });
-      const body = (await response.json().catch(() => ({}))) as Problem & { message?: string };
+      const body = (await response.json().catch(() => ({}))) as Problem & { message?: string; playerRevision?: number };
       if (response.status === 412) {
         idempotency.current = null;
         setTone("error");
-        setMessage("다른 작업으로 정보가 변경되어 최신값을 불러왔습니다. 내용을 확인한 뒤 다시 저장해 주세요.");
+        setConflict(true);
+        setMessage("다른 작업으로 정보가 변경됐어요. 작성한 입력은 유지했습니다. 아래 최신 저장값과 비교해 주세요.");
         router.refresh();
         return;
       }
       if (!response.ok) throw new Error(body.detail ?? body.title ?? "수정하지 못했습니다.");
       setTone("success");
       setMessage(body.message ?? "플레이어 정보를 수정했습니다.");
+      if (typeof body.playerRevision === "number") setEditingRevision(body.playerRevision);
       idempotency.current = null;
       router.refresh();
     } catch (error) {
@@ -161,6 +168,15 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
 
   return (
     <form className={styles.form} onSubmit={submit} aria-busy={pending}>
+      {conflict ? <section className="task-state" role="alert">
+        <h3>최신 저장값과 비교</h3>
+        {player.revision === editingRevision ? <><p>최신 정보를 불러오는 중입니다. 입력은 유지돼요.</p><Button type="button" variant="outline" onClick={() => router.refresh()}>최신값 다시 불러오기</Button></> : <>
+          <dl><dt>이름</dt><dd>{player.memberName}</dd><dt>Riot ID</dt><dd>{player.riotId}</dd><dt>현재 티어</dt><dd>{player.currentTier ?? "미입력"}</dd><dt>최고 티어</dt><dd>{player.peakTier ?? "미입력"}</dd></dl>
+          <div className="recovery-links"><Button type="button" variant="outline" onClick={() => { setEditingRevision(player.revision); setConflict(false); setMessage("작성한 입력을 유지했어요. 최신값과 비교한 뒤 저장해 주세요."); }}>내 입력 유지</Button>
+          <Button type="button" variant="outline" onClick={() => { setEditingRevision(player.revision); setConflict(false); setResetVersion((value) => value + 1); setMessage("작성한 입력을 버리고 최신 저장값을 불러왔어요."); }}>입력 버리고 최신값 사용</Button></div>
+        </>}
+      </section> : null}
+      <div key={resetVersion} className={styles.form}>
       <label className={styles.field}>이름
         <input name="memberName" defaultValue={player.memberName} required minLength={2} maxLength={100} autoComplete="name" aria-describedby="account-player-name-help" />
         <small id="account-player-name-help">2~100자</small>
@@ -174,7 +190,8 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
         <AccountTierField label="최고 티어" name="peakTier" initialValue={player.peakTier} />
       </div>
       <p id="account-player-riot-id-warning" className={styles.notice}>Riot ID 변경 시 기존 전적 연동이 해제됩니다. 저장 후 다시 연결해야 합니다.</p>
-      <button className={styles.submit} type="submit" disabled={pending}>{pending ? "저장 중…" : "내 플레이어 정보 저장"}</button>
+      </div>
+      <button className={styles.submit} type="submit" disabled={pending || conflict}>{pending ? "저장 중…" : "내 플레이어 정보 저장"}</button>
       {message ? <p className={styles.message} data-tone={tone} role={tone === "error" ? "alert" : "status"}>{message}</p> : null}
     </form>
   );

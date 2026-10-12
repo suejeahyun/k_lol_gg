@@ -1,0 +1,734 @@
+{
+  "checkedAt": "2026-10-12T15:45:37.256Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "method": "CUA actual anonymous browser; 23 page examples at 320/390/1440 CSS viewport widths. DOM geometry, decoded visible images and input label association only; not full WCAG, physical-device, screen-reader or performance certification.",
+  "rows": [
+    {
+      "label": "/",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "home",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "applications",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/applications",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/recruits",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/recruits",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/matches",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/matches",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/rankings",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/rankings",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/rankings/mmr",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/rankings/mmr",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/competitions/events",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/events",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/competitions/destruction",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/destruction",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/tools/team-balance",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/team-balance",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/tools/random-team",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/random-team",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/tools/coin-toss",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/coin-toss",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/login",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/login",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/signup",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/signup",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/help/contact",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/help/contact",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/install",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/install",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/players settled",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/players",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/highlights settled",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/highlights",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/images settled",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/images",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "/",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/applications",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/applications",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/recruits",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/recruits",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/players",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/players",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/matches",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/matches",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/rankings",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/rankings",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/rankings/mmr",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/rankings/mmr",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/competitions/events",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/events",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/competitions/destruction",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/destruction",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/tools/team-balance",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/team-balance",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/tools/random-team",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/random-team",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/tools/coin-toss",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/coin-toss",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/highlights",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/highlights",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/images",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/images",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/login",
+      "clientWidth": 1440,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/login",
+      "scrollWidth": 1440,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/signup",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/signup",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/help/contact",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/help/contact",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/install",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/install",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "/applications",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/applications",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/recruits",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/recruits",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/players",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/players",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/matches",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/matches",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/rankings",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/rankings",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/rankings/mmr",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/rankings/mmr",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/competitions/events",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/events",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/competitions/destruction",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/destruction",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/tools/team-balance",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/team-balance",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/tools/random-team",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/random-team",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/tools/coin-toss",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/tools/coin-toss",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/highlights",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/highlights",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/images",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/images",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/login",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/login",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/signup",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/signup",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/help/contact",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/help/contact",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "/install",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/install",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/players/[public-example]",
+      "scrollWidth": 317,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/matches/submit",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/events/[public-example]",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/destruction/[public-example]",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 305,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/images/[public-example]",
+      "scrollWidth": 305,
+      "unlabelledVisibleInputs": 0,
+      "width": 320
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/players/[public-example]",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/matches/submit",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/events/[public-example]",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/destruction/[public-example]",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 375,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/images/[public-example]",
+      "scrollWidth": 375,
+      "unlabelledVisibleInputs": 0,
+      "width": 390
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/players/[public-example]",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 1440,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/matches/submit",
+      "scrollWidth": 1440,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/events/[public-example]",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/competitions/destruction/[public-example]",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    },
+    {
+      "label": "public detail",
+      "clientWidth": 1425,
+      "h1Count": 1,
+      "loadedBrokenImages": 0,
+      "path": "/images/[public-example]",
+      "scrollWidth": 1425,
+      "unlabelledVisibleInputs": 0,
+      "width": 1440
+    }
+  ],
+  "interactions": [
+    {
+      "check": "purpose search team splitting",
+      "passed": true
+    },
+    {
+      "check": "home ranking next changes selected ranking",
+      "passed": true
+    },
+    {
+      "check": "application login continuation",
+      "passed": true
+    },
+    {
+      "check": "application back navigation",
+      "passed": true
+    },
+    {
+      "check": "player next page",
+      "passed": true,
+      "note": "Rechecked after navigation settled; 2 / 14 visible. Initial observation occurred before URL commit."
+    },
+    {
+      "check": "player search empty state",
+      "passed": true
+    },
+    {
+      "check": "player search reset",
+      "passed": true,
+      "note": "Rechecked after URL commit; query removed and first page restored."
+    }
+  ],
+  "notes": [
+    "Initial loading-only observations were replaced with settled H1 observations.",
+    "Player next/reset were rechecked after URL commit; initial reads were early.",
+    "Public page navigation only. No account signup, application submission, upload, admin save or operational state change."
+  ]
+}

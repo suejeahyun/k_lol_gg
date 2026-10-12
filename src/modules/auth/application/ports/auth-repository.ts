@@ -33,6 +33,8 @@ export type RecordLoginAttemptInput = Readonly<{
 export type AuthCleanupInput = Readonly<{
   now: Date;
   revokedBefore: Date;
+  expiredBefore?: Date;
+  limit?: number;
 }>;
 
 export type AuthCleanupResult = Readonly<{

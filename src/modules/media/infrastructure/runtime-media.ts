@@ -2,6 +2,7 @@ import "server-only";
 
 import { PublicPrivateAssetService } from "@/modules/assets/application/public-private-asset-service";
 import { PostgresPublicPrivateAssetRepository } from "@/modules/assets/infrastructure/postgres-public-private-asset-repository";
+import { renderPublicImage } from "@/modules/assets/infrastructure/public-image-derivative";
 import { getRuntimePrivateImageStorage } from "@/modules/matches/infrastructure/runtime-private-assets";
 import { getDatabase } from "@/platform/db/client";
 
@@ -23,6 +24,7 @@ export function getRuntimePublishedAssetService() {
     return new PublicPrivateAssetService(
       new PostgresPublicPrivateAssetRepository(getDatabase()),
       storage,
+      renderPublicImage,
     );
   } catch {
     return null;

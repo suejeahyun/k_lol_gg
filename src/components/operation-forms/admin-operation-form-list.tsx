@@ -12,21 +12,34 @@ import styles from "@/components/admin/admin-operations.module.css";
 export { ADMIN_OPERATION_FORM_LABELS as typeLabels } from "@/modules/admin/domain/admin-workspaces";
 export const operationFormStatusLabels = Object.freeze({ PENDING: "대기", IN_REVIEW: "검토 중", COMPLETED: "완료", REJECTED: "반려", CANCELLED: "취소" });
 
-export async function AdminOperationFormList({ selectedType, selectedStatus }: { selectedType?: string; selectedStatus?: string }) {
+export async function AdminOperationFormList({ selectedType, selectedStatus, selectedPage }: { selectedType?: string; selectedStatus?: string; selectedPage?: string }) {
   await requirePageRole("ADMIN", selectedType ? `/admin/operation-forms/${selectedType}` : "/admin/operation-forms");
   const formType = isOperationFormType(selectedType) ? selectedType : undefined;
   const status = isOperationFormStatus(selectedStatus) ? selectedStatus : undefined;
-  const result = await loadRuntimeOperationForms((service) => service.list({ formType, status }));
+  const page = selectedPage && /^[1-9]\d*$/u.test(selectedPage) && Number.isSafeInteger(Number(selectedPage)) ? Number(selectedPage) : 1;
+  const result = await loadRuntimeOperationForms((service) => service.list({ formType, status, page }));
+  const pageHref = (targetPage: number) => {
+    const params = new URLSearchParams();
+    if (formType) params.set("type", formType);
+    if (status) params.set("status", status);
+    if (targetPage > 1) params.set("page", String(targetPage));
+    return `/admin/operation-forms${params.size ? `?${params}` : ""}`;
+  };
   return <main className={styles.page}>
     <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>{formType ? typeLabels[formType] : "운영 신청서"}</h1></div><Link className={styles.link} href="/admin/discipline">운영·감사</Link></header>
-    <form className={styles.filters} method="get" action={formType ? `/admin/operation-forms/${formType}` : "/admin/operation-forms"}>
-      {!formType ? <label>유형<select name="type" defaultValue=""><option value="">전체 유형</option>{OPERATION_FORM_TYPES.map((type) => <option key={type} value={type}>{typeLabels[type]}{result.state === "ready" ? ` (${result.data.counts[type]}건)` : ""}</option>)}</select></label> : null}
+    <form className={styles.filters} method="get" action="/admin/operation-forms">
+      <label>유형<select name="type" defaultValue={formType ?? ""}><option value="">전체 유형</option>{OPERATION_FORM_TYPES.map((type) => <option key={type} value={type}>{typeLabels[type]}{result.state === "ready" ? ` (${result.data.counts[type]}건)` : ""}</option>)}</select></label>
       <label>상태<select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{OPERATION_FORM_STATUSES.map((item) => <option key={item} value={item}>{operationFormStatusLabels[item]}</option>)}</select></label><button type="submit">필터 적용</button>
     </form>
-    {result.state === "ready" ? <p className={styles.summary}>{formType ? `${typeLabels[formType]} 전체 ${result.data.counts[formType]}건` : `전체 신청 ${Object.values(result.data.counts).reduce((sum, count) => sum + count, 0)}건`} · 현재 조건 {result.data.items.length}건 표시</p> : null}
+    {result.state === "ready" ? <p className={styles.summary}>{formType ? `${typeLabels[formType]} 전체 ${result.data.counts[formType]}건` : `전체 신청 ${Object.values(result.data.counts).reduce((sum, count) => sum + count, 0)}건`} · 현재 조건 {result.data.total}건 중 {result.data.items.length}건 표시</p> : null}
     {result.state === "ready" && result.data.items.length ? <div className={styles.tableWrap} role="region" aria-label="운영 신청 목록" tabIndex={0}><table className={styles.table}><thead><tr><th scope="col">유형</th><th scope="col">신청자</th><th scope="col">상태</th><th scope="col">접수</th><th scope="col">보기</th></tr></thead><tbody>{result.data.items.map((form) => {
       const applicant = "applicantName" in form.payload ? form.payload.applicantName : form.payload.hostName;
       return <tr key={form.id}><td>{typeLabels[form.formType]}</td><td>{applicant}</td><td><span className={styles.badge} data-status={form.status}>{operationFormStatusLabels[form.status]}</span></td><td>{new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" }).format(new Date(form.submittedAt))}</td><td><Link href={`/admin/operation-forms/${form.formType}/${form.id}`}>상세</Link></td></tr>;
     })}</tbody></table></div> : result.state === "ready" ? <section className={styles.state}><h2>조건에 맞는 신청이 없습니다.</h2><p>필터를 바꾸거나 새 접수를 기다려 주세요.</p></section> : result.state === "unavailable" ? <section className={styles.state} role="status"><h2>신청서를 확인할 수 없습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section> : <section className={styles.state} role="alert"><h2>신청서를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section>}
+    {result.state === "ready" && result.data.totalPages > 1 ? <nav className={styles.tabs} aria-label="운영 신청서 페이지">
+      {result.data.page > 1 ? <Link href={pageHref(result.data.page - 1)} rel="prev">이전</Link> : <span aria-disabled="true">이전</span>}
+      <span aria-current="page">{result.data.page} / {result.data.totalPages} 페이지</span>
+      {result.data.page < result.data.totalPages ? <Link href={pageHref(result.data.page + 1)} rel="next">다음</Link> : <span aria-disabled="true">다음</span>}
+    </nav> : null}
   </main>;
 }

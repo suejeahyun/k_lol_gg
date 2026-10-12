@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { BackToList } from "@/components/navigation/list-return";
@@ -34,6 +35,6 @@ export default async function HighlightDetail({ params }: { params: Promise<{ hi
   const result = await loadDetail(highlightId);
   if (result.state === "ready" && !result.data) notFound();
   if (result.state !== "ready") return <div className={`page-wrap ${styles.detail}`}><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Sparkles /><h1>영상을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>;
-  const item = toPublicHighlightDto(result.data!, (id) => `/api/media/assets/${id}`);
+  const item = toPublicHighlightDto(result.data!, publicMediaAssetUrl);
   return <article className={`page-wrap ${styles.detail}`}><header className={styles.detailHeader}><h1>{item.title}</h1><p>{item.description}</p></header><div className={styles.player}><YouTubePlayer youtubeId={item.youtubeId} title={item.title} /></div><div className={styles.detailActions}><BackToList className={styles.back} href="/highlights"><ArrowLeft size={17} /> 목록으로</BackToList><a className={styles.back} href={item.youtubeWatchUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={17} aria-hidden="true" /> YouTube에서 보기<span className="sr-only"> (새 탭)</span></a></div></article>;
 }

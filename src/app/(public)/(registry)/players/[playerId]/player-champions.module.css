@@ -27,7 +27,11 @@
 .recentMatch span,
 .recentMatch strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .championCard small { margin-top: .2rem; color: var(--text-muted); }
-.recentMatch { grid-template-columns: auto minmax(0, 1fr); }
+:global(.profile-recent) .recentMatch {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
+}
 
 @media (max-width: 560px) {
   .championGrid { grid-template-columns: 1fr; }

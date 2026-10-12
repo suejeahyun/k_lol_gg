@@ -15,7 +15,6 @@ test("own player mutation keeps approval, origin, revision and idempotency guard
 test("own player form keeps one idempotency key for an uncertain retry and explains Riot relinking", async () => {
   const form = await readFile(new URL("../src/components/accounts/account-player-form.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/components/accounts/account-access.module.css", import.meta.url), "utf8");
-  const page = await readFile(new URL("../src/app/(public)/account/page.tsx", import.meta.url), "utf8");
   assert.match(form, /useRef/);
   assert.match(form, /fingerprint/);
   assert.match(form, /idempotency\.current = null/);
@@ -38,7 +37,7 @@ test("own player form keeps one idempotency key for an uncertain retry and expla
   assert.match(styles, /\.tierControls \{ display: grid; grid-template-columns:/);
   assert.match(styles, /@media \(max-width: 520px\)/);
   assert.match(styles, /\.promise, \.facts, \.playerTierGrid, \.activityGrid, \.accountGrid \{ grid-template-columns: 1fr; \}/);
-  assert.match(page, /<AccountPlayerForm key=\{account\.player\.revision\} player=\{account\.player\} \/>/);
+  // Draft preservation and explicit conflict recovery are exercised by audit-user-flow-recovery.test.mjs.
 });
 
 test("account pages reuse the account shell and avoid decorative English headings", async () => {

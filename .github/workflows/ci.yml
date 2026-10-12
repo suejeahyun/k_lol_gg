@@ -31,6 +31,12 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Scan current tree for secrets
+        run: npm run security:secrets -- --tree-only
+
+      - name: Check production dependency advisories
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Lint, typecheck, test, and build
         run: npm run check
 

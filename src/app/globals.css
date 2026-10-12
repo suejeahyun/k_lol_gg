@@ -2442,6 +2442,8 @@ body:has(.user-dialog[open]) {
 
 .profile-recent {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 8px;
   margin-top: 14px;
 }

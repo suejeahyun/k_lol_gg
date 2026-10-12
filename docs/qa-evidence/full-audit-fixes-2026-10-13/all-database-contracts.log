@@ -1,0 +1,1496 @@
+Release-candidate isolated database contract run; no browser scripts and no external database.
+
+FILE tests/database/fresh-install.contract.test.ts
+TAP version 13
+# Subtest: all journaled migrations install idempotently on a distinct empty PostgreSQL 18 database
+ok 1 - all journaled migrations install idempotently on a distinct empty PostgreSQL 18 database
+  ---
+  duration_ms: 953.6698
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1739.599
+
+
+FILE tests/database/data-platform.contract.test.ts
+TAP version 13
+# Subtest: four guards reject unsafe database targets
+ok 1 - four guards reject unsafe database targets
+  ---
+  duration_ms: 0.8976
+  type: 'test'
+  ...
+# Subtest: migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18
+    # Subtest: forward migration preserves existing player rows and is idempotent
+    ok 1 - forward migration preserves existing player rows and is idempotent
+      ---
+      duration_ms: 1173.3176
+      type: 'test'
+      ...
+    # Subtest: auth and TOTP constraints fail closed
+    ok 2 - auth and TOTP constraints fail closed
+      ---
+      duration_ms: 117.258
+      type: 'test'
+      ...
+    # Subtest: database auth repository persists durable session, TOTP, and rate-limit state
+    ok 3 - database auth repository persists durable session, TOTP, and rate-limit state
+      ---
+      duration_ms: 234.8079
+      type: 'test'
+      ...
+    # Subtest: registry uniqueness and lifecycle constraints are enforced
+    ok 4 - registry uniqueness and lifecycle constraints are enforced
+      ---
+      duration_ms: 5.5497
+      type: 'test'
+      ...
+    # Subtest: PostgresPlayerRepository returns only public active projections
+    ok 5 - PostgresPlayerRepository returns only public active projections
+      ---
+      duration_ms: 24.5307
+      type: 'test'
+      ...
+    # Subtest: domain change and audit append commit or roll back atomically
+    ok 6 - domain change and audit append commit or roll back atomically
+      ---
+      duration_ms: 5.8592
+      type: 'test'
+      ...
+    1..6
+ok 2 - migrations, constraints, repository, and transaction contracts hold on PostgreSQL 18
+  ---
+  duration_ms: 1568.5255
+  type: 'test'
+  ...
+1..2
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2352.4955
+
+
+FILE tests/database/usage.contract.test.ts
+TAP version 13
+# Subtest: usage storage: idempotency, KST days, visits, identity transitions, staff exclusions and durable limits
+ok 1 - usage storage: idempotency, KST days, visits, identity transitions, staff exclusions and durable limits
+  ---
+  duration_ms: 247.0588
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 998.2826
+
+
+FILE tests/database/inhouse-migration.contract.test.ts
+TAP version 13
+# Subtest: 0041 fresh install, populated 0040 upgrade and reapply preserve enrollment history
+ok 1 - 0041 fresh install, populated 0040 upgrade and reapply preserve enrollment history
+  ---
+  duration_ms: 3534.9953
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4268.0543
+
+
+FILE tests/database/auth-totp-lifecycle.contract.test.ts
+TAP version 13
+# Subtest: administrator TOTP lifecycle is serialized, audited, and rolled back atomically
+    # Subtest: a TOTP setup session that expires while queued cannot mutate security state
+    ok 1 - a TOTP setup session that expires while queued cannot mutate security state
+      ---
+      duration_ms: 531.7562
+      type: 'test'
+      ...
+    # Subtest: pending setup never rotates silently and explicit cancellation is auditable
+    ok 2 - pending setup never rotates silently and explicit cancellation is auditable
+      ---
+      duration_ms: 15.5971
+      type: 'test'
+      ...
+    # Subtest: concurrent enable has one winner and revokes every session in its transaction
+    ok 3 - concurrent enable has one winner and revokes every session in its transaction
+      ---
+      duration_ms: 14.6279
+      type: 'test'
+      ...
+    # Subtest: audit insertion failure rolls credential, version, and revocation back
+    ok 4 - audit insertion failure rolls credential, version, and revocation back
+      ---
+      duration_ms: 22.0791
+      type: 'test'
+      ...
+    # Subtest: concurrent self-disable deletes the factor and revokes all sessions exactly once
+    ok 5 - concurrent self-disable deletes the factor and revokes all sessions exactly once
+      ---
+      duration_ms: 9.2905
+      type: 'test'
+      ...
+    # Subtest: USER is rejected while SUPER_ADMIN self-setup remains allowed
+    ok 6 - USER is rejected while SUPER_ADMIN self-setup remains allowed
+      ---
+      duration_ms: 5.8152
+      type: 'test'
+      ...
+    1..6
+ok 1 - administrator TOTP lifecycle is serialized, audited, and rolled back atomically
+  ---
+  duration_ms: 692.2213
+  type: 'test'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1463.7423
+
+
+FILE tests/database/player-admin.contract.test.ts
+TAP version 13
+# Subtest: S02 player mutations, legacy mapping, privacy, replay, and rollback hold on PostgreSQL 18
+ok 1 - S02 player mutations, legacy mapping, privacy, replay, and rollback hold on PostgreSQL 18
+  ---
+  duration_ms: 1103.6628
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1876.0404
+
+
+FILE tests/database/season-platform.contract.test.ts
+TAP version 13
+# Subtest: season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18
+    # Subtest: retired lifecycle timestamps reject activated or ended history
+    ok 1 - retired lifecycle timestamps reject activated or ended history
+      ---
+      duration_ms: 2.7516
+      type: 'test'
+      ...
+    # Subtest: concurrent activation leaves exactly one active season
+    ok 2 - concurrent activation leaves exactly one active season
+      ---
+      duration_ms: 139.462
+      type: 'test'
+      ...
+    # Subtest: clone creates a draft and stale clone revision is rejected
+    ok 3 - clone creates a draft and stale clone revision is rejected
+      ---
+      duration_ms: 8.8321
+      type: 'test'
+      ...
+    # Subtest: Kakao provenance hash and position invariants are enforced by PostgreSQL
+    ok 4 - Kakao provenance hash and position invariants are enforced by PostgreSQL
+      ---
+      duration_ms: 336.6076
+      type: 'test'
+      ...
+    # Subtest: SUPER resolves or cancels pending Kakao applications with idempotency, merge policy and safe team handoff
+    ok 5 - SUPER resolves or cancels pending Kakao applications with idempotency, merge policy and safe team handoff
+      ---
+      duration_ms: 276.3583
+      type: 'test'
+      ...
+    # Subtest: SITE upsert reuses the same player/date/round row imported from Kakao
+    ok 6 - SITE upsert reuses the same player/date/round row imported from Kakao
+      ---
+      duration_ms: 17.0673
+      type: 'test'
+      ...
+    # Subtest: command receipts expire after 24 hours and an expired key is safely reusable
+    ok 7 - command receipts expire after 24 hours and an expired key is safely reusable
+      ---
+      duration_ms: 9.5549
+      type: 'test'
+      ...
+    # Subtest: season audit snapshots retain lifecycle and schedule field diffs
+    ok 8 - season audit snapshots retain lifecycle and schedule field diffs
+      ---
+      duration_ms: 10.8024
+      type: 'test'
+      ...
+    # Subtest: clone and cancellation roll back with their audit event
+    ok 9 - clone and cancellation roll back with their audit event
+      ---
+      duration_ms: 9.0695
+      type: 'test'
+      ...
+    # Subtest: owner cancellation, resubmission and admin review honor revisions
+    ok 10 - owner cancellation, resubmission and admin review honor revisions
+      ---
+      duration_ms: 80.4892
+      type: 'test'
+      ...
+    # Subtest: public DTO excludes member, login, Discord and internal review fields
+    ok 11 - public DTO excludes member, login, Discord and internal review fields
+      ---
+      duration_ms: 5.9288
+      type: 'test'
+      ...
+    # Subtest: public status counts cover the full roster while the projection is capped at 200
+    ok 12 - public status counts cover the full roster while the projection is capped at 200
+      ---
+      duration_ms: 45.9782
+      type: 'test'
+      ...
+    # Subtest: viewer approval and active-player capability are rechecked from the database
+    ok 13 - viewer approval and active-player capability are rechecked from the database
+      ---
+      duration_ms: 28.5199
+      type: 'test'
+      ...
+    # Subtest: non-approved account is rechecked inside the mutation transaction
+    ok 14 - non-approved account is rechecked inside the mutation transaction
+      ---
+      duration_ms: 0.933
+      type: 'test'
+      ...
+    # Subtest: ACCOUNT and ADMIN purposes cannot cross-authorize season commands
+    ok 15 - ACCOUNT and ADMIN purposes cannot cross-authorize season commands
+      ---
+      duration_ms: 4.0787
+      type: 'test'
+      ...
+    # Subtest: ADMIN and SUPER_ADMIN roles may use approved user actions only through ACCOUNT sessions
+    ok 16 - ADMIN and SUPER_ADMIN roles may use approved user actions only through ACCOUNT sessions
+      ---
+      duration_ms: 21.4529
+      type: 'test'
+      ...
+    # Subtest: session revocation wins over a queued ACCOUNT mutation
+    ok 17 - session revocation wins over a queued ACCOUNT mutation
+      ---
+      duration_ms: 166.3046
+      type: 'test'
+      ...
+    # Subtest: optional TOTP removal preserves a valid password-only ADMIN session
+    ok 18 - optional TOTP removal preserves a valid password-only ADMIN session
+      ---
+      duration_ms: 169.5091
+      type: 'test'
+      ...
+    # Subtest: soft-deleted account is rejected again inside the mutation transaction
+    ok 19 - soft-deleted account is rejected again inside the mutation transaction
+      ---
+      duration_ms: 1.6189
+      type: 'test'
+      ...
+    # Subtest: reviewer history restricts hard deletion of the reviewer account
+    ok 20 - reviewer history restricts hard deletion of the reviewer account
+      ---
+      duration_ms: 6.2557
+      type: 'test'
+      ...
+    # Subtest: audit failure rolls the season and idempotency receipt back together
+    ok 21 - audit failure rolls the season and idempotency receipt back together
+      ---
+      duration_ms: 3.7806
+      type: 'test'
+      ...
+    # Subtest: ending and retirement preserve history instead of cascading deletion
+    ok 22 - ending and retirement preserve history instead of cascading deletion
+      ---
+      duration_ms: 10.0988
+      type: 'test'
+      ...
+    1..22
+ok 1 - season lifecycle, participation ownership, idempotency and audit contracts hold on PostgreSQL 18
+  ---
+  duration_ms: 1450.1456
+  type: 'test'
+  ...
+# Subtest: site and Kakao serialize the last seat, allow explicit reserves and block closed rounds
+ok 2 - site and Kakao serialize the last seat, allow explicit reserves and block closed rounds
+  ---
+  duration_ms: 341.2995
+  type: 'test'
+  ...
+1..2
+# tests 24
+# suites 0
+# pass 24
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2635.2823
+
+
+FILE tests/database/kakao-site-notices.contract.test.ts
+TAP version 13
+# Subtest: site capacity transition queue is atomic, scoped, replay-safe and offline tolerant
+    # Subtest: UNVERIFIED matches only one-candidate review items
+    ok 1 - UNVERIFIED matches only one-candidate review items
+      ---
+      duration_ms: 12.7002
+      type: 'test'
+      ...
+    # Subtest: website roster ignores legacy pending in another scope or mode
+    ok 2 - website roster ignores legacy pending in another scope or mode
+      ---
+      duration_ms: 90.6271
+      type: 'test'
+      ...
+    # Subtest: 9 to 10, retry and unchanged 10 create a single notification
+    ok 3 - 9 to 10, retry and unchanged 10 create a single notification
+      ---
+      duration_ms: 38.5922
+      type: 'test'
+      ...
+    # Subtest: failed application transaction rolls back its notification
+    ok 4 - failed application transaction rolls back its notification
+      ---
+      duration_ms: 32.4093
+      type: 'test'
+      ...
+    # Subtest: another scope or target cannot claim and replay is refused
+    ok 5 - another scope or target cannot claim and replay is refused
+      ---
+      duration_ms: 11.3251
+      type: 'test'
+      ...
+    # Subtest: offline lease expires, concurrent polls claim once, ACK is idempotent
+    ok 6 - offline lease expires, concurrent polls claim once, ACK is idempotent
+      ---
+      duration_ms: 27.8621
+      type: 'test'
+      ...
+    # Subtest: uncertain send is terminal; a newer 9 to 10 transition remains separate
+    ok 7 - uncertain send is terminal; a newer 9 to 10 transition remains separate
+      ---
+      duration_ms: 37.9474
+      type: 'test'
+      ...
+    # Subtest: expiry, failure bound and retention are enforced
+    ok 8 - expiry, failure bound and retention are enforced
+      ---
+      duration_ms: 29.3243
+      type: 'test'
+      ...
+    1..8
+ok 1 - site capacity transition queue is atomic, scoped, replay-safe and offline tolerant
+  ---
+  duration_ms: 367.3204
+  type: 'test'
+  ...
+1..1
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1122.3371
+
+
+FILE tests/database/account-lifecycle.contract.test.ts
+TAP version 13
+# Subtest: S01 account lifecycle, recovery security, races, replay, and rollback hold on PostgreSQL 18
+ok 1 - S01 account lifecycle, recovery security, races, replay, and rollback hold on PostgreSQL 18
+  ---
+  duration_ms: 4213.5967
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8568.4948
+
+
+FILE tests/database/match-snapshot.contract.test.ts
+TAP version 13
+# Subtest: S04 stores participant display identity and rejection reasons as durable history
+    # Subtest: published detail keeps ten KDA rows and exposes a real API 404/fallback contract
+    ok 1 - published detail keeps ten KDA rows and exposes a real API 404/fallback contract
+      ---
+      duration_ms: 55.1006
+      type: 'test'
+      ...
+    # Subtest: registry rename does not rewrite a recorded participant or its archived revision
+    ok 2 - registry rename does not rewrite a recorded participant or its archived revision
+      ---
+      duration_ms: 280.5249
+      type: 'test'
+      ...
+    # Subtest: reject after and reopen before audit snapshots retain the cleared public reason
+    ok 3 - reject after and reopen before audit snapshots retain the cleared public reason
+      ---
+      duration_ms: 19.6144
+      type: 'test'
+      ...
+    # Subtest: web submission accepts only the owner's current valid selected team draft
+    ok 4 - web submission accepts only the owner's current valid selected team draft
+      ---
+      duration_ms: 27.5408
+      type: 'test'
+      ...
+    # Subtest: admin match creation rechecks and persists the exact selected team draft
+    ok 5 - admin match creation rechecks and persists the exact selected team draft
+      ---
+      duration_ms: 15.0135
+      type: 'test'
+      ...
+    # Subtest: submission approval carries team-balance provenance through match history and outbox
+    ok 6 - submission approval carries team-balance provenance through match history and outbox
+      ---
+      duration_ms: 40.4343
+      type: 'test'
+      ...
+    1..6
+ok 1 - S04 stores participant display identity and rejection reasons as durable history
+  ---
+  duration_ms: 588.3554
+  type: 'test'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1388.2024
+
+
+FILE tests/database/match-authorization.contract.test.ts
+TAP version 13
+# Subtest: match writes accept password-only administrators and enforce current session boundaries
+    # Subtest: ADMIN without TOTP
+    ok 1 - ADMIN without TOTP
+      ---
+      duration_ms: 11.8572
+      type: 'test'
+      ...
+    # Subtest: SUPER_ADMIN without TOTP
+    ok 2 - SUPER_ADMIN without TOTP
+      ---
+      duration_ms: 3.0701
+      type: 'test'
+      ...
+    # Subtest: existing TOTP session
+    ok 3 - existing TOTP session
+      ---
+      duration_ms: 3.9116
+      type: 'test'
+      ...
+    # Subtest: ACCOUNT cookie cannot authorize admin import
+    ok 4 - ACCOUNT cookie cannot authorize admin import
+      ---
+      duration_ms: 2.2737
+      type: 'test'
+      ...
+    # Subtest: ordinary member
+    ok 5 - ordinary member
+      ---
+      duration_ms: 1.6694
+      type: 'test'
+      ...
+    # Subtest: revoked session
+    ok 6 - revoked session
+      ---
+      duration_ms: 2.2021
+      type: 'test'
+      ...
+    # Subtest: expired session despite earlier request time
+    ok 7 - expired session despite earlier request time
+      ---
+      duration_ms: 1.8801
+      type: 'test'
+      ...
+    # Subtest: stale auth version
+    ok 8 - stale auth version
+      ---
+      duration_ms: 2.2187
+      type: 'test'
+      ...
+    # Subtest: changed role
+    ok 9 - changed role
+      ---
+      duration_ms: 2.0006
+      type: 'test'
+      ...
+    # Subtest: suspended account
+    ok 10 - suspended account
+      ---
+      duration_ms: 1.5748
+      type: 'test'
+      ...
+    # Subtest: deleted account
+    ok 11 - deleted account
+      ---
+      duration_ms: 1.6376
+      type: 'test'
+      ...
+    # Subtest: password reset required
+    ok 12 - password reset required
+      ---
+      duration_ms: 1.4357
+      type: 'test'
+      ...
+    # Subtest: fixture session cannot write
+    ok 13 - fixture session cannot write
+      ---
+      duration_ms: 1.8459
+      type: 'test'
+      ...
+    # Subtest: approved member submission
+    ok 14 - approved member submission
+      ---
+      duration_ms: 1.8031
+      type: 'test'
+      ...
+    1..14
+ok 1 - match writes accept password-only administrators and enforce current session boundaries
+  ---
+  duration_ms: 132.4483
+  type: 'test'
+  ...
+1..1
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 857.4678
+
+
+FILE tests/database/statistics-projection.contract.test.ts
+TAP version 13
+# Subtest: S05 rebuilds PUBLISHED match statistics atomically and receipts make replay idempotent
+ok 1 - S05 rebuilds PUBLISHED match statistics atomically and receipts make replay idempotent
+  ---
+  duration_ms: 371.7267
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1170.4383
+
+
+FILE tests/database/media.contract.test.ts
+TAP version 13
+# Subtest: S10 media publication requires a live admin session and is idempotent, asset-safe, auditable, and soft archived
+ok 1 - S10 media publication requires a live admin session and is idempotent, asset-safe, auditable, and soft archived
+  ---
+  duration_ms: 366.0972
+  type: 'test'
+  ...
+# Subtest: security maintenance retains recent/active sessions, bounds cleanup, and records daily replay
+ok 2 - security maintenance retains recent/active sessions, bounds cleanup, and records daily replay
+  ---
+  duration_ms: 138.1365
+  type: 'test'
+  ...
+# Subtest: S10 admin upload persists STAGED to READY, lists by exact draft, attaches safely, and tombstones unused assets
+ok 3 - S10 admin upload persists STAGED to READY, lists by exact draft, attaches safely, and tombstones unused assets
+  ---
+  duration_ms: 303.7263
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1628.546
+
+
+FILE tests/database/team-balance-draft.contract.test.ts
+TAP version 13
+# Subtest: team internal experience counts published games only and converges after void and restore
+ok 1 - team internal experience counts published games only and converges after void and restore
+  ---
+  duration_ms: 338.5012
+  type: 'test'
+  ...
+# Subtest: team-only override requires a live admin session and recent solo provider requires connected fresh identity
+ok 2 - team-only override requires a live admin session and recent solo provider requires connected fresh identity
+  ---
+  duration_ms: 359.1194
+  type: 'test'
+  ...
+# Subtest: S06 draft lifecycle is owner/admin authorized, append-only, transactional, and idempotent
+ok 3 - S06 draft lifecycle is owner/admin authorized, append-only, transactional, and idempotent
+  ---
+  duration_ms: 1341.6339
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3079.1176
+
+
+FILE tests/database/team-score.contract.test.ts
+TAP version 13
+# (node:36224) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+# (Use `node --trace-deprecation ...` to show where the warning was created)
+# Subtest: team score detail reads persisted audits and rating inputs from one read-only snapshot
+ok 1 - team score detail reads persisted audits and rating inputs from one read-only snapshot
+  ---
+  duration_ms: 476.8819
+  type: 'test'
+  ...
+# Subtest: team score overview batches active players, includes saved zero scores, paginates and excludes override from tier statistics
+ok 2 - team score overview batches active players, includes saved zero scores, paginates and excludes override from tier statistics
+  ---
+  duration_ms: 404.8236
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2081.7159
+
+
+FILE tests/database/mmr-projection.contract.test.ts
+TAP version 13
+# Subtest: S05-B persists canonical full-ledger MMR replay without competing for the S04 outbox
+ok 1 - S05-B persists canonical full-ledger MMR replay without competing for the S04 outbox
+  ---
+  duration_ms: 2590.2344
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3381.7544
+
+
+FILE tests/database/mmr-history.contract.test.ts
+TAP version 13
+# Subtest: 0048 fresh/0047 upgrade preserve historical events and support the previous event-only writer
+ok 1 - 0048 fresh/0047 upgrade preserve historical events and support the previous event-only writer
+  ---
+  duration_ms: 3170.0528
+  type: 'test'
+  ...
+# Subtest: MMR catches up after title/KDA edits, removed games and voids without changing earlier generations
+ok 2 - MMR catches up after title/KDA edits, removed games and voids without changing earlier generations
+  ---
+  duration_ms: 1265.4937
+  type: 'test'
+  ...
+# Subtest: MMR persists 410 games beyond the old bind limit and rolls back every batch on a late failure
+not ok 3 - MMR persists 410 games beyond the old bind limit and rolls back every batch on a late failure
+  ---
+  duration_ms: 2532.162
+  type: 'test'
+  location: 'E:\\k-LOL.GG\\worktrees\\full-audit-fixes-20261013\\tests\\database\\mmr-history.contract.test.ts:169:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Failed query: insert into "competition"."match_recalculation_outbox" ("id", "aggregate_type", "aggregate_id", "event_type", "action", "dedupe_key", "match_revision", "team_balance_draft_id", "old_season_id", "new_season_id", "old_order_key", "new_order_key", "input_digest", "payload_json", "status", "attempt_count", "available_at", "locked_at", "delivered_at", "last_error_code", "created_at", "updated_at") values ($1, $2, $3, $4, $5, $6, $7, default, $8, $9, $10, $11, $12, $13, $14, default, $15, default, default, default, $16, $17)
+    params: 90a58f43-107f-4dc9-8de3-9b5b07e7a99b,MATCH_SERIES,e8955090-0185-474c-b9f4-70b2d803183b,MATCH_CHANGED,AMENDED,late-batch-regression,1,2ea8edf5-fc09-4d8f-9429-88fd13b0f69c,2ea8edf5-fc09-4d8f-9429-88fd13b0f69c,,,���b��c�y$��CM�y�W-�?=��h��5,{},PENDING,2026-10-12T17:47:13.696Z,2026-10-12T17:47:13.696Z,2026-10-12T17:47:13.696Z
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    NodePgPreparedQuery.queryWithCache (E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\node_modules\src\pg-core\session.ts:73:11)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async <anonymous> (E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\tests\database\mmr-history.contract.test.ts:194:5)
+    async isolated (E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\tests\database\mmr-history.contract.test.ts:36:11)
+    async TestContext.<anonymous> (E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\tests\database\mmr-history.contract.test.ts:170:3)
+    async Test.run (node:internal/test_runner/test:1125:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 2
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7774.342
+
+
+FILE tests/database/recruiting.contract.test.ts
+TAP version 13
+# Subtest: S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomically with owner/session checks
+ok 1 - S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomically with owner/session checks
+  ---
+  duration_ms: 299.7554
+  type: 'test'
+  ...
+# Subtest: party member statistics are bounded and count distinct parties and primary companions
+ok 2 - party member statistics are bounded and count distinct parties and primary companions
+  ---
+  duration_ms: 90.9445
+  type: 'test'
+  ...
+# Subtest: S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity
+ok 3 - S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity
+  ---
+  duration_ms: 101.4834
+  type: 'test'
+  ...
+# Subtest: Kakao aggregate controllers block confused-deputy lifecycle mutations
+ok 4 - Kakao aggregate controllers block confused-deputy lifecycle mutations
+  ---
+  duration_ms: 160.3752
+  type: 'test'
+  ...
+# Subtest: V4 scrim finish completes only the active same-room target and replays without duplicate writes
+ok 5 - V4 scrim finish completes only the active same-room target and replays without duplicate writes
+  ---
+  duration_ms: 106.2783
+  type: 'test'
+  ...
+# Subtest: concurrent V4 party member commands serialize on the locked latest aggregate
+ok 6 - concurrent V4 party member commands serialize on the locked latest aggregate
+  ---
+  duration_ms: 284.0764
+  type: 'test'
+  ...
+# Subtest: concurrent V4 scrim participant commands compose after the database row lock
+ok 7 - concurrent V4 scrim participant commands compose after the database row lock
+  ---
+  duration_ms: 156.5528
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2148.9754
+
+
+FILE tests/database/operation-forms.contract.test.ts
+TAP version 13
+# Subtest: S09 operation forms persist signed submissions and ADMIN TOTP mutations atomically
+ok 1 - S09 operation forms persist signed submissions and ADMIN TOTP mutations atomically
+  ---
+  duration_ms: 364.1732
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1098.9009
+
+
+FILE tests/database/kakao-assistant.contract.test.ts
+TAP version 13
+# Subtest: signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room
+ok 1 - signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room
+  ---
+  duration_ms: 154.8804
+  type: 'test'
+  ...
+# Subtest: in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room
+ok 2 - in-house round metadata persists schedule and notice, clears on full snapshot, and isolates authoritative mode transitions by room
+  ---
+  duration_ms: 433.758
+  type: 'test'
+  ...
+# Subtest: authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes
+ok 3 - authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes
+  ---
+  duration_ms: 214.2891
+  type: 'test'
+  ...
+# Subtest: signed Kakao season snapshots match exact players and preserve unresolved entries for review
+ok 4 - signed Kakao season snapshots match exact players and preserve unresolved entries for review
+  ---
+  duration_ms: 180.4346
+  type: 'test'
+  ...
+# Subtest: recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks
+ok 5 - recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks
+  ---
+  duration_ms: 145.3809
+  type: 'test'
+  ...
+# Subtest: in-house shortcuts and full snapshots enforce integrated SITE capacity while preserving confirmed decisions
+ok 6 - in-house shortcuts and full snapshots enforce integrated SITE capacity while preserving confirmed decisions
+  ---
+  duration_ms: 321.941
+  type: 'test'
+  ...
+# Subtest: in-house finish preserves every roster row, hides the round, and replays without writes
+ok 7 - in-house finish preserves every roster row, hides the round, and replays without writes
+  ---
+  duration_ms: 141.5005
+  type: 'test'
+  ...
+# Subtest: editable inhouse forms count unlinked names, merge concurrent additions, protect SITE rows and retain closed rosters
+ok 8 - editable inhouse forms count unlinked names, merge concurrent additions, protect SITE rows and retain closed rosters
+  ---
+  duration_ms: 447.8507
+  type: 'test'
+  ...
+# Subtest: name-first in-house copies keep pending slots and merge metadata without overwriting newer edits
+ok 9 - name-first in-house copies keep pending slots and merge metadata without overwriting newer edits
+  ---
+  duration_ms: 218.4235
+  type: 'test'
+  ...
+# Subtest: in-house copy forms reopen a vacated reserve slot and preserve the remaining roster
+ok 10 - in-house copy forms reopen a vacated reserve slot and preserve the remaining roster
+  ---
+  duration_ms: 159.4829
+  type: 'test'
+  ...
+# Subtest: owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke
+ok 11 - owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke
+  ---
+  duration_ms: 146.2561
+  type: 'test'
+  ...
+# Subtest: Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox
+ok 12 - Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox
+  ---
+  duration_ms: 183.8349
+  type: 'test'
+  ...
+# Subtest: inhouse roster matching uses bounded lookups for ten members and guests
+ok 13 - inhouse roster matching uses bounded lookups for ten members and guests
+  ---
+  duration_ms: 256.9176
+  type: 'test'
+  ...
+# {"label":"1-members-save","queries":31,"memberLookups":1,"applicationLookups":1,"elapsedMs":16}
+# {"label":"1-members-unchanged","queries":26,"memberLookups":0,"applicationLookups":0,"elapsedMs":10}
+# {"label":"10-members-save","queries":40,"memberLookups":1,"applicationLookups":1,"elapsedMs":21}
+# {"label":"10-members-unchanged","queries":26,"memberLookups":0,"applicationLookups":0,"elapsedMs":10}
+# {"label":"10-guests-save","queries":39,"memberLookups":1,"applicationLookups":0,"elapsedMs":17}
+# {"label":"10-guests-unchanged","queries":27,"memberLookups":1,"applicationLookups":0,"elapsedMs":14}
+# Subtest: inhouse overview projects all three modes and excludes other rooms, closed rounds and drafts
+ok 14 - inhouse overview projects all three modes and excludes other rooms, closed rounds and drafts
+  ---
+  duration_ms: 106.0493
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4065.359
+
+
+FILE tests/database/kakao-form-snapshots.contract.test.ts
+TAP version 13
+# Subtest: Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST
+    # Subtest: scope, kind, target and operating-day binding are mandatory
+    ok 1 - scope, kind, target and operating-day binding are mandatory
+      ---
+      duration_ms: 5.8605
+      type: 'test'
+      ...
+    # Subtest: concurrent readers reuse a single durable original
+    ok 2 - concurrent readers reuse a single durable original
+      ---
+      duration_ms: 78.1452
+      type: 'test'
+      ...
+    # Subtest: transaction rollback does not leave an issued code behind
+    ok 3 - transaction rollback does not leave an issued code behind
+      ---
+      duration_ms: 3.2883
+      type: 'test'
+      ...
+    # Subtest: database constraints fail closed even when application validation is bypassed
+    ok 4 - database constraints fail closed even when application validation is bypassed
+      ---
+      duration_ms: 124.3076
+      type: 'test'
+      ...
+    # Subtest: midnight preserves the code but the exact 06:00 boundary rejects it
+    ok 5 - midnight preserves the code but the exact 06:00 boundary rejects it
+      ---
+      duration_ms: 60.5028
+      type: 'test'
+      ...
+    # Subtest: bounded retention cleanup never removes a live original
+    ok 6 - bounded retention cleanup never removes a live original
+      ---
+      duration_ms: 28.7989
+      type: 'test'
+      ...
+    1..6
+ok 1 - Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST
+  ---
+  duration_ms: 417.4376
+  type: 'test'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1147.8513
+
+
+FILE tests/database/kakao-room-registry.contract.test.ts
+TAP version 13
+# Subtest: one installation maps to exactly one canonical room without room parsing or sender allowlists
+ok 1 - one installation maps to exactly one canonical room without room parsing or sender allowlists
+  ---
+  duration_ms: 297.0401
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1054.7726
+
+
+FILE tests/database/kakao-party-overview.contract.test.ts
+TAP version 13
+# Subtest: ADR0011 lists more than twenty parties without snapshots and reads scoped active/draft details directly
+ok 1 - ADR0011 lists more than twenty parties without snapshots and reads scoped active/draft details directly
+  ---
+  duration_ms: 157.7597
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 893.5798
+
+
+FILE tests/kakao-v4-input-tolerance-p0.test.ts
+TAP version 13
+# Subtest: [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle
+ok 1 - [P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle
+  ---
+  duration_ms: 1.0862
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member
+ok 2 - [P0-PARTY-01] punctuation, full-width, escape, and whitespace rows have one semantic member
+  ---
+  duration_ms: 7.3988
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot
+ok 3 - [P0-PARTY-02] an explicit empty slot is valid but an absent slot row is not a full snapshot
+  ---
+  duration_ms: 3.7741
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-03] slash and comma in one reserve row stay in one display name
+ok 4 - [P0-PARTY-03] slash and comma in one reserve row stay in one display name
+  ---
+  duration_ms: 0.5378
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target
+ok 5 - [P0-PARTY-04] a 2-person title cannot overwrite an existing 5-person recruit target
+  ---
+  duration_ms: 1.429
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot
+ok 6 - [P0-PARTY-05] conflicting duplicate slot rows reject the whole snapshot
+  ---
+  duration_ms: 0.797
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-06] member order is canonical and independent of pasted row order
+ok 7 - [P0-PARTY-06] member order is canonical and independent of pasted row order
+  ---
+  duration_ms: 0.851
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved
+ok 8 - [P0-PARTY-07] name suffix notes, emoji, and Kakao tags are preserved
+  ---
+  duration_ms: 2.6733
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-08] multiline metadata values match their single-line semantic values
+ok 9 - [P0-PARTY-08] multiline metadata values match their single-line semantic values
+  ---
+  duration_ms: 2.012
+  type: 'test'
+  ...
+# Subtest: [P0-PARTY-09] an automatic-number empty draft never creates a recruit
+ok 10 - [P0-PARTY-09] an automatic-number empty draft never creates a recruit
+  ---
+  duration_ms: 1.1418
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-01] all four forms preserve values continued on the following line
+ok 11 - [P0-OPS-01] all four forms preserve values continued on the following line
+  ---
+  duration_ms: 4.8017
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-02] all four forms expose exact missing-field contracts without submission
+ok 12 - [P0-OPS-02] all four forms expose exact missing-field contracts without submission
+  ---
+  duration_ms: 0.9424
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter
+ok 13 - [P0-OPS-03] parentheses and comma stay in the person name instead of becoming an implicit delimiter
+  ---
+  duration_ms: 0.2647
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN
+ok 14 - [P0-OPS-04] ordinary conversation and partial label discussions remain UNKNOWN
+  ---
+  duration_ms: 0.9846
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-05:friends] field order does not alter the canonical payload
+ok 15 - [P0-OPS-05:friends] field order does not alter the canonical payload
+  ---
+  duration_ms: 0.5027
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form
+ok 16 - [P0-OPS-06:friends] a conflicting duplicate label rejects the whole form
+  ---
+  duration_ms: 0.2511
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field
+ok 17 - [P0-OPS-07:friends] arbitrary footer text cannot contaminate the last field
+  ---
+  duration_ms: 0.4209
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-05:suggestions] field order does not alter the canonical payload
+ok 18 - [P0-OPS-05:suggestions] field order does not alter the canonical payload
+  ---
+  duration_ms: 0.3383
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form
+ok 19 - [P0-OPS-06:suggestions] a conflicting duplicate label rejects the whole form
+  ---
+  duration_ms: 0.2542
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field
+ok 20 - [P0-OPS-07:suggestions] arbitrary footer text cannot contaminate the last field
+  ---
+  duration_ms: 0.3203
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-05:meetups] field order does not alter the canonical payload
+ok 21 - [P0-OPS-05:meetups] field order does not alter the canonical payload
+  ---
+  duration_ms: 0.3921
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form
+ok 22 - [P0-OPS-06:meetups] a conflicting duplicate label rejects the whole form
+  ---
+  duration_ms: 0.285
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field
+ok 23 - [P0-OPS-07:meetups] arbitrary footer text cannot contaminate the last field
+  ---
+  duration_ms: 0.4345
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-05:leaves] field order does not alter the canonical payload
+ok 24 - [P0-OPS-05:leaves] field order does not alter the canonical payload
+  ---
+  duration_ms: 0.4626
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form
+ok 25 - [P0-OPS-06:leaves] a conflicting duplicate label rejects the whole form
+  ---
+  duration_ms: 0.2784
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field
+ok 26 - [P0-OPS-07:leaves] arbitrary footer text cannot contaminate the last field
+  ---
+  duration_ms: 0.4039
+  type: 'test'
+  ...
+# Subtest: [P0-OPS-08] prose mentioning every label is not classified as a form
+ok 27 - [P0-OPS-08] prose mentioning every label is not classified as a form
+  ---
+  duration_ms: 0.2071
+  type: 'test'
+  ...
+# Subtest: [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed
+ok 28 - [P0-IDEMPOTENCY-01] the same event is dispatched exactly once and then replayed
+  ---
+  duration_ms: 1.0096
+  type: 'test'
+  ...
+# Subtest: [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched
+ok 29 - [P0-IDEMPOTENCY-02] different events with one semantic payload are both dispatched
+  ---
+  duration_ms: 1.0441
+  type: 'test'
+  ...
+# Subtest: [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch
+ok 30 - [P0-MULTIUSER-01] same-room events from different senders reach edit and finish dispatch
+  ---
+  duration_ms: 0.6751
+  type: 'test'
+  ...
+# Subtest: [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server
+ok 31 - [P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server
+  ---
+  duration_ms: 0.1504
+  type: 'test'
+  ...
+# Subtest: [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker
+ok 32 - [P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker
+  ---
+  duration_ms: 0.5446
+  type: 'test'
+  ...
+# Subtest: [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role
+ok 33 - [P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role
+  ---
+  duration_ms: 150.6554
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1088.929
+
+
+FILE tests/database/event-competition.contract.test.ts
+TAP version 13
+# (node:33584) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+# (Use `node --trace-deprecation ...` to show where the warning was created)
+# Subtest: S07 event adapter persists exact-ten lifecycle, S06 teams, correction invalidation and owner-safe reads
+ok 1 - S07 event adapter persists exact-ten lifecycle, S06 teams, correction invalidation and owner-safe reads
+  ---
+  duration_ms: 926.8053
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1772.0133
+
+
+FILE tests/database/destruction-competition.contract.test.ts
+TAP version 13
+# Subtest: S08 adapter persists recruitment, seeded auction, BO stages, roster history, MVP revote and atomic receipts
+ok 1 - S08 adapter persists recruitment, seeded auction, BO stages, roster history, MVP revote and atomic receipts
+  ---
+  duration_ms: 5231.8569
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6149.1708
+
+
+FILE tests/database/operations.contract.test.ts
+TAP version 13
+# Subtest: S13 settings, AI ledger and signed maintenance preserve authorization and idempotency contracts
+ok 1 - S13 settings, AI ledger and signed maintenance preserve authorization and idempotency contracts
+  ---
+  duration_ms: 416.7918
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1220.7165
+
+
+FILE tests/database/storage-probe.contract.test.ts
+TAP version 13
+# Subtest: storage probe atomically limits concurrent jobs, rejects replay, and records synthetic storage success and failure
+ok 1 - storage probe atomically limits concurrent jobs, rejects replay, and records synthetic storage success and failure
+  ---
+  duration_ms: 171.4429
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 958
+
+
+FILE tests/database/operational-health.contract.test.ts
+TAP version 13
+# Subtest: admin diagnostics aggregate only current notice scope and fixed operational evidence in a bounded read-only transaction
+ok 1 - admin diagnostics aggregate only current notice scope and fixed operational evidence in a bounded read-only transaction
+  ---
+  duration_ms: 330.3914
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1186.3399
+
+
+FILE tests/database/riot.contract.test.ts
+TAP version 13
+# Subtest: 0045 fresh, populated 0044 upgrade and replay preserve existing Riot links and summaries
+ok 1 - 0045 fresh, populated 0044 upgrade and replay preserve existing Riot links and summaries
+  ---
+  duration_ms: 2991.2363
+  type: 'test'
+  ...
+# Subtest: Riot analytics archive deduplicates, pages without upstream access, retains daily observations and hides changed connections
+ok 2 - Riot analytics archive deduplicates, pages without upstream access, retains daily observations and hides changed connections
+  ---
+  duration_ms: 292.277
+  type: 'test'
+  ...
+# Subtest: S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit and outbox atomic
+ok 3 - S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit and outbox atomic
+  ---
+  duration_ms: 432.7866
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4514.651
+
+
+FILE tests/database/riot-production.contract.test.ts
+TAP version 13
+# Subtest: production RSO cache and signed sync job survive application retry without persisting credentials
+ok 1 - production RSO cache and signed sync job survive application retry without persisting credentials
+  ---
+  duration_ms: 390.3363
+  type: 'test'
+  ...
+# Subtest: scheduled Riot repository excludes ineligible identities and duplicate/recent work
+ok 2 - scheduled Riot repository excludes ineligible identities and duplicate/recent work
+  ---
+  duration_ms: 135.4403
+  type: 'test'
+  ...
+# Subtest: Riot key probe persists only safe outcomes and rejects replay, rapid retry, invalid signature and disabled flag
+ok 3 - Riot key probe persists only safe outcomes and rejects replay, rapid retry, invalid signature and disabled flag
+  ---
+  duration_ms: 99.4681
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1467.1755
+
+
+FILE tests/database/discipline.contract.test.ts
+TAP version 13
+# Subtest: S11 discipline records and private evidence persist with masked ownership, replay, and exact review state
+ok 1 - S11 discipline records and private evidence persist with masked ownership, replay, and exact review state
+  ---
+  duration_ms: 594.1322
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1480.2771
+
+
+FILE tests/database/champion-catalog.contract.test.ts
+TAP version 13
+# Subtest: S10 champion catalog keeps live ADMIN session mutations, replay and durable ledgers atomic
+ok 1 - S10 champion catalog keeps live ADMIN session mutations, replay and durable ledgers atomic
+  ---
+  duration_ms: 307.0292
+  type: 'test'
+  ...
+# Subtest: S10 champion image backfill applies and rolls back all 173 NULL fixture rows
+ok 2 - S10 champion image backfill applies and rolls back all 173 NULL fixture rows
+  ---
+  duration_ms: 201.8447
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1330.0343
+
+
+FILE tests/database/database-recovery.contract.test.ts
+TAP version 13
+# {"kind":"isolated-postgresql-recovery","archiveBytes":1151280,"archiveSha256":"261e67d5675ac528c26c3773fbf86f877d7dae8b8c2466c6b64480fedc459981","migrationCount":49,"migrationHead":"0048_mmr-game-source-history","tableCount":113,"schemaDefinitionCount":3626,"exactTableCountsMatched":true,"fixtureRelationMatched":true,"foreignKeysValidated":true,"migrationReplayNoop":true,"failedMigrationRolledBack":true}
+# Subtest: PostgreSQL custom archive restores the complete schema, data and migration head
+ok 1 - PostgreSQL custom archive restores the complete schema, data and migration head
+  ---
+  duration_ms: 3105.0251
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3816.1753
+
+
+FILE tests/database/cleanup-readiness.contract.test.ts
+TAP version 13
+# Subtest: bounded maintenance deletes only expired rows and records an atomic replayable result
+ok 1 - bounded maintenance deletes only expired rows and records an atomic replayable result
+  ---
+  duration_ms: 144.0022
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 895.9203
+

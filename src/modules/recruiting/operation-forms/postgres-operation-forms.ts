@@ -56,6 +56,10 @@ export type OperationFormMutationResult = Readonly<{
 export type OperationFormList = Readonly<{
   items: readonly AdminOperationFormDto[];
   counts: Readonly<Record<OperationFormType, number>>;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 }>;
 
 function sha256(value: string) { return createHash("sha256").update(value).digest(); }
@@ -284,16 +288,22 @@ export class PostgresOperationForms {
     });
   }
 
-  async list(input: Readonly<{ formType?: OperationFormType; status?: OperationFormStatus; limit?: number }> = {}): Promise<OperationFormList> {
+  async list(input: Readonly<{ formType?: OperationFormType; status?: OperationFormStatus; limit?: number; page?: number }> = {}): Promise<OperationFormList> {
     await this.purgeExpiredSupport();
     const conditions = [sql`${operationForms.deletedAt} IS NULL`];
     if (input.formType) conditions.push(eq(operationForms.formType, input.formType));
     if (input.status) conditions.push(eq(operationForms.status, input.status));
-    const rows = await this.database.select().from(operationForms).where(and(...conditions)).orderBy(desc(operationForms.submittedAt), desc(operationForms.id)).limit(Math.min(Math.max(input.limit ?? 100, 1), 100));
+    const pageSize = Number.isSafeInteger(input.limit) ? Math.min(Math.max(input.limit!, 1), 100) : 100;
+    const requestedPage = Number.isSafeInteger(input.page) ? Math.max(input.page!, 1) : 1;
+    const [count] = await this.database.select({ value: sql<number>`count(*)::int` }).from(operationForms).where(and(...conditions));
+    const total = count?.value ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(requestedPage, totalPages);
+    const rows = await this.database.select().from(operationForms).where(and(...conditions)).orderBy(desc(operationForms.submittedAt), desc(operationForms.id)).limit(pageSize).offset((page - 1) * pageSize);
     const allCounts = await this.database.select({ formType: operationForms.formType, value: sql<number>`count(*)::int` }).from(operationForms).where(sql`${operationForms.deletedAt} IS NULL`).groupBy(operationForms.formType);
     const counts = { friends: 0, leaves: 0, meetups: 0, suggestions: 0 };
     for (const row of allCounts) counts[row.formType] = row.value;
-    return { items: rows.map(fromRow).map(toAdminOperationFormDto), counts };
+    return { items: rows.map(fromRow).map(toAdminOperationFormDto), counts, page, pageSize, total, totalPages };
   }
 
   async get(formType: OperationFormType, id: string) {

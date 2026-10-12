@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `0601644420b7cbdc056c1f307d67aec845c6190d005d31c5143cc44cb0d4baa2`
-- Tables: 111
-- Foreign keys: 173
+- Schema SHA-256: `f767983df929d728473e1f778bc1bb6ee7871299e7487eb9cf388c692c38533d`
+- Tables: 112
+- Foreign keys: 174
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -923,9 +923,18 @@ erDiagram
         uuid actor_user_account_id FK "NOT NULL"
         timestamp_with_time_zone created_at "NOT NULL"
     }
+    mmr__match_game_sources {
+        bigint generation PK "NOT NULL"
+        uuid game_id PK "NOT NULL"
+        uuid match_id FK "NOT NULL"
+        integer game_number "NOT NULL"
+        varchar_32 source_kind "NOT NULL"
+        jsonb source_json "nullable"
+        timestamp_with_time_zone created_at "NOT NULL"
+    }
     mmr__match_result_events {
         uuid id PK "NOT NULL"
-        bigint generation "NOT NULL"
+        bigint generation FK "NOT NULL"
         uuid source_event_id FK "NOT NULL"
         uuid match_id FK "NOT NULL"
         uuid game_id FK "NOT NULL"
@@ -997,11 +1006,12 @@ erDiagram
     auth__user_accounts ||--o{ mmr__command_receipts : "actor_user_account_id to id"
     auth__user_accounts ||--o{ mmr__manual_adjustments : "actor_user_account_id to id"
     auth__user_accounts o|--o{ mmr__projection_runs : "actor_user_account_id to id"
-    competition__match_games ||--o{ mmr__match_result_events : "game_id to id"
     competition__match_recalculation_outbox ||--o| mmr__consumer_receipts : "outbox_event_id to id"
     competition__match_series ||--o{ mmr__consumer_receipts : "match_id to id"
+    competition__match_series ||--o{ mmr__match_game_sources : "match_id to id"
     competition__match_series ||--o{ mmr__match_result_events : "match_id to id"
     competition__match_series ||--o{ mmr__match_result_events : "source_event_id to id"
+    mmr__match_game_sources ||--o{ mmr__match_result_events : "generation to generation, game_id to game_id"
     mmr__projection_runs ||--o{ mmr__consumer_receipts : "run_id to id"
     mmr__projection_runs ||--o{ mmr__outbox : "run_id to id"
     registry__players ||--o{ mmr__manual_adjustments : "player_id to id"

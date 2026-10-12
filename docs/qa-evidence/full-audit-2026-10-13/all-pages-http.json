@@ -1,0 +1,1087 @@
+{
+  "checkedAt": "2026-10-12T15:41:43.723Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "method": "All current page routes; anonymous GET only. Dynamic IDs are synthetic, so 404 is expected for nonexistent resources. Auth redirects are not authenticated UI validation. No response bodies retained.",
+  "rows": [
+    {
+      "route": "/",
+      "status": 200,
+      "ms": 478,
+      "bytes": 113398,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/app",
+      "status": 308,
+      "ms": 617,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/competitions",
+      "status": 200,
+      "ms": 268,
+      "bytes": 46659,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/start",
+      "status": 200,
+      "ms": 236,
+      "bytes": 53813,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/account",
+      "status": 200,
+      "ms": 263,
+      "bytes": 40785,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/account/password",
+      "status": 200,
+      "ms": 241,
+      "bytes": 41430,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/login",
+      "status": 200,
+      "ms": 266,
+      "bytes": 24522,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/security",
+      "status": 307,
+      "ms": 252,
+      "bytes": 17009,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/users",
+      "status": 307,
+      "ms": 268,
+      "bytes": 18739,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fusers",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/users/[userAccountId]",
+      "status": 307,
+      "ms": 269,
+      "bytes": 20060,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fusers%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/forgot-password",
+      "status": 200,
+      "ms": 230,
+      "bytes": 41562,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/login",
+      "status": 200,
+      "ms": 231,
+      "bytes": 41391,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/signup",
+      "status": 200,
+      "ms": 237,
+      "bytes": 44048,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/seasons",
+      "status": 307,
+      "ms": 276,
+      "bytes": 17777,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fseasons",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/applications",
+      "status": 200,
+      "ms": 267,
+      "bytes": 49688,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/recruits",
+      "status": 308,
+      "ms": 52,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=recruits",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/help/recruits",
+      "status": 200,
+      "ms": 234,
+      "bytes": 59792,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/recruits",
+      "status": 200,
+      "ms": 260,
+      "bytes": 61686,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/progress/event",
+      "status": 307,
+      "ms": 317,
+      "bytes": 18102,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprogress%2Fevent",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/progress/event/[eventId]",
+      "status": 307,
+      "ms": 250,
+      "bytes": 18949,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprogress%2Fevent%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/progress/event/new",
+      "status": 307,
+      "ms": 252,
+      "bytes": 18787,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprogress%2Fevent%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/competitions/events",
+      "status": 200,
+      "ms": 246,
+      "bytes": 57993,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/competitions/events/[eventId]",
+      "status": 200,
+      "ms": 263,
+      "bytes": 42946,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/progress/destruction",
+      "status": 307,
+      "ms": 252,
+      "bytes": 18126,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprogress%2Fdestruction",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/progress/destruction/[tournamentId]",
+      "status": 307,
+      "ms": 267,
+      "bytes": 19164,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprogress%2Fdestruction%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/progress/destruction/new",
+      "status": 307,
+      "ms": 260,
+      "bytes": 18811,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprogress%2Fdestruction%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/competitions/destruction",
+      "status": 200,
+      "ms": 237,
+      "bytes": 59132,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/competitions/destruction/[tournamentId]",
+      "status": 200,
+      "ms": 255,
+      "bytes": 43322,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/balance",
+      "status": 307,
+      "ms": 238,
+      "bytes": 17777,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fbalance",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/balance-ai",
+      "status": 307,
+      "ms": 269,
+      "bytes": 18161,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fbalance-ai",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/balance/drafts",
+      "status": 307,
+      "ms": 262,
+      "bytes": 18094,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fbalance%2Fdrafts",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/balance/drafts/[draftId]",
+      "status": 307,
+      "ms": 263,
+      "bytes": 19120,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fbalance%2Fdrafts%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/tools/team-balance",
+      "status": 200,
+      "ms": 259,
+      "bytes": 51147,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/tools/team-balance/drafts",
+      "status": 200,
+      "ms": 234,
+      "bytes": 42198,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/tools/team-balance/drafts/[draftId]",
+      "status": 200,
+      "ms": 229,
+      "bytes": 43235,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/tools/coin-toss",
+      "status": 200,
+      "ms": 226,
+      "bytes": 51109,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/tools/random-team",
+      "status": 200,
+      "ms": 229,
+      "bytes": 51085,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/matches",
+      "status": 307,
+      "ms": 273,
+      "bytes": 34017,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fmatches",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/matches/[matchId]",
+      "status": 307,
+      "ms": 253,
+      "bytes": 18609,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fmatches%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/matches/[matchId]/edit",
+      "status": 307,
+      "ms": 268,
+      "bytes": 19105,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fmatches%2F[synthetic-id]%2Fedit",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/matches/new",
+      "status": 307,
+      "ms": 247,
+      "bytes": 18648,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fmatches%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/matches/submissions/[submissionId]",
+      "status": 307,
+      "ms": 260,
+      "bytes": 19153,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fmatches%2Fsubmissions%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/matches",
+      "status": 200,
+      "ms": 396,
+      "bytes": 92654,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/matches/[matchId]",
+      "status": 200,
+      "ms": 246,
+      "bytes": 43051,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/matches/submissions",
+      "status": 200,
+      "ms": 241,
+      "bytes": 44279,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/matches/submit",
+      "status": 200,
+      "ms": 248,
+      "bytes": 44867,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/players",
+      "status": 307,
+      "ms": 242,
+      "bytes": 20270,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fplayers",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/players/[playerId]",
+      "status": 307,
+      "ms": 254,
+      "bytes": 21305,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fplayers%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/players/new",
+      "status": 307,
+      "ms": 263,
+      "bytes": 21142,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fplayers%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/app/players",
+      "status": 308,
+      "ms": 32,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/players",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/players",
+      "status": 200,
+      "ms": 256,
+      "bytes": 165803,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/players/[playerId]",
+      "status": 200,
+      "ms": 273,
+      "bytes": 43666,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/rankings",
+      "status": 200,
+      "ms": 455,
+      "bytes": 78968,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/rankings/mmr",
+      "status": 200,
+      "ms": 422,
+      "bytes": 71650,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/champions",
+      "status": 307,
+      "ms": 291,
+      "bytes": 18416,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fchampions",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/champions/[championId]/edit",
+      "status": 307,
+      "ms": 255,
+      "bytes": 19670,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fchampions%2FAhri%2Fedit",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/champions/new",
+      "status": 307,
+      "ms": 250,
+      "bytes": 18915,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fchampions%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/highlights",
+      "status": 307,
+      "ms": 240,
+      "bytes": 18234,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fhighlights",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/highlights/[highlightId]/edit",
+      "status": 307,
+      "ms": 255,
+      "bytes": 20500,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fhighlights%2F[synthetic-id]%2Fedit",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/highlights/new",
+      "status": 307,
+      "ms": 251,
+      "bytes": 18733,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fhighlights%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/images",
+      "status": 307,
+      "ms": 257,
+      "bytes": 18218,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fimages",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/images/[imageId]/edit",
+      "status": 307,
+      "ms": 246,
+      "bytes": 20458,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fimages%2F[synthetic-id]%2Fedit",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/images/new",
+      "status": 307,
+      "ms": 238,
+      "bytes": 18717,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fimages%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/private-assets",
+      "status": 307,
+      "ms": 248,
+      "bytes": 18436,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprivate-assets",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/private-assets/[assetId]",
+      "status": 307,
+      "ms": 248,
+      "bytes": 19090,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fprivate-assets%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/highlights",
+      "status": 200,
+      "ms": 271,
+      "bytes": 56092,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/highlights/[highlightId]",
+      "status": 200,
+      "ms": 263,
+      "bytes": 44538,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/images",
+      "status": 200,
+      "ms": 322,
+      "bytes": 54135,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/images/[imageId]",
+      "status": 200,
+      "ms": 241,
+      "bytes": 44497,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/account/discipline",
+      "status": 200,
+      "ms": 228,
+      "bytes": 41811,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/discipline",
+      "status": 307,
+      "ms": 234,
+      "bytes": 17603,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fdiscipline",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/discipline/[recordId]",
+      "status": 307,
+      "ms": 253,
+      "bytes": 18451,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fdiscipline%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/discipline/new",
+      "status": 307,
+      "ms": 243,
+      "bytes": 18288,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fdiscipline%2Fnew",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/discipline",
+      "status": 200,
+      "ms": 229,
+      "bytes": 48125,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/operation-forms",
+      "status": 308,
+      "ms": 35,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/operation-forms",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/operation-forms/[formType]",
+      "status": 308,
+      "ms": 31,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/operation-forms?type=friends",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/operation-forms",
+      "status": 307,
+      "ms": 251,
+      "bytes": 17623,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Foperation-forms",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/operation-forms/[formType]",
+      "status": 308,
+      "ms": 24,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/operation-forms?type=friends",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/operation-forms/[formType]/[id]",
+      "status": 307,
+      "ms": 429,
+      "bytes": 19009,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Foperation-forms%2Ffriends%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/operation-forms/warnings",
+      "status": 308,
+      "ms": 85,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/discipline",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/account/riot",
+      "status": 200,
+      "ms": 249,
+      "bytes": 41699,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/riot",
+      "status": 307,
+      "ms": 399,
+      "bytes": 17765,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Friot",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/help/riot",
+      "status": 200,
+      "ms": 244,
+      "bytes": 59395,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao",
+      "status": 307,
+      "ms": 248,
+      "bytes": 17786,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fkakao",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/recruits",
+      "status": 308,
+      "ms": 50,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=recruits",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/recruits/logs",
+      "status": 308,
+      "ms": 28,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=logs",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/recruits/settings",
+      "status": 308,
+      "ms": 32,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=health",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/rooms",
+      "status": 307,
+      "ms": 264,
+      "bytes": 18276,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fkakao%2Frooms",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/scrims",
+      "status": 308,
+      "ms": 27,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=scrims",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/season-apply",
+      "status": 308,
+      "ms": 26,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/seasons/kakao-pending",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/settings",
+      "status": 308,
+      "ms": 32,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=settings",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/kakao/stats",
+      "status": 308,
+      "ms": 30,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=stats",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/logs/kakao",
+      "status": 308,
+      "ms": 24,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/kakao?tab=logs",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/seasons/kakao-pending",
+      "status": 307,
+      "ms": 267,
+      "bytes": 18130,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fseasons%2Fkakao-pending",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/seasons/kakao-pending/[pendingId]",
+      "status": 307,
+      "ms": 242,
+      "bytes": 18933,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fseasons%2Fkakao-pending%2F[synthetic-id]",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/help/kakao",
+      "status": 200,
+      "ms": 223,
+      "bytes": 57097,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin",
+      "status": 307,
+      "ms": 260,
+      "bytes": 17262,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/ai-requests",
+      "status": 308,
+      "ms": 40,
+      "bytes": 15,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/logs?view=ai-requests",
+      "cache": "public, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/logs",
+      "status": 307,
+      "ms": 247,
+      "bytes": 17579,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Flogs",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/search",
+      "status": 307,
+      "ms": 269,
+      "bytes": 17587,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fsearch",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/site-settings",
+      "status": 307,
+      "ms": 250,
+      "bytes": 17749,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fsite-settings",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/admin/usage",
+      "status": 307,
+      "ms": 250,
+      "bytes": 17583,
+      "hasH1": false,
+      "serverError": false,
+      "redirect": "/admin/login?next=%2Fadmin%2Fusage",
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/forbidden",
+      "status": 200,
+      "ms": 227,
+      "bytes": 42050,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/help",
+      "status": 200,
+      "ms": 223,
+      "bytes": 46493,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/help/contact",
+      "status": 200,
+      "ms": 228,
+      "bytes": 43396,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/install",
+      "status": 200,
+      "ms": 233,
+      "bytes": 57123,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/privacy",
+      "status": 200,
+      "ms": 230,
+      "bytes": 51330,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "route": "/terms",
+      "status": 200,
+      "ms": 220,
+      "bytes": 46440,
+      "hasH1": true,
+      "serverError": false,
+      "redirect": null,
+      "cache": "private, no-cache, no-store, max-age=0, must-revalidate"
+    }
+  ]
+}

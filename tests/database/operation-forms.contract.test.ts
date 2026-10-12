@@ -106,5 +106,29 @@ test("S09 operation forms persist signed submissions and ADMIN TOTP mutations at
     assert.equal(await service.get("suggestions", inquiryId), null);
     assert.equal((await database.select().from(operationForms).where(eq(operationForms.id, createdForm.id))).length, 1, "Existing Kakao forms are not purged by the website policy");
     assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.scope, `ADMIN:REVIEW_OPERATION_FORM:suggestions:${inquiryId}`))).length, 0, "Private replay body is removed too");
+
+    const listingTime = new Date();
+    const listingRows = Array.from({ length: 105 }, (_, index) => ({
+      id: randomUUID(), formType: "suggestions" as const, status: "PENDING" as const,
+      payloadJson: submit.payload, sourceRoomId: "pagination-contract", sourceSenderId: `pagination-${index}`,
+      submittedAt: listingTime, createdAt: listingTime, updatedAt: listingTime,
+    }));
+    await database.insert(operationForms).values(listingRows);
+    await database.insert(operationForms).values({ ...listingRows[0]!, id: randomUUID(), status: "COMPLETED" });
+    await database.insert(operationForms).values({ ...listingRows[0]!, id: randomUUID(), deletedAt: listingTime, deletedByUserAccountId: adminId, deletionReason: "synthetic" });
+    const firstPage = await service.list({ formType: "suggestions", status: "PENDING" });
+    const secondPage = await service.list({ formType: "suggestions", status: "PENDING", page: 2 });
+    assert.equal(firstPage.total, 107, "Status and deletion filters apply to the count");
+    assert.equal(firstPage.items.length, 100);
+    assert.equal(secondPage.items.length, 7);
+    assert.equal(secondPage.page, 2);
+    assert.equal(secondPage.totalPages, 2);
+    assert.equal(new Set([...firstPage.items, ...secondPage.items].map((form) => form.id)).size, 107, "Equal timestamps still produce unique deterministic pages");
+    for (const row of listingRows) assert.ok([...firstPage.items, ...secondPage.items].some((form) => form.id === row.id), "Older submissions remain reachable");
+    assert.deepEqual((await service.list({ formType: "suggestions", status: "PENDING", page: 999 })).items, secondPage.items, "Out-of-range pages recover to the last page");
+    const emptyPage = await service.list({ formType: "suggestions", status: "REJECTED", page: 2 });
+    assert.equal(emptyPage.total, 0);
+    assert.equal(emptyPage.page, 1);
+    assert.deepEqual(emptyPage.items, []);
   } finally { await pool.end(); }
 });

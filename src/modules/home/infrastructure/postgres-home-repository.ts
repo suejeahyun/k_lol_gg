@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import { and, asc, count, desc, eq, ilike, inArray, lt, sql } from "drizzle-orm";
 
 import { destructionCompetitions } from "@/platform/db/schema/destruction-competitions";
@@ -193,7 +194,7 @@ export class PostgresHomeRepository implements HomeRepository {
       const images = [
         ...assetRows.map((image) => ({
           id: image.assetId,
-          url: `/api/media/assets/${image.assetId}`,
+          url: publicMediaAssetUrl(image.assetId),
           ordinal: image.ordinal,
         })),
         ...winnerExternalImageRows.filter((image) => image.galleryId === row.galleryId).map((image) => ({

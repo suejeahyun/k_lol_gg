@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import { AramSyncError } from "./aram-rating";
 import { RiotAramRecords } from "./riot-aram-records";
 import { readRiotProductionConfiguration } from "@/modules/riot/infrastructure/riot-runtime-policy";
@@ -221,7 +222,7 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
       assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")
     ) return null;
     const images = [
-      ...assets.map((asset) => ({ assetId: asset.assetId, ordinal: asset.ordinal, url: `/api/media/assets/${asset.assetId}` })),
+      ...assets.map((asset) => ({ assetId: asset.assetId, ordinal: asset.ordinal, url: publicMediaAssetUrl(asset.assetId) })),
       ...externalImages.map((image) => ({ assetId: `external:${gallery.id}:${image.ordinal}`, ...image })),
     ].sort((left, right) => left.ordinal - right.ordinal);
     return Object.freeze({

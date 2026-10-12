@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "./account-access.module.css";
 import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
+import { validateNewPassword } from "@/modules/accounts/domain/account-contracts";
+import { canonicalRiotId } from "@/modules/riot/domain/riot-integration";
 
 type Message = Readonly<{ text: string; tone: "error" | "success" }> | null;
 
@@ -87,11 +89,13 @@ export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
 }
 
 export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
-  const router = useRouter();
   const safeNext = normalizeAccountNext(nextPath, "/");
   const loginHref = `/login?next=${encodeURIComponent(safeNext)}`;
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message>(null);
+  const [completed, setCompleted] = useState(false);
+  const [invalidField, setInvalidField] = useState("");
+  const completionRef = useRef<HTMLDivElement>(null);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
 
   useEffect(() => {
@@ -104,6 +108,7 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || completed) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const payload = {
@@ -134,7 +139,8 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
       idempotency.current = null;
       setMessage({ text: safeMessage(body, "가입과 자동 승인이 완료되었습니다."), tone: "success" });
       form.reset();
-      router.push(loginHref);
+      setCompleted(true);
+      requestAnimationFrame(() => completionRef.current?.focus());
     } catch {
       setMessage({ text: "네트워크 연결을 확인한 뒤 다시 시도해 주세요.", tone: "error" });
     } finally {
@@ -142,12 +148,36 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
     }
   }
 
+  if (completed) return <div ref={completionRef} tabIndex={-1} className={styles.form} role="status">
+    <h2>가입 결과</h2>
+    <p className={styles.message} data-tone="success">{message?.text}</p>
+    <p>로그인 후 내 계정에서 승인·플레이어 연결 상태를 확인할 수 있어요.</p>
+    <Link className={styles.primaryLink} href={loginHref}>로그인하고 계속하기</Link>
+    <Link href="/help/contact">가입·플레이어 연결 문의</Link>
+  </div>;
+
   return (
-    <form className={styles.form} onSubmit={submit} noValidate>
-      <label className={styles.field}>로그인 아이디<input name="loginId" autoComplete="username" minLength={4} maxLength={64} required autoFocus /><small>4~64자 · 한글, 영문, 숫자, . _ -</small></label>
-      <label className={styles.field}>비밀번호<input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /><small>10자 이상 · 문자와 숫자 포함</small></label>
-      <label className={styles.field}>회원명<input name="memberName" autoComplete="name" minLength={2} maxLength={100} required /></label>
-      <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={22} required /><small>게임 이름 최대 16자 · 태그 최대 5자</small></label>
+    <form className={styles.form} onSubmit={submit} onInvalid={(event) => {
+      const input = event.currentTarget.querySelector<HTMLInputElement>(":invalid") ?? event.target as HTMLInputElement;
+      setInvalidField(input.name);
+      setMessage({ text: input.validationMessage, tone: "error" });
+    }} onInput={() => { setInvalidField(""); setMessage(null); }}>
+      <label className={styles.field}>로그인 아이디<input name="loginId" autoComplete="username" minLength={4} maxLength={64} pattern="[\p{L}\p{N}._\-]{4,64}" title="4~64자의 한글, 영문, 숫자, 점, 밑줄, 하이픈을 사용해 주세요." required autoFocus aria-invalid={invalidField === "loginId" || undefined} /><small>4~64자 · 한글, 영문, 숫자, . _ -</small></label>
+      <label className={styles.field}>비밀번호<input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required aria-invalid={invalidField === "password" || undefined} onInput={(event) => {
+        const input = event.currentTarget;
+        input.setCustomValidity(!input.value || validateNewPassword(input.value) ? "" : "비밀번호는 10~128자로 문자와 숫자를 모두 포함해 주세요.");
+      }} /><small>10자 이상 · 문자와 숫자 포함</small></label>
+      <label className={styles.field}>회원명<input name="memberName" autoComplete="name" minLength={2} maxLength={100} required aria-invalid={invalidField === "memberName" || undefined} /></label>
+      <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={22} required aria-invalid={invalidField === "riotId" || undefined} onInput={(event) => {
+        const input = event.currentTarget;
+        try {
+          const [gameName, tagLine, extra] = input.value.split("#");
+          if (!input.value) { input.setCustomValidity(""); return; }
+          if (extra !== undefined) throw new Error("invalid");
+          canonicalRiotId({ gameName: gameName ?? "", tagLine: tagLine ?? "" });
+          input.setCustomValidity("");
+        } catch { input.setCustomValidity("게임 이름#태그 형식으로 입력해 주세요. 게임 이름은 최대 16자, 태그는 최대 5자입니다."); }
+      }} /><small>게임 이름 최대 16자 · 태그 최대 5자</small></label>
       <label className={styles.check}><input name="termsAccepted" type="checkbox" required /><span><Link href="/terms" target="_blank">이용약관</Link>을 확인했고 계정 운영 규칙에 동의합니다.</span></label>
       <label className={styles.check}><input name="privacyAccepted" type="checkbox" required /><span><Link href="/privacy" target="_blank">개인정보 처리 안내</Link>에 따른 계정·회원명·Riot ID 처리에 동의합니다.</span></label>
       <button className={styles.submit} type="submit" disabled={busy}>{busy ? "가입 중…" : "가입하기"}</button>

@@ -128,6 +128,7 @@ test("published asset delivery checks publication/READY via its port and never r
   const service = new PublicPrivateAssetService(
     { async findReadyPublished(id) { return id === asset.id ? asset : null; } },
     { storageProvider: "TEST", async stageAt() {}, async requestDelete() {}, async read(key) { assert.equal(key, asset.storageKey); return bytes; } },
+    async (input) => ({ bytes: input, contentType: "image/webp" as const }),
   );
   const result = await service.readPublished(asset.id);
   assert.deepEqual(Object.keys(result).sort(), ["assetId", "byteSize", "bytes", "contentType"]);
@@ -136,6 +137,7 @@ test("published asset delivery checks publication/READY via its port and never r
   const corrupt = new PublicPrivateAssetService(
     { async findReadyPublished() { return asset; } },
     { storageProvider: "TEST", async stageAt() {}, async requestDelete() {}, async read() { return Uint8Array.from([9, 9, 9, 9]); } },
+    async () => { throw new Error("Corrupt original must not be rendered"); },
   );
   await assert.rejects(() => corrupt.readPublished(asset.id), (error: unknown) => error instanceof PrivateAssetError && error.code === "STORAGE_UNAVAILABLE");
 });

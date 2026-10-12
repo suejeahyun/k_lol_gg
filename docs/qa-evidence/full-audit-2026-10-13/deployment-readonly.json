@@ -1,0 +1,6 @@
+{
+  "checkedAt": "2026-10-12T15:46:36.799Z",
+  "verified": false,
+  "exitCode": 1,
+  "reason": "Local cached Vercel CLI unavailable or inspect did not return parseable JSON; no deployment action attempted."
+}

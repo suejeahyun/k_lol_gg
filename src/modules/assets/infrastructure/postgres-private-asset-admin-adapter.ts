@@ -23,7 +23,7 @@ import type { V2Database } from "@/platform/db/database";
 import { auditEvents } from "@/platform/db/schema/audit";
 import { disciplineAssetBindings } from "@/platform/db/schema/discipline";
 import { matchSubmissionImages, matchSubmissions, privateAssets } from "@/platform/db/schema/matches";
-import { mediaGalleries, mediaHighlights } from "@/platform/db/schema/media";
+import { mediaGalleries, mediaGalleryAssets, mediaHighlights } from "@/platform/db/schema/media";
 import type { V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
 
@@ -35,6 +35,19 @@ const RESOURCE_TYPES = new Set<PrivateAssetResourceType>([
   "HIGHLIGHT",
   "SECURITY_INCIDENT",
 ]);
+
+export const MEDIA_CLEANUP_PRINCIPAL = "MEDIA_ASSET_CLEANUP";
+
+function unreferencedMediaAsset() {
+  return and(
+    inArray(privateAssets.purpose, ["GALLERY", "HIGHLIGHT_THUMBNAIL"]),
+    sql`not exists (select 1 from ${mediaGalleryAssets} where ${mediaGalleryAssets.privateAssetId} = ${privateAssets.id})`,
+    sql`not exists (select 1 from ${mediaHighlights} where ${mediaHighlights.thumbnailAssetId} = ${privateAssets.id})`,
+    // A malformed cross-purpose legacy binding must never turn evidence into a cleanup target.
+    sql`not exists (select 1 from ${matchSubmissionImages} where ${matchSubmissionImages.privateAssetId} = ${privateAssets.id})`,
+    sql`not exists (select 1 from ${disciplineAssetBindings} where ${disciplineAssetBindings.privateAssetId} = ${privateAssets.id})`,
+  );
+}
 
 function recordFromRow(row: typeof privateAssets.$inferSelect): PrivateAssetRecord | null {
   if (!PRIVATE_ASSET_PURPOSES.includes(row.purpose as PrivateAssetPurpose)) return null;
@@ -88,7 +101,7 @@ export class PostgresPrivateAssetAdminAdapter implements
   PrivateAssetRepository {
   private readonly transactions = new WeakMap<PrivateAssetTransaction, V2Transaction>();
 
-  constructor(private readonly database: V2Database) {}
+  constructor(private readonly database: V2Database, private readonly cleanupBefore?: Date) {}
 
   transaction<T>(work: (transaction: PrivateAssetTransaction) => Promise<T>) {
     return withTransaction(this.database, async (databaseTransaction) => {
@@ -101,6 +114,9 @@ export class PostgresPrivateAssetAdminAdapter implements
 
   async recheck<TActor extends PrivateAssetActor>(context: PrivateAssetTransaction, actor: TActor): Promise<TActor | null> {
     const transaction = this.tx(context);
+    if (actor.purpose === "JOB") {
+      return this.cleanupBefore && actor.principalId === MEDIA_CLEANUP_PRINCIPAL && actor.role === "SYSTEM" ? actor : null;
+    }
     if (actor.purpose !== "ADMIN") return null;
     const locked = await lockTransactionSessionActor(transaction, {
       userAccountId: actor.userAccountId,
@@ -188,7 +204,10 @@ export class PostgresPrivateAssetAdminAdapter implements
 
   async findByIdForUpdate(context: PrivateAssetTransaction, assetId: string) {
     const transaction = this.tx(context);
-    const row = (await transaction.select().from(privateAssets).where(eq(privateAssets.id, assetId)).for("update").limit(1))[0];
+    const row = (await transaction.select().from(privateAssets).where(and(
+      eq(privateAssets.id, assetId),
+      this.cleanupBefore ? and(unreferencedMediaAsset(), eq(privateAssets.status, "DELETE_PENDING"), lt(privateAssets.deleteRequestedAt, this.cleanupBefore)) : undefined,
+    )).for("update").limit(1))[0];
     if (!row) return null;
     return this.bindingFor(transaction, row);
   }
@@ -223,9 +242,9 @@ export class PostgresPrivateAssetAdminAdapter implements
             and ${query.resourceId ? sql`ae.metadata_json->>'resourceId' = ${query.resourceId}` : sql`true`}
         )`,
         !query.resourceType || query.resourceType === "MATCH_SUBMISSION" ? sql<boolean>`exists (
-          select 1 from matches.match_submission_images msi
-          where msi.private_asset_id = ${privateAssets.id}
-            and ${query.resourceId ? sql`msi.submission_id::text = ${query.resourceId}` : sql`true`}
+          select 1 from ${matchSubmissionImages}
+          where ${matchSubmissionImages.privateAssetId} = ${privateAssets.id}
+            and ${query.resourceId ? sql`${matchSubmissionImages.submissionId}::text = ${query.resourceId}` : sql`true`}
         )` : undefined,
         !query.resourceType || query.resourceType === "DISCIPLINE_TASK" ? sql<boolean>`exists (
           select 1 from discipline.asset_bindings dab
@@ -251,8 +270,11 @@ export class PostgresPrivateAssetAdminAdapter implements
   }
 
   async listCleanupCandidates(context: PrivateAssetTransaction, limit: number) {
+    if (!this.cleanupBefore) return [];
     const rows = await this.tx(context).select().from(privateAssets).where(and(
       eq(privateAssets.status, "DELETE_PENDING"),
+      lt(privateAssets.deleteRequestedAt, this.cleanupBefore),
+      unreferencedMediaAsset(),
       sql<boolean>`not exists (
         select 1 from audit.events ae where ae.target_type = 'PRIVATE_ASSET'
           and ae.action = 'PRIVATE_ASSET_CLEANUP_OUTCOME' and ae.target_id = ${privateAssets.id}::text
@@ -263,9 +285,11 @@ export class PostgresPrivateAssetAdminAdapter implements
   }
 
   async listStaleStagedCandidates(context: PrivateAssetTransaction, before: string, limit: number) {
+    if (!this.cleanupBefore) return [];
     const transaction = this.tx(context);
     const rows = await transaction.select().from(privateAssets).where(and(
       eq(privateAssets.status, "STAGED"),
+      unreferencedMediaAsset(),
       lt(privateAssets.createdAt, new Date(before)),
     )).orderBy(asc(privateAssets.createdAt), asc(privateAssets.id)).limit(limit).for("update", { skipLocked: true });
     const bindings = await Promise.all(rows.map((row) => this.bindingFor(transaction, row)));

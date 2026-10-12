@@ -1,51 +1,47 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import { getRuntimeRiot } from "@/modules/riot/infrastructure/runtime-riot";
+import { clearRsoCallbackBinding, getRsoCallbackSession } from "@/modules/riot/infrastructure/runtime-rso-callback";
+import { rsoCompletionResponse } from "@/modules/riot/infrastructure/riot-rso-completion";
 import { exactObject, prepareRiotMutation, requireRiotApiSession, riotErrorResponse, riotInvalidInputResponse, riotMutationResponse, riotNotFoundResponse, riotUnavailableResponse } from "@/modules/riot/infrastructure/riot-http";
 
 export const dynamic = "force-dynamic";
 
-function accountRedirect(status: "connected" | "denied" | "failed") {
-  const origin = process.env.V2_PUBLIC_ORIGIN ?? process.env.PUBLIC_ORIGIN;
-  if (!origin) return riotUnavailableResponse();
-  const location = new URL("/account/riot", origin);
-  location.searchParams.set("rso", status);
-  return Response.redirect(location, 303);
-}
-
 export async function GET(request: Request) {
-  const auth = await requireRiotApiSession("USER");
-  if (!auth.ok) return auth.response;
+  const finish = (status: "connected" | "denied" | "failed") => clearRsoCallbackBinding(rsoCompletionResponse(status), request);
   const url = new URL(request.url);
   const keys = [...url.searchParams.keys()];
+  const state = url.searchParams.get("state") ?? "";
+  if (url.searchParams.getAll("state").length !== 1) return finish("failed");
+  const session = await getRsoCallbackSession(state);
+  if (!session) return finish("failed");
   if (url.searchParams.has("error")) {
-    if (keys.some((key) => !["error", "error_description", "state"].includes(key))) {
-      return accountRedirect("failed");
+    if (keys.some((key) => !["error", "error_description", "state"].includes(key)) || new Set(keys).size !== keys.length) {
+      return finish("failed");
     }
-    return accountRedirect("denied");
+    return finish("denied");
   }
   if (keys.length !== 2 || !url.searchParams.has("state") || !url.searchParams.has("code")) {
-    return accountRedirect("failed");
+    return finish("failed");
   }
-  const state = url.searchParams.get("state") ?? "";
   const code = url.searchParams.get("code") ?? "";
-  if (!state || state.length > 1_000 || !code || code.length > 2_000) return accountRedirect("failed");
+  if (!state || state.length > 1_000 || !code || code.length > 2_000) return finish("failed");
   const runtime = getRuntimeRiot();
-  if (!runtime?.rsoAvailable) return accountRedirect("failed");
+  if (!runtime?.rsoAvailable) return finish("failed");
   try {
-    const owner = await runtime.query.getOwnerStatus(auth.session.userId);
-    if (!owner) return accountRedirect("failed");
+    const owner = await runtime.query.getOwnerStatus(session.userId);
+    if (!owner) return finish("failed");
     const codeDigest = createHash("sha256").update(code).digest("hex");
     await runtime.service.completeRso({
       context: {
-        principalId: auth.session.userId,
+        principalId: session.userId,
         requestId: randomUUID(),
         issuedAt: new Date().toISOString(),
         authorizationIntent: {
           kind: "OWNER_SESSION",
-          sessionId: auth.session.sessionId,
-          role: auth.session.role,
-          authVersion: auth.session.authVersion,
+          sessionId: session.sessionId,
+          role: session.role,
+          authVersion: session.authVersion,
           transactionRecheck: true,
         },
         idempotencyKeyMaterial: createHash("sha256")
@@ -62,9 +58,9 @@ export async function GET(request: Request) {
       publicState: state,
       authorizationCode: code,
     });
-    return accountRedirect("connected");
+    return finish("connected");
   } catch {
-    return accountRedirect("failed");
+    return finish("failed");
   }
 }
 

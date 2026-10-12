@@ -9,6 +9,7 @@ import {
   mmrCommandReceipts,
   mmrConsumerReceipts,
   mmrManualAdjustments,
+  mmrMatchGameSources,
   mmrMatchResultEvents,
   mmrOutbox,
   mmrPlayerPositionProfiles,
@@ -47,6 +48,13 @@ import {
 
 const GLOBAL_STATE_KEY = "GLOBAL";
 const RECEIPT_TTL_MS = 24 * 60 * 60 * 1_000;
+const INSERT_BATCH_ROWS = 1_000;
+
+function* insertBatches<T>(rows: readonly T[]) {
+  for (let offset = 0; offset < rows.length; offset += INSERT_BATCH_ROWS) {
+    yield rows.slice(offset, offset + INSERT_BATCH_ROWS);
+  }
+}
 
 type SuccessfulMutation = Omit<MmrMutationResult, "replayed">;
 
@@ -84,14 +92,17 @@ async function loadLedger(transaction: V2Transaction) {
     .select({ id: matchSeries.id, playedOn: matchSeries.playedOn, status: matchSeries.status })
     .from(matchSeries)
     .where(eq(matchSeries.status, "PUBLISHED"))
-    .orderBy(asc(matchSeries.playedOn), asc(matchSeries.id));
+    .orderBy(asc(matchSeries.playedOn), asc(matchSeries.id))
+    // Match edits/voids lock the series FOR UPDATE before replacing its games.
+    // Hold the selected sources stable until the entire generation commits.
+    .for("share");
   const seriesIds = seriesRows.map((row) => row.id);
   const gameRows = seriesIds.length === 0
     ? []
     : await transaction
         .select({ id: matchGames.id, seriesId: matchGames.seriesId, gameNumber: matchGames.gameNumber, winnerTeam: matchGames.winnerTeam })
         .from(matchGames)
-        .where(inArray(matchGames.seriesId, seriesIds))
+        .where(sql`${matchGames.seriesId} = ANY(${sql.param(seriesIds)}::uuid[])`)
         .orderBy(asc(matchGames.seriesId), asc(matchGames.gameNumber), asc(matchGames.id));
   const gameIds = gameRows.map((row) => row.id);
   const participantRows = gameIds.length === 0
@@ -107,7 +118,7 @@ async function loadLedger(transaction: V2Transaction) {
           assists: matchParticipants.assists,
         })
         .from(matchParticipants)
-        .where(inArray(matchParticipants.gameId, gameIds))
+        .where(sql`${matchParticipants.gameId} = ANY(${sql.param(gameIds)}::uuid[])`)
         .orderBy(asc(matchParticipants.gameId), asc(matchParticipants.team), asc(matchParticipants.position), asc(matchParticipants.playerId));
   const participantsByGame = new Map<string, typeof participantRows>();
   for (const row of participantRows) {
@@ -225,8 +236,8 @@ async function publishProjection(
     startedAt: input.now,
     completedAt: input.now,
   });
-  if (projection.profiles.length > 0) {
-    await transaction.insert(mmrPlayerProfiles).values(projection.profiles.map((profile) => ({
+  for (const profiles of insertBatches(projection.profiles)) {
+    await transaction.insert(mmrPlayerProfiles).values(profiles.map((profile) => ({
       generation,
       playerId: profile.playerId,
       overallScoreBp: profile.overallScoreBp,
@@ -235,7 +246,7 @@ async function publishProjection(
       formulaVersion: MMR_FORMULA_VERSION,
       calculatedAt: input.now,
     })));
-    await transaction.insert(mmrPlayerPositionProfiles).values(projection.profiles.flatMap((profile) =>
+    await transaction.insert(mmrPlayerPositionProfiles).values(profiles.flatMap((profile) =>
       MMR_POSITIONS.map((position) => ({
         generation,
         playerId: profile.playerId,
@@ -246,8 +257,20 @@ async function publishProjection(
       })),
     ));
   }
-  if (projection.matchEvents.length > 0) {
-    await transaction.insert(mmrMatchResultEvents).values(projection.matchEvents.map((event) => ({
+  const gameSources = ledger.matches.flatMap((match) => match.games.map((game) => ({
+    generation,
+    gameId: game.id,
+    matchId: match.id,
+    gameNumber: game.gameNumber,
+    sourceKind: "LEDGER_SNAPSHOT",
+    sourceJson: { orderKey: match.orderKey, winnerTeam: game.winnerTeam, participants: game.participants },
+    createdAt: input.now,
+  })));
+  for (const sources of insertBatches(gameSources)) {
+    await transaction.insert(mmrMatchGameSources).values(sources);
+  }
+  for (const events of insertBatches(projection.matchEvents)) {
+    await transaction.insert(mmrMatchResultEvents).values(events.map((event) => ({
       id: randomUUID(),
       generation,
       sourceEventId: event.sourceEventId,
@@ -267,9 +290,9 @@ async function publishProjection(
     })));
   }
   let consumedEventCount = 0;
-  if (sources.length > 0) {
-    consumedEventCount = (
-      await transaction.insert(mmrConsumerReceipts).values(sources.map((source) => ({
+  for (const batch of insertBatches(sources)) {
+    consumedEventCount += (
+      await transaction.insert(mmrConsumerReceipts).values(batch.map((source) => ({
         outboxEventId: source.id,
         runId,
         generation,

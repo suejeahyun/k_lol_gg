@@ -64,6 +64,7 @@ async function applicationPage(data) {
     "@/modules/seasons/application/client-application-positions": applicationPositions,
     "@/modules/seasons/infrastructure/runtime-season-data": { loadRuntimeSeasonData: async (read) => ({ state: "ready", data: await read({ getApplicationHub: async (_owner, recruitNo) => { assert.equal(recruitNo, data.selectedRecruitNo); return data; } }) }) },
     "@/components/navigation/recruiting-competitions": { RecruitingCompetitions: () => null },
+    "@/components/navigation/live-view-refresh": { LiveViewRefresh: () => null },
     "./application-actions": { ApplicationActions },
     "./applications.module.css": css,
   });

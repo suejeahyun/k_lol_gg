@@ -104,7 +104,7 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     const tables = await pool.query<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'mmr'",
     );
-    assert.equal(tables.rowCount, 9);
+    assert.equal(tables.rowCount, 10);
 
     await database.insert(userAccounts).values([
       { id: superId, loginId: "mmr-super", loginIdNormalized: "mmr-super", role: "SUPER_ADMIN", status: "APPROVED" },

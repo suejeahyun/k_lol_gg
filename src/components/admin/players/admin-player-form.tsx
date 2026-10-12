@@ -62,6 +62,8 @@ export function AdminPlayerForm({
   const router = useRouter();
   const [values, setValues] = useState(() => initialValues(player));
   const [pending, setPending] = useState(false);
+  const [editingRevision, setEditingRevision] = useState(player?.revision);
+  const [conflict, setConflict] = useState(false);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const retryKey = useRef<{ fingerprint: string; key: string } | null>(null);
   const riotIdChanged = mode === "edit" && Boolean(player) &&
@@ -74,6 +76,7 @@ export function AdminPlayerForm({
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending || conflict) return;
     const payload = {
       memberName: values.memberName.trim(),
       nickname: values.nickname.trim(),
@@ -87,7 +90,7 @@ export function AdminPlayerForm({
       return;
     }
 
-    const fingerprint = JSON.stringify({ mode, playerId: player?.id ?? null, revision: player?.revision ?? null, payload });
+    const fingerprint = JSON.stringify({ mode, playerId: player?.id ?? null, revision: editingRevision ?? null, payload });
     if (!retryKey.current || retryKey.current.fingerprint !== fingerprint) {
       retryKey.current = { fingerprint, key: newIdempotencyKey() };
     }
@@ -102,20 +105,22 @@ export function AdminPlayerForm({
           headers: {
             "Content-Type": "application/json; charset=utf-8",
             "Idempotency-Key": retryKey.current.key,
-            ...(mode === "edit" ? { "If-Match": `"${player?.revision}"` } : {}),
+            ...(mode === "edit" ? { "If-Match": `"${editingRevision}"` } : {}),
           },
           body: JSON.stringify(payload),
         },
       );
       if (!response.ok) {
         setMessage({ tone: "error", text: await problemMessage(response) });
+        if (response.status === 412) { setConflict(true); retryKey.current = null; }
         if (response.status === 412 || response.status === 404) router.refresh();
         return;
       }
 
-      const body = (await response.json()) as { message?: string; player?: { id?: string } };
+      const body = (await response.json()) as { message?: string; player?: { id?: string; revision?: number } };
       retryKey.current = null;
       setMessage({ tone: "success", text: body.message ?? "저장되었습니다." });
+      if (typeof body.player?.revision === "number") setEditingRevision(body.player.revision);
       if (mode === "create" && body.player?.id) {
         router.push(`/admin/players/${body.player.id}`);
       } else {
@@ -130,6 +135,14 @@ export function AdminPlayerForm({
 
   return (
     <form className={styles.form} onSubmit={submit} aria-busy={pending}>
+      {conflict && player ? <section className="task-state" role="alert">
+        <h3>작성한 입력을 유지했습니다. 최신 저장값과 비교해 주세요.</h3>
+        {player.revision === editingRevision ? <button type="button" onClick={() => router.refresh()}>최신값 다시 불러오기</button> : <div>
+          <dl><dt>회원명</dt><dd>{player.memberName}</dd><dt>Riot ID</dt><dd>{player.riotId}</dd><dt>V1 기존 번호</dt><dd>{player.legacyId ?? "없음"}</dd><dt>현재 티어</dt><dd>{player.currentTier ?? "미입력"}</dd><dt>최고 티어</dt><dd>{player.peakTier ?? "미입력"}</dd></dl>
+          <Button type="button" onClick={() => { setEditingRevision(player.revision); setConflict(false); setMessage({ tone: "success", text: "작성한 입력을 유지했습니다. 비교한 뒤 다시 저장해 주세요." }); }}>내 입력 유지</Button>
+          <Button type="button" variant="outline" onClick={() => { setValues(initialValues(player)); setEditingRevision(player.revision); setConflict(false); setMessage({ tone: "success", text: "입력을 버리고 최신 저장값을 불러왔습니다." }); }}>입력 버리고 최신값 사용</Button>
+        </div>}
+      </section> : null}
       <div className={styles.formGrid}>
         <label className={styles.field}>
           <span>회원명 <b>관리자 전용</b></span>
@@ -221,7 +234,7 @@ export function AdminPlayerForm({
       </datalist>
 
       <div className={styles.formActions}>
-        <Button size="lg" type="submit" disabled={pending}>
+        <Button size="lg" type="submit" disabled={pending || conflict}>
           {mode === "create" ? <UserPlus aria-hidden="true" /> : <Save aria-hidden="true" />}
           {pending ? "저장 중…" : mode === "create" ? "플레이어 등록" : "변경 저장"}
         </Button>

@@ -9,6 +9,7 @@ import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-
 import { APPLICATION_POSITION_LABELS } from "@/modules/seasons/application/client-application-positions";
 
 import { RecruitingCompetitions } from "@/components/navigation/recruiting-competitions";
+import { LiveViewRefresh } from "@/components/navigation/live-view-refresh";
 import { ApplicationActions } from "./application-actions";
 import styles from "./applications.module.css";
 
@@ -68,6 +69,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   return (
     <div className={`page-wrap ${styles.page}`} data-application-type="season" data-entry-source={source}>
       <ApplicationsHero type="season" source={source} />
+      <LiveViewRefresh checkedAt={result.state === "ready" ? new Date().toISOString() : null} />
 
       {result.state === "unavailable" ? (
         <section className={styles.stateCard} role="status">

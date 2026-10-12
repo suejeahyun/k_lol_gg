@@ -50,7 +50,11 @@ export function CreateSeasonForm() {
   const [message, setMessage] = useState<string | null>(null);
   const keys = useRef(new ClientMutationKeyStore("admin-season-create")).current;
 
-  async function submit(formData: FormData) {
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     setPending(true);
     setMessage(null);
     try {
@@ -59,6 +63,7 @@ export function CreateSeasonForm() {
         ...seasonDates(formData),
       }, keys);
       setMessage("초안 시즌을 만들었습니다.");
+      form.reset();
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "시즌을 만들지 못했습니다.");
@@ -68,7 +73,7 @@ export function CreateSeasonForm() {
   }
 
   return (
-    <form className={styles.createForm} action={submit}>
+    <form className={styles.createForm} onSubmit={submit} aria-busy={pending}>
       <label>시즌 이름<input name="name" maxLength={120} required placeholder="예: 2026 가을 시즌" /></label>
       <label>신청 시작<input name="applicationsOpenAt" type="datetime-local" /></label>
       <label>신청 종료<input name="applicationsCloseAt" type="datetime-local" /></label>
@@ -100,7 +105,10 @@ export function SeasonRowActions({ season }: { season: AdminSeason }) {
     }
   }
 
-  async function edit(formData: FormData) {
+  async function edit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
+    const formData = new FormData(event.currentTarget);
     setPending("edit");
     setMessage(null);
     try {
@@ -136,7 +144,7 @@ export function SeasonRowActions({ season }: { season: AdminSeason }) {
       {season.status === "DRAFT" || season.status === "ACTIVE" ? (
         <details>
           <summary aria-label={`${season.name} 편집`}>편집</summary>
-          <form action={edit}>
+          <form onSubmit={edit} aria-busy={Boolean(pending)}>
             <label>이름<input name="name" required maxLength={120} defaultValue={season.name} /></label>
             <label>신청 시작<input name="applicationsOpenAt" type="datetime-local" defaultValue={kstDateTimeLocalFromIso(season.applicationsOpenAt)} /></label>
             <label>신청 종료<input name="applicationsCloseAt" type="datetime-local" defaultValue={kstDateTimeLocalFromIso(season.applicationsCloseAt)} /></label>
@@ -157,7 +165,10 @@ export function ReviewApplicationForm({ application }: { application: AdminSeaso
   const [message, setMessage] = useState<string | null>(null);
   const keys = useRef(new ClientMutationKeyStore(`admin-review-${application.id}`)).current;
 
-  async function submit(formData: FormData) {
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
+    const formData = new FormData(event.currentTarget);
     setPending(true);
     setMessage(null);
     try {
@@ -182,7 +193,7 @@ export function ReviewApplicationForm({ application }: { application: AdminSeaso
 
   const options: SeasonApplicationStatus[] = ["CONFIRMED", "RESERVE", "REJECTED"];
   return (
-    <form className={styles.reviewForm} action={submit}>
+    <form className={styles.reviewForm} onSubmit={submit} aria-busy={pending}>
       <label>
         <span className="sr-only">{application.player.displayName} 신청 상태</span>
         <select name="status" defaultValue={options.includes(application.status) ? application.status : "CONFIRMED"} disabled={pending}>

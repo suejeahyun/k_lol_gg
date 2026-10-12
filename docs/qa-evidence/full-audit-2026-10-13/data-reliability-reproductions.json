@@ -1,0 +1,42 @@
+{
+  "environment": "ephemeral-loopback-postgresql-18-synthetic-only",
+  "coverage": "Repository data lifecycle; authentication deliberately stubbed as in existing match snapshot contract",
+  "matchEditAfterMmr": {
+    "editBeforeProjectionStatus": 200,
+    "mmrGeneration": 1,
+    "resultEventCount": 10,
+    "editAfterProjectionFailure": {
+      "name": "Error",
+      "applicationCode": null,
+      "sqlstate": "23001",
+      "constraint": "match_result_events_game_id_match_games_id_fk"
+    },
+    "underlyingFailure": {
+      "sqlstate": "23001",
+      "constraint": "match_result_events_game_id_match_games_id_fk"
+    },
+    "rollbackPreservedMatchAndParticipants": true
+  },
+  "mmrInsertBoundary": [
+    {
+      "games": 409,
+      "eventRows": 4090,
+      "parameterCount": 65440,
+      "serializedParameterFormatCount": 65440,
+      "serializedValueCount": 65440
+    },
+    {
+      "games": 410,
+      "eventRows": 4100,
+      "parameterCount": 65600,
+      "serializedParameterFormatCount": 64,
+      "serializedValueCount": 64,
+      "databaseFailure": {
+        "sqlstate": "08P01",
+        "message": "바인드 메시지는 64 매개 변수 형태지만, 0 매개 변수여야함"
+      }
+    }
+  ],
+  "boundaryFailurePreservedEvents": true,
+  "clusterStoppedAndRemoved": true
+}

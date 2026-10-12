@@ -1,7 +1,7 @@
 import { AdminOperationFormList } from "@/components/operation-forms/admin-operation-form-list";
 
 export const dynamic = "force-dynamic";
-export default async function OperationFormsPage({ searchParams }: { searchParams: Promise<{ type?: string | string[]; status?: string | string[] }> }) {
+export default async function OperationFormsPage({ searchParams }: { searchParams: Promise<{ type?: string | string[]; status?: string | string[]; page?: string | string[] }> }) {
   const search = await searchParams;
-  return <AdminOperationFormList selectedType={Array.isArray(search.type) ? search.type[0] : search.type} selectedStatus={Array.isArray(search.status) ? search.status[0] : search.status} />;
+  return <AdminOperationFormList selectedType={Array.isArray(search.type) ? search.type[0] : search.type} selectedStatus={Array.isArray(search.status) ? search.status[0] : search.status} selectedPage={typeof search.page === "string" ? search.page : undefined} />;
 }

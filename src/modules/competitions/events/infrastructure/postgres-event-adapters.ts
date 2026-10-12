@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import { randomUUID } from "node:crypto";
 
 import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
@@ -351,7 +352,7 @@ export class PostgresEventAdapter implements EventQueryRepository {
     if (assets.length + externalImages.length < 1 || assets.length + externalImages.length > 5 ||
       assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")) return null;
     const images = [
-      ...assets.map((asset) => ({ assetId: asset.assetId, ordinal: asset.ordinal, url: `/api/media/assets/${asset.assetId}` })),
+      ...assets.map((asset) => ({ assetId: asset.assetId, ordinal: asset.ordinal, url: publicMediaAssetUrl(asset.assetId) })),
       ...externalImages.map((image) => ({ assetId: `external:${gallery.id}:${image.ordinal}`, ...image })),
     ].sort((left, right) => left.ordinal - right.ordinal);
     return Object.freeze({

@@ -1,4 +1,4 @@
-const CACHE_NAME = "klol-v2-static-v3";
+const CACHE_NAME = "klol-v2-static-v4";
 const PRECACHE = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
@@ -34,11 +34,28 @@ function isPublicStatic(request) {
 
 self.addEventListener("fetch", (event) => {
   if (!isPublicStatic(event.request)) return;
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-    if (response.ok && response.type === "basic") {
-      const copy = response.clone();
-      event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)));
+  const immutable = new URL(event.request.url).pathname.startsWith("/_next/static/");
+  const refresh = async (cache) => {
+    const response = await fetch(event.request, { cache: immutable ? "default" : "no-cache", signal: AbortSignal.timeout(5_000) });
+    try {
+      if (response.ok && response.type === "basic") await cache?.put(event.request, response.clone());
+      else if (response.status === 404 || response.status === 410) await cache?.delete(event.request);
+    } catch {
+      // Cache quota/storage errors must never replace a successful network response.
     }
     return response;
-  })));
+  };
+  // Content-hashed build files stay immutable. Fixed image/manifest URLs are revalidated.
+  event.respondWith((async () => {
+    let cache, cached;
+    try {
+      cache = await caches.open(CACHE_NAME);
+      cached = await cache.match(event.request);
+    } catch {
+      // Browser storage can be unavailable even while the network is healthy.
+    }
+    if (immutable && cached) return cached;
+    try { return await refresh(cache); }
+    catch (error) { if (cached) return cached; throw error; }
+  })());
 });

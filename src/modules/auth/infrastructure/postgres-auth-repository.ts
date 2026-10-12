@@ -757,19 +757,26 @@ export class PostgresAuthRepository implements AuthRepository {
   }
 
   async cleanupExpiredAuthState(input: AuthCleanupInput): Promise<AuthCleanupResult> {
+    const limit = input.limit ?? 1_000;
+    const expiredBefore = input.expiredBefore ?? input.now;
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1_000 ||
+      ![input.now, input.revokedBefore, expiredBefore].every((value) => Number.isFinite(value.getTime())) ||
+      expiredBefore > input.now || input.revokedBefore > input.now) throw new Error("INVALID_AUTH_CLEANUP");
     return withTransaction(this.database, async (transaction) => {
       const expiredSessions = await transaction
         .delete(authSessions)
-        .where(
-          or(
-            lt(authSessions.expiresAt, input.now),
-            and(isNotNull(authSessions.revokedAt), lt(authSessions.revokedAt, input.revokedBefore)),
-          ),
-        )
+        .where(sql`${authSessions.id} in (
+          select id from ${authSessions}
+          where expires_at < ${expiredBefore} or (revoked_at is not null and revoked_at < ${input.revokedBefore})
+          order by expires_at, id limit ${limit} for update skip locked
+        )`)
         .returning({ id: authSessions.id });
       const expiredBuckets = await transaction
         .delete(loginRateLimitBuckets)
-        .where(lt(loginRateLimitBuckets.expiresAt, input.now))
+        .where(sql`ctid in (
+          select ctid from ${loginRateLimitBuckets} where expires_at < ${input.now}
+          order by expires_at limit ${limit} for update skip locked
+        )`)
         .returning({ scope: loginRateLimitBuckets.scope });
 
       return {

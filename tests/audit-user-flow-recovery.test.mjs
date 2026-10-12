@@ -1,0 +1,248 @@
+import assert from "node:assert/strict";
+import { readFileSync, existsSync } from "node:fs";
+import { webcrypto } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
+import vm from "node:vm";
+import * as React from "react";
+import * as jsx from "react/jsx-runtime";
+import { renderToStaticMarkup } from "react-dom/server";
+import ts from "typescript";
+
+const root = fileURLToPath(new URL("../", import.meta.url));
+const css = { __esModule: true, default: new Proxy({}, { get: (_, key) => String(key) }) };
+const Button = ({ children, ...props }) => React.createElement("button", Object.fromEntries(Object.entries(props).filter(([key]) => !["variant", "size"].includes(key))), children);
+const Link = ({ children, ...props }) => React.createElement("a", props, children);
+function find(tree, predicate) {
+  if (!React.isValidElement(tree)) return null;
+  if (predicate(tree)) return tree;
+  for (const child of React.Children.toArray(tree.props.children)) { const match = find(child, predicate); if (match) return match; }
+  return null;
+}
+function harness(file, name, initialProps, send) {
+  const slots = [], requests = [], navigation = [], cache = new Map(), effects = [];
+  const windowListeners = new Map(), documentListeners = new Map();
+  const windowFixture = { confirm: () => true, addEventListener: (name, handler) => windowListeners.set(name, handler), removeEventListener: name => windowListeners.delete(name) };
+  const documentFixture = { visibilityState: "visible", addEventListener: (name, handler) => documentListeners.set(name, handler), removeEventListener: name => documentListeners.delete(name) };
+  let cursor = 0, props = initialProps, refreshed = 0;
+  const hooks = {
+    useState(initial) { const index = cursor++; if (!(index in slots)) slots[index] = typeof initial === "function" ? initial() : initial; return [slots[index], value => { slots[index] = typeof value === "function" ? value(slots[index]) : value; }]; },
+    useRef(initial) { return slots[cursor++] ??= { current: initial }; },
+    useMemo(callback) { return callback(); },
+    useEffect(callback) { effects.push(callback); },
+    useTransition() { return [false, callback => callback()]; },
+    useId() { return `fixture-${cursor++}`; },
+  };
+  function load(filename) {
+    if (cache.has(filename)) return cache.get(filename).exports;
+    const result = { exports: {} }; cache.set(filename, result);
+    const code = ts.transpileModule(readFileSync(filename, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
+    vm.runInNewContext(code, {
+      exports: result.exports, TextEncoder, URL, URLSearchParams, crypto: webcrypto, requestAnimationFrame: callback => callback(), window: windowFixture, document: documentFixture,
+      FormData: class { constructor(values) { this.values = values; } get(name) { return this.values[name] ?? null; } },
+      fetch: async (url, options) => { requests.push({ url, ...options }); return send(requests.length, options); },
+      require(specifier) {
+        if (specifier === "react") return hooks;
+        if (specifier === "react/jsx-runtime") return jsx;
+        if (specifier === "next/link") return Link;
+        if (specifier === "next/navigation") return { useRouter: () => ({ push: href => navigation.push(href), refresh: () => refreshed++ }) };
+        if (specifier === "@/components/ui/button") return { Button };
+        if (specifier === "@/components/ui/input") return { Input: props => React.createElement("input", props) };
+        if (specifier.endsWith("theme-icons")) return new Proxy({}, { get: () => () => null });
+        if (specifier.endsWith("usage-actions")) return { recordUsageAction() {} };
+        if (specifier.endsWith(".module.css")) return css;
+        const base = specifier.startsWith("@/") ? path.join(root, "src", specifier.slice(2)) : path.resolve(path.dirname(filename), specifier);
+        const resolved = [base, `${base}.ts`, `${base}.tsx`].find(candidate => existsSync(candidate) && /\.tsx?$/.test(candidate));
+        assert.ok(resolved, `Unhandled dependency ${specifier}`);
+        return load(resolved);
+      },
+    });
+    return result.exports;
+  }
+  const Component = load(path.join(root, "src", file))[name];
+  return {
+    requests, navigation, windowListeners, documentListeners, documentFixture,
+    runEffects() { return effects.splice(0).map(callback => callback()).filter(Boolean); },
+    get refreshed() { return refreshed; },
+    render(nextProps = props) { props = nextProps; cursor = 0; return Component(props); },
+    async submit(values) { await find(this.render(), node => node.type === "form").props.onSubmit({ preventDefault() {}, currentTarget: values }); },
+  };
+}
+const rejection = () => ({ ok: false, status: 412, json: async () => ({ detail: "다른 작업이 먼저 저장됨" }) });
+const success = body => ({ ok: true, status: 200, json: async () => body });
+
+test("full round requires an explicit reserve choice and sends only the selected seat", async () => {
+  const subject = harness("app/(public)/(applications)/applications/application-actions.tsx", "ApplicationActions", { initial: null, recruitNo: 1, applicantPlayer: { displayName: "합성 회원", riotId: "Fixture#KR1" }, applyDate: "2026-10-13", capacity: 10, participantCount: 10 }, () => success({}));
+  let tree = subject.render();
+  assert.equal(find(tree, node => node.type === "input" && node.props.name === "seat" && node.props.disabled).props.checked, false);
+  const submit = find(tree, node => node.type === "button" && node.props.onClick);
+  assert.equal(submit.props.disabled, true);
+  await submit.props.onClick();
+  assert.equal(subject.requests.length, 0);
+  find(tree, node => node.type === "input" && node.props.name === "seat" && !node.props.disabled).props.onChange();
+  find(subject.render(), node => node.type === "input" && node.props.value === "MID").props.onChange();
+  tree = subject.render();
+  assert.match(renderToStaticMarkup(tree), /예비 참가 신청/u);
+  await find(tree, node => node.type === "button" && node.props.onClick).props.onClick();
+  assert.equal(JSON.parse(subject.requests[0].body).reserve, true);
+});
+
+const application = { id: "fixture-application", seasonId: "fixture-season", applyDate: "2026-10-13", recruitNo: 1, status: "APPLIED", source: "SITE", mainPosition: "TOP", subPositions: ["JGL"], revision: 1, updatedAt: "2026-10-13T00:00:00Z" };
+const applicationProps = { initial: application, recruitNo: 1, applicantPlayer: { displayName: "합성 회원", riotId: "Fixture#KR1" }, applyDate: application.applyDate, capacity: 10, participantCount: 5 };
+const action = (tree, label) => find(tree, node => node.type === "button" && node.props.children === label);
+test("application refresh preserves draft and blocks save/cancel until the new revision is explicitly accepted", async () => {
+  const saved = { ...application, mainPosition: "MID", subPositions: ["JGL", "ADC"], status: "RESERVE", revision: 3 };
+  const subject = harness("app/(public)/(applications)/applications/application-actions.tsx", "ApplicationActions", applicationProps, () => success({ application: saved }));
+  find(subject.render(), node => node.props.name === "mainPosition" && node.props.value === "MID").props.onChange();
+  find(subject.render(), node => node.props.name === "subPositions" && node.props.value === "ADC").props.onChange();
+  find(subject.render(), node => node.props.name === "seat" && node.props.checked === false).props.onChange();
+  let tree = subject.render({ ...applicationProps, initial: { ...application, mainPosition: "SUP", subPositions: ["TOP"], revision: 2 } });
+  assert.equal(find(tree, node => node.props.name === "mainPosition" && node.props.value === "MID").props.checked, true);
+  assert.match(renderToStaticMarkup(tree), /최신 주라인<\/dt><dd>서폿/u);
+  assert.equal(action(tree, "예비 신청 수정").props.disabled, true);
+  assert.equal(action(tree, "내 신청 취소").props.disabled, true);
+  await action(tree, "예비 신청 수정").props.onClick();
+  await action(tree, "내 신청 취소").props.onClick();
+  assert.equal(subject.requests.length, 0);
+  action(tree, "내 입력 유지").props.onClick();
+  await action(subject.render(), "예비 신청 수정").props.onClick();
+  assert.equal(subject.requests[0].headers["If-Match"], '"2"');
+  assert.deepEqual(JSON.parse(subject.requests[0].body), { recruitNo: 1, mainPosition: "MID", subPositions: ["JGL", "ADC"], reserve: true });
+  tree = subject.render();
+  assert.equal(action(tree, "예비 신청 수정").props.disabled, false, "a successful response advances the draft revision before refresh arrives");
+  await action(tree, "예비 신청 수정").props.onClick();
+  assert.equal(subject.requests[1].headers["If-Match"], '"3"');
+});
+
+test("application 412 retains the draft and explicit discard uses latest main/sub/reserve values", async () => {
+  const subject = harness("app/(public)/(applications)/applications/application-actions.tsx", "ApplicationActions", applicationProps, attempt => attempt === 1 ? rejection() : success({ application: { ...application, revision: 3, status: "CANCELLED" } }));
+  find(subject.render(), node => node.props.name === "mainPosition" && node.props.value === "MID").props.onChange();
+  await action(subject.render(), "신청 수정").props.onClick();
+  assert.equal(subject.requests[0].headers["If-Match"], '"1"');
+  assert.equal(action(subject.render(), "신청 수정").props.disabled, true);
+  const latest = { ...application, mainPosition: "SUP", subPositions: ["ADC"], status: "RESERVE", revision: 2 };
+  let tree = subject.render({ ...applicationProps, initial: latest });
+  assert.equal(find(tree, node => node.props.name === "mainPosition" && node.props.value === "MID").props.checked, true);
+  action(tree, "입력 버리고 최신값 사용").props.onClick();
+  tree = subject.render();
+  assert.equal(find(tree, node => node.props.name === "mainPosition" && node.props.value === "SUP").props.checked, true);
+  assert.equal(find(tree, node => node.props.name === "subPositions" && node.props.value === "ADC").props.checked, true);
+  assert.equal(action(tree, "예비 신청 수정").props.disabled, false);
+  await action(tree, "내 신청 취소").props.onClick();
+  assert.equal(subject.requests[1].method, "DELETE");
+  assert.equal(subject.requests[1].headers["If-Match"], '"2"');
+});
+
+test("a newly observed application needs comparison even when its initial revision is zero", async () => {
+  const subject = harness("app/(public)/(applications)/applications/application-actions.tsx", "ApplicationActions", { ...applicationProps, initial: null }, () => success({}));
+  subject.render();
+  const tree = subject.render({ ...applicationProps, initial: { ...application, revision: 0 } });
+  assert.equal(action(tree, "신청 수정").props.disabled, true);
+  assert.ok(action(tree, "내 입력 유지"));
+});
+
+test("season creation retains a failed draft and resets only after confirmed success", async () => {
+  let resets = 0;
+  const fields = { name: "합성 시즌", startsAt: "2026-10-13T20:00", applicationsOpenAt: "", applicationsCloseAt: "", endsAt: "", reset() { resets++; } };
+  const subject = harness("app/(admin)/admin/seasons/season-admin-actions.tsx", "CreateSeasonForm", {}, attempt => attempt === 1 ? rejection() : success({}));
+  assert.equal(subject.render().props.action, undefined, "failed requests must not enter React's automatic form-reset path");
+  await subject.submit(fields);
+  assert.equal(resets, 0);
+  assert.match(renderToStaticMarkup(subject.render()), /다른 작업이 먼저 저장됨/u);
+  await subject.submit(fields);
+  assert.equal(resets, 1);
+  assert.equal(subject.requests[0].body, subject.requests[1].body);
+});
+
+test("signup retains the actual review result with an explicit login continuation", async () => {
+  const subject = harness("components/accounts/account-auth-forms.tsx", "SignupForm", { nextPath: "/applications?recruitNo=2" }, () => success({ message: "기존 플레이어 연결은 관리자 수동 검토 후 확정됩니다." }));
+  const fields = { loginId: "fixture_user", password: "Synthetic123", memberName: "합성 회원", riotId: "Fixture#KR1", termsAccepted: "on", privacyAccepted: "on", reset() {} };
+  assert.equal(subject.render().props.noValidate, undefined);
+  await subject.submit(fields);
+  const tree = subject.render();
+  assert.match(renderToStaticMarkup(tree), /관리자 수동 검토/u);
+  assert.equal(find(tree, node => node.type === "form"), null);
+  assert.equal(subject.navigation.length, 0, "success should remain readable until the user chooses to continue");
+  const login = find(tree, node => node.type === Link && node.props.href.startsWith("/login?"));
+  assert.equal(new URL(login.props.href, "https://fixture.invalid").searchParams.get("next"), "/applications?recruitNo=2");
+});
+
+test("signup reports password and Riot ID validity on the field being edited", () => {
+  const subject = harness("components/accounts/account-auth-forms.tsx", "SignupForm", {}, () => success({}));
+  const tree = subject.render();
+  for (const [name, invalid, valid, expected] of [["password", "short", "Synthetic123", /비밀번호/u], ["riotId", "MissingTag", "Fixture#KR1", /게임 이름#태그/u]]) {
+    let validity = "";
+    const input = { value: invalid, setCustomValidity(value) { validity = value; } };
+    const field = find(tree, node => node.type === "input" && node.props.name === name);
+    field.props.onInput({ currentTarget: input });
+    assert.match(validity, expected);
+    input.value = valid; field.props.onInput({ currentTarget: input });
+    assert.equal(validity, "");
+  }
+});
+
+const player = { id: "fixture-player", memberName: "이전 이름", nickname: "Fixture", tagLine: "KR1", riotId: "Fixture#KR1", peakTier: "GOLD I", currentTier: "SILVER II", revision: 1 };
+test("admin player conflict preserves draft, compares latest and retries only after explicit choice", async () => {
+  const subject = harness("components/admin/players/admin-player-form.tsx", "AdminPlayerForm", { mode: "edit", player }, attempt => attempt === 1 ? rejection() : success({ player: { id: player.id, revision: 3 } }));
+  find(subject.render(), node => node.props.name === "memberName").props.onChange({ target: { value: "작성 중 이름" } });
+  await subject.submit({});
+  let tree = subject.render({ mode: "edit", player: { ...player, memberName: "다른 관리자의 이름", revision: 2 } });
+  assert.equal(find(tree, node => node.props.name === "memberName").props.value, "작성 중 이름");
+  assert.match(renderToStaticMarkup(tree), /다른 관리자의 이름/u);
+  assert.equal(find(tree, node => node.props.type === "submit").props.disabled, true);
+  find(tree, node => node.props.children === "내 입력 유지").props.onClick();
+  await subject.submit({});
+  assert.equal(subject.requests[1].headers["If-Match"], '"2"');
+  assert.equal(JSON.parse(subject.requests[1].body).memberName, "작성 중 이름");
+  await subject.submit({});
+  assert.equal(subject.requests[2].headers["If-Match"], '"3"');
+});
+
+test("account player conflict keeps the form mounted when the user retains their draft", async () => {
+  const subject = harness("components/accounts/account-player-form.tsx", "AccountPlayerForm", { player }, attempt => attempt === 1 ? rejection() : success({ playerRevision: 3 }));
+  const fields = { memberName: "작성 이름", riotId: "Fixture#KR1", peakTier: "GOLD I", currentTier: "SILVER II" };
+  const draft = tree => find(tree, node => node.type === "div" && node.props.className === "form");
+  const before = draft(subject.render()).key;
+  await subject.submit(fields);
+  let tree = subject.render({ player: { ...player, memberName: "최신 저장 이름", revision: 2 } });
+  assert.equal(draft(tree).key, before);
+  assert.equal(find(tree, node => node.props.type === "submit").props.disabled, true);
+  find(tree, node => node.props.children === "내 입력 유지").props.onClick();
+  await subject.submit(fields);
+  assert.equal(subject.requests[1].headers["If-Match"], '"2"');
+  assert.equal(JSON.parse(subject.requests[1].body).memberName, "작성 이름");
+});
+
+test("account player discard explicitly resets editable fields to the latest revision", async () => {
+  const subject = harness("components/accounts/account-player-form.tsx", "AccountPlayerForm", { player }, rejection);
+  const draft = tree => find(tree, node => node.type === "div" && node.props.className === "form");
+  const before = draft(subject.render()).key;
+  await subject.submit({ memberName: "작성 중 이름" });
+  const latest = { ...player, memberName: "최신 회원명", revision: 2 };
+  const tree = subject.render({ player: latest });
+  find(tree, node => node.props.children === "입력 버리고 최신값 사용").props.onClick();
+  const discarded = subject.render();
+  assert.notEqual(draft(discarded).key, before, "only a deliberate discard remounts uncontrolled inputs");
+  assert.equal(find(discarded, node => node.props.name === "memberName").props.defaultValue, latest.memberName);
+  assert.equal(find(discarded, node => node.props.type === "submit").props.disabled, false);
+});
+
+test("live view refresh checks on a visible return, throttles repeated focus, and supports manual refresh", () => {
+  const subject = harness("components/navigation/live-view-refresh.tsx", "LiveViewRefresh", { checkedAt: new Date(Date.now() - 31_000).toISOString() }, () => success({}));
+  const tree = subject.render();
+  assert.match(renderToStaticMarkup(tree), /마지막 조회/u);
+  const cleanups = subject.runEffects();
+  subject.documentFixture.visibilityState = "hidden";
+  subject.windowListeners.get("focus")();
+  assert.equal(subject.refreshed, 0);
+  subject.documentFixture.visibilityState = "visible";
+  subject.documentListeners.get("visibilitychange")();
+  subject.windowListeners.get("focus")();
+  assert.equal(subject.refreshed, 1);
+  find(tree, node => node.props.children === "현황 새로고침").props.onClick();
+  assert.equal(subject.refreshed, 2);
+  cleanups.forEach(cleanup => cleanup());
+  assert.equal(subject.windowListeners.size, 0);
+  assert.equal(subject.documentListeners.size, 0);
+});

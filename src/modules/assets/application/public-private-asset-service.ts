@@ -16,6 +16,7 @@ export class PublicPrivateAssetService {
   constructor(
     private readonly repository: PublicPrivateAssetRepository,
     private readonly storage: PrivateImageStorage,
+    private readonly renderPublicImage: (bytes: Uint8Array) => Promise<Readonly<{ bytes: Uint8Array; contentType: "image/webp" }>>,
   ) {}
 
   async readPublished(assetId: string): Promise<PublishedAssetBytes> {
@@ -36,6 +37,11 @@ export class PublicPrivateAssetService {
     ) {
       throw new PrivateAssetError("STORAGE_UNAVAILABLE", "Published asset failed its integrity check.");
     }
-    return Object.freeze({ assetId: asset.id, contentType: asset.contentType, byteSize: asset.byteSize, bytes });
+    try {
+      const derivative = await this.renderPublicImage(bytes);
+      return Object.freeze({ assetId: asset.id, contentType: derivative.contentType, byteSize: derivative.bytes.byteLength, bytes: derivative.bytes });
+    } catch {
+      throw new PrivateAssetError("STORAGE_UNAVAILABLE", "Published image could not be prepared.");
+    }
   }
 }

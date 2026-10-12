@@ -1,0 +1,25 @@
+
+> klol-gg-v2@0.1.0 verify:recovery
+> tsx scripts/test-db/run-recovery-drill.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+{"kind":"isolated-postgresql-recovery","archiveBytes":476324,"archiveSha256":"97b5bdfdc871e2d627ea65b6172408fd8a9426388873187a469f03ed17004414","migrationCount":49,"migrationHead":"0048_mmr-game-source-history","tableCount":113,"schemaDefinitionCount":3626,"exactTableCountsMatched":true,"fixtureRelationMatched":true,"foreignKeysValidated":true,"migrationReplayNoop":true,"failedMigrationRolledBack":true}
+✔ PostgreSQL custom archive restores the complete schema, data and migration head (4359.4858ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5029.1779
+✔ bounded maintenance deletes only expired rows and records an atomic replayable result (156.1939ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 844.9343
+[db-contract] cluster stopped and disposable workspace path removed

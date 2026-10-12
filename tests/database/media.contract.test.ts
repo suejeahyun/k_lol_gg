@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { MediaService, MediaServiceError, type MediaCommandContext } from "../../src/modules/media";
 import { PrivateAssetService } from "../../src/modules/assets/application/private-asset-service";
@@ -10,6 +10,10 @@ import type { PrivateAssetHumanActor } from "../../src/modules/assets/applicatio
 import { PostgresPrivateAssetAdminAdapter } from "../../src/modules/assets/infrastructure/postgres-private-asset-admin-adapter";
 import { FakePrivateImageStorage } from "../../src/modules/matches/infrastructure/private-image";
 import { PostgresMediaRepository } from "../../src/modules/media/infrastructure/postgres-media-repository";
+import { createMediaAssetCleanupService } from "../../src/modules/media/infrastructure/media-asset-maintenance";
+import { MEDIA_CLEANUP_PRINCIPAL } from "../../src/modules/assets/infrastructure/postgres-private-asset-admin-adapter";
+import { PostgresAuthRepository } from "../../src/modules/auth/infrastructure/postgres-auth-repository";
+import { runSecurityMaintenance } from "../../src/modules/operations/infrastructure/security-maintenance";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -107,6 +111,36 @@ test("S10 media publication requires a live admin session and is idempotent, ass
   }
 });
 
+test("security maintenance retains recent/active sessions, bounds cleanup, and records daily replay", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const now = new Date();
+  const days = (offset: number) => new Date(now.getTime() + offset * 86_400_000);
+  const userId = randomUUID();
+  const oldExpired = randomUUID(), oldRevoked = randomUUID(), recentExpired = randomUUID(), recentRevoked = randomUUID(), active = randomUUID();
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: userId, loginId: `cleanup-${userId}`, loginIdNormalized: `cleanup-${userId}`, role: "USER", status: "APPROVED" });
+    await database.insert(authSessions).values([
+      { id: oldExpired, expiresAt: days(-40), revokedAt: null },
+      { id: oldRevoked, expiresAt: days(1), revokedAt: days(-40) },
+      { id: recentExpired, expiresAt: days(-5), revokedAt: null },
+      { id: recentRevoked, expiresAt: days(1), revokedAt: days(-5) },
+      { id: active, expiresAt: days(1), revokedAt: null },
+    ].map((row) => ({ ...row, tokenHash: randomBytes(32), userAccountId: userId, role: "USER" as const, purpose: "ACCOUNT" as const, authVersion: 0, issuedAt: days(-50) })));
+    const bounded = await new PostgresAuthRepository(database).cleanupExpiredAuthState({ now, expiredBefore: days(-30), revokedBefore: days(-30), limit: 1 });
+    assert.equal(bounded.sessionsDeleted, 1);
+    const storage = new FakePrivateImageStorage();
+    const result = await runSecurityMaintenance(database, storage, now);
+    assert.equal(result.replayed, false);
+    const remaining = (await database.select({ id: authSessions.id }).from(authSessions).where(inArray(authSessions.id, [oldExpired, oldRevoked, recentExpired, recentRevoked, active]))).map((row) => row.id).sort();
+    assert.deepEqual(remaining, [recentExpired, recentRevoked, active].sort());
+    assert.deepEqual(await runSecurityMaintenance(database, storage, now), { replayed: true });
+  } finally { await pool.end(); }
+});
+
 test("S10 admin upload persists STAGED to READY, lists by exact draft, attaches safely, and tombstones unused assets", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
@@ -186,6 +220,39 @@ test("S10 admin upload persists STAGED to READY, lists by exact draft, attaches 
     await assets.finalize(assetActor, unusedStaged.assetId);
     assert.equal((await assets.requestDeletion(assetActor, unusedStaged.assetId)).status, "DELETE_PENDING");
     await assert.rejects(assets.readPrivateBytes(assetActor, unusedStaged.assetId), /not available/i);
+    const cleanupActor = { purpose: "JOB", principalId: MEDIA_CLEANUP_PRINCIPAL, role: "SYSTEM" } as const;
+    const atSixDays = createMediaAssetCleanupService(database, storage, new Date(now.getTime() + 6 * 86_400_000));
+    assert.equal((await atSixDays.planCleanup(cleanupActor, 20)).length, 0, "Seven-day recovery retention is enforced");
+    // Draft/archived references are protected as well as currently published content.
+    await assets.requestDeletion(assetActor, ready.assetId);
+    await media.archiveGallery(context(sessionActor, "s10-retain-archived-gallery"), galleryId, 3, {}, now);
+    const cleanup = createMediaAssetCleanupService(database, storage, new Date(now.getTime() + 8 * 86_400_000));
+    const plans = await cleanup.planCleanup(cleanupActor, 20);
+    assert.ok(plans.some((plan) => plan.assetId === unusedStaged.assetId));
+    assert.ok(!plans.some((plan) => plan.assetId === ready.assetId), "Real gallery reference prevents Blob deletion");
+    const plan = plans.find((item) => item.assetId === unusedStaged.assetId)!;
+    assert.ok(storage.stored.has(plan.storageKey));
+    const unavailableStorage = { storageProvider: storage.storageProvider, stageAt: storage.stageAt.bind(storage), read: storage.read.bind(storage), async requestDelete() { throw new Error("synthetic-storage-outage"); } };
+    const failedCleanup = createMediaAssetCleanupService(database, unavailableStorage, new Date(now.getTime() + 8 * 86_400_000));
+    await assert.rejects(failedCleanup.executeCleanup(cleanupActor, plan), /cleanup failed/i);
+    assert.ok((await cleanup.planCleanup(cleanupActor, 20)).some((item) => item.assetId === plan.assetId), "Failed deletion remains retryable");
+    await cleanup.executeCleanup(cleanupActor, plan);
+    assert.equal(storage.stored.has(plan.storageKey), false);
+    assert.ok(!(await cleanup.planCleanup(cleanupActor, 20)).some((item) => item.assetId === unusedStaged.assetId), "Completed tombstone is not selected again");
+    await cleanup.executeCleanup(cleanupActor, plan); // Repeated provider deletion is idempotent.
+    assert.ok(storage.stored.size >= 1, "Referenced image is retained");
+    await assert.rejects(cleanup.planCleanup({ ...cleanupActor, principalId: "OTHER_JOB" }, 20), /not available/i);
+    const evidenceId = randomUUID(), evidenceKey = `evidence/${evidenceId}`;
+    storage.stored.set(evidenceKey, bytes);
+    await database.insert(privateAssets).values({ id: evidenceId, createdByUserAccountId: adminId, ingestSource: "ADMIN", storageProvider: storage.storageProvider, storageKey: evidenceKey, contentType: "image/png", byteSize: bytes.byteLength, width: 32, height: 32, sha256: Buffer.from(digest, "hex"), purpose: "SECURITY_INCIDENT_EVIDENCE", status: "DELETE_PENDING", deleteRequestedAt: now, createdAt: now });
+    await assert.rejects(cleanup.executeCleanup(cleanupActor, { ...plan, assetId: evidenceId, storageKey: evidenceKey }), /not available/i);
+    assert.ok(storage.stored.has(evidenceKey), "Non-media evidence cannot be consumed by this worker");
+    const abandonedDraft = await media.createGallery(context(sessionActor, "s10-abandoned-gallery"), 0, { title: "미완료 업로드", description: "복구 대상", imageAssetIds: [] }, now);
+    const abandoned = await assets.stage({ actor: assetActor, resourceType: "GALLERY_ENTRY", resourceId: String((abandonedDraft.body.gallery as { id: string }).id), purpose: "GALLERY", bytes, declaredContentType: "image/png", declaredSha256Hex: digest });
+    const recovery = createMediaAssetCleanupService(database, storage, new Date(now.getTime() + 2 * 86_400_000));
+    const recovered = await recovery.recoverStaleStages(cleanupActor, new Date(now.getTime() + 86_400_000).toISOString(), 20);
+    assert.ok(recovered.some((item) => item.assetId === abandoned.assetId && item.status === "DELETE_PENDING"));
+    assert.ok(!(await recovery.planCleanup(cleanupActor, 20)).some((item) => item.assetId === abandoned.assetId), "Recovered stages receive a new seven-day retention window");
   } finally {
     await pool.end();
   }

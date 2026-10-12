@@ -1,4 +1,5 @@
 import { getRuntimeRiot } from "@/modules/riot/infrastructure/runtime-riot";
+import { attachRsoCallbackBinding } from "@/modules/riot/infrastructure/runtime-rso-callback";
 import { exactObject, prepareRiotMutation, requireRiotApiSession, riotErrorResponse, riotInvalidInputResponse, riotMutationResponse, riotUnavailableResponse } from "@/modules/riot/infrastructure/riot-http";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,6 @@ export async function POST(request: Request) {
   const runtime = getRuntimeRiot(); if (!runtime?.rsoAvailable) return riotUnavailableResponse(prepared.value.traceId);
   try {
     const result = await runtime.service.startRso({ context: prepared.value.context, returnTo: (body as { returnTo?: string }).returnTo });
-    return riotMutationResponse(result, prepared.value.traceId, { ...result.body, authorizationUrl: result.authorizationUrl, returnTo: result.returnTo });
+    return await attachRsoCallbackBinding(riotMutationResponse(result, prepared.value.traceId, { ...result.body, authorizationUrl: result.authorizationUrl, returnTo: result.returnTo }), request, auth.session, result.authorizationUrl);
   } catch (error) { return riotErrorResponse(error, prepared.value.traceId); }
 }

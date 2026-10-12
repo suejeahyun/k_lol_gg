@@ -1,3 +1,4 @@
+import { publicMediaAssetUrl } from "@/modules/media/domain/public-asset-url";
 import { MediaServiceError, toPublicGalleryDto } from "@/modules/media";
 import { mediaErrorResponse, mediaReadResponse, mediaUnavailableResponse } from "@/modules/media/infrastructure/media-http";
 import { getRuntimeMediaService } from "@/modules/media/infrastructure/runtime-media";
@@ -12,6 +13,6 @@ export async function GET(request: Request, context: { params: Promise<{ imageId
   try {
     const item = await service.getPublicGallery((await context.params).imageId);
     if (!item) throw new MediaServiceError("NOT_FOUND", "missing");
-    return mediaReadResponse({ gallery: toPublicGalleryDto(item, (id) => `/api/media/assets/${id}`) }, item.revision, traceId);
+    return mediaReadResponse({ gallery: toPublicGalleryDto(item, publicMediaAssetUrl) }, item.revision, traceId);
   } catch (error) { return mediaErrorResponse(error, traceId); }
 }

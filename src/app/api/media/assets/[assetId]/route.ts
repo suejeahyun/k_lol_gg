@@ -9,7 +9,8 @@ const unavailable = definePublicProblem({ code: "ASSET_STORAGE_UNAVAILABLE", sta
 
 export async function GET(request: Request, context: { params: Promise<{ assetId: string }> }) {
   const traceId = readValidatedTraceId(request.headers);
-  if (new URL(request.url).searchParams.size) return problemResponse(notFound, { traceId });
+  const query = new URL(request.url).searchParams;
+  if (query.size && (query.size !== 1 || query.get("v") !== "2")) return problemResponse(notFound, { traceId });
   const service = getRuntimePublishedAssetService();
   if (!service) return problemResponse(unavailable, { traceId });
   try {
@@ -19,7 +20,7 @@ export async function GET(request: Request, context: { params: Promise<{ assetId
       headers: {
         "Content-Type": asset.contentType,
         "Content-Length": String(asset.byteSize),
-        "Cache-Control": "public, max-age=300, stale-while-revalidate=86400",
+        "Cache-Control": "no-store",
         "Content-Security-Policy": "default-src 'none'; sandbox",
         "Cross-Origin-Resource-Policy": "same-origin",
         "X-Content-Type-Options": "nosniff",

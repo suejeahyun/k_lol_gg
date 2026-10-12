@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   check,
+  foreignKey,
   index,
   integer,
   jsonb,
@@ -14,7 +15,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { userAccounts } from "./auth";
-import { matchGames, matchPosition, matchRecalculationOutbox, matchSeries } from "./matches";
+import { matchPosition, matchRecalculationOutbox, matchSeries } from "./matches";
 import { mmrSchema } from "./namespaces";
 import { bytea } from "./primitives";
 import { players } from "./registry";
@@ -107,6 +108,30 @@ export const mmrPlayerPositionProfiles = mmrSchema.table(
   ],
 );
 
+// Projection history must outlive replacement/removal of the editable game.
+// Legacy events retain their known references without inventing historical KDA.
+export const mmrMatchGameSources = mmrSchema.table(
+  "match_game_sources",
+  {
+    generation: bigint("generation", { mode: "number" }).notNull(),
+    gameId: uuid("game_id").notNull(),
+    matchId: uuid("match_id").notNull().references(() => matchSeries.id, { onDelete: "restrict" }),
+    gameNumber: integer("game_number").notNull(),
+    sourceKind: varchar("source_kind", { length: 32 }).notNull(),
+    sourceJson: jsonb("source_json").$type<Record<string, unknown>>(),
+    createdAt: timestamptz("created_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.generation, table.gameId] }),
+    check("mmr_game_sources_generation_positive", sql`${table.generation} > 0`),
+    check("mmr_game_sources_number_range", sql`${table.gameNumber} BETWEEN 1 AND 9`),
+    check("mmr_game_sources_provenance", sql`(
+      (${table.sourceKind} = 'LEGACY_EVENT_REFERENCE' AND ${table.sourceJson} IS NULL)
+      OR (${table.sourceKind} = 'LEDGER_SNAPSHOT' AND ${table.sourceJson} IS NOT NULL AND jsonb_typeof(${table.sourceJson}) = 'object')
+    )`),
+  ],
+);
+
 export const mmrMatchResultEvents = mmrSchema.table(
   "match_result_events",
   {
@@ -114,7 +139,7 @@ export const mmrMatchResultEvents = mmrSchema.table(
     generation: bigint("generation", { mode: "number" }).notNull(),
     sourceEventId: uuid("source_event_id").notNull().references(() => matchSeries.id, { onDelete: "restrict" }),
     matchId: uuid("match_id").notNull().references(() => matchSeries.id, { onDelete: "restrict" }),
-    gameId: uuid("game_id").notNull().references(() => matchGames.id, { onDelete: "restrict" }),
+    gameId: uuid("game_id").notNull(),
     gameNumber: integer("game_number").notNull(),
     playerId: uuid("player_id").notNull().references(() => players.id, { onDelete: "restrict" }),
     team: varchar("team", { length: 8 }).notNull(),
@@ -128,6 +153,11 @@ export const mmrMatchResultEvents = mmrSchema.table(
     createdAt: timestamptz("created_at").notNull(),
   },
   (table) => [
+    foreignKey({
+      name: "mmr_match_events_generation_game_source_fk",
+      columns: [table.generation, table.gameId],
+      foreignColumns: [mmrMatchGameSources.generation, mmrMatchGameSources.gameId],
+    }).onDelete("restrict"),
     uniqueIndex("mmr_match_events_generation_game_player_uidx").on(table.generation, table.gameId, table.playerId),
     index("mmr_match_events_player_generation_idx").on(table.playerId, table.generation, table.gameNumber),
     check("mmr_match_events_generation_positive", sql`${table.generation} > 0`),

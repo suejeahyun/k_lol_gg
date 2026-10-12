@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-12T18:01:52.701Z",
+  "mode": "production",
+  "status": "PASS",
+  "migration": "0048_mmr-game-source-history",
+  "reviewedHash": "825303a3696fb9e29fc1a117c9c16447fd230e6990151658a8e6da91a074a17f",
+  "backupSha256": "e0d02d471cca86e05f09e4c60eaf9236a33118ffe91ec6b2725e4b6e5fb045d6",
+  "targetFingerprint": "c5918218dd171001",
+  "application": {
+    "replayed": false,
+    "previousMmrTablesPreserved": 9,
+    "eventCount": 1950,
+    "sources": [
+      {
+        "source_kind": "LEGACY_EVENT_REFERENCE",
+        "count": 195
+      }
+    ],
+    "missing": 0,
+    "invalid": 0,
+    "migrationCount": 49
+  },
+  "replay": {
+    "replayed": true
+  }
+}
