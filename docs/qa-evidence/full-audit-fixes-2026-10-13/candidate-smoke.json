@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-12T18:05:45.586Z",
+  "status": "PASS",
+  "deploymentId": "dpl_4ANEhEjy1fLYeRPbXzjX4Xg83sXX",
+  "source": "5b3a616749f17ae5199ba599bf6bb4ac6f50ff24",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "bytes": 57,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 113398,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "bytes": 51399,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "bytes": 63462,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/images",
+      "status": 200,
+      "bytes": 54135,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/api/admin/operation-forms?page=2",
+      "status": 401,
+      "bytes": 196,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/security-maintenance",
+      "status": 401,
+      "bytes": 24,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/riot-sync",
+      "status": 401,
+      "bytes": 26,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/images",
+      "status": 200,
+      "bytes": 2190,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    }
+  ],
+  "publicAssetDerivativeObserved": false,
+  "notes": "Authenticated Vercel deployment-protection bypass only; application requests are anonymous read-only GET. No response bodies or cookies retained."
+}

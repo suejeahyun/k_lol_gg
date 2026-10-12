@@ -2,7 +2,7 @@
 
 ## 현재 상태
 
-기능 버전 `full-audit-fixes@1.0.0`, 예정 tag `full-audit-fixes-v1.0.0`. 작업 시작 commit은 `440433a27a2a9df2a012b4cc315e872acf5cb06d`이며 checkout은 `full-audit-fixes-20261013`이다. 소스와 로컬 검증 근거를 준비했으며 **운영 migration·배포는 대기 중**이다. 최종 commit/tag, 배포 ID·immutable URL·alias·health/smoke는 릴리스 담당자가 실제 완료 후 기록한다. 이 문서 작성만으로 `PRODUCTION` 상태를 부여하지 않는다.
+**`full-audit-fixes@1.0.0` 운영 반영 완료.** source `5b3a616749f17ae5199ba599bf6bb4ac6f50ff24`, tag `full-audit-fixes-v1.0.0`, migration `0048_mmr-game-source-history`. Vercel `dpl_8hhjPC8sMT12bB7ZTCtQavyPcchX`의 READY·동일 source·운영 alias·health를 확인했고 운영 HTTP 34조건과 배포 후 DB 무결성 점검이 통과했다. [배포·복구 근거](production.md). 작업 시작 commit은 `440433a27a2a9df2a012b4cc315e872acf5cb06d`이며 checkout은 `full-audit-fixes-20261013`이다.
 
 [원본 전체 감사](../full-audit-2026-10-13/README.md)의 재현 결함과 구체적인 개선을 반영했다. 당시 감사 기록은 수정 전 근거로 유지하며, 현재 상태는 이 디렉터리와 아래 최종 결과를 기준으로 읽는다. 사용자에게 확인된 **카카오 실기기·방 확인, MMR v2 적용은 완료 상태를 유지**한다.
 
@@ -11,7 +11,10 @@
 - [보안·의존성·미디어·RSO 상세](security.md)
 - [신청·회원·관리자 UX 상세](ux.md)
 - [실제 브라우저 검증](browser.md)
+- [운영 DB·앱 배포 상태](production.md)
 - [기능 릴리스 등록 규칙](../../releases/README.md)
+
+최종 현재 트리 검사와 별도 전체 Git 이력 비밀정보 검사도 통과했다. [이력 검사 로그](secrets-history-final.log). 릴리스 97개/tag 97개의 연결을 검증했다. [등록부 검사](release-evidence-final.log). 로그를 보관할 때 끝 공백과 마지막 빈 줄만 정리했으며 테스트 결과는 변경하지 않았다.
 
 ## 반영 범위
 
@@ -75,13 +78,15 @@
 
 배포 전 운영 연결을 읽기 전용으로 확인하고 private 경로에 dump를 보관한 뒤 격리 PostgreSQL 18로 복원했다. 공개 기록에는 원본 데이터나 접속값 대신 검증 수치와 digest만 남겼다. 192개 table의 행 수와 논리 column/constraint, MMR 9개 table 내용·상태, migration head가 일치했다. [백업·복원 근거](production-backup-restore.json).
 
-그 복원본에 `0048_mmr-game-source-history`를 적용하고 재실행했다. 기존 MMR 9개 table과 event 1,950개를 보존했고 참조 195개를 `LEGACY_EVENT_REFERENCE`로 생성했다. missing/invalid 0이며 재실행은 no-op이었다. [migration rehearsal](migration-rehearsal.json). **이는 운영 DB 적용 완료 증거가 아니다.**
+그 복원본에 `0048_mmr-game-source-history`를 적용하고 재실행했다. 기존 MMR 9개 table과 event 1,950개를 보존했고 참조 195개를 `LEGACY_EVENT_REFERENCE`로 생성했다. missing/invalid 0이며 재실행은 no-op이었다. [migration rehearsal](migration-rehearsal.json).
+
+이후 실제 운영 DB에도 검토한 0048을 transaction으로 적용하고 재실행했다. **운영 적용 PASS**: 기존 MMR 9개 table·event 1,950개 보존, legacy source 195개, missing/invalid 0, migration 49개, 재실행 no-op. [운영 적용 JSON](production-migration.json), [대상 확인·잠금·복구 절차](production.md). 앱 배포 후에도 동일 무결성을 [읽기 전용 재확인](postdeploy-db.json)했다.
 
 0048은 전진 migration이며 앱을 이전 버전으로 돌려도 DB에 유지한다. 구 writer 호환 trigger가 과거 앱의 event-only 삽입을 허용한다. live game을 참조하던 이전 FK로 되돌리는 down migration은 지원하지 않는다. 복원 검증은 provider PITR이나 Blob 원본 백업을 포함하지 않는다.
 
 ## 배포 후 확인과 남는 제한
 
-- 현재 registry 등록·tag 게시·운영 migration·Vercel 배포는 완료로 표시하지 않는다. 최종 SHA와 0048 head, provider 배포 ID·immutable URL·alias·확인 시각, health/smoke를 연결한 뒤 상태를 갱신한다.
+- 운영 migration·앱 배포·tag 게시·공개 HTTP 34조건·DB 재확인과 실제 모집 새로고침/플레이어 320·390·1440px 확인을 완료했다. [운영 브라우저](production-browser.json), [배포 기록](production.md).
 - 일일 security-maintenance는 `vercel.json`상 19:30 UTC(다음 날 04:30 KST)다. 최대 미디어 20개·세션 1,000개보다 큰 backlog는 여러 날에 걸쳐 처리된다. 성공 후 같은 UTC 날짜의 추가 호출은 새 batch를 시작하지 않는다. 실제 예약 실행과 수량/실패 관찰은 배포 후 근거가 필요하다.
 - 개발 의존성 잔여 12개는 moderate 4/high 8/critical 0이며 braces/micromatch/fast-glob 및 drizzle-kit/@esbuild-kit/esbuild 체인에 있다. 운영 의존성 감사 0과 구분한다. 호환성을 검증하지 않은 강제 major override나 downgrade를 적용하지 않았다.
 - 실제 Riot RSO 제공자는 새로 활성화하지 않았고 실제 외부 왕복을 검증하지 않았다. 일반 Riot API의 순차 queue 개선과 RSO 로그인 제공자 활성화는 별개의 상태다.

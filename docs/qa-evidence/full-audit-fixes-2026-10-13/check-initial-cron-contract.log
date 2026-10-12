@@ -802,7 +802,7 @@ test at tests\operations-http-boundary.test.mjs:44:1
   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
   + actual - expected
   ... Skipped lines
-  
+
     [
       {
         path: '/api/cron/destruction-ratings',
@@ -815,7 +815,7 @@ test at tests\operations-http-boundary.test.mjs:44:1
   +     schedule: '30 19 * * *'
   +   }
     ]
-  
+
       at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/full-audit-fixes-20261013/tests/operations-http-boundary.test.mjs:58:10)
       at async Test.run (node:internal/test_runner/test:1125:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {

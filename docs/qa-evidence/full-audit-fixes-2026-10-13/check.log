@@ -1909,9 +1909,9 @@ E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\src\modules\matches\infrastructu
   Finished TypeScript in 18.7s ...
   Collecting page data using 15 workers ...
   Generating static pages using 15 workers (0/102) ...
-  Generating static pages using 15 workers (25/102) 
-  Generating static pages using 15 workers (50/102) 
-  Generating static pages using 15 workers (76/102) 
+  Generating static pages using 15 workers (25/102)
+  Generating static pages using 15 workers (50/102)
+  Generating static pages using 15 workers (76/102)
 ✓ Generating static pages using 15 workers (102/102) in 309ms
   Finalizing page optimization ...
 
@@ -2312,4 +2312,3 @@ Route (app)                                                             Revalida
 
 ○  (Static)   prerendered as static content
 ƒ  (Dynamic)  server-rendered on demand
-

@@ -28,4 +28,6 @@ S00~S13은 소스에 통합됐다. 아래 수치와 배포는 최초 S14 검증 
 
 최근 솔로 최대 20경기 요약과 관리자 팀 편성 보정은 이제 V2에 구현되어 있다. 일반 관리자 편집은 [10/09 운영 반영](qa-evidence/team-balance-admin-2026-10-08/production.md)을 확인했다. 없는 값·오래된 최근 요약만 0/미제공으로 처리한다. MMR V2 전환도 [10/08 완료 기록](qa-evidence/service-completion-final-2026-10-08/mmr-transition.md)을 따르며 다시 미완료로 분류하지 않는다.
 
-남은 외부 조건은 실제 휴대폰 Kakao 방 수신·절전 복구, Riot RSO 승인·소유자 동의, 운영 인증 화면 재확인, 실제 OS 설치·보조기술·OCR 정확도·장시간 부하, provider PITR·Blob 전체복원이다. [최신 전체 검증 원장](qa-evidence/service-completion-final-2026-10-08/README.md)에서 격리 검증과 운영·실기기 검증을 구분한다. 과거 전체 캡처 건수를 현재 미완료 작업량으로 재사용하거나 모든 외부 연동이 검증됐다고 판정하지 않는다.
+2026-10-13 전체 점검 보완 `full-audit-fixes@1.0.0`은 MMR 과거 이력·대량 저장, Riot 순차 처리, 신청·관리 폼 복구, 운영 신청 페이지 처리, 공개 이미지 개인정보 보호·보관기간 정리, PWA·보안 CI를 보완했다. source `5b3a616749f17ae5199ba599bf6bb4ac6f50ff24`, tag `full-audit-fixes-v1.0.0`. 최종 check(계약 688·단위 1,087/skip 1), 변경 DB·복구·인증 HTTP와 실제 합성 브라우저 검증을 통과했고 운영 migration 0048을 적용했다. 앱 main 배포 `dpl_8hhjPC8sMT12bB7ZTCtQavyPcchX`의 READY·동일 SHA·canonical alias·health ready와 운영 HTTP 34조건을 확인했다. [배포·복구 근거](qa-evidence/full-audit-fixes-2026-10-13/production.md).
+
+카카오 실기기·방 확인은 사용자 확인 완료 사항이다. MMR V2 정식 전환과 함께 완료 상태를 유지한다. 현재 남은 외부 검증은 Riot RSO 승인·소유자 동의·실제 왕복, 새 PWA 버전의 실제 설치 기기 갱신, 보조기술·OCR 정확도·장시간 부하, provider PITR·Blob 전체 복원이다. dev 전용 의존성 감사 12개도 호환 가능한 후속 수정을 기다린다. [최신 전체 점검 개선 근거](qa-evidence/full-audit-fixes-2026-10-13/README.md)에서 격리 검증과 운영·실기기 검증을 구분한다. 과거 전체 캡처 건수를 현재 미완료 작업량으로 재사용하거나 모든 외부 연동이 검증됐다고 판정하지 않는다.

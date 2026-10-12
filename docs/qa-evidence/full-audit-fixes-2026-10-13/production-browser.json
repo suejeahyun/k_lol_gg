@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-12T18:09:15.938Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "publicApplicationRefresh": true,
+  "applicationViewport": {
+    "width": 1280,
+    "client": 1265,
+    "scroll": 1265,
+    "brokenImages": 0
+  },
+  "playerResponsive": [
+    {
+      "brokenImages": 0,
+      "client": 305,
+      "recentGames": 5,
+      "scroll": 305,
+      "width": 320
+    },
+    {
+      "brokenImages": 0,
+      "client": 375,
+      "recentGames": 5,
+      "scroll": 375,
+      "width": 390
+    },
+    {
+      "brokenImages": 0,
+      "client": 1425,
+      "recentGames": 5,
+      "scroll": 1425,
+      "width": 1440
+    }
+  ],
+  "notes": "Anonymous real browser. Production data was not modified. No full WCAG, screen-reader, mobile device or traffic-load certification."
+}

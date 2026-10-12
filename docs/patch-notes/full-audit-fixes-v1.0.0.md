@@ -1,6 +1,6 @@
 # 전체 점검 후 안정성·사용 흐름 개선 1.0.0
 
-2026-10-13 KST. 기능 버전은 `full-audit-fixes@1.0.0`이며, 최종 통합 검사와 주요 브라우저 흐름 검증을 통과했습니다. **운영 배포는 대기 중**입니다. 실제 반영 여부와 세부 검증 범위는 [QA 기록](../qa-evidence/full-audit-fixes-2026-10-13/README.md)을 기준으로 확인합니다.
+2026-10-13 KST. `full-audit-fixes@1.0.0`을 **운영 반영했습니다**. 최종 통합 검사와 주요 브라우저 흐름 검증, 운영 DB 개선 및 배포 후 HTTP 34조건·DB 무결성 검사를 통과했습니다. 세부 검증 범위는 [QA 기록](../qa-evidence/full-audit-fixes-2026-10-13/README.md)과 [배포 기록](../qa-evidence/full-audit-fixes-2026-10-13/production.md)을 기준으로 확인합니다.
 
 ## 경기 기록과 정보 갱신
 

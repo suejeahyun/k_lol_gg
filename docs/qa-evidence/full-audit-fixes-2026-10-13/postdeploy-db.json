@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-10-12T18:08:33.624Z",
+  "status": "PASS",
+  "readOnly": true,
+  "aggregateWindowSince": "2026-10-12T18:07:00.000Z",
+  "privilegedHttpInvoked": false,
+  "writesAttempted": false,
+  "deployment": {
+    "id": "dpl_8hhjPC8sMT12bB7ZTCtQavyPcchX",
+    "source": "5b3a616749f17ae5199ba599bf6bb4ac6f50ff24",
+    "readyState": "READY",
+    "readinessEvidence": "production-deployment.json",
+    "readinessCheckedAt": "2026-10-12T18:07:53.210Z"
+  },
+  "targetFingerprint": "c5918218dd171001",
+  "transaction": {
+    "read_only": "on",
+    "isolation": "repeatable read",
+    "snapshot_at": "2026-10-12T18:08:33.488Z"
+  },
+  "migration": {
+    "count": 49,
+    "tag": "0048_mmr-game-source-history",
+    "hash": "825303a3696fb9e29fc1a117c9c16447fd230e6990151658a8e6da91a074a17f",
+    "created_at": "1791826858073",
+    "exactMatch": true
+  },
+  "mmr": {
+    "event_count": 1950,
+    "source_count": 195,
+    "missing_source_references": 0,
+    "source_identity_mismatches": 0,
+    "invalid_constraints": 0,
+    "history_foreign_key_count": 1,
+    "obsolete_live_game_foreign_key_count": 0,
+    "old_writer_trigger_enabled_count": 1,
+    "sourceKinds": [
+      {
+        "source_kind": "LEGACY_EVENT_REFERENCE",
+        "count": 195
+      }
+    ],
+    "currentProjection": {
+      "generation": "2",
+      "status": "READY",
+      "formula_version": "V2_DETERMINISTIC_1",
+      "source_match_count": 47,
+      "source_game_count": 104,
+      "calculated_at": "2026-10-07T15:57:52.679Z"
+    }
+  },
+  "recentJobAggregates": {
+    "availableTables": {
+      "maintenance": true,
+      "riot": true,
+      "statistics": true,
+      "mmr": true
+    },
+    "maintenance": [],
+    "riotScheduled": [],
+    "statistics": [],
+    "mmr": [],
+    "limitations": "Durable aggregate activity only; not proof of an idle cron invocation or attribution to one deployment. No row payloads or identities were read.",
+    "securityMaintenance": "UNOBSERVED_IN_WINDOW",
+    "securityMaintenanceScheduledUtc": "19:30 (04:30 Asia/Seoul)",
+    "manualCronInvocations": 0
+  },
+  "connectionClosed": true
+}

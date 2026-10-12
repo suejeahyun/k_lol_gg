@@ -1,5 +1,15 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-13 전체 점검 보완 1.0.0 운영 반영
+
+`full-audit-fixes@1.0.0`, source `5b3a616749f17ae5199ba599bf6bb4ac6f50ff24`, tag `full-audit-fixes-v1.0.0`. MMR 과거 경기 참조 보존과 대량 저장, Riot 순차 처리량, 신청·플레이어 동시 수정의 초안 보존, 운영 신청 페이지 처리, 가입·실패 입력 안내, 320px 표시를 수정했다. 공개 이미지 메타데이터 제거와 게시 철회 확인, 미디어·인증 정보 보관기간 정리, RSO 전용 콜백 연결, PWA 최신화·cache 실패 복구, 의존성·CI 점검을 반영했다.
+
+최종 `npm run check`는 계약 688/688·단위 1,087 pass/1 skip·lint 오류 0/기존 경고 58·ERD·가이드 이미지 68개·production build를 통과했다. 변경 DB 계약, 410게임 저장·rollback, 복구 2/2, 인증 HTTP, PWA 5/5와 합성 계정의 실제 브라우저 검증도 통과했다. 참가 신청 두 탭에서는 초안 유지·최신값 비교·선택 전 저장/취소 차단·유지 후 재저장·버리기를 확인했고 실제 320/390/1440px에서 가로 넘침이 없었다. 초기 실패와 재실행은 [전체 QA](qa-evidence/full-audit-fixes-2026-10-13/README.md)에 구분했다.
+
+운영 DB는 백업·격리 복원·0048 rehearsal 후 `0048_mmr-game-source-history` 적용과 재실행 no-op을 통과했다. 기존 MMR 9개 table·event 1,950개를 보존하고 legacy source 195개를 생성했으며 missing/invalid는 0이다. 앱 main 배포 `dpl_8hhjPC8sMT12bB7ZTCtQavyPcchX`는 2026-10-12 18:07:34 UTC에 READY가 되었고, 18:07:53 UTC에 동일 source SHA와 canonical 운영 alias를 확인했다. health ready·운영 HTTP 34조건 통과, 운영 사이트 참가 신청 화면의 새로고침 표시·실제 갱신과 1280px 가로 넘침/깨진 이미지 0도 확인했다. [운영 DB·배포·복구 근거](qa-evidence/full-audit-fixes-2026-10-13/production.md), [운영 HTTP 결과](qa-evidence/full-audit-fixes-2026-10-13/production-http.json).
+
+카카오 실기기·방 확인과 MMR V2 정식 전환은 사용자 확인 완료 상태를 유지한다. 운영 의존성 감사는 0건이며 dev 전용 감사 항목 12개(moderate 4/high 8)는 남아 있다. 실제 Riot RSO 제공자 활성화·왕복, 설치 기기의 새 PWA 갱신, 과거 이미지 cache 회수, provider PITR·Blob 전체 복원과 장기 부하는 이번 완료 범위에 포함하지 않는다. 아래 과거 시점의 카카오/MMR 대기 표현은 당시 기록으로 보존하며 현재 완료 상태는 이 항목을 따른다.
+
 ## 2026-10-10 내전 점수 계산·관리 자료 1.1.0 운영 반영
 
 티어 단계·LP 해석, 구형 마스터 층 왕복, 고티어 경고를 수정하고 점수 미리보기·큰 보정 재확인·변경 이력·보정 목록·티어별 실제 분포를 구현했다. 전체 check(계약673·단위1082/skip1), 격리 DB5, 복구2, 합성 ADMIN 브라우저 검증을 통과했다. source `8ce5e7aa9171732edf4f47eb6b548e884f14a14c`, tag `team-balance-admin-v1.1.0`, main `dpl_7sTiDeiGCTk9mhh689b54UXiJySu` READY·동일 SHA·운영 alias·health를 확인했고 운영 HTTP33조건을 통과했다. 기존 MMR·운영 점수·저장 초안·migration0047 유지. [검증 근거](qa-evidence/team-score-insights-2026-10-10/README.md), [배포·복구](qa-evidence/team-score-insights-2026-10-10/production.md), [실계정·외부 조건](qa-evidence/team-score-insights-2026-10-10/external-conditions.md).

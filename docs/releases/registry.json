@@ -2108,6 +2108,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "full-audit-fixes",
+      "version": "1.0.0",
+      "gitTag": "full-audit-fixes-v1.0.0",
+      "commit": "5b3a616749f17ae5199ba599bf6bb4ac6f50ff24",
+      "releasedAt": "2026-10-12T18:07:34.578Z",
+      "migrationHead": "0048_mmr-game-source-history",
+      "qaEvidence": "docs/qa-evidence/full-audit-fixes-2026-10-13/production.md",
+      "patchNotes": "docs/patch-notes/full-audit-fixes-v1.0.0.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_8hhjPC8sMT12bB7ZTCtQavyPcchX",
+        "url": "https://k-lol-fqdo24m2r-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-12T18:08:08.541Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }
