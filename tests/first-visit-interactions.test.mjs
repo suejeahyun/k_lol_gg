@@ -157,3 +157,23 @@ test("a superseded request cannot clear the loading state of the newer search", 
   await client.settle();
   assert.equal(client.loading(), false);
 });
+
+test("recruit instruction copies fixed identity and never offers an ambiguous numeric legacy command", async () => {
+  const copied = [];
+  const { RecruitInstructions } = load("components/navigation/recruit-instructions.tsx", {
+    react: { useState: () => ["", () => {}] }, "react/jsx-runtime": jsxRuntime, "next/link": Link,
+    "@/components/usage/usage-actions": { recordUsageAction() {} },
+  }, { navigator: { clipboard: { async writeText(value) { copied.push(value); } } } });
+  for (const recruitCode of ["ABCDE-23456", "FGHJK-67892"]) {
+    const tree = RecruitInstructions({ recruitCode });
+    const button = find(tree, node => node.type === "button");
+    assert.ok(button);
+    await button.props.onClick();
+    assert.match(text(tree), new RegExp(`구인상세 ${recruitCode}`));
+  }
+  assert.deepEqual(copied, ["구인상세 ABCDE-23456", "구인상세 FGHJK-67892"]);
+  const legacy = RecruitInstructions({ recruitCode: null });
+  assert.equal(find(legacy, node => node.type === "button"), null);
+  assert.match(text(legacy), /날짜·게임·참가자가 같은 모집인지 확인/);
+  assert.doesNotMatch(text(legacy), /구인상세 \d/);
+});

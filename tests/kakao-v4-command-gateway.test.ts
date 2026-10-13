@@ -157,7 +157,7 @@ test("R23 retires every old-phone scrim command and form without dispatching or 
       assert.equal(result.reply, KAKAO_V4_SCRIM_RETIRED_REPLY, request.text);
       assert.equal((await service.execute(request, "current")).replayed, true);
       const classification = classifyKakaoV4Command(request);
-      const command = canonicalizeKakaoV4Command(classification, request);
+      const command = canonicalizeKakaoV4Command(classification, request, new Date((request).timestamp * 1_000));
       if (command) {
         assert.equal(command.domain, "SCRIM");
         const canonicalResult = await service.executeCanonical({ envelope: request, keyId: "current", requestDigestHex: "a".repeat(64), requestId: request.eventId, command });
@@ -229,4 +229,26 @@ test("V4 application errors normalize idempotency conflicts to public 409 only",
   const invalid = kakaoV4CommandFailureResponse({ code: "INVALID_COMMAND" }, "trace-v4-invalid");
   assert.equal(invalid.status, 400);
   assert.equal((await invalid.json()).code, "INVALID_FORM");
+});
+
+test("service uses one injected server instant for canonical targets and dispatcher despite an accepted client clock offset", async () => {
+  const serverNow = new Date("2026-10-14T05:56:00+09:00");
+  const input = { ...envelope, text: "구인상세 2", timestamp: Date.parse("2026-10-14T06:00:00+09:00") / 1_000 };
+  const rawBody = Buffer.from(JSON.stringify(input)), keyId = "synthetic-key", secret = Buffer.from("synthetic-clock-key-not-production");
+  const bodyDigest = createHash("sha256").update(rawBody).digest("hex");
+  const signature = "v4=" + createHmac("sha256", secret).update(kakaoV4SignatureMaterial(keyId, bodyDigest)).digest("hex");
+  assert.equal(verifyKakaoV4Signature({ envelope: input, rawBody, keyId, signature, secrets: [{ keyId, secret }], now: serverNow }).ok, true);
+  let calls = 0;
+  const dispatcher = { async dispatch(context: Parameters<KakaoV4CommandDispatcher["dispatch"]>[0], command: Parameters<KakaoV4CommandDispatcher["dispatch"]>[1]) {
+    calls++;
+    assert.equal(context.now?.toISOString(), serverNow.toISOString());
+    assert.equal(context.envelope.timestamp, input.timestamp, "the signed envelope remains unchanged");
+    assert.deepEqual(command, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-10-13", recruitNumber: 2 } });
+    return { kind: "PARTY" as const, action: "DETAIL" as const, aggregate: null, legacyReply: "synthetic", replayed: false };
+  } } as KakaoV4CommandDispatcher;
+  const service = new KakaoV4CommandService({ authorizeProfile: async () => ({ roomId: "room-synthetic", roomStatus: "ACTIVE", capabilityProfile: "RECRUIT", installationId: input.installationId }) }, dispatcher, () => serverNow);
+  await service.execute(input, keyId, { requestDigestHex: bodyDigest, requestId: input.eventId });
+  assert.equal(calls, 1);
+  assert.equal((await service.execute(input, keyId, { requestDigestHex: bodyDigest, requestId: input.eventId })).replayed, true);
+  assert.equal(calls, 1);
 });

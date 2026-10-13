@@ -270,6 +270,25 @@ test("Rhino audit detects functions that mix value and bare returns", () => {
   assert.deepEqual(analyzeRhinoStatic(program).inconsistentReturnFunctions.map((finding) => finding.name), ["mixed"]);
 });
 
+test("R29 size compaction preserves maintained transport and adapter executable tokens", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const tokenSignature = value => [...acorn.tokenizer(value, { ecmaVersion: 5, allowReserved: true })]
+    .map(token => JSON.stringify([token.type.label, token.value]));
+  const adapter = await readFile(resolve(root, "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_ADAPTER.js"), "utf8");
+  const generatedFunctions = functionSources(artifact);
+  for (const [name, source] of functionSources(adapter)) {
+    assert.deepEqual(tokenSignature(generatedFunctions.get(name)), tokenSignature(source), name);
+  }
+  const gateway = value => {
+    const program = acorn.parse(value, { ecmaVersion: 5, allowReserved: true });
+    const declaration = program.body.find(node => node.type === "VariableDeclaration" && node.declarations[0]?.id.name === "KLOL_V1_GATEWAY");
+    assert.ok(declaration);
+    return value.slice(declaration.start, declaration.end);
+  };
+  const transport = await readFile(resolve(root, "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_TRANSPORT.js"), "utf8");
+  assert.deepEqual(tokenSignature(gateway(artifact)), tokenSignature(gateway(transport)));
+});
+
 test("V1 strict routes organizer-only metadata activation forms with or without one slash", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   const base = "[K-LOL.GG 구인구직 양식]\n📢 2인 파티 구인\n모집번호: #6\n\n》시작시간 :\n》게임정보 :\n》주최자 : 재현";
@@ -294,7 +313,7 @@ test("V1 strict routes scoped in-house finish commands as unchanged raw text", a
     assert.equal(request.profileId, profileId);
     assert.equal(request.text, message);
   }
-  for (const message of ["//내전 2ㅉ", "내전2ㅉ", "내전 0ㅉ", "스크림 1000ㅉ", "내전\n2ㅉ"]) {
+  for (const message of ["//내전 2ㅉ", "내전 0ㅉ", "스크림 1000ㅉ", "내전\n2ㅉ"]) {
     const runtime = evaluate(artifact);
     assert.deepEqual(replyFor(runtime, message), [], message);
     assert.equal(runtime.http.calls, 0, message);
@@ -610,7 +629,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R28_2026_10_14\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R29_2026_10_14\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
   );
 });
 
@@ -1190,7 +1209,7 @@ test("R27 local diagnostics bypass request state, deduplication and notification
     logs.length = 0;
     const replies = replyFor(runtime, message, { imageDB });
     assert.equal(replies.length, 1, message);
-    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R28_2026_10_14/u);
+    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R29_2026_10_14/u);
     assert.match(replies[0], /내전상세 1/u);
     assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] RETURNED"]);
   }
@@ -1242,4 +1261,123 @@ test("R28 fixed recruitment code routing ignores malformed edits, prose and bot 
   const echo = evaluate(artifact);
   assert.deepEqual(replyFor(echo, "상세 ABCDE-23456", { sender: "K-LOL 구인구직 도우미" }), []);
   assert.equal(echo.http.calls, 0);
+});
+
+test("R29 retries an undelivered reply without suppressing the later successful delivery", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const failure of ["false", "throw"]) {
+    const runtime = evaluate(artifact, { responseBody: { reply: "[합성 저장 성공]" } });
+    let attempts = 0;
+    const visible = [];
+    const bodies = [];
+    const replier = { reply(value) {
+      attempts += 1;
+      if (attempts === 1) {
+        if (failure === "throw") throw new Error("synthetic failed reply");
+        return false;
+      }
+      visible.push(String(value));
+      return true;
+    } };
+    for (let index = 0; index < 3; index += 1) {
+      runtime.response("합성방", "상세 7", "합성사용자", true, replier, {}, "com.kakao.talk", false, "same-failed-reply-log", "channel", "synthetic-user");
+      bodies.push(runtime.http.body);
+    }
+    assert.equal(runtime.http.calls, 3, failure);
+    assert.equal(new Set(bodies).size, 1, "callback retry must keep the identical signed request");
+    assert.equal(visible.filter(value => value === "[합성 저장 성공]").length, 1, failure);
+    assert.equal(attempts, failure === "false" ? 2 : 3, "only an accepted server reply suppresses later duplicates");
+  }
+});
+
+test("R29 transient and empty responses do not hide success on the same callback retry", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const failure of ["timeout", "http503", "wrapped503", "notOk", "empty", "invalidJson"]) {
+    const runtime = evaluate(artifact, { responseBody: { reply: "[합성 저장 성공]" } });
+    const connect = runtime.org.jsoup.Jsoup.connect;
+    const bodies = [];
+    runtime.org.jsoup.Jsoup.connect = function(url) {
+      const chain = connect(url);
+      const execute = chain.execute;
+      chain.execute = function() {
+        bodies.push(runtime.http.body);
+        if (bodies.length > 1) return execute();
+        if (failure === "timeout") throw new Error("synthetic timeout");
+        const body = failure === "wrapped503" ? { statusCode: 503, reply: "unavailable" }
+          : failure === "notOk" ? { ok: false, reply: "unavailable" }
+          : failure === "empty" ? {} : { reply: "unavailable" };
+        return {
+          statusCode: () => failure === "http503" ? 503 : 200,
+          body: () => failure === "invalidJson" ? "invalid JSON" : JSON.stringify(body),
+          header: () => "",
+        };
+      };
+      return chain;
+    };
+    const options = { logId: "same-transient-log", sender: "합성사용자" };
+    assert.equal(replyFor(runtime, "상세 7 추가 합성", options).length, 1, failure);
+    assert.deepEqual(replyFor(runtime, "상세 7 추가 합성", options), ["[합성 저장 성공]"], failure);
+    assert.deepEqual(replyFor(runtime, "상세 7 추가 합성", options), [], failure);
+    assert.equal(runtime.http.calls, 3);
+    assert.equal(new Set(bodies).size, 1);
+  }
+});
+
+test("R29 rejected form replies do not persist local content deduplication", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const kind of ["party", "season", "operation"]) {
+    const runtime = evaluate(artifact, { responseBody: { reply: "[합성 저장 성공]" } });
+    let accepted = false;
+    const visible = [];
+    const replier = { reply(value) { if (!accepted) return false; visible.push(String(value)); return true; } };
+    const run = () => {
+      runtime.KLOL_V1_GATEWAY.beginRequest("same-form-log", "synthetic-user", "합성사용자");
+      if (kind === "party") runtime.handlePartyRecruitSync("합성방", "모집번호: #7\n1. 합성", "합성사용자", replier);
+      else if (kind === "season") runtime.handleSeasonApplyMessage("합성방", "📢 내전하실분 #1\n1.합성/M/M/TOP/SUP", "합성사용자", replier);
+      else runtime.handleOperationFormMessage("합성방", "<외출>\n1. 이름 및 닉네임 :합성\n2. 외출기간 :하루\n3. 외출사유 :휴식\n4. 외출범위 :소통방", "합성사용자", replier);
+    };
+    run();
+    accepted = true;
+    run();
+    assert.deepEqual(visible, ["[합성 저장 성공]"], kind);
+    assert.equal(runtime.http.calls, 2, kind);
+  }
+});
+
+test("R29 phone inhouse finish aliases match server classification and preserve raw text", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const messages = ["내전 7쫑", "내전 7마감", "내전 7종료", "/내전 7ㅉ", "／내전 ７ㅉ", "내전 #7ㅉ", "내전7ㅉ", "내전\t#7 종료"];
+  const classified = JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "-e", `
+    const { classifyKakaoV4Command } = require("./src/modules/recruiting/kakao-v4/classifier.ts");
+    process.stdout.write(JSON.stringify(${JSON.stringify(messages)}.map(text => classifyKakaoV4Command({ profileId: "FEATURES", text }).command)));
+  `], { cwd: root, encoding: "utf8" }));
+  assert.ok(classified.every(command => command === "INHOUSE_FINISH"));
+  for (const message of messages) {
+    const runtime = evaluate(artifact);
+    assert.deepEqual(replyFor(runtime, message), ["[V1 server reply]"], message);
+    assert.equal(runtime.http.calls, 1, message);
+    const request = JSON.parse(runtime.http.body);
+    assert.equal(request.profileId, "FEATURES");
+    assert.equal(request.text, message);
+  }
+  for (const message of ["//내전 7쫑", "/ 내전 7ㅉ", "내전\n7쫑", "내전 0종료", "내전 1000마감", "오늘 내전 7종료", "내전 7종료 취소"]) {
+    const runtime = evaluate(artifact);
+    assert.equal(runtime.handleInhouseFinishCommand(message, "합성방", "합성사용자", { reply() {} }), false, message);
+    assert.equal(runtime.http.calls, 0, message);
+  }
+  const echo = evaluate(artifact);
+  assert.deepEqual(replyFor(echo, "내전 7마감", { sender: "K-LOL 구인구직 도우미" }), []);
+  assert.equal(echo.http.calls, 0);
+});
+
+test("R29 party reserve shortcuts forward their explicit intent unchanged", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const message of ["상세 7 예비추가 합성", "상세 7 예비 추가 합성", "상세 ABCDE-23456 예비추가 합성", "상세 ABCDE-23456 예비 추가 합성"]) {
+    const runtime = evaluate(artifact);
+    assert.deepEqual(replyFor(runtime, message), ["[V1 server reply]"]);
+    assert.equal(runtime.http.calls, 1);
+    const request = JSON.parse(runtime.http.body);
+    assert.equal(request.profileId, "RECRUIT");
+    assert.equal(request.text, message);
+  }
 });

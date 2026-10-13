@@ -19,11 +19,14 @@ import {
 
 import styles from "./applications.module.css";
 
-type ProblemBody = { detail?: string; title?: string; notice?: string | null; application?: OwnSeasonApplication };
+type ProblemBody = { code?: string; detail?: string; title?: string; notice?: string | null; application?: OwnSeasonApplication };
 
 type ApplicantPlayer = Readonly<{ displayName: string; riotId: string }>;
 
 type ApplicationActionsProps = Readonly<{
+  seasonId: string;
+  seasonName: string;
+  roundId: string | null;
   initial: OwnSeasonApplication | null;
   recruitNo: number;
   applicantPlayer: ApplicantPlayer;
@@ -44,7 +47,7 @@ function statusLabel(status: OwnSeasonApplication["status"]) {
   }[status];
 }
 
-export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyDate, mode = "RIFT", closed = false, capacity = 10, participantCount = 0 }: ApplicationActionsProps) {
+export function ApplicationActions({ seasonId, seasonName, roundId, initial, recruitNo, applicantPlayer, applyDate, mode = "RIFT", closed = false, capacity = 10, participantCount = 0 }: ApplicationActionsProps) {
   const router = useRouter();
   const [mainPosition, setMainPosition] = useState<SeasonApplicationPosition | null>(
     initial?.mainPosition ?? null,
@@ -57,6 +60,9 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
   const [reserve, setReserve] = useState(initial?.status === "RESERVE");
   const [editingApplication, setEditingApplication] = useState(initial);
   const [serverConflict, setServerConflict] = useState(false);
+  const [targetUnavailable, setTargetUnavailable] = useState(false);
+  const [editingTarget, setEditingTarget] = useState({ seasonId, applyDate, roundId });
+  const targetChanged = editingTarget.seasonId !== seasonId || editingTarget.applyDate !== applyDate || editingTarget.roundId !== roundId;
   const reviewed = Boolean(initial?.reviewed || (initial && ["CONFIRMED", "REJECTED"].includes(initial.status)));
   const reapplying = initial?.status === "CANCELLED";
   const isRift = mode === "RIFT";
@@ -65,13 +71,14 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
   const keys = useRef(new ClientMutationKeyStore("site-application")).current;
   const revision = editingApplication?.revision ?? 0;
   const latestChanged = Boolean(initial && (!editingApplication || initial.id !== editingApplication.id || initial.revision > revision));
-  const needsComparison = serverConflict || latestChanged;
+  const needsComparison = serverConflict || latestChanged || targetChanged;
   const availableSubPositions = useMemo(
     () => availableApplicationSubPositions(mainPosition ?? "ALL"),
     [mainPosition],
   );
 
   async function mutate(method: "POST" | "DELETE", body: Record<string, unknown>) {
+    body = { ...body, target: { ...editingTarget, applicationId: editingApplication?.id ?? null } };
     const ticket = keys.issue(method, revision, body);
     const response = await fetch("/api/applications/season", {
       method,
@@ -88,7 +95,15 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
       if (response.status === 412) {
         keys.complete(ticket);
         setServerConflict(true);
-        router.refresh();
+        if (payload.code === "APPLICATION_TARGET_CHANGED") {
+          // A round may disappear at the day boundary. Do not replace the editor
+          // with the route's empty/error screen and discard the user's draft.
+          const latest = await fetch(`/api/applications/season?recruitNo=${recruitNo}`, { cache: "no-store" })
+            .then(async (result) => result.ok ? await result.json() as { currentSeason?: unknown } : null)
+            .catch(() => null);
+          if (latest?.currentSeason) router.refresh();
+          else setTargetUnavailable(true);
+        } else router.refresh();
       }
       throw new Error(payload.detail || payload.title || "요청을 처리하지 못했습니다.");
     }
@@ -154,24 +169,29 @@ export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyD
       {!initial ? <Link className={styles.mergeNotice} href="/help/contact">카카오 신청 회원 연결 문의</Link> : null}
       {closed ? <p className={styles.liveMessage}>모집 마감</p> : null}
       {needsComparison ? <section className="task-state" role="alert">
-        <h3>다른 곳에서 신청이 변경됐어요. 작성한 입력은 유지했습니다.</h3>
-        {latestChanged && initial ? <>
+        <h3>{targetChanged ? "운영일·시즌 또는 모집이 변경됐어요. 작성한 입력은 유지했습니다." : "다른 곳에서 신청이 변경됐어요. 작성한 입력은 유지했습니다."}</h3>
+        {targetChanged || (latestChanged && initial) ? <>
           <p>최신 저장값과 비교한 뒤 입력 유지 또는 버리기를 선택해 주세요.</p>
           <dl>
-            <dt>최신 신청 상태</dt><dd>{statusLabel(initial.status)}</dd>
-            {["APPLIED", "CONFIRMED", "RESERVE"].includes(initial.status) ? <><dt>최신 참가 구분</dt><dd>{initial.status === "RESERVE" ? "예비 참가" : "본 참가"}</dd></> : null}
-            {isRift ? <><dt>최신 주라인</dt><dd>{POSITION_LABELS[initial.mainPosition]}</dd><dt>최신 부라인</dt><dd>{initial.subPositions.map((position) => POSITION_LABELS[position]).join(", ") || "없음"}</dd></> : null}
+            {targetChanged ? <><dt>이전 신청일</dt><dd>{editingTarget.applyDate}</dd><dt>현재 모집</dt><dd>{seasonName} · {applyDate} · {recruitNo}회차</dd></> : null}
+            <dt>최신 신청 상태</dt><dd>{initial ? statusLabel(initial.status) : "신청 없음"}</dd>
+            {initial && ["APPLIED", "CONFIRMED", "RESERVE"].includes(initial.status) ? <><dt>최신 참가 구분</dt><dd>{initial.status === "RESERVE" ? "예비 참가" : "본 참가"}</dd></> : null}
+            {isRift && initial ? <><dt>최신 주라인</dt><dd>{POSITION_LABELS[initial.mainPosition]}</dd><dt>최신 부라인</dt><dd>{initial.subPositions.map((position) => POSITION_LABELS[position]).join(", ") || "없음"}</dd></> : null}
           </dl>
           <div className={styles.actionButtons}>
             {!reviewed && !closed ? <button type="button" onClick={() => {
+              setEditingTarget({ seasonId, applyDate, roundId });
+              setTargetUnavailable(false);
               setEditingApplication(initial); setServerConflict(false); setMessage("작성한 입력을 유지했습니다. 비교한 뒤 다시 저장해 주세요.");
-            }}>내 입력 유지</button> : null}
+            }}>{targetChanged ? "현재 모집에 내 입력 사용" : "내 입력 유지"}</button> : null}
             <button type="button" onClick={() => {
-              setMainPosition(initial.mainPosition); setSubPositions([...initial.subPositions]); setReserve(initial.status === "RESERVE");
+              setEditingTarget({ seasonId, applyDate, roundId });
+              setTargetUnavailable(false);
+              setMainPosition(initial?.mainPosition ?? null); setSubPositions([...(initial?.subPositions ?? [])]); setReserve(initial?.status === "RESERVE");
               setEditingApplication(initial); setServerConflict(false); setMessage("입력을 버리고 최신 저장값을 불러왔습니다.");
             }}>입력 버리고 최신값 사용</button>
           </div>
-        </> : <><p>최신 신청 정보를 불러오는 중입니다. 입력은 유지돼요.</p><div className={styles.actionButtons}><button type="button" onClick={() => router.refresh()}>최신값 다시 불러오기</button></div></>}
+        </> : targetUnavailable ? <><p>현재 운영일에 이 회차를 확인하지 못했어요. 작성한 입력은 이 화면에 유지됩니다.</p><Link href="/applications?type=season" target="_blank" rel="noopener noreferrer">새 탭에서 현재 모집 확인</Link></> : <><p>최신 신청 정보를 불러오는 중입니다. 입력은 유지돼요.</p><div className={styles.actionButtons}><button type="button" onClick={() => router.refresh()}>최신값 다시 불러오기</button></div></>}
       </section> : null}
       <fieldset disabled={pending !== null || reviewed || closed}>
         <legend>참가 구분</legend>

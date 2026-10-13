@@ -60,6 +60,14 @@ export type OwnSeasonApplication = Readonly<{
   updatedAt: string;
 }>;
 
+/** Identity observed by the web editor; revisions alone do not identify a recruitment. */
+export type SeasonApplicationTarget = Readonly<{
+  seasonId: string;
+  applyDate: string;
+  roundId: string | null;
+  applicationId: string | null;
+}>;
+
 export type ApplicationHub = Readonly<{
   currentSeason: PublicSeason | null;
   myApplication: OwnSeasonApplication | null;
@@ -74,7 +82,7 @@ export type ApplicationHub = Readonly<{
   participantsTruncated: boolean;
   selectedRecruitNo: number;
   availableRecruitNos: readonly number[];
-  round: Readonly<{ mode: string; capacity: number; closed: boolean; ambiguous: boolean }>;
+  round: Readonly<{ id: string | null; mode: string; capacity: number; closed: boolean; ambiguous: boolean }>;
   unlinkedCount: number;
 }>;
 
@@ -260,6 +268,8 @@ export const SEASON_SERVICE_ERROR_CODES = [
   "NOT_FOUND",
   "PLAYER_REQUIRED",
   "PRECONDITION_FAILED",
+  "APPLICATION_TARGET_REQUIRED",
+  "APPLICATION_TARGET_CHANGED",
   "SESSION_STALE",
 ] as const;
 

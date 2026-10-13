@@ -89,6 +89,7 @@ test("내전 빠른 추가 대상이 미등록이어도 이름과 접수 인원�
 });
 
 const context: KakaoV4DispatchContext = Object.freeze({
+  now: new Date(1789000000 * 1_000),
   envelope: Object.freeze({
     profileId: "RECRUIT",
     installationId: "install-11111111111111111111111111111111",
@@ -138,8 +139,8 @@ test("fixed party code pins copy edits and expired-form recovery to the original
   const original = { ...openStatus().parties[0]!, formCode: "ABCDE-23456@4", recruitDate: "2026-10-13" };
   const now = Date.parse("2026-10-14T00:00:00Z") / 1_000;
   const text = v1StrictPartyDetailReply(original, 7).replace("2.\n", "2. 신규\n");
-  const request = { ...context, envelope: { ...context.envelope, text, timestamp: now } };
-  const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), request.envelope);
+  const request = { ...context, now: new Date(now * 1_000), envelope: { ...context.envelope, text, timestamp: now } };
+  const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), request.envelope, new Date((request.envelope).timestamp * 1_000));
   assert.ok(canonical?.domain === "PARTY" && canonical.action === "SYNC");
   const recruitCodeTarget = { id: original.id, revision: original.revision, recruitDate: original.recruitDate, recruitNumber: 7, status: "IN_PROGRESS" as const };
   for (const partySyncError of [undefined, "PARTY_COPY_CONFLICT"]) {
@@ -164,7 +165,7 @@ test("fixed party code pins copy edits and expired-form recovery to the original
 test("fixed party code never falls back to today's number when missing, closed, or pasted onto another number", async () => {
   const original = { ...openStatus().parties[0]!, formCode: "ABCDE-23456@4" };
   const text = v1StrictPartyDetailReply(original, 7);
-  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), { ...context.envelope, text });
+  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), { ...context.envelope, text }, new Date(context.envelope.timestamp * 1_000));
   assert.ok(command?.domain === "PARTY" && command.action === "SYNC");
   for (const target of [null, ...["FINISHED", "CANCELED", "RESET"].map(status => ({ id: original.id, revision: 4,
     recruitDate: original.recruitDate, recruitNumber: 7, status: status as RecruitingCodeTarget["status"] })),
@@ -494,7 +495,7 @@ test("the exact generated V1 party form activates with only organizer populated 
       .replace("》주최자 :", "》주최자 : 재현");
     const submittedEnvelope = { ...context.envelope, eventId: `event-dispatcher-form-${prefix ? "slash" : "plain"}`, text: submittedText };
     const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text: submittedText });
-    const command = canonicalizeKakaoV4Command(classification, submittedEnvelope);
+    const command = canonicalizeKakaoV4Command(classification, submittedEnvelope, new Date((submittedEnvelope).timestamp * 1_000));
     if (!command || command.domain !== "PARTY" || command.action !== "SYNC") assert.fail("generated form must canonicalize as a party snapshot");
 
     const saved = await state.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, command);
@@ -537,7 +538,7 @@ test("party copy saves return the overview while unchanged stale copies retain e
     const detail = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
     const text = unchanged ? detail.legacyReply : detail.legacyReply.replace("2.\n", "2. 민규\n");
     const submittedEnvelope = { ...context.envelope, text, eventId: `event-compact-party-${unchanged}` };
-    const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), submittedEnvelope);
+    const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), submittedEnvelope, new Date((submittedEnvelope).timestamp * 1_000));
     if (canonical?.domain !== "PARTY" || canonical.action !== "SYNC") assert.fail("compact form must route as party sync");
     const result = await state.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, canonical);
     const saved = state.handled[0];
@@ -555,7 +556,7 @@ test("party copy saves return the overview while unchanged stale copies retain e
     assert.deepEqual(lookup.partyTarget, unchanged ? { recruitDate: "2026-09-10", recruitNumber: 7 } : undefined);
     assert.equal(result.legacyReply.match(/\[파티 #7\]/gu)?.length, 1);
     assert.doesNotMatch(result.legacyReply, /운영일|저장기준|주최자/u);
-    const copiedAgain = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text: result.legacyReply }), { ...submittedEnvelope, text: result.legacyReply });
+    const copiedAgain = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text: result.legacyReply }), { ...submittedEnvelope, text: result.legacyReply }, new Date(submittedEnvelope.timestamp * 1_000));
     if (unchanged) assert.equal(copiedAgain?.action, "SYNC", "recovery reply must remain editable");
     else assert.notEqual(copiedAgain?.action, "SYNC", "overview must not be accepted as a roster edit");
     const unavailable = harness({ statusFailure: true });
@@ -576,7 +577,7 @@ test("party copy save overview includes every active party including full partie
   const detail = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
   const text = detail.legacyReply.replace("2.\n", "2. 합성참가자\n");
   const submittedEnvelope = { ...context.envelope, text };
-  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), submittedEnvelope);
+  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), submittedEnvelope, new Date((submittedEnvelope).timestamp * 1_000));
   if (command?.domain !== "PARTY" || command.action !== "SYNC") assert.fail("party copy command required");
   const multiple = harness({ partyFormCode: "ABCDE-23456", partyCopyChanged: true, partyStatus: parties });
   const result = await multiple.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, command);
@@ -757,7 +758,7 @@ test("a copied form reference cannot be reused to create an automatic-number par
   const state = harness({ partyFormCode: "ABCDE-23456" });
   const detail = await state.dispatcher.dispatch(context, { domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 } });
   const text = detail.legacyReply;
-  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), { ...context.envelope, text });
+  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), { ...context.envelope, text }, new Date(context.envelope.timestamp * 1_000));
   if (command?.domain !== "PARTY" || command.action !== "SYNC") assert.fail("expected a copied party");
   const result = await state.dispatcher.dispatch(context, { ...command, target: { ...command.target, recruitNumber: null } });
   assert.match(result.legacyReply, /모집번호를 바꿀 수 없어요/u);
@@ -783,7 +784,7 @@ test("existing party snapshots forward slot states without forwarding submitted 
   const state = harness();
   const text = "[K-LOL.GG 구인구직 양식]\n📢 2인 파티 구인\n모집번호: #7\n\n1. 새참가자\n2.\n예비 1.";
   const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
-  const command = canonicalizeKakaoV4Command(classification, { ...context.envelope, text, eventId: "event-dispatcher-db-authority-01" });
+  const command = canonicalizeKakaoV4Command(classification, { ...context.envelope, text, eventId: "event-dispatcher-db-authority-01" }, new Date(context.envelope.timestamp * 1_000));
   if (!command || command.domain !== "PARTY" || command.action !== "SYNC") assert.fail("expected exact party snapshot");
   await state.dispatcher.dispatch({ ...context, envelope: { ...context.envelope, text, eventId: "event-dispatcher-db-authority-01" } }, command);
   const handled = state.handled[0];
@@ -840,7 +841,7 @@ test("party member shortcut classifications canonicalize to the current operatin
       text,
       timestamp,
       eventId: `event-member-canonical-${action.toLowerCase()}`,
-    });
+    }, new Date(timestamp * 1_000));
     assert.deepEqual(command, {
       domain: "PARTY",
       action,
@@ -924,17 +925,17 @@ test("missing, ambiguous, and member-limit shortcut results stay concrete succes
   }
 });
 
-test("party mutation and latest full form keep the signed instant across the 06:00 KST boundary", async () => {
+test("party mutation and latest full form keep the server instant across the 06:00 KST boundary", async () => {
   for (const [instant, expectedDate] of [
     ["2026-09-12T05:59:59.000+09:00", "2026-09-11"],
     ["2026-09-12T06:01:00.000+09:00", "2026-09-12"],
   ] as const) {
     const text = "[K-LOL.GG 구인구직 양식]\n📢 5인 파티 구인\n모집번호: #7\n1. 재현\n2.\n3.\n4.\n5.\n예비 1.";
     const envelope = { ...context.envelope, eventId: `event-boundary-${expectedDate}`, timestamp: Date.parse(instant) / 1_000, text };
-    const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope);
+    const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope, new Date((envelope).timestamp * 1_000));
     if (!command || command.domain !== "PARTY" || command.action !== "SYNC") assert.fail("expected party sync");
     const state = harness();
-    const result = await state.dispatcher.dispatch({ ...context, envelope }, command);
+    const result = await state.dispatcher.dispatch({ ...context, envelope, now: new Date(instant) }, command);
     assert.equal(command.target.recruitDate, expectedDate);
     assert.equal((state.statusCalls[0] as { now?: Date }).now?.toISOString(), new Date(instant).toISOString());
     assert.equal((state.statusCalls[0] as { afterMutation?: boolean }).afterMutation, true);
@@ -1221,4 +1222,51 @@ test("dispatcher fails closed when command domain and static profile differ", as
   );
   assert.equal(state.handled.length, 0);
   assert.equal(state.seasonCalls.length, 0);
+});
+
+test("party reserve intent survives numeric and fixed-code dispatch with main vacancies", async () => {
+  const recruitCodeTarget = { id: "party-7", revision: 3, recruitDate: "2026-09-10", recruitNumber: 7, status: "IN_PROGRESS" as const };
+  for (const target of ["7", "ABCDE-23456"]) {
+    for (const prefix of ["예비", "대기"]) {
+      const text = `상세 ${target} ${prefix} 추가 합성예비`;
+      const envelope = { ...context.envelope, text };
+      const command = canonicalizeKakaoV4Command(classifyKakaoV4Command(envelope), envelope, context.now!);
+      assert.ok(command?.domain === "PARTY");
+      const state = harness({ recruitCodeTarget });
+      await state.dispatcher.dispatch(context, command);
+      const submitted = state.handled[0]!;
+      assert.equal(submitted.type, "PARTY_MEMBER_ADD");
+      assert.deepEqual(submitted.payload, { name: "합성예비", reserve: true });
+    }
+  }
+});
+
+test("a receipt committed during member handling pins the follow-up form to the original UUID across the day boundary", async () => {
+  let handled: RecruitingCommandResult | null = null;
+  const serverNow = new Date("2026-09-11T06:00:01+09:00");
+  const oldTarget = { id: "original-party", revision: 3, recruitNumber: 7, recruitDate: "2026-09-10", status: "IN_PROGRESS" as const };
+  const formReads: unknown[] = [];
+  const dispatcher = new KakaoV4CommandDispatcher({ recruiting: {
+    async findPartyEventReplay() { return handled ? { ...handled, target: oldTarget } : null; },
+    async resolveCompatTarget(input) { assert.equal(input.recruitDate, "2026-09-11"); return { id: "today-party", revision: 0 }; },
+    async resolveScrimUpsert() { return null; },
+    async handle(command) {
+      assert.equal(command.aggregateId, "today-party");
+      const result = mutationResult(command);
+      handled = { ...result, replayed: true, body: { ...result.body, aggregateId: oldTarget.id,
+        data: { ...result.body.data, id: oldTarget.id, recruitDate: oldTarget.recruitDate } } };
+      return handled;
+    },
+  }, assistant: {
+    async getOpenChatStatus(input) {
+      formReads.push(input.partyTarget);
+      assert.equal(input.now?.toISOString(), serverNow.toISOString(), "expiry still uses current server time");
+      return { body: { ...openStatus(), parties: [{ ...openStatus().parties[0]!, id: oldTarget.id, recruitDate: oldTarget.recruitDate }] }, replayed: false };
+    },
+    async syncSeasonSnapshot() { assert.fail("party retry must not touch inhouse state"); },
+  } });
+  const result = await dispatcher.dispatch({ ...context, now: serverNow }, { domain: "PARTY", action: "ADD_MEMBER",
+    target: { recruitDate: "2026-09-11", recruitNumber: 7 }, name: "합성참가" });
+  assert.equal(result.replayed, true);
+  assert.deepEqual(formReads, [{ recruitDate: oldTarget.recruitDate, recruitNumber: 7, partyId: oldTarget.id }]);
 });

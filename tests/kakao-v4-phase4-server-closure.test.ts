@@ -57,7 +57,7 @@ test("[P4-S01] every public fixture alias has a local reply or canonical dispatc
       assert.notEqual(classification.kind, "WRONG_PROFILE", text);
       if (classification.kind === "UNKNOWN" || classification.kind === "WRONG_PROFILE") continue;
       assert.equal(classification.audience, "USER", text);
-      assert.ok(localCommands.has(classification.command) || canonicalizeKakaoV4Command(classification, envelope(profileId, text, 1)), text);
+      assert.ok(localCommands.has(classification.command) || canonicalizeKakaoV4Command(classification, envelope(profileId, text, 1), new Date((envelope(profileId, text, 1)).timestamp * 1_000)), text);
     }
   }
 });
@@ -95,7 +95,7 @@ test("[P4-S01A] every actual V41 public sample has a local reply or canonical di
     assert.notEqual(classification.kind, "WRONG_PROFILE", sample.name);
     if (classification.kind === "UNKNOWN" || classification.kind === "WRONG_PROFILE") continue;
     assert.equal(classification.audience, "USER", sample.name);
-    assert.ok(localCommands.has(classification.command) || canonicalizeKakaoV4Command(classification, envelope(profileId, sample.sample, 2)), sample.name);
+    assert.ok(localCommands.has(classification.command) || canonicalizeKakaoV4Command(classification, envelope(profileId, sample.sample, 2), new Date((envelope(profileId, sample.sample, 2)).timestamp * 1_000)), sample.name);
   }
 });
 

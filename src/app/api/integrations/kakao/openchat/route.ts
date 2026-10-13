@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       ? await service.getOpenChatStatus({
           ...common,
           scope: "BOT:KAKAO:OPENCHAT:STATUS",
-          now: new Date(prepared.intent.timestampSeconds * 1_000),
+          now: new Date(),
         })
       : command.command === "SEARCH_PLAYER"
         ? await service.searchPlayers({ ...common, scope: "BOT:KAKAO:OPENCHAT:SEARCH_PLAYER", query: command.query })

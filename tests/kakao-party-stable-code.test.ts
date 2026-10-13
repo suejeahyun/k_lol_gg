@@ -29,7 +29,7 @@ function envelope(text: string): KakaoV4CommandEnvelope {
 }
 
 function canonical(text: string) {
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope(text));
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope(text), new Date((envelope(text)).timestamp * 1_000));
 }
 
 test("stable party identity renders as two lines and round-trips every party template", () => {

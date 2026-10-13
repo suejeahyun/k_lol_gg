@@ -113,9 +113,11 @@ export class KakaoV4CommandService {
   constructor(
     private readonly authorizer: KakaoV4ProfileAuthorizer,
     private readonly dispatcher?: KakaoV4CommandDispatcher,
+    private readonly clock: () => Date = () => new Date(),
   ) {}
 
   async execute(envelope: KakaoV4CommandEnvelope, keyId: string, metadata?: Readonly<{ requestDigestHex: string; requestId: string }>): Promise<KakaoV4CommandResult> {
+    const now = this.clock();
     const authorization = await this.authorizer.authorizeProfile({
       installationPublicId: envelope.installationId,
       requiredCapabilityProfile: envelope.profileId,
@@ -136,14 +138,14 @@ export class KakaoV4CommandService {
     let result = localReply(envelope, classification);
     let replayed = false;
     if (!result && this.dispatcher) {
-      const canonical = canonicalizeKakaoV4Command(classification, envelope);
+      const canonical = canonicalizeKakaoV4Command(classification, envelope, now);
       if (canonical?.domain === "OPERATIONS" && canonical.action === "INVALID_FORM") {
         result = Object.freeze({
           kind: "REPLY" as const,
           reply: `[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: ${canonical.missingFields.join(", ")}`,
         });
       } else if (canonical) {
-        const dispatched = await this.dispatcher.dispatch({ envelope, keyId, requestDigestHex: metadata?.requestDigestHex ?? digest, requestId: metadata?.requestId ?? envelope.eventId, authorization }, canonical);
+        const dispatched = await this.dispatcher.dispatch({ envelope, keyId, requestDigestHex: metadata?.requestDigestHex ?? digest, requestId: metadata?.requestId ?? envelope.eventId, authorization, now }, canonical);
         result = Object.freeze({ kind: "REPLY" as const, reply: dispatched.legacyReply });
         replayed = dispatched.replayed;
       } else if (classification.kind === "SNAPSHOT" || classification.kind === "UNKNOWN" && classification.partyForm) {
@@ -176,6 +178,7 @@ export class KakaoV4CommandService {
     requestId: string;
     command: CanonicalKakaoV4Command;
   }>): Promise<KakaoV4DispatcherResult> {
+    const now = this.clock();
     if (!this.dispatcher) throw new KakaoV4CommandError("DISPATCHER_UNAVAILABLE");
     const authorization = await this.authorizer.authorizeProfile({
       installationPublicId: input.envelope.installationId,
@@ -194,6 +197,7 @@ export class KakaoV4CommandService {
       requestDigestHex: input.requestDigestHex,
       requestId: input.requestId,
       authorization,
+      now,
     }, input.command);
   }
 }

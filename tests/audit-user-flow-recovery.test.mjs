@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
-import { webcrypto } from "node:crypto";
+import * as nodeCrypto from "node:crypto";
+const { webcrypto } = nodeCrypto;
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -43,6 +44,7 @@ function harness(file, name, initialProps, send) {
       FormData: class { constructor(values) { this.values = values; } get(name) { return this.values[name] ?? null; } },
       fetch: async (url, options) => { requests.push({ url, ...options }); return send(requests.length, options); },
       require(specifier) {
+        if (specifier === "node:crypto") return nodeCrypto;
         if (specifier === "react") return hooks;
         if (specifier === "react/jsx-runtime") return jsx;
         if (specifier === "next/link") return Link;
@@ -72,6 +74,110 @@ function harness(file, name, initialProps, send) {
 const rejection = () => ({ ok: false, status: 412, json: async () => ({ detail: "다른 작업이 먼저 저장됨" }) });
 const success = body => ({ ok: true, status: 200, json: async () => body });
 
+test("application day, season and round changes retain choices until the new target is accepted", async () => {
+  for (const change of [{ applyDate: "2026-10-14" }, { seasonId: "new-season", seasonName: "새 시즌" }, { roundId: "new-round" }]) {
+    const props = { seasonId: "old-season", seasonName: "기존 시즌", roundId: null, applyDate: "2026-10-13", initial: null, recruitNo: 1, applicantPlayer: { displayName: "합성", riotId: "Fixture#KR1" } };
+    const subject = harness("app/(public)/(applications)/applications/application-actions.tsx", "ApplicationActions", props, () => success({}));
+    find(subject.render(), node => node.props.name === "mainPosition" && node.props.value === "MID").props.onChange();
+    let tree = subject.render({ ...props, ...change });
+    assert.equal(find(tree, node => node.props.name === "mainPosition" && node.props.value === "MID").props.checked, true);
+    const save = find(tree, node => node.type === "button" && node.props.children === "참가 신청");
+    assert.equal(save.props.disabled, true);
+    await save.props.onClick();
+    assert.equal(subject.requests.length, 0);
+    find(tree, node => node.props.children === "현재 모집에 내 입력 사용").props.onClick();
+    tree = subject.render();
+    await find(tree, node => node.type === "button" && node.props.children === "참가 신청").props.onClick();
+    const payload = JSON.parse(subject.requests[0].body);
+    assert.equal(payload.mainPosition, "MID");
+    assert.deepEqual(payload.target, { seasonId: change.seasonId ?? props.seasonId, applyDate: change.applyDate ?? props.applyDate, roundId: change.roundId ?? props.roundId, applicationId: null });
+  }
+});
+
+test("an expired round that no longer exists keeps the draft instead of refreshing into an error page", async () => {
+  const props = { seasonId: "old-season", seasonName: "기존 시즌", roundId: "old-round", applyDate: "2026-10-13", initial: null, recruitNo: 2, applicantPlayer: { displayName: "합성", riotId: "Fixture#KR1" } };
+  const subject = harness("app/(public)/(applications)/applications/application-actions.tsx", "ApplicationActions", props, attempt => attempt === 1
+    ? { ok: false, status: 412, json: async () => ({ code: "APPLICATION_TARGET_CHANGED" }) }
+    : { ok: false, status: 400, json: async () => ({}) });
+  find(subject.render(), node => node.props.name === "mainPosition" && node.props.value === "MID").props.onChange();
+  await find(subject.render(), node => node.type === "button" && node.props.children === "참가 신청").props.onClick();
+  const tree = subject.render();
+  assert.equal(subject.refreshed, 0);
+  assert.equal(find(tree, node => node.props.name === "mainPosition" && node.props.value === "MID").props.checked, true);
+  assert.equal(find(tree, node => node.props.children === "참가 신청").props.disabled, true);
+  assert.match(renderToStaticMarkup(tree), /새 탭에서 현재 모집 확인/u);
+});
+
+const submissionFixture = { id: "11111111-1111-4111-8111-111111111111", publicCode: "MR2AAAAAAAAAAAAAAAA", seasonId: null, seasonName: null, title: "합성 경기", organizer: "합성", seriesNumber: 1, note: null, playedOn: "2026-10-14", startedAt: null, expectedGameCount: 2, teamBalanceDraftId: null, source: "WEB", receivedGameNumbers: [], status: "AWAITING_UPLOAD", publicReviewReason: null, approvedMatchSeriesId: null, revision: 1, updatedAt: "2026-10-14T00:00:00Z" };
+const submissionProps = { viewer: "APPROVED", seasons: [], initial: submissionFixture, requestedCode: submissionFixture.publicCode, requestedTeamBalanceDraftId: null, teamBalanceDraft: null };
+const submissionInput = { title: "내 작성값", organizer: "합성", seriesNumber: "1", playedOn: "2026-10-14", expectedGameCount: "2" };
+
+test("match submission conflicts compare latest values and retry preserved input with the accepted revision", async () => {
+  const latest = { ...submissionFixture, revision: 2, title: "다른 탭 제목", note: "다른 탭 메모" };
+  const subject = harness("app/(public)/(matches)/matches/submit/submission-form.tsx", "SubmissionForm", submissionProps, attempt => attempt === 1 ? rejection() : attempt === 2 ? success({ submission: latest }) : success({ status: "AWAITING_UPLOAD", revision: 3 }));
+  find(subject.render(), node => node.props.children === "접수 정보 수정").props.onClick();
+  await subject.submit(submissionInput);
+  let tree = subject.render();
+  assert.match(renderToStaticMarkup(tree), /다른 탭 제목/u);
+  assert.match(renderToStaticMarkup(tree), /다른 탭 메모/u);
+  assert.equal(find(tree, node => node.props.children === "수정 저장").props.disabled, true);
+  await subject.submit(submissionInput);
+  assert.equal(subject.requests.length, 2, "comparison blocks another mutation");
+  find(tree, node => node.props.children === "내 입력 유지").props.onClick();
+  await subject.submit(submissionInput);
+  assert.equal(subject.requests[2].headers["If-Match"], '"2"');
+  assert.equal(JSON.parse(subject.requests[2].body).title, "내 작성값");
+});
+
+test("match conflict retry survives failed latest reads and terminal state offers discard only", async () => {
+  const subject = harness("app/(public)/(matches)/matches/submit/submission-form.tsx", "SubmissionForm", submissionProps, attempt => attempt === 1 ? rejection() : attempt === 2 ? Promise.reject(new Error("offline")) : success({ submission: { ...submissionFixture, revision: 2, status: "CANCELLED" } }));
+  find(subject.render(), node => node.props.children === "접수 정보 수정").props.onClick();
+  await subject.submit(submissionInput);
+  let tree = subject.render();
+  assert.match(renderToStaticMarkup(tree), /입력은 유지했습니다/u);
+  await find(tree, node => node.props.children === "최신값 다시 불러오기").props.onClick();
+  await new Promise(resolve => setImmediate(resolve));
+  tree = subject.render();
+  assert.equal(find(tree, node => node.props.children === "내 입력 유지"), null);
+  find(tree, node => node.props.children === "입력 버리고 최신값 사용").props.onClick();
+  assert.equal(find(subject.render(), node => node.props.children === "수정 저장"), null);
+  assert.match(renderToStaticMarkup(subject.render()), /사용자 취소/u);
+});
+
+test("image upload recovery cannot advance an open editor past unseen metadata changes", async () => {
+  const latest = { ...submissionFixture, revision: 2, title: "다른 탭 최신 제목", receivedGameNumbers: [1] };
+  const subject = harness("app/(public)/(matches)/matches/submit/submission-form.tsx", "SubmissionForm", submissionProps, attempt => attempt === 1 ? Promise.reject(new Error("response lost")) : attempt === 2 ? success({ submission: latest }) : success({ status: "AWAITING_UPLOAD", revision: 3 }));
+  find(subject.render(), node => node.props.children === "접수 정보 수정").props.onClick();
+  const file = { name: "synthetic.png", type: "image/png", size: 12, arrayBuffer: async () => new Uint8Array(12).buffer };
+  find(subject.render(), node => node.type === "input" && node.props.type === "file").props.onChange({ currentTarget: { files: [file], value: "synthetic.png" } });
+  for (let attempt = 0; attempt < 20 && subject.requests.length < 2; attempt++) await new Promise(resolve => setTimeout(resolve, 5));
+  let tree = subject.render();
+  assert.equal(subject.requests.length, 2);
+  assert.match(renderToStaticMarkup(tree), /다른 탭 최신 제목/u);
+  assert.equal(find(tree, node => node.props.children === "수정 저장").props.disabled, true);
+  await subject.submit(submissionInput);
+  assert.equal(subject.requests.length, 2);
+  find(tree, node => node.props.children === "내 입력 유지").props.onClick();
+  await subject.submit(submissionInput);
+  assert.equal(subject.requests[2].headers["If-Match"], '"2"');
+  assert.equal(JSON.parse(subject.requests[2].body).title, submissionInput.title);
+});
+
+test("site and Kakao settings lock all inputs during saving and unlock after malformed responses", async () => {
+  const initial = { revision: 1, brandName: "합성", tagline: "기존", supportUrl: null, features: { registrations: true }, aiAllowedRoles: [], aiRequestsPerHour: 10, aiDailyCostLimitMicros: 0, internalMaintenanceNote: null, globalEnabled: true, maintenanceMode: false, playerSearchEnabled: true, seasonApplicationsEnabled: true, imageReceiveEnabled: true, recruitingEnabled: true, scheduledNoticeEnabled: true, maxMessageLength: 900 };
+  for (const [file, name] of [["app/(admin)/admin/site-settings/settings-form.tsx", "default"], ["app/(admin)/admin/kakao/kakao-settings-form.tsx", "KakaoSettingsForm"]]) {
+    let respond;
+    const subject = harness(file, name, { initial }, () => new Promise(resolve => { respond = resolve; }));
+    const pending = subject.submit({});
+    assert.equal(find(subject.render(), node => node.type === "fieldset").props.disabled, true);
+    respond({ ok: true, json: async () => { throw new Error("truncated response"); } });
+    await pending;
+    const tree = subject.render();
+    assert.equal(find(tree, node => node.type === "fieldset").props.disabled, false);
+    assert.match(renderToStaticMarkup(tree), /저장하지 못했습니다/u);
+  }
+});
+
 test("full round requires an explicit reserve choice and sends only the selected seat", async () => {
   const subject = harness("app/(public)/(applications)/applications/application-actions.tsx", "ApplicationActions", { initial: null, recruitNo: 1, applicantPlayer: { displayName: "합성 회원", riotId: "Fixture#KR1" }, applyDate: "2026-10-13", capacity: 10, participantCount: 10 }, () => success({}));
   let tree = subject.render();
@@ -89,7 +195,7 @@ test("full round requires an explicit reserve choice and sends only the selected
 });
 
 const application = { id: "fixture-application", seasonId: "fixture-season", applyDate: "2026-10-13", recruitNo: 1, status: "APPLIED", source: "SITE", mainPosition: "TOP", subPositions: ["JGL"], revision: 1, updatedAt: "2026-10-13T00:00:00Z" };
-const applicationProps = { initial: application, recruitNo: 1, applicantPlayer: { displayName: "합성 회원", riotId: "Fixture#KR1" }, applyDate: application.applyDate, capacity: 10, participantCount: 5 };
+const applicationProps = { seasonId: application.seasonId, seasonName: "합성 시즌", roundId: null, initial: application, recruitNo: 1, applicantPlayer: { displayName: "합성 회원", riotId: "Fixture#KR1" }, applyDate: application.applyDate, capacity: 10, participantCount: 5 };
 const action = (tree, label) => find(tree, node => node.type === "button" && node.props.children === label);
 test("application refresh preserves draft and blocks save/cancel until the new revision is explicitly accepted", async () => {
   const saved = { ...application, mainPosition: "MID", subPositions: ["JGL", "ADC"], status: "RESERVE", revision: 3 };
@@ -108,7 +214,7 @@ test("application refresh preserves draft and blocks save/cancel until the new r
   action(tree, "내 입력 유지").props.onClick();
   await action(subject.render(), "예비 신청 수정").props.onClick();
   assert.equal(subject.requests[0].headers["If-Match"], '"2"');
-  assert.deepEqual(JSON.parse(subject.requests[0].body), { recruitNo: 1, mainPosition: "MID", subPositions: ["JGL", "ADC"], reserve: true });
+  assert.deepEqual(JSON.parse(subject.requests[0].body), { recruitNo: 1, mainPosition: "MID", subPositions: ["JGL", "ADC"], reserve: true, target: { seasonId: application.seasonId, applyDate: application.applyDate, roundId: null, applicationId: application.id } });
   tree = subject.render();
   assert.equal(action(tree, "예비 신청 수정").props.disabled, false, "a successful response advances the draft revision before refresh arrives");
   await action(tree, "예비 신청 수정").props.onClick();

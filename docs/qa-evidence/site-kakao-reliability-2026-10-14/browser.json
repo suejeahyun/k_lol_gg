@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "environment": "loopback esbuild harness with actual React client components, synthetic props and HTTP responses",
+  "productionDataUsed": false,
+  "productionMutations": 0,
+  "checks": [
+    "Match edit: typed title and note survive HTTP 412 and latest GET",
+    "Match conflict: save, cancel and image uploads disabled before explicit comparison choice",
+    "Match keep: next PATCH uses revision 2 and the typed title, then shows success",
+    "Site settings: all inputs disabled while PUT pending, saved text retained after response, revision becomes 2",
+    "Kakao settings: all switches and maximum length disabled while POST pending, enabled after response",
+    "Application: changing displayed operating date preserves MID choice and blocks submit",
+    "Application: explicit current-target choice enables submit; POST includes new date, season UUID, round and application identity",
+    "Application at 320px: document scrollWidth 305 <= viewport 320"
+  ],
+  "limitations": [
+    "Server, authentication and DB behavior were tested separately; browser harness uses synthetic fetch and navigation",
+    "Upload timeout conflict branch covered by automated component regression, not browser upload",
+    "No actual Kakao phone installation or transmission"
+  ],
+  "screenshot": "application-mobile.png",
+  "cleanup": "temporary browser tab closed, viewport reset, loopback server stopped"
+}

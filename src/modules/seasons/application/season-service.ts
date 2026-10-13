@@ -15,6 +15,7 @@ import {
   normalizeSeasonName,
   SeasonServiceError,
   type SeasonApplicationPosition,
+  type SeasonApplicationTarget,
 } from "../domain/season";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -175,6 +176,26 @@ function assertDateKey(value: string) {
   }
 }
 
+/** Public HTTP callers require this binding; internal legacy callers can omit it. */
+export function requireSeasonApplicationTarget(body: unknown): SeasonApplicationTarget {
+  const value = body && typeof body === "object" && !Array.isArray(body)
+    ? (body as Record<string, unknown>).target : undefined;
+  if (value === undefined) throw new SeasonServiceError("APPLICATION_TARGET_REQUIRED", "화면을 새로고침한 뒤 신청해 주세요.");
+  const target = objectBody(value, ["seasonId", "applyDate", "roundId", "applicationId"]);
+  if (typeof target.seasonId !== "string" || typeof target.applyDate !== "string") {
+    throw new SeasonServiceError("INVALID_INPUT", "신청 대상을 확인해 주세요.");
+  }
+  assertUuid(target.seasonId);
+  assertDateKey(target.applyDate);
+  for (const key of ["roundId", "applicationId"] as const) {
+    if (target[key] !== null) {
+      if (typeof target[key] !== "string") throw new SeasonServiceError("INVALID_INPUT", "신청 대상을 확인해 주세요.");
+      assertUuid(target[key]);
+    }
+  }
+  return target as SeasonApplicationTarget;
+}
+
 export class SeasonService {
   constructor(private readonly repository: SeasonRepository) {}
 
@@ -332,7 +353,8 @@ export class SeasonService {
     body: unknown,
     now = new Date(),
   ) {
-    const parsed = objectBody(body, ["mainPosition", "subPositions", "recruitNo", "reserve"]);
+    const parsed = objectBody(body, ["mainPosition", "subPositions", "recruitNo", "reserve", "target"]);
+    const target = parsed.target === undefined ? undefined : requireSeasonApplicationTarget(body);
     if (parsed.mainPosition != null && !isSeasonApplicationPosition(parsed.mainPosition)) {
       throw new SeasonServiceError("INVALID_INPUT", "주라인을 선택해 주세요.");
     }
@@ -343,12 +365,13 @@ export class SeasonService {
     const subPositions = positions(parsed.subPositions ?? [], mainPosition ?? "ALL");
     const input = {
       actorUserAccountId: context.actorSession.userAccountId,
-      applyDate: recruitingOperatingDateKey(now),
+      applyDate: target?.applyDate ?? recruitingOperatingDateKey(now),
       recruitNo: positiveRecruitNo(parsed.recruitNo ?? 1),
       expectedRevision,
       mainPosition,
       subPositions,
       reserve: parsed.reserve === true,
+      ...(target ? { target } : {}),
     };
     return this.repository.upsertOwnApplication(
       envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:upsert", input),
@@ -363,15 +386,17 @@ export class SeasonService {
     body: unknown,
     now = new Date(),
   ) {
-    const parsed = objectBody(body, ["recruitNo"]);
-    const applyDate = recruitingOperatingDateKey(now);
+    const parsed = objectBody(body, ["recruitNo", "target"]);
+    const target = parsed.target === undefined ? undefined : requireSeasonApplicationTarget(body);
+    const applyDate = target?.applyDate ?? recruitingOperatingDateKey(now);
     const recruitNo = positiveRecruitNo(parsed.recruitNo ?? 1);
     return this.repository.cancelOwnApplication(
-      envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:cancel", { applyDate, recruitNo, expectedRevision }),
+      envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:cancel", { applyDate, recruitNo, expectedRevision, ...(target ? { target } : {}) }),
       expectedRevision,
       applyDate,
       recruitNo,
       now,
+      target,
     );
   }
 

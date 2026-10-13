@@ -829,7 +829,7 @@ export class PostgresKakaoAssistant {
     afterMutation?: boolean;
   }>): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
     const query = async (transaction: V2Transaction) => {
-      const statusNow = input.now ?? new Date(input.intent.timestampSeconds * 1_000);
+      const statusNow = input.now ?? new Date();
       const operatingDate = recruitingOperatingDateKey(statusNow);
       const partyRows = input.projection === "SCRIM" ? [] : await transaction.select({
           id: recruitParties.id,

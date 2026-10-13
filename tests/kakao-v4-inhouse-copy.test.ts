@@ -19,7 +19,7 @@ function parse(text: string) {
   return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), {
     profileId: "FEATURES", installationId: `install-${"a".repeat(32)}`, senderId: `sender-${"b".repeat(32)}`,
     eventId: "event-inhouse-copy", timestamp: Date.parse("2026-09-20T12:00:00Z") / 1_000, nonce: "c".repeat(32), text,
-  });
+  }, new Date(Date.parse("2026-09-20T12:00:00Z") / 1_000 * 1_000));
 }
 
 test("inhouse copy requires explicit lanes for RIFT main/reserve rows and preserves save reference separately from notices", () => {
@@ -76,6 +76,7 @@ test("inhouse stale forms return the latest copy without retrying the mutation, 
     const command = parse(baseForm);
     if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected copy form");
     const result = await dispatcher.dispatch({
+      now: new Date("2026-09-20T12:00:00Z"),
       envelope: { profileId: "FEATURES", installationId: `install-${"a".repeat(32)}`, senderId: `sender-${"b".repeat(32)}`,
         eventId: "event-inhouse-stale", timestamp: Date.parse("2026-09-20T12:00:00Z") / 1_000, nonce: "c".repeat(32), text: baseForm },
       keyId: "current", requestId: "request-inhouse-stale", requestDigestHex: "ab".repeat(32),

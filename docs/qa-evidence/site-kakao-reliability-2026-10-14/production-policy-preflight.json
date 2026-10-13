@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-13T18:50:01.500Z",
+  "targetFingerprint": "c5918218dd171001",
+  "readOnly": true,
+  "writesAttempted": false,
+  "settings": {
+    "global_enabled": true,
+    "maintenance_mode": false,
+    "player_search_enabled": true,
+    "season_applications_enabled": true,
+    "image_receive_enabled": true,
+    "recruiting_enabled": true,
+    "scheduled_notice_enabled": true,
+    "max_message_length": 4000
+  }
+}

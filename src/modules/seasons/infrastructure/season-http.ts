@@ -24,6 +24,8 @@ import type { SeasonCommandContext } from "../application/season-service";
 import { SeasonServiceError } from "../domain/season";
 
 const SEASON_HTTP_PROBLEMS = Object.freeze({
+  applicationTargetRequired: definePublicProblem({ code: "APPLICATION_TARGET_REQUIRED", status: 428, title: "신청 화면을 새로 불러와 주세요.", detail: "이전 버전의 화면입니다. 작성한 내용을 확인한 뒤 새로고침해 주세요." }),
+  applicationTargetChanged: definePublicProblem({ code: "APPLICATION_TARGET_CHANGED", status: 412, title: "신청 대상이 변경됐어요.", detail: "운영일·시즌 또는 모집이 변경되었습니다. 최신 모집을 확인한 뒤 다시 신청해 주세요." }),
   recruitFull: definePublicProblem({ code: "RECRUIT_FULL", status: 409, title: "본 참가 정원이 찼어요.", detail: "예비 참가를 선택해 주세요. 본 참가로 자동 전환되지는 않습니다." }),
   recruitClosed: definePublicProblem({ code: "RECRUIT_CLOSED", status: 409, title: "내전 모집이 마감됐어요.", detail: "명단은 보관 중입니다. 참가 변경은 운영진에게 요청해 주세요." }),
   recruitAmbiguous: definePublicProblem({ code: "RECRUIT_AMBIGUOUS", status: 409, title: "같은 번호의 내전이 여러 개 있어요.", detail: "다른 내전에 잘못 접수하지 않도록 운영진에게 모집 확인을 요청해 주세요." }),
@@ -244,6 +246,8 @@ export function seasonServiceErrorResponse(error: unknown, traceId?: string): Re
       NOT_FOUND: SEASON_HTTP_PROBLEMS.notFound,
       PLAYER_REQUIRED: SEASON_HTTP_PROBLEMS.playerRequired,
       PRECONDITION_FAILED: SEASON_HTTP_PROBLEMS.preconditionFailed,
+      APPLICATION_TARGET_REQUIRED: SEASON_HTTP_PROBLEMS.applicationTargetRequired,
+      APPLICATION_TARGET_CHANGED: SEASON_HTTP_PROBLEMS.applicationTargetChanged,
       SESSION_STALE: SEASON_HTTP_PROBLEMS.unauthenticated,
     }[error.code];
     return problemResponse(problem, { traceId });

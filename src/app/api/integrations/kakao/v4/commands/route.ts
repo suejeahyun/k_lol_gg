@@ -15,6 +15,9 @@ import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/r
 import { readBoundedKakaoRawBody } from "@/modules/recruiting/infrastructure/kakao-http-request";
 import { KakaoV4CommandService } from "@/modules/recruiting/kakao-v4/application";
 import { KakaoV4CommandDispatcher } from "@/modules/recruiting/kakao-v4/dispatcher";
+import { classifyKakaoV4Command } from "@/modules/recruiting/kakao-v4/classifier";
+import { kakaoV4OperationFeature } from "@/modules/recruiting/kakao-v4/operation-access";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 import {
   KAKAO_V4_COMMAND_CONTRACT,
   KAKAO_V4_MAXIMUM_BODY_BYTES,
@@ -104,6 +107,11 @@ async function handleCommand(request: Request, traceId: string) {
     return kakaoV4ProblemResponse("SIGNATURE_INVALID", traceId);
   }
 
+  // Read current settings for every authenticated request, including receipt replays.
+  const classification = classifyKakaoV4Command({ profileId: envelope.profileId, text: envelope.text });
+  if (!await isRuntimeKakaoFeatureEnabled(kakaoV4OperationFeature(classification), envelope.text)) {
+    return kakaoV4ProblemResponse("OPERATION_DISABLED", traceId);
+  }
   const commandService = runtimeService();
   if (!commandService) return kakaoV4ProblemResponse("UNAVAILABLE", traceId);
   try {

@@ -113,7 +113,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             {result.data.unlinkedCount > 0 ? <p className={styles.mergeNotice}>참가 인원 중 회원 연결 대기 {result.data.unlinkedCount}명</p> : null}
           </section>
 
-          {!result.data.currentSeason.applicationsOpen || result.data.round.closed ? (
+          {(!result.data.currentSeason.applicationsOpen || result.data.round.closed) && !(result.data.viewer === "APPROVED" && result.data.hasActivePlayer) ? (
             <section className={styles.stateCard}>
               <ShieldCheck aria-hidden="true" />
               <h2>신청 기간이 마감되었어요.</h2>
@@ -139,27 +139,18 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               <h2>연결된 활성 플레이어가 필요해요.</h2>
               <Link href="/account">내 계정에서 연결 확인</Link>
             </section>
-          ) : result.data.canApply ? (
+          ) : result.data.viewer === "APPROVED" && result.data.hasActivePlayer ? (
             <ApplicationActions
-              key={`${result.data.currentSeason.id}:${result.data.applyDate}:${result.data.selectedRecruitNo}`}
+              key={`${result.data.applicantPlayer!.id}:${result.data.selectedRecruitNo}`}
+              seasonId={result.data.currentSeason.id}
+              seasonName={result.data.currentSeason.name}
+              roundId={result.data.round.id}
               initial={result.data.myApplication}
               recruitNo={result.data.selectedRecruitNo}
               applicantPlayer={result.data.applicantPlayer!}
               applyDate={result.data.applyDate}
               mode={result.data.round.mode}
-              closed={result.data.round.closed}
-              capacity={result.data.round.capacity}
-              participantCount={result.data.counts.applied + result.data.counts.confirmed}
-            />
-          ) : result.data.currentSeason.applicationsOpen && result.data.myApplication ? (
-            <ApplicationActions
-              key={`${result.data.currentSeason.id}:${result.data.applyDate}:${result.data.selectedRecruitNo}`}
-              initial={result.data.myApplication}
-              recruitNo={result.data.selectedRecruitNo}
-              applicantPlayer={result.data.applicantPlayer!}
-              applyDate={result.data.applyDate}
-              mode={result.data.round.mode}
-              closed={result.data.round.closed}
+              closed={result.data.round.closed || !result.data.currentSeason.applicationsOpen}
               capacity={result.data.round.capacity}
               participantCount={result.data.counts.applied + result.data.counts.confirmed}
             />

@@ -71,7 +71,7 @@ async function applicationPage(data) {
   return page.default({ searchParams: Promise.resolve({ recruitNo: String(data.selectedRecruitNo) }) });
 }
 
-test("season, date and round changes replace application form state in both editable branches", async () => {
+test("date and season changes preserve the editor for explicit target comparison; navigating rounds resets it", async () => {
   for (const canApply of [true, false]) {
     const identity = async (options) => {
       const tree = await applicationPage(hub({ ...options, canApply }));
@@ -80,7 +80,9 @@ test("season, date and round changes replace application form state in both edit
       return form.key;
     };
     const keys = await Promise.all([{}, { recruitNo: 2 }, { applyDate: "2026-10-06" }, { seasonId: "season-two" }].map(identity));
-    assert.equal(new Set(keys).size, 4, "each application identity must receive its own selected positions and reserve state");
+    assert.notEqual(keys[1], keys[0], "explicit round navigation starts that round editor");
+    assert.equal(keys[2], keys[0], "day refresh preserves draft for target comparison");
+    assert.equal(keys[3], keys[0], "season refresh preserves draft for target comparison");
     assert.equal(await identity({ revision: 2 }), keys[0], "same-round refresh must preserve local edits");
   }
 });
@@ -106,10 +108,12 @@ test("closed season or round shows its lifecycle before new-application authenti
         else data.round.closed = true;
         const tree = await applicationPage(data);
         const html = renderToStaticMarkup(tree);
-        assert.match(html, /신청 기간이 마감되었어요/u, `${closure}/${viewer}/${hasActivePlayer}`);
-        assert.match(html, /href="\/recruits">다른 모집 보기/u);
+        if (viewer !== "APPROVED" || !hasActivePlayer) assert.match(html, /신청 기간이 마감되었어요/u, `${closure}/${viewer}/${hasActivePlayer}`);
+        if (viewer !== "APPROVED" || !hasActivePlayer) assert.match(html, /href="\/recruits">다른 모집 보기/u);
         assert.doesNotMatch(html, /href="(?:\/login\?|\/account")|로그인·승인 필요|연결된 활성 플레이어가 필요/u);
-        assert.equal(find(tree, (node) => node.type === ApplicationActions), null);
+        const form = find(tree, (node) => node.type === ApplicationActions);
+        if (viewer === "APPROVED" && hasActivePlayer) assert.equal(form.props.closed, true);
+        else assert.equal(form, null);
       }
     }
     for (const [status, label] of Object.entries({ APPLIED: "신청", RESERVE: "예비", CONFIRMED: "확정", REJECTED: "거절", CANCELLED: "취소" })) {
@@ -119,7 +123,7 @@ test("closed season or round shows its lifecycle before new-application authenti
       else data.round.closed = true;
       const tree = await applicationPage(data);
       assert.equal(find(tree, (node) => node.props.id === "my-status-title").props.children, label);
-      assert.equal(find(tree, (node) => node.type === ApplicationActions), null, "closed records remain readable without mutation controls");
+      assert.equal(find(tree, (node) => node.type === ApplicationActions).props.closed, true, "the draft stays mounted with mutations disabled");
       assert.match(renderToStaticMarkup(tree), /2026-10-05 · 2회차 · 주 미드/u);
     }
   }

@@ -14,17 +14,17 @@ export function KakaoSettingsForm({ initial, readOnly = false }: { initial: Kaka
   const [settings, setSettings] = useState(initial);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   async function submit(event: FormEvent) {
-    event.preventDefault(); if (readOnly) return; setState("saving");
+    event.preventDefault(); if (readOnly || state === "saving") return; setState("saving");
     const payload = Object.fromEntries([...Object.keys(labels), "maxMessageLength"].map((key) => [key, settings[key as keyof KakaoOperationSettingsDto]]));
     const response = await fetch("/api/admin/kakao/settings", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "If-Match": `"${settings.revision}"`, "Idempotency-Key": crypto.randomUUID() }, body: JSON.stringify(payload) }).catch(() => null);
     if (!response?.ok) { setState("error"); return; }
-    const body = await response.json() as { settings?: KakaoOperationSettingsDto };
-    if (!body.settings) { setState("error"); return; }
+    const body = await response.json().catch(() => null) as { settings?: KakaoOperationSettingsDto } | null;
+    if (!body?.settings) { setState("error"); return; }
     setSettings(body.settings); setState("saved");
   }
-  return <form className={styles.settingsForm} onSubmit={submit}>
+  return <form className={styles.settingsForm} onSubmit={submit} aria-busy={state === "saving"} onChange={() => { if (state !== "saving") setState("idle"); }}>
     {readOnly ? <p>조회 전용입니다. 설정 변경은 최고 관리자에게 요청해 주세요.</p> : null}
-    <fieldset disabled={readOnly} style={{ border: 0, padding: 0 }}><legend className="sr-only">카카오 운영 설정</legend>
+    <fieldset disabled={readOnly || state === "saving"} style={{ border: 0, padding: 0 }}><legend className="sr-only">카카오 운영 설정</legend>
     <div className={styles.checks}>{(Object.keys(labels) as (keyof typeof labels)[]).map((key) => <label key={key}><input type="checkbox" checked={settings[key]} onChange={(event) => setSettings({ ...settings, [key]: event.target.checked })}/><span>{labels[key]}</span></label>)}</div>
     <label className={styles.numberField}><span>메시지 최대 길이</span><input type="number" min={100} max={10000} value={settings.maxMessageLength} onChange={(event) => setSettings({ ...settings, maxMessageLength: Number(event.target.value) })}/></label>
     </fieldset>

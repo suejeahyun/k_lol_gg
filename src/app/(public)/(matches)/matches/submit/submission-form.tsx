@@ -62,6 +62,9 @@ export function SubmissionForm({
   const [navigationPending, startNavigation] = useTransition();
   const busy = mutationPending || navigationPending;
   const [editing, setEditing] = useState(false);
+  const [conflict, setConflict] = useState(false);
+  const [latestSubmission, setLatestSubmission] = useState<MatchSubmissionView | null>(null);
+  const [formVersion, setFormVersion] = useState(0);
   const mutationKeys = useRef(new ClientMatchMutationKeyStore("match-submission")).current;
   const createRequestIds = useRef(new ClientMatchMutationKeyStore("match-submission-request")).current;
 
@@ -93,6 +96,24 @@ export function SubmissionForm({
       setError(true); setMessage("MR2로 시작하는 대문자 접수 코드 19자를 확인해 주세요."); return;
     }
     startNavigation(() => router.push(`/matches/submit?code=${encodeURIComponent(resumeCode)}`));
+  }
+
+  async function recoverConflict() {
+    if (!submission) return;
+    setConflict(true);
+    setLatestSubmission(null);
+    setBusy(true);
+    setError(true);
+    setMessage("다른 작업으로 접수가 변경됐어요. 작성한 입력은 유지했습니다. 최신값과 비교해 주세요.");
+    try {
+      const response = await fetch(`/api/me/match-submissions/${submission.publicCode}`, { cache: "no-store", headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(await problemMessage(response));
+      const result = await response.json() as { submission?: MatchSubmissionView };
+      if (!result.submission || result.submission.id !== submission.id || !Number.isSafeInteger(result.submission.revision)) throw new Error("최신 접수를 확인하지 못했어요.");
+      setLatestSubmission(result.submission);
+    } catch {
+      setMessage("최신 접수를 불러오지 못했어요. 입력은 유지했습니다. 최신값 다시 불러오기를 눌러 주세요.");
+    } finally { setBusy(false); }
   }
 
   async function createSubmission(event: React.FormEvent<HTMLFormElement>) {
@@ -143,7 +164,7 @@ export function SubmissionForm({
   }
 
   async function upload(gameNumber: number, file: File | undefined) {
-    if (busy || !submission || !file) return;
+    if (busy || conflict || !submission || !file) return;
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size < 12 || file.size > MATCH_IMAGE_MAX_BYTES) {
       setError(true); setMessage("PNG, JPEG, WebP 이미지만 4MiB 이하로 선택해 주세요."); return;
     }
@@ -188,6 +209,14 @@ export function SubmissionForm({
         });
         if (reconcile.ok) {
           const latest = await reconcile.json() as { submission: MatchSubmissionView };
+          if (editing && latest.submission.revision !== submission.revision) {
+            setConflict(true);
+            setLatestSubmission(latest.submission);
+            setError(true);
+            setMessage("이미지 등록 확인 중 접수의 변경을 확인했어요. 작성한 입력은 유지했습니다. 최신값과 비교해 주세요.");
+            if (uploadTicket && latest.submission.receivedGameNumbers.includes(gameNumber)) mutationKeys.complete(uploadTicket);
+            return;
+          }
           setSubmission(latest.submission);
           if (latest.submission.receivedGameNumbers.includes(gameNumber)) {
             if (uploadTicket) mutationKeys.complete(uploadTicket);
@@ -204,7 +233,7 @@ export function SubmissionForm({
 
   async function updateSubmission(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !submission) return;
+    if (busy || conflict || !submission) return;
     const data = new FormData(event.currentTarget);
     const startedLocal = String(data.get("startedAt") ?? "");
     const body = {
@@ -234,6 +263,7 @@ export function SubmissionForm({
         },
         body: JSON.stringify(body),
       });
+      if (response.status === 412) { mutationKeys.complete(commandTicket); await recoverConflict(); return; }
       if (!response.ok) throw new Error(await problemMessage(response));
       const updated = await response.json() as { status: MatchSubmissionView["status"]; revision: number };
       mutationKeys.complete(commandTicket);
@@ -252,7 +282,7 @@ export function SubmissionForm({
   }
 
   async function cancelSubmission() {
-    if (busy || !submission || !window.confirm("이 결과 접수를 취소할까요? 취소한 접수는 다시 수정할 수 없어요.")) return;
+    if (busy || conflict || !submission || !window.confirm("이 결과 접수를 취소할까요? 취소한 접수는 다시 수정할 수 없어요.")) return;
     setBusy(true); setError(false); setMessage("접수를 취소하고 있어요…");
     const commandTicket = mutationKeys.issue(
       `POST:/api/me/match-submissions/${submission.id}/cancel`,
@@ -269,6 +299,7 @@ export function SubmissionForm({
         },
         body: "{}",
       });
+      if (response.status === 412) { mutationKeys.complete(commandTicket); await recoverConflict(); return; }
       if (!response.ok) throw new Error(await problemMessage(response));
       const updated = await response.json() as { status: MatchSubmissionView["status"]; revision: number };
       mutationKeys.complete(commandTicket);
@@ -291,6 +322,16 @@ export function SubmissionForm({
         })}
       </ol> : null}
       {message ? <p className={styles.status} data-error={error} data-busy={busy ? "true" : undefined} role={error ? "alert" : "status"}>{message}</p> : null}
+      {conflict ? <section className={styles.panel} role="alert" aria-busy={busy}>
+        <h2>최신 접수와 비교</h2>
+        {latestSubmission ? <>
+          <dl><dt>최신 상태</dt><dd>{STATUS_LABEL[latestSubmission.status]}</dd><dt>경기 제목</dt><dd>{latestSubmission.title}</dd><dt>주최자</dt><dd>{latestSubmission.organizer}</dd><dt>경기 날짜·회차</dt><dd>{latestSubmission.playedOn} · {latestSubmission.seriesNumber}회</dd><dt>시즌</dt><dd>{latestSubmission.seasonName ?? "미지정"}</dd><dt>시작 시각</dt><dd>{latestSubmission.startedAt ? new Date(latestSubmission.startedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : "미입력"}</dd><dt>게임 수·이미지</dt><dd>{latestSubmission.expectedGameCount}게임 · {latestSubmission.receivedGameNumbers.length}장</dd><dt>메모</dt><dd>{latestSubmission.note ?? "없음"}</dd></dl>
+          <div className={styles.actions}>
+            {latestSubmission.status === "AWAITING_UPLOAD" ? <button type="button" disabled={busy} onClick={() => { setSubmission(latestSubmission); setConflict(false); setLatestSubmission(null); setMessage("작성한 입력을 유지했어요. 비교한 뒤 다시 저장해 주세요."); }}>내 입력 유지</button> : null}
+            <button type="button" disabled={busy} onClick={() => { setSubmission(latestSubmission); setConflict(false); setLatestSubmission(null); setFormVersion((value) => value + 1); if (latestSubmission.status !== "AWAITING_UPLOAD") setEditing(false); setError(false); setMessage("입력을 버리고 최신 접수를 불러왔어요."); }}>입력 버리고 최신값 사용</button>
+          </div>
+        </> : <button type="button" disabled={busy} onClick={() => void recoverConflict()}>최신값 다시 불러오기</button>}
+      </section> : null}
       {recoveringCode ? null : !submission ? (
         <section className={styles.panel} aria-labelledby="new-submission-title">
           <h2 id="new-submission-title">새 결과 접수</h2>
@@ -324,8 +365,8 @@ export function SubmissionForm({
             <span><strong>{submission.receivedGameNumbers.length}</strong> / {submission.expectedGameCount}장 등록</span>
             <i aria-hidden="true"><b style={{ width: `${submission.receivedGameNumbers.length / submission.expectedGameCount * 100}%` }} /></i>
           </div>
-          {submission.status === "AWAITING_UPLOAD" ? <div className={styles.actions}><button type="button" disabled={busy} onClick={() => setEditing((current) => !current)}>{editing ? "수정 닫기" : "접수 정보 수정"}</button><button type="button" disabled={busy} data-danger="true" onClick={cancelSubmission}>접수 취소</button></div> : submission.status === "PENDING_REVIEW" ? <div className={styles.actions}><button type="button" disabled={busy} data-danger="true" onClick={cancelSubmission}>검토 요청 취소</button></div> : null}
-          {editing ? <form className={styles.form} onSubmit={updateSubmission}>
+          {submission.status === "AWAITING_UPLOAD" ? <div className={styles.actions}><button type="button" disabled={busy || conflict} onClick={() => setEditing((current) => !current)}>{editing ? "수정 닫기" : "접수 정보 수정"}</button><button type="button" disabled={busy || conflict} data-danger="true" onClick={cancelSubmission}>접수 취소</button></div> : submission.status === "PENDING_REVIEW" ? <div className={styles.actions}><button type="button" disabled={busy || conflict} data-danger="true" onClick={cancelSubmission}>검토 요청 취소</button></div> : null}
+          {editing ? <form key={formVersion} className={styles.form} onSubmit={updateSubmission}>
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} defaultValue={submission.title} /></label>
             <label>주최자<input name="organizer" required maxLength={100} defaultValue={submission.organizer} /></label>
             <label>회차<input name="seriesNumber" type="number" min={1} defaultValue={submission.seriesNumber} required /></label>
@@ -334,12 +375,12 @@ export function SubmissionForm({
             <label>진행한 게임 수<select name="expectedGameCount" defaultValue={submission.expectedGameCount} disabled={submission.receivedGameNumbers.length > 0}><option value="2">2게임</option><option value="3">3게임</option></select>{submission.receivedGameNumbers.length > 0 ? <input type="hidden" name="expectedGameCount" value={submission.expectedGameCount} /> : null}</label>
             <label>시즌(선택)<select name="seasonId" defaultValue={submission.seasonId ?? ""}><option value="">운영자가 확인 후 선택</option>{seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
             <label className={styles.wide}>비공개 전달 메모<textarea name="note" maxLength={1000} defaultValue={submission.note ?? ""} /></label>
-            <button type="submit" disabled={busy}>수정 저장</button>
+            <button type="submit" disabled={busy || conflict}>수정 저장</button>
           </form> : null}
           <div className={styles.uploadGrid}>
             {Array.from({ length: submission.expectedGameCount }, (_, index) => index + 1).map((gameNumber) => {
               const done = submission.receivedGameNumbers.includes(gameNumber);
-              return <label className={styles.upload} data-done={done} key={gameNumber}><strong>{gameNumber}게임 {done ? "등록 완료" : "이미지"}</strong><span>PNG · JPEG · WebP, 최대 4MiB</span>{!done && submission.status === "AWAITING_UPLOAD" ? <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(event) => {
+              return <label className={styles.upload} data-done={done} key={gameNumber}><strong>{gameNumber}게임 {done ? "등록 완료" : "이미지"}</strong><span>PNG · JPEG · WebP, 최대 4MiB</span>{!done && submission.status === "AWAITING_UPLOAD" ? <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy || conflict} onChange={(event) => {
                 const file = event.currentTarget.files?.[0];
                 event.currentTarget.value = "";
                 void upload(gameNumber, file);

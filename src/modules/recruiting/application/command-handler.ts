@@ -159,7 +159,8 @@ function validateCommand(command: RecruitingCommand) {
     const payload = command.payload as unknown as Record<string, unknown>;
     if (
       !payload || typeof payload !== "object" || Array.isArray(payload) ||
-      Object.keys(payload).length !== 1 || typeof payload.name !== "string" ||
+      Object.keys(payload).some((key) => key !== "name" && key !== "reserve") || typeof payload.name !== "string" ||
+      (payload.reserve !== undefined && typeof payload.reserve !== "boolean") ||
       !payload.name || payload.name !== payload.name.trim() || payload.name.length > 80 || /[\u0000-\u001f\u007f]/u.test(payload.name)
     ) throw new RecruitingApplicationError("INVALID_COMMAND", "Party member commands require one valid name.");
   }
@@ -270,7 +271,7 @@ function scrimSnapshot(scrim: ScrimRecruit | null): JsonObject | null {
 
 function partyJson(party: RecruitParty): JsonObject {
   const dto = toPublicPartyDto(party);
-  return { id: dto.id, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: dto.maximumMembers, startTimeText: dto.startTimeText, gameInfo: dto.gameInfo, organizerText: dto.organizerText, scheduledStartAt: dto.scheduledStartAt };
+  return { id: dto.id, recruitDate: dto.recruitDate, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: dto.maximumMembers, startTimeText: dto.startTimeText, gameInfo: dto.gameInfo, organizerText: dto.organizerText, scheduledStartAt: dto.scheduledStartAt };
 }
 
 function scrimJson(scrim: ScrimRecruit): JsonObject {
@@ -391,7 +392,7 @@ export class RecruitingCommandHandler {
         try {
           const result = mutateRecruitPartyMember({
             party: party!,
-            mutation: { action: command.type === "PARTY_MEMBER_ADD" ? "ADD" : "REMOVE", name: command.payload.name },
+            mutation: { action: command.type === "PARTY_MEMBER_ADD" ? "ADD" : "REMOVE", name: command.payload.name, reserve: command.payload.reserve },
             now,
           });
           nextParty = result.party;

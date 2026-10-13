@@ -134,8 +134,9 @@ function compactBundleSource(value) {
 }
 
 // Preserve V1 executable lines verbatim; only the maintained adapter/transport
-// omit horizontal padding beside delimiters/assignments. Token offsets protect strings and
-// regular expressions, and retained newlines preserve automatic semicolons.
+// omit horizontal padding beside delimiters and unambiguous operators. Token offsets protect strings and
+// regular expressions. Remove a newline only after an explicit semicolon and
+// before a closing block; all automatic-semicolon boundaries remain intact.
 function compactAdapterSource(value) {
   const source = compactBundleSource(value);
   const tokens = [...acorn.tokenizer(source, { ecmaVersion: 5, allowReserved: true })];
@@ -144,7 +145,8 @@ function compactAdapterSource(value) {
     const previous = tokens[index - 1];
     const current = tokens[index];
     const gap = source.slice(previous.end, current.start);
-    if (/^[ \t]+$/u.test(gap) && [previous, current].some((token) => [",", ";", "(", ")", "{", "}", "="].includes(token.type.label))) {
+    const closesTerminatedBlock = previous.type.label === ";" && current.type.label === "}" && /^[ \t\r\n]+$/u.test(gap);
+    if (closesTerminatedBlock || /^[ \t]+$/u.test(gap) && [previous, current].some((token) => [",", ";", "(", ")", "{", "}", "=", "==/!=/===/!==", "&&", "||", "</>/<=/>=", "?", ":"].includes(token.type.label))) {
       result = result.slice(0, previous.end) + result.slice(current.start);
     }
   }
@@ -272,9 +274,10 @@ const entry = [
   "  var sourceReplier = replier;",
   "  var guardedReplier = {",
   "    reply: function (value) {",
-  "      if (KLOL_V1_GATEWAY.shouldSuppressReply()) return;",
-  "      sourceReplier.reply(value);",
-  "      KLOL_V1_GATEWAY.markReplySent();",
+  "      if (KLOL_V1_GATEWAY.shouldSuppressReply()) return true;",
+  "      if (sourceReplier.reply(value) === false) return false;",
+  "      KLOL_V1_GATEWAY.markReplySent(value);",
+  "      return true;",
   "    }",
   "  };",
   "  if (isRetiredScrimInput(localText)) {",
@@ -291,10 +294,7 @@ const entry = [
   "  try {",
   "    if (handleCopyRosterForm(msg, room, sender, guardedReplier)) return;",
   "    if (handleRecruitCodeCommand(msg, room, sender, guardedReplier)) return;",
-  "    if (/^\\/?내전[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) {",
-  "      handlePartyRecruitApi(\"\", room, msg, sender, guardedReplier, \"\", \"FEATURES\");",
-  "      return;",
-  "    }",
+  "    if (handleInhouseFinishCommand(msg, room, sender, guardedReplier)) return;",
   "    if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;",
   // The legacy response probes images synchronously before routing commands.
   // Text notifications do not need image extraction; retain actual image input.
@@ -306,7 +306,7 @@ const entry = [
   "    KLOL_V1_GATEWAY.finish();",
   "  }",
   "}",
-].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
+].map((line) => line.trimStart()).join("\n");
 const operationCandidateBinding = [
   "var isOperationFormCompleteMessage = isOperationFormMessage;",
   "isOperationFormMessage = isOperationFormCandidateMessage;",
@@ -413,8 +413,8 @@ if (!output.includes("if (handleMemberMutationCommand(msg, room, sender, guarded
 if (!output.includes("if (isOpenChatBotInhouseLoadingNotice(msg, sender)) return;")) {
   throw new Error("V1-strict output must ignore the OpenChat bot's in-house loading notice");
 }
-if (!output.includes("if (KLOL_V1_GATEWAY.shouldSuppressReply()) return;") ||
-    !output.includes("KLOL_V1_GATEWAY.markReplySent();")) {
+if (!output.includes("if (KLOL_V1_GATEWAY.shouldSuppressReply()) return true;") ||
+    !output.includes("KLOL_V1_GATEWAY.markReplySent(value);")) {
   throw new Error("V1-strict output must suppress only callbacks whose visible reply was already sent");
 }
 if (!output.includes("상세 번호 추가/삭제 이름") ||

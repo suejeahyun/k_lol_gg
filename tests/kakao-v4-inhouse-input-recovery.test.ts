@@ -47,7 +47,7 @@ test("real RIFT input recovers one missing position slash and accepts empty flex
     const text = form(secondName);
     const classification = classifyKakaoV4Command({ profileId: "FEATURES", text });
     assert.equal(classification.kind, "SNAPSHOT", secondName);
-    const command = canonicalizeKakaoV4Command(classification, envelope(text));
+    const command = canonicalizeKakaoV4Command(classification, envelope(text), new Date((envelope(text)).timestamp * 1_000));
     assert.equal(command?.domain, "SEASON", secondName);
     assert.equal(command?.action, "SYNC", secondName);
     if (command?.domain !== "SEASON" || command.action !== "SYNC") continue;
@@ -115,7 +115,7 @@ test("mixed real-world rows keep valid entries, route partial rows to review, an
   ].join("\n");
   const command = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "FEATURES", text }),
-    envelope(text),
+    envelope(text), new Date((envelope(text)).timestamp * 1_000)
   );
   assert.equal(command, null, "missing or invalid RIFT lanes reject the entire form before writing");
 });
@@ -126,7 +126,7 @@ test("a final empty duplicate row means cancellation while a missing numbered ro
     .replace(String.raw`9\.`, "9. 유지/M/M/TOP/SUP\r\n9.");
   const command = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "FEATURES", text }),
-    envelope(text),
+    envelope(text), new Date((envelope(text)).timestamp * 1_000)
   );
   assert.equal(command?.domain, "SEASON");
   assert.equal(command?.action, "SYNC");
@@ -141,7 +141,7 @@ test("an incomplete duplicate footer cannot replace a valid slot while valid edi
     .concat("\r\n1. 승리팀 랜덤 1인 스킨 증정");
   const command = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "FEATURES", text }),
-    envelope(text),
+    envelope(text), new Date((envelope(text)).timestamp * 1_000)
   );
   assert.equal(command?.domain, "SEASON");
   assert.equal(command?.action, "SYNC");
@@ -171,7 +171,7 @@ test("numbered footer text after a complete empty roster cannot create a pending
     .concat("\r\n1. 승리팀 랜덤 1인 스킨 증정");
   const command = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "FEATURES", text }),
-    envelope(text),
+    envelope(text), new Date((envelope(text)).timestamp * 1_000)
   );
   assert.equal(command?.domain, "SEASON");
   assert.equal(command?.action, "SYNC");
@@ -184,7 +184,7 @@ test("valid edits and explicit cancellation after a complete roster remain last-
   const validEditText = form().concat("\r\n1. 수정/M/M/MID/ADC");
   const validEdit = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "FEATURES", text: validEditText }),
-    envelope(validEditText),
+    envelope(validEditText), new Date((envelope(validEditText)).timestamp * 1_000)
   );
   assert.equal(validEdit?.domain, "SEASON");
   assert.equal(validEdit?.action, "SYNC");
@@ -201,7 +201,7 @@ test("valid edits and explicit cancellation after a complete roster remain last-
   const cancelledText = form().concat("\r\n1.");
   const cancelled = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "FEATURES", text: cancelledText }),
-    envelope(cancelledText),
+    envelope(cancelledText), new Date((envelope(cancelledText)).timestamp * 1_000)
   );
   assert.equal(cancelled?.domain, "SEASON");
   assert.equal(cancelled?.action, "SYNC");

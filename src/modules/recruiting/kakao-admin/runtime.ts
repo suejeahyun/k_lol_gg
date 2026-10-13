@@ -8,12 +8,12 @@ export function getRuntimeKakaoAdmin() {
   try { return new PostgresKakaoAdmin(getDatabase()); } catch { return null; }
 }
 
-export async function isRuntimeKakaoFeatureEnabled(feature: KakaoFeature, operationMessage?: string) {
+export async function isRuntimeKakaoFeatureEnabled(feature: KakaoFeature | null, operationMessage?: string) {
   const runtime = getRuntimeKakaoAdmin();
   if (!runtime) return false;
   try {
     const settings = await runtime.getSettings();
-    return settings.globalEnabled && !settings.maintenanceMode && settings[feature] &&
+    return settings.globalEnabled && !settings.maintenanceMode && (feature === null || settings[feature]) &&
       (operationMessage === undefined || isKakaoOperationMessageAllowed(operationMessage, settings.maxMessageLength));
   } catch { return false; }
 }

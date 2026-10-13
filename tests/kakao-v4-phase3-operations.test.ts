@@ -55,7 +55,7 @@ const context: KakaoV4DispatchContext = Object.freeze({
 
 function canonical(text: string) {
   const envelope = { ...featuresEnvelope, text };
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), envelope);
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), envelope, new Date((envelope).timestamp * 1_000));
 }
 
 function harness(operationForms?: KakaoV4OperationFormsPort) {

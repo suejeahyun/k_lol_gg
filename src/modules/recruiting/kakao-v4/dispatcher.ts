@@ -9,7 +9,7 @@ import {
   sealRecruitingCommand,
   type RecruitingCommand,
 } from "../application/commands";
-import type { RecruitingCodeTarget, RecruitingCommandResult, RecruitingCompatTargetInput } from "../application/ports";
+import type { RecruitingCodeTarget, RecruitingCommandResult, RecruitingCompatTargetInput, RecruitingPartyReplay, RecruitingPartyReplayInput } from "../application/ports";
 import { isPartyFormCode } from "../application/party-copy-snapshot";
 import { decodeV1StrictScrimTimeText } from "../domain/v1-strict-scrim-time";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
@@ -52,10 +52,12 @@ type SignedAssistantInput = Readonly<{
   intent: VerifiedKakaoWebhookIntent;
   requestKey: string;
   scope: string;
+  now?: Date;
 }>;
 
 export type KakaoV4RecruitingPort = Readonly<{
   handle(command: RecruitingCommand): Promise<RecruitingCommandResult>;
+  findPartyEventReplay?(input: RecruitingPartyReplayInput): Promise<RecruitingPartyReplay | null>;
   resolveCompatTarget(input: RecruitingCompatTargetInput): Promise<Readonly<{ id: string; revision: number }> | null>;
   resolvePartyRecruitCode?(input: Readonly<{ sourceRoomId: string; code: string }>): Promise<RecruitingCodeTarget | null>;
   resolveScrimUpsert(input: Readonly<{
@@ -103,6 +105,8 @@ export type KakaoV4DispatchContext = Readonly<{
   requestDigestHex: string;
   requestId: string;
   authorization: KakaoV4InstallationAuthorization;
+  /** Trusted server instant; the envelope timestamp is only an authentication input. */
+  now?: Date;
 }>;
 
 export type KakaoV4DispatcherResult = Readonly<{
@@ -157,6 +161,7 @@ function signedInput(context: KakaoV4DispatchContext): SignedAssistantInput {
     intent: authorizationIntent(context),
     requestKey: context.envelope.eventId,
     scope: KAKAO_V4_EVENT_SCOPE,
+    now: context.now,
   });
 }
 
@@ -598,6 +603,8 @@ export class KakaoV4CommandDispatcher {
   }>) {}
 
   async dispatch(context: KakaoV4DispatchContext, command: CanonicalKakaoV4Command): Promise<KakaoV4DispatcherResult> {
+    context = { ...context, now: context.now ?? new Date() };
+    if (!Number.isFinite(context.now!.getTime())) throw new KakaoV4DispatcherError("INVALID_COMMAND");
     const requiredProfile = requiredProfileForKakaoV4Command(command);
     if (
       context.envelope.profileId !== requiredProfile ||
@@ -691,7 +698,7 @@ export class KakaoV4CommandDispatcher {
       projection,
       partyTarget: partyTarget ? { recruitDate: partyTarget.recruitDate, recruitNumber: partyTarget.recruitNumber,
         ...(partyTarget.partyId ? { partyId: partyTarget.partyId } : {}) } : undefined,
-      now: new Date(context.envelope.timestamp * 1_000),
+      now: context.now,
       afterMutation,
     });
   }
@@ -729,7 +736,7 @@ export class KakaoV4CommandDispatcher {
 
   private async latestPartyForm(context: KakaoV4DispatchContext, recruitNumber: number, reply?: string, target?: Readonly<{ recruitDate: string; partyId?: string; recruitCode?: string }>) {
     try {
-      const date = target?.recruitDate ?? recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
+      const date = target?.recruitDate ?? recruitingOperatingDateKey(context.now!);
       const status = await this.openChatStatus(context, "PARTY", true, { recruitDate: date, recruitNumber, ...(target?.partyId ? { partyId: target.partyId } : {}) });
       const party = status.body.parties.find((item) => item.recruitDate === date && item.recruitNumber === recruitNumber && (!target?.partyId || item.id === target.partyId));
       if (!party) return `${reply ?? "저장했습니다."}\n\n최신 양식을 찾지 못했습니다. 구인현황을 확인해 주세요.`;
@@ -780,6 +787,28 @@ export class KakaoV4CommandDispatcher {
     context: KakaoV4DispatchContext,
     command: Extract<CanonicalKakaoV4Command, { domain: "PARTY" }>,
   ): Promise<KakaoV4DispatcherResult> {
+    const operation = command.action === "BY_CODE" ? command.operation : command.action;
+    if (operation === "ADD_MEMBER" || operation === "REMOVE_MEMBER" || operation === "FINISH") {
+      const replay = await this.dependencies.recruiting.findPartyEventReplay?.({
+        actorPrincipalId: actorPrincipalId(context.envelope), eventId: context.envelope.eventId,
+        bodyDigestHex: context.requestDigestHex, sourceRoomId: context.authorization.roomId, now: context.now!,
+        commandType: operation === "FINISH" ? "FINISH_PARTY" : operation === "ADD_MEMBER" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE",
+      });
+      if (replay) {
+        const target = { ...replay.target, partyId: replay.target.id };
+        let reply: string;
+        if (operation === "FINISH") {
+          reply = await this.appendLatestPartyStatus(context,
+            `✅ 파티 #${target.recruitNumber} ${replay.body.status === "CANCELED" ? "초안 취소" : "마감"} 완료`);
+        } else {
+          const data = partyMemberResultData(replay.body.data, { recruitNumber: target.recruitNumber,
+            action: operation === "ADD_MEMBER" ? "ADD" : "REMOVE", name: "name" in command ? command.name : "" });
+          if (!data) throw new KakaoV4DispatcherError("UNAVAILABLE");
+          reply = await this.latestPartyForm(context, target.recruitNumber, partyMemberMutationReply(data), target);
+        }
+        return { kind: "PARTY", action: command.action, aggregate: replay.body, legacyReply: reply, replayed: true };
+      }
+    }
     if (command.action === "BY_CODE" || command.action === "SYNC" && parseRecruitFormReference(command.payload.parsedForm?.saveReference)) {
       const reference = command.action === "SYNC" ? parseRecruitFormReference(command.payload.parsedForm?.saveReference)! : null;
       const fixedCode = command.action === "BY_CODE" ? command.recruitCode : reference!.code;
@@ -795,7 +824,7 @@ export class KakaoV4CommandDispatcher {
       const target = { recruitDate: resolved.recruitDate, recruitNumber: resolved.recruitNumber, partyId: resolved.id, recruitCode: fixedCode };
       if (command.action === "BY_CODE") {
         return this.party(context, command.operation === "ADD_MEMBER" || command.operation === "REMOVE_MEMBER"
-          ? { domain: "PARTY", action: command.operation, target, name: command.name }
+          ? { domain: "PARTY", action: command.operation, target, name: command.name, ...(command.reserve ? { reserve: true } : {}) }
           : { domain: "PARTY", action: command.operation, target });
       }
       command = { ...command, target };
@@ -851,7 +880,7 @@ export class KakaoV4CommandDispatcher {
         type: commandType,
         aggregateId: target.id,
         metadata: commandMetadata(context, target.revision),
-        payload: { name: command.name },
+        payload: { name: command.name, ...(command.reserve ? { reserve: true } : {}) },
       });
       let result: RecruitingCommandResult;
       try {
@@ -882,11 +911,19 @@ export class KakaoV4CommandDispatcher {
         name: command.name,
       });
       if (!data) throw new KakaoV4DispatcherError("UNAVAILABLE");
+      // A concurrent original may commit between the preflight read and handle.
+      // Bind the follow-up form to that receipt, not today's pre-resolved number.
+      const committedReplay = result.replayed ? await this.dependencies.recruiting.findPartyEventReplay?.({
+        actorPrincipalId: actorPrincipalId(context.envelope), eventId: context.envelope.eventId,
+        bodyDigestHex: context.requestDigestHex, sourceRoomId: context.authorization.roomId, now: context.now!, commandType,
+      }) : null;
+      const replyTarget = committedReplay ? { ...committedReplay.target, partyId: committedReplay.target.id } : command.target;
+      if (result.replayed && !committedReplay && result.body.aggregateId !== target.id) throw new KakaoV4DispatcherError("UNAVAILABLE");
       return Object.freeze({
         kind: "PARTY",
         action: command.action,
         aggregate: result.body,
-        legacyReply: await this.latestPartyForm(context, command.target.recruitNumber, partyMemberMutationReply(data), command.target),
+        legacyReply: await this.latestPartyForm(context, data.recruitNumber, partyMemberMutationReply(data), replyTarget),
         replayed: result.replayed,
       });
     }
@@ -925,7 +962,7 @@ export class KakaoV4CommandDispatcher {
               revision: result.body.revision,
               formCode: typeof result.body.data.formCode === "string" ? result.body.data.formCode : undefined,
               recruitNumber,
-              recruitDate: command.payload.recruitDate,
+              recruitDate: typeof result.body.data.recruitDate === "string" ? result.body.data.recruitDate : command.payload.recruitDate,
               partyType: command.payload.partyType,
               title: command.payload.title,
               maximumMembers: command.payload.maximumMembers,
@@ -935,7 +972,7 @@ export class KakaoV4CommandDispatcher {
               revision: result.body.revision,
               formCode: typeof result.body.data.formCode === "string" ? result.body.data.formCode : undefined,
               recruitNumber,
-              recruitDate: command.payload.recruitDate,
+              recruitDate: typeof result.body.data.recruitDate === "string" ? result.body.data.recruitDate : command.payload.recruitDate,
               partyType: command.payload.partyType,
               title: command.payload.title,
               maximumMembers: command.payload.maximumMembers,
@@ -999,7 +1036,7 @@ export class KakaoV4CommandDispatcher {
             payload: {
               members: command.payload.members,
               copyGuard: command.payload.parsedForm ? {
-                operatingDate: command.target.partyId ? command.target.recruitDate : recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000)),
+                operatingDate: command.target.partyId ? command.target.recruitDate : recruitingOperatingDateKey(context.now!),
                 saveReference: command.payload.parsedForm.saveReference,
                 submittedPartyType: command.payload.parsedForm.submittedTitle?.partyType,
                 submittedMaximumMembers: command.payload.parsedForm.submittedTitle?.maximumMembers,
@@ -1093,7 +1130,7 @@ export class KakaoV4CommandDispatcher {
           ? `이번 요청으로 변경된 내용은 없어요.\n예전 양식의 빈칸으로는 이후 참가자를 삭제하지 않아요. 아래 최신 양식에서 이름을 지우거나 '구인상세 ${command.action === "SYNC" ? command.target.recruitCode ?? recruitNumber : recruitNumber} 삭제 이름'을 입력해 주세요.`
           : "이미 같은 내용으로 저장되어 있어요."
         : `✅ 파티${registered ? "등록" : "수정"} 완료 · #${recruitNumber}${registeredNames ? ` · ${registeredNames}` : ""}`;
-    const legacyReply = command.action === "SYNC" && (editableCopy && data.copyChanged === false || command.target.partyId && command.target.recruitDate !== recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000)))
+    const legacyReply = command.action === "SYNC" && (editableCopy && data.copyChanged === false || command.target.partyId && command.target.recruitDate !== recruitingOperatingDateKey(context.now!))
       ? await this.latestPartyForm(context, recruitNumber, saveReply, command.target)
       : await this.appendLatestPartyStatus(context, saveReply);
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
@@ -1551,7 +1588,7 @@ export class KakaoV4CommandDispatcher {
     } catch (error) {
       if (command.action === "SYNC" && error instanceof KakaoAssistantError &&
           (error.code === "PRECONDITION_FAILED" || error.code === "INVALID_STATE" || error.code === "CONFLICT" || error.code === "INVALID_INPUT")) {
-        const latestOperatingDate = recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
+        const latestOperatingDate = recruitingOperatingDateKey(context.now!);
         const latest = await this.dependencies.assistant.syncSeasonSnapshot({
           ...signedInput(context), requestId: context.requestId,
           command: { action: "STATUS", seasonId: command.seasonId, applyDate: latestOperatingDate, recruitNo: command.applyDate === latestOperatingDate ? command.recruitNumber : null, participants: [] },

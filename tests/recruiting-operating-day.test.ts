@@ -17,7 +17,7 @@ function partyCommand(at: string) {
     nonce: "1".repeat(32),
     text,
   };
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope);
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope, new Date((envelope).timestamp * 1_000));
 }
 
 function scrimCommand(at: string, text: string) {
@@ -30,7 +30,7 @@ function scrimCommand(at: string, text: string) {
     nonce: "2".repeat(32),
     text,
   };
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope);
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope, new Date((envelope).timestamp * 1_000));
 }
 
 test("recruiting operating day changes exactly at 06:00 KST", () => {
@@ -40,7 +40,7 @@ test("recruiting operating day changes exactly at 06:00 KST", () => {
   assert.throws(() => recruitingOperatingDateKey(new Date(Number.NaN)), /INVALID_RECRUITING_OPERATING_INSTANT/u);
 });
 
-test("signed party targets use the envelope instant and the 06:00 KST operating boundary", () => {
+test("signed party targets use the server instant and the 06:00 KST operating boundary", () => {
   assert.deepEqual(partyCommand("2026-09-12T05:59:59.000+09:00"), {
     domain: "PARTY", action: "FINISH", target: { recruitDate: "2026-09-11", recruitNumber: 15 },
   });
@@ -65,4 +65,19 @@ test("signed scrim templates and targets use the same 06:00 KST operating bounda
   assert.deepEqual(scrimCommand("2026-09-12T06:00:00.000+09:00", "스크림상세 15"), {
     domain: "SCRIM", action: "DETAIL", target: { recruitDate: "2026-09-12", recruitNumber: 15 },
   });
+});
+
+test("signed client clock skew cannot select a different business operating day", () => {
+  for (const [serverTime, clientTime, expected] of [
+    ["2026-10-14T05:56:00+09:00", "2026-10-14T06:00:00+09:00", "2026-10-13"],
+    ["2026-10-14T06:01:00+09:00", "2026-10-14T05:57:00+09:00", "2026-10-14"],
+  ]) {
+    for (const text of ["구인상세 2", "2ㅉ", "상세 2 예비 추가 합성참가", "5인 파티"]) {
+      const input: KakaoV4CommandEnvelope = { profileId: "RECRUIT", installationId: "install-" + "1".repeat(32), senderId: "sender-user-" + "2".repeat(32), eventId: "event-server-clock-00001", nonce: "3".repeat(32), timestamp: Date.parse(clientTime!) / 1_000, text };
+      const command = canonicalizeKakaoV4Command(classifyKakaoV4Command(input), input, new Date(serverTime!));
+      assert.ok(command?.domain === "PARTY");
+      const actual = command.action === "CREATE" ? command.payload.recruitDate : "target" in command ? command.target.recruitDate : null;
+      assert.equal(actual, expected, text);
+    }
+  }
 });

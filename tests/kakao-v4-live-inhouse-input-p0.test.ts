@@ -48,7 +48,7 @@ function envelope(text: string, eventId: string): KakaoV4CommandEnvelope {
 
 function canonical(text: string) {
   const input = envelope(text, "event-live-inhouse-canonical-01");
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), input);
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), input, new Date((input).timestamp * 1_000));
 }
 
 test("[P0-INHOUSE-LIVE-01] 동휘/김동휘 실양식은 Mid all을 복구해 같은 semantic payload로 dispatch한다", async () => {

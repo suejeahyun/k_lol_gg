@@ -59,7 +59,7 @@ test("legacy Kakao admin pages permanently redirect to canonical real-state tabs
 });
 
 test("every canonical Kakao handler checks the stored feature policy", async () => {
-  for (const path of ["search-player", "openchat", "scheduled-notice", "season-applications", "image-receive", "managed-forms", "operation-forms", "recruits"]) {
+  for (const path of ["search-player", "openchat", "scheduled-notice", "season-applications", "image-receive", "managed-forms", "operation-forms", "recruits", "v4/commands"]) {
     const source = await read(`src/app/api/integrations/kakao/${path}/route.ts`);
     assert.match(source, /isRuntimeKakaoFeatureEnabled/u);
   }

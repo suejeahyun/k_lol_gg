@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R28_2026_10_14";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R29_2026_10_14";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -177,6 +177,13 @@ function handleRecruitCodeCommand(value, room, sender, replier) {
   return true;
 }
 
+function handleInhouseFinishCommand(value, room, sender, replier) {
+  var text = normalizePartyMemberMutationCommandText(value).replace(/ᄍ/g, "ㅉ");
+  if (!/^\/?내전[^\S\r\n\u2028\u2029]*#?[^\S\r\n\u2028\u2029]*[1-9]\d{0,2}[^\S\r\n\u2028\u2029]*(?:쫑|ㅉ|마감|종료)$/.test(text)) return false;
+  if (!isKlolBotEchoSender(sender)) handlePartyRecruitApi("", room, String(value), sender, replier, "내전 마감", "FEATURES");
+  return true;
+}
+
 function v1ExtractSeasonRecruitNoFromSnapshot(text) {
   var lines = normalizeText(String(text || "")).split("\n");
   var headerText = lines.slice(0, 8).join("\n");
@@ -338,13 +345,13 @@ function handleSeasonApplyMessage(roomLabel, text, sender, replier) {
     }
     reply = KLOL_V1_GATEWAY.replyText(result);
     if (reply != "") {
-      replier.reply(reply);
+      if (replier.reply(reply) === false) return;
       lastRecruitHash = hash;
       DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
       return;
     }
     if (result.body && result.body.ok === true && Number(result.body.pending || 0) === 0) {
-      replier.reply(v1SeasonApplyCompleteNotice());
+      if (replier.reply(v1SeasonApplyCompleteNotice()) === false) return;
       lastRecruitHash = hash;
       DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
       return;
@@ -372,8 +379,7 @@ function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label, 
       return result.body.ok !== false;
     }
     if (reply != "") {
-      replier.reply(reply);
-      return v1GatewaySucceeded(result);
+      return replier.reply(reply) !== false && v1GatewaySucceeded(result);
     }
     replier.reply("[K-LOL.GG " + label + "]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
     return false;
@@ -421,7 +427,7 @@ function handleOperationFormMessage(room, text, sender, replier) {
     }
     reply = KLOL_V1_GATEWAY.replyText(result);
     if (reply != "") {
-      replier.reply(reply);
+      if (replier.reply(reply) === false) return;
       if (v1GatewaySucceeded(result)) {
         lastOperationFormHash = hash;
         DataBase.setDataBase(OPERATION_FORM_SAVE_KEY, hash);

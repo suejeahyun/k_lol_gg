@@ -520,12 +520,35 @@ try {
     "ACTIVE_SEASON_EXISTS",
   );
 
+  async function applicationTarget(cookie: string) {
+    const response = await fetch(`${origin}/api/applications/season`, { headers: { cookie } });
+    assert.equal(response.status, 200);
+    const hub = await response.json() as { currentSeason: { id: string }; applyDate: string; round: { id: string | null }; myApplication: { id: string } | null };
+    return { seasonId: hub.currentSeason.id, applyDate: hub.applyDate, roundId: hub.round.id, applicationId: hub.myApplication?.id ?? null };
+  }
+  for (const method of ["POST", "DELETE"]) {
+    await expectProblem(await fetch(`${origin}/api/applications/season`, {
+      method, headers: mutationHeaders(cookies.otherUser, `unbound-${method}-${randomUUID()}`, 0, origin, "192.0.2.91"), body: "{}",
+    }), 428, "APPLICATION_TARGET_REQUIRED");
+  }
+  for (const target of [
+    { ...await applicationTarget(cookies.otherUser), seasonId: randomUUID() },
+    { ...await applicationTarget(cookies.otherUser), applyDate: "2000-01-01" },
+    { ...await applicationTarget(cookies.otherUser), roundId: randomUUID() },
+    { ...await applicationTarget(cookies.otherUser), applicationId: randomUUID() },
+  ]) {
+    await expectProblem(await fetch(`${origin}/api/applications/season`, {
+      method: "POST", headers: mutationHeaders(cookies.otherUser, `wrong-target-${randomUUID()}`, 0, origin, "192.0.2.91"),
+      body: JSON.stringify({ target, mainPosition: "MID", subPositions: [] }),
+    }), 412, "APPLICATION_TARGET_CHANGED");
+  }
+
   for (const cookie of [cookies.pending, cookies.rejected, cookies.suspended]) {
     await expectProblem(
       await fetch(`${origin}/api/applications/season`, {
         method: "POST",
         headers: mutationHeaders(cookie, `status-fail-${randomUUID()}`, 0),
-        body: JSON.stringify({ mainPosition: "MID", subPositions: [] }),
+        body: JSON.stringify({ target: await applicationTarget(cookie), mainPosition: "MID", subPositions: [] }),
       }),
       403,
       "FORBIDDEN",
@@ -535,7 +558,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.admin, `application-admin-cookie-${randomUUID()}`, 0),
-      body: JSON.stringify({ mainPosition: "MID", subPositions: [] }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.admin), mainPosition: "MID", subPositions: [] }),
     }),
     401,
     "UNAUTHENTICATED",
@@ -544,7 +567,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.applicant, `application-csrf-${randomUUID()}`, 0, "https://attacker.invalid"),
-      body: JSON.stringify({ mainPosition: "MID", subPositions: [] }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.applicant), mainPosition: "MID", subPositions: [] }),
     }),
     403,
     "ORIGIN_FORBIDDEN",
@@ -558,7 +581,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.noPlayerUser, `application-no-player-${randomUUID()}`, 0),
-      body: JSON.stringify({ mainPosition: "MID", subPositions: [] }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.noPlayerUser), mainPosition: "MID", subPositions: [] }),
     }),
     409,
     "PLAYER_REQUIRED",
@@ -573,13 +596,13 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.applicant, `application-body-${randomUUID()}`, 0),
-      body: JSON.stringify({ mainPosition: "MID", subPositions: [], unexpected: true }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.applicant), mainPosition: "MID", subPositions: [], unexpected: true }),
     }),
     400,
     "INVALID_INPUT",
   );
 
-  const applicationBody = { mainPosition: "MID", subPositions: ["SUP"] };
+  const applicationBody = { target: await applicationTarget(cookies.applicant), mainPosition: "MID", subPositions: ["SUP"] };
   const applicationKey = `application-create-${randomUUID()}`;
   const applied = await fetch(`${origin}/api/applications/season`, {
     method: "POST",
@@ -605,7 +628,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.applicant, applicationKey, 0),
-      body: JSON.stringify({ mainPosition: "TOP", subPositions: [] }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.applicant), mainPosition: "TOP", subPositions: [] }),
     }),
     409,
     "IDEMPOTENCY_MISMATCH",
@@ -614,7 +637,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.applicant, `application-stale-${randomUUID()}`, 1),
-      body: JSON.stringify(applicationBody),
+      body: JSON.stringify({ ...applicationBody, target: await applicationTarget(cookies.applicant) }),
     }),
     412,
     "PRECONDITION_FAILED",
@@ -624,7 +647,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "DELETE",
       headers: mutationHeaders(cookies.applicant, `application-target-${randomUUID()}`, 0),
-      body: JSON.stringify({ applicationId }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.applicant), applicationId }),
     }),
     400,
     "INVALID_INPUT",
@@ -633,7 +656,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "DELETE",
       headers: mutationHeaders(cookies.otherUser, `application-other-${randomUUID()}`, 0),
-      body: "{}",
+      body: JSON.stringify({ target: await applicationTarget(cookies.otherUser) }),
     }),
     404,
     "NOT_FOUND",
@@ -642,7 +665,7 @@ try {
   const cancelled = await fetch(`${origin}/api/applications/season`, {
     method: "DELETE",
     headers: mutationHeaders(cookies.applicant, `application-cancel-${randomUUID()}`, 0),
-    body: "{}",
+    body: JSON.stringify({ target: await applicationTarget(cookies.applicant) }),
   });
   assert.equal(cancelled.status, 200);
   assert.equal(cancelled.headers.get("etag"), '"1"');
@@ -650,7 +673,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "DELETE",
       headers: mutationHeaders(cookies.applicant, `application-cancelled-again-${randomUUID()}`, 1),
-      body: "{}",
+      body: JSON.stringify({ target: await applicationTarget(cookies.applicant) }),
     }),
     409,
     "INVALID_TRANSITION",
@@ -658,7 +681,7 @@ try {
   const resubmitted = await fetch(`${origin}/api/applications/season`, {
     method: "POST",
     headers: mutationHeaders(cookies.applicant, `application-resubmit-${randomUUID()}`, 1),
-    body: JSON.stringify({ mainPosition: "ADC", subPositions: ["SUP"] }),
+    body: JSON.stringify({ target: await applicationTarget(cookies.applicant), mainPosition: "ADC", subPositions: ["SUP"] }),
   });
   assert.equal(resubmitted.status, 200);
   assert.equal(resubmitted.headers.get("etag"), '"2"');
@@ -684,7 +707,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.applicant, `application-reviewed-${randomUUID()}`, 3),
-      body: JSON.stringify(applicationBody),
+      body: JSON.stringify({ ...applicationBody, target: await applicationTarget(cookies.applicant) }),
     }),
     409,
     "APPLICATION_REVIEWED",
@@ -693,7 +716,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "DELETE",
       headers: mutationHeaders(cookies.applicant, `application-reserve-cancel-${randomUUID()}`, 3),
-      body: "{}",
+      body: JSON.stringify({ target: await applicationTarget(cookies.applicant) }),
     }),
     409,
     "INVALID_TRANSITION",
@@ -710,7 +733,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.applicant, `application-rejected-reapply-${randomUUID()}`, 4),
-      body: JSON.stringify(applicationBody),
+      body: JSON.stringify({ ...applicationBody, target: await applicationTarget(cookies.applicant) }),
     }),
     409,
     "APPLICATION_REVIEWED",
@@ -719,7 +742,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "DELETE",
       headers: mutationHeaders(cookies.applicant, `application-rejected-cancel-${randomUUID()}`, 4),
-      body: "{}",
+      body: JSON.stringify({ target: await applicationTarget(cookies.applicant) }),
     }),
     409,
     "INVALID_TRANSITION",
@@ -728,7 +751,7 @@ try {
   const publicSeedApplication = await fetch(`${origin}/api/applications/season`, {
     method: "POST",
     headers: mutationHeaders(cookies.otherUser, `application-public-seed-${randomUUID()}`, 0),
-    body: JSON.stringify({ mainPosition: "TOP", subPositions: [] }),
+    body: JSON.stringify({ target: await applicationTarget(cookies.otherUser), mainPosition: "TOP", subPositions: [] }),
   });
   assert.equal(publicSeedApplication.status, 201);
 
@@ -775,7 +798,7 @@ try {
         origin,
         "203.0.113.20",
       ),
-      body: JSON.stringify({ mainPosition: index % 2 === 0 ? "MID" : "TOP", subPositions: [] }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.rateUpsertUser), mainPosition: index % 2 === 0 ? "MID" : "TOP", subPositions: [] }),
     });
     assert.equal(response.status, index === 0 ? 201 : 200, await response.text());
   }
@@ -788,7 +811,7 @@ try {
       origin,
       "203.0.113.20",
     ),
-    body: JSON.stringify({ mainPosition: "SUP", subPositions: [] }),
+    body: JSON.stringify({ target: await applicationTarget(cookies.rateUpsertUser), mainPosition: "SUP", subPositions: [] }),
   });
   await expectProblem(upsertRateLimited, 429, "RATE_LIMITED");
   assert.match(upsertRateLimited.headers.get("retry-after") ?? "", /^[1-9][0-9]*$/);
@@ -805,7 +828,7 @@ try {
       ),
       // Cancellation rate limiting needs 13 entries; use explicit reserves so the
       // current ten-seat main-participant capacity remains enforced.
-      body: JSON.stringify({ mainPosition: "JGL", subPositions: [], reserve: true }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.rateCancelUsers[index]!), mainPosition: "JGL", subPositions: [], reserve: true }),
     });
     assert.equal(appliedForCancellation.status, 201, await appliedForCancellation.text());
   }
@@ -819,7 +842,7 @@ try {
         origin,
         "198.51.100.200",
       ),
-      body: "{}",
+      body: JSON.stringify({ target: await applicationTarget(cookies.rateCancelUsers[index]!) }),
     });
     assert.equal(cancelledAtBoundary.status, 200, await cancelledAtBoundary.text());
   }
@@ -832,7 +855,7 @@ try {
       origin,
       "198.51.100.200",
     ),
-    body: "{}",
+    body: JSON.stringify({ target: await applicationTarget(cookies.rateCancelUsers[12]!) }),
   });
   await expectProblem(cancelRateLimited, 429, "RATE_LIMITED");
   assert.match(cancelRateLimited.headers.get("retry-after") ?? "", /^[1-9][0-9]*$/);
@@ -845,7 +868,7 @@ try {
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",
       headers: mutationHeaders(cookies.otherUser, `rate-store-unavailable-${randomUUID()}`, 0, origin, "192.0.2.50"),
-      body: JSON.stringify({ mainPosition: "TOP", subPositions: [] }),
+      body: JSON.stringify({ target: await applicationTarget(cookies.otherUser), mainPosition: "TOP", subPositions: [] }),
     }),
     503,
     "RATE_LIMIT_UNAVAILABLE",

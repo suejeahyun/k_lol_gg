@@ -184,7 +184,7 @@ test("[P3-I07] INHOUSE authoritative snapshots preserve delete, zero and A→B�
   const actual = revisions.map((members, index) => {
     const message = inhouseTemplate("협곡", members);
     const classified = classifyKakaoV4Command({ profileId: "FEATURES", text: message });
-    const canonical = canonicalizeKakaoV4Command(classified, envelope("FEATURES", message, 120 + index));
+    const canonical = canonicalizeKakaoV4Command(classified, envelope("FEATURES", message, 120 + index), new Date((envelope("FEATURES", message, 120 + index)).timestamp * 1_000));
     assert.ok(canonical, `revision ${index + 1}: intentional 501 remains until the snapshot is canonicalized`);
     assert.equal(object(canonical).action, "SYNC");
     return valuesFromCanonicalSnapshot(canonical);
@@ -196,7 +196,7 @@ test("[P3-I08] ARAM and AUGMENT_ARAM snapshots keep name-only authoritative arra
   for (const mode of ["칼바람", "증바람"] as const) {
     const message = inhouseTemplate(mode, ["재현", "민서"]);
     const classified = classifyKakaoV4Command({ profileId: "FEATURES", text: message });
-    const canonical = canonicalizeKakaoV4Command(classified, envelope("FEATURES", message, mode === "칼바람" ? 130 : 131));
+    const canonical = canonicalizeKakaoV4Command(classified, envelope("FEATURES", message, mode === "칼바람" ? 130 : 131), new Date((envelope("FEATURES", message, mode === "칼바람" ? 130 : 131)).timestamp * 1_000));
     assert.ok(canonical, `${mode}: intentional 501 remains until the snapshot is canonicalized`);
     assert.deepEqual(valuesFromCanonicalSnapshot(canonical), ["재현", "민서"]);
   }

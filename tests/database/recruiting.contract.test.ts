@@ -132,7 +132,7 @@ test("S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomic
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetId, partyId))).length, 1);
     const feed = await adapter.listPublicFeed();
     assert.equal(feed.parties.length, 1);
-    assert.deepEqual(Object.keys(feed.parties[0]!).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+    assert.deepEqual(Object.keys(feed.parties[0]!).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitCode", "recruitDate", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
     assert.deepEqual(feed.parties[0]!.members, [{ name: "계약 참가자", position: "TOP", slotNo: 1, substitute: false }]);
 
     const changed = accountCreateCommand({ accountId, sessionId, aggregateId: partyId, requestKey: "s09-contract-create-0001", title: "다른 본문" });

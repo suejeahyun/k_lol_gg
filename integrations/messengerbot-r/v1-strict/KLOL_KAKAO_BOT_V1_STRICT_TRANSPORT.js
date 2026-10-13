@@ -179,6 +179,7 @@ var KLOL_V1_GATEWAY = (function () {
     var keyId = setting(KEY_ID) || "current";
     var item = delivery(pid, text, sender);
     active = item;
+    item.reply = null;
     var material = CON + "\n" + keyId + "\n" + sha256(item.body);
     var netAt = new Date().getTime();
     var response = null;
@@ -201,10 +202,12 @@ var KLOL_V1_GATEWAY = (function () {
     var raw = String(response.body() || "");
     var status = response.statusCode();
     var replayed = clean(response.header("Idempotency-Replayed")) === "true";
+    var body = json(raw);
+    item.reply = status >= 200 && status < 300 && body && body.ok !== false && !(Number(body.statusCode) >= 400) ? body.reply : null;
     return {
       ok: status >= 200 && status < 300,
       status: status,
-      body: json(raw),
+      body: body,
       traceId: clean(response.header("X-Trace-Id")),
       replayed: replayed
     };
@@ -214,8 +217,8 @@ var KLOL_V1_GATEWAY = (function () {
     return Boolean(active && active.replySent);
   }
 
-  function markReplySent() {
-    if (active) active.replySent = true;
+  function markReplySent(value) {
+    if (active && typeof active.reply === "string" && active.reply !== "" && active.reply === String(value)) active.replySent = true;
   }
 
   function replyText(result) {

@@ -344,7 +344,7 @@ test("full scrim sync replaces V1 form fields but binds date, number, tournament
 });
 
 test("public party DTO excludes room, sender, notes and request keys by construction", () => {
-  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitCode", "recruitDate", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
   assert.deepEqual(toPublicRecruitPartyDto(createRecruitParty({
     id: "public-members", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 3,
     type: "PARTY_NUMBER", title: "공개 참여자", maximumMembers: 2, now,
@@ -395,4 +395,22 @@ test("public scrim join binds the opponent leader and reopen clears that control
   assert.equal(joined.opponentSenderId, "sender-opponent");
   const reopened = transitionScrimRecruit({ scrim: joined, expectedRevision: 1, command: "REOPEN" });
   assert.equal(reopened.opponentSenderId, null);
+});
+
+test("explicit party reserve joins preserve main holes, fill reserve holes, and never duplicate or move an existing name", () => {
+  const stored = { ...party(), type: "PARTY_NUMBER" as const, status: "IN_PROGRESS" as const, members: [
+    { name: "본참가", position: null, slotNo: 2, substitute: false },
+    { name: "기존예비", position: null, slotNo: 2, substitute: true },
+  ] };
+  const added = mutateRecruitPartyMember({ party: stored, mutation: { action: "ADD", name: "새예비", reserve: true }, now });
+  assert.deepEqual(added.party.members.find(member => member.name === "새예비"), { name: "새예비", position: null, slotNo: 1, substitute: true });
+  assert.deepEqual(added.party.members.filter(member => !member.substitute), stored.members.filter(member => !member.substitute));
+  const duplicate = mutateRecruitPartyMember({ party: added.party, mutation: { action: "ADD", name: "본참가", reserve: true }, now });
+  assert.equal(duplicate.outcome, "ALREADY_PRESENT");
+  assert.equal(duplicate.party, added.party);
+  const wrongSection = mutateRecruitPartyMember({ party: added.party, mutation: { action: "REMOVE", name: "본참가", reserve: true }, now });
+  assert.equal(wrongSection.outcome, "NOT_FOUND");
+  assert.equal(wrongSection.party, added.party);
+  const full = { ...stored, members: Array.from({ length: 99 }, (_, index) => ({ name: `합성${index}`, position: null, slotNo: index + 1, substitute: true })) };
+  assert.throws(() => mutateRecruitPartyMember({ party: full, mutation: { action: "ADD", name: "초과예비", reserve: true }, now }), /RECRUIT_MEMBER_LIMIT_EXCEEDED/);
 });

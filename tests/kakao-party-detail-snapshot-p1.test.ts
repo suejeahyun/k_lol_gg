@@ -45,7 +45,7 @@ function envelope(text: string): KakaoV4CommandEnvelope {
 }
 
 function canonical(text: string) {
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope(text));
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope(text), new Date((envelope(text)).timestamp * 1_000));
 }
 
 test("R24 compact party form keeps the complete saved-result envelope copyable with one new name", () => {

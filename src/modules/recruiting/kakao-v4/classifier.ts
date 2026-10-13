@@ -299,6 +299,7 @@ function classifyParty(text: string): KakaoV4RecognizedCommand | null {
     return recognized(memberMutation.action === "ADD" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE", text, {
       recruitNumber: memberMutation.recruitNumber,
       name: memberMutation.name,
+      ...(memberMutation.reserve ? { reserve: true } : {}),
     });
   }
   const detail = /^(?:구인상세|상세)\s*#?\s*(\d+)$/u.exec(text);
@@ -344,7 +345,7 @@ function classifyPartyCodeCommand(text: string): KakaoV4RecognizedCommand | null
     // Keep the established single-person name/alias validation for both targets.
     const mutation = detailMemberMutation(`상세 1 ${detail[2]}`, ["상세"]);
     return mutation ? recognized(mutation.action === "ADD" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE", text, {
-      recruitCode, name: mutation.name,
+      recruitCode, name: mutation.name, ...(mutation.reserve ? { reserve: true } : {}),
     }) : null;
   }
   const prefix = /^구인(?:마감|쫑|종료)\s+(\S+)$/u.exec(normalized);

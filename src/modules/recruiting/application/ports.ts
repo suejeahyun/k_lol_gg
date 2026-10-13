@@ -29,6 +29,17 @@ export type RecruitingCodeTarget = Readonly<{
   status: RecruitParty["status"];
 }>;
 
+export type RecruitingPartyReplayInput = Readonly<{
+  actorPrincipalId: string;
+  eventId: string;
+  bodyDigestHex: string;
+  sourceRoomId: string;
+  commandType: "PARTY_MEMBER_ADD" | "PARTY_MEMBER_REMOVE" | "FINISH_PARTY";
+  now: Date;
+}>;
+
+export type RecruitingPartyReplay = RecruitingCommandResult & Readonly<{ target: RecruitingCodeTarget }>;
+
 export interface RecruitingUnitOfWork {
   /** Must rollback repository, audit, outbox, nonce, and receipt writes together. */
   transaction<T>(operation: (transaction: RecruitingTransactionContext) => Promise<T>): Promise<T>;

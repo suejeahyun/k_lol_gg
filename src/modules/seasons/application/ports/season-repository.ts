@@ -11,6 +11,7 @@ import type {
   PublicSeason,
   SeasonApplicationPosition,
   SeasonApplicationStatus,
+  SeasonApplicationTarget,
 } from "../../domain/season";
 
 export type CommandEnvelope = Readonly<{
@@ -48,6 +49,7 @@ export type UpsertOwnApplicationInput = Readonly<{
   mainPosition: SeasonApplicationPosition | null;
   subPositions: readonly SeasonApplicationPosition[];
   reserve?: boolean;
+  target?: SeasonApplicationTarget;
 }>;
 
 export type ReviewApplicationInput = Readonly<{
@@ -158,6 +160,7 @@ export interface SeasonRepository {
     applyDate: string,
     recruitNo: number,
     now: Date,
+    target?: SeasonApplicationTarget,
   ): Promise<MutationResult<Record<string, unknown>>>;
   reviewApplication(
     envelope: CommandEnvelope,

@@ -31,7 +31,7 @@ import { partyCopySnapshot } from "../application/party-copy-snapshot";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
 import { issueKakaoRecruitFormSnapshot, loadKakaoRecruitFormSnapshot, loadKakaoFormSnapshot } from "./kakao-form-snapshots";
 import { normalizeRecruitCode, parseRecruitFormReference } from "../domain/kakao-recruit-reference";
-import { kakaoRecruitCommandAccess, type RecruitingCommand, type RecruitingCommandActor } from "../application/commands";
+import { hashKakaoV4EventId, kakaoV4EventRequestFingerprint, KAKAO_V4_EVENT_SCOPE, kakaoRecruitCommandAccess, type RecruitingCommand, type RecruitingCommandActor } from "../application/commands";
 import {
   parsePartyMemberStatsQuery,
   PARTY_MEMBER_STATS_COMPANION_LIMIT,
@@ -51,6 +51,8 @@ import type {
   RecruitingQueryPort,
   RecruitingReceiptPort,
   RecruitingRepository,
+  RecruitingPartyReplay,
+  RecruitingPartyReplayInput,
   RecruitingTransactionContext,
   RecruitingUnitOfWork,
 } from "../application/ports";
@@ -180,6 +182,35 @@ export class PostgresRecruitingAdapter implements
   private readonly actors = new WeakMap<RecruitingTransactionContext, TransactionActor>();
 
   constructor(private readonly database: V2Database) {}
+
+  /** An authenticated retry must not resolve today's reused number before its durable receipt. */
+  async findPartyEventReplay(input: RecruitingPartyReplayInput): Promise<RecruitingPartyReplay | null> {
+    const row = (await this.database.select().from(recruitingCommandReceipts).where(and(
+      eq(recruitingCommandReceipts.actorPrincipalId, input.actorPrincipalId),
+      eq(recruitingCommandReceipts.scope, KAKAO_V4_EVENT_SCOPE),
+      eq(recruitingCommandReceipts.keyHash, Buffer.from(hashKakaoV4EventId(input.eventId))),
+      gt(recruitingCommandReceipts.expiresAt, input.now),
+    )).limit(1))[0];
+    if (!row) return null;
+    if (row.bodyDigestHex !== input.bodyDigestHex || !sameBytes(row.requestHash,
+      kakaoV4EventRequestFingerprint({ principalId: input.actorPrincipalId, bodyDigestHex: input.bodyDigestHex }))) {
+      throw new RecruitingApplicationError("IDEMPOTENCY_MISMATCH", "The event is already bound to another signed request.");
+    }
+    const receipt = receiptFromRow(row);
+    if (!receipt) return null;
+    const body = receipt.body;
+    if (body.aggregateKind !== "PARTY" || body.commandType !== input.commandType ||
+      typeof body.aggregateId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.aggregateId) ||
+      !body.data || typeof body.data !== "object" || Array.isArray(body.data) || body.aggregateId !== body.data.id ||
+      !Number.isSafeInteger(receipt.revision) || receipt.revision < 0 || body.revision !== receipt.revision) {
+      throw new RecruitingApplicationError("IDEMPOTENCY_MISMATCH", "The durable event response is inconsistent.");
+    }
+    const target = (await this.database.select({ id: recruitParties.id, revision: recruitParties.revision,
+      recruitDate: recruitParties.recruitDate, recruitNumber: recruitParties.recruitNumber, status: recruitParties.status,
+    }).from(recruitParties).where(and(eq(recruitParties.id, body.aggregateId), eq(recruitParties.sourceRoomId, input.sourceRoomId))).limit(1))[0];
+    if (!target) throw new RecruitingApplicationError("NOT_FOUND", "The original event target is not in this authorized scope.");
+    return { body, revision: receipt.revision, replayed: true, target };
+  }
 
   async resolveCompatTarget(input: RecruitingCompatTargetInput) {
     if (input.kind === "PARTY") {
@@ -647,14 +678,18 @@ export class PostgresRecruitingAdapter implements
 
   async listPublicFeed() {
     const [partyRows, scrimRows] = await Promise.all([
-      this.database.select().from(recruitParties).where(inArray(recruitParties.status, ["IN_PROGRESS"])).orderBy(desc(recruitParties.recruitDate), recruitParties.recruitNumber).limit(60),
+      this.database.select({ party: recruitParties, recruitCode: kakaoRecruitCodes.code }).from(recruitParties)
+        .leftJoin(kakaoRecruitCodes, and(eq(kakaoRecruitCodes.targetId, recruitParties.id),
+          eq(kakaoRecruitCodes.scopeHash, sql`sha256(convert_to(${recruitParties.sourceRoomId}, 'UTF8'))`)))
+        .where(inArray(recruitParties.status, ["IN_PROGRESS"]))
+        .orderBy(desc(recruitParties.recruitDate), recruitParties.recruitNumber).limit(60),
       this.database.select().from(scrimRecruits).where(and(
         eq(scrimRecruits.isDraft, false),
         inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
       )).orderBy(desc(scrimRecruits.recruitDate), scrimRecruits.scrimNumber).limit(60),
     ]);
     return {
-      parties: partyRows.map((row) => toPublicPartyDto(partyFromRow(row))),
+      parties: partyRows.map((row) => toPublicPartyDto(partyFromRow(row.party), row.recruitCode)),
       scrims: scrimRows.map((row) => toPublicScrimDto(scrimFromRow(row))),
     };
   }

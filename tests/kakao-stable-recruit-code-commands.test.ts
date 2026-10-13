@@ -33,8 +33,8 @@ test("fixed code aliases preserve the identity and operation across the operatin
       assert.equal(classification.command, command, variant);
       assert.deepEqual(classification.parameters, { recruitCode: code, ...(name ? { name } : {}) });
       const expected = { domain: "PARTY", action: "BY_CODE", operation, recruitCode: code, ...(name ? { name } : {}) };
-      assert.deepEqual(canonicalizeKakaoV4Command(classification, envelope(variant)), expected, variant);
-      assert.deepEqual(canonicalizeKakaoV4Command(classification, envelope(variant, Date.parse("2026-10-13T21:00:01Z") / 1_000)), expected);
+      assert.deepEqual(canonicalizeKakaoV4Command(classification, envelope(variant), new Date((envelope(variant)).timestamp * 1_000)), expected, variant);
+      assert.deepEqual(canonicalizeKakaoV4Command(classification, envelope(variant, Date.parse("2026-10-13T21:00:01Z") / 1_000), new Date((envelope(variant, Date.parse("2026-10-13T21:00:01Z") / 1_000)).timestamp * 1_000)), expected);
       assert.equal(classifyKakaoV4Command({ profileId: "FEATURES", text: variant }).kind, "WRONG_PROFILE", variant);
     }
   }
@@ -55,9 +55,9 @@ test("numeric commands keep current-day targets and canonicalizer validates code
   const classified = classifyKakaoV4Command({ profileId: "RECRUIT", text });
   assert.equal(classified.kind, "COMMAND");
   if (classified.kind !== "COMMAND") return;
-  assert.deepEqual(canonicalizeKakaoV4Command(classified, envelope(text)), {
+  assert.deepEqual(canonicalizeKakaoV4Command(classified, envelope(text), new Date((envelope(text)).timestamp * 1_000)), {
     domain: "PARTY", action: "ADD_MEMBER", target: { recruitDate: "2026-10-13", recruitNumber: 3 }, name: "홍길동",
   });
-  assert.equal(canonicalizeKakaoV4Command({ ...classified, parameters: { ...classified.parameters, recruitCode: "wrong-code" } }, envelope(text)), null);
-  assert.equal(canonicalizeKakaoV4Command({ ...classified, parameters: { recruitCode: code } }, envelope(text)), null);
+  assert.equal(canonicalizeKakaoV4Command({ ...classified, parameters: { ...classified.parameters, recruitCode: "wrong-code" } }, envelope(text), new Date((envelope(text)).timestamp * 1_000)), null);
+  assert.equal(canonicalizeKakaoV4Command({ ...classified, parameters: { recruitCode: code } }, envelope(text), new Date((envelope(text)).timestamp * 1_000)), null);
 });

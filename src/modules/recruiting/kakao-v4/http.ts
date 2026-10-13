@@ -11,9 +11,11 @@ export type KakaoV4HttpErrorCode =
   | "WRONG_PROFILE"
   | "INVALID_FORM"
   | "INVALID_STATE"
+  | "OPERATION_DISABLED"
   | "UNAVAILABLE";
 
 const problems = Object.freeze({
+  OPERATION_DISABLED: definePublicProblem({ code: "KAKAO_OPERATION_DISABLED", status: 503, title: "현재 이 봇 기능을 사용할 수 없습니다.", detail: "운영 설정 또는 메시지 길이 제한으로 요청을 처리하지 않았습니다. 운영진에게 확인해 주세요." }),
   QUERY_FORBIDDEN: definePublicProblem({ code: "QUERY_FORBIDDEN", status: 400, title: "쿼리 매개변수를 사용할 수 없습니다.", detail: "V4 command gateway에는 JSON 본문만 전송해 주세요." }),
   FORBIDDEN_IDENTITY_HEADER: definePublicProblem({ code: "KAKAO_V4_FORBIDDEN_IDENTITY_HEADER", status: 400, title: "V4에서 허용하지 않는 식별 헤더입니다.", detail: "방, 채널, 발신자 식별 헤더를 제거하고 V4 envelope만 전송해 주세요." }),
   COMMAND_INVALID: definePublicProblem({ code: "KAKAO_V4_COMMAND_INVALID", status: 400, title: "Kakao V4 명령이 올바르지 않습니다.", detail: "profileId, installationId, senderId, eventId, timestamp, nonce, text를 확인해 주세요." }),

@@ -62,7 +62,7 @@ function envelope(profileId: KakaoV4ProfileId, text: string, eventId: string, se
 
 function canonical(profileId: KakaoV4ProfileId, text: string, eventId = "event-input-tolerance-0001") {
   const input = envelope(profileId, text, eventId);
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId, text }), input);
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId, text }), input, new Date((input).timestamp * 1_000));
 }
 
 function partySync(text: string) {
@@ -97,7 +97,7 @@ function partyDispatcherHarness() {
     handled,
     async dispatch(text: string, eventId: string) {
       const input = envelope("RECRUIT", text, eventId);
-      const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), input);
+      const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), input, new Date((input).timestamp * 1_000));
       assert.equal(command?.domain, "PARTY");
       if (command?.domain !== "PARTY") assert.fail("expected PARTY command");
       return dispatcher.dispatch({
@@ -437,10 +437,12 @@ test(
     const roomAService = new KakaoV4CommandService(
       new KakaoV4InstallationScopeAuthorizer(roomASecret),
       dispatcher,
+      () => new Date(KST_TIMESTAMP * 1_000),
     );
     const roomBService = new KakaoV4CommandService(
       new KakaoV4InstallationScopeAuthorizer(roomBSecret),
       dispatcher,
+      () => new Date(KST_TIMESTAMP * 1_000),
     );
     const partyId = randomUUID();
     const resetSequence = 100;

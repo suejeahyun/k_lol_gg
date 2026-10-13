@@ -27,6 +27,7 @@ export type RecruitMember = Readonly<{
 export type RecruitPartyMemberMutation = Readonly<{
   action: "ADD" | "REMOVE";
   name: string;
+  reserve?: boolean;
 }>;
 
 export type RecruitPartyMemberMutationResult = Readonly<{
@@ -111,6 +112,8 @@ export type ScrimRecruit = Readonly<{
 export type PublicRecruitPartyDto = Readonly<{
   id: string;
   recruitNumber: number;
+  recruitDate: string;
+  recruitCode: string | null;
   type: RecruitPartyType;
   status: RecruitPartyStatus;
   title: string;
@@ -236,16 +239,18 @@ export function mutateRecruitPartyMember(input: Readonly<{
 }>): RecruitPartyMemberMutationResult {
   if (input.party.status !== "IN_PROGRESS") throw new Error("RECRUIT_NOT_MUTABLE");
   validDate(input.now, "INVALID_RECRUIT_TIME");
+  if (input.mutation.reserve !== undefined && typeof input.mutation.reserve !== "boolean") throw new Error("INVALID_RECRUIT_MEMBER_MUTATION");
   const name = cleanText(input.mutation.name, "INVALID_RECRUIT_MEMBER", 80);
   const identity = normalizedMemberIdentity(name);
   const matches = input.party.members.filter((member) => normalizedMemberIdentity(member.name) === identity);
 
   if (input.mutation.action === "REMOVE") {
-    if (matches.length === 0) {
+    const removable = input.mutation.reserve ? matches.filter((member) => member.substitute) : matches;
+    if (removable.length === 0) {
       return { party: input.party, action: "REMOVE", outcome: "NOT_FOUND", name, slotNo: null, substitute: null };
     }
-    if (matches.length !== 1) throw new Error("AMBIGUOUS_MEMBER");
-    const removed = matches[0]!;
+    if (removable.length !== 1) throw new Error("AMBIGUOUS_MEMBER");
+    const removed = removable[0]!;
     const party = syncRecruitParty({
       party: input.party,
       expectedRevision: input.party.revision,
@@ -281,7 +286,7 @@ export function mutateRecruitPartyMember(input: Readonly<{
   );
   let slotNo = 1;
   while (slotNo <= input.party.maximumMembers && occupiedPrimarySlots.has(slotNo)) slotNo += 1;
-  const substitute = occupiedPrimarySlots.size >= input.party.maximumMembers || slotNo > input.party.maximumMembers;
+  const substitute = input.mutation.reserve === true || occupiedPrimarySlots.size >= input.party.maximumMembers || slotNo > input.party.maximumMembers;
   if (substitute) {
     const occupiedReserveSlots = new Set(
       input.party.members.filter((member) => member.substitute).map((member) => member.slotNo),
@@ -505,10 +510,12 @@ export function shouldAutoFinishRecruit(input: Readonly<{
   return input.now.getTime() - input.party.lastActivityAt.getTime() >= input.idleMilliseconds;
 }
 
-export function toPublicRecruitPartyDto(party: RecruitParty): PublicRecruitPartyDto {
+export function toPublicRecruitPartyDto(party: RecruitParty, recruitCode: string | null = null): PublicRecruitPartyDto {
   return {
     id: party.id,
     recruitNumber: party.recruitNumber,
+    recruitDate: party.recruitDate,
+    recruitCode,
     type: party.type,
     status: party.status,
     title: party.title,

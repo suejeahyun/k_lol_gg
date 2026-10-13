@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-10-13T19:10:10.623Z",
+  "status": "PASS",
+  "integratedCheck": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "contracts": {
+      "pass": 704,
+      "fail": 0,
+      "skip": 0
+    },
+    "unit": {
+      "pass": 1112,
+      "fail": 0,
+      "skip": 1
+    },
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 58
+    },
+    "typecheck": "PASS",
+    "erd": {
+      "tables": 114,
+      "foreignKeys": 175
+    },
+    "guideImages": 68,
+    "productionBuild": "PASS"
+  },
+  "db": {
+    "scope": "recruiting",
+    "files": 11,
+    "pass": 112,
+    "fail": 0,
+    "skip": 0,
+    "cleanup": "stopped and disposable workspace path removed",
+    "evidence": "data.md"
+  },
+  "http": {
+    "scope": "isolated season HTTP",
+    "status": "PASS",
+    "targetMissing": 428,
+    "targetMismatch": 412,
+    "cleanup": "server and isolated database stopped"
+  },
+  "browser": {
+    "evidence": "browser.json",
+    "productionMutation": false
+  },
+  "secrets": {
+    "currentTree": "PASS",
+    "completeGitHistory": "PASS"
+  },
+  "localLogs": [
+    {
+      "path": ".tmp/site-kakao-check-final.log",
+      "sha256": "10ea789224731f39578bceba755bbb3fac96fb11c7b4ae53a5dac73a1dc966b3"
+    },
+    {
+      "path": ".tmp/site-kakao-secrets-history.log",
+      "sha256": "0f80a5ed105ab5ff76273703a6b3f8f3e7ef1106a6b6977c8704b33014cefe9a"
+    },
+    {
+      "path": ".tmp/site-kakao-secrets-tree-final.log",
+      "sha256": "ab06e1acf467be66acec5022a47fde3a1aa9301dc71f3deb6312e53123ce72ca"
+    },
+    {
+      "path": ".tmp/site-review-20261014/season-http.log",
+      "sha256": "382d66ebe1bd86895078f3b5729b77c5d8dc98a22e8566d84f7fc86b1cde2285"
+    }
+  ],
+  "note": "Final runtime source passed integrated check. Afterwards two DB-only historical-date fixtures received an explicit server clock; the complete affected DB scope then passed. Phone installation remains PENDING_USER_INSTALL."
+}

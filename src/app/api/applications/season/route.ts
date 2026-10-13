@@ -13,6 +13,7 @@ import {
   seasonUnavailableResponse,
 } from "@/modules/seasons/infrastructure/season-http";
 import { SeasonServiceError } from "@/modules/seasons/domain/season";
+import { requireSeasonApplicationTarget } from "@/modules/seasons/application/season-service";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(prepared.value.traceId);
   try {
+    requireSeasonApplicationTarget(prepared.value.body);
     const result = await service.upsertOwnApplication(
       prepared.value.context,
       prepared.value.expectedRevision,
@@ -81,6 +83,7 @@ export async function DELETE(request: Request) {
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(prepared.value.traceId);
   try {
+    requireSeasonApplicationTarget(prepared.value.body);
     const result = await service.cancelOwnApplication(
       prepared.value.context,
       prepared.value.expectedRevision,

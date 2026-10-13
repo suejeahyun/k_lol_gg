@@ -103,10 +103,10 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "PARTY"; action: "CREATE"; payload: KakaoV4PartyCreatePayload }>
   | Readonly<{ domain: "PARTY"; action: "STATUS" }>
   | Readonly<{ domain: "PARTY"; action: "BY_CODE"; operation: "DETAIL" | "FINISH"; recruitCode: string }>
-  | Readonly<{ domain: "PARTY"; action: "BY_CODE"; operation: "ADD_MEMBER" | "REMOVE_MEMBER"; recruitCode: string; name: string }>
+  | Readonly<{ domain: "PARTY"; action: "BY_CODE"; operation: "ADD_MEMBER" | "REMOVE_MEMBER"; recruitCode: string; name: string; reserve?: boolean }>
   | Readonly<{ domain: "PARTY"; action: "DETAIL"; target: KakaoV4RecruitTarget }>
-  | Readonly<{ domain: "PARTY"; action: "ADD_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
-  | Readonly<{ domain: "PARTY"; action: "REMOVE_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
+  | Readonly<{ domain: "PARTY"; action: "ADD_MEMBER"; target: KakaoV4RecruitTarget; name: string; reserve?: boolean }>
+  | Readonly<{ domain: "PARTY"; action: "REMOVE_MEMBER"; target: KakaoV4RecruitTarget; name: string; reserve?: boolean }>
   | Readonly<{ domain: "PARTY"; action: "SYNC"; target: KakaoV4PartySyncTarget; payload: KakaoV4PartySyncPayload }>
   | Readonly<{ domain: "PARTY"; action: "FINISH"; target: KakaoV4RecruitTarget }>
   | Readonly<{ domain: "SCRIM"; action: "CREATE"; payload: ScrimFormCommandPayload }>
@@ -162,10 +162,6 @@ export type CanonicalKakaoV4Command =
 
 export function requiredProfileForKakaoV4Command(command: CanonicalKakaoV4Command) {
   return command.domain === "SEASON" || command.domain === "PLAYER" || command.domain === "OPERATIONS" ? "FEATURES" as const : "RECRUIT" as const;
-}
-
-function partyOperatingDate(timestamp: number) {
-  return recruitingOperatingDateKey(new Date(timestamp * 1_000));
 }
 
 function numberParameter(parameters: Readonly<Record<string, string | number | boolean | null>>, key: string) {
@@ -537,9 +533,9 @@ function scrimSnapshot(text: string, fallbackDate: string, v1Strict: boolean): K
   });
 }
 
-export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassification, envelope: KakaoV4CommandEnvelope): CanonicalKakaoV4Command | null {
+export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassification, envelope: KakaoV4CommandEnvelope, now: Date = new Date()): CanonicalKakaoV4Command | null {
   if (classification.kind === "UNKNOWN" || classification.kind === "WRONG_PROFILE") return null;
-  const partyDate = partyOperatingDate(envelope.timestamp);
+  const partyDate = recruitingOperatingDateKey(now);
   const parameters = classification.parameters;
   if (classification.command === "PARTY_CREATE") {
     const partyType = (textParameter(parameters, "partyType") ?? "PARTY_NUMBER") as RecruitPartyType;
@@ -560,7 +556,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
       const recruitCode = normalizeRecruitCode(codeParameter);
       return recruitCode && name ? Object.freeze({ domain: "PARTY" as const, action: "BY_CODE" as const,
         operation: classification.command === "PARTY_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
-        recruitCode, name }) : null;
+        recruitCode, name, ...(parameters.reserve === true ? { reserve: true } : {}) }) : null;
     }
     if (!recruitNumber || !name) return null;
     return Object.freeze({
@@ -568,6 +564,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
       action: classification.command === "PARTY_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
       target: Object.freeze({ recruitDate: partyDate, recruitNumber }),
       name,
+      ...(parameters.reserve === true ? { reserve: true } : {}),
     });
   }
   if (classification.command === "PARTY_DETAIL" || classification.command === "PARTY_FINISH") {

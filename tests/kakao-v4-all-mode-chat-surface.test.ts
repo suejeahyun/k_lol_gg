@@ -40,7 +40,7 @@ test("내전과 스크림 빠른 추가·삭제는 슬래시, 모바일 공백�
     if (classified.kind !== "COMMAND") continue;
     assert.equal(classified.command, commandId, text);
     assert.equal(classified.parameters.name, text.includes("02정민") ? "02정민/mid/ad" : text.includes("김 별") ? "김 별" : text.includes("정민") ? (text.includes("all") ? "정민/all" : "정민") : "재현", text);
-    const canonical = canonicalizeKakaoV4Command(classified, input);
+    const canonical = canonicalizeKakaoV4Command(classified, input, new Date((input).timestamp * 1_000));
     assert.equal(canonical?.action, action, text);
     if (canonical?.domain === "SEASON" && text.includes("예비")) assert.equal(canonical.reserve, true, text);
   }
@@ -63,7 +63,7 @@ test("협곡 내전 빠른 추가는 이름만 또는 티어·라인 전체 입�
     const input = envelope("FEATURES", text);
     const classified = classifyKakaoV4Command(input);
     assert.equal(classified.kind, "COMMAND", text);
-    const canonical = canonicalizeKakaoV4Command(classified, input);
+    const canonical = canonicalizeKakaoV4Command(classified, input, new Date((input).timestamp * 1_000));
     if (!canonical || canonical.domain !== "SEASON" || canonical.action !== "ADD_MEMBER") assert.fail(text);
     assert.equal(canonical.name, text.includes("02정민") ? "02정민" : text.includes("민혁") ? "민혁" : "재현", text);
     assert.equal(canonical.mainPosition ?? "ALL", mainPosition, text);
@@ -81,7 +81,7 @@ test("내전 전체 양식은 일반 명단과 예비 명단을 함께 동기화
     "빠른 예비 추가: 내전상세 1 예비추가 이름/주라인/부라인", "빠른 예비 삭제: 내전상세 1 예비삭제 이름", "마감: 내전 1ㅉ",
   ].join("\n");
   const input = envelope("FEATURES", text);
-  const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command(input), input);
+  const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command(input), input, new Date((input).timestamp * 1_000));
   if (!canonical || canonical.domain !== "SEASON" || canonical.action !== "SYNC") assert.fail("expected inhouse sync");
   assert.equal(canonical.reserveSectionObserved, true);
   assert.deepEqual(canonical.participants.map(({ slotNo, name, mainPosition, subPositions, reserve }) => ({ slotNo, name, mainPosition, subPositions, reserve })), [
@@ -117,7 +117,7 @@ test("내전 명령도 파티·스크림과 같은 오전 6시 운영일을 사�
     const input = envelope(profileId, text, timestamp);
     const classified = classifyKakaoV4Command(input);
     assert.notEqual(classified.kind, "UNKNOWN", text);
-    const canonical = canonicalizeKakaoV4Command(classified, input);
+    const canonical = canonicalizeKakaoV4Command(classified, input, new Date((input).timestamp * 1_000));
     if (canonical && "applyDate" in canonical) assert.equal(canonical.applyDate, "2026-09-12", text);
     if (canonical && "target" in canonical) assert.equal(canonical.target.recruitDate, "2026-09-12", text);
   }
@@ -169,7 +169,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
 
   const inhouseContext = dispatchContext("FEATURES", "내전구인 협곡", "event-inhouse-reserve-0001");
   const inhouseClassified = classifyKakaoV4Command(inhouseContext.envelope);
-  const inhouseCommand = canonicalizeKakaoV4Command(inhouseClassified, inhouseContext.envelope);
+  const inhouseCommand = canonicalizeKakaoV4Command(inhouseClassified, inhouseContext.envelope, new Date((inhouseContext.envelope).timestamp * 1_000));
   assert.ok(inhouseCommand);
   const inhouse = await dispatcher.dispatch(inhouseContext, inhouseCommand);
   assert.equal(seasonCalls[0]?.action, "RESERVE");
@@ -182,7 +182,7 @@ test("내전·스크림 생성은 DRAFT 번호를 먼저 예약하고 실제 번
 
   const scrimContext = dispatchContext("RECRUIT", "스크림구인", "event-scrim-reserve-0000001");
   const scrimClassified = classifyKakaoV4Command(scrimContext.envelope);
-  const scrimCommand = canonicalizeKakaoV4Command(scrimClassified, scrimContext.envelope);
+  const scrimCommand = canonicalizeKakaoV4Command(scrimClassified, scrimContext.envelope, new Date((scrimContext.envelope).timestamp * 1_000));
   assert.ok(scrimCommand);
   const scrim = await dispatcher.dispatch(scrimContext, scrimCommand);
   assert.equal(recruitingCalls[0]?.type, "CREATE_SCRIM");
@@ -212,12 +212,12 @@ test("내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은
   });
 
   const inhouseContext = dispatchContext("FEATURES", "내전구인 협곡", "event-inhouse-notice-000001");
-  const inhouseCreate = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseContext.envelope), inhouseContext.envelope);
+  const inhouseCreate = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseContext.envelope), inhouseContext.envelope, new Date((inhouseContext.envelope).timestamp * 1_000));
   assert.ok(inhouseCreate);
   const inhouseTemplate = (await dispatcher.dispatch(inhouseContext, inhouseCreate)).legacyReply;
   const inhouseSubmission = inhouseTemplate.replace("\n1.\n", "\n1. 재현/all\n");
   const inhouseEnvelope = { ...inhouseContext.envelope, eventId: "event-inhouse-notice-000002", text: inhouseSubmission };
-  const inhouseSync = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseEnvelope), inhouseEnvelope);
+  const inhouseSync = canonicalizeKakaoV4Command(classifyKakaoV4Command(inhouseEnvelope), inhouseEnvelope, new Date((inhouseEnvelope).timestamp * 1_000));
   if (!inhouseSync || inhouseSync.domain !== "SEASON" || inhouseSync.action !== "SYNC") assert.fail("expected inhouse snapshot");
   assert.equal(inhouseSync.roundMetadata?.noticeText, null);
   assert.equal(inhouseSync.roundMetadata?.organizerText, null);
@@ -226,15 +226,15 @@ test("내전 안내 문구는 공지가 아니며 스크림 빈 예약 양식은
   assert.equal(inhouseSync.participants[0]?.name, "재현");
 
   const scrimContext = dispatchContext("RECRUIT", "스크림구인", "event-scrim-empty-draft-0001");
-  const scrimCreate = canonicalizeKakaoV4Command(classifyKakaoV4Command(scrimContext.envelope), scrimContext.envelope);
+  const scrimCreate = canonicalizeKakaoV4Command(classifyKakaoV4Command(scrimContext.envelope), scrimContext.envelope, new Date((scrimContext.envelope).timestamp * 1_000));
   assert.ok(scrimCreate);
   const scrimTemplate = (await dispatcher.dispatch(scrimContext, scrimCreate)).legacyReply;
   const emptyEnvelope = { ...scrimContext.envelope, eventId: "event-scrim-empty-draft-0002", text: scrimTemplate };
-  assert.equal(canonicalizeKakaoV4Command(classifyKakaoV4Command(emptyEnvelope), emptyEnvelope), null);
+  assert.equal(canonicalizeKakaoV4Command(classifyKakaoV4Command(emptyEnvelope), emptyEnvelope, new Date((emptyEnvelope).timestamp * 1_000)), null);
 
   const populated = scrimTemplate.replace("주최자:", "주최자: 재현");
   const populatedEnvelope = { ...emptyEnvelope, eventId: "event-scrim-empty-draft-0003", text: populated };
-  const scrimSync = canonicalizeKakaoV4Command(classifyKakaoV4Command(populatedEnvelope), populatedEnvelope);
+  const scrimSync = canonicalizeKakaoV4Command(classifyKakaoV4Command(populatedEnvelope), populatedEnvelope, new Date((populatedEnvelope).timestamp * 1_000));
   if (!scrimSync || scrimSync.domain !== "SCRIM" || scrimSync.action !== "UPSERT") assert.fail("expected populated scrim snapshot");
   assert.equal(scrimSync.payload.organizerText, "재현");
   assert.equal(scrimSync.payload.requesterTeamName, "재현");
@@ -298,7 +298,7 @@ test("내전·스크림 빠른 추가는 이름을 서버 명령으로 보내고
     ["RECRUIT", "스크림상세 6 추가 재현", "event-scrim-member-00000001"],
   ] as const) {
     const context = dispatchContext(profileId, text, eventId);
-    const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command(context.envelope), context.envelope);
+    const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command(context.envelope), context.envelope, new Date((context.envelope).timestamp * 1_000));
     assert.ok(canonical);
     const result = await dispatcher.dispatch(context, canonical);
     assert.match(result.legacyReply, text.includes("민혁") ? /추가 완료: 민혁/u : text.includes("정민") ? /예비 추가 완료: 정민/u : /추가 완료: 재현/u);

@@ -19,7 +19,7 @@ function envelope(profileId: KakaoV4ProfileId, text: string): KakaoV4CommandEnve
 
 function canonical(profileId: KakaoV4ProfileId, text: string) {
   const input = envelope(profileId, text);
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId, text }), input);
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId, text }), input, new Date((input).timestamp * 1_000));
 }
 
 test("structural operation candidates with one empty value reach exact missingFields", () => {

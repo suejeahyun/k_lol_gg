@@ -15,7 +15,7 @@ function parse(text: string) {
   return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), {
     profileId: "FEATURES", installationId: `install-${"a".repeat(32)}`, senderId: `sender-${"b".repeat(32)}`,
     eventId: "legacy-copy-regression", timestamp: Date.parse("2026-09-22T12:00:00Z") / 1000, nonce: "c".repeat(32), text,
-  });
+  }, new Date(Date.parse("2026-09-22T12:00:00Z") / 1000 * 1_000));
 }
 const original: InhouseCopyRow = { id: "synthetic-entry-a", kind: "PENDING", slotNo: 1, name: "가상참가갑",
   reserve: false, pending: true, mainPosition: "MID", subPositions: ["SUP"] };

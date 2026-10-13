@@ -61,6 +61,7 @@ export default async function RecruitsPage() {
                 >
                   <div className={styles.cardTop}><span>{partyTypeLabel[party.type]}</span><b>#{party.recruitNumber}</b></div>
                   <h3>{party.title}</h3>
+                  <p>모집일 {party.recruitDate}{party.recruitCode ? ` · 모집코드 ${party.recruitCode}` : " · 모집코드 확인 필요"}</p>
                   <p className={styles.availability} data-full={party.memberCount >= party.maximumMembers}>{party.memberCount >= party.maximumMembers ? "정원 마감" : `참가 가능 · ${party.maximumMembers - party.memberCount}자리 남음`}</p>
                   <dl><div><dt>주최자</dt><dd>{party.organizerText?.trim() || "미등록 · 모집방에서 확인"}</dd></div><div><dt>참여</dt><dd>{party.memberCount} / {party.maximumMembers}명</dd></div><div><dt>시작 예정</dt><dd>{timeLabel(party.scheduledStartAt, party.startTimeText)}</dd></div><div><dt>게임·모집 안내</dt><dd>{party.gameInfo.trim() && party.gameInfo !== "미입력" ? party.gameInfo : "미등록 · 모집방에서 확인"}</dd></div></dl>
                   <section className={styles.members} aria-label={`파티 #${party.recruitNumber} 참여자`}>
@@ -79,7 +80,7 @@ export default async function RecruitsPage() {
                     aria-valuemax={party.maximumMembers}
                     aria-valuenow={party.memberCount}
                   ><i aria-hidden="true" style={{ width: `${Math.min(100, party.memberCount / party.maximumMembers * 100)}%` }} /></div>
-                  <RecruitInstructions recruitNumber={party.recruitNumber} full={party.memberCount >= party.maximumMembers} />
+                  <RecruitInstructions recruitCode={party.recruitCode} full={party.memberCount >= party.maximumMembers} />
                 </article>)}
               </div>
             )}

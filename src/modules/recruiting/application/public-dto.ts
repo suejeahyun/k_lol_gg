@@ -22,8 +22,8 @@ export type PublicScrimRecruitDto = Readonly<{
   bestOf: number | null;
 }>;
 
-export function toPublicPartyDto(party: RecruitParty) {
-  return Object.freeze({ ...toPublicRecruitPartyDto(party) });
+export function toPublicPartyDto(party: RecruitParty, recruitCode: string | null = null) {
+  return Object.freeze({ ...toPublicRecruitPartyDto(party, recruitCode) });
 }
 
 export function toPublicScrimDto(scrim: ScrimRecruit): PublicScrimRecruitDto {

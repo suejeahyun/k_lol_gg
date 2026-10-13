@@ -4,7 +4,7 @@ import { getDatabase } from "@/platform/db/client";
 
 import { RecruitingCommandHandler } from "../application/command-handler";
 import type { RecruitingCommand } from "../application/commands";
-import type { RecruitingCompatTargetInput } from "../application/ports";
+import type { RecruitingCompatTargetInput, RecruitingPartyReplayInput } from "../application/ports";
 import { PostgresRecruitingAdapter } from "./postgres-recruiting-adapter";
 
 const clock = {
@@ -33,6 +33,10 @@ export class RuntimeRecruitingService {
 
   resolveCompatTarget(input: RecruitingCompatTargetInput) {
     return this.adapter.resolveCompatTarget(input);
+  }
+
+  findPartyEventReplay(input: RecruitingPartyReplayInput) {
+    return this.adapter.findPartyEventReplay(input);
   }
 
   resolvePartyRecruitCode(input: Readonly<{ sourceRoomId: string; code: string }>) {

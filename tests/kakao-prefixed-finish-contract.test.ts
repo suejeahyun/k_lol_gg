@@ -66,7 +66,7 @@ test("내전/스크림 번호ㅉ 명령은 slash 유무와 관계없이 현재 �
     assert.equal(classified.kind, "COMMAND", text);
     if (classified.kind !== "COMMAND") continue;
     assert.equal(classified.command, expectedCommand, text);
-    assert.deepEqual(canonicalizeKakaoV4Command(classified, input), expectedCanonical, text);
+    assert.deepEqual(canonicalizeKakaoV4Command(classified, input, new Date((input).timestamp * 1_000)), expectedCanonical, text);
   }
 });
 

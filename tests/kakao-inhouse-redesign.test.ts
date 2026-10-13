@@ -22,7 +22,7 @@ function envelope(text: string) {
     eventId: "redesign-input", timestamp: Date.parse("2026-09-21T12:00:00Z") / 1000, nonce: "c".repeat(32), text };
 }
 function parse(text: string) {
-  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), envelope(text));
+  return canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), envelope(text), new Date((envelope(text)).timestamp * 1_000));
 }
 
 test("modern form round-trips empty metadata and all requested Rift line syntaxes", () => {

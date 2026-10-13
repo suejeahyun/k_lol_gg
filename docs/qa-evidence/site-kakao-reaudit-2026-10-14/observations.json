@@ -1,0 +1,52 @@
+{
+  "scope": "read-only audit with synthetic probes",
+  "sourceCommit": "7494cac5930755ed342605f398d725b49c74bdbd",
+  "productionRuntimeCommit": "4d6a4aa30171774876c4f4af2b031301d23656a0",
+  "productionDeployment": "dpl_HzWW4ADSsWBc7zATWfgi6WBaHxj5",
+  "productionWrites": false,
+  "phoneInstallationVerified": false,
+  "publicBrowser": {
+    "path": "/recruits",
+    "distinctCardsWithNumber2": 2,
+    "cardCommand": "구인상세 2",
+    "participantContentRetained": false,
+    "actualCardDatesAndScopesQueried": false
+  },
+  "syntheticProbes": {
+    "siteCommand": {
+      "distinctPartiesSamePublicNumber": true,
+      "publicDtoOmitsDateAndCode": true,
+      "previousDayCardCommandTargetsToday": true
+    },
+    "applicationDayBoundary": {
+      "renderedApplyDate": "2026-10-13",
+      "repositoryApplyDateTwoSecondsLater": "2026-10-14",
+      "recruitNo": 1,
+      "testedActions": ["APPLY", "CANCEL"],
+      "databaseConnection": false
+    },
+    "clockBoundary": {
+      "signedFutureAccepted": true,
+      "clockAheadSeconds": 240,
+      "serverOperatingDate": "2026-10-13",
+      "issuedOperatingDate": "2026-10-14",
+      "pruneCutoffIsClientTime": true,
+      "unexpiredOriginalMatchesDelete": true,
+      "actualDeletionExecuted": false
+    },
+    "maintenanceGate": {
+      "legacyGateAllowed": false,
+      "legacyGateSettingsReads": 1,
+      "v4HttpStatus": 200,
+      "v4SettingsReads": 0,
+      "dispatchedDomain": "PARTY",
+      "dispatchedAction": "CREATE",
+      "dispatchImplementation": "fake; no database write"
+    },
+    "replyFalse": { "httpCalls": 2, "replyAttempts": 1, "replySuccesses": 0 },
+    "partyReserveAdd": { "slotNo": 2, "substitute": false },
+    "submissionConflict": { "parentRevisionDelivered": 2, "patchIfMatch": [1, 1], "refreshes": 0 },
+    "settingsPendingInput": { "editableWhileSaving": true, "restoredRequestTimeValue": true },
+    "inhouseFinishAliases": { "serverClassified": "INHOUSE_FINISH", "phoneHttpCalls": 0 }
+  }
+}

@@ -211,7 +211,7 @@ test("only EXACT party forms become SYNC while parsed title and slot states reac
   };
   const classification = classifyKakaoV4Command({ profileId: envelope.profileId, text: exact });
   assert.equal(classification.kind, "SNAPSHOT");
-  const canonical = canonicalizeKakaoV4Command(classification, envelope);
+  const canonical = canonicalizeKakaoV4Command(classification, envelope, new Date((envelope).timestamp * 1_000));
   assert.equal(canonical?.domain, "PARTY");
   assert.equal(canonical?.action, "SYNC");
   if (canonical?.domain !== "PARTY" || canonical.action !== "SYNC") return;
@@ -224,7 +224,7 @@ test("only EXACT party forms become SYNC while parsed title and slot states reac
   const ambiguous = classifyKakaoV4Command({ profileId: "RECRUIT", text: ambiguousText });
   assert.equal(ambiguous.kind, "UNKNOWN");
   if (ambiguous.kind === "UNKNOWN") assert.equal(ambiguous.partyForm?.decision, "AMBIGUOUS");
-  assert.equal(canonicalizeKakaoV4Command(ambiguous, { ...envelope, text: ambiguousText }), null);
+  assert.equal(canonicalizeKakaoV4Command(ambiguous, { ...envelope, text: ambiguousText }, new Date(envelope.timestamp * 1_000)), null);
 });
 
 test("metadata-only party activation forms accept slash and keep organizer separate from members", () => {
@@ -238,7 +238,7 @@ test("metadata-only party activation forms accept slash and keep organizer separ
       profileId: "RECRUIT", installationId: "install-11111111111111111111111111111111",
       senderId: "sender-user-22222222222222222222222222222222", eventId: `event-metadata-${prefix ? "slash" : "plain"}`,
       timestamp: Date.parse("2026-09-11T12:00:00.000Z") / 1_000, nonce: "1".repeat(32), text,
-    });
+    }, new Date(Date.parse("2026-09-11T12:00:00.000Z") / 1_000 * 1_000));
     if (!canonical || canonical.domain !== "PARTY" || canonical.action !== "SYNC") assert.fail("expected metadata activation snapshot");
     assert.deepEqual(canonical.payload.members, []);
     assert.equal(canonical.payload.organizerText, "재현");
@@ -262,7 +262,7 @@ test("the reported #11 party template classifies as one metadata activation snap
     profileId: "RECRUIT", installationId: "install-11111111111111111111111111111111",
     senderId: "sender-user-22222222222222222222222222222222", eventId: "event-party-production-template",
     timestamp: Date.parse("2026-09-13T20:38:00.000+09:00") / 1_000, nonce: "3".repeat(32), text,
-  });
+  }, new Date(Date.parse("2026-09-13T20:38:00.000+09:00") / 1_000 * 1_000));
 
   assert.equal(parsed.decision, "EXACT");
   assert.equal(classification.kind, "SNAPSHOT");
@@ -284,7 +284,7 @@ test("generated operating day wins across the 06:00 boundary while legacy forms 
   };
   const generatedCommand = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "RECRUIT", text: generated }),
-    afterBoundary,
+    afterBoundary, new Date((afterBoundary).timestamp * 1_000)
   );
   if (!generatedCommand || generatedCommand.domain !== "PARTY" || generatedCommand.action !== "SYNC") assert.fail("expected generated party snapshot");
   assert.equal(generatedCommand.target.recruitDate, "2026-09-12");
@@ -293,7 +293,7 @@ test("generated operating day wins across the 06:00 boundary while legacy forms 
   const legacy = generated.replace("운영일: 2026-09-12\n", "");
   const legacyCommand = canonicalizeKakaoV4Command(
     classifyKakaoV4Command({ profileId: "RECRUIT", text: legacy }),
-    { ...afterBoundary, eventId: "event-party-operating-day-legacy", text: legacy },
+    { ...afterBoundary, eventId: "event-party-operating-day-legacy", text: legacy }, new Date(afterBoundary.timestamp * 1_000)
   );
   if (!legacyCommand || legacyCommand.domain !== "PARTY" || legacyCommand.action !== "SYNC") assert.fail("expected legacy party snapshot");
   assert.equal(legacyCommand.target.recruitDate, "2026-09-13");

@@ -1268,3 +1268,54 @@ test("site and Kakao serialize the last seat, allow explicit reserves and block 
     await pool.end();
   }
 });
+
+
+test("bound web applications reject changed days, seasons, rounds and UUIDs without touching the new target", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const service = new SeasonService(new PostgresSeasonRepository(database));
+  const suffix = randomUUID().slice(0, 8);
+  const account = approvedAccount(`binding-${suffix}`);
+  const playerId = randomUUID(), seasonId = randomUUID(), roundId = randomUUID();
+  const before = new Date(`${recruitingOperatingDateKey(new Date())}T20:59:59Z`);
+  const after = new Date(before.getTime() + 2_000);
+  const oldDate = recruitingOperatingDateKey(before), nextDate = recruitingOperatingDateKey(after);
+  const target = { seasonId, applyDate: oldDate, roundId: null, applicationId: null as string | null };
+  try {
+    await database.insert(userAccounts).values(accountRow(account));
+    await database.insert(authSessions).values({ id: account.sessionId, tokenHash: randomBytes(32), userAccountId: account.id, authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: new Date(before.getTime() - 86_400_000), expiresAt: new Date(after.getTime() + 86_400_000) });
+    await database.insert(players).values({ id: playerId, userAccountId: account.id, memberName: `합성-${suffix}`, memberNameNormalized: `합성-${suffix}`, nickname: `Bind${suffix}`, nicknameNormalized: `bind${suffix}`, tagLine: "QA", tagLineNormalized: "qa" });
+    await database.insert(seasons).values({ id: seasonId, name: `Binding ${suffix}`, nameNormalized: `binding ${suffix}`, status: "ACTIVE", activatedAt: before });
+    const originalCommand = command(account.id, `original-${suffix}`);
+    const originalBody = { target, recruitNo: 1, mainPosition: "MID" };
+    const original = await service.upsertOwnApplication(originalCommand, 0, originalBody, before);
+    const oldId = (original.body.application as { id: string }).id;
+    assert.equal((await service.upsertOwnApplication(originalCommand, 0, originalBody, after)).replayed, true, "completed old command replays without writing a new day");
+    await database.insert(seasonInhouseRounds).values({ id: roundId, seasonId, applyDate: nextDate, recruitNo: 1, sourceRoomIdHash: randomBytes(32), sourceReferenceHash: randomBytes(32), mode: "RIFT", status: "IN_PROGRESS", capacity: 10 });
+    const currentTarget = { seasonId, applyDate: nextDate, roundId, applicationId: null as string | null };
+    const fresh = await service.upsertOwnApplication(command(account.id, `fresh-${suffix}`), 0, { target: currentTarget, recruitNo: 1, mainPosition: "TOP" }, after);
+    const freshId = (fresh.body.application as { id: string }).id;
+    assert.notEqual(freshId, oldId);
+    for (const stale of [
+      { ...target, applicationId: oldId },
+      { ...currentTarget, seasonId: randomUUID(), applicationId: freshId },
+      { ...currentTarget, roundId: randomUUID(), applicationId: freshId },
+      { ...currentTarget, applicationId: oldId },
+      currentTarget,
+    ]) {
+      await assert.rejects(service.upsertOwnApplication(command(account.id, `stale-upsert-${randomUUID()}`), 0, { target: stale, recruitNo: 1, mainPosition: "SUP" }, after), errorCode("APPLICATION_TARGET_CHANGED"));
+      await assert.rejects(service.cancelOwnApplication(command(account.id, `stale-cancel-${randomUUID()}`), 0, { target: stale, recruitNo: 1 }, after), errorCode("APPLICATION_TARGET_CHANGED"));
+    }
+    const untouched = (await database.select().from(seasonApplications).where(eq(seasonApplications.id, freshId)))[0]!;
+    assert.equal(untouched.mainPosition, "TOP"); assert.equal(untouched.status, "APPLIED"); assert.equal(untouched.revision, 0);
+    const hub = await service.getApplicationHub(account.id, 1, after);
+    assert.equal(hub.round.id, roundId);
+    const cancelled = await service.cancelOwnApplication(command(account.id, `current-cancel-${suffix}`), 0, { target: { ...currentTarget, applicationId: freshId }, recruitNo: 1 }, after);
+    assert.equal((cancelled.body.application as { status: string }).status, "CANCELLED");
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});

@@ -688,6 +688,10 @@ test("party member command validation and ambiguous removal fail closed before p
   const harness = new Harness();
   const handler = new RecruitingCommandHandler(harness.dependencies());
   const invalid = command("PARTY_MEMBER_ADD", "party-invalid-member", 0, { name: "valid" });
+  for (const payload of [{ name: "valid", reserve: "true" }, { name: "valid", reserve: true, slotNo: 1 }]) {
+    assert.throws(() => handler.handle({ ...invalid, payload } as unknown as RecruitingCommand),
+      (error: unknown) => error instanceof RecruitingApplicationError && error.code === "INVALID_COMMAND");
+  }
   assert.throws(
     () => handler.handle({ ...invalid, payload: { name: " bad " } } as unknown as RecruitingCommand),
     (error: unknown) => error instanceof RecruitingApplicationError && error.code === "INVALID_COMMAND",
@@ -1022,7 +1026,7 @@ test("public party and scrim DTOs expose only reviewed fields", () => {
     startTimeText: "21:00", gameInfo: "미입력", organizerText: "재현",
     scheduledStartAt: null, protectedUntil: new Date(now), lastActivityAt: new Date(now),
   };
-  assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+  assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitCode", "recruitDate", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
   assert.deepEqual(toPublicPartyDto(party).members, party.members);
   const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, sourceSenderId: null, opponentSenderId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
   assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "organizerText", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);

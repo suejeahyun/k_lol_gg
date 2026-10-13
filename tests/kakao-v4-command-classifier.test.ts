@@ -301,7 +301,7 @@ test("Kakao copy/paste party row variants still canonicalize to one SYNC member"
       nonce: "3".repeat(32),
       text,
     };
-    const canonical = canonicalizeKakaoV4Command(classification, envelope);
+    const canonical = canonicalizeKakaoV4Command(classification, envelope, new Date((envelope).timestamp * 1_000));
     assert.equal(canonical?.domain, "PARTY", label);
     assert.equal(canonical?.action, "SYNC", label);
     if (canonical?.domain === "PARTY" && canonical.action === "SYNC") {
@@ -326,7 +326,7 @@ test("full-width empty reserve punctuation and clock text never become party mem
     timestamp: Date.parse("2026-09-10T03:00:00.000Z") / 1_000,
     nonce: "4".repeat(32),
     text,
-  });
+  }, new Date(Date.parse("2026-09-10T03:00:00.000Z") / 1_000 * 1_000));
   if (canonical?.domain === "PARTY" && canonical.action === "SYNC") {
     assert.deepEqual(canonical.payload.members, []);
   } else {

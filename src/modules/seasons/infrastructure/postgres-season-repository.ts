@@ -65,6 +65,7 @@ import {
   type AdminSeasonKakaoPendingApplication,
   type OwnSeasonApplication,
   type PublicSeason,
+  type SeasonApplicationTarget,
 } from "../domain/season";
 
 type SeasonRow = typeof seasons.$inferSelect;
@@ -422,7 +423,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
         participantsTruncated: false,
         selectedRecruitNo: recruitNo,
         availableRecruitNos: [1],
-        round: { mode: "RIFT", capacity: 10, closed: true, ambiguous: false },
+        round: { id: null, mode: "RIFT", capacity: 10, closed: true, ambiguous: false },
         unlinkedCount: 0,
       };
     }
@@ -460,7 +461,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
 
     const selectedRounds = inhouseRounds.filter((row) => row.recruitNo === recruitNo);
     const selectedRound = selectedRounds[0];
-    const round = { mode: selectedRound?.mode ?? "RIFT", capacity: selectedRound?.capacity ?? 10,
+    const round = { id: selectedRound?.id ?? null, mode: selectedRound?.mode ?? "RIFT", capacity: selectedRound?.capacity ?? 10,
       closed: selectedRounds.length > 1 || Boolean(selectedRound && selectedRound.status !== "IN_PROGRESS"),
       ambiguous: selectedRounds.length > 1 };
     const pendingCounts = await this.database.select({ reserve: seasonKakaoPendingApplications.reserve, value: count() })
@@ -1157,9 +1158,15 @@ export class PostgresSeasonRepository implements SeasonRepository {
   ) {
     return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
+      if (input.target && (input.target.seasonId !== season.id || input.applyDate !== recruitingOperatingDateKey(now))) {
+        throw new SeasonServiceError("APPLICATION_TARGET_CHANGED", "운영일 또는 시즌이 변경되었습니다.");
+      }
       await this.lockInhouseEnrollment(transaction, season.id, input.applyDate);
       const player = await this.actorPlayerForUpdate(transaction, input.actorUserAccountId);
       const round = await this.assertRecruitRoundExists(transaction, season.id, input.applyDate, input.recruitNo);
+      if (input.target && input.target.roundId !== (round?.id ?? null)) {
+        throw new SeasonServiceError("APPLICATION_TARGET_CHANGED", "모집 대상이 변경되었습니다.");
+      }
       if (round && round.status !== "IN_PROGRESS") throw new SeasonServiceError("RECRUIT_CLOSED", "내전 모집이 마감됐어요.");
       if ((!round || round.mode === "RIFT") && input.mainPosition === null) {
         throw new SeasonServiceError("RIFT_POSITION_REQUIRED", "협곡은 주라인 또는 전체 가능을 직접 선택해 주세요.");
@@ -1179,6 +1186,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .for("update")
         .limit(1);
       const current = currentRows[0];
+      if (input.target && input.target.applicationId !== (current?.id ?? null)) {
+        throw new SeasonServiceError("APPLICATION_TARGET_CHANGED", "본인 신청이 변경되었습니다.");
+      }
       const mergePlan = planSiteApplicationMerge(current ?? null);
       const beforeCount = await this.inhouseParticipantCount(transaction, season.id, input.applyDate, input.recruitNo, round);
       const reserve = input.reserve === true;
@@ -1285,12 +1295,19 @@ export class PostgresSeasonRepository implements SeasonRepository {
     applyDate: string,
     recruitNo: number,
     now: Date,
+    target?: SeasonApplicationTarget,
   ) {
     return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
+      if (target && (target.seasonId !== season.id || applyDate !== recruitingOperatingDateKey(now))) {
+        throw new SeasonServiceError("APPLICATION_TARGET_CHANGED", "운영일 또는 시즌이 변경되었습니다.");
+      }
       await this.lockInhouseEnrollment(transaction, season.id, applyDate);
       const player = await this.actorPlayerForUpdate(transaction, envelope.actorUserAccountId);
       const round = await this.assertRecruitRoundExists(transaction, season.id, applyDate, recruitNo);
+      if (target && target.roundId !== (round?.id ?? null)) {
+        throw new SeasonServiceError("APPLICATION_TARGET_CHANGED", "모집 대상이 변경되었습니다.");
+      }
       if (round && round.status !== "IN_PROGRESS") throw new SeasonServiceError("RECRUIT_CLOSED", "내전 모집이 마감됐어요.");
       const currentRows = await transaction
         .select()
@@ -1306,6 +1323,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .for("update")
         .limit(1);
       const current = currentRows[0];
+      if (target && target.applicationId !== (current?.id ?? null)) {
+        throw new SeasonServiceError("APPLICATION_TARGET_CHANGED", "본인 신청이 변경되었습니다.");
+      }
       if (!current) throw new SeasonServiceError("NOT_FOUND", "본인의 오늘 신청을 찾을 수 없습니다.");
       if (current.revision !== expectedRevision) {
         throw new SeasonServiceError("PRECONDITION_FAILED", "신청 revision이 변경되었습니다.");

@@ -40,7 +40,7 @@ function envelope(text: string, strict: boolean): KakaoV4CommandEnvelope {
 
 function strictPayload(timeText: string) {
   const value = envelope(FORM.replace("__TIME__", timeText), true);
-  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command(value), value);
+  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command(value), value, new Date((value).timestamp * 1_000));
   assert.ok(command && command.domain === "SCRIM" && command.action === "UPSERT");
   return command.payload;
 }
@@ -51,7 +51,7 @@ test("V1 strict scrim time keeps an explicit M/D instead of forcing the operatio
   assert.equal(payload.memo, null);
 
   const normal = envelope(FORM.replace("__TIME__", "9/12 21:00"), false);
-  const normalCommand = canonicalizeKakaoV4Command(classifyKakaoV4Command(normal), normal);
+  const normalCommand = canonicalizeKakaoV4Command(classifyKakaoV4Command(normal), normal, new Date((normal).timestamp * 1_000));
   assert.ok(normalCommand && normalCommand.domain === "SCRIM" && normalCommand.action === "UPSERT");
   assert.equal(normalCommand.payload.scheduledAt, "2026-09-11T12:00:00.000Z", "ordinary V4 parsing must not change");
 });

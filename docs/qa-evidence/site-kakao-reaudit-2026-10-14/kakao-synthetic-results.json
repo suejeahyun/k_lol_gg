@@ -1,0 +1,177 @@
+{
+  "environment": {
+    "kind": "local VM and pure TypeScript domain functions",
+    "phoneArtifactVersion": "KLOL_KAKAO_BOT_V40_R28_2026_10_14",
+    "artifactSha256": "73d7e3ed4f09c57cb54d84df67c272530d69c986b5199666f19cf37d5a4c9843",
+    "actualDeviceValidation": false,
+    "realNetworkCalls": 0,
+    "databaseCalls": 0,
+    "trackedSourceWrites": 0,
+    "allParticipantsSynthetic": true,
+    "reproductionCommand": "node --import tsx .tmp/kakao-reaudit-20261014.mjs"
+  },
+  "replyDelivery": {
+    "falseReplyThenDuplicate": {
+      "httpCalls": 2,
+      "replyAttempts": 1,
+      "visibleReplies": []
+    },
+    "timeoutThenDuplicateSuccess": {
+      "httpCalls": 2,
+      "firstReplies": [
+        "[K-LOL.GG 명단 추가]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요."
+      ],
+      "secondReplies": []
+    },
+    "normalDuplicateControl": {
+      "firstReplies": [
+        "synthetic success delivered"
+      ],
+      "secondReplies": []
+    },
+    "scope": "Failure return and timeout are injected mocks. Actual device failures are not claimed. Successful duplicate reply suppression is intentional; suppressing an undelivered or newly successful result is the finding."
+  },
+  "reserveCommands": [
+    {
+      "text": "상세 7 예비추가 합성",
+      "phoneHttpCalls": 1,
+      "parameters": {
+        "recruitNumber": 7,
+        "name": "합성"
+      },
+      "canonical": {
+        "domain": "PARTY",
+        "action": "ADD_MEMBER",
+        "target": {
+          "recruitDate": "2026-10-14",
+          "recruitNumber": 7
+        },
+        "name": "합성"
+      },
+      "resultingMember": {
+        "name": "합성",
+        "position": null,
+        "slotNo": 2,
+        "substitute": false
+      }
+    },
+    {
+      "text": "상세 ABCDE-23456 예비추가 합성",
+      "phoneHttpCalls": 1,
+      "parameters": {
+        "recruitCode": "ABCDE-23456",
+        "name": "합성"
+      },
+      "canonical": {
+        "domain": "PARTY",
+        "action": "BY_CODE",
+        "operation": "ADD_MEMBER",
+        "recruitCode": "ABCDE-23456",
+        "name": "합성"
+      },
+      "resultingMember": {
+        "name": "합성",
+        "position": null,
+        "slotNo": 2,
+        "substitute": false
+      }
+    },
+    {
+      "text": "상세 7 대기추가 합성",
+      "phoneHttpCalls": 1,
+      "parameters": {
+        "recruitNumber": 7,
+        "name": "합성"
+      },
+      "canonical": {
+        "domain": "PARTY",
+        "action": "ADD_MEMBER",
+        "target": {
+          "recruitDate": "2026-10-14",
+          "recruitNumber": 7
+        },
+        "name": "합성"
+      },
+      "resultingMember": {
+        "name": "합성",
+        "position": null,
+        "slotNo": 2,
+        "substitute": false
+      }
+    }
+  ],
+  "finishAliases": [
+    {
+      "text": "내전 7쫑",
+      "phoneHttpCalls": 0,
+      "phoneReplies": [],
+      "serverClassification": "INHOUSE_FINISH",
+      "serverCanonical": {
+        "domain": "SEASON",
+        "action": "FINISH",
+        "seasonId": null,
+        "applyDate": "2026-10-14",
+        "recruitNumber": 7
+      }
+    },
+    {
+      "text": "내전 7마감",
+      "phoneHttpCalls": 0,
+      "phoneReplies": [],
+      "serverClassification": "INHOUSE_FINISH",
+      "serverCanonical": {
+        "domain": "SEASON",
+        "action": "FINISH",
+        "seasonId": null,
+        "applyDate": "2026-10-14",
+        "recruitNumber": 7
+      }
+    },
+    {
+      "text": "내전 7종료",
+      "phoneHttpCalls": 0,
+      "phoneReplies": [],
+      "serverClassification": "INHOUSE_FINISH",
+      "serverCanonical": {
+        "domain": "SEASON",
+        "action": "FINISH",
+        "seasonId": null,
+        "applyDate": "2026-10-14",
+        "recruitNumber": 7
+      }
+    },
+    {
+      "text": "／내전 ７ㅉ",
+      "phoneHttpCalls": 0,
+      "phoneReplies": [],
+      "serverClassification": "INHOUSE_FINISH",
+      "serverCanonical": {
+        "domain": "SEASON",
+        "action": "FINISH",
+        "seasonId": null,
+        "applyDate": "2026-10-14",
+        "recruitNumber": 7
+      }
+    },
+    {
+      "text": "내전 #7ㅉ",
+      "phoneHttpCalls": 0,
+      "phoneReplies": [],
+      "serverClassification": "INHOUSE_FINISH",
+      "serverCanonical": {
+        "domain": "SEASON",
+        "action": "FINISH",
+        "seasonId": null,
+        "applyDate": "2026-10-14",
+        "recruitNumber": 7
+      }
+    }
+  ],
+  "finishControl": {
+    "text": "/내전 7ㅉ",
+    "phoneHttpCalls": 1,
+    "phoneReplies": [
+      "[V1 server reply]"
+    ]
+  }
+}

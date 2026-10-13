@@ -1413,7 +1413,7 @@ test("editable inhouse forms count unlinked names, merge concurrent additions, p
     const parsed = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), {
       profileId: "FEATURES", installationId: "install-legacy-inhouse", senderId: "sender-legacy-inhouse", eventId: "legacy-inhouse-copy",
       timestamp: Math.floor(now.getTime() / 1_000), nonce: "f".repeat(32), text,
-    });
+    }, new Date(Math.floor(now.getTime() / 1_000) * 1_000));
     if (parsed?.domain !== "SEASON" || parsed.action !== "SYNC") assert.fail("issued legacy copy must parse for guarded storage validation");
     assert.equal(parsed.participants.every((entry) => entry.nameOnly), true);
     return parsed.participants;
@@ -1691,7 +1691,7 @@ test("in-house copy forms reopen a vacated reserve slot and preserve the remaini
     const parsed = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text: copyText }), {
       profileId: "FEATURES", installationId: "install-reserve-gap", senderId: "sender-reserve-gap", eventId: "event-reserve-gap",
       timestamp: Math.floor(now.getTime() / 1_000), nonce: "e".repeat(32), text: copyText,
-    });
+    }, new Date(Math.floor(now.getTime() / 1_000) * 1_000));
     if (parsed?.domain !== "SEASON" || parsed.action !== "SYNC") assert.fail("the generated reserve vacancy form must parse");
     const restored = await send({
       action: "SYNC", seasonId, applyDate: parsed.applyDate, recruitNo: parsed.recruitNumber, mode: parsed.mode,
