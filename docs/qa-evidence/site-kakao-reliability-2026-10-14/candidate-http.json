@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-13T19:12:53.791Z",
+  "status": "PASS",
+  "deploymentId": "dpl_7Hpo2sbGcXbFFg6dQnJ4rNaq7YL2",
+  "source": "cf32d4f9ee94149a3fb0be81301f9943ccd6c7a0",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "bytes": 57,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 110917,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "bytes": 60077,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "bytes": 51399,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/help/kakao",
+      "status": 200,
+      "bytes": 59055,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/help/recruits",
+      "status": 200,
+      "bytes": 62009,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/api/admin/operation-forms?page=2",
+      "status": 401,
+      "bytes": 196,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/kakao-daily-close",
+      "status": 401,
+      "bytes": 187,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/security-maintenance",
+      "status": 401,
+      "bytes": 24,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    }
+  ],
+  "notes": "Authenticated Vercel deployment-protection bypass; application requests are anonymous read-only GET. No response bodies or cookies retained."
+}

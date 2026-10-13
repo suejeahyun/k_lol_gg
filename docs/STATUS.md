@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-14 사이트·카카오 봇 안정성 보완 1.0.0 운영 반영
+
+`site-kakao-reliability@1.0.0`, source `cf32d4f9ee94149a3fb0be81301f9943ccd6c7a0`, tag `site-kakao-reliability-v1.0.0`. 재점검 9건을 수정했다. 공개 모집의 고정 코드 복사, 신청 화면의 날짜·시즌·회차·본인 신청 고정, 서버 시각 및 재전송 대상 고정, V4 운영 설정, 예비 등록, 경기 초안 복구와 관리자 저장 입력 잠금을 적용했다.
+
+전체 check 계약 704/704·단위 1,112 pass/1 skip·lint 오류 0/기존 경고 58·build, 격리 DB 112/112, 시즌 HTTP와 합성 브라우저를 통과했다. main `dpl_BpxTdkKCLLGa2nwrp1F1o8T2Q5pc` READY·동일 SHA·canonical alias, 운영 HTTP 9조건·실제 서명 조회 2조건·읽기 전용 DB catalog 확인 완료. migration 0049 유지, 운영 설정 변경 없음. [검증](qa-evidence/site-kakao-reliability-2026-10-14/README.md), [배포·복구](qa-evidence/site-kakao-reliability-2026-10-14/production.md).
+
+**R29 비공개 휴대폰 파일은 준비 완료이며 실기기 설치는 PENDING_USER_INSTALL이다.** 답장 재시도·마감 별칭 수정에는 파일 교체가 필요하다. R29는 R28의 고정 코드 직접 명령도 포함한다. 아래 R28 설치 대기 표현은 이전 시점의 기록이다.
+
 ## 2026-10-14 파티 고정 모집코드 1.0.0 운영 반영
 
 `stable-recruit-codes@1.0.0`, source `4d6a4aa30171774876c4f4af2b031301d23656a0`, tag `stable-recruit-codes-v1.0.0`. 파티별 모집코드를 처음 한 번 발급하고 수정·날짜 변경·종료 뒤에도 같은 모집에 연결한다. 명단 원본은 자동 버전으로 구분하며 기존 동시 편집·원본 만료·권한·멱등성을 유지했다. 고정 코드로 상세·추가·삭제·쫑을 처리하고 날짜가 바뀌어 같은 번호가 재사용돼도 실제 UUID로 대상을 고정한다. 내전은 이번 변경 대상이 아니다.

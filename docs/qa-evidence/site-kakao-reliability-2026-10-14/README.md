@@ -45,3 +45,7 @@
 - 격리 PostgreSQL recruiting scope: 11개 파일 112/112 PASS, skip 0. 마지막 실패는 DB 전용 과거 날짜 fixture 두 곳에 서버 시계를 주입하지 않은 테스트였으며 이를 고친 뒤 전체 scope를 다시 통과했다. 런타임 소스 변경은 없었다. [DB 상세 근거](data.md).
 - 중복 요청의 최초 조회가 원 요청 커밋보다 빨랐던 경합까지 검사했다. 이미 처리된 명령의 답장은 재검증한 receipt의 원래 모집 UUID·날짜·번호에 고정하며, 검증할 수 없는 다른 대상으로 양식을 만들지 않는다.
 - 초기 실패 로그는 최종 검사와 구분한다. 배포 후보와 운영 확인 결과는 배포가 실제 완료된 뒤 별도로 기록한다.
+
+## 운영 반영 확인
+
+source `cf32d4f9ee94149a3fb0be81301f9943ccd6c7a0`, tag `site-kakao-reliability-v1.0.0`, main `dpl_BpxTdkKCLLGa2nwrp1F1o8T2Q5pc` READY·동일 source·canonical alias를 확인했다. 운영 health ready·HTTP 9조건·실제 서명 조회 2조건·읽기 전용 DB catalog 모두 PASS. 최종 tree 비밀정보 검사도 통과했다. [배포·복구·휴대폰 설치 상태](production.md). **R29 실기기 설치는 PENDING_USER_INSTALL**이다.

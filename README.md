@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-14 사이트·카카오 봇 안정성 1.0.0 운영 반영**: 재점검 9건을 수정했습니다. 고정 코드 복사, 신청 대상·재전송 보호, 예비 등록, 초안 복구와 설정 저장을 보완했습니다. source `cf32d4f9`, main READY·운영 health·HTTP/서명 조회 확인 완료. **휴대폰 R29 파일 교체는 대기 중입니다.** [변경 안내](docs/patch-notes/site-kakao-reliability-v1.0.0.md), [배포·검증·복구](docs/qa-evidence/site-kakao-reliability-2026-10-14/production.md). 아래는 이전 릴리스의 시점별 기록입니다.
+
 **2026-10-10 내전 점수 관리 1.1.0 운영 반영**: 티어·LP 계산, 점수 미리보기·입력 확인·변경 이력·관리 목록·티어별 실제 평균/중앙값을 개선했습니다. source `8ce5e7aa`, main READY·동일 SHA·운영 도메인·health와 HTTP33조건 확인. [검증](docs/qa-evidence/team-score-insights-2026-10-10/README.md), [배포·복구](docs/qa-evidence/team-score-insights-2026-10-10/production.md), [남은 외부 조건](docs/qa-evidence/team-score-insights-2026-10-10/external-conditions.md). 아래는 이전 릴리스의 시점별 기록입니다.
 
 **2026-10-09 내전 팀 편성 점수 관리자 편집 1.0.0 운영 반영**: 일반 관리자 점수 저장 권한과 검색·점수 비교·초기화·재시도 화면을 개선했습니다. source `69d83366`, 운영 READY·health·31개 HTTP 점검 확인. [배포·검증·복구](docs/qa-evidence/team-balance-admin-2026-10-08/production.md).

@@ -1,0 +1,17 @@
+{
+  "checkedDateKst": "2026-10-14",
+  "status": "PASS",
+  "source": "cf32d4f9ee94149a3fb0be81301f9943ccd6c7a0",
+  "url": "https://k-lol-gg.vercel.app/recruits",
+  "viewportWidth": 1280,
+  "documentWidth": 1265,
+  "codedCardVisible": true,
+  "recruitDateVisible": true,
+  "legacyCodeMissingSafeGuidanceVisible": true,
+  "copyButtons": 1,
+  "brokenImages": 0,
+  "mutationsPerformed": false,
+  "responseBodiesOrRosterScreenshotsRetained": false,
+  "temporaryTabClosed": true,
+  "notes": "Observed the canonical production page with a real browser. A coded card and a legacy card shared the same daily number but had different dates; only the coded card exposed the lookup-copy button. No command was sent to Kakao and no participant data was stored in this evidence."
+}

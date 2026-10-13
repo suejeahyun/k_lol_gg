@@ -1,0 +1,46 @@
+{
+  "status": "PASS",
+  "at": "2026-10-13T19:15:09.437Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "mode": "signed-read-only-behavior",
+  "technicalRecordsMayBeWritten": true,
+  "schemaCatalogChecked": false,
+  "checks": [
+    {
+      "label": "fixed-code-registry-detail",
+      "httpStatus": 200,
+      "durationMs": 455,
+      "redirectBlocked": false,
+      "deploymentProtectionPossible": false,
+      "jsonResponse": true,
+      "contractMatches": true,
+      "protocolMatches": true,
+      "eventMatches": true,
+      "noAggregatePayload": true,
+      "passed": true,
+      "scopedRegistryLookupResponseRecognized": true,
+      "missingCodeNotice": true,
+      "terminalCodeNotice": false,
+      "activeVersionedDetail": false,
+      "responseBodyRetained": false
+    },
+    {
+      "label": "stable-code-help",
+      "httpStatus": 200,
+      "durationMs": 225,
+      "redirectBlocked": false,
+      "deploymentProtectionPossible": false,
+      "jsonResponse": true,
+      "contractMatches": true,
+      "protocolMatches": true,
+      "eventMatches": true,
+      "noAggregatePayload": true,
+      "passed": true,
+      "fixedCodeHelp": true,
+      "versionHelp": true,
+      "lookupHelp": true,
+      "closeHelp": true,
+      "responseBodyRetained": false
+    }
+  ]
+}
