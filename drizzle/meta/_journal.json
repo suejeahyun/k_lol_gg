@@ -344,6 +344,13 @@
       "when": 1791826858073,
       "tag": "0048_mmr-game-source-history",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1791907441396,
+      "tag": "0049_stable-recruit-codes",
+      "breakpoints": true
     }
   ]
 }

@@ -187,7 +187,13 @@ test("server help explains editable numbered copies and inhouse mode requirement
     assert.doesNotMatch(result.reply, /1\. 5인파티|저장기준/u);
     assert.doesNotMatch(result.reply, /스크림/u);
     assert.doesNotMatch(result.reply, /시간·게임을 바꿀 수 없어요/u);
-    if (text === "구인도움말") assert.match(result.reply, /이름만 지우고 번호 행과 양식코드를 남긴/u);
+    if (text === "구인도움말") {
+      assert.match(result.reply, /이름만 지우고 번호 행과 코드·버전 줄을 남긴/u);
+      assert.match(result.reply, /모집코드는 처음 한 번만 발급되며 수정해도 유지/u);
+      assert.match(result.reply, /명단버전은 봇이 자동으로 갱신/u);
+      assert.match(result.reply, /구인상세 모집코드/u);
+      assert.match(result.reply, /구인마감 모집코드 또는 모집코드ㅉ/u);
+    }
   }
   const retired = await service.execute({ ...envelope, profileId: "FEATURES", text: "내전확인 ABCDEF", eventId: "event-r24-retired-confirm-guide" }, "current");
   assert.match(retired.reply, /빈칸에 이름 추가/u);

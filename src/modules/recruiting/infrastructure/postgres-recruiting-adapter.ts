@@ -10,6 +10,7 @@ import {
 import { auditEvents } from "@/platform/db/schema/audit";
 import { userAccounts } from "@/platform/db/schema/auth";
 import { destructionCompetitions } from "@/platform/db/schema/destruction-competitions";
+import { kakaoRecruitCodes } from "@/platform/db/schema/kakao-recruit-form-snapshots";
 import {
   recruitParties,
   kakaoRoomMembers,
@@ -28,7 +29,8 @@ import { withTransaction } from "@/platform/db/transaction";
 import { RecruitingApplicationError } from "../application/command-handler";
 import { partyCopySnapshot } from "../application/party-copy-snapshot";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
-import { issueKakaoFormSnapshot, loadKakaoFormSnapshot } from "./kakao-form-snapshots";
+import { issueKakaoRecruitFormSnapshot, loadKakaoRecruitFormSnapshot, loadKakaoFormSnapshot } from "./kakao-form-snapshots";
+import { normalizeRecruitCode, parseRecruitFormReference } from "../domain/kakao-recruit-reference";
 import { kakaoRecruitCommandAccess, type RecruitingCommand, type RecruitingCommandActor } from "../application/commands";
 import {
   parsePartyMemberStatsQuery,
@@ -187,6 +189,7 @@ export class PostgresRecruitingAdapter implements
           eq(recruitParties.sourceRoomId, input.sourceRoomId),
           eq(recruitParties.recruitDate, input.recruitDate),
           eq(recruitParties.recruitNumber, input.recruitNumber),
+          input.partyId ? eq(recruitParties.id, input.partyId) : undefined,
           input.allowedPartyStatuses ? inArray(recruitParties.status, input.allowedPartyStatuses) : undefined,
         )).orderBy(desc(recruitParties.resetSequence)).limit(1))[0] ?? null;
     }
@@ -198,6 +201,17 @@ export class PostgresRecruitingAdapter implements
         eq(scrimRecruits.isDraft, false),
         input.allowedScrimStatuses ? inArray(scrimRecruits.status, input.allowedScrimStatuses) : undefined,
       )).limit(1))[0] ?? null;
+  }
+
+  async resolvePartyRecruitCode(input: Readonly<{ sourceRoomId: string; code: string }>) {
+    const code = normalizeRecruitCode(input.code);
+    if (!code) return null;
+    return (await this.database.select({ id: recruitParties.id, revision: recruitParties.revision,
+      recruitDate: recruitParties.recruitDate, recruitNumber: recruitParties.recruitNumber, status: recruitParties.status,
+    }).from(kakaoRecruitCodes).innerJoin(recruitParties, eq(recruitParties.id, kakaoRecruitCodes.targetId)).where(and(
+      eq(kakaoRecruitCodes.code, code), eq(kakaoRecruitCodes.scopeHash, sha256(input.sourceRoomId)),
+      eq(recruitParties.sourceRoomId, input.sourceRoomId),
+    )).limit(1))[0] ?? null;
   }
 
   async resolveScrimUpsert(input: Readonly<{
@@ -428,15 +442,19 @@ export class PostgresRecruitingAdapter implements
   }
 
   async issuePartyCopySnapshot(context: RecruitingTransactionContext, party: RecruitParty, now: Date) {
-    if (!party.sourceRoomId || party.recruitDate !== recruitingOperatingDateKey(now)) return null;
-    return issueKakaoFormSnapshot(this.transactionFor(context), {
+    if (!party.sourceRoomId || !["DRAFT", "IN_PROGRESS"].includes(party.status)) return null;
+    return issueKakaoRecruitFormSnapshot(this.transactionFor(context), {
       kind: "PARTY", scopeHash: sha256(party.sourceRoomId), targetId: party.id,
-      operatingDate: party.recruitDate, state: partyCopySnapshot(party), now,
+      operatingDate: recruitingOperatingDateKey(now), state: partyCopySnapshot(party), now,
     });
   }
 
   async loadPartyCopySnapshot(context: RecruitingTransactionContext, party: RecruitParty, code: string, now: Date) {
     if (!party.sourceRoomId) return null;
+    if (parseRecruitFormReference(code)) return loadKakaoRecruitFormSnapshot(this.transactionFor(context), {
+      kind: "PARTY", scopeHash: sha256(party.sourceRoomId), targetId: party.id,
+      operatingDate: recruitingOperatingDateKey(now), code, now,
+    });
     return loadKakaoFormSnapshot(this.transactionFor(context), {
       kind: "PARTY", scopeHash: sha256(party.sourceRoomId), targetId: party.id,
       operatingDate: party.recruitDate, code, now,

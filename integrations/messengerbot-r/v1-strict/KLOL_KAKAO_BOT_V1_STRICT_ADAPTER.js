@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R27_2026_09_22";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_R28_2026_10_14";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -161,6 +161,19 @@ function handleMemberMutationCommand(text, room, sender, replier) {
     "명단 " + (parsed.command === "ADD" ? "추가" : "삭제"),
     parsed.profileId
   );
+  return true;
+}
+
+function handleRecruitCodeCommand(value, room, sender, replier) {
+  var text = normalizePartyMemberMutationCommandText(value), match = null;
+  if (/[\r\n\u2028\u2029]/.test(text) || text.indexOf("//") === 0 || /^\/\s/.test(text)) return false;
+  if (text.charAt(0) === "/") text = text.substring(1);
+  match = /^(?:구인상세|상세)\s+(\S+)(?:\s+(.+))?$/.exec(text);
+  if (match && match[2] && !parseMemberMutationCommand("상세 1 " + match[2])) return false;
+  match = match || /^구인(?:마감|쫑|종료)\s+(\S+)$/.exec(text) || /^(\S+?)\s*(?:쫑|ㅉ|ᄍ|마감|종료)$/.exec(text);
+  if (!match || !/^[2-9A-HJ-NP-Z]{5}-[2-9A-HJ-NP-Z]{5}$/.test(match[1].toUpperCase())) return false;
+  if (isKlolBotEchoSender(sender)) return true;
+  handlePartyRecruitApi("", room || RECRUIT_ROOM_LABEL, String(value || ""), sender, replier, "파티 모집", "RECRUIT");
   return true;
 }
 

@@ -4,9 +4,11 @@ import test from "node:test";
 import type { JsonObject } from "../src/modules/competitions/core/command-contracts";
 import {
   issueKakaoFormSnapshot,
+  issueKakaoRecruitFormSnapshot,
   kakaoFormSnapshotExpiry,
   kakaoFormSnapshotStateHash,
   loadKakaoFormSnapshot,
+  loadKakaoRecruitFormSnapshot,
   normalizeKakaoFormSnapshotCode,
 } from "../src/modules/recruiting/infrastructure/kakao-form-snapshots";
 import type { V2Transaction } from "../src/platform/db/transaction";
@@ -17,6 +19,19 @@ test("form codes are readable ASCII and normalize mobile fullwidth/lowercase inp
   for (const input of ["ABCDE23456", "ABCDE-01234", "ABCDE-I2345", "ABCDE-O2345", "ABCDE-23456x", "x ABCDE-23456", ""]) {
     assert.equal(normalizeKakaoFormSnapshotCode(input), null);
   }
+});
+
+test("stable recruitment storage rejects invalid identity and incomplete versions before querying", async () => {
+  const noDatabase = {} as V2Transaction;
+  const binding = { kind: "PARTY" as const, scopeHash: Buffer.alloc(32, 7), targetId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", operatingDate: "2026-10-14", now: new Date("2026-10-14T06:00:00+09:00") };
+  for (const changes of [{ kind: "INHOUSE" as const }, { targetId: "display-number-1" }, { scopeHash: Buffer.alloc(31) }, { operatingDate: "2026-10-13" }, { now: new Date(NaN) }]) {
+    await assert.rejects(issueKakaoRecruitFormSnapshot(noDatabase, { ...binding, ...changes, state: {} }), /INVALID_KAKAO_FORM_SNAPSHOT_BINDING/u);
+    assert.equal(await loadKakaoRecruitFormSnapshot(noDatabase, { ...binding, ...changes, code: "ABCDE-23456@1" }), null);
+  }
+  for (const code of ["ABCDE-23456", "ABCDE-23456@0", "ABCDE-23456@-1", "ABCDE-23456@9007199254740992", "not-a-code"]) {
+    assert.equal(await loadKakaoRecruitFormSnapshot(noDatabase, { ...binding, code }), null);
+  }
+  await assert.rejects(issueKakaoRecruitFormSnapshot(noDatabase, { ...binding, state: { bad: "가".repeat(23_000) } }), /KAKAO_FORM_SNAPSHOT_TOO_LARGE/u);
 });
 
 test("snapshot expiry is precisely the next 06:00 KST, including month/year boundaries", () => {

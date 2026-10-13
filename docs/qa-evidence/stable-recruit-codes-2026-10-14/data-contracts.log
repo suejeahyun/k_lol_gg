@@ -1,0 +1,137 @@
+Isolated PostgreSQL 18 recruitment snapshot contracts; synthetic data only.
+
+FILE tests/database/kakao-form-snapshots.contract.test.ts
+TAP version 13
+# Subtest: Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST
+    # Subtest: scope, kind, target and operating-day binding are mandatory
+    ok 1 - scope, kind, target and operating-day binding are mandatory
+      ---
+      duration_ms: 8.6535
+      type: 'test'
+      ...
+    # Subtest: concurrent readers reuse a single durable original
+    ok 2 - concurrent readers reuse a single durable original
+      ---
+      duration_ms: 112.54
+      type: 'test'
+      ...
+    # Subtest: transaction rollback does not leave an issued code behind
+    ok 3 - transaction rollback does not leave an issued code behind
+      ---
+      duration_ms: 3.7219
+      type: 'test'
+      ...
+    # Subtest: database constraints fail closed even when application validation is bypassed
+    ok 4 - database constraints fail closed even when application validation is bypassed
+      ---
+      duration_ms: 173.6161
+      type: 'test'
+      ...
+    # Subtest: midnight preserves the code but the exact 06:00 boundary rejects it
+    ok 5 - midnight preserves the code but the exact 06:00 boundary rejects it
+      ---
+      duration_ms: 73.2977
+      type: 'test'
+      ...
+    # Subtest: bounded retention cleanup never removes a live original
+    ok 6 - bounded retention cleanup never removes a live original
+      ---
+      duration_ms: 37.1904
+      type: 'test'
+      ...
+    1..6
+ok 1 - Kakao short form originals are durable, scoped, reusable and expire at 06:00 KST
+  ---
+  duration_ms: 1547.7393
+  type: 'test'
+  ...
+1..1
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2603.2333
+
+FILE tests/database/kakao-recruit-form-snapshots.contract.test.ts
+TAP version 13
+# Subtest: stable recruitment references preserve originals, serialize versions and retain identity across days
+    # Subtest: the same state/day reuses a version without consuming or modifying its original
+    ok 1 - the same state/day reuses a version without consuming or modifying its original
+      ---
+      duration_ms: 11.3382
+      type: 'test'
+      ...
+    # Subtest: scope, real UUID, PARTY kind, operating day and complete reference are required
+    ok 2 - scope, real UUID, PARTY kind, operating day and complete reference are required
+      ---
+      duration_ms: 23.6189
+      type: 'test'
+      ...
+    # Subtest: simultaneous first issuance converges and different originals receive distinct versions
+    ok 3 - simultaneous first issuance converges and different originals receive distinct versions
+      ---
+      duration_ms: 143.1912
+      type: 'test'
+      ...
+    # Subtest: a generated code collision retries without stealing another recruitment identity
+    ok 4 - a generated code collision retries without stealing another recruitment identity
+      ---
+      duration_ms: 5.7531
+      type: 'test'
+      ...
+    # Subtest: rollback removes initial issuance and does not advance an existing watermark
+    ok 5 - rollback removes initial issuance and does not advance an existing watermark
+      ---
+      duration_ms: 9.7568
+      type: 'test'
+      ...
+    # Subtest: midnight retains originals; 06:00 expires them but preserves the code and increasing version
+    ok 6 - midnight retains originals; 06:00 expires them but preserves the code and increasing version
+      ---
+      duration_ms: 9.3459
+      type: 'test'
+      ...
+    # Subtest: retention prunes at most 256 expired originals without deleting registries or live originals
+    ok 7 - retention prunes at most 256 expired originals without deleting registries or live originals
+      ---
+      duration_ms: 26.8784
+      type: 'test'
+      ...
+    # Subtest: exhausted counters fail closed while an already-issued original remains readable
+    ok 8 - exhausted counters fail closed while an already-issued original remains readable
+      ---
+      duration_ms: 7.581
+      type: 'test'
+      ...
+    # Subtest: database constraints reject invalid identities, versions, expiry and originals
+    ok 9 - database constraints reject invalid identities, versions, expiry and originals
+      ---
+      duration_ms: 447.3311
+      type: 'test'
+      ...
+    1..9
+ok 1 - stable recruitment references preserve originals, serialize versions and retain identity across days
+  ---
+  duration_ms: 2742.8637
+  type: 'test'
+  ...
+# Subtest: stable recruitment migration supports fresh install, populated legacy upgrade, replay and previous writers
+ok 2 - stable recruitment migration supports fresh install, populated legacy upgrade, replay and previous writers
+  ---
+  duration_ms: 2930.3452
+  type: 'test'
+  ...
+1..2
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6524.2383
+
+Isolated PostgreSQL cluster stopped and disposable directory removed.

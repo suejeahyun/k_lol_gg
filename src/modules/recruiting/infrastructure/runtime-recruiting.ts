@@ -35,6 +35,10 @@ export class RuntimeRecruitingService {
     return this.adapter.resolveCompatTarget(input);
   }
 
+  resolvePartyRecruitCode(input: Readonly<{ sourceRoomId: string; code: string }>) {
+    return this.adapter.resolvePartyRecruitCode(input);
+  }
+
   resolveScrimUpsert(input: Readonly<{
     sourceRoomId: string;
     recruitDate: string;

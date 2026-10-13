@@ -1,5 +1,6 @@
 import type { KakaoOpenChatStatusDto } from "../kakao-assistant/domain";
 import { partyCopyReference } from "../application/party-copy-reference";
+import { recruitFormIdentityLines } from "../domain/kakao-recruit-reference";
 
 type Party = KakaoOpenChatStatusDto["parties"][number];
 
@@ -109,7 +110,7 @@ function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" |
   const editable = party.type === "PARTY_NUMBER";
   const lines = [
     `[파티 #${party.recruitNumber}] ${title} · ${main.length}/${party.maximumMembers}명`,
-    ...(editable ? [`양식코드: ${formCode}`, "──────────────",
+    ...(editable ? [...recruitFormIdentityLines(formCode), "──────────────",
       `시작 시간 : ${editableMetadata(party.startTimeText)}`, `게임 종류 : ${editableMetadata(party.gameInfo)}`]
       : [`시작: ${party.startTimeText ?? "미정"}`, `게임: ${party.gameInfo ?? "미정"}`]),
     "",
@@ -121,7 +122,7 @@ function compactCopyForm(party: Pick<Party, "recruitNumber" | "type" | "title" |
   }
   lines.push("");
   lines.push(...reserveSlotLines(reserves));
-  if (!editable) lines.push("", `양식코드: ${formCode}`);
+  if (!editable) lines.push("", ...recruitFormIdentityLines(formCode));
   return lines.join("\n");
 }
 

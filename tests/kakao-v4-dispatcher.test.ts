@@ -12,6 +12,8 @@ import { KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/applic
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
 import { KAKAO_V1_STRICT_PROTOCOL, KAKAO_V1_STRICT_RESPONSE_FORMAT } from "../src/modules/recruiting/kakao-v4/domain";
+import type { RecruitingCodeTarget } from "../src/modules/recruiting/application/ports";
+import { v1StrictPartyDetailReply } from "../src/modules/recruiting/kakao-v4/v1-strict-party-replies";
 import {
   KakaoV4CommandDispatcher,
   KakaoV4DispatcherError,
@@ -132,6 +134,81 @@ function openStatus(): KakaoOpenChatStatusDto {
   };
 }
 
+test("fixed party code pins copy edits and expired-form recovery to the original UUID across days", async () => {
+  const original = { ...openStatus().parties[0]!, formCode: "ABCDE-23456@4", recruitDate: "2026-10-13" };
+  const now = Date.parse("2026-10-14T00:00:00Z") / 1_000;
+  const text = v1StrictPartyDetailReply(original, 7).replace("2.\n", "2. 신규\n");
+  const request = { ...context, envelope: { ...context.envelope, text, timestamp: now } };
+  const canonical = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), request.envelope);
+  assert.ok(canonical?.domain === "PARTY" && canonical.action === "SYNC");
+  const recruitCodeTarget = { id: original.id, revision: original.revision, recruitDate: original.recruitDate, recruitNumber: 7, status: "IN_PROGRESS" as const };
+  for (const partySyncError of [undefined, "PARTY_COPY_CONFLICT"]) {
+    const state = harness({ recruitCodeTarget, partySyncError, partyStatus: [{ ...original, formCode: "ABCDE-23456@5" }] });
+    const result = await state.dispatcher.dispatch(request, canonical);
+    const handled = state.handled[0]!;
+    assert.equal(handled.type, "SYNC_PARTY");
+    assert.equal(handled.aggregateId, original.id);
+    if (handled.type !== "SYNC_PARTY") assert.fail("expected sync");
+    assert.equal(handled.payload.copyGuard?.operatingDate, "2026-10-13");
+    assert.equal(handled.payload.copyGuard?.saveReference, "ABCDE-23456@4");
+    assert.deepEqual(state.resolved[0], { kind: "PARTY", sourceRoomId: context.authorization.roomId,
+      recruitDate: "2026-10-13", recruitNumber: 7, partyId: original.id, allowedPartyStatuses: ["DRAFT", "IN_PROGRESS"] });
+    const detail = state.statusCalls.at(-1) as { partyTarget: { partyId?: string; recruitDate: string } };
+    assert.equal(detail.partyTarget.partyId, original.id);
+    assert.equal(detail.partyTarget.recruitDate, "2026-10-13");
+    assert.match(result.legacyReply, /모집코드: ABCDE-23456/u);
+    assert.match(result.legacyReply, /명단버전: 5/u);
+  }
+});
+
+test("fixed party code never falls back to today's number when missing, closed, or pasted onto another number", async () => {
+  const original = { ...openStatus().parties[0]!, formCode: "ABCDE-23456@4" };
+  const text = v1StrictPartyDetailReply(original, 7);
+  const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), { ...context.envelope, text });
+  assert.ok(command?.domain === "PARTY" && command.action === "SYNC");
+  for (const target of [null, ...["FINISHED", "CANCELED", "RESET"].map(status => ({ id: original.id, revision: 4,
+    recruitDate: original.recruitDate, recruitNumber: 7, status: status as RecruitingCodeTarget["status"] })),
+    { id: original.id, revision: 4, recruitDate: original.recruitDate, recruitNumber: 8, status: "IN_PROGRESS" as const }]) {
+    const state = harness({ recruitCodeTarget: target });
+    await state.dispatcher.dispatch(context, command);
+    assert.equal(state.handled.length, 0);
+    assert.equal(state.resolved.length, 0);
+    assert.equal(state.statusCalls.length, 0);
+  }
+});
+
+test("fixed-code detail, close and member commands retain the resolved UUID and operating date", async () => {
+  const recruitCodeTarget = { id: "party-7", revision: 3, recruitDate: "2026-10-13", recruitNumber: 7, status: "IN_PROGRESS" as const };
+  for (const operation of ["DETAIL", "FINISH", "ADD_MEMBER", "REMOVE_MEMBER"] as const) {
+    const state = harness({ recruitCodeTarget, partyStatus: [{ ...openStatus().parties[0]!, recruitDate: "2026-10-13", formCode: "ABCDE-23456@2" }] });
+    const command: CanonicalKakaoV4Command = operation === "ADD_MEMBER" || operation === "REMOVE_MEMBER"
+      ? { domain: "PARTY", action: "BY_CODE", operation, recruitCode: "ABCDE-23456", name: "합성" }
+      : { domain: "PARTY", action: "BY_CODE", operation, recruitCode: "ABCDE-23456" };
+    await state.dispatcher.dispatch(context, command);
+    if (operation === "DETAIL") {
+      const call = state.statusCalls[0] as { partyTarget: unknown };
+      assert.deepEqual(call.partyTarget, { recruitDate: "2026-10-13", recruitNumber: 7, partyId: "party-7" });
+    } else {
+      assert.equal(state.handled[0]?.aggregateId, "party-7");
+      const call = state.resolved[0] as { partyId?: string; recruitDate: string };
+      assert.equal(call.partyId, "party-7");
+      assert.equal(call.recruitDate, "2026-10-13");
+    }
+  }
+});
+
+test("fixed-code recovery never suggests a reused daily number after a lookup failure or close conflict", async () => {
+  const recruitCodeTarget = { id: "party-7", revision: 3, recruitDate: "2026-10-13", recruitNumber: 7, status: "IN_PROGRESS" as const };
+  const unavailable = harness({ recruitCodeTarget, statusFailure: true });
+  const add = await unavailable.dispatcher.dispatch(context, { domain: "PARTY", action: "BY_CODE", operation: "ADD_MEMBER", recruitCode: "ABCDE-23456", name: "합성" });
+  assert.match(add.legacyReply, /상세 ABCDE-23456/u);
+  assert.doesNotMatch(add.legacyReply, /상세 7/u);
+  const conflict = harness({ recruitCodeTarget, partyFinishError: "REVISION_CONFLICT" });
+  const finish = await conflict.dispatcher.dispatch(context, { domain: "PARTY", action: "BY_CODE", operation: "FINISH", recruitCode: "ABCDE-23456" });
+  assert.match(finish.legacyReply, /ABCDE-23456ㅉ/u);
+  assert.doesNotMatch(finish.legacyReply, /7ㅉ/u);
+});
+
 function mutationResult(
   command: RecruitingCommand,
   memberOutcome: "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND" = "APPLIED",
@@ -192,6 +269,7 @@ function harness(options: Readonly<{
   partyRegistrationCreated?: boolean;
   partyCopyChanged?: boolean;
   partyStatus?: KakaoOpenChatStatusDto["parties"];
+  recruitCodeTarget?: RecruitingCodeTarget | null;
 }> = {}) {
   const handled: RecruitingCommand[] = [];
   const resolved: unknown[] = [];
@@ -199,6 +277,11 @@ function harness(options: Readonly<{
   const staticCalls: unknown[] = [];
   const seasonCalls: Array<{ command: unknown }> = [];
   const recruiting: KakaoV4RecruitingPort = {
+    async resolvePartyRecruitCode(input) {
+      assert.equal(input.sourceRoomId, context.authorization.roomId);
+      assert.equal(input.code, "ABCDE-23456");
+      return options.recruitCodeTarget ?? null;
+    },
     async handle(command) {
       handled.push(command);
       if (options.partySyncError && command.type === "SYNC_PARTY") throw new Error(options.partySyncError);

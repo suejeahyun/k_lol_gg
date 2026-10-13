@@ -5,8 +5,10 @@ import { and, eq, gt, sql } from "drizzle-orm";
 import type { JsonObject, JsonValue } from "@/modules/competitions/core/command-contracts";
 import { canonicalJson } from "@/modules/seasons/domain/season";
 import { kakaoFormSnapshots } from "@/platform/db/schema/kakao-form-snapshots";
+import { kakaoRecruitCodes, kakaoRecruitFormSnapshots } from "@/platform/db/schema/kakao-recruit-form-snapshots";
 import type { V2Transaction } from "@/platform/db/transaction";
 
+import { formatRecruitFormReference, parseRecruitFormReference } from "../domain/kakao-recruit-reference";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
 
 const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -131,5 +133,82 @@ export async function loadKakaoFormSnapshot(
     eq(kakaoFormSnapshots.scopeHash, input.scopeHash), eq(kakaoFormSnapshots.targetId, input.targetId),
     eq(kakaoFormSnapshots.operatingDate, input.operatingDate), gt(kakaoFormSnapshots.expiresAt, input.now),
   )).limit(1))[0];
+  return row?.state ?? null;
+}
+
+function validRecruitBinding(input: SnapshotBinding): boolean {
+  return validBinding(input) && input.kind === "PARTY" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.targetId) &&
+    input.operatingDate === recruitingOperatingDateKey(input.now);
+}
+
+/** Retain the permanent code and version watermark while removing only expired originals. */
+export async function pruneExpiredKakaoRecruitFormSnapshots(transaction: V2Transaction, now: Date): Promise<void> {
+  if (!Number.isFinite(now.getTime())) throw new Error("INVALID_KAKAO_FORM_SNAPSHOT_INSTANT");
+  await transaction.execute(sql`
+    delete from ${kakaoRecruitFormSnapshots}
+    where (${kakaoRecruitFormSnapshots.code}, ${kakaoRecruitFormSnapshots.version}) in (
+      select code, version from ${kakaoRecruitFormSnapshots}
+      where expires_at <= ${now.toISOString()}::timestamptz
+      order by expires_at, code, version
+      limit ${CLEANUP_BATCH_SIZE}
+      for update skip locked
+    )
+  `);
+}
+
+/** Issue a stable PARTY code and a separately versioned original in the caller's authorized transaction. */
+export async function issueKakaoRecruitFormSnapshot(
+  transaction: V2Transaction,
+  input: SnapshotBinding & Readonly<{ state: JsonObject }>,
+): Promise<string> {
+  if (!validRecruitBinding(input)) throw new Error("INVALID_KAKAO_FORM_SNAPSHOT_BINDING");
+  const expiresAt = kakaoFormSnapshotExpiry(input.operatingDate);
+  const stateHash = kakaoFormSnapshotStateHash(input.state);
+  await pruneExpiredKakaoRecruitFormSnapshots(transaction, input.now);
+  const identity = and(eq(kakaoRecruitCodes.scopeHash, input.scopeHash), eq(kakaoRecruitCodes.targetId, input.targetId));
+  const loadCodeForUpdate = async () => (await transaction.select({
+    code: kakaoRecruitCodes.code, lastVersion: kakaoRecruitCodes.lastVersion,
+  }).from(kakaoRecruitCodes).where(identity).for("update").limit(1))[0];
+  let registry = await loadCodeForUpdate();
+  // A competing first issuance may own the target or a random code. ON CONFLICT
+  // waits for its commit without aborting this transaction, then we lock its row.
+  for (let attempt = 0; !registry && attempt < 8; attempt += 1) {
+    registry = (await transaction.insert(kakaoRecruitCodes).values({
+      code: newCode(), scopeHash: input.scopeHash, targetId: input.targetId, createdAt: input.now,
+    }).onConflictDoNothing().returning({ code: kakaoRecruitCodes.code, lastVersion: kakaoRecruitCodes.lastVersion }))[0]
+      ?? await loadCodeForUpdate();
+  }
+  if (!registry) throw new Error("KAKAO_FORM_SNAPSHOT_CODE_UNAVAILABLE");
+  const existing = (await transaction.select({ version: kakaoRecruitFormSnapshots.version }).from(kakaoRecruitFormSnapshots).where(and(
+    eq(kakaoRecruitFormSnapshots.code, registry.code), eq(kakaoRecruitFormSnapshots.operatingDate, input.operatingDate),
+    eq(kakaoRecruitFormSnapshots.stateHash, stateHash), gt(kakaoRecruitFormSnapshots.expiresAt, input.now),
+  )).limit(1))[0];
+  if (existing) return formatRecruitFormReference(registry.code, existing.version);
+  const version = registry.lastVersion + 1;
+  if (!Number.isSafeInteger(version) || version < 1) throw new Error("KAKAO_FORM_SNAPSHOT_VERSION_EXHAUSTED");
+  await transaction.insert(kakaoRecruitFormSnapshots).values({
+    code: registry.code, version, operatingDate: input.operatingDate,
+    stateHash, stateJson: input.state, createdAt: input.now, expiresAt,
+  });
+  await transaction.update(kakaoRecruitCodes).set({ lastVersion: version }).where(eq(kakaoRecruitCodes.code, registry.code));
+  return formatRecruitFormReference(registry.code, version);
+}
+
+/** The reference identifies an original, never permission; callers still authorize and lock the party. */
+export async function loadKakaoRecruitFormSnapshot(
+  transaction: V2Transaction,
+  input: SnapshotBinding & Readonly<{ code: string }>,
+): Promise<JsonObject | null> {
+  if (!validRecruitBinding(input)) return null;
+  const reference = parseRecruitFormReference(input.code.normalize("NFKC").trim().toUpperCase());
+  if (!reference) return null;
+  await pruneExpiredKakaoRecruitFormSnapshots(transaction, input.now);
+  const row = (await transaction.select({ state: kakaoRecruitFormSnapshots.stateJson }).from(kakaoRecruitFormSnapshots)
+    .innerJoin(kakaoRecruitCodes, eq(kakaoRecruitCodes.code, kakaoRecruitFormSnapshots.code)).where(and(
+      eq(kakaoRecruitCodes.code, reference.code), eq(kakaoRecruitCodes.scopeHash, input.scopeHash), eq(kakaoRecruitCodes.targetId, input.targetId),
+      eq(kakaoRecruitFormSnapshots.version, reference.version), eq(kakaoRecruitFormSnapshots.operatingDate, input.operatingDate),
+      gt(kakaoRecruitFormSnapshots.expiresAt, input.now),
+    )).limit(1))[0];
   return row?.state ?? null;
 }

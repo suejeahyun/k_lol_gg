@@ -1,7 +1,9 @@
 import type { JsonObject } from "@/modules/competitions/core";
 import type { RecruitMember, RecruitParty } from "../domain/recruiting";
+import { parseRecruitFormReference } from "../domain/kakao-recruit-reference";
 
-export const isPartyFormCode = (value: string | null | undefined): value is string => typeof value === "string" && /^[A-Z2-9]{5}-[A-Z2-9]{5}$/u.test(value);
+export const isPartyFormCode = (value: string | null | undefined): value is string => typeof value === "string" &&
+  (/^[A-Z2-9]{5}-[A-Z2-9]{5}$/u.test(value) || parseRecruitFormReference(value) !== null);
 
 type CopyParty = Pick<RecruitParty, "id" | "revision" | "status" | "type" | "maximumMembers" | "members" | "startTimeText" | "gameInfo" | "organizerText">;
 

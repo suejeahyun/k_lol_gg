@@ -2,6 +2,7 @@ import type { SeasonApplicationPosition } from "@/modules/seasons/domain/season"
 
 import type { ScrimFormCommandPayload, SyncScrimCommandPayload } from "../application/commands";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
+import { normalizeRecruitCode } from "../domain/kakao-recruit-reference";
 import type { RecruitMember, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
 import { encodeV1StrictScrimTimeText, parseV1StrictScrimTime } from "../domain/v1-strict-scrim-time";
 import { isOperationFormType, type OperationFormPayloadByType, type OperationFormType } from "../operation-forms/domain";
@@ -12,8 +13,11 @@ import { parseKakaoV4OperationForm } from "./operation-form";
 import { parsePartyForm, type ParsedPartyForm } from "./party-snapshot-parser";
 
 export type KakaoV4RecruitTarget = Readonly<{
+  recruitCode?: string;
   recruitDate: string;
   recruitNumber: number;
+  /** Resolved server-side from a fixed code only. */
+  partyId?: string;
 }>;
 
 export type KakaoV4PartyCreatePayload = Readonly<{
@@ -46,8 +50,11 @@ export type KakaoV4PartySyncPayload = Readonly<{
 }>;
 
 export type KakaoV4PartySyncTarget = Readonly<{
+  recruitCode?: string;
   recruitDate: string;
   recruitNumber: number | null;
+  /** Resolved server-side from a fixed code only. */
+  partyId?: string;
 }>;
 
 export type KakaoV4SeasonParticipant = Readonly<{
@@ -95,6 +102,8 @@ export type KakaoV4ScrimUpsertPayload = Readonly<{
 export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "PARTY"; action: "CREATE"; payload: KakaoV4PartyCreatePayload }>
   | Readonly<{ domain: "PARTY"; action: "STATUS" }>
+  | Readonly<{ domain: "PARTY"; action: "BY_CODE"; operation: "DETAIL" | "FINISH"; recruitCode: string }>
+  | Readonly<{ domain: "PARTY"; action: "BY_CODE"; operation: "ADD_MEMBER" | "REMOVE_MEMBER"; recruitCode: string; name: string }>
   | Readonly<{ domain: "PARTY"; action: "DETAIL"; target: KakaoV4RecruitTarget }>
   | Readonly<{ domain: "PARTY"; action: "ADD_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
   | Readonly<{ domain: "PARTY"; action: "REMOVE_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
@@ -546,6 +555,13 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
   if (classification.command === "PARTY_MEMBER_ADD" || classification.command === "PARTY_MEMBER_REMOVE") {
     const recruitNumber = numberParameter(parameters, "recruitNumber");
     const name = textParameter(parameters, "name");
+    const codeParameter = textParameter(parameters, "recruitCode");
+    if (codeParameter !== null) {
+      const recruitCode = normalizeRecruitCode(codeParameter);
+      return recruitCode && name ? Object.freeze({ domain: "PARTY" as const, action: "BY_CODE" as const,
+        operation: classification.command === "PARTY_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
+        recruitCode, name }) : null;
+    }
     if (!recruitNumber || !name) return null;
     return Object.freeze({
       domain: "PARTY" as const,
@@ -555,6 +571,12 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     });
   }
   if (classification.command === "PARTY_DETAIL" || classification.command === "PARTY_FINISH") {
+    const codeParameter = textParameter(parameters, "recruitCode");
+    if (codeParameter !== null) {
+      const recruitCode = normalizeRecruitCode(codeParameter);
+      return recruitCode ? Object.freeze({ domain: "PARTY" as const, action: "BY_CODE" as const,
+        operation: classification.command === "PARTY_DETAIL" ? "DETAIL" as const : "FINISH" as const, recruitCode }) : null;
+    }
     const recruitNumber = numberParameter(parameters, "recruitNumber");
     if (!recruitNumber) return null;
     return Object.freeze({ domain: "PARTY" as const, action: classification.command === "PARTY_DETAIL" ? "DETAIL" as const : "FINISH" as const, target: Object.freeze({ recruitDate: partyDate, recruitNumber }) });

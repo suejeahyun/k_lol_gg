@@ -13,10 +13,20 @@ export type RecruitingCompatTargetInput = Readonly<{
   sourceRoomId: string;
   recruitDate: string;
   recruitNumber: number;
+  /** Server-resolved UUID pins fixed-code requests across dates and number reuse. */
+  partyId?: string;
   /** PARTY lookups may be narrowed to the states accepted by the caller's command. */
   allowedPartyStatuses?: readonly RecruitParty["status"][];
   /** SCRIM lookups may be narrowed to the states accepted by the caller's command. */
   allowedScrimStatuses?: readonly Exclude<ScrimRecruit["status"], "DRAFT">[];
+}>;
+
+export type RecruitingCodeTarget = Readonly<{
+  id: string;
+  revision: number;
+  recruitDate: string;
+  recruitNumber: number;
+  status: RecruitParty["status"];
 }>;
 
 export interface RecruitingUnitOfWork {

@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-13T16:12:16.272Z",
+  "status": "PASS",
+  "mode": "private-local-restored-copy",
+  "migration": "0049_stable-recruit-codes",
+  "reviewedHash": "2f2428fb5f9d308a06936f3e608773fce43cf0a469682fc3169712de4cc66c35",
+  "backupSha256": "41e39b8a24d1487822cb69f1ec27973e0707135b3847aa202aa4db875c0f4904",
+  "application": {
+    "replayed": false,
+    "existingRecruitingCountsPreserved": true,
+    "counts": {
+      "parties": 1660,
+      "legacy_originals": 12,
+      "receipts": 2597
+    },
+    "newTables": {
+      "codes": 0,
+      "originals": 0
+    },
+    "invalidConstraints": 0,
+    "migrationCount": 50
+  },
+  "replay": {
+    "replayed": true
+  },
+  "localClusterStopped": true
+}

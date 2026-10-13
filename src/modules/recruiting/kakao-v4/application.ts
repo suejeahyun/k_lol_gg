@@ -67,12 +67,16 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
       "연결 오류가 나오면 내전상세 번호로 저장 여부를 먼저 확인해 주세요.", "",
       "새 모집 만들기", "파티: 5인파티", "내전: 내전구인 협곡 / 내전구인 칼바람 / 내전구인 증바람",
       "번호형 파티는 최신 양식에서 이름·시작·게임을 수정할 수 있어요.",
-      "취소는 이름만 지우고 번호 행과 양식코드를 남긴 뒤 전체 전송해주세요.",
+      "파티 모집코드는 처음 한 번만 발급되며 수정해도 유지됩니다.",
+      "명단버전은 봇이 자동으로 갱신하므로 모집코드와 함께 그대로 보내주세요.",
+      "취소는 이름만 지우고 번호 행과 코드·버전 줄을 남긴 뒤 전체 전송해주세요.",
       "같은 항목을 다른 사람이 먼저 고쳤으면 최신 양식으로 다시 작성해주세요.",
       "파티 연결 오류는 상세 번호로 저장 여부부터 확인해주세요.", "",
       "파티: 구인현황 / 상세 번호 / 종료: 번호ㅉ", "내전: 내전현황 / 내전상세 번호 / 종료: 내전 번호ㅉ",
+      "파티 번호는 당일용입니다. 같은 모집을 다시 찾을 때는 구인상세 모집코드를 사용하세요.",
+      "코드로 마감: 구인마감 모집코드 또는 모집코드ㅉ",
       "내전 모집이 마감되어도 경기용 명단은 보관됩니다.", "", "취소·수정이 필요할 때",
-      "상세 번호 추가/삭제 이름", "내전상세 번호 추가/삭제 이름", "내전상세 번호 수정/예비추가/예비삭제 이름/라인",
+      "상세 번호 추가/삭제 이름 (파티는 번호 대신 모집코드도 가능)", "내전상세 번호 추가/삭제 이름", "내전상세 번호 수정/예비추가/예비삭제 이름/라인",
     ].join("\n"),
   });
   if (classification.command === "LOCAL_RECRUIT_WEB_HELP") return Object.freeze({
@@ -148,7 +152,7 @@ export class KakaoV4CommandService {
         const inputErrors = classification.kind === "SNAPSHOT" && classification.family === "INHOUSE" ? getKakaoV4InhouseInputErrors(envelope.text)
           : partyForm ? [partyForm.diagnostics.some((item) => item.code === "MISSING_SLOT")
             ? "명단의 번호 행이 빠졌어요. 이름을 지울 때도 번호는 남겨 주세요."
-            : "모집번호·정원·양식코드와 번호 행을 확인해주세요. 양식 전체를 복사해 다시 작성해 주세요."] : [];
+            : "모집번호·정원·모집코드·명단버전(구형은 양식코드)과 번호 행을 확인해주세요. 양식 전체를 복사해 다시 작성해 주세요."] : [];
         if (inputErrors.length === 0) throw new KakaoV4CommandError("INVALID_FORM");
         result = Object.freeze({ kind: "REPLY" as const,
           reply: ["✏️ 아직 저장되지 않았어요", "", ...inputErrors, "",

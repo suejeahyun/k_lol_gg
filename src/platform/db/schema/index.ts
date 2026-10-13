@@ -11,6 +11,7 @@ export * from "./team-tools";
 export * from "./mmr";
 export * from "./recruiting";
 export * from "./kakao-form-snapshots";
+export * from "./kakao-recruit-form-snapshots";
 export * from "./kakao-site-notices";
 export * from "./media";
 export * from "./event-competitions";

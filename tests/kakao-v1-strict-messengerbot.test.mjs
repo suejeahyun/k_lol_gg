@@ -365,6 +365,31 @@ test("R24 compact copy forms keep complete success and pending envelopes in one 
   }
 });
 
+test("fixed party code and roster version survive one signed phone request unchanged", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const forms = JSON.parse(execFileSync(process.execPath, ["--import", "tsx", "-e", `
+    const { v1StrictPartyTemplate } = require("./src/modules/recruiting/kakao-v4/v1-strict-party-replies.ts");
+    process.stdout.write(JSON.stringify(["PARTY_NUMBER", "FLEX_RANK"].map(partyType =>
+      v1StrictPartyTemplate({ recruitNumber: 9, recruitDate: "2026-10-14", partyType, title: "", maximumMembers: 5, formCode: "ABCDE-23456@2" })
+        .replace(partyType === "PARTY_NUMBER" ? "1.\\n" : "TOP.\\n", partyType === "PARTY_NUMBER" ? "1. 합성참가\\n" : "TOP. 합성참가\\n")
+    )));
+  `], { cwd: root, encoding: "utf8" }));
+  for (const form of forms) {
+    assert.match(form, /모집코드: ABCDE-23456\n명단버전: 2/u);
+    for (const text of [form, `/${form}`, `✅ 저장했어요.\n\n${form}`, form.replaceAll("\n", "\r\n")]) {
+      const runtime = evaluate(artifact, { responseBody: { reply: "신청 저장: 합성참가" } });
+      assert.deepEqual(replyFor(runtime, text), ["신청 저장: 합성참가"]);
+      assert.equal(runtime.http.calls, 1);
+      const request = JSON.parse(runtime.http.body);
+      assert.equal(request.profileId, "RECRUIT");
+      assert.equal(request.text, text);
+    }
+    const echo = evaluate(artifact);
+    assert.deepEqual(replyFor(echo, form, { sender: "K-LOL 구인구직 도우미" }), []);
+    assert.equal(echo.http.calls, 0);
+  }
+});
+
 test("R24 compact form routing leaves malformed references to the server and ignores prose", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const code of ["", "양식코드: 깨짐", "양식코드: ABCDE-12345\n양식코드: XXXXX-XXXXX"]) {
@@ -552,10 +577,10 @@ test("all response-reachable non-transport V1 executable lines are preserved wit
 });
 
 test("strict adapter reuses the canonical V1 local dedupe storage keys", async () => {
-  const artifact = await readFile(artifactPath, "utf8");
-  assert.match(artifact, /var RECRUIT_SAVE_KEY = "KLOL_RECRUIT_LAST_HASH_UNIFIED_V24";/u);
-  assert.match(artifact, /var PARTY_RECRUIT_SAVE_KEY = "KLOL_PARTY_RECRUIT_LAST_HASH_UNIFIED_V18";/u);
-  assert.match(artifact, /var OPERATION_FORM_SAVE_KEY = "KLOL_OPERATION_FORM_LAST_HASH_V1";/u);
+  const runtime = evaluate(await readFile(artifactPath, "utf8"));
+  assert.equal(runtime.RECRUIT_SAVE_KEY, "KLOL_RECRUIT_LAST_HASH_UNIFIED_V24");
+  assert.equal(runtime.PARTY_RECRUIT_SAVE_KEY, "KLOL_PARTY_RECRUIT_LAST_HASH_UNIFIED_V18");
+  assert.equal(runtime.OPERATION_FORM_SAVE_KEY, "KLOL_OPERATION_FORM_LAST_HASH_V1");
 });
 
 test("local replies, echo rules, events, and no-reply behavior equal the canonical V1", async () => {
@@ -585,7 +610,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R27_2026_09_22\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R28_2026_10_14\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
   );
 });
 
@@ -1165,7 +1190,7 @@ test("R27 local diagnostics bypass request state, deduplication and notification
     logs.length = 0;
     const replies = replyFor(runtime, message, { imageDB });
     assert.equal(replies.length, 1, message);
-    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R27_2026_09_22/u);
+    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R28_2026_10_14/u);
     assert.match(replies[0], /내전상세 1/u);
     assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] RETURNED"]);
   }
@@ -1185,4 +1210,36 @@ test("R27 diagnostic distinguishes reply failure and tolerates unavailable loggi
   runtime.Log.i = () => { throw new Error("logger unavailable"); };
   assert.equal(replyFor(runtime, "봇속도").length, 1);
   assert.equal(runtime.http.calls, 0);
+});
+
+test("R28 fixed recruitment code commands reach the server once with the original text", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const message of [
+    "구인상세 ABCDE-23456", "/상세 abcde-23456", "상세 ＡＢＣＤＥ－２３４５６",
+    "상세 ABCDE-23456 추가 홍길동", "/구인상세 ABCDE-23456 삭제 홍길동",
+    "구인마감 ABCDE-23456", "구인쫑 ABCDE-23456", "구인종료 ABCDE-23456", "ABCDE-23456ㅉ",
+  ]) {
+    const runtime = evaluate(artifact);
+    assert.deepEqual(replyFor(runtime, message), ["[V1 server reply]"], message);
+    assert.equal(runtime.http.calls, 1, message);
+    const body = JSON.parse(runtime.http.body);
+    assert.equal(body.profileId, "RECRUIT", message);
+    assert.equal(body.text, message, message);
+  }
+});
+
+test("R28 fixed recruitment code routing ignores malformed edits, prose and bot echoes", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const message of [
+    "오늘 상세 ABCDE-23456", "//상세 ABCDE-23456", "/ 상세 ABCDE-23456",
+    "상세 ABCD0-23456", "상세 ABCDE-23456@1", "상세 ABCDE-23456 추가",
+    "상세 ABCDE-23456 추가 가,나", "상세 ABCDE-23456 추가 가\n삭제 나",
+  ]) {
+    const runtime = evaluate(artifact);
+    assert.equal(runtime.handleRecruitCodeCommand(message, "room", "재현", { reply() {} }), false, message);
+    assert.equal(runtime.http.calls, 0, message);
+  }
+  const echo = evaluate(artifact);
+  assert.deepEqual(replyFor(echo, "상세 ABCDE-23456", { sender: "K-LOL 구인구직 도우미" }), []);
+  assert.equal(echo.http.calls, 0);
 });

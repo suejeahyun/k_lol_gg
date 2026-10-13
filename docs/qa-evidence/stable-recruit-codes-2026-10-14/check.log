@@ -1,0 +1,989 @@
+
+> klol-gg-v2@0.1.0 check
+> npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build
+
+
+> klol-gg-v2@0.1.0 lint
+> eslint
+
+
+E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js
+   1:838   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+   5:130   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  32:231   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:79    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  33:196   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  34:274   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  35:200   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  36:66    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  44:347   warning  'n' is defined but never used  @typescript-eslint/no-unused-vars
+  54:409   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  56:71    warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  59:168   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  60:318   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  65:1002  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  74:403   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:151   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:216   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  75:497   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  78:2934  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  79:8     warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  80:116   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  81:378   warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V1_COMPAT.js
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\integrations\messengerbot-r\KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
+    2:5  warning  'KLOL_V41_BUNDLE_START_SENTINEL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  369:1  warning  Unused eslint-disable directive (no problems were reported)
+
+E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\integrations\messengerbot-r\v1-strict\KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js
+     1:5   warning  'KLOL_V1_SOURCE_SHA256' is assigned a value but never used           @typescript-eslint/no-unused-vars
+     2:5   warning  'KLOL_V1_EXTRACTED_SHA256' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     3:5   warning  'KLOL_V1_SOURCE_FUNCTIONS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+     6:5   warning  'KLOL_V1_TRANSPORT_SEAMS' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    38:8   warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   131:8   warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   228:5   warning  'PARTY_RECRUIT_STATUS_API_URL' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   239:41  warning  'ignored' is defined but never used                                  @typescript-eslint/no-unused-vars
+   304:8   warning  'ignoredJavaNormalizationError' is defined but never used            @typescript-eslint/no-unused-vars
+   314:10  warning  'parsePartyMemberMutationCommand' is defined but never used          @typescript-eslint/no-unused-vars
+   469:8   warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   488:8   warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   503:8   warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   541:8   warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   567:8   warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   579:8   warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   617:8   warning  'error' is defined but never used                                    @typescript-eslint/no-unused-vars
+   621:29  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   621:34  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   621:41  warning  'imageBase64' is defined but never used                              @typescript-eslint/no-unused-vars
+   621:53  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   624:36  warning  'room' is defined but never used                                     @typescript-eslint/no-unused-vars
+   624:41  warning  'sender' is defined but never used                                   @typescript-eslint/no-unused-vars
+   624:48  warning  'replier' is defined but never used                                  @typescript-eslint/no-unused-vars
+   766:77  warning  'packageName' is defined but never used                              @typescript-eslint/no-unused-vars
+   777:10  warning  'ignoredImageError' is defined but never used                        @typescript-eslint/no-unused-vars
+   781:10  warning  'ignoredImageBase64Error' is defined but never used                  @typescript-eslint/no-unused-vars
+   794:10  warning  'ignoredImageBitmapError' is defined but never used                  @typescript-eslint/no-unused-vars
+  1810:5   warning  'isOperationFormCompleteMessage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1812:5   warning  'isSeasonApplyCompleteMessage' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1842:10  warning  'response' is defined but never used                                 @typescript-eslint/no-unused-vars
+  1850:12  warning  'ignoredDiagnosticReply' is defined but never used                   @typescript-eslint/no-unused-vars
+
+E:\k-LOL.GG\worktrees\full-audit-fixes-20261013\src\modules\matches\infrastructure\postgres-match-transaction-authorizer.ts
+  11:73  warning  '_now' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 58 problems (0 errors, 58 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+
+> klol-gg-v2@0.1.0 typecheck
+> tsc --noEmit
+
+
+> klol-gg-v2@0.1.0 db:erd:check
+> tsx scripts/database/generate-erd.ts --check
+
+[db:erd] up to date: 114 tables, 175 foreign keys, schema sha256 dc3390315db7fd6675265dfdccb1ac3a2b863e491bce84bc8d1dec1a0da8f3cb
+
+> klol-gg-v2@0.1.0 test
+> npm run test:contracts && npm run test:unit
+
+
+> klol-gg-v2@0.1.0 test:contracts
+> node --test tests/*.test.mjs
+
+✔ public match and player detail use the same allowlisted champion portrait with a safe fallback (7.5167ms)
+✔ my account connects bounded participation and current discipline status to details and evidence (8.1043ms)
+✔ event and destruction details retain actions while exposing readable lifecycle and result hierarchy (1.4681ms)
+✔ own player mutation keeps approval, origin, revision and idempotency guards (4.0052ms)
+✔ own player form keeps one idempotency key for an uncertain retry and explains Riot relinking (3.8614ms)
+✔ account pages reuse the account shell and avoid decorative English headings (2.6608ms)
+✔ isolated account HTTP verification runs the real Chromium owner profile regression (1.913ms)
+✔ 역할 변경 API는 same-origin 세션 검사 뒤 일반 ADMIN을 mutation parsing 전에 거부한다 (4.3224ms)
+✔ 역할 관리 UI와 목록 진입점은 SUPER_ADMIN에게만 노출된다 (9.8141ms)
+✔ 승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구하지 않는다 (4.7071ms)
+✔ 플레이어 상세는 연결 계정 revision으로 기존 SUPER_ADMIN 역할 API를 안전하게 재사용한다 (1.2707ms)
+✔ discipline reaches records 51–101 and returns without losing the selected classification (226.9515ms)
+✔ logs keeps each ledger's page and filters while requesting only the displayed ledger (113.1652ms)
+✔ log filters reset their own page while preserving the other ledger context (85.5652ms)
+✔ discipline: out-of-range page recovers without calling it an empty data set (57.3628ms)
+✔ discipline: empty, unavailable and error states provide truthful recovery (168.3021ms)
+✔ logs: out-of-range page recovers without calling it an empty data set (174.8277ms)
+✔ logs: empty, unavailable and error states provide truthful recovery (318.4992ms)
+✔ invalid or duplicated queries never start list reads and both pages retain the ADMIN guard (891.4703ms)
+✔ the accepted upper page has a previous action but never emits a page outside the bound (146.6401ms)
+✔ administrator balance status uses readable Korean operational labels (11.5038ms)
+✔ administrator balance navigation is a visible keyboard-focusable control (4.8826ms)
+✔ event administrators can reach records 13–25 and return without losing filters (716.0672ms)
+✔ event search keeps page size, starts at page one and retains canonical filter values (678.336ms)
+✔ event out-of-range empty page returns to the same filtered first page (409.8132ms)
+✔ event empty filtered and initial states differ, and failed loads can retry the same query (717.5753ms)
+✔ event invalid pagination avoids accidental unfiltered reads and provides recovery (1297.305ms)
+✔ event pagination never emits a page outside the existing parser limit (162.7649ms)
+✔ destruction administrators can reach records 13–25 and return without losing filters (176.8616ms)
+✔ destruction search keeps page size, starts at page one and retains canonical filter values (87.5878ms)
+✔ destruction out-of-range empty page returns to the same filtered first page (79.3828ms)
+✔ destruction empty filtered and initial states differ, and failed loads can retry the same query (565.7365ms)
+✔ destruction invalid pagination avoids accidental unfiltered reads and provides recovery (1414.4446ms)
+✔ destruction pagination never emits a page outside the existing parser limit (262.3105ms)
+✔ discipline: lost creation response retries the exact payload/key and locks confirmed navigation (180.5466ms)
+✔ discipline: simultaneous submits issue one creation request (42.9126ms)
+✔ discipline: 5xx and unreadable success preserve identity and recover without a stuck form (56.9453ms)
+✔ discipline: a definite first rejection allows correction with a new identity (43.8831ms)
+✔ discipline: 401 after uncertainty does not abandon the original creation (132.922ms)
+✔ discipline: 403 after uncertainty does not abandon the original creation (53.9509ms)
+✔ discipline: 429 after uncertainty does not abandon the original creation (97.753ms)
+✔ discipline: malformed success cannot unlock an unconfirmed creation (102.5057ms)
+✔ highlight: lost creation response retries the exact payload/key and locks confirmed navigation (223.5468ms)
+✔ highlight: simultaneous submits issue one creation request (213.1746ms)
+✔ highlight: 5xx and unreadable success preserve identity and recover without a stuck form (156.2965ms)
+✔ highlight: a definite first rejection allows correction with a new identity (238.9179ms)
+✔ highlight: 401 after uncertainty does not abandon the original creation (222.3559ms)
+✔ highlight: 403 after uncertainty does not abandon the original creation (157.9948ms)
+✔ highlight: 429 after uncertainty does not abandon the original creation (221.2111ms)
+✔ highlight: malformed success cannot unlock an unconfirmed creation (124.6879ms)
+✔ gallery: lost creation response retries the exact payload/key and locks confirmed navigation (124.6144ms)
+✔ gallery: simultaneous submits issue one creation request (164.9233ms)
+✔ gallery: 5xx and unreadable success preserve identity and recover without a stuck form (186.1469ms)
+✔ gallery: a definite first rejection allows correction with a new identity (178.3792ms)
+✔ gallery: 401 after uncertainty does not abandon the original creation (201.6705ms)
+✔ gallery: 403 after uncertainty does not abandon the original creation (126.1098ms)
+✔ gallery: 429 after uncertainty does not abandon the original creation (195.3122ms)
+✔ gallery: malformed success cannot unlock an unconfirmed creation (114.147ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=false (86.4555ms)
+✔ gallery: retry preserves selected files and partial upload results, attachment failure=true (96.9813ms)
+✔ gallery: truncated attachment response cannot report a confirmed connection (112.9216ms)
+✔ gallery: null attachment response cannot report a confirmed connection (109.3486ms)
+✔ gallery: empty attachment response cannot report a confirmed connection (217.0408ms)
+✔ gallery: invalid-revision attachment response cannot report a confirmed connection (93.3285ms)
+✔ MMR 수동 조정은 raw UUID 대신 bounded 플레이어 선택기를 사용한다 (2.0292ms)
+✔ Riot 작업은 현재 목록에서 플레이어와 link를 선택하고 revision을 자동 계산한다 (1.9711ms)
+✔ 징계 대상 선택은 관리자 전용 bounded endpoint의 allowlist metadata로 표시값을 채운다 (4.1684ms)
+✔ 공통 bounded picker는 원격 metadata를 문자열 allowlist로 제한한다 (1.0423ms)
+✔ the contracted match edit page reuses the guarded editor and preserves the AI review alias (4.0722ms)
+✔ highlight: later pages remain reachable with status and page size (56.0919ms)
+✔ highlight: all-status native GET works and filtered empty state has a reset (144.9499ms)
+✔ highlight: boundaries use server-clamped current page without impossible directions (72.9501ms)
+✔ highlight: invalid parameters recover without loading or relaxing strict validation (228.1606ms)
+✔ highlight: load failure retries the same validated page and filter (16.1913ms)
+✔ highlight: publication labels are readable and a published editor opens its public page (161.288ms)
+✔ highlight: filter controls remount when the applied page or filter changes (205.5849ms)
+✔ gallery: later pages remain reachable with status and page size (29.724ms)
+✔ gallery: all-status native GET works and filtered empty state has a reset (42.712ms)
+✔ gallery: boundaries use server-clamped current page without impossible directions (87.4546ms)
+✔ gallery: invalid parameters recover without loading or relaxing strict validation (146.132ms)
+✔ gallery: load failure retries the same validated page and filter (28.8829ms)
+✔ gallery: publication labels are readable and a published editor opens its public page (99.5402ms)
+✔ gallery: filter controls remount when the applied page or filter changes (107.7371ms)
+✔ MMR players retain query, position and page size across page navigation and show the score used for ordering (158.5593ms)
+✔ MMR review pagination uses its independent query contract and detail close retains the current page (116.458ms)
+✔ MMR invalid and duplicated queries do not silently display an unrelated first page; empty pages recover within their tab (981.6281ms)
+✔ champion previous and next retain search, status and size, while edited filters reset to page one (24.2786ms)
+✔ champion status choices and badges use Korean labels while retaining canonical filter values (57.515ms)
+✔ champion invalid, unavailable, unmatched and out-of-range pages each have a valid recovery (318.1584ms)
+✔ season administration presents lifecycle, status, source, and position labels in Korean (5.5975ms)
+✔ account and settings administration avoid decorative English labels (4.4071ms)
+✔ admin HTTP guard matrix covers every canonical App Router page (116.4303ms)
+✔ administrator team draft pages use the ADMIN viewer and administrator mutation boundary (11.8795ms)
+✔ administrator recommendation aliases remain same-origin permanent redirects (1.2581ms)
+✔ administrator drafts support recoverable archive and persisted match registration (3.627ms)
+✔ season, date and round changes replace application form state in both editable branches (469.0377ms)
+✔ position-free rounds do not display a fabricated main/sub position in own or public status (91.3936ms)
+✔ closed season or round shows its lifecycle before new-application authentication and retains own status (1059.9212ms)
+✔ open season keeps account recovery, selected-round login return and existing application state (251.1469ms)
+✔ a missing site application retains a direct path to recover Kakao member linking (38.3839ms)
+✔ event position labels remain readable while form values retain the API position codes (54.0586ms)
+✔ event lifecycle blocks impossible application prompts while open recruitment retains auth and own controls (103.0937ms)
+✔ own status and public roster use the same Korean position labels as the application form (356.0786ms)
+✔ ranking view and applied criteria replace stale unsaved filter inputs (28.505ms)
+✔ destruction format choices distinguish match lengths and retain the selected canonical filter (206.3638ms)
+✔ full round requires an explicit reserve choice and sends only the selected seat (301.4967ms)
+✔ application refresh preserves draft and blocks save/cancel until the new revision is explicitly accepted (129.2335ms)
+✔ application 412 retains the draft and explicit discard uses latest main/sub/reserve values (116.8083ms)
+✔ a newly observed application needs comparison even when its initial revision is zero (70.39ms)
+✔ season creation retains a failed draft and resets only after confirmed success (93.8832ms)
+✔ signup retains the actual review result with an explicit login continuation (294.3983ms)
+✔ signup reports password and Riot ID validity on the field being edited (129.0276ms)
+✔ admin player conflict preserves draft, compares latest and retries only after explicit choice (58.2166ms)
+✔ account player conflict keeps the form mounted when the user retains their draft (23.1241ms)
+✔ account player discard explicitly resets editable fields to the latest revision (43.4371ms)
+✔ live view refresh checks on a visible return, throttles repeated focus, and supports manual refresh (83.9819ms)
+✔ capture fixture example resolves every repository page without placeholders (2395.7925ms)
+✔ browser QA server emits setup credentials, actor identity and fail-fast dynamic source IDs (10.4902ms)
+✔ browser quality boundary accepts WCAG and performance values at their budgets (2.3648ms)
+✔ browser quality boundary reports semantic, keyboard, motion, axe and performance failures (0.5796ms)
+✔ compact standalone auth pages do not require a skip link or a single h1 (0.1698ms)
+✔ full-page capture uses stable light reduced-motion rendering and wakes lazy media (0.8637ms)
+✔ full-page capture fails visible repository error states even when HTTP is 200 (0.1507ms)
+✔ full-page capture accepts synthetic credentials through bounded stdin (0.1314ms)
+✔ champion administrator pages reuse the highlight content shell and keep safe mutations (17.8446ms)
+✔ champion read APIs keep public and administrator namespaces separated (6.5663ms)
+✔ Data Dragon version monitor discovers the upstream latest version without changing the pinned catalog (13.62ms)
+✔ only documentation changed since the actual successful deployment can skip (1.6136ms)
+✔ first deployments, manual redeploys, missing history and mismatched checkout build (0.2711ms)
+✔ 핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상이다 (6.2176ms)
+✔ 기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다 (2.9764ms)
+✔ 작은 순위 숫자와 내 순위 배지는 4.5:1 이상의 실제 색 대비를 가진다 (2.7976ms)
+✔ 순위 분류와 기능 검색 결과의 키보드 외곽선은 밝은 배경에서 3:1 이상이다 (20.2601ms)
+✔ admin destruction filters display distinct Korean choices while submitting canonical values to the existing parser (802.9503ms)
+✔ admin destruction result cards preserve identity, counts and revision while describing the format and lifecycle in Korean (484.7083ms)
+✔ the connected admin detail already uses the same Korean stages and format without changing canonical stage links (569.4387ms)
+✔ uncertain destruction retry followed by 401 retains identity and inputs (32.8847ms)
+✔ uncertain destruction retry followed by 403 retains identity and inputs (14.5941ms)
+✔ uncertain destruction retry followed by 408 retains identity and inputs (21.2439ms)
+✔ uncertain destruction retry followed by 429 retains identity and inputs (15.0986ms)
+✔ confirmed destruction navigation stays locked (18.4795ms)
+✔ destruction concurrent submits send one request before React renders (24.8058ms)
+✔ destruction server errors and truncated JSON preserve the creation request (23.5342ms)
+✔ a definite destruction input rejection allows correction with a new request (37.6143ms)
+✔ all eight supported preliminary formats keep distinct actual domain labels (15.4541ms)
+✔ CLASSIC creation retains valid recruitment and preliminary-format payloads (180.6135ms)
+✔ ARAM creation retains valid recruitment and preliminary-format payloads (283.5005ms)
+✔ ARAM_MAYHEM creation retains valid recruitment and preliminary-format payloads (195.0737ms)
+✔ gallery deep link starts a native modal at its close action (262.4085ms)
+✔ gallery modal contains Tab and Shift+Tab within its one close control (87.2074ms)
+✔ Escape follows the same gallery close link without replacing browser history (153.7179ms)
+✔ close or browser-back cleanup restores scrolling and the original image link (59.396ms)
+✔ gallery keeps the existing image, ordinal, accessible name and URL paths (127.611ms)
+✔ completed and cancelled anonymous visitors see closed actions and a login link specifically for their own record (1025.4795ms)
+✔ pending accounts see terminal state and account recovery only for own-application reading (525.0969ms)
+✔ recruitment keeps application login and approval recovery without promising early MVP voting (1040.9295ms)
+✔ preliminary and tournament voting have their own login return target and approval recovery (764.8207ms)
+✔ approved terminal participants retain their stored application and mode record without mutation controls (1517.5598ms)
+✔ existing recruitment submit/cancel and active MVP vote handlers preserve request identities and values (916.8161ms)
+✔ confirmed mode-record editing remains available during team building when the existing DTO allows it (105.216ms)
+✔ application and MVP deep links still focus their visible region for each lifecycle and account state (2145.7425ms)
+✔ private-read failures and uncertain mutation recovery remain actionable (161.1957ms)
+✔ a recorded bracket that differs from calculated qualifiers preserves all records without claiming a final rank (923.4321ms)
+✔ matching and unpublished qualifiers retain calculated ranks and normal advancement criteria (361.774ms)
+✔ the public detail summary distinguishes actual confirmed teams from a future qualification threshold (484.4881ms)
+✔ public destruction detail keeps owner application, vote and explicit unavailable/error states (5.5406ms)
+✔ administrator destruction workspaces expose the full staged lifecycle (7.5698ms)
+✔ API source keeps account owner and ADMIN boundaries separate (6.2294ms)
+✔ public discipline API exposes aggregate statistics only (19.3083ms)
+✔ owner and admin evidence boundaries require session, revision, idempotency, and concealed reads (2.4221ms)
+✔ regular administrators may read discipline details but only super administrators may mutate them (6.8102ms)
+✔ asset jobs accept signed requests only and are durably replay-guarded (1.1811ms)
+✔ discipline pages declare real empty, error, and unavailable states (1.9999ms)
+✔ discipline administrator headings and status labels are readable Korean (1.616ms)
+✔ file-read errors release the task and expose a recoverable error (553.6309ms)
+✔ a lost attachment confirmation recovers through the existing READY asset without another raw upload (124.0853ms)
+✔ READY submission keeps the same request identity after network loss and authentication rejection (86.5803ms)
+✔ a READY submission with unreadable success reports uncertainty and releases its busy state (42.6566ms)
+✔ simultaneous READY clicks issue one submission (59.4003ms)
+✔ a partial batch advances revision and stops after an unconfirmed response (149.0805ms)
+✔ event creation retries the exact uncertain request and keeps editing locked until confirmation (225.8858ms)
+✔ two submissions before render issue only one event request (45.2581ms)
+✔ server errors and unreadable successful responses retain the original event identity (20.5988ms)
+✔ a definite rejection unlocks correction and gives the corrected request a new identity (27.5634ms)
+✔ an uncertain creation keeps its identity after retry receives 401 (13.8785ms)
+✔ an uncertain creation keeps its identity after retry receives 403 (30.5624ms)
+✔ an uncertain creation keeps its identity after retry receives 429 (51.4664ms)
+✔ actual admin rendering exposes settings only while planned with no participants, including cancelled participants (275.4801ms)
+✔ unchanged dates round-trip exactly through KST inputs across midnight independently of machine timezone (105.0313ms)
+✔ edited settings use the existing command shape and reject invalid recruitment dates before sending (76.5162ms)
+✔ lost response, server failure and unreadable success retry the same body, revision and idempotency key (134.9754ms)
+✔ same-tick submits and another lifecycle operation are blocked through the successful refresh (139.2664ms)
+✔ conflict preserves input until explicit reload; expired sessions return to this event after admin login (176.7903ms)
+✔ correcting a rejected setting uses a distinct request identity (52.7529ms)
+✔ unconfirmed success bodies retain the same request identity and never claim completion (517.7752ms)
+✔ actual detail page resets local settings from the latest event revision after refresh (174.3424ms)
+✔ actual admin page identifies each event mode and current lifecycle stage in Korean without losing links or authority (73.7673ms)
+✔ actual participant rows distinguish position, registration source and cancelled participation without leaking unknown codes (37.7603ms)
+✔ public competition pages expose list/detail/application states without administrator controls (11.2524ms)
+✔ administrator event pages connect every lifecycle operation to protected canonical APIs (61.1342ms)
+✔ legacy event routes reuse the common no-store same-origin redirect boundary (10.0758ms)
+✔ the application menu marks exactly the selected application type, including query navigation (272.4769ms)
+✔ clearing or resetting a slow player search cancels the request and returns to idle (124.884ms)
+✔ a superseded request cannot clear the loading state of the newer search (62.1561ms)
+✔ full-page QA runner parses only tagged synthetic harness values (3.3023ms)
+✔ full-page QA summary fails count drift and any route issue (0.6902ms)
+✔ capture credentials use bounded stdin instead of command-line secrets (9.4305ms)
+✔ capture CLI rejects unknown stdin credential fields before opening files or Chromium (273.2922ms)
+✔ 홈과 데스크톱 메뉴는 이미 구현된 경기·팀 밸런스를 준비 중으로 표시하지 않는다 (3.3272ms)
+✔ 홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센다 (0.8501ms)
+✔ 홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 갤러리를 조회한다 (2.0934ms)
+✔ 홈 피드 공개 projection은 소유자·회원·Discord 필드를 선택하지 않는다 (3.1477ms)
+✔ 홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST 일일 안내 챔피언을 선택한다 (69.6618ms)
+✔ 홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다 (20.8666ms)
+✔ 홈은 소개·랭킹·바로가기·소식·내 활동·기록 순서로 안내한다 (1.6638ms)
+✔ ranking choices name all three rankings before the single slide and expose selection (186.033ms)
+✔ direct ranking choice stops rotation and updates its single slide and full-ranking destination (43.0832ms)
+✔ named choices retain directional keyboard, previous/next and explicit play controls (64.6299ms)
+✔ empty or single ranking does not expose impossible slide controls (72.3779ms)
+✔ a rejected native install prompt reports recovery and accepts a new browser offer (152.7471ms)
+✔ installation prevents duplicate native prompts and waits for actual appinstalled (19.9448ms)
+✔ a ready browser offer is not overwritten by initial environment detection (12.6143ms)
+✔ a late native choice cannot overwrite confirmed app installation (39.3124ms)
+✔ Kakao admin API splits ADMIN reads from SUPER TOTP mutations (10.9147ms)
+✔ legacy Kakao admin pages permanently redirect to canonical real-state tabs (28.2218ms)
+✔ every canonical Kakao handler checks the stored feature policy (8.1263ms)
+✔ owner image session creation honors site and Kakao feature switches (1.4791ms)
+✔ Kakao assistant routes share raw-body HMAC and durable read receipts (26.3388ms)
+✔ managed forms remain isolated while season snapshots and owner-bound images are durable (4.4218ms)
+✔ legacy Kakao paths execute the signed canonical POST handlers without redirects (21.1721ms)
+✔ Kakao route capability policy is explicit for every phone endpoint (29.1631ms)
+✔ season member submissions and reads use the FEATURES room but force cancel has a trusted command gate (3.1453ms)
+✔ normal room authorization uses only canonical registry state and keeps environment bootstrap explicit (4.1687ms)
+✔ private installer generator preserves shared settings and creates one identity per Kakao room (691.8546ms)
+✔ Kakao routes are explicitly isolated between recruit and features installations (30.3123ms)
+✔ wrong-room failures remain short and actionable on the phone (22.3178ms)
+✔ recruit mutations expose PII-free stage timing for p50 and p95 aggregation (1.6317ms)
+✔ companion is ES5 and below both editor character limits (142.5644ms)
+✔ exact status/version commands are local and preserve OFF, settings and the registered target (3.0616ms)
+✔ diagnostics ignore ordinary messages, slash variants and untrusted app callbacks (0.788ms)
+✔ registration results use fixed Korean replies and never poll or expose secrets (2.6734ms)
+✔ OFF and repeated registration replies cannot enable polling or replace a session (1.0338ms)
+✔ installed response callback reports status and registration without queue delivery (2.2165ms)
+✔ no registration, disabled, wrong app/code, or another session cannot send (0.8924ms)
+✔ ACK loss retries ACK without sending again, including after restart (1.5567ms)
+✔ crash marker or ambiguous SDK result never resends automatically (1.9984ms)
+✔ ledger write failure, wrong target and stale lease fail closed before send (2.2468ms)
+✔ explicit SDK rejection is retryable after manual session renewal (1.0032ms)
+✔ whole installed runtime answers local diagnostics without credentials, network or registration (15.3286ms)
+✔ initialization failures leave version and fixed failure-stage diagnostics available (11.6119ms)
+✔ rejected callback contexts stay silent and record only fixed local diagnostic codes (1.6458ms)
+✔ reply failure and SDK rejection produce fixed local evidence without leaking exceptions (1.3312ms)
+✔ reported open-chat false group flag still answers version, diagnostics and status locally (2.6651ms)
+✔ false group flag requires exact one-use code and retains only explicitly registered session (2.7952ms)
+✔ false group flag never permits debug, missing-package or other-app registration (11.8104ms)
+✔ the ADR freezes every non-negotiable V1-exact adapter constraint (44.7127ms)
+✔ the reusable V4 text transport is one signed five-second request without bearer fallback (1.4045ms)
+✔ the V1 strict phone installer uses the current private artifact and omits public-only provenance (8.6024ms)
+✔ installation profiles, not callback room or sender role, form the V4 text authorization boundary (2.414ms)
+✔ V2 services can reserve a hidden DRAFT and legacy bearer routes remain closed (1.73ms)
+✔ the existing image service is separately signed, bounded, and session-backed (3.4667ms)
+✔ canonical V40 R2 routes managed commands to site-first links, not the legacy image session creator (85.2063ms)
+✔ a clean V1-strict install keeps imageDB silent instead of inventing an unreachable UUID flow (8.3267ms)
+✔ the dormant legacy image receiver remains secure for non-strict clients without reopening bearer access (3.3935ms)
+✔ builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact (512.8043ms)
+✔ Rhino audit detects functions that mix value and bare returns (0.828ms)
+✔ V1 strict routes organizer-only metadata activation forms with or without one slash (28.6282ms)
+✔ V1 strict routes scoped in-house finish commands as unchanged raw text (27.1075ms)
+✔ R23 retired scrim commands and forms reply locally without an HTTP request (37.9599ms)
+✔ R25 local help matches optional member linking, Rift lanes, protected editing and detail rereads (6.8006ms)
+✔ R24 compact copy forms keep complete success and pending envelopes in one signed request (76.36ms)
+✔ fixed party code and roster version survive one signed phone request unchanged (392.4682ms)
+✔ R24 compact form routing leaves malformed references to the server and ignores prose (28.6461ms)
+✔ R24 actual server-rendered party and inhouse templates accept one name through the phone (500.5561ms)
+✔ R23 copy-paste party and inhouse forms forward names and saved references unchanged (44.4681ms)
+✔ V1 strict routes the full organizer-only template returned by the production server (11.1987ms)
+✔ artifact excludes legacy HTTP, bearer, and embedded secret material (1.4862ms)
+✔ all response-reachable non-transport V1 executable lines are preserved without comments or blank spacers (50.305ms)
+✔ strict adapter reuses the canonical V1 local dedupe storage keys (13.7595ms)
+✔ local replies, echo rules, events, and no-reply behavior equal the canonical V1 (29.6415ms)
+✔ R19 chooses one complete tone when the OpenChat entry guide appears (30.7615ms)
+✔ R19 consumes the raw join event and accepts only the OpenChat entry heading (14.5682ms)
+✔ approved party member mutations parse safely and use one RECRUIT gateway request (125.9722ms)
+✔ inhouse member shortcuts reach the matching profile gateway (140.3564ms)
+✔ reported inhouse loading echo is ignored while user commands and explicit member edits keep one reply (25.7201ms)
+✔ same MessengerBot logId replay suppresses only the duplicate visible reply (22.2926ms)
+✔ ambiguous party member text never reaches the mutation gateway (101.8335ms)
+✔ local recruit help documents member commands and keeps full-form guidance (9.628ms)
+✔ command and form predicates are byte-derived and behaviorally equal to V1 (13.1558ms)
+✔ one public command performs one five-second signed gateway request without room binding (23.5681ms)
+✔ recoverable season rows reach the gateway once even with whitespace numbering and partial fields (12.0274ms)
+✔ completed augment-ARAM in-house forms reach the FEATURES gateway and always reply (6.4465ms)
+✔ completed augment-ARAM metadata with ten empty name rows activates through FEATURES (33.8625ms)
+✔ a complete empty season snapshot reaches the gateway once for authoritative cancellation (45.0567ms)
+✔ empty-snapshot gate rejects incomplete forms and ordinary conversation (57.1329ms)
+✔ clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior (7.8389ms)
+✔ all seven active text seams preserve V1 success and empty replies while failures use safe common notices (339.9203ms)
+✔ literal transport failures distinguish settings, input, and connection errors without exposing values (111.0802ms)
+✔ both V40 R2 image seams stay inactive for every transport outcome (59.158ms)
+✔ R26 text commands never probe notification images before their response (132.5759ms)
+✔ R26 speed diagnostic keeps the previous request timing across ordinary chat and bot echo (13.9723ms)
+✔ R27 local diagnostics bypass request state, deduplication and notification image reads (22.7452ms)
+✔ R27 diagnostic distinguishes reply failure and tolerates unavailable logging (16.3887ms)
+✔ R28 fixed recruitment code commands reach the server once with the original text (138.091ms)
+✔ R28 fixed recruitment code routing ignores malformed edits, prose and bot echoes (102.9684ms)
+✔ V1-strict keeps completion diagnostics but routes incomplete operation-form candidates (42.0783ms)
+✔ V1-strict candidate routing ignores ordinary label discussion (6.0736ms)
+✔ V1-strict ordinary label discussion performs no request or local dedupe write (8.0857ms)
+✔ V1-strict accepts standalone wrapper titles but ignores wrappers embedded in prose (7.612ms)
+✔ V1-strict response forwards one incomplete form request to the FEATURES gateway (4.3669ms)
+✔ V1-strict canonicalizes tolerant label spelling before gateway classification (27.4367ms)
+✔ V1_STRICT fixture preserves the canonical V1 bytes across checkout line endings (3.1502ms)
+✔ V1_STRICT fixture contains no hard-coded credential value (0.6876ms)
+✔ V1_STRICT fixture remains ES5 and Rhino-static warning free (80.182ms)
+✔ V1_STRICT executes the original bot-version reply with or without slash (7.8511ms)
+✔ V1_STRICT executes the original user help exactly (6.3447ms)
+✔ APPROVED_EXTENSIONS cannot be mislabeled as commands from the V1_STRICT oracle (24.5167ms)
+✔ [A01] the unified phone artifact is a readable ES5 single file below 40,000 characters (35.5673ms)
+✔ [A02] the final unified artifact has zero Rhino static warning candidates (20.7783ms)
+✔ [A03] the generated artifact classifies each command into exactly one server profile (2.0366ms)
+✔ [A04] callback room, channel and group values are neither read nor transmitted (5.1977ms)
+✔ [A05] text transport timeout is no more than five seconds (0.8628ms)
+✔ V4 source template is one thin command-family routing client (17.4744ms)
+✔ the generated unified phone file is standalone ES5 with one callback (42.9988ms)
+✔ builder owns the unified output and refreshes deprecated split fixtures (1.6587ms)
+✔ release docs lock one phone, one MessengerBot profile, and two Kakao rooms (2.4415ms)
+✔ [C01] each entry sends its own static profile regardless of poisoned callback room values (24.5599ms)
+✔ [C02] RECRUIT ignores FEATURES commands locally without a server call (4.507ms)
+✔ [C03] FEATURES ignores RECRUIT commands locally without a server call (1.4677ms)
+✔ [C03A] one unified phone bot routes both room command families exactly once (9.3023ms)
+✔ [C03C] party template commands including spaced aliases use exactly one server request for a V1 number (3.5445ms)
+✔ [C03D] a copied V1 party form without its number returns the exact local guidance (2.3518ms)
+✔ [C03B] unified bot version is one local reply and never reaches transport (3.6634ms)
+✔ [C04] malformed slash, URLs and middle slash are rejected before transport (3.016ms)
+✔ [C05] no-logId boot counter gives every independent command a new event ID (1.6269ms)
+✔ [C06] one command performs one HTTP execute with a five-second maximum (3.7733ms)
+✔ [C05A] logId replay is stable in one boot and isolated across profiles and restarts (6.4301ms)
+✔ [C05C] phone settings are read from MessengerBot storage once within one request cache (1.5929ms)
+✔ [C05B] unified echo suppression checks both room-specific bot display names (1.2163ms)
+✔ [C07] one scrim command performs exactly one client-to-server send (2.2632ms)
+✔ [C08:WRONG_PROFILE] client exposes the WRONG_PROFILE error category (12.174ms)
+✔ [C08:INVALID_SIGNATURE] client exposes the INVALID_SIGNATURE error category (16.8664ms)
+✔ [C08:REPLAY_CONFLICT] client exposes the REPLAY_CONFLICT error category (9.0931ms)
+✔ [C08:SERVER_UNAVAILABLE] client exposes the SERVER_UNAVAILABLE error category (16.77ms)
+✔ [C08:INVALID_FORM] client exposes the INVALID_FORM error category (14.9903ms)
+✔ [C08A] INVALID_FORM keeps the server parser detail and has a safe fallback (5.2003ms)
+✔ [P3-C01] FEATURES entry sends one request for 내전구인 (34.0262ms)
+✔ [P3-C02] FEATURES entry sends one request for 내전구인 협곡 2026-09-09 21:30 #2 10명 (13.1536ms)
+✔ [P3-C03] FEATURES entry sends one request for 내전구인 칼바람 2026-09-09 21:30 #3 10명 (11.2079ms)
+✔ [P3-C04] FEATURES entry sends one request for 내전구인 증바람 2026-09-09 21:30 #4 10명 (2.3232ms)
+✔ [P3-C05] FEATURES entry sends one request for 내전현황 (5.2887ms)
+✔ [P3-C06] FEATURES entry sends one request for 내전상세 2 (1.8716ms)
+✔ [P3-C07] FEATURES entry sends one request for 📢 내전하실분 #2 (6.533ms)
+✔ [P3-C08] RECRUIT entry sends one request for 스크림구인 (13.3617ms)
+✔ [P3-C09] RECRUIT entry sends one request for [K-LOL.GG 스크림 구인 양식] (2.1215ms)
+✔ [P3-C10] FEATURES entry sends one request for 지인 이름: 친구 (1.315ms)
+✔ [P3-C11] FEATURES entry sends one request for 본인 이름 및 닉네임: 홍길동/테스터 (3.2895ms)
+✔ [P3-C12] FEATURES entry sends one request for 주최자 이름 및 닉네임: 홍길동/테스터 (1.4676ms)
+✔ [P3-C13] FEATURES entry sends one request for 이름 및 닉네임: 신청자/닉 (10.5083ms)
+✔ [P3-C14] FEATURES entry sends one request for 등록 (3.5584ms)
+✔ [P3-C15] FEATURES entry sends one request for 내전등록 (2.3652ms)
+✔ [P3-C16] FEATURES entry sends one request for 경고등록 (7.5812ms)
+✔ [P3-C17] FEATURES entry sends one request for 인증 (8.7295ms)
+✔ [P3-C18] FEATURES entry sends one request for 경고현황 (3.305ms)
+✔ [P3-C19] FEATURES entry sends one request for 결과현황 (2.2897ms)
+✔ [P3-C20] FEATURES entry sends one request for 사진취소 (2.0704ms)
+✔ [P3-C21] FEATURES entry sends one request for 자동공지 20 (0.9566ms)
+✔ [P4-C01] unified 봇버전 is client-only with exact local content (8.9895ms)
+✔ [P4-C02] unified 도움말 is client-only with exact local content (3.6377ms)
+✔ [P4-C03] unified 구인도움말 is client-only with exact local content (8.3309ms)
+✔ [P4-C04] unified 구인웹도우미 is client-only with exact local content (3.3062ms)
+✔ [P4-C05] every V1 PUBLIC alias is classified by the unified phone with at most one send (54.0543ms)
+✔ [P4-C06] malformed slash, URL and middle-slash inputs never enter public transport (41.9145ms)
+✔ [P4-I01] V2도움말 never enters public V4 transport (2.9895ms)
+✔ [P4-I02] V2진단 never enters public V4 transport (3.3153ms)
+✔ [P4-I03] V2연동확인 never enters public V4 transport (3.7303ms)
+✔ [P4-I04] 연동확인 never enters public V4 transport (2.186ms)
+✔ [P4-I05] V2모집 never enters public V4 transport (2.4071ms)
+✔ [P4-I06] V2시즌 never enters public V4 transport (2.6695ms)
+✔ [P4-I07] V2양식 never enters public V4 transport (4.2461ms)
+✔ [P4-I08] V2사진세션 never enters public V4 transport (1.9979ms)
+✔ [P4-I09] V2사진취소 never enters public V4 transport (2.0186ms)
+✔ [P4-A01] final unified phone artifact is synchronized ES5, under 40k and Rhino-static clean (41.2415ms)
+✔ [P4-C01] every public V1 alias passes the correct phone profile with zero-or-one slash (41.0751ms)
+✔ [P4-C02] local public replies are exact and never include V2 operator commands (5.7839ms)
+✔ [P4-C02A] all actual V41 public command samples pass the matching V4 phone profile (7.1864ms)
+✔ [P4-C03] photo and retired preview commands reply locally with no server transmission (2.7614ms)
+✔ [P4-C04] internal, unknown, and malformed inputs are rejected before transport (2.6317ms)
+✔ [P4-C05] unified entry preserves one send site, five-second timeout, and dynamic family split (1.3327ms)
+✔ [P4-C02B] member shortcuts tolerate mobile normalization and reject ambiguous mutations (5.1853ms)
+✔ V4 private generator creates one ignored paste-ready file without printing secrets (1388.0237ms)
+✔ [R01] V4 durable receipt and nonce schema is present in the ordered migration ledger (3.3644ms)
+✔ [R02] installation, canonical room, key and capability migrations match the runtime schema (11.5283ms)
+✔ [R03] V3 and V4 server intake coexist while one V4 entry binds profile-specific installation identity (7.3776ms)
+✔ [RESOLVED R04] V4 uses deterministic installation scope without a pairing command (9.1731ms)
+✔ [R05] documented Vercel variable names cover the V4 runtime without reading values (6.2561ms)
+✔ contract fixture has traceable V1 evidence and all required domains (1.6794ms)
+✔ zero or exactly one leading slash routes to the same command (0.5539ms)
+✔ double slash, URL slash, separated slash, and middle slash are not commands (0.1301ms)
+✔ same installation scope members can edit and finish across sender identities (0.1734ms)
+✔ initial party form exposes the three activation fields without participant rows (0.195ms)
+✔ full party forms are authoritative snapshots and allow A→B→A (0.23ms)
+✔ party member shortcuts retain the full-form workflow and current-scope mutation boundary (0.154ms)
+✔ Rift, ARAM, and Augment ARAM preserve their V1 field policies (0.1989ms)
+✔ scrim keeps full-form editing and V1 disabled manual lifecycle replies (1.1117ms)
+✔ operation forms retain V1 labels, wrappers, missing-field reply, and echo guard (0.1885ms)
+✔ registration and warning guidance preserve exact V1 headings and destinations (0.2766ms)
+✔ user-facing help excludes V2 diagnostics and raw JSON commands (0.3409ms)
+✔ representative record, recent, and ranking replies remain exact V1 fixtures (0.1141ms)
+✔ V40 구인도움말 문구와 줄바꿈을 그대로 유지한다 (9.7536ms)
+✔ V40 5인파티 생성 응답에 모집번호가 있는 편집 가능한 전체 양식을 유지한다 (5.8265ms)
+✔ V40 구인현황 제목과 상세 명령 CTA를 포함한 정확한 응답을 유지한다 (4.6985ms)
+✔ V40 bare 멸망전스크림 입력을 스크림 명령으로 분류한다 (9.3054ms)
+✔ V40 일반 도움말의 제목·항목·줄바꿈을 모든 별칭에서 그대로 유지한다 (30.5316ms)
+✔ V40 구인 웹 도우미와 구인 도움말을 서로 다른 응답으로 유지한다 (14.5455ms)
+✔ V40 등록 센터의 설명과 기존 링크를 모든 별칭에서 그대로 유지한다 (8.3943ms)
+▶ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다
+  ✔ 내전등록 (20.6139ms)
+  ✔ 경고등록 (12.6306ms)
+  ✔ 인증 (9.7574ms)
+  ✔ 경고현황 (6.4213ms)
+  ✔ 결과현황 (12.1155ms)
+✔ V40 내전·경고·인증·현황 링크 응답을 그대로 유지한다 (62.9803ms)
+▶ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다
+  ✔ 전적 (6.3316ms)
+  ✔ 최근 (4.7243ms)
+  ✔ 랭킹 (4.6411ms)
+✔ V40 전적·최근·랭킹의 사용자 표시 정보를 잃지 않는다 (16.3138ms)
+✔ V40처럼 오픈채팅봇이 출력한 운영 양식은 재접수하지 않는다 (2.207ms)
+✔ V40 운영 양식은 서버가 만든 접수 문구를 그대로 전달한다 (4.2751ms)
+✔ V40 사진취소 별칭의 사이트 우선 안내 동작을 그대로 유지한다 (5.1704ms)
+✔ V40 입장·퇴장·초대·서버 echo 동작을 유지한다 (2.6691ms)
+✔ V40 스크림구인은 자동배정 번호와 원래 줄바꿈을 가진 전체 양식을 반환한다 (15.1601ms)
+✔ V40 스크림현황은 파티 현황과 섞지 않고 한글 상태와 상세 명령을 표시한다 (4.0304ms)
+✔ V40 스크림현황 빈 상태 문구를 정확히 유지한다 (2.873ms)
+✔ V40 스크림상세는 복사 가능한 전체 양식과 수정 안내를 그대로 반환한다 (6.8576ms)
+✔ V40 스크림 전체 양식 신규 제출은 즉시 한 번 저장하고 등록 완료만 응답한다 (11.678ms)
+✔ V40 원본 양식은 멸망전번호 없이 서버의 단일 활성 대회 자동 판별을 사용한다 (5.2795ms)
+✔ V40 스크림 전체 양식 수정 제출은 별도 확인 없이 같은 번호를 교체 반영한다 (5.5191ms)
+✔ V40에서 사용 중단된 참가·확정·취소·수동 종료는 원래 안내만 하고 변경하지 않는다 (10.7729ms)
+✔ paste-ready V41 bot routes major commands only through the signed V2 transport (18.0363ms)
+✔ mobile installer has no Rhino CODE_HAS_NO_SIDE_EFFECTS statement candidates (83.8634ms)
+✔ phone transport renders actionable HTTP failure categories (6.0626ms)
+✔ Kakao pending slot lookup is lifecycle-neutral and only cancels ACTIVE rows (2.2563ms)
+✔ 자동 수집한 전체 명령 계약은 slash/무슬래시를 하나의 canonical command로 만든다 (13.2287ms)
+✔ V1 호환 파서는 모든 공개 V1 명령에서 slash/무슬래시 분류를 동일하게 유지한다 (19.1231ms)
+✔ canonical command 경계는 본문과 Riot ID를 보존하고 slash 오인식을 막는다 (1.8725ms)
+✔ 휴대폰 압축본의 V1 무통신 명령은 읽기 쉬운 전체본과 동일하게 응답한다 (32.2203ms)
+✔ room and channel callback fields are not used for installation scope (7.2822ms)
+✔ installation scope is stable across signing-key rotation and differs across installations (3.2039ms)
+✔ delivery identity ignores raw room and channel while binding installation, sender, log, and message (3.4493ms)
+✔ opaque sender uses userHash when available and display-name fallback is labeled (3.4396ms)
+✔ field diagnostics explicitly use installation scope and retain opaque sender (12.6431ms)
+✔ response stores a season preview and only the matching one-time code performs SYNC (35.1928ms)
+✔ response requires a complete authoritative snapshot scope and supports preview cancellation (17.7947ms)
+✔ response ignores server echoes and restores legacy guide aliases after full-width normalization (3.2854ms)
+✔ response preserves V40 room events, missing-number guidance, and parameterized managed shortcuts (6.8332ms)
+✔ response keeps an active image session when MessengerBot only exposes a placeholder (5.205ms)
+✔ response routes legacy record, recent, and ranking commands through V2 data while preserving V1 replies (9.5605ms)
+✔ response formats scheduled notice aliases as read-only previews (3.0195ms)
+✔ response accepts bitmap fallback, reports image progress, and clears terminal or cancelled sessions (3.3512ms)
+✔ response exposes a secret-free V2 transport diagnostic (2.0366ms)
+✔ response scopes different senders to one installation and ignores broken room parser fields (6.5262ms)
+✔ response suppresses a duplicate callback with the same Kakao log identity (3.171ms)
+✔ response entry point keeps representative V1 and V2 replies identical with or without slash (53.6443ms)
+✔ raw V2 recruiting JSON is explicitly marked for the server-side operator gate (2.5105ms)
+✔ response entry point does not treat slash-only, URL, middle slash, double slash, or slash-space as commands (3.3554ms)
+✔ V41 season output uses the site application fields and round-trips as bot input (11.2967ms)
+✔ V41 season input accepts the labeled site form and rejects invalid sub positions (6.3005ms)
+✔ V41 authoritative sync response reports create, update, cancel and review counts (4.3425ms)
+✔ V1 compatibility parser stays ES5, transport-free, and rejects unsafe input (13.7468ms)
+✔ all V40 party creation, finish, help, status, and detail aliases are classified (4.0315ms)
+✔ party form parser preserves metadata, positions, numbered members, and substitutes (6.7842ms)
+✔ party form metadata accepts line endings and colon variants without rewriting values (4.6002ms)
+✔ party form tolerates clipped headers, Markdown escapes, attached values, and controlled line wraps (2.7005ms)
+✔ inhouse aliases parse mode, date, time, recruit number, and capacity (8.1682ms)
+✔ scrim aliases and legacy full form are converted without a transport call (5.2348ms)
+✔ four operation forms become exact V2 payload shapes with sender fallbacks (5.4478ms)
+✔ four legacy 외출 wrappers parse identically and missing fields are explicit (2.9635ms)
+✔ registration, warning, result, evidence, status, and photo-cancel aliases are classified (6.4678ms)
+✔ V1: 내전구인만 입력하면 종목 선택 안내를 정확히 보낸다 (25.4148ms)
+✔ V1: 알 수 없는 내전 종목에만 입력값을 포함한 오류와 선택 안내를 보낸다 (8.6532ms)
+✔ V1: 협곡 내전구인은 티어·라인과 빈 칸을 포함한 전체 양식을 정확히 보낸다 (3.7641ms)
+✔ V1: 칼바람 내전구인은 이름 전용 전체 양식을 정확히 보낸다 (3.2331ms)
+✔ V1: 번호 없는 내전현황은 모든 회차 요약과 내전상세 명령을 정확히 보낸다 (6.1783ms)
+✔ V1: 내전상세 번호는 참여자와 빈 칸을 포함한 편집 가능한 전체 양식을 정확히 보낸다 (5.1663ms)
+✔ V1: 작성한 전체 신청 양식은 확인 단계 없이 한 번 동기화하고 서버 답변을 그대로 보낸다 (7.1708ms)
+✔ V1: 같은 전체 신청 양식이 연속 수신되면 첫 반영 뒤 중복 요청과 중복 답변을 내지 않는다 (5.1152ms)
+✔ V1: 빈 전체 양식은 일반·ASCII slash·전각 slash 모두 0명 authoritative sync로 처리한다 (26.8227ms)
+✔ V1: 불완전한 빈 양식과 double·URL·중간 slash는 authoritative sync를 실행하지 않는다 (11.2669ms)
+✔ 외출 필수값 누락은 항목별 안내만 보내고 서버 제출을 실행하지 않는다 (3.2926ms)
+✔ 오류 제목이 이미 포함된 서버 상세는 K-LOL.GG 요청 실패 제목을 중복하지 않는다 (2.8632ms)
+✔ legacy party create suppresses a duplicate callback before a second V2 mutation (17.937ms)
+✔ legacy full party form maps positions to slots and synchronizes the existing V2 party (13.7275ms)
+✔ slash and plain temporary/form flows share server-first metadata fallback and preserve free text (11.2268ms)
+✔ 99 재현, 지오, 97 기용 fixtures complete public create, form, and finish flows with or without slash (43.8726ms)
+✔ legacy party candidates stay separate from primary capacity (3.4127ms)
+✔ legacy finish suppresses a duplicate callback after the party leaves active status (7.9175ms)
+✔ same-room users can clear and finish another user's two-digit party while repeated forms stay idempotent (14.9791ms)
+✔ failed party mutations return the cause without fetching or appending status (3.2555ms)
+✔ successful sync, blank deletion, and finish explain a failed status refresh (16.1819ms)
+✔ legacy operation form, inhouse template, and scrim template stay available (24.4335ms)
+✔ legacy scrim full form is stored through the typed V2 mutation and replays safely (25.894ms)
+✔ 숫자형 플레이어·미디어 상세는 존재 확인 뒤 canonical UUID로 이동한다 (7.238ms)
+✔ 숫자형 이벤트전·멸망전은 존재 확인 뒤 canonical UUID로 이동한다 (37.6193ms)
+✔ 관리자 직접 가져오기는 파일·붙여넣기·비공개 미리보기·재시도 복구를 제공한다 (17.7783ms)
+✔ 관리자 로그아웃은 가져오기 복구 namespace만 best-effort로 지운다 (4.7757ms)
+✔ 직접 가져오기 API는 예약→bounded body→work gate→private finalize 순서를 지킨다 (14.9068ms)
+✔ 검토 UI는 fuzzy 자동 연결 없이 구조화 행별 사람 확인을 요구한다 (2.6547ms)
+✔ admin import cancellation is authorized only for ADMIN-source rows (1.9336ms)
+✔ match editor exposes only the structured form and traps the void confirmation dialog (21.0192ms)
+✔ picker status copy is outside the listbox and visual active row matches aria active descendant (2.6599ms)
+✔ submission reject dialog shares the accessible modal behavior (2.6062ms)
+✔ submission conflict keeps component identity and adopts only a verified latest revision (1.9953ms)
+✔ match editor conflict preserves local input and adopts only a verified latest aggregate (2.0421ms)
+✔ match editor save action stays readable in enabled and disabled states (8.6297ms)
+✔ OCR route reserves before the process gate and all external work (17.9735ms)
+✔ OCR reservation is durable, single-image and replay-first (12.6769ms)
+✔ submission approval durably transfers team-balance provenance into the match aggregate (0.9707ms)
+✔ ordinary match amendments cannot clear immutable team-balance provenance (0.2344ms)
+✔ web submission linkage revalidates draft ownership, lifecycle and selected layout in its transaction (0.2396ms)
+✔ match changed outbox carries team-balance provenance in its typed row and payload (0.1494ms)
+✔ public match detail returns a not-found contract instead of a blank success (3.4173ms)
+✔ saving a reviewed roster cannot approve a different edit made before its response (173.142ms)
+✔ uncertain review writes retry the exact body/revision with the same key (166.3936ms)
+✔ review inputs and repeat mutations stay locked through response and refreshed projection (90.7116ms)
+✔ a validation failure permits input correction with a new request identity (100.4909ms)
+✔ 412 preserves the local roster and requires explicit comparison before continuing (115.2243ms)
+✔ an uncertain approval retries its original command and locks the confirmed terminal state (146.2269ms)
+✔ review state uses readable labels while source comparison and real OCR warnings remain available (441.7458ms)
+✔ explicitly loading the current linked team fills each game's empty slots without changing results and requires every row to be checked (91.2075ms)
+✔ loading a linked team never overwrites an existing player selection or bypasses a terminal review (496.6054ms)
+✔ unconfirmed review success cannot confirm a different submission, advance revision or consume retry identity (373.239ms)
+✔ unconfirmed OCR success preserves image revision and the exact retry key without refreshing (200.1879ms)
+✔ confirmed OCR success and unavailable OCR results both advance only the image revision and require a fresh comparison (101.938ms)
+✔ first submission prioritizes required information while optional fields and continuation stay available (10.6797ms)
+✔ a cancelled partial upload never displays unfinished images as a completed step (1.7965ms)
+✔ anonymous result continuation returns to the same submission after login (8.5335ms)
+✔ changing a continuation code or draft resets form identity while same-context refresh preserves edits (34.451ms)
+✔ pending, rejected, suspended and password-reset accounts get recovery before filling the submission form (97.0933ms)
+✔ completed or rejected submissions show their result and recovery without impossible upload controls (6.1304ms)
+✔ submission lookup failure keeps the code for retry and is distinct from a missing submission (115.1557ms)
+✔ creating a submission locks mutations until the server route has committed and resets new-submission state (131.5628ms)
+✔ match submission accepts only an owner-verified selected team-balance draft (0.7959ms)
+✔ successful server selection remounts both draft workspaces without resetting local edits (0.1506ms)
+✔ 홈과 이미지 상세은 같은 접근 가능한 수동 캐러셀을 사용한다 (5.1421ms)
+✔ 캐러셀은 빈 상태를 안전하게 닫고 한 장에는 이동 컨트롤을 숨기며 여러 장에는 직접 이동을 제공한다 (10.5816ms)
+✔ 캐러셀은 모바일 비율·44px 조작 영역·모션 감소 설정을 유지한다 (3.5091ms)
+✔ 홈 우승 사진은 FK 연결을 우선하고 엄격한 레거시 후보만 보강하며 실제 자산 URL을 사용한다 (1.9894ms)
+✔ gallery image load failures keep a clear, accessible fallback in the reserved card area (21.2723ms)
+✔ migration journal has contiguous indices, increasing timestamps, and matching SQL tags (14.7406ms)
+✔ manual MMR position labels are readable while canonical values reach the adjustment request (656.3719ms)
+✔ successful HTTP status without the published generation is not claimed as completed (231.6113ms)
+✔ response-loss retry preserves the same adjustment idempotency key and body (208.2433ms)
+✔ player selection and pending state guard the actual adjustment form and same-tick submits (114.1709ms)
+✔ successful adjustment remains locked until the refreshed generation arrives (92.8448ms)
+✔ corrupt success responses for both commands remain uncertain and replay the original request (984.5182ms)
+✔ unreadable JSON, transient errors and throttling keep the frozen request retryable (130.7537ms)
+✔ expired or insufficient sessions preserve the request through a separate admin login (56.5628ms)
+✔ generation conflicts require an explicit refresh and clear the selected adjustment player (29.2658ms)
+✔ definitive input rejection preserves editable input and does not announce success (38.2608ms)
+✔ admin without SUPER role sees no mutation form and valid recalculation requests retain preconditions (31.5638ms)
+✔ recalculation modal starts at cancel and Escape restores the trigger without submitting (25.5781ms)
+✔ recalculation modal cycles Tab in both directions and handles direct confirmation links (33.0393ms)
+✔ opening a recalculation modal immediately locks background adjustments and cancel preserves input (52.4024ms)
+✔ confirming the modal once closes it and retains the existing request and refresh lock (44.4108ms)
+✔ public MMR page exposes canonical allowlisted filters and bounded projection summaries (14.6836ms)
+✔ admin MMR workspace connects protected recalculate, adjustment, players and review states (20.205ms)
+✔ team balance provider selects READY MMR before statistics fallback (1.4554ms)
+✔ MMR previous/next links reach later players and preserve validated search, position, and page size (13.7108ms)
+✔ first and last MMR pages expose only valid directions (15.5495ms)
+✔ selected position displays the score used to rank and that position's sample, including zero (31.6745ms)
+✔ empty projection, unmatched search, and out-of-range page have different recovery actions (9.5408ms)
+✔ invalid MMR address is rejected before loading and has a clean recovery link (7.7742ms)
+✔ MMR load failure retries the same bounded query without pretending the list is empty (2.3575ms)
+✔ unknown root addresses keep one complete public shell and recovery links (21.9516ms)
+✔ public resource and invalid-query recovery uses the existing layout without nesting another shell (11.8211ms)
+✔ application error recovery keeps the public main landmark singular (19.1651ms)
+✔ admin not-found content stays behind its layout authorization and inside one admin shell (78.2587ms)
+✔ actual review and delete handlers send the strong numeric ETag accepted by the server parser (407.7726ms)
+✔ lost responses and unreadable successes preserve request identity and edited inputs for retry (57.0918ms)
+✔ changing an unsuccessful review payload uses a separate idempotency identity (85.8738ms)
+✔ review is guarded against same-tick clicks and stays locked through server refresh (75.7651ms)
+✔ a stale revision preserves local input until explicit reload and expired sessions link back to the same record (106.0648ms)
+✔ successful deletion navigates to its filtered list and cannot repeat before navigation (29.2348ms)
+✔ record detail keys review state to the record revision after an explicit server refresh (75.027ms)
+✔ operation form API preserves filters across pages and defaults to the first page (151.016ms)
+✔ operation form API rejects malformed or repeated pagination before loading private rows (19.0335ms)
+✔ signed operation-form submit retains raw-body HMAC and durable replay boundaries (14.2598ms)
+✔ admin mutation requires ADMIN session, same-origin, If-Match and idempotency (9.4929ms)
+✔ admin pages expose filtered empty/error/unavailable states and compatibility routes (2.0582ms)
+✔ operational diagnostics remain admin-only server rendering with no polling or mutation (14.7576ms)
+✔ public operations endpoints expose bounded settings and minimum health only (31.2439ms)
+✔ admin mutations and downloads retain strong server authorization boundaries (12.2295ms)
+✔ internal maintenance requires a signed job and never accepts session authorization (12.1458ms)
+✔ Vercel schedules destruction ratings, statistics, MMR, Riot and daily Kakao close through protected GET boundaries (2.6514ms)
+✔ route groups are removed while concrete and dynamic segments become canonical URLs (52.8056ms)
+✔ route fixtures override parameter fixtures and every missing dynamic fixture fails immediately (1.2342ms)
+✔ recommendation query variants reject a malformed transcribed draft fixture (0.7276ms)
+✔ capture sessions are isolated by authentication boundary (0.2046ms)
+[capture-plan] 1 page files -> 4 capture targets at C:\Users\sjh11\AppData\Local\Temp\klol-capture-cli-1zWyTC\nested\capture-plan.json
+✔ the CLI contract reads a fixtures JSON file and creates its output directory (180.9568ms)
+✔ the repository plan covers every page once, resolves IDs and adds reviewed variants (1603.8529ms)
+✔ 사용자·관리자 상세 화면은 저장소 오류 상태에서도 페이지 제목과 상태 의미를 유지한다 (50.0495ms)
+✔ 공용 미디어 편집 화면도 저장소 오류 상태에서 페이지 제목을 유지한다 (12.9899ms)
+✔ 챔피언 이미지 projection은 0025 적용 전에도 공개 통계·목록 조회를 유지한다 (8.259ms)
+✔ 플레이어 공개 프로필은 실제 경기 KDA와 신청 포지션 배치·팀 밸런스 점수를 함께 설명한다 (3.7358ms)
+✔ 공개 Riot 읽기는 API·RSO 비밀 구성과 분리되고 UI가 미연동·대기·오류를 구분한다 (2.0297ms)
+✔ 플레이어 검색어는 문자열·배열·미입력을 하나의 안전한 문자열로 정규화한다 (1.3454ms)
+✔ 중복 q 파라미터 배열은 첫 값으로 정규화되어 trim 오류를 만들지 않는다 (0.2121ms)
+✔ 검색 유스케이스는 PlayerRepository 포트를 통해 주입된 구현만 호출한다 (0.6757ms)
+✔ fixed static URLs refresh online and use cached data offline; hashed assets stay immutable (26.9535ms)
+✔ cache storage failures never discard network assets or conceal their removal (6.2392ms)
+✔ PWA manifest and layout publish the expected install contract (19.4928ms)
+✔ service worker caches static public assets only (7.5032ms)
+✔ install icons exist and are not empty (5.8098ms)
+✔ rankings preserve complete Latin/Korean names, Riot IDs, player links, and separate metrics in every view (115.1883ms)
+✔ ranking player links can shrink and wrap unspaced names in narrow and wide layouts (11.897ms)
+✔ recovery command explicitly runs the import-safe database harness (18.0475ms)
+✔ 공개 구인 카드와 API DTO는 참여자 표시 정보만 노출한다 (13.0856ms)
+✔ 내전 등록·상세 UI는 경기 시간을 입력하거나 표시하지 않는다 (49.7551ms)
+✔ 이벤트 대회와 멸망전은 목록·필터·신청 CTA·관리 흐름을 독립 경로로 유지한다 (86.9965ms)
+✔ account pagination reports the filtered total and page range while retaining filters and page size (48.8831ms)
+✔ partial jobs expose their finite diagnostic next to the existing status (3.3812ms)
+✔ first and last job pages expose only valid navigation and preserve the status filter (7.839ms)
+✔ log navigation retains its source and does not produce an incompatible account status (6.7294ms)
+✔ bulk preview remains a bounded first batch without ordinary page navigation or invented totals (1.9367ms)
+✔ a now-empty page can return to available results without displaying a nonexistent range (2.267ms)
+✔ navigation respects the query ceiling and unavailable data never pretends there are zero accounts (11.7487ms)
+✔ sync: cancel focus, both Tab boundaries, Escape and trigger restoration execute without requests (193.1044ms)
+✔ link: cancel focus, both Tab boundaries, Escape and trigger restoration execute without requests (72.2713ms)
+✔ sync: open preview locks background submissions and freezes the selected request until explicit confirmation (75.9012ms)
+✔ link: pending Escape stays locked, errors remain in the modal and a completed request restores focus (64.0275ms)
+✔ owner renders a Korean partial cause with the existing sync action and no raw diagnostic (36.6486ms)
+✔ owner never renders an unknown diagnostic body or prototype key (117.4695ms)
+✔ real Riot link method values have concrete labels without claiming ownership for admin links (37.8859ms)
+✔ history chart server output preserves tooltip text for every chart mode (303.2317ms)
+✔ match growth server output preserves own and opponent tooltips without fabricated missing values (177.026ms)
+✔ match summaries render identical Korean clock text across server and browser locale data (394.2887ms)
+✔ filter and chart date keys use fixed Korean calendar parts across locale data and year boundaries (229.9049ms)
+✔ app/(public)/(applications)/applications/error.tsx: 다시 시도 re-fetches the failed server segment (75.1497ms)
+✔ app/(admin)/admin/players/error.tsx: 다시 시도 re-fetches the failed server segment (21.186ms)
+✔ app/(admin)/admin/users/error.tsx: 다시 시도 re-fetches the failed server segment (15.5992ms)
+✔ app/(admin)/admin/users/[userAccountId]/error.tsx: 다시 시도 re-fetches the failed server segment (9.1853ms)
+✔ Kakao pending API splits ADMIN reads from SUPER TOTP mutations (10.426ms)
+✔ pending operator UI uses bounded filters, a player picker and revision-safe commands (1.6576ms)
+✔ public season applications expose Kakao-started recruit rounds without leaking pending identities (9.7229ms)
+✔ feature-gated site assistant is mounted globally and uses protected AI contracts (4.0138ms)
+✔ site feature access fails closed for missing or unreadable settings (1.6327ms)
+✔ registration feature protects both its page and mutation before credential work (1.9492ms)
+✔ match submission feature keeps reads available but guards every owner mutation (8.4072ms)
+✖ Kakao help feature controls its public guide without exposing configuration (23.904ms)
+✖ recruit guide teaches participation and guarded edits before optional creation (1.1097ms)
+✔ recommendation APIs keep owner/admin scope and the team-balance feature boundary (13.9024ms)
+✔ team-balance pages expose recommendation views and fail closed with the site switch (4.175ms)
+✔ owner team recommendations retain the selected tab, team and draft after authentication (65.8917ms)
+✔ owner draft pagination and authentication preserve the applied page size (43.3221ms)
+✔ admin team recommendations retain the selected tab, team and draft after authentication (37.6592ms)
+✔ admin draft pagination and authentication preserve the applied page size (17.7208ms)
+✔ a lost create response retries the exact draft request with its original idempotency key (71.0456ms)
+✔ editing an unresolved draft request uses a new key and returning to the original input retains its retry (48.9314ms)
+✔ draft workspace retries an uncertain mutation before refresh and separates later revisions (44.974ms)
+✔ manual edits cannot save, copy or submit the previous selected team before evaluation (166.9776ms)
+✔ manual selection sends edited players and keeps them locked through response and refresh (45.086ms)
+✔ archived team drafts cannot be rearranged by keyboard or drag handlers (44.4033ms)
+✔ failed manual evaluation preserves edited slots and retries the same revision and request key (29.3388ms)
+✔ 랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복사·초기화 상태를 연결한다 (45.2609ms)
+✔ 코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다 (31.7112ms)
+✔ 공개 도구 페이지에는 상호 이동과 canonical metadata가 있다 (3.4286ms)
+✔ 팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다 (7.3524ms)
+✔ 팀 밸런스 후보 API는 승인 계정과 안전한 서버 검색·신청 그룹 경계를 사용한다 (1.7237ms)
+✔ 시작 페이지는 익명·계정 상태·승인 계정·관리자 진입을 구분한다 (2.2154ms)
+✔ Riot 도움말은 직접 연결과 별도 본인 인증, 공개·비공개 범위를 안내한다 (1.2728ms)
+✔ 설치 화면은 install prompt와 iOS·Android PWA·개인 캐시 금지를 구분한다 (1.5384ms)
+✔ 사용자 shell은 skip target, landmark, modal search, 모바일 5개 진입점을 제공한다 (17.2335ms)
+✔ 전체 메뉴는 목적별로 기능을 보여주고 필요한 계정 접근을 안내한다 (1.6702ms)
+✔ 일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다 (4.0182ms)
+✔ V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다 (10.878ms)
+✔ 사용자와 관리자 로그아웃 UI는 세션 폐기 성공 뒤에만 로그인 화면으로 이동한다 (8.9657ms)
+✔ 관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 축소하지 않는다 (3.9801ms)
+✔ 모바일 관리자 메뉴에서도 현재 역할과 안전한 로그아웃을 제공한다 (2.6834ms)
+✔ 관리자 로그인은 비밀번호 후 원래 화면으로 이동하며 인증 코드 필드가 없다 (1.1687ms)
+✔ 계정 작업 UI는 stale revision에서 최신 projection을 읽고 안내를 유지한다 (3.8057ms)
+✔ 일회성 비밀번호는 숨김·BFCache 복귀·명시적 닫기에서 메모리와 안내를 함께 종료한다 (6.2724ms)
+✔ 내 계정 플레이어 탭은 대기 claim과 거절 claim을 구분한다 (3.742ms)
+✔ 내 계정 상태 안내는 공개 사유가 없을 때도 상태별 기본 문구를 구분한다 (1.3198ms)
+✔ 계정 시각은 공통 Asia/Seoul 24시간 포맷터를 사용한다 (2.538ms)
+✔ 가입·본인 비밀번호 변경 UI는 성공과 pagehide에서 비밀번호 fingerprint ref를 즉시 비운다 (2.0918ms)
+✔ 정적 마감 대상의 native button은 submit 여부를 명시한다 (533.0839ms)
+✔ 이벤트 운영 폼은 내부 UUID나 JSON 복사를 요구하지 않는다 (3.4858ms)
+✔ 완성된 메뉴와 관리자 검색은 과거 단계 문구를 노출하지 않는다 (2.1414ms)
+✔ Riot ID의 게임 이름과 태그는 각각 이름을 가진다 (0.8146ms)
+✔ 화면 효과는 스트리밍 중인 React 하위 DOM을 변경하지 않는다 (36.2318ms)
+✔ 전역 효과 CSS는 감속 모드·정밀 포인터·강제 색상 경계를 유지한다 (2.5487ms)
+ℹ tests 691
+ℹ suites 0
+ℹ pass 689
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9898.4362
+
+✖ failing tests:
+
+test at tests\site-feature-boundary.test.mjs:38:1
+✖ Kakao help feature controls its public guide without exposing configuration (23.904ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/. Input:
+
+  'import { createRouteMetadata } from "@/modules/seo/domain/site-seo";\r\n' +
+    'import Link from "next/link";\r\n' +
+    'import styles from "../help.module.css";\r\n' +
+    'import { SiteFeatureStatePanel } from "@/components/site-feature-state";\r\n' +
+    'import { readSiteFeatureState, siteFeatureLabel } from "@/modules/operations/infrastructure/site-feature-access";\r\n' +
+    '\r\n' +
+    'export const metadata = createRouteMetadata("/help/kakao");\r\n' +
+    '\r\n' +
+    'export default async function KakaoHelpPage() {\r\n' +
+    '  const featureState = await readSiteFeatureState("kakaoHelp");\r\n' +
+    '  if (featureState !== "enabled") return <div className={`page-wrap ${styles.page}`}><SiteFeatureStatePanel label={siteFeatureLabel("kakaoHelp")} state={featureState} /></div>;\r\n' +
+    '  return <div className={`page-wrap ${styles.page}`}>\r\n' +
+    '    <header className={styles.hero}>\r\n' +
+    '      <span>KAKAO BOT</span>\r\n' +
+    '      <h1>최신 명단으로 참가하고 수정해요</h1>\r\n' +
+    '      <p>최근 봇 명단 전체 복사 → 이름과 필요한 라인 입력 → 전체 전송. 봇의 저장 결과를 확인해주세요.</p>\r\n' +
+    '    </header>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>복사·붙여넣기로 참가하기</h2>\r\n' +
+    '      <ol>\r\n' +
+    '        <li><strong>최근 봇 명단 전체를 복사</strong>합니다. 참가하려면 새 모집을 만들 필요가 없어요.</li>\r\n' +
+    '        <li><strong>빈칸에 내 이름</strong>을 넣습니다. 사이트 회원이 아니어도 내전에 접수할 수 있어요.</li>\r\n' +
+    '        <li><strong>메시지 전체를 전송</strong>한 뒤 봇의 저장 결과를 확인합니다. 파티는 저장 후 현재 구인 목록이 나옵니다. 다음 참가자는 <strong>구인상세 번호</strong>로 최신 양식을 받아 복사해요.</li>\r\n' +
+    '      </ol>\r\n' +
+    '      <p>참가할 때는 다른 사람 이름·시간·게임·모집 번호를 그대로 두세요. 파티의 <strong>모집코드·명단버전</strong>, 내전의 <strong>양식코드</strong>도 바꾸지 않습니다. 인원수는 봇이 계산합니다.</p>\r\n' +
+    '      <p>협곡 내전의 신규·교체 참가자는 라인이 필요해요. <strong>이름/top,mid</strong> 또는 <strong>이름/all</strong>로 적어주세요. 칼바람·증바람은 이름만 입력하면 됩니다.</p>\r\n' +
+    '      <p>내전은 이름으로 먼저 접수하며, 사이트 회원 연결 전에도 명단과 인원수에 포함됩니다. 사이트에 등록한 이름 또는 닉네임과 정확히 일치하는 활성 회원이 한 명이면 참가 명단에 자동 연결됩니다. 동명이인은 이름(사이트 닉네임)으로 구분해주세요. 로그인이나 계정 소유권 인증과는 별개입니다. 저장 후 봇이 보내는 최신 양식으로 다음 참가와 수정을 이어가세요.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>명단이 안 보이나요?</h2>\r\n' +
+    '      <ul>\r\n' +
+    '        <li><strong>파티</strong>: <strong>구인현황</strong> → 원하는 번호 확인 → <strong>구인상세 9</strong></li>\r\n' +
+    '        <li><strong>내전</strong>: <strong>내전현황</strong> → 원하는 번호 확인 → <strong>내전상세 9</strong></li>\r\n' +
+    '      </ul>\r\n' +
+    '      <p>정원이 찼다면 원하는 경우에만 예비 칸에 이름을 넣으세요. 저장되지 않았다는 안내가 나오면 함께 표시된 최신 명단에 다시 작성하면 됩니다.</p>\r\n' +
+    '      <p>파티 번호는 당일용입니다. 날짜가 바뀌어도 같은 모집을 찾으려면 <strong>구인상세 ABCDE-23456</strong>처럼 받은 모집코드를 입력하세요.</p>\r\n' +
+    '      <p>연결 오류가 나도 저장은 끝났을 수 있어요. 다시 보내기 전에 파티는 상세 번호, 내전은 내전상세 번호로 명단을 확인해 주세요.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>새로 모집하는 사람만</h2>\r\n' +
+    '      <ol>\r\n' +
+    '        <li>파티는 <strong>5인파티</strong>를 입력합니다. 내전은 <strong>내전구인</strong> 입력 후 종목을 선택하거나 <strong>내전구인 협곡</strong>처럼 종목까지 입력하세요.</li>\r\n' +
+    '        <li>파티는 빈 양식에 시간·게임과 첫 참가자 이름을 적습니다. 시간·게임은 비워둘 수 있지만, <strong>처음 등록할 때는 이름이 한 명 이상</strong> 있어야 해요. 내전은 선택한 종목을 확인하고 협곡이면 이름과 라인을 적어주세요.</li>\r\n' +
+    '        <li>메시지 전체를 전송해 모집을 시작합니다. 내전은 현재 사이트의 모집 정보와 연결됩니다.</li>\r\n' +
+    '      </ol>\r\n' +
+    '      <p>파티의 <strong>모집코드는 처음 한 번 발급</strong>되며 같은 모집을 수정해도 유지됩니다. <strong>명단버전은 봇이 자동으로 갱신</strong>하므로 두 줄 모두 복사한 그대로 보내세요. 구형 양식코드가 있는 양식도 사용할 수 있습니다.</p>\r\n' +
+    '      <p>번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요. 모집번호·정원·종목·모집코드·명단버전은 바꾸지 마세요.</p>\r\n' +
+    '      <p>아직 등록하지 않은 초안은 구인현황에 나오지 않아요. <strong>구인상세 번호</strong>로 다시 받고, 만들지 않을 때는 <strong>번호ㅉ</strong>로 초안을 취소하세요.</p>\r\n' +
+    '      <p>라인형 파티와 구형 양식에는 기존 편집 제한이 적용됩니다. 취소는 상세 번호 삭제 이름을 사용해주세요.</p>\r\n' +
+    '      <p>내전 이름·라인·시간·안내도 최신 양식에서 수정할 수 있어요. 같은 항목을 다른 사람이 먼저 바꿨다면 최신 양식을 다시 받아 작성해주세요.</p>\r\n' +
+    '      <p>사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정해야 합니다.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>취소하거나 모집을 마칠 때</h2>\r\n' +
+    '      <ul>\r\n' +
+    '        <li>참가 취소: 파티는 <strong>상세 9 삭제 내이름</strong>, 내전은 <strong>내전상세 9 삭제 내이름</strong></li>\r\n' +
+    '        <li>모집 마감: 파티는 <strong>9ㅉ</strong>, 내전은 <strong>내전 9ㅉ</strong></li>\r\n' +
+    '        <li>파티 코드로 지정: <strong>상세 ABCDE-23456 삭제 내이름</strong>, <strong>구인마감 ABCDE-23456</strong> 또는 <strong>ABCDE-23456ㅉ</strong></li>\r\n' +
+    '        <li>편집 가능한 최신 N인파티·내전 양식에서 취소할 때는 번호 행을 남기고 이름만 비운 뒤 전체 전송해주세요. 다른 사람의 참가 내용은 확인 없이 변경하지 마세요.</li>\r\n' +
+    '      </ul>\r\n' +
+    '      <p>스크림은 카카오 모집 기능에서 제외되었습니다. 기존 저장 기록은 유지됩니다.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <p className={styles.notice}>운영일은 한국 시간 오전 6시에 바뀝니다. 지난 양식 대신 봇이 출력한 최신 양식을 사용해 주세요.</p>\r\n' +
+    '    <nav className={styles.links}>\r\n' +
+    '      <Link href="/recruits">현재 모집 보기</Link>\r\n' +
+    '      <Link href="/help/recruits">모집 이용 안내</Link>\r\n' +
+    '    </nav>\r\n' +
+    '  </div>;\r\n' +
+    '}\r\n'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/full-audit-fixes-20261013/tests/site-feature-boundary.test.mjs:54:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import { createRouteMetadata } from "@/modules/seo/domain/site-seo";\r\nimport Link from "next/link";\r\nimport styles from "../help.module.css";\r\nimport { SiteFeatureStatePanel } from "@/components/site-feature-state";\r\nimport { readSiteFeatureState, siteFeatureLabel } from "@/modules/operations/infrastructure/site-feature-access";\r\n\r\nexport const metadata = createRouteMetadata("/help/kakao");\r\n\r\nexport default async function KakaoHelpPage() {\r\n  const featureState = await readSiteFeatureState("kakaoHelp");\r\n  if (featureState !== "enabled") return <div className={`page-wrap ${styles.page}`}><SiteFeatureStatePanel label={siteFeatureLabel("kakaoHelp")} state={featureState} /></div>;\r\n  return <div className={`page-wrap ${styles.page}`}>\r\n    <header className={styles.hero}>\r\n      <span>KAKAO BOT</span>\r\n      <h1>최신 명단으로 참가하고 수정해요</h1>\r\n      <p>최근 봇 명단 전체 복사 → 이름과 필요한 라인 입력 → 전체 전송. 봇의 저장 결과를 확인해주세요.</p>\r\n    </header>\r\n    <section className={styles.section}>\r\n      <h2>복사·붙여넣기로 참가하기</h2>\r\n      <ol>\r\n        <li><strong>최근 봇 명단 전체를 복사</strong>합니다. 참가하려면 새 모집을 만들 필요가 없어요.</li>\r\n        <li><strong>빈칸에 내 이름</strong>을 넣습니다. 사이트 회원이 아니어도 내전에 접수할 수 있어요.</li>\r\n        <li><strong>메시지 전체를 전송</strong>한 뒤 봇의 저장 결과를 확인합니다. 파티는 저장 후 현재 구인 목록이 나옵니다. 다음 참가자는 <strong>구인상세 번호</strong>로 최신 양식을 받아 복사해요.</li>\r\n      </ol>\r\n      <p>참가할 때는 다른 사람 이름·시간·게임·모집 번호를 그대로 두세요. 파티의 <strong>모집코드·명단버전</strong>, 내전의 <strong>양식코드</strong>도 바꾸지 않습니다. 인원수는 봇이 계산합니다.</p>\r\n      <p>협곡 내전의 신규·교체 참가자는 라인이 필요해요. <strong>이름/top,mid</strong> 또는 <strong>이름/all</strong>로 적어주세요. 칼바람·증바람은 이름만 입력하면 됩니다.</p>\r\n      <p>내전은 이름으로 먼저 접수하며, 사이트 회원 연결 전에도 명단과 인원수에 포함됩니다. 사이트에 등록한 이름 또는 닉네임과 정확히 일치하는 활성 회원이 한 명이면 참가 명단에 자동 연결됩니다. 동명이인은 이름(사이트 닉네임)으로 구분해주세요. 로그인이나 계정 소유권 인증과는 별개입니다. 저장 후 봇이 보내는 최신 양식으로 다음 참가와 수정을 이어가세요.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>명단이 안 보이나요?</h2>\r\n      <ul>\r\n        <li><strong>파티</strong>: <strong>구인현황</strong> → 원하는 번호 확인 → <strong>구인상세 9</strong></li>\r\n        <li><strong>내전</strong>: <strong>내전현황</strong> → 원하는 번호 확인 → <strong>내전상세 9</strong></li>\r\n      </ul>\r\n      <p>정원이 찼다면 원하는 경우에만 예비 칸에 이름을 넣으세요. 저장되지 않았다는 안내가 나오면 함께 표시된 최신 명단에 다시 작성하면 됩니다.</p>\r\n      <p>파티 번호는 당일용입니다. 날짜가 바뀌어도 같은 모집을 찾으려면 <strong>구인상세 ABCDE-23456</strong>처럼 받은 모집코드를 입력하세요.</p>\r\n      <p>연결 오류가 나도 저장은 끝났을 수 있어요. 다시 보내기 전에 파티는 상세 번호, 내전은 내전상세 번호로 명단을 확인해 주세요.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>새로 모집하는 사람만</h2>\r\n      <ol>\r\n        <li>파티는 <strong>5인파티</strong>를 입력합니다. 내전은 <strong>내전구인</strong> 입력 후 종목을 선택하거나 <strong>내전구인 협곡</strong>처럼 종목까지 입력하세요.</li>\r\n        <li>파티는 빈 양식에 시간·게임과 첫 참가자 이름을 적습니다. 시간·게임은 비워둘 수 있지만, <strong>처음 등록할 때는 이름이 한 명 이상</strong> 있어야 해요. 내전은 선택한 종목을 확인하고 협곡이면 이름과 라인을 적어주세요.</li>\r\n        <li>메시지 전체를 전송해 모집을 시작합니다. 내전은 현재 사이트의 모집 정보와 연결됩니다.</li>\r\n      </ol>\r\n      <p>파티의 <strong>모집코드는 처음 한 번 발급</strong>되며 같은 모집을 수정해도 유지됩니다. <strong>명단버전은 봇이 자동으로 갱신</strong>하므로 두 줄 모두 복사한 그대로 보내세요. 구형 양식코드가 있는 양식도 사용할 수 있습니다.</p>\r\n      <p>번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요. 모집번호·정원·종목·모집코드·명단버전은 바꾸지 마세요.</p>\r\n      <p>아직 등록하지 않은 초안은 구인현황에 나오지 않아요. <strong>구인상세 번호</strong>로 다시 받고, 만들지 않을 때는 <strong>번호ㅉ</strong>로 초안을 취소하세요.</p>\r\n      <p>라인형 파티와 구형 양식에는 기존 편집 제한이 적용됩니다. 취소는 상세 번호 삭제 이름을 사용해주세요.</p>\r\n      <p>내전 이름·라인·시간·안내도 최신 양식에서 수정할 수 있어요. 같은 항목을 다른 사람이 먼저 바꿨다면 최신 양식을 다시 받아 작성해주세요.</p>\r\n      <p>사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정해야 합니다.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>취소하거나 모집을 마칠 때</h2>\r\n      <ul>\r\n        <li>참가 취소: 파티는 <strong>상세 9 삭제 내이름</strong>, 내전은 <strong>내전상세 9 삭제 내이름</strong></li>\r\n        <li>모집 마감: 파티는 <strong>9ㅉ</strong>, 내전은 <strong>내전 9ㅉ</strong></li>\r\n        <li>파티 코드로 지정: <strong>상세 ABCDE-23456 삭제 내이름</strong>, <strong>구인마감 ABCDE-23456</strong> 또는 <strong>ABCDE-23456ㅉ</strong></li>\r\n        <li>편집 가능한 최신 N인파티·내전 양식에서 취소할 때는 번호 행을 남기고 이름만 비운 뒤 전체 전송해주세요. 다른 사람의 참가 내용은 확인 없이 변경하지 마세요.</li>\r\n      </ul>\r\n      <p>스크림은 카카오 모집 기능에서 제외되었습니다. 기존 저장 기록은 유지됩니다.</p>\r\n    </section>\r\n    <p className={styles.notice}>운영일은 한국 시간 오전 6시에 바뀝니다. 지난 양식 대신 봇이 출력한 최신 양식을 사용해 주세요.</p>\r\n    <nav className={styles.links}>\r\n      <Link href="/recruits">현재 모집 보기</Link>\r\n      <Link href="/help/recruits">모집 이용 안내</Link>\r\n    </nav>\r\n  </div>;\r\n}\r\n',
+    expected: /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\site-feature-boundary.test.mjs:67:1
+✖ recruit guide teaches participation and guarded edits before optional creation (1.1097ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/. Input:
+
+  'import { createRouteMetadata } from "@/modules/seo/domain/site-seo";\r\n' +
+    'import Link from "next/link";\r\n' +
+    'import styles from "../help.module.css";\r\n' +
+    '\r\n' +
+    'export const metadata = createRouteMetadata("/help/recruits");\r\n' +
+    '\r\n' +
+    'export default function RecruitHelpPage() {\r\n' +
+    '  return <div className={`page-wrap ${styles.page}`}>\r\n' +
+    '    <header className={styles.hero}>\r\n' +
+    '\r\n' +
+    '      <h1>파티·내전 모집 이용 안내</h1>\r\n' +
+    '\r\n' +
+    '    </header>\r\n' +
+    '    <section id="find-room" className={styles.section}>\r\n' +
+    '      <h2>모집방을 모르겠어요</h2>\r\n' +
+    '      <p>파티 참가는 해당 모집이 올라온 카카오톡 방에서 진행합니다. 이미 커뮤니티에 참여 중이라면 모집 글을 올린 사람에게 방을 확인해 주세요.</p>\r\n' +
+    '      <p>처음 방문했다면 <Link href="/help/contact">운영팀에 참가 경로 문의</Link>를 남겨 주세요. 이 사이트에 방 초대 링크가 공개되어 있지 않은 모집은 임의로 연결할 수 없습니다.</p>\r\n' +
+    '      <p>사이트에서 바로 신청하려면 <Link href="/applications">오늘 내전 신청</Link>을 이용하세요.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>카카오톡에서 복사·붙여넣기로 참가하기</h2>\r\n' +
+    '      <ol>\r\n' +
+    '        <li><strong>최근 봇 명단 전체를 복사</strong>합니다.</li>\r\n' +
+    '        <li><strong>빈칸에 내 이름</strong>을 넣습니다. 사이트 회원이 아니어도 내전에 접수할 수 있어요.</li>\r\n' +
+    '        <li><strong>메시지 전체를 전송</strong>하고 봇의 저장 결과를 확인합니다.</li>\r\n' +
+    '      </ol>\r\n' +
+    '      <p>참가할 때는 다른 사람 이름·시간·게임을 그대로 두세요. 파티의 <strong>모집코드·명단버전</strong>, 내전의 <strong>양식코드</strong>도 바꾸지 않습니다. 파티는 저장 후 현재 구인 목록이 나옵니다. 다음 참가자는 <strong>구인상세 번호</strong> 또는 <strong>구인상세 모집코드</strong>로 최신 양식을 받아 복사하면 됩니다.</p>\r\n' +
+    '      <p>협곡 내전의 신규·교체 참가자는 라인이 필요해요. <strong>이름/top,mid</strong> 또는 <strong>이름/all</strong>로 적어주세요. 칼바람·증바람은 이름만 입력하면 됩니다.</p>\r\n' +
+    '      <p>내전은 이름으로 먼저 접수하며, 사이트 회원 연결 전에도 명단과 인원수에 포함됩니다. 사이트에 등록한 이름 또는 닉네임과 정확히 일치하는 활성 회원이 한 명이면 참가 명단에 자동 연결됩니다. 동명이인은 이름(사이트 닉네임)으로 구분해주세요. 로그인이나 계정 소유권 인증과는 별개입니다. 저장 후 봇이 보내는 최신 양식으로 다음 참가와 수정을 이어가세요.</p>\r\n' +
+    '      <p>정원이 찼을 때 예비 참여를 원하면 예비 칸에 이름을 넣으세요. 저장되지 않았다는 안내가 나오면 봇이 보여 준 최신 명단에 다시 작성해 주세요.</p>\r\n' +
+    '      <p>연결 오류가 나도 저장은 끝났을 수 있어요. 다시 보내기 전에 파티는 상세 번호, 내전은 내전상세 번호로 명단을 확인해 주세요.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>새 모집 만들기</h2>\r\n' +
+    '      <p>함께할 사람을 새로 모을 때만 <strong>5인파티</strong>를 입력하세요. 빈 양식에 시간·게임과 첫 참가자 이름을 적어 전체 전송하면 됩니다. 시간·게임은 비워둘 수 있지만, <strong>처음 등록할 때는 이름이 한 명 이상</strong> 있어야 해요.</p>\r\n' +
+    '      <p>아직 등록하지 않은 초안은 구인현황에 나오지 않아요. <strong>구인상세 번호</strong>로 다시 받고, 만들지 않을 때는 <strong>번호ㅉ</strong>로 초안을 취소하세요.</p>\r\n' +
+    '      <p>내전은 <strong>내전구인</strong> 입력 후 종목을 선택하세요. <strong>내전구인 협곡</strong>, <strong>내전구인 칼바람</strong>, <strong>내전구인 증바람</strong>으로 바로 양식을 받을 수도 있습니다.</p>\r\n' +
+    '      <p>파티의 <strong>모집코드는 처음 한 번 발급</strong>되며 같은 모집을 수정해도 유지됩니다. <strong>명단버전은 봇이 자동으로 갱신</strong>하므로 두 줄 모두 복사한 그대로 보내세요. 구형 양식코드가 있는 양식도 사용할 수 있습니다.</p>\r\n' +
+    '      <p>번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요. 모집번호·정원·종목·모집코드·명단버전은 바꾸지 마세요.</p>\r\n' +
+    '      <p>라인형 파티와 구형 양식에는 기존 편집 제한이 적용됩니다. 취소는 상세 번호 삭제 이름을 사용해주세요.</p>\r\n' +
+    '      <p>내전 이름·라인·시간·안내도 최신 양식에서 수정할 수 있어요. 같은 항목을 다른 사람이 먼저 바꿨다면 최신 양식을 다시 받아 작성해주세요.</p>\r\n' +
+    '      <p>사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정해야 합니다.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>명단 찾기·취소·마감</h2>\r\n' +
+    '      <ul>\r\n' +
+    '        <li><strong>구인현황</strong> 또는 <strong>내전현황</strong>에서 참여할 모집 번호를 찾습니다.</li>\r\n' +
+    '        <li><strong>구인상세 12</strong>로 파티 전체 양식을 다시 받고, <strong>12ㅉ</strong>으로 모집을 마감합니다.</li>\r\n' +
+    '        <li>파티 번호는 당일용입니다. 날짜가 바뀌어도 같은 모집을 찾으려면 <strong>구인상세 ABCDE-23456</strong>, 마감하려면 <strong>구인마감 ABCDE-23456</strong> 또는 <strong>ABCDE-23456ㅉ</strong>처럼 받은 모집코드를 사용하세요.</li>\r\n' +
+    '        <li><strong>내전상세 12</strong>로 내전 전체 양식을 다시 받고, <strong>내전 12ㅉ</strong>으로 모집을 마감합니다.</li>\r\n' +
+    '        <li>취소는 <strong>상세 12 삭제 내이름</strong> 또는 <strong>내전상세 12 삭제 내이름</strong>을 입력합니다. 편집 가능한 최신 N인파티·내전 양식에서는 번호 행을 남기고 이름만 비운 뒤 전체 전송할 수도 있어요.</li>\r\n' +
+    '        <li>파티의 <strong>상세 12 추가 내이름</strong> 같은 빠른 명령도 사용할 수 있습니다. 코드로 지정하려면 <strong>상세 ABCDE-23456 추가 내이름</strong> 또는 <strong>상세 ABCDE-23456 삭제 내이름</strong>을 입력하세요.</li>\r\n' +
+    '      </ul>\r\n' +
+    '      <p>명령 앞에는 <strong>/</strong>를 붙여도 됩니다.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>사이트에서 확인하기</h2>\r\n' +
+    '      <ol>\r\n' +
+    '        <li><strong>파티 모집</strong>에서 게임 종류, 현재 인원, 참여자 이름·포지션과 예정 시간을 확인합니다.</li>\r\n' +
+    '        <li>종료·취소된 모집은 목록에서 제외되며 현재 참여 가능한 모집이 먼저 표시됩니다.</li>\r\n' +
+    '      </ol>\r\n' +
+    '      <p>카카오 스크림 모집 기능은 제외되었으며, 기존 저장 기록의 조회는 유지됩니다.</p>\r\n' +
+    '    </section>\r\n' +
+    '    <section className={styles.section}>\r\n' +
+    '      <h2>모집 등록 안내</h2>\r\n' +
+    '      <ul>\r\n' +
+    '        <li>파티 모집 등록·수정은 봇이 있는 카카오톡 방에서 진행합니다. 사이트에서는 현황과 참여 방법을 확인합니다. 내전 참가 신청은 사이트의 ‘오늘 내전 신청’에서도 가능합니다.</li>\r\n' +
+    '        <li>같은 요청이 반복되어도 모집은 한 번만 등록됩니다.</li>\r\n' +
+    '        <li>모집에 작성한 참여자 표시 이름, 포지션과 예비 여부는 현재 모집 카드에 공개됩니다.</li>\r\n' +
+    '        <li>로그인 ID, 연락처, 방·발신자 식별값과 운영 메모는 공개하지 않습니다.</li>\r\n' +
+    '      </ul>\r\n' +
+    '    </section>\r\n' +
+    '    <p className={styles.notice}>카카오톡에서는 봇이 출력한 최신 양식을 사용하고, 사이트에서는 모집 내용이 바뀌었을 때 목록을 새로고침해 주세요.</p>\r\n' +
+    '    <nav className={styles.links}>\r\n' +
+    '      <Link href="/recruits">현재 모집 보기</Link>\r\n' +
+    '      <Link href="/help/kakao">카카오 봇 안내</Link>\r\n' +
+    '    </nav>\r\n' +
+    '  </div>;\r\n' +
+    '}\r\n'
+
+      at TestContext.<anonymous> (file:///E:/k-LOL.GG/worktrees/full-audit-fixes-20261013/tests/site-feature-boundary.test.mjs:81:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'import { createRouteMetadata } from "@/modules/seo/domain/site-seo";\r\nimport Link from "next/link";\r\nimport styles from "../help.module.css";\r\n\r\nexport const metadata = createRouteMetadata("/help/recruits");\r\n\r\nexport default function RecruitHelpPage() {\r\n  return <div className={`page-wrap ${styles.page}`}>\r\n    <header className={styles.hero}>\r\n\r\n      <h1>파티·내전 모집 이용 안내</h1>\r\n\r\n    </header>\r\n    <section id="find-room" className={styles.section}>\r\n      <h2>모집방을 모르겠어요</h2>\r\n      <p>파티 참가는 해당 모집이 올라온 카카오톡 방에서 진행합니다. 이미 커뮤니티에 참여 중이라면 모집 글을 올린 사람에게 방을 확인해 주세요.</p>\r\n      <p>처음 방문했다면 <Link href="/help/contact">운영팀에 참가 경로 문의</Link>를 남겨 주세요. 이 사이트에 방 초대 링크가 공개되어 있지 않은 모집은 임의로 연결할 수 없습니다.</p>\r\n      <p>사이트에서 바로 신청하려면 <Link href="/applications">오늘 내전 신청</Link>을 이용하세요.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>카카오톡에서 복사·붙여넣기로 참가하기</h2>\r\n      <ol>\r\n        <li><strong>최근 봇 명단 전체를 복사</strong>합니다.</li>\r\n        <li><strong>빈칸에 내 이름</strong>을 넣습니다. 사이트 회원이 아니어도 내전에 접수할 수 있어요.</li>\r\n        <li><strong>메시지 전체를 전송</strong>하고 봇의 저장 결과를 확인합니다.</li>\r\n      </ol>\r\n      <p>참가할 때는 다른 사람 이름·시간·게임을 그대로 두세요. 파티의 <strong>모집코드·명단버전</strong>, 내전의 <strong>양식코드</strong>도 바꾸지 않습니다. 파티는 저장 후 현재 구인 목록이 나옵니다. 다음 참가자는 <strong>구인상세 번호</strong> 또는 <strong>구인상세 모집코드</strong>로 최신 양식을 받아 복사하면 됩니다.</p>\r\n      <p>협곡 내전의 신규·교체 참가자는 라인이 필요해요. <strong>이름/top,mid</strong> 또는 <strong>이름/all</strong>로 적어주세요. 칼바람·증바람은 이름만 입력하면 됩니다.</p>\r\n      <p>내전은 이름으로 먼저 접수하며, 사이트 회원 연결 전에도 명단과 인원수에 포함됩니다. 사이트에 등록한 이름 또는 닉네임과 정확히 일치하는 활성 회원이 한 명이면 참가 명단에 자동 연결됩니다. 동명이인은 이름(사이트 닉네임)으로 구분해주세요. 로그인이나 계정 소유권 인증과는 별개입니다. 저장 후 봇이 보내는 최신 양식으로 다음 참가와 수정을 이어가세요.</p>\r\n      <p>정원이 찼을 때 예비 참여를 원하면 예비 칸에 이름을 넣으세요. 저장되지 않았다는 안내가 나오면 봇이 보여 준 최신 명단에 다시 작성해 주세요.</p>\r\n      <p>연결 오류가 나도 저장은 끝났을 수 있어요. 다시 보내기 전에 파티는 상세 번호, 내전은 내전상세 번호로 명단을 확인해 주세요.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>새 모집 만들기</h2>\r\n      <p>함께할 사람을 새로 모을 때만 <strong>5인파티</strong>를 입력하세요. 빈 양식에 시간·게임과 첫 참가자 이름을 적어 전체 전송하면 됩니다. 시간·게임은 비워둘 수 있지만, <strong>처음 등록할 때는 이름이 한 명 이상</strong> 있어야 해요.</p>\r\n      <p>아직 등록하지 않은 초안은 구인현황에 나오지 않아요. <strong>구인상세 번호</strong>로 다시 받고, 만들지 않을 때는 <strong>번호ㅉ</strong>로 초안을 취소하세요.</p>\r\n      <p>내전은 <strong>내전구인</strong> 입력 후 종목을 선택하세요. <strong>내전구인 협곡</strong>, <strong>내전구인 칼바람</strong>, <strong>내전구인 증바람</strong>으로 바로 양식을 받을 수도 있습니다.</p>\r\n      <p>파티의 <strong>모집코드는 처음 한 번 발급</strong>되며 같은 모집을 수정해도 유지됩니다. <strong>명단버전은 봇이 자동으로 갱신</strong>하므로 두 줄 모두 복사한 그대로 보내세요. 구형 양식코드가 있는 양식도 사용할 수 있습니다.</p>\r\n      <p>번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요. 모집번호·정원·종목·모집코드·명단버전은 바꾸지 마세요.</p>\r\n      <p>라인형 파티와 구형 양식에는 기존 편집 제한이 적용됩니다. 취소는 상세 번호 삭제 이름을 사용해주세요.</p>\r\n      <p>내전 이름·라인·시간·안내도 최신 양식에서 수정할 수 있어요. 같은 항목을 다른 사람이 먼저 바꿨다면 최신 양식을 다시 받아 작성해주세요.</p>\r\n      <p>사이트 신청은 본인이 사이트에서, 운영진 확정 항목은 운영진이 수정해야 합니다.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>명단 찾기·취소·마감</h2>\r\n      <ul>\r\n        <li><strong>구인현황</strong> 또는 <strong>내전현황</strong>에서 참여할 모집 번호를 찾습니다.</li>\r\n        <li><strong>구인상세 12</strong>로 파티 전체 양식을 다시 받고, <strong>12ㅉ</strong>으로 모집을 마감합니다.</li>\r\n        <li>파티 번호는 당일용입니다. 날짜가 바뀌어도 같은 모집을 찾으려면 <strong>구인상세 ABCDE-23456</strong>, 마감하려면 <strong>구인마감 ABCDE-23456</strong> 또는 <strong>ABCDE-23456ㅉ</strong>처럼 받은 모집코드를 사용하세요.</li>\r\n        <li><strong>내전상세 12</strong>로 내전 전체 양식을 다시 받고, <strong>내전 12ㅉ</strong>으로 모집을 마감합니다.</li>\r\n        <li>취소는 <strong>상세 12 삭제 내이름</strong> 또는 <strong>내전상세 12 삭제 내이름</strong>을 입력합니다. 편집 가능한 최신 N인파티·내전 양식에서는 번호 행을 남기고 이름만 비운 뒤 전체 전송할 수도 있어요.</li>\r\n        <li>파티의 <strong>상세 12 추가 내이름</strong> 같은 빠른 명령도 사용할 수 있습니다. 코드로 지정하려면 <strong>상세 ABCDE-23456 추가 내이름</strong> 또는 <strong>상세 ABCDE-23456 삭제 내이름</strong>을 입력하세요.</li>\r\n      </ul>\r\n      <p>명령 앞에는 <strong>/</strong>를 붙여도 됩니다.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>사이트에서 확인하기</h2>\r\n      <ol>\r\n        <li><strong>파티 모집</strong>에서 게임 종류, 현재 인원, 참여자 이름·포지션과 예정 시간을 확인합니다.</li>\r\n        <li>종료·취소된 모집은 목록에서 제외되며 현재 참여 가능한 모집이 먼저 표시됩니다.</li>\r\n      </ol>\r\n      <p>카카오 스크림 모집 기능은 제외되었으며, 기존 저장 기록의 조회는 유지됩니다.</p>\r\n    </section>\r\n    <section className={styles.section}>\r\n      <h2>모집 등록 안내</h2>\r\n      <ul>\r\n        <li>파티 모집 등록·수정은 봇이 있는 카카오톡 방에서 진행합니다. 사이트에서는 현황과 참여 방법을 확인합니다. 내전 참가 신청은 사이트의 ‘오늘 내전 신청’에서도 가능합니다.</li>\r\n        <li>같은 요청이 반복되어도 모집은 한 번만 등록됩니다.</li>\r\n        <li>모집에 작성한 참여자 표시 이름, 포지션과 예비 여부는 현재 모집 카드에 공개됩니다.</li>\r\n        <li>로그인 ID, 연락처, 방·발신자 식별값과 운영 메모는 공개하지 않습니다.</li>\r\n      </ul>\r\n    </section>\r\n    <p className={styles.notice}>카카오톡에서는 봇이 출력한 최신 양식을 사용하고, 사이트에서는 모집 내용이 바뀌었을 때 목록을 새로고침해 주세요.</p>\r\n    <nav className={styles.links}>\r\n      <Link href="/recruits">현재 모집 보기</Link>\r\n      <Link href="/help/kakao">카카오 봇 안내</Link>\r\n    </nav>\r\n  </div>;\r\n}\r\n',
+    expected: /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/,
+    operator: 'match',
+    diff: 'simple'
+  }

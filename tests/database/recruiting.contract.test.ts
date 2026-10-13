@@ -16,6 +16,8 @@ import {
 } from "../../src/modules/recruiting";
 import { PostgresRecruitingAdapter } from "../../src/modules/recruiting/infrastructure/postgres-recruiting-adapter";
 import { partyCopyReference } from "../../src/modules/recruiting/application/party-copy-reference";
+import { parseRecruitFormReference } from "../../src/modules/recruiting/domain/kakao-recruit-reference";
+import { PostgresKakaoAssistant } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-assistant";
 import type { RecruitMember } from "../../src/modules/recruiting/domain/recruiting";
 import { recruitingOperatingDateKey } from "../../src/modules/recruiting/domain/operating-day";
 import { createDatabaseHandle } from "../../src/platform/db/database";
@@ -35,6 +37,7 @@ import {
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 const bodyDigestHex = "ab".repeat(32);
+
 
 function accountCreateCommand(input: Readonly<{
   accountId: string;
@@ -624,7 +627,7 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     assert.equal(afterCopy.revision, 5);
     assert.equal((afterCopy.membersJson as unknown[]).length, 3);
 
-    // R24 short codes compose two whole-form additions on the same locked target.
+    // Stable references compose two whole-form additions on the same locked target.
     partyId = randomUUID();
     const operatingDate = recruitingOperatingDateKey(new Date());
     const draft = await handler.handle(v4Command("CREATE_PARTY", {
@@ -633,7 +636,7 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
       startTimeText: "미정", gameInfo: "미정", organizerText: null, scheduledStartAt: null, protectedUntil: null, initialStatus: "DRAFT",
     }, `sender-${suffix}-copy-create`));
     const draftCode = String(draft.body.data.formCode);
-    assert.match(draftCode, /^[A-Z2-9]{5}-[A-Z2-9]{5}$/u);
+    assert.match(draftCode, /^[2-9A-HJ-NP-Z]{5}-[2-9A-HJ-NP-Z]{5}@1$/u);
     const copied = (code: string, members: readonly RecruitMember[], startTimeText = "지금", gameInfo = "배그") => ({
       members, startTimeText, startTimeState: "PRESENT_VALUE" as const, gameInfo, gameInfoState: "PRESENT_VALUE" as const,
       copyGuard: { operatingDate, saveReference: code },
@@ -653,6 +656,8 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     assert.equal(twoMembers.startTimeText, "지금");
     assert.equal(twoMembers.gameInfo, "배그", "the second old draft accepts the already-saved metadata change");
     const baselineCode = String(concurrentCopies.find((entry) => entry.revision === 2)!.body.data.formCode);
+    assert.equal(baselineCode.split("@")[0], draftCode.split("@")[0], "copy changes preserve the recruitment code");
+    assert.notEqual(baselineCode, draftCode, "copy changes receive a new immutable original version");
     await handler.handle(v4Command("PARTY_MEMBER_REMOVE", { name: baseline[0]!.name }, `sender-${suffix}-withdraw`));
     const third = await handler.handle(v4Command("SYNC_PARTY", {
       ...copied(baselineCode, [...baseline, { name: "세명", slotNo: 3, position: null, substitute: false }]),
@@ -775,4 +780,120 @@ test("concurrent V4 scrim participant commands compose after the database row lo
   } finally {
     await pool.end();
   }
+});
+
+
+test("a scoped fixed code reads, edits and closes its original UUID across days and reused numbers", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const adapter = new PostgresRecruitingAdapter(database);
+  const assistant = new PostgresKakaoAssistant(database);
+  let now = new Date("2097-09-28T23:00:00+09:00");
+  const handler = new RecruitingCommandHandler({
+    unitOfWork: adapter, repository: adapter, authorization: adapter, receipts: adapter,
+    audit: adapter.auditPort(), outbox: adapter.outboxPort(),
+    clock: { now: () => now, receiptExpiresAt: (createdAt) => new Date(createdAt.getTime() + 86_400_000) },
+  });
+  const suffix = randomBytes(8).toString("hex");
+  const roomId = `room-fixed-identity-${suffix}`, principalId = `bot:fixed-identity-${suffix}`;
+  const originalId = randomUUID(), nextDayId = randomUUID(), resetId = randomUUID();
+  const originalDate = recruitingOperatingDateKey(now);
+  const resetSequence = Math.floor(Math.random() * 1_000_000_000);
+  let sequence = 0;
+  function command<Type extends RecruitingCommand["type"]>(type: Type, aggregateId: string,
+    payload: Extract<RecruitingCommand, { type: Type }>["payload"], expectedRevision = 0, room = roomId) {
+    const eventId = `event-fixed-identity-${suffix}-${++sequence}`;
+    const digest = createHash("sha256").update(eventId).digest("hex");
+    return sealRecruitingCommand({ type, aggregateId, metadata: {
+      actor: { kind: "BOT", principalId, commandSource: "KAKAO_V4", authorizationIntent: {
+        kind: "KAKAO_HMAC", keyId: "contract", timestampSeconds: Math.floor(now.getTime() / 1_000),
+        nonce: eventId, installationId: `install-${suffix}`, deliveryId: eventId, roomId: room, senderId: `sender-${suffix}`,
+        bodyDigestHex: digest, requireNonceClaim: true, transactionRecheck: true,
+      } }, requestId: randomUUID(), expectedRevision, issuedAt: now.toISOString(), idempotency: {
+        scope: recruitingCommandScope("BOT", type, "KAKAO_V4"), keyHash: hashKakaoV4EventId(eventId),
+        requestFingerprint: new Uint8Array(32), bodyDigestHex: digest,
+      },
+    }, payload } as unknown as Extract<RecruitingCommand, { type: Type }>);
+  }
+  const create = (id: string, date: string, name: string, reset = resetSequence) => handler.handle(command("CREATE_PARTY", id, {
+    recruitDate: date, resetSequence: reset, recruitNumber: 93, partyType: "PARTY_NUMBER", title: "고정 코드 합성 계약",
+    maximumMembers: 2, members: [{ name, position: null, slotNo: 1, substitute: false }],
+    startTimeText: "미정", gameInfo: "미입력", organizerText: null, scheduledStartAt: null, protectedUntil: null,
+  }));
+  const row = async (id: string) => (await database.select().from(recruitParties).where(eq(recruitParties.id, id)))[0]!;
+  const readDetail = (target: { id: string; recruitDate: string; recruitNumber: number }, room = roomId) => {
+    const requestKey = `fixed-detail-${suffix}-${++sequence}`;
+    return assistant.getOpenChatStatus({ actorPrincipalId: principalId, requestKey, scope: "BOT:KAKAO:PARTY:READ", projection: "PARTY",
+      partyTarget: { ...target, partyId: target.id }, now, intent: {
+        kind: "KAKAO_HMAC", keyId: "contract", timestampSeconds: Math.floor(now.getTime() / 1_000),
+        nonce: requestKey, roomId: room, senderId: `sender-${suffix}`, bodyDigestHex: createHash("sha256").update(requestKey).digest("hex"),
+        requireNonceClaim: true, transactionRecheck: true,
+      } });
+  };
+  const editedMembers: RecruitMember[] = [
+    { name: "합성 원모집 참가자", position: null, slotNo: 1, substitute: false },
+    { name: "합성 다음날 참가자", position: null, slotNo: 2, substitute: false },
+  ];
+  const copy = (reference: string) => ({
+    members: editedMembers, copyGuard: { operatingDate: originalDate, saveReference: reference },
+    startTimeText: "미정", startTimeState: "PRESENT_VALUE" as const, gameInfo: "미입력", gameInfoState: "PRESENT_VALUE" as const,
+    slotPatches: [...editedMembers.map((member) => ({ slotNo: member.slotNo, substitute: false, state: "PRESENT_VALUE" as const, value: member.name })),
+      { slotNo: 1, substitute: true, state: "PRESENT_EMPTY" as const, value: null }],
+  });
+  try {
+    await applyMigrations(database);
+    const original = await create(originalId, originalDate, "합성 원모집 참가자");
+    const reference = String(original.body.data.formCode), code = parseRecruitFormReference(reference)!.code;
+    assert.equal((await adapter.resolvePartyRecruitCode({ sourceRoomId: roomId, code }))!.id, originalId);
+    assert.equal(await adapter.resolvePartyRecruitCode({ sourceRoomId: `${roomId}-foreign`, code }), null);
+    await assert.rejects(handler.handle(command("PARTY_MEMBER_ADD", originalId, { name: "다른 방 참가자" }, 0, `${roomId}-foreign`)),
+      (error) => error instanceof RecruitingApplicationError && error.code === "NOT_FOUND");
+
+    now = new Date("2097-09-29T06:00:00+09:00");
+    const nextDay = await create(nextDayId, recruitingOperatingDateKey(now), "합성 새 모집 참가자");
+    // A reset generation can reuse the display number even on the original date.
+    const reset = await create(resetId, originalDate, "합성 다른 세대 참가자", resetSequence + 1);
+    assert.notEqual(parseRecruitFormReference(String(nextDay.body.data.formCode))!.code, code);
+    assert.notEqual(parseRecruitFormReference(String(reset.body.data.formCode))!.code, code);
+    const unaffected = [await row(nextDayId), await row(resetId)];
+    const target = (await adapter.resolvePartyRecruitCode({ sourceRoomId: roomId, code }))!;
+    assert.equal(target.id, originalId);
+    assert.equal(target.recruitDate, originalDate);
+    assert.deepEqual(await adapter.resolveCompatTarget({ kind: "PARTY", sourceRoomId: roomId, recruitDate: target.recruitDate,
+      recruitNumber: target.recruitNumber, partyId: target.id, allowedPartyStatuses: ["IN_PROGRESS"] }), { id: originalId, revision: 0 });
+    assert.equal((await readDetail(target, `${roomId}-foreign`)).body.parties.length, 0);
+
+    const before = await row(originalId);
+    await assert.rejects(handler.handle(command("SYNC_PARTY", target.id, copy(reference))), /PARTY_COPY_CONFLICT/u);
+    assert.deepEqual(await row(originalId), before, "an expired original cannot edit the still-active party");
+    const detail = await readDetail(target);
+    assert.equal(detail.body.parties.length, 1);
+    assert.equal(detail.body.parties[0]!.id, originalId);
+    const latestReference = detail.body.parties[0]!.formCode!;
+    assert.equal(parseRecruitFormReference(latestReference)!.code, code);
+    assert.ok(parseRecruitFormReference(latestReference)!.version > parseRecruitFormReference(reference)!.version);
+    const edited = await handler.handle(command("SYNC_PARTY", target.id, copy(latestReference)));
+    assert.equal(edited.revision, 1);
+    assert.deepEqual((await row(originalId)).membersJson, editedMembers);
+    const finishTarget = (await adapter.resolvePartyRecruitCode({ sourceRoomId: roomId, code }))!;
+    const finish = command("FINISH_PARTY", finishTarget.id, {}, finishTarget.revision);
+    assert.equal((await handler.handle(finish)).body.status, "FINISHED");
+    assert.equal((await handler.handle(finish)).replayed, true);
+    const closed = await row(originalId);
+    const closedTarget = (await adapter.resolvePartyRecruitCode({ sourceRoomId: roomId, code }))!;
+    assert.equal(closedTarget.id, originalId);
+    assert.equal(closedTarget.status, "FINISHED");
+    assert.equal(await adapter.resolveCompatTarget({ kind: "PARTY", sourceRoomId: roomId, recruitDate: closedTarget.recruitDate,
+      recruitNumber: closedTarget.recruitNumber, partyId: closedTarget.id, allowedPartyStatuses: ["IN_PROGRESS", "DRAFT"] }), null);
+    assert.equal((await readDetail(closedTarget)).body.parties.length, 0);
+    await assert.rejects(handler.handle(command("SYNC_PARTY", originalId, copy(String(edited.body.data.formCode)), closed.revision)), /RECRUIT_NOT_MUTABLE/u);
+    await assert.rejects(handler.handle(command("PARTY_MEMBER_ADD", originalId, { name: "종료 후 참가자" }, closed.revision)), /RECRUIT_NOT_MUTABLE/u);
+    await assert.rejects(handler.handle(command("FINISH_PARTY", originalId, {}, closed.revision)), /RECRUIT_NOT_MUTABLE/u);
+    assert.deepEqual(await row(originalId), closed);
+    assert.deepEqual([await row(nextDayId), await row(resetId)], unaffected, "neither new date nor reset-generation number reuse redirects the fixed code");
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, originalId))).length, 3,
+      "only create, edit and finish emit mutation events");
+  } finally { await pool.end(); }
 });

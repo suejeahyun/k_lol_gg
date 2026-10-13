@@ -1,0 +1,21 @@
+{
+  "mode": "isolated-local",
+  "results": [
+    {
+      "file": "tests/database/kakao-form-snapshots.contract.test.ts",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/database/kakao-recruit-form-snapshots.contract.test.ts",
+      "exitCode": 0,
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0
+    }
+  ]
+}

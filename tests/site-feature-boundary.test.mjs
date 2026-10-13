@@ -51,7 +51,7 @@ test("Kakao help feature controls its public guide without exposing configuratio
   assert.match(page, /구인상세 번호/);
   assert.match(page, /처음 등록할 때는 이름이 한 명 이상/);
   assert.match(page, /초안을 취소하세요/);
-  assert.match(page, /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
+  assert.match(page, /번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
   assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
   assert.match(page, /신규·교체 참가자는 라인이 필요/);
   assert.match(page, /이름\/all/);
@@ -78,7 +78,7 @@ test("recruit guide teaches participation and guarded edits before optional crea
   assert.match(page, /구인상세 번호/);
   assert.match(page, /처음 등록할 때는 이름이 한 명 이상/);
   assert.match(page, /초안을 취소하세요/);
-  assert.match(page, /양식코드가 있는 번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
+  assert.match(page, /번호형 N인파티는 최신 양식에서 이름 추가·삭제·교체와 시작·게임 수정을 할 수 있어요/);
   assert.match(page, /라인형 파티와 구형 양식에는 기존 편집 제한/);
   assert.match(page, /신규·교체 참가자는 라인이 필요/);
   assert.match(page, /이름\/all/);

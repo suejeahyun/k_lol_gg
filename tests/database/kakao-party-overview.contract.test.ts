@@ -7,7 +7,8 @@ import { KakaoAssistantError } from "../../src/modules/recruiting/kakao-assistan
 import { PostgresKakaoAssistant } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-assistant";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
-import { kakaoFormSnapshots } from "../../src/platform/db/schema/kakao-form-snapshots";
+import { parseRecruitFormReference } from "../../src/modules/recruiting/domain/kakao-recruit-reference";
+import { kakaoRecruitCodes, kakaoRecruitFormSnapshots } from "../../src/platform/db/schema/kakao-recruit-form-snapshots";
 import { recruitParties } from "../../src/platform/db/schema/recruiting";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
@@ -39,7 +40,8 @@ test("ADR0011 lists more than twenty parties without snapshots and reads scoped 
       startTimeText: "미정", gameInfo: "미입력", sourceRoomId: roomId, lastActivityAt: now,
     })));
     const assistant = new PostgresKakaoAssistant(database);
-    const snapshotCount = async () => (await database.select().from(kakaoFormSnapshots).where(eq(kakaoFormSnapshots.scopeHash, scopeHash))).length;
+    const snapshotCount = async () => (await database.select().from(kakaoRecruitFormSnapshots)
+      .innerJoin(kakaoRecruitCodes, eq(kakaoRecruitCodes.code, kakaoRecruitFormSnapshots.code)).where(eq(kakaoRecruitCodes.scopeHash, scopeHash))).length;
     const list = await assistant.getOpenChatStatus(input());
     assert.deepEqual(list.body.parties.map((party) => party.recruitNumber), Array.from({ length: 23 }, (_, index) => index + 1));
     assert.equal(list.body.partiesTruncated, false);
@@ -49,7 +51,7 @@ test("ADR0011 lists more than twenty parties without snapshots and reads scoped 
     const detail = await assistant.getOpenChatStatus(detailInput);
     assert.equal(detail.body.parties.length, 1);
     assert.equal(detail.body.parties[0]?.recruitNumber, 23);
-    assert.match(detail.body.parties[0]?.formCode ?? "", /^[2-9A-HJ-NP-Z]{5}-[2-9A-HJ-NP-Z]{5}$/u);
+    assert.equal(parseRecruitFormReference(detail.body.parties[0]?.formCode)?.version, 1);
     assert.equal((await assistant.getOpenChatStatus(detailInput)).replayed, true);
     assert.equal(await snapshotCount(), 1);
     const draft = await assistant.getOpenChatStatus(input({ recruitDate: date, recruitNumber: 24 }));

@@ -17,7 +17,7 @@ import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signatu
 import { planSeasonApplicationMerge } from "@/modules/seasons/domain/application-source-policy";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
 import { kakaoRecruitTimeText } from "../domain/recruiting";
-import { issueKakaoFormSnapshot, loadKakaoFormSnapshot } from "../infrastructure/kakao-form-snapshots";
+import { issueKakaoFormSnapshot, issueKakaoRecruitFormSnapshot, loadKakaoFormSnapshot } from "../infrastructure/kakao-form-snapshots";
 import { partyCopySnapshot } from "../application/party-copy-snapshot";
 import { planInhouseCopyAdditions, planInhouseCopyEdits, type InhouseCopyRow } from "./inhouse-copy-form";
 import {
@@ -824,7 +824,7 @@ export class PostgresKakaoAssistant {
 
   getOpenChatStatus(input: SignedReadInput & Readonly<{
     projection?: "PARTY" | "SCRIM";
-    partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number }>;
+    partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number; partyId?: string }>;
     now?: Date;
     afterMutation?: boolean;
   }>): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
@@ -849,7 +849,7 @@ export class PostgresKakaoAssistant {
         }).from(recruitParties).where(and(
           input.partyTarget ? inArray(recruitParties.status, ["DRAFT", "IN_PROGRESS"]) : eq(recruitParties.status, "IN_PROGRESS"),
           eq(recruitParties.sourceRoomId, input.intent.roomId),
-          eq(recruitParties.recruitDate, operatingDate),
+          input.partyTarget?.partyId ? eq(recruitParties.id, input.partyTarget.partyId) : eq(recruitParties.recruitDate, operatingDate),
           input.partyTarget ? eq(recruitParties.recruitDate, input.partyTarget.recruitDate) : undefined,
           input.partyTarget ? eq(recruitParties.recruitNumber, input.partyTarget.recruitNumber) : undefined,
         ))
@@ -896,7 +896,7 @@ export class PostgresKakaoAssistant {
       const latestScrim = latestScrimRows[0];
       const partyFormCodes = new Map<string, string>();
       for (const party of input.partyTarget ? parties : []) {
-        const formCode = await issueKakaoFormSnapshot(transaction, {
+        const formCode = await issueKakaoRecruitFormSnapshot(transaction, {
           kind: "PARTY", scopeHash: createHash("sha256").update(input.intent.roomId).digest(),
           targetId: party.id, operatingDate, now: statusNow,
           state: partyCopySnapshot({ ...party, members: publicRecruitMembers(party.members) }),

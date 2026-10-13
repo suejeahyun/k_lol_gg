@@ -1,4 +1,5 @@
 import type { RecruitPartyType } from "../domain/recruiting";
+import { formatRecruitFormReference, parseRecruitFormReference } from "../domain/kakao-recruit-reference";
 
 const NUMBERED_ROW = /^\s*([0-9０-９]{1,2})(?:\s*\\?[.)．。）]|\s+)\s*(.*?)\s*$/u;
 const POSITION_ROW = /^\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)(?:\s*\\?[.:：．。]|\s+)\s*(.*?)\s*$/iu;
@@ -7,6 +8,9 @@ const RECRUIT_LABEL = /^\s*(?:[》>*#-]\s*)*모\s*집\s*번\s*호\s*[:：]?\s*(.
 const OPERATING_DATE_LABEL = /^\s*[》>]?\s*운영\s*일\s*[:：]?\s*(.*?)\s*$/u;
 const SAVE_REFERENCE_LABEL = /^\s*[》>]?\s*저장\s*기준\s*[:：]?\s*(.*?)\s*$/u;
 const FORM_CODE_LABEL = /^\s*양식\s*코드\s*[:：]\s*(.*?)\s*$/u;
+const RECRUIT_CODE_LABEL = /^\s*모집\s*코드\s*[:：]\s*(.*?)\s*$/u;
+const ROSTER_VERSION_LABEL = /^\s*명단\s*버전\s*[:：]\s*(.*?)\s*$/u;
+const FORM_IDENTITY_SIGNAL = /^\s*(?:모집\s*코드|명단\s*버전|양식\s*코드)/u;
 const START_TIME_LABEL = /^\s*[》>]?\s*(?:게임\s*)?(?:시작|출발)\s*(?:시간)?\s*[:：]\s*(.*?)\s*$/u;
 const GAME_INFO_LABEL = /^\s*[》>]?\s*게임\s*(?:정보|종류)?\s*[:：]\s*(.*?)\s*$/u;
 const ORGANIZER_LABEL = /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?\s*(.*?)\s*$/u;
@@ -189,7 +193,7 @@ function partySlotContinuation(lines: readonly string[], index: number) {
   const value = normalizedValue(lines[index + 1] ?? "");
   if (!value) return null;
   if (
-    DISPLAY_SEPARATOR.test(value) || FORM_CODE_LABEL.test(value) || /^전체 복사/u.test(value) || SAVE_REFERENCE_LABEL.test(value) || /^복사 안내:/u.test(value) || RECRUIT_LABEL.test(value) || OPERATING_DATE_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
+    DISPLAY_SEPARATOR.test(value) || FORM_IDENTITY_SIGNAL.test(value) || /^전체 복사/u.test(value) || SAVE_REFERENCE_LABEL.test(value) || /^복사 안내:/u.test(value) || RECRUIT_LABEL.test(value) || OPERATING_DATE_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
     DETAIL_HEADER.test(value) || DETAIL_SUMMARY.test(value) || RESERVE_COUNT_SUMMARY.test(value) ||
     parsePartyReserveRow(value) || parsePartyNumberedRow(value) || parsePartyPositionRow(value) || /^\d{3,}\s*[.)]/u.test(value.normalize("NFKC")) ||
     submittedTitle(value, index + 2) || /^\s*(?:\[?K-LOL|📢|참여해|\*?상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(value)
@@ -210,7 +214,7 @@ function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: 
     const line = lines[index]!;
     if (DISPLAY_SEPARATOR.test(line)) break;
     if (
-      FORM_CODE_LABEL.test(line) || /^전체 복사/u.test(line) || SAVE_REFERENCE_LABEL.test(line) || /^복사 안내:/u.test(line) || RECRUIT_LABEL.test(line) || OPERATING_DATE_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) || ORGANIZER_LABEL.test(line) ||
+      FORM_IDENTITY_SIGNAL.test(line) || /^전체 복사/u.test(line) || SAVE_REFERENCE_LABEL.test(line) || /^복사 안내:/u.test(line) || RECRUIT_LABEL.test(line) || OPERATING_DATE_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) || ORGANIZER_LABEL.test(line) ||
       DETAIL_HEADER.test(line) || DETAIL_SUMMARY.test(line) || RESERVE_COUNT_SUMMARY.test(line) ||
       parsePartyReserveRow(line) || parsePartyNumberedRow(line) || parsePartyPositionRow(line) ||
       submittedTitle(line, index + 1) || /^\s*(?:\[K-LOL|참여해|\*상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(line)
@@ -295,7 +299,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
       }
       continue;
     }
-    if ([START_TIME_LABEL, GAME_INFO_LABEL, ORGANIZER_LABEL, OPERATING_DATE_LABEL, SAVE_REFERENCE_LABEL, FORM_CODE_LABEL].some((pattern) => pattern.test(line))) continue;
+    if ([START_TIME_LABEL, GAME_INFO_LABEL, ORGANIZER_LABEL, OPERATING_DATE_LABEL, SAVE_REFERENCE_LABEL, FORM_IDENTITY_SIGNAL].some((pattern) => pattern.test(line))) continue;
     const title = submittedTitle(line, lineNumber);
     if (title) {
       titles.push(title);
@@ -380,14 +384,28 @@ export function parsePartyForm(input: string): ParsedPartyForm {
     const match = SAVE_REFERENCE_LABEL.exec(line) ?? FORM_CODE_LABEL.exec(line);
     return match ? [normalizedValue(match[1] ?? "").normalize("NFKC").replace(/\s*\(그대로 두세요\)\s*$/u, "")] : [];
   });
-  const saveReference = references[0] ?? null;
+  const codes = lines.flatMap((line) => {
+    const match = RECRUIT_CODE_LABEL.exec(line);
+    return match ? [normalizedValue(match[1] ?? "").normalize("NFKC")] : [];
+  });
+  const versions = lines.flatMap((line) => {
+    const match = ROSTER_VERSION_LABEL.exec(line);
+    return match ? [normalizedValue(match[1] ?? "").normalize("NFKC")] : [];
+  });
+  const identityLines = lines.filter((line) => FORM_IDENTITY_SIGNAL.test(line));
+  const hasRecruitIdentity = identityLines.some((line) => !FORM_CODE_LABEL.test(line));
+  const recruitIdentity = hasRecruitIdentity && codes.length === 1 && versions.length === 1 &&
+    identityLines.length === 2 && references.length === 0
+    ? parseRecruitFormReference(`${codes[0]}@${versions[0]}`) : null;
+  const saveReference = recruitIdentity ? formatRecruitFormReference(recruitIdentity.code, recruitIdentity.version) : references[0] ?? null;
   const onlyRecruitNumber = uniqueRecruitNumbers.size === 1 ? [...uniqueRecruitNumbers][0] : null;
   if (saveReference !== null && (uniqueRecruitNumbers.size === 0 || uniqueRecruitNumbers.has("AUTO"))) {
     diagnostics.push(diagnostic("INVALID_RECRUIT_NUMBER", null, "recruitNumber"));
   }
   const compactHeader = /^\s*\/?\[파티\s*#\d+\]/mu.test(input.normalize("NFKC"));
-  if ((compactHeader && (saveReference === null || !/^[A-Z2-9]{5}-[A-Z2-9]{5}$/u.test(saveReference))) ||
-      references.length > 1 || (saveReference !== null && !/^(?:\d{4}-\d{2}-\d{2} \/ P[a-f0-9]{32}-R\d+|[A-Z2-9]{5}-[A-Z2-9]{5})$/u.test(saveReference))) {
+  if ((hasRecruitIdentity && !recruitIdentity) ||
+      (compactHeader && !recruitIdentity && (saveReference === null || !/^[A-Z2-9]{5}-[A-Z2-9]{5}$/u.test(saveReference))) ||
+      references.length > 1 || (!recruitIdentity && saveReference !== null && !/^(?:\d{4}-\d{2}-\d{2} \/ P[a-f0-9]{32}-R\d+|[A-Z2-9]{5}-[A-Z2-9]{5})$/u.test(saveReference))) {
     diagnostics.push(diagnostic("INVALID_SAVE_REFERENCE", null, "saveReference"));
   }
   const start = metadata(lines, START_TIME_LABEL);

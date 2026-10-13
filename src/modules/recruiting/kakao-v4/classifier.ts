@@ -1,4 +1,5 @@
 import { canonicalKakaoV4CommandText, type KakaoV4ProfileId } from "./domain";
+import { normalizeRecruitCode } from "../domain/kakao-recruit-reference";
 import { isKakaoV4InhouseStructuredAddName } from "./inhouse-snapshot-parser";
 import { detectKakaoV4OperationFormCandidate } from "./operation-form-parser";
 import { parsePartyForm, parsePartyNumberedRow, parsePartyPositionRow, parsePartyReserveRow } from "./party-snapshot-parser";
@@ -291,6 +292,8 @@ function classifyParty(text: string): KakaoV4RecognizedCommand | null {
   if (["현재구인구직현황", "현재구인현황", "구인구직현황", "구인현황", "현황"].includes(text)) {
     return recognized("PARTY_STATUS", text);
   }
+  const codeCommand = classifyPartyCodeCommand(text);
+  if (codeCommand) return codeCommand;
   const memberMutation = detailMemberMutation(text, ["구인상세", "상세"]);
   if (memberMutation) {
     return recognized(memberMutation.action === "ADD" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE", text, {
@@ -328,6 +331,27 @@ function classifyParty(text: string): KakaoV4RecognizedCommand | null {
     maximumMembers: definition[1],
     explicitRecruitNumber: named[2] ? Number(named[2]) : null,
   });
+}
+
+function classifyPartyCodeCommand(text: string): KakaoV4RecognizedCommand | null {
+  if (/[\r\n\u2028\u2029]/u.test(text)) return null;
+  const normalized = text.normalize("NFKC");
+  const detail = /^(?:구인상세|상세)\s+(\S+)(?:\s+(.+))?$/u.exec(normalized);
+  if (detail) {
+    const recruitCode = normalizeRecruitCode(detail[1]!);
+    if (!recruitCode) return null;
+    if (!detail[2]) return recognized("PARTY_DETAIL", text, { recruitCode });
+    // Keep the established single-person name/alias validation for both targets.
+    const mutation = detailMemberMutation(`상세 1 ${detail[2]}`, ["상세"]);
+    return mutation ? recognized(mutation.action === "ADD" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE", text, {
+      recruitCode, name: mutation.name,
+    }) : null;
+  }
+  const prefix = /^구인(?:마감|쫑|종료)\s+(\S+)$/u.exec(normalized);
+  const suffix = /^(\S+?)\s*(?:쫑|ㅉ|ᄍ|마감|종료)$/u.exec(normalized);
+  const value = prefix?.[1] ?? suffix?.[1];
+  const recruitCode = value ? normalizeRecruitCode(value) : null;
+  return recruitCode ? recognized("PARTY_FINISH", text, { recruitCode }) : null;
 }
 
 type DetailMemberMutation = Readonly<{

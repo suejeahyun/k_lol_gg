@@ -133,6 +133,25 @@ function compactBundleSource(value) {
   return value.replace(/^[ \t]+/gmu, "");
 }
 
+// Preserve V1 executable lines verbatim; only the maintained adapter/transport
+// omit horizontal padding beside delimiters/assignments. Token offsets protect strings and
+// regular expressions, and retained newlines preserve automatic semicolons.
+function compactAdapterSource(value) {
+  const source = compactBundleSource(value);
+  const tokens = [...acorn.tokenizer(source, { ecmaVersion: 5, allowReserved: true })];
+  let result = source;
+  for (let index = tokens.length - 1; index > 0; index -= 1) {
+    const previous = tokens[index - 1];
+    const current = tokens[index];
+    const gap = source.slice(previous.end, current.start);
+    if (/^[ \t]+$/u.test(gap) && [previous, current].some((token) => [",", ";", "(", ")", "{", "}", "="].includes(token.type.label))) {
+      result = result.slice(0, previous.end) + result.slice(current.start);
+    }
+  }
+  // The private installer consumes these two stable source markers.
+  return result.replace(/^var (KLOL_V1_GATEWAY|BOT_CODE_VERSION)=/gmu, "var $1 = ");
+}
+
 function compactStringArray(values) {
   const rows = [];
   for (let index = 0; index < values.length; index += 24) {
@@ -218,10 +237,10 @@ for (const node of sourceProgram.body) {
 const missing = [...selectedFunctionNames].filter((name) => !extractedNames.includes(name));
 if (missing.length > 0) throw new Error(`Missing canonical V1 functions: ${missing.join(", ")}`);
 
-const transport = compactBundleSource(await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_TRANSPORT.js"), "utf8"))
+const transport = compactAdapterSource(await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_TRANSPORT.js"), "utf8"))
   .replace(/\r\n?/gu, "\n")
   .trim();
-const adapter = compactBundleSource(await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_ADAPTER.js"), "utf8"))
+const adapter = compactAdapterSource(await readFile(resolve(directory, "KLOL_KAKAO_BOT_V1_STRICT_ADAPTER.js"), "utf8"))
   .replace(/\r\n?/gu, "\n")
   .trim();
 const provenance = [
@@ -271,6 +290,7 @@ const entry = [
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
   "    if (handleCopyRosterForm(msg, room, sender, guardedReplier)) return;",
+  "    if (handleRecruitCodeCommand(msg, room, sender, guardedReplier)) return;",
   "    if (/^\\/?내전[ \\t]+[1-9]\\d{0,2}[ \\t]*ㅉ$/.test(msg)) {",
   "      handlePartyRecruitApi(\"\", room, msg, sender, guardedReplier, \"\", \"FEATURES\");",
   "      return;",
@@ -312,10 +332,10 @@ const seasonCandidateBinding = [
 const recruitHelpBinding = [
   "getPartyRecruitHelpNotice = function () {",
   "  return \"[K-LOL.GG 구인 도움말]\\n\\n참가하기\\n1. 최근 봇 명단 전체 복사\\n2. 빈칸에 내 이름 입력\\n3. 메시지 전체 전송 = 저장\\n\\n\" +",
-  "    \"협곡: 이름/top,mid 또는 이름/all\\n칼바람·증바람: 이름만 입력\\n회원 연결은 접수 후 진행합니다.\\n저장 결과를 확인하고 다음 사람은 새 명단을 복사해 주세요.\\n양식코드와 번호는 그대로 두세요.\\n\\n\" +",
+  "    \"협곡: 이름/top,mid 또는 이름/all\\n칼바람·증바람: 이름만 입력\\n회원 연결은 접수 후 진행합니다.\\n저장 결과를 확인하고 다음 사람은 새 명단을 복사해 주세요.\\n파티 모집코드는 처음 한 번만 발급되며 수정해도 유지됩니다.\\n명단버전은 봇이 자동으로 갱신합니다. 모집코드·명단버전은 그대로 두세요.\\n내전 양식코드와 번호는 그대로 두세요.\\n\\n\" +",
   "    \"새 모집 만들기\\n파티: 5인파티 / 내전: 내전구인\\n\\n\" +",
-  "    \"파티: 구인현황 / 상세 번호 / 종료: 번호ㅉ\\n내전: 내전현황 / 내전상세 번호 / 종료: 내전 번호ㅉ\\n오전 6시 내전 자동 종료\\n\\n\" +",
-  "    \"취소·수정\\nN인파티: 양식에서 이름 추가·삭제·교체, 시작·게임 수정\\n내전: 최신 양식에서 이름·라인·시간 수정\\n삭제: 번호 행을 남기고 이름만 비우기\\n사이트 신청·운영진 확정 항목은 보호됩니다.\\n상세 번호 추가/삭제 이름\\n내전상세 번호 추가/삭제 이름\\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\\n\\n저장 상태 확인: 상세 번호 / 내전상세 번호로 다시 조회\";",
+  "    \"파티: 구인현황 / 상세 번호 / 종료: 번호ㅉ\\n파티 번호는 당일용입니다. 같은 모집 조회: 구인상세 모집코드\\n코드로 마감: 구인마감 모집코드 또는 모집코드ㅉ\\n내전: 내전현황 / 내전상세 번호 / 종료: 내전 번호ㅉ\\n오전 6시 내전 자동 종료\\n\\n\" +",
+  "    \"취소·수정\\nN인파티: 양식에서 이름 추가·삭제·교체, 시작·게임 수정\\n내전: 최신 양식에서 이름·라인·시간 수정\\n삭제: 번호 행을 남기고 이름만 비우기\\n사이트 신청·운영진 확정 항목은 보호됩니다.\\n상세 번호 추가/삭제 이름 (파티는 번호 대신 모집코드도 가능)\\n내전상세 번호 추가/삭제 이름\\n내전상세 번호 수정/예비추가/예비삭제 이름/라인\\n\\n저장 상태 확인: 상세 번호 / 내전상세 번호로 다시 조회\";",
   "};",
   "var v1UnifiedHelp = getUnifiedHelpNotice;",
   "getUnifiedHelpNotice = function () {",
@@ -383,6 +403,9 @@ if (!output.includes("if (isRetiredScrimInput(localText))") || !output.includes(
 }
 if (!output.includes("if (handleCopyRosterForm(msg, room, sender, guardedReplier)) return;")) {
   throw new Error("R24 must route compact copy forms before the legacy router");
+}
+if (!output.includes("if (handleRecruitCodeCommand(msg, room, sender, guardedReplier)) return;")) {
+  throw new Error("R28 must route fixed recruitment code commands before the legacy router");
 }
 if (!output.includes("if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;")) {
   throw new Error("V1-strict output must route explicit member mutations before the V1 dispatcher");

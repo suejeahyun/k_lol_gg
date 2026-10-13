@@ -9,10 +9,11 @@ import {
   sealRecruitingCommand,
   type RecruitingCommand,
 } from "../application/commands";
-import type { RecruitingCommandResult, RecruitingCompatTargetInput } from "../application/ports";
+import type { RecruitingCodeTarget, RecruitingCommandResult, RecruitingCompatTargetInput } from "../application/ports";
 import { isPartyFormCode } from "../application/party-copy-snapshot";
 import { decodeV1StrictScrimTimeText } from "../domain/v1-strict-scrim-time";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
+import { parseRecruitFormReference } from "../domain/kakao-recruit-reference";
 import {
   KakaoAssistantError,
   type KakaoOpenChatStatusDto,
@@ -56,6 +57,7 @@ type SignedAssistantInput = Readonly<{
 export type KakaoV4RecruitingPort = Readonly<{
   handle(command: RecruitingCommand): Promise<RecruitingCommandResult>;
   resolveCompatTarget(input: RecruitingCompatTargetInput): Promise<Readonly<{ id: string; revision: number }> | null>;
+  resolvePartyRecruitCode?(input: Readonly<{ sourceRoomId: string; code: string }>): Promise<RecruitingCodeTarget | null>;
   resolveScrimUpsert(input: Readonly<{
     sourceRoomId: string;
     recruitDate: string;
@@ -69,7 +71,7 @@ export type KakaoV4RecruitingPort = Readonly<{
 export type KakaoV4AssistantPort = Readonly<{
   getOpenChatStatus(input: SignedAssistantInput & Readonly<{
     projection?: "PARTY" | "SCRIM";
-    partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number }>;
+    partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number; partyId?: string }>;
     now?: Date;
     afterMutation?: boolean;
   }>): Promise<Readonly<{ body: KakaoOpenChatStatusDto; replayed: boolean }>>;
@@ -683,11 +685,12 @@ export class KakaoV4CommandDispatcher {
     });
   }
 
-  private async openChatStatus(context: KakaoV4DispatchContext, projection?: "PARTY" | "SCRIM", afterMutation = false, partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number }>) {
+  private async openChatStatus(context: KakaoV4DispatchContext, projection?: "PARTY" | "SCRIM", afterMutation = false, partyTarget?: Readonly<{ recruitDate: string; recruitNumber: number; partyId?: string }>) {
     return this.dependencies.assistant.getOpenChatStatus({
       ...signedInput(context),
       projection,
-      partyTarget,
+      partyTarget: partyTarget ? { recruitDate: partyTarget.recruitDate, recruitNumber: partyTarget.recruitNumber,
+        ...(partyTarget.partyId ? { partyId: partyTarget.partyId } : {}) } : undefined,
       now: new Date(context.envelope.timestamp * 1_000),
       afterMutation,
     });
@@ -724,34 +727,35 @@ export class KakaoV4CommandDispatcher {
     }
   }
 
-  private async latestPartyForm(context: KakaoV4DispatchContext, recruitNumber: number, reply?: string) {
+  private async latestPartyForm(context: KakaoV4DispatchContext, recruitNumber: number, reply?: string, target?: Readonly<{ recruitDate: string; partyId?: string; recruitCode?: string }>) {
     try {
-      const date = recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
-      const status = await this.openChatStatus(context, "PARTY", true, { recruitDate: date, recruitNumber });
-      const party = status.body.parties.find((item) => item.recruitDate === date && item.recruitNumber === recruitNumber);
+      const date = target?.recruitDate ?? recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000));
+      const status = await this.openChatStatus(context, "PARTY", true, { recruitDate: date, recruitNumber, ...(target?.partyId ? { partyId: target.partyId } : {}) });
+      const party = status.body.parties.find((item) => item.recruitDate === date && item.recruitNumber === recruitNumber && (!target?.partyId || item.id === target.partyId));
       if (!party) return `${reply ?? "저장했습니다."}\n\n최신 양식을 찾지 못했습니다. 구인현황을 확인해 주세요.`;
       const form = v1StrictPartyDetailReply(party, recruitNumber);
       return reply ? `${reply}\n\n${form}` : form;
     } catch {
-      return `${reply ?? "저장했습니다."}\n\n최신 양식 조회 실패. 상세 ${recruitNumber}을 입력해 주세요.`;
+      return `${reply ?? "저장했습니다."}\n\n최신 양식 조회 실패. 상세 ${target?.recruitCode ?? recruitNumber}을 입력해 주세요.`;
     }
   }
 
   private async unavailablePartyReply(
     context: KakaoV4DispatchContext,
-    target: Readonly<{ recruitDate: string; recruitNumber: number | null }>,
+    target: Readonly<{ recruitDate: string; recruitNumber: number | null; partyId?: string; recruitCode?: string }>,
     action: "SYNC" | "FINISH",
     stateChanged = false,
   ): Promise<KakaoV4DispatcherResult> {
     const closed = target.recruitNumber === null ? null : await this.dependencies.recruiting.resolveCompatTarget({
       kind: "PARTY", sourceRoomId: context.authorization.roomId,
       recruitDate: target.recruitDate, recruitNumber: target.recruitNumber,
+      ...(target.partyId ? { partyId: target.partyId } : {}),
       allowedPartyStatuses: ["FINISHED", "CANCELED", "RESET"],
     });
     const reply = closed
       ? `[K-LOL.GG 파티 #${target.recruitNumber}]\n이미 마감되거나 종료된 파티입니다.\n이 양식으로는 저장할 수 없어요. 구인현황에서 진행 중인 모집을 확인해 주세요.`
       : stateChanged
-        ? `[K-LOL.GG 파티 #${target.recruitNumber}]\n모집 상태가 바뀌어 이번 요청으로는 마감하지 않았어요.\n구인현황을 확인한 뒤 ${target.recruitNumber}ㅉ로 다시 마감해 주세요.`
+        ? `[K-LOL.GG 파티 #${target.recruitNumber}]\n모집 상태가 바뀌어 이번 요청으로는 마감하지 않았어요.\n${target.recruitCode ? `구인상세 ${target.recruitCode}` : "구인현황"}을 확인한 뒤 ${target.recruitCode ?? target.recruitNumber}ㅉ로 다시 마감해 주세요.`
       : action === "FINISH"
         ? ["[K-LOL.GG 구인구직 마무리]",
           `현재 운영일의 진행 중인 모집번호 #${target.recruitNumber}를 찾지 못했습니다.`,
@@ -776,6 +780,26 @@ export class KakaoV4CommandDispatcher {
     context: KakaoV4DispatchContext,
     command: Extract<CanonicalKakaoV4Command, { domain: "PARTY" }>,
   ): Promise<KakaoV4DispatcherResult> {
+    if (command.action === "BY_CODE" || command.action === "SYNC" && parseRecruitFormReference(command.payload.parsedForm?.saveReference)) {
+      const reference = command.action === "SYNC" ? parseRecruitFormReference(command.payload.parsedForm?.saveReference)! : null;
+      const fixedCode = command.action === "BY_CODE" ? command.recruitCode : reference!.code;
+      const resolved = await this.dependencies.recruiting.resolvePartyRecruitCode?.({ sourceRoomId: context.authorization.roomId, code: fixedCode });
+      if (!resolved || command.action === "SYNC" && resolved.recruitNumber !== command.target.recruitNumber) {
+        return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
+          legacyReply: "저장하지 않았어요. 모집코드와 모집번호에 맞는 파티를 찾지 못했어요. 구인현황에서 해당 모집을 확인해 주세요.", replayed: false });
+      }
+      if (resolved.status !== "DRAFT" && resolved.status !== "IN_PROGRESS") {
+        return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
+          legacyReply: `[K-LOL.GG 파티 #${resolved.recruitNumber}]\n모집코드: ${fixedCode}\n이미 마감되거나 종료된 파티입니다. 이 코드는 다른 모집에 재사용되지 않아요.`, replayed: false });
+      }
+      const target = { recruitDate: resolved.recruitDate, recruitNumber: resolved.recruitNumber, partyId: resolved.id, recruitCode: fixedCode };
+      if (command.action === "BY_CODE") {
+        return this.party(context, command.operation === "ADD_MEMBER" || command.operation === "REMOVE_MEMBER"
+          ? { domain: "PARTY", action: command.operation, target, name: command.name }
+          : { domain: "PARTY", action: command.operation, target });
+      }
+      command = { ...command, target };
+    }
     const v1Strict = usesKakaoV1StrictResponse(context.envelope);
     if (command.action === "STATUS" || command.action === "DETAIL") {
       const status = await this.openChatStatus(context, "PARTY", false, command.action === "DETAIL" ? command.target : undefined);
@@ -791,7 +815,7 @@ export class KakaoV4CommandDispatcher {
           ? command.action === "DETAIL"
             ? v1StrictPartyDetailReply(parties[0] ?? null, command.target.recruitNumber)
             : v1StrictPartyStatusReply(parties)
-          : missingDetail
+          : command.action === "DETAIL" && missingDetail
             ? `[K-LOL.GG 요청 실패]\n진행 중인 파티 #${command.target.recruitNumber}을 찾지 못했습니다.`
             : command.action === "DETAIL" ? v1StrictPartyDetailReply(parties[0]!, command.target.recruitNumber) : v1StrictPartyStatusReply(parties),
         replayed: status.replayed,
@@ -805,6 +829,7 @@ export class KakaoV4CommandDispatcher {
         sourceRoomId: context.authorization.roomId,
         recruitDate: command.target.recruitDate,
         recruitNumber: command.target.recruitNumber,
+        ...(command.target.partyId ? { partyId: command.target.partyId } : {}),
         allowedPartyStatuses: partyCompatTargetStatuses(commandType),
       });
       if (!target) {
@@ -861,7 +886,7 @@ export class KakaoV4CommandDispatcher {
         kind: "PARTY",
         action: command.action,
         aggregate: result.body,
-        legacyReply: await this.latestPartyForm(context, command.target.recruitNumber, partyMemberMutationReply(data)),
+        legacyReply: await this.latestPartyForm(context, command.target.recruitNumber, partyMemberMutationReply(data), command.target),
         replayed: result.replayed,
       });
     }
@@ -930,6 +955,7 @@ export class KakaoV4CommandDispatcher {
           sourceRoomId: context.authorization.roomId,
           recruitDate: command.target.recruitDate,
           recruitNumber: command.target.recruitNumber,
+          ...(command.target.partyId ? { partyId: command.target.partyId } : {}),
           allowedPartyStatuses: [status],
         });
         if (target) break;
@@ -949,12 +975,13 @@ export class KakaoV4CommandDispatcher {
         return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
           legacyReply: "저장하지 않았어요. 양식코드가 있는 명단의 모집번호를 바꿀 수 없어요. 상세 번호로 최신 양식을 받아 주세요.", replayed: false });
       }
-      const target = !automaticRecruitNumber
+      const target = command.target.recruitNumber !== null
         ? await this.dependencies.recruiting.resolveCompatTarget({
             kind: "PARTY",
             sourceRoomId: context.authorization.roomId,
             recruitDate: command.target.recruitDate,
             recruitNumber: command.target.recruitNumber,
+            ...(command.target.partyId ? { partyId: command.target.partyId } : {}),
             allowedPartyStatuses: partyCompatTargetStatuses("SYNC_PARTY"),
           })
         : null;
@@ -972,7 +999,7 @@ export class KakaoV4CommandDispatcher {
             payload: {
               members: command.payload.members,
               copyGuard: command.payload.parsedForm ? {
-                operatingDate: recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000)),
+                operatingDate: command.target.partyId ? command.target.recruitDate : recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000)),
                 saveReference: command.payload.parsedForm.saveReference,
                 submittedPartyType: command.payload.parsedForm.submittedTitle?.partyType,
                 submittedMaximumMembers: command.payload.parsedForm.submittedTitle?.maximumMembers,
@@ -1019,8 +1046,8 @@ export class KakaoV4CommandDispatcher {
       const code = typeof error === "object" && error !== null && "code" in error ? error.code : null;
       const copyError = error instanceof Error ? error.message : "";
       const copyMessages: Record<string, string> = {
-        PARTY_COPY_CONFLICT: "저장하지 않았어요. 양식코드가 오래되었거나 달라요. 아래 최신 양식을 복사해 다시 작성해 주세요.",
-        PARTY_COPY_REMOVAL: `저장하지 않았어요. 이 구형 양식은 삭제·교체를 지원하지 않아요. 최신 상세 양식을 받아 주세요. 취소: 상세 ${command.target.recruitNumber} 삭제 이름`,
+        PARTY_COPY_CONFLICT: `저장하지 않았어요. ${command.target.recruitCode ? "명단버전이 만료되었거나 달라요" : "양식코드가 오래되었거나 달라요"}. 아래 최신 양식을 복사해 다시 작성해 주세요.`,
+        PARTY_COPY_REMOVAL: `저장하지 않았어요. 이 양식은 삭제·교체를 지원하지 않아요. 취소: 상세 ${command.target.recruitCode ?? command.target.recruitNumber} 삭제 이름`,
         PARTY_COPY_METADATA: "저장하지 않았어요. 모집 정보가 달라졌어요. 아래 최신 양식을 복사해 다시 작성해 주세요.",
         PARTY_COPY_EDIT_CONFLICT: "저장하지 않았어요. 같은 항목을 다른 사람이 먼저 수정했어요. 아래 최신 양식을 복사해 다시 작성해 주세요.",
         PARTY_COPY_INCOMPLETE: "저장하지 않았어요. 번호 행이나 예비 행이 빠졌어요. 이름만 지우고 번호는 남겨 주세요. 아래 양식 전체를 복사해 다시 작성해 주세요.",
@@ -1033,14 +1060,14 @@ export class KakaoV4CommandDispatcher {
       }
       if (command.action === "SYNC" && copyMessages[copyError]) {
         return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
-          legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, copyMessages[copyError]), replayed: false });
+          legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, copyMessages[copyError], command.target), replayed: false });
       }
       if (command.action === "SYNC" && (code === "REVISION_CONFLICT" || code === "AMBIGUOUS_MEMBER")) {
         const message = code === "AMBIGUOUS_MEMBER"
           ? "저장하지 않았습니다. 같은 이름이 중복되어 있습니다. 최신 양식에서 이름을 구분해 주세요."
           : "저장하지 않았습니다. 양식이 오래되었거나 기존 명단과 다릅니다. 최신 양식을 복사해 다시 입력해 주세요.";
         return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
-          legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, message), replayed: false });
+          legacyReply: await this.latestPartyForm(context, command.target.recruitNumber ?? 0, message, command.target), replayed: false });
       }
       if (error instanceof Error && error.message === "EMPTY_DRAFT_ACTIVATION") {
         return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
@@ -1063,11 +1090,11 @@ export class KakaoV4CommandDispatcher {
       ? `✅ 파티 #${recruitNumber} ${result.body.status === "CANCELED" ? "초안 취소" : "마감"} 완료`
       : data.copyChanged === false
         ? editableCopy
-          ? `이번 요청으로 변경된 내용은 없어요.\n예전 양식의 빈칸으로는 이후 참가자를 삭제하지 않아요. 아래 최신 양식에서 이름을 지우거나 '구인상세 ${recruitNumber} 삭제 이름'을 입력해 주세요.`
+          ? `이번 요청으로 변경된 내용은 없어요.\n예전 양식의 빈칸으로는 이후 참가자를 삭제하지 않아요. 아래 최신 양식에서 이름을 지우거나 '구인상세 ${command.action === "SYNC" ? command.target.recruitCode ?? recruitNumber : recruitNumber} 삭제 이름'을 입력해 주세요.`
           : "이미 같은 내용으로 저장되어 있어요."
         : `✅ 파티${registered ? "등록" : "수정"} 완료 · #${recruitNumber}${registeredNames ? ` · ${registeredNames}` : ""}`;
-    const legacyReply = editableCopy && data.copyChanged === false
-      ? await this.latestPartyForm(context, recruitNumber, saveReply)
+    const legacyReply = command.action === "SYNC" && (editableCopy && data.copyChanged === false || command.target.partyId && command.target.recruitDate !== recruitingOperatingDateKey(new Date(context.envelope.timestamp * 1_000)))
+      ? await this.latestPartyForm(context, recruitNumber, saveReply, command.target)
       : await this.appendLatestPartyStatus(context, saveReply);
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
   }

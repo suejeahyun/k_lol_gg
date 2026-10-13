@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `f767983df929d728473e1f778bc1bb6ee7871299e7487eb9cf388c692c38533d`
-- Tables: 112
-- Foreign keys: 174
+- Schema SHA-256: `dc3390315db7fd6675265dfdccb1ac3a2b863e491bce84bc8d1dec1a0da8f3cb`
+- Tables: 114
+- Foreign keys: 175
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -1187,6 +1187,22 @@ erDiagram
         uuid updated_by_user_account_id FK "nullable"
         timestamp_with_time_zone updated_at "NOT NULL"
     }
+    recruiting__kakao_recruit_codes {
+        varchar_11 code PK "NOT NULL"
+        bytea scope_hash "NOT NULL"
+        uuid target_id "NOT NULL"
+        bigint last_version "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+    }
+    recruiting__kakao_recruit_form_snapshots {
+        varchar_11 code PK, FK "NOT NULL"
+        bigint version PK "NOT NULL"
+        date operating_date "NOT NULL"
+        bytea state_hash "NOT NULL"
+        jsonb state_json "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone expires_at "NOT NULL"
+    }
     recruiting__kakao_room_bindings {
         uuid id PK "NOT NULL"
         bigint revision "NOT NULL"
@@ -1359,6 +1375,7 @@ erDiagram
     recruiting__kakao_bot_installations ||--o{ recruiting__kakao_room_bindings : "installation_id to id"
     recruiting__kakao_bot_installations o|--o{ recruiting__kakao_room_pairings : "consumed_installation_id to id"
     recruiting__kakao_image_sessions ||--o{ recruiting__kakao_inbound_images : "session_id to id"
+    recruiting__kakao_recruit_codes ||--o{ recruiting__kakao_recruit_form_snapshots : "code to code"
     recruiting__kakao_rooms o|--o{ recruiting__kakao_bot_installations : "canonical_room_id to id"
     recruiting__kakao_rooms ||--o{ recruiting__kakao_room_bindings : "room_id to id"
     recruiting__kakao_rooms ||--o{ recruiting__kakao_room_members : "room_id to id"
