@@ -2128,6 +2128,32 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "stable-recruit-codes",
+      "version": "1.0.0",
+      "gitTag": "stable-recruit-codes-v1.0.0",
+      "commit": "4d6a4aa30171774876c4f4af2b031301d23656a0",
+      "releasedAt": "2026-10-13T16:26:01.588Z",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/stable-recruit-codes-2026-10-14/production.md",
+      "patchNotes": "docs/patch-notes/stable-recruit-codes-v1.0.0.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_HzWW4ADSsWBc7zATWfgi6WBaHxj5",
+        "url": "https://k-lol-okucz4htp-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-13T16:26:32.575Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R 파티 고정 모집코드",
+          "version": "KLOL_KAKAO_BOT_V40_R28_2026_10_14",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }

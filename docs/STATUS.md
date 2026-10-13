@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-14 파티 고정 모집코드 1.0.0 운영 반영
+
+`stable-recruit-codes@1.0.0`, source `4d6a4aa30171774876c4f4af2b031301d23656a0`, tag `stable-recruit-codes-v1.0.0`. 파티별 모집코드를 처음 한 번 발급하고 수정·날짜 변경·종료 뒤에도 같은 모집에 연결한다. 명단 원본은 자동 버전으로 구분하며 기존 동시 편집·원본 만료·권한·멱등성을 유지했다. 고정 코드로 상세·추가·삭제·쫑을 처리하고 날짜가 바뀌어 같은 번호가 재사용돼도 실제 UUID로 대상을 고정한다. 내전은 이번 변경 대상이 아니다.
+
+최종 check(계약 691/691, 단위 1,101 pass/1 skip, lint 오류 0/기존 경고 58, ERD·가이드 이미지·production build)와 격리 recruiting 110/110·kakao-v4 scope 33/33을 통과했다. 백업·복원·rehearsal 후 운영 0049 적용/replay와 기존 자료 보존을 확인했다. main `dpl_HzWW4ADSsWBc7zATWfgi6WBaHxj5` READY·동일 source·운영 alias·health ready, 운영 HTTP 9조건·실제 서명 조회 2조건과 DB catalog 재확인을 통과했다. [검증](qa-evidence/stable-recruit-codes-2026-10-14/README.md), [배포·복구](qa-evidence/stable-recruit-codes-2026-10-14/production.md).
+
+**R28 비공개 휴대폰 파일은 생성 완료, 실기기 설치는 `PENDING_USER_INSTALL`이다.** 코드 직접 명령에는 R28 교체가 필요하다. 기존 봇의 전체 양식 복사와 당일 숫자 명령은 호환된다. 이전 실기기 확인을 이번 R28 설치 완료로 간주하지 않는다. [설치 안내](../integrations/messengerbot-r/MESSENGERBOT_R_INSTALL.md).
+
 ## 2026-10-13 전체 점검 보완 1.0.0 운영 반영
 
 `full-audit-fixes@1.0.0`, source `5b3a616749f17ae5199ba599bf6bb4ac6f50ff24`, tag `full-audit-fixes-v1.0.0`. MMR 과거 경기 참조 보존과 대량 저장, Riot 순차 처리량, 신청·플레이어 동시 수정의 초안 보존, 운영 신청 페이지 처리, 가입·실패 입력 안내, 320px 표시를 수정했다. 공개 이미지 메타데이터 제거와 게시 철회 확인, 미디어·인증 정보 보관기간 정리, RSO 전용 콜백 연결, PWA 최신화·cache 실패 복구, 의존성·CI 점검을 반영했다.

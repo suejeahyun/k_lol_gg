@@ -2,7 +2,7 @@
 
 ## 현재 기록 상태
 
-`stable-recruit-codes@1.0.0`의 **소스 구현 및 배포 준비 기록**이다. 사용자 분석 확인 후 “진행해줘” 승인으로 고정 모집코드·별도 명단 버전 방식을 구현했다. 최종 `npm run check`, 격리 recruiting 110/110, kakao-v4 scope 33/33, 운영 전 백업·복원 및 restored-copy migration rehearsal이 통과했다. 운영 migration 0049 적용과 재실행 no-op을 확인했다. 앱 배포·health는 아직 확정하지 않았다. 로그가 존재하는 것만으로 해당 최종 상태를 PASS나 운영 반영으로 판단하지 않는다.
+`stable-recruit-codes@1.0.0`의 **운영 반영 기록**이다. 사용자 분석 확인 후 “진행해줘” 승인으로 고정 모집코드·별도 명단 버전 방식을 구현했다. 최종 `npm run check`, 격리 recruiting 110/110, kakao-v4 scope 33/33, 운영 전 백업·복원 및 restored-copy migration rehearsal이 통과했다. 운영 migration 0049 적용·재실행 no-op과 main 배포 READY·동일 source·운영 alias·health ready를 확인했다. 운영 HTTP 9조건과 서명 조회 2조건이 통과했다. **R28 실제 휴대폰 설치는 대기**이며 서버 배포 완료와 구분한다.
 
 - [설계 결정 ADR 0014](../../architecture/0014-kakao-stable-recruit-codes.md)
 - [한국어 패치 노트](../../patch-notes/stable-recruit-codes-v1.0.0.md)
@@ -10,7 +10,9 @@
 - [휴대폰 설치 안내](../../../integrations/messengerbot-r/MESSENGERBOT_R_INSTALL.md)
 - 작업 branch: `codex/stable-recruit-codes-20261014`
 - migration head: `0049_stable-recruit-codes`
-- 릴리스 commit·tag·Vercel 배포 ID·운영 alias 확인: 최종 릴리스 단계에서 기록
+- source: `4d6a4aa30171774876c4f4af2b031301d23656a0`, tag: `stable-recruit-codes-v1.0.0`
+- main deployment: `dpl_HzWW4ADSsWBc7zATWfgi6WBaHxj5`, [운영 주소](https://k-lol-gg.vercel.app)
+- [배포·복구 상세](production.md)
 
 ## 변경 범위와 검증 기준
 
@@ -32,7 +34,7 @@
 
 ## 집중 검사 관측
 
-아래는 담당자가 해당 명령을 실행해 관측한 집중 결과다. 후속 소스 변경을 모두 포함한 최종 통합 실행으로 대체하거나 재확인해야 하며, 서로 겹치는 수를 합산하지 않는다.
+아래는 담당자가 해당 명령을 실행해 관측한 집중 결과다. 최종 통합 실행 결과는 다음 표에 따로 기록하며, 서로 겹치는 수를 합산하지 않는다.
 
 | 실행 | 관측한 결과 |
 | --- | --- |
@@ -46,14 +48,14 @@
 
 ## 최종 검증·배포 기록란
 
-| 단계 | 이 초안의 판정 |
+| 단계 | 최종 판정 |
 | --- | --- |
 | `npm run check` | 최종 PASS, 종료 코드 0. 계약 691/691, 단위 1,101 pass/1 skip/0 fail, ERD 114 table/175 FK, lint 0 error/58 warning, production build PASS. [최종 로그](check-release.log). 최초 도움말 기대 문구 계약 2개·단위 1개 실패 후 기대값을 정리했으며 중간 [실행 로그](check-final.log)는 최종 PASS 근거로 사용하지 않음 |
 | 격리 recruiting/kakao-v4 DB 및 migration 계약 | 담당 최종 보고: recruiting 110/110, kakao-v4 scope 33/33 PASS. HTTP 서버 end-to-end 검증을 뜻하지 않음. [데이터 상세](data.md), [계약 집계](data-contracts.json), [계약 로그](data-contracts.log) |
-| 운영 전 백업·복원 및 restored-copy rehearsal | PASS. 기존 193개 테이블 보존·별도 복원, 복원본에서 0049 적용·replay PASS. [백업 기록](production-backup-restore.json), [rehearsal 기록](migration-rehearsal.json). 운영 적용 직전 SQL hash·대상·시각 재확인 필요 |
+| 운영 전 백업·복원 및 restored-copy rehearsal | PASS. 기존 193개 테이블 보존·별도 복원, 복원본에서 0049 적용·replay PASS. [백업 기록](production-backup-restore.json), [rehearsal 기록](migration-rehearsal.json). 운영 적용 직전 SQL hash·대상·시각을 재확인함 |
 | 운영 migration 적용·재실행 | PASS. 2026-10-13 16:16:58 UTC, migration 50개/head 0049. 기존 파티 1,660·legacy 원본 12·receipt 2,597개 보존, 새 두 테이블 0개로 시작, invalid constraint 0, 재실행 no-op. [기록](production-migration.json) |
-| production 후보·운영 배포·health/smoke | 미기재 |
-| 릴리스 tag·registry·비밀정보 검사 | 미기재 |
+| production 후보·운영 배포·health/smoke | PASS. 후보 HTTP 9조건, main READY·동일 source·canonical alias·health ready, 운영 HTTP 9조건·서명 HTTP 2조건. [배포](production.md), [운영 HTTP](production-http.json), [서명 HTTP](production-signed-http.json), [운영 DB 재확인](production-db-postdeploy.json) |
+| 릴리스 tag·registry·비밀정보 검사 | tag 게시, registry에 서버 PRODUCTION·휴대폰 PENDING_USER_INSTALL 분리. 현재 tree 및 전체 Git 이력 비밀정보 검사 PASS. [현재 tree](secrets-tree.log), [전체 이력](secrets.log). 원래 전체 검사 시작 뒤 생긴 릴리스 문서도 최종 tree 검사로 확인 |
 | R28 비공개 설치본 생성 | 기존 비공개 설정을 재사용해 root 담당자가 생성 성공. 아래 메타데이터만 기록하며 본문·비밀값은 보관하지 않음 |
 | 실제 휴대폰 R28 교체·송수신 | 미확인. 기존 실기기 확인 이력을 이번 버전 설치 증거로 사용하지 않음 |
 
