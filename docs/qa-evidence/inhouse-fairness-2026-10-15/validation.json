@@ -45,7 +45,7 @@
   },
   "secretScan": {
     "currentTree": "PASS",
-    "completeLocalHistory": "PENDING"
+    "completeLocalHistory": "PASS"
   },
   "productionDependencyAudit": {
     "vulnerabilities": 0,

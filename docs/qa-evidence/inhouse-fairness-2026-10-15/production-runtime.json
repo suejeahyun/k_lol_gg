@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-14T23:23:25.4840117Z",
+  "deploymentId": "dpl_J6gfStg7uPci5Nk4mianrZNREYq9",
+  "functions": [
+    {
+      "path": "api/admin/team-tools/drafts/[draftId]/reevaluate",
+      "runtime": "nodejs24.x",
+      "timeoutSeconds": 60,
+      "memoryMb": 2048
+    },
+    {
+      "path": "api/team-tools/drafts",
+      "runtime": "nodejs24.x",
+      "timeoutSeconds": 60,
+      "memoryMb": 2048
+    },
+    {
+      "path": "api/team-tools/drafts/[draftId]/reevaluate",
+      "runtime": "nodejs24.x",
+      "timeoutSeconds": 60,
+      "memoryMb": 2048
+    }
+  ],
+  "pass": true
+}

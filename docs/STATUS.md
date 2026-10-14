@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-15 내전 공정성 규칙 1.0.0 운영 반영
+
+`inhouse-fairness@1.0.0`, source `3e8a84f5aff5497c6d01b92fc0039149c1419df9`, tag `inhouse-fairness-v1.0.0`. 허용 포지션과 원포 고정, 바텀 큰 등급 3단계 제한, 양 팀·역할 동시 탐색, 공정성 판정 및 수동 선택·저장 경계 재검사를 적용했다. 기존 개인 점수·관리자 보정과 과거 초안 JSON을 보존한다.
+
+전체 check 계약 709/709·단위 1,137 pass/1 skip·lint 오류 0/기존 경고 58·typecheck·ERD·build, 격리 DB 6/6, 공정성 HTTP 5/5, 인증 HTTP 검사를 통과했다. main `dpl_J6gfStg7uPci5Nk4mianrZNREYq9` READY·동일 SHA·canonical alias, 운영 HTTP 8조건 및 새 정적 파일 문구를 확인했다. migration 0049·운영 데이터·설정 유지. 실제 운영 계정의 계산 요청과 경기 승률은 별도 검증 범위다. [규칙](inhouse-balance-rules.md), [검증](qa-evidence/inhouse-fairness-2026-10-15/README.md), [배포·복구](qa-evidence/inhouse-fairness-2026-10-15/production.md).
+
 ## 2026-10-14 사이트·카카오 봇 안정성 보완 1.0.0 운영 반영
 
 `site-kakao-reliability@1.0.0`, source `cf32d4f9ee94149a3fb0be81301f9943ccd6c7a0`, tag `site-kakao-reliability-v1.0.0`. 재점검 9건을 수정했다. 공개 모집의 고정 코드 복사, 신청 화면의 날짜·시즌·회차·본인 신청 고정, 서버 시각 및 재전송 대상 고정, V4 운영 설정, 예비 등록, 경기 초안 복구와 관리자 저장 입력 잠금을 적용했다.

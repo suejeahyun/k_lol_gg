@@ -18,5 +18,7 @@
 - 처음 전체 검사에서는 CPU 작업이 병렬 실행되는 중 기존 5초 성능 단정만 5.317초로 실패했다. 조합 수·결과 검증은 유지하고 API 한도의 절반인 30초를 회귀 예산으로 명시한 뒤 전체 검사를 다시 통과했다. 최초 인증 HTTP 검사는 빌드 전 실행해 production artifact가 없어 실패했으므로 빌드 후 재실행 결과만 최종 근거로 사용한다.
 - 현재 tree 비밀정보 검사와 운영 의존성 감사(취약점 0), 기존 릴리스 99개 tag·migration 근거 검사를 통과했다.
 - 빌드 후 `npm run verify:auth-http` exit 0: 권한 guard·제한·관리자 비밀번호·쿠키·역할·보안 헤더·로그아웃·production fixture 차단을 확인했다.
+- 전체 로컬 Git 이력 비밀정보 검사도 최종 exit 0으로 통과했다.
+- 배포 source의 GitHub V2 CI도 success로 완료됐다. [CI 기록](github-ci.json).
 
-실제 배포 결과는 `production.md`에 별도로 기록한다. 후보·운영 공개 HTTP 검증과 격리 합성 데이터 검증은 구분하며, 실제 운영 사용자의 팀 초안을 테스트 목적으로 생성하지 않는다.
+source `3e8a84f5`, tag `inhouse-fairness-v1.0.0`의 main 운영 배포가 READY이며 동일 SHA·project·canonical alias를 확인했다. 후보와 운영 GET 각각 8조건 및 운영 정적 파일의 새 문구 확인이 PASS다. [배포 결과와 복구](production.md)에 별도로 기록한다. 공개 HTTP 검증과 격리 합성 데이터 검증은 구분하며, 실제 운영 사용자의 팀 초안을 테스트 목적으로 생성하지 않았다.

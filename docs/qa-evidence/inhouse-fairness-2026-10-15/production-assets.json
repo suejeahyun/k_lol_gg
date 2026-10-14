@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-14T23:21:22.902Z",
+  "page": "/tools/team-balance",
+  "scriptCount": 13,
+  "matches": [
+    {
+      "url": "/_next/static/immutable/chunks/3p_u8bn_emzd7.js",
+      "status": 200,
+      "markers": [
+        "선택하지 않은 기타 포지션도 허용"
+      ]
+    },
+    {
+      "url": "/_next/static/immutable/chunks/43swnm04jly1h.js",
+      "status": 200,
+      "markers": [
+        "큰 등급 3단계"
+      ]
+    }
+  ],
+  "pass": true
+}
