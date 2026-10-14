@@ -11,7 +11,7 @@ import type {
   TeamBalanceViewer,
 } from "./ports/team-balance-repository";
 import {
-  calculateTeamBalanceCandidates,
+  validateTeamBalancePlayers,
   TEAM_BALANCE_POSITIONS,
   TEAM_BALANCE_PREFERENCES,
   type TeamBalanceEligibility,
@@ -88,10 +88,7 @@ function createInput(value: unknown): CreateTeamBalanceDraftInput {
     return { playerId: uuid(record.playerId), eligiblePositions: eligibility(record.eligiblePositions) };
   });
   try {
-    calculateTeamBalanceCandidates(
-      participants.map((participant) => ({ ...participant, rating: null })),
-      1,
-    );
+    validateTeamBalancePlayers(participants.map((participant) => ({ ...participant, rating: null })));
   } catch {
     throw new TeamBalanceServiceError("INVALID_INPUT", "10명의 포지션 조합을 확인해 주세요.");
   }

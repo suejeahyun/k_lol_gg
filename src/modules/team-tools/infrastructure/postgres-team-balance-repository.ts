@@ -36,8 +36,10 @@ import type { TeamBalanceRatingProvider } from "../application/ports/team-balanc
 import {
   calculateTeamBalanceCandidates,
   evaluateTeamBalanceLayout,
+  TeamBalanceDomainError,
   type EvaluatedTeamBalanceLayout,
   type TeamBalanceEligibility,
+  type TeamBalanceLayoutEntry,
   type TeamBalancePlayer,
   type TeamBalanceRatingProviderDto,
 } from "../domain/team-balance";
@@ -502,6 +504,28 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
     }));
   }
 
+  private async validateStoredCandidate(
+    transaction: V2Transaction,
+    draftId: string,
+    candidate: typeof teamBalanceDraftCandidates.$inferSelect,
+  ) {
+    // Candidate JSON is append-only history. Re-evaluate its layout against the
+    // authoritative inputs for this round so older candidates cannot bypass
+    // current hard rules, without silently replacing historical scores.
+    try {
+      return evaluateTeamBalanceLayout(
+        await this.participantInputs(transaction, draftId),
+        candidate.assignmentsJson as unknown as readonly TeamBalanceLayoutEntry[],
+      );
+    } catch (error) {
+      if (error instanceof TeamBalanceDomainError) {
+        if (error.code === "FAIRNESS_CONSTRAINT") throw error;
+        throw new TeamBalanceServiceError("INVALID_TRANSITION", "저장된 배치가 현재 포지션 조건과 맞지 않습니다. 초안을 다시 평가해 주세요.");
+      }
+      throw error;
+    }
+  }
+
   async selectCandidate(
     envelope: TeamBalanceCommandEnvelope,
     draftId: string,
@@ -532,7 +556,8 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
         let evaluated: EvaluatedTeamBalanceLayout;
         try {
           evaluated = evaluateTeamBalanceLayout(await this.participantInputs(transaction, draftId), input.layout);
-        } catch {
+        } catch (error) {
+          if (error instanceof TeamBalanceDomainError && error.code === "FAIRNESS_CONSTRAINT") throw error;
           throw new TeamBalanceServiceError("INVALID_INPUT", "수동 팀 배치의 인원·포지션을 확인해 주세요.");
         }
         selected = (
@@ -569,6 +594,7 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
         }
       }
       if (!selected) throw new TeamBalanceServiceError("NOT_FOUND", "선택한 팀 배치를 찾을 수 없습니다.");
+      await this.validateStoredCandidate(transaction, draftId, selected);
 
       const updated = (
         await transaction
@@ -603,9 +629,17 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
   ) {
     return this.idempotent(envelope, "EITHER", async (transaction) => {
       const current = await this.lockedDraft(transaction, envelope, draftId, expectedRevision);
-      if (current.status !== "EVALUATED" || !current.selectedCandidateSignature) {
+      if (current.status !== "EVALUATED" || !current.selectedCandidateSignature || !current.selectedCandidateSource) {
         throw new TeamBalanceServiceError("INVALID_TRANSITION", "추천 또는 수동 팀 배치가 적용된 평가 상태에서만 저장할 수 있습니다.");
       }
+      const selected = (await transaction.select().from(teamBalanceDraftCandidates).where(and(
+        eq(teamBalanceDraftCandidates.draftId, draftId),
+        eq(teamBalanceDraftCandidates.evaluationRound, current.evaluationRound),
+        eq(teamBalanceDraftCandidates.signature, current.selectedCandidateSignature),
+        eq(teamBalanceDraftCandidates.source, current.selectedCandidateSource),
+      )).limit(1))[0];
+      if (!selected) throw new TeamBalanceServiceError("INVALID_TRANSITION", "선택한 팀 배치가 없습니다. 초안을 다시 평가해 주세요.");
+      await this.validateStoredCandidate(transaction, draftId, selected);
       const updated = (
         await transaction
           .update(teamBalanceDrafts)

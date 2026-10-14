@@ -52,8 +52,8 @@ function exhaustivePairedLayouts(players: readonly TeamBalancePlayer[]) {
   );
   const layouts: TeamBalanceLayoutEntry[][] = [];
 
-  // player-00 is the symmetry anchor and must remain BLUE. The other four
-  // position pairs independently select one BLUE player: all 2^4 layouts.
+  // Manual scoring permits either color; this fixture enumerates one side of
+  // the mirrored pairs with player-00 BLUE: all 2^4 layouts.
   for (let mask = 0; mask < 1 << 4; mask += 1) {
     const layout: TeamBalanceLayoutEntry[] = [];
     for (let positionIndex = 0; positionIndex < TEAM_BALANCE_POSITIONS.length; positionIndex += 1) {
@@ -120,7 +120,7 @@ test("the V1 global recommendation is one lossless 5:5 layout with every positio
   assert.equal(result.candidates.length, 1);
   assert.equal(result.search.symmetryAnchorPlayerId, "player-00");
   assert.equal(result.search.teamCombinationCount, 126);
-  assert.equal(result.search.feasibleLayoutCount, 126);
+  assert.equal(result.search.feasibleLayoutCount, 16);
 
   for (const candidate of result.candidates) {
     assert.equal(candidate.assignments.length, 10);
@@ -172,7 +172,7 @@ test("mixed legacy and new player ids keep a total order across forward, reverse
   assert.deepEqual(rotate.candidates, forward.candidates);
 });
 
-test("V1 search evaluates 126 anchored team splits and each team's best permutation", () => {
+test("joint search evaluates all 126 splits and 120 by 120 explicitly permitted role pairs", () => {
   const flexible: TeamBalancePlayer[] = pairedPlayers().map((player, playerIndex) => ({
     ...player,
     eligiblePositions: TEAM_BALANCE_POSITIONS.map((position, positionIndex) => ({
@@ -185,9 +185,11 @@ test("V1 search evaluates 126 anchored team splits and each team's best permutat
   const elapsedMs = performance.now() - startedAt;
 
   assert.equal(result.search.teamCombinationCount, 126);
-  assert.equal(result.search.feasibleLayoutCount, 126);
+  assert.equal(result.search.feasibleLayoutCount, 126 * 120 * 120);
   assert.equal(result.candidates.length, 1);
-  assert.ok(elapsedMs < 5_000, `exhaustive search took ${Math.round(elapsedMs)}ms`);
+  // The full suite runs CPU-heavy files concurrently. Keep headroom for that
+  // contention while reserving half the API's 60-second limit for DB work.
+  assert.ok(elapsedMs < 30_000, `exhaustive search took ${Math.round(elapsedMs)}ms`);
 });
 
 test("automatic and manual paths return the exact same scoring-kernel breakdown", () => {
@@ -225,12 +227,16 @@ test("position rating overrides overall and confidence shrinks unknown data towa
   });
 });
 
-test("positions omitted from the request remain legal V1 AUTO assignments", () => {
+test("positions omitted from the request stay forbidden; explicit AUTO remains permitted", () => {
   const topOnly = pairedPlayers(false).map((player) => ({
     ...player,
     eligiblePositions: [{ position: "TOP" as TeamBalancePosition, preference: "AUTO" as const }],
   }));
-  const result = calculateTeamBalanceCandidates(topOnly);
+  assert.throws(() => calculateTeamBalanceCandidates(topOnly), assertCode("NO_FEASIBLE_LAYOUT"));
+  const explicit = pairedPlayers(false).map((player) => ({
+    ...player, eligiblePositions: player.eligiblePositions.map((entry) => ({ ...entry, preference: "AUTO" as const })),
+  }));
+  const result = calculateTeamBalanceCandidates(explicit);
   assert.equal(result.candidates[0]?.assignments.length, 10);
   assert.ok(result.candidates[0]?.assignments.every((entry) => entry.preference === "AUTO"));
 });
@@ -262,7 +268,7 @@ test("[V1 blueblack golden] score uses tier, inhouse, position experience and th
 
   assert.equal(player.rating.source, "V1");
   assert.equal(player.rating.effectiveScore, 66.7);
-  assert.equal(evaluated.score.v1?.formulaVersion, "V1_BLUEBLACK_AI_GLOBAL_2026_10_10");
+  assert.equal(evaluated.score.v1?.formulaVersion, "V2_INHOUSE_FAIRNESS_2026_10_15");
   assert.deepEqual(evaluated.score.v1?.missingSources, ["RECENT_SOLO", "BALANCE_OVERRIDE"]);
 });
 
@@ -273,7 +279,9 @@ test("share text keeps the V1 line order and excludes draft ids, account ids and
     pairedPlayers().map((player, ordinal) => ({ playerId: player.playerId, displayName: ordinal === 0 ? "닉네임\n0" : `닉네임${ordinal}` })),
   );
 
-  assert.match(text, /^BLUE .+\nRED .+\n밸런스 판단: AI 전체탐색 최고안 \/ RED \d+\.\d% vs BLUE \d+\.\d%$/u);
+  assert.match(text, /^BLUE .+\nRED .+\n내전 규칙:/u);
+  assert.match(text, /밸런스 판단: 내전 규칙 전체탐색 추천 \/ RED \d+\.\d% vs BLUE \d+\.\d%/u);
+  assert.match(text, /검증된 실제 승률이 아닙니다/u);
   assert.doesNotMatch(text, /https?:|draft|account|player-/u);
   assert.match(text, /닉네임 0/u);
 });

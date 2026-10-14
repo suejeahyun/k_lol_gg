@@ -8,6 +8,7 @@ import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mut
 
 import {
   TEAM_BALANCE_TEAMS,
+  evaluateTeamBalanceLayout,
   formatTeamBalanceShareText,
   type TeamBalanceDraftCandidate,
   type TeamBalanceDraft,
@@ -20,10 +21,10 @@ const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜",
 const teamLabel = { BLUE: "블루", RED: "레드" } as const;
 const preferenceLabel = { MAIN: "주", SUB: "부", AUTO: "자동" } as const;
 const candidateCriteria = {
-  V1_AI_GLOBAL: { label: "AI 최적 추천", description: null },
+  V1_AI_GLOBAL: { label: "내전 규칙 추천", description: null },
   OVERALL_BALANCE: { label: "종합 균형", description: "팀 전력·라인 차이·포지션 선호를 모두 반영한 추천" },
-  POSITION_BALANCE: { label: "라인 균형", description: "각 라인의 맞대결 점수 차이를 가장 먼저 줄인 추천" },
-  PREFERENCE_PRIORITY: { label: "주 포지션 우선", description: "참가자가 신청한 주 포지션 배치를 가장 먼저 지킨 추천" },
+  POSITION_BALANCE: { label: "라인 균형", description: "필수 조건과 심한 불균형을 먼저 검사하고 라인 격차를 줄인 추천" },
+  PREFERENCE_PRIORITY: { label: "주 포지션 우선", description: "필수 조건과 심한 불균형을 먼저 검사하고 주 포지션 만족도를 높인 추천" },
   LEGACY: { label: "이전 계산 결과", description: "최신 평가 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },
   MANUAL: { label: "수동 배치", description: "사용자가 직접 교체하고 서버에서 다시 평가한 배치" },
 } as const;
@@ -38,6 +39,16 @@ function differenceTone(value: number) {
   return "open";
 }
 
+function fairnessLabel(candidate: TeamBalanceDraftCandidate) {
+  switch (candidate.score.fairness?.status) {
+    case "BALANCED": return "균형 추천";
+    case "CONDITIONAL": return "조건부 편성";
+    case "REVIEW_REQUIRED": return "정보 확인 필요";
+    case "INVALID": return "필수 조건 위반";
+    default: return "규칙 재평가 필요";
+  }
+}
+
 export function TeamBalanceDraftWorkspace({
   draft,
   endpointBase = `/api/team-tools/drafts/${draft.id}`,
@@ -50,7 +61,8 @@ export function TeamBalanceDraftWorkspace({
   const router = useRouter();
   const autoCandidates = draft.candidates.filter((candidate) => candidate.source === "AUTO");
   const selectedCandidate = draft.candidates.find((candidate) => candidate.signature === draft.selectedCandidateSignature) ?? null;
-  const hasLegacyCandidates = autoCandidates.some((candidate) => !candidate.criterion || candidate.criterion === "LEGACY");
+  const selectedInvalid = selectedCandidate?.score.fairness?.status === "INVALID";
+  const hasLegacyCandidates = autoCandidates.some((candidate) => !candidate.score.fairness || !candidate.criterion || candidate.criterion === "LEGACY");
   const initialLayout = (selectedCandidate ?? autoCandidates[0])?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? [];
   const [manualLayout, setManualLayout] = useState<TeamBalanceLayoutEntry[]>(initialLayout);
   const [draggingSlot, setDraggingSlot] = useState<number | null>(null);
@@ -73,6 +85,9 @@ export function TeamBalanceDraftWorkspace({
   async function mutate(action: "select" | "save" | "reevaluate" | "archive" | "restore", body: unknown) {
     if (busy || sending.current) return;
     if (manualChanged && (action === "save" || action === "reevaluate")) return;
+    if (action === "save" && selectedInvalid) return;
+    if (action === "select" && typeof body === "object" && body !== null && "candidateRank" in body &&
+      draft.candidates.some((candidate) => candidate.rank === body.candidateRank && candidate.score.fairness?.status === "INVALID")) return;
     sending.current = true;
     setPending(action);
     setMessage("");
@@ -109,7 +124,7 @@ export function TeamBalanceDraftWorkspace({
   }
 
   async function copySelectedResult() {
-    if (!selectedCandidate || manualChanged || busy || sending.current) return;
+    if (!selectedCandidate || selectedInvalid || manualChanged || busy || sending.current) return;
     setMessage("");
     try {
       if (!navigator.clipboard?.writeText) throw new Error("이 브라우저에서는 클립보드 복사를 사용할 수 없어요.");
@@ -121,18 +136,29 @@ export function TeamBalanceDraftWorkspace({
   }
 
   function swapManual(sourceSlot: number, targetSlot: number) {
-    if (manualLocked || sending.current || sourceSlot === targetSlot) return;
-    setManualLayout((current) => {
-      const source = current[sourceSlot];
-      const target = current[targetSlot];
-      if (!source || !target) return current;
-      return current.map((entry, index) => index === sourceSlot
+    if (manualLocked || sending.current || sourceSlot === targetSlot) return false;
+    const source = manualLayout[sourceSlot];
+    const target = manualLayout[targetSlot];
+    if (!source || !target) return false;
+    if (!participantById.get(source.playerId)?.eligiblePositions.some((entry) => entry.position === target.position) ||
+      !participantById.get(target.playerId)?.eligiblePositions.some((entry) => entry.position === source.position)) {
+      setMessage("허용하지 않은 포지션으로는 교체할 수 없어요. 참가자의 가능 포지션을 확인해 주세요.");
+      return false;
+    }
+    const nextLayout = manualLayout.map((entry, index) => index === sourceSlot
         ? { ...entry, playerId: target.playerId }
         : index === targetSlot
           ? { ...entry, playerId: source.playerId }
           : entry);
-    });
-    setMessage("");
+    try {
+      evaluateTeamBalanceLayout(draft.participants, nextLayout);
+    } catch {
+      setMessage("현재 참가자 정보로는 이 교체가 필수 조건을 충족하지 못해요. 허용 포지션과 바텀의 큰 티어 3단계 제한을 확인해 주세요.");
+      return false;
+    }
+    setManualLayout(nextLayout);
+    setMessage("두 플레이어의 자리를 바꿨어요. 서버 평가로 확인해 주세요.");
+    return true;
   }
 
   function selectKeyboardSlot(slot: number) {
@@ -149,7 +175,6 @@ export function TeamBalanceDraftWorkspace({
     }
     swapManual(keyboardSlot, slot);
     setKeyboardSlot(null);
-    setMessage("두 슬롯의 플레이어를 교체했어요. 서버 평가로 확인해 주세요.");
   }
 
   return (
@@ -160,19 +185,28 @@ export function TeamBalanceDraftWorkspace({
       </section>
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
-        <div className={styles.heading}><div><h2 id="candidate-title">AI 최적 팀 추천</h2></div></div>
-        {selectedCandidate ? <div className={styles.evaluationOverview} data-balance={differenceTone(selectedCandidate.score.teamStrength.difference)} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}
+        <div className={styles.heading}><div><h2 id="candidate-title">내전 규칙 팀 추천</h2></div></div>
+        {selectedCandidate ? <>
+          <div className={styles.evaluationOverview} data-balance={selectedCandidate.score.fairness?.status === "BALANCED" ? differenceTone(selectedCandidate.score.teamStrength.difference) : "open"} role="status"><div><span>내전 규칙 판정</span><strong>{fairnessLabel(selectedCandidate)}</strong></div><div><span>참고 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div>
+          <p className={styles.fieldHint}>추천 기준: {candidateCriterion(selectedCandidate).label} · 승률은 점수 기반 참고 추정이며 검증된 실제 승률이 아닙니다.</p>
+          {selectedCandidate.score.fairness ? <div className={styles.notice}>
+            {selectedCandidate.score.fairness.hardViolations.length ? <p role="alert">{selectedCandidate.score.fairness.hardViolations.join(" / ")}</p> : null}
+            {selectedCandidate.score.fairness.warnings.length ? <ul>{selectedCandidate.score.fairness.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul> : null}
+            <details><summary>내전 규칙 세부 검사 {selectedCandidate.score.fairness.checks.length}개</summary><ul>{selectedCandidate.score.fairness.checks.map((check) => <li key={check.code}><strong>{check.status === "PASS" ? "통과" : check.status === "WARN" ? "주의" : "위반"} · {check.label}</strong> — {check.detail}</li>)}</ul></details>
+          </div> : <p className={styles.notice} role="status">이전 계산 결과에는 새 규칙 판정이 없습니다. 최신 통계로 재평가한 뒤 확인해 주세요.</p>}
+        </> : null}
         <div className={styles.candidateGrid}>
           {autoCandidates.slice(0, 1).map((candidate) => {
             const criterion = candidateCriterion(candidate);
             const selected = draft.selectedCandidateSignature === candidate.signature;
-            return <article key={candidate.id} data-selected={selected} data-balance={differenceTone(candidate.score.teamStrength.difference)}>
+            return <article key={candidate.id} data-selected={selected} data-balance={candidate.score.fairness?.status === "BALANCED" ? differenceTone(candidate.score.teamStrength.difference) : "open"}>
               <header><strong>{criterion.label}</strong><span>{selected ? "적용 중" : "추천 결과"}</span></header>
+              <p><strong>{fairnessLabel(candidate)}</strong></p>
               {criterion.description ? <p>{criterion.description}</p> : null}
               {candidate.score.v1?.missingSources.length ? <p role="note">최근 솔로 상세가 없거나 갱신 후 24시간이 지난 경우, 또는 팀 편성 보정이 미설정인 경우 해당 보조값은 0으로 계산합니다.</p> : null}
               <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>
               <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
-              <button type="button" aria-pressed={selected} disabled={busy || selected || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
+              <button type="button" aria-pressed={selected} disabled={busy || selected || candidate.score.fairness?.status === "INVALID" || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
             </article>;
           })}
         </div>
@@ -204,7 +238,7 @@ export function TeamBalanceDraftWorkspace({
                 onDragStart={(event) => { if (manualLocked || sending.current) { event.preventDefault(); return; } event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(index)); setDraggingSlot(index); setDragOverSlot(index); setMessage("교체할 자리 위에 카드를 놓아 주세요."); }}
                 onDragEnd={() => { setDraggingSlot(null); setDragOverSlot(null); }}
                 onDragOver={(event) => { if (manualLocked || sending.current) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverSlot(index); }}
-                onDrop={(event) => { if (manualLocked || sending.current) return; event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) { swapManual(sourceSlot, index); setMessage("두 플레이어의 자리를 바꿨어요. 서버 평가로 확인해 주세요."); } setDraggingSlot(null); setDragOverSlot(null); }}
+                onDrop={(event) => { if (manualLocked || sending.current) return; event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) swapManual(sourceSlot, index); setDraggingSlot(null); setDragOverSlot(null); }}
               >
                 <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong></div>
                 <div className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small></div>
@@ -217,10 +251,10 @@ export function TeamBalanceDraftWorkspace({
       </section>
 
       <section className={styles.draftActions} data-pending={pending || (refreshing ? "refresh" : undefined)} aria-busy={busy} aria-label="초안 작업">
-        <button className={styles.primaryButton} type="button" disabled={busy || manualChanged || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
-        <button className={styles.secondaryButton} type="button" disabled={busy || manualChanged || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
+        <button className={styles.primaryButton} type="button" disabled={busy || manualChanged || selectedInvalid || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
+        <button className={styles.secondaryButton} type="button" disabled={busy || manualChanged || selectedInvalid || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
         <button className={styles.secondaryButton} type="button" disabled={busy || manualChanged || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "실력과 포지션으로 재평가" : "최신 통계로 재평가"}</button>
-        {draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? busy || manualChanged
+        {draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? busy || manualChanged || selectedInvalid
           ? <button className={styles.primaryButton} type="button" disabled>{resultLabel} <ArrowRight size={16} aria-hidden="true" /></button>
           : <Link className={styles.primaryLink} href={resultHref}>{resultLabel} <ArrowRight size={16} aria-hidden="true" /></Link> : null}
         {mode === "ADMIN" && draft.status !== "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => mutate("archive", {})}><Archive size={17} aria-hidden="true" /> 초안 보관</button> : null}

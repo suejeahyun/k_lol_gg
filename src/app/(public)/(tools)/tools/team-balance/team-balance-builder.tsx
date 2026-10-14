@@ -22,6 +22,7 @@ type Row = {
   additionalPositions: Position[];
   additionalPreference: Preference;
   allPositions: boolean;
+  allowAutofill: boolean;
 };
 
 type CandidatePlayer = Readonly<{
@@ -91,6 +92,7 @@ function initialRows(): Row[] {
     additionalPositions: [],
     additionalPreference: "SUB",
     allPositions: false,
+    allowAutofill: false,
   }));
 }
 
@@ -104,9 +106,12 @@ function rowFromCandidate(candidate: CandidatePlayer, index: number): Row {
     mainPreference: allPositions ? "AUTO" : "MAIN",
     additionalPositions: allPositions
       ? []
-      : candidate.subPositions.filter((position): position is Position => position !== "ALL" && position !== mainPosition),
+      : candidate.subPositions.includes("ALL")
+        ? TEAM_BALANCE_POSITIONS.filter((position) => position !== mainPosition)
+        : candidate.subPositions.filter((position): position is Position => position !== "ALL" && position !== mainPosition),
     additionalPreference: "SUB",
     allPositions,
+    allowAutofill: false,
   };
 }
 
@@ -114,12 +119,15 @@ function eligiblePositions(row: Row) {
   if (row.allPositions) {
     return TEAM_BALANCE_POSITIONS.map((position) => ({ position, preference: "AUTO" as const }));
   }
-  return [
+  const selected = [
     { position: row.mainPosition, preference: row.mainPreference },
     ...row.additionalPositions
       .filter((position) => position !== row.mainPosition)
       .map((position) => ({ position, preference: row.additionalPreference })),
   ];
+  return row.allowAutofill
+    ? [...selected, ...TEAM_BALANCE_POSITIONS.filter((position) => !selected.some((entry) => entry.position === position)).map((position) => ({ position, preference: "AUTO" as const }))]
+    : selected;
 }
 
 async function responseDetail(response: Response, fallback: string) {
@@ -331,6 +339,16 @@ export function TeamBalanceBuilder() {
         <strong className={styles.count}>{selectedRows.length} / 10명</strong>
       </div>
       <label className={styles.fieldLabel}>초안 이름<input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} required /></label>
+      <details className={styles.notice}>
+        <summary>내전 밸런스 규칙</summary>
+        <ul>
+          <li>선택한 주·부 포지션만 배정하며, 한 개만 선택하면 원포지션 고정입니다. 기타 포지션은 직접 허용한 경우에만 배정합니다.</li>
+          <li>원딜끼리와 서포터끼리 현재 티어의 큰 등급이 3단계 이상 차이 나면 제외합니다. 골드↔다이아는 3단계이며, 골드4↔골드1은 같은 등급입니다.</li>
+          <li>팀 합계, 큰 대면 격차가 2곳 이상인지, 바텀 편중, 포지션 양보 부담과 양 팀이 활용할 라인을 함께 비교합니다.</li>
+          <li>상위 두 명은 양 팀 분산과 가능한 미드·정글 분담을 선호합니다. 탑·미드 및 원딜·서포터 우세를 분산하고, 약한 서포터의 정글 보완이 한 팀에 중복된 전력 우세를 만들지 않는지 검사합니다.</li>
+          <li>조건을 충분히 만족하지 못하면 조건부 편성, 티어 자료가 없으면 정보 확인 필요로 표시합니다.</li>
+        </ul>
+      </details>
 
       <section className={styles.balanceStep} aria-labelledby="balance-step-one-title">
         <button className={styles.balanceStepToggle} type="button" aria-expanded={stepOneOpen} onClick={() => setStepOneOpen((open) => !open)}>
@@ -400,11 +418,12 @@ export function TeamBalanceBuilder() {
                   </div>
                 </div>
                 <details className={styles.balanceRowDetails}>
-                  <summary><strong>세부 설정</strong><small>{row.allPositions ? "모든 포지션 자동 배치" : `추가 가능 ${row.additionalPositions.length}개`}</small></summary>
+                  <summary><strong>세부 설정</strong><small>{row.allPositions ? "모든 포지션 자동 배치" : row.allowAutofill ? "주·부 유지 · 기타 배정 허용" : row.additionalPositions.length === 0 ? "원포지션 고정" : `추가 가능 ${row.additionalPositions.length}개`}</small></summary>
                   <div>
                   <SingleChoice label="주 포지션 선호" value={row.mainPreference} options={preferenceOptions} disabled={row.allPositions} onChange={(mainPreference) => update(index, { mainPreference })} />
                   <fieldset className={styles.choiceField} disabled={row.allPositions}><legend>추가 가능 포지션</legend><div className={styles.choiceButtons} role="group" aria-label="추가 가능 포지션">{TEAM_BALANCE_POSITIONS.filter((position) => position !== row.mainPosition).map((position) => { const selected = row.additionalPositions.includes(position); return <button type="button" key={position} aria-pressed={selected} data-selected={selected ? "true" : undefined} onClick={() => update(index, { additionalPositions: selected ? row.additionalPositions.filter((current) => current !== position) : [...row.additionalPositions, position] })}>{positionLabel[position]}</button>; })}</div></fieldset>
                   <SingleChoice label="추가 포지션 선호" value={row.additionalPreference} options={preferenceOptions} disabled={row.allPositions || row.additionalPositions.length === 0} onChange={(additionalPreference) => update(index, { additionalPreference })} />
+                  <label><span><input type="checkbox" aria-label={`${row.playerLabel} 기타 포지션 허용`} checked={row.allowAutofill} disabled={row.allPositions || pending} onChange={(event) => update(index, { allowAutofill: event.target.checked })} /> 선택하지 않은 기타 포지션도 허용</span><small>기본은 선택한 포지션만 허용합니다. 해제 상태에서 한 개만 선택하면 해당 포지션에 고정됩니다.</small></label>
                   </div>
                 </details>
               </article>

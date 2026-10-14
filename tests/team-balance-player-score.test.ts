@@ -126,6 +126,11 @@ test("single-player breakdown and override preview share layout calculations for
     const updated = { ...subject, rating: { ...subject.rating!, v1: { ...subject.rating!.v1!, balanceOverrideScore: nextOverride } } };
     assert.deepEqual(preview, evaluateTeamBalancePlayerScore(updated));
     for (const position of preview.positions) {
+      if (!updated.eligiblePositions.some((entry) => entry.position === position.position)) {
+        assert.throws(() => layoutWith(updated, position.position),
+          (error) => error instanceof TeamBalanceDomainError && error.code === "FAIRNESS_CONSTRAINT");
+        continue;
+      }
       const evaluated = layoutWith(updated, position.position);
       assert.equal(position.effectiveScore, evaluated.assignments.find((entry) => entry.playerId === subject.playerId)?.rating.effectiveScore);
       assert.equal(evaluated.score.v1?.formulaVersion, TEAM_BALANCE_V1_FORMULA_VERSION);

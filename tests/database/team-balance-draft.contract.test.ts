@@ -9,6 +9,9 @@ import {
   TeamBalanceService,
   TeamBalanceRecommendationService,
   TeamBalanceServiceError,
+  TeamBalanceDomainError,
+  evaluateTeamBalanceLayout,
+  type TeamBalancePlayer,
   type TeamBalanceCommandContext,
   type TeamBalanceRatingProvider,
   type TeamBalanceRatingSnapshot,
@@ -611,6 +614,115 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     assert.ok(recommendation);
     assert.equal(recommendation.state, expectedRecommendationState);
     assert.equal(recommendation.picks.length, 5);
+  } finally {
+    await pool.end();
+  }
+});
+
+// These rows model pre-policy snapshots without changing append-only candidates.
+test("fairness guards legacy auto/manual selection and saving without rewriting history or failed-command evidence", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const ownerId = randomUUID();
+  const sessionId = randomUUID();
+  const playerIds = Array.from({ length: 10 }, () => randomUUID());
+  const now = new Date();
+  const actor = { userAccountId: ownerId, sessionId, role: "USER", authVersion: 0 } as const;
+  const provider = new MutableRatingProvider();
+  const service = new TeamBalanceService(new PostgresTeamBalanceRepository(database, provider));
+  const context = (key: string) => commandContext(actor, "APPROVED_ACCOUNT_MUTATION", key);
+  const roster: TeamBalancePlayer[] = playerIds.map((playerId, index) => ({
+    playerId,
+    eligiblePositions: [{ position: positions[index % 5]!, preference: "MAIN" }],
+    rating: {
+      overall: 50, confidence: 0, sampleSize: 0, positions: null,
+      v1: {
+        legacyPlayerId: null, currentTier: "GOLD IV", peakTier: "GOLD IV", season: null,
+        internalGames: 0, internalPositionGames: {}, recentSolo: null, balanceOverrideScore: 0,
+        mmr: { overall: 50, confidence: 0, positions: {} }, missingSources: [],
+      },
+    },
+  }));
+  const layout = playerIds.map((playerId, index) => ({ playerId, team: index < 5 ? "BLUE" as const : "RED" as const, position: positions[index % 5]! }));
+  const evaluated = evaluateTeamBalanceLayout(roster, layout);
+  const legacyScore = { ...evaluated.score };
+  delete legacyScore.fairness;
+  const isFairnessFailure = (error: unknown) => error instanceof TeamBalanceDomainError && error.code === "FAIRNESS_CONSTRAINT";
+  async function legacyDraft(snapshot: readonly TeamBalancePlayer[]) {
+    const draftId = randomUUID();
+    await database.insert(teamBalanceDrafts).values({
+      id: draftId, ownerUserAccountId: ownerId, title: "이전 편성 규칙 계약", selectedCandidateSource: "AUTO",
+      selectedCandidateSignature: evaluated.signature, createdByUserAccountId: ownerId, updatedByUserAccountId: ownerId,
+    });
+    await database.insert(teamBalanceDraftParticipants).values(snapshot.map((player, ordinal) => ({
+      draftId, playerId: player.playerId, ordinal, displayNameSnapshot: `참가자 ${ordinal}`,
+      eligiblePositionsJson: player.eligiblePositions, ratingSnapshotJson: player.rating!,
+    })));
+    await database.insert(teamBalanceDraftCandidates).values({
+      id: randomUUID(), draftId, evaluationRound: 1, source: "AUTO", rank: 1, signature: evaluated.signature,
+      assignmentsJson: evaluated.assignments, scoreJson: legacyScore, createdByUserAccountId: ownerId,
+    });
+    return draftId;
+  }
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: ownerId, loginId: `fair-${ownerId}`, loginIdNormalized: `fair-${ownerId}`, status: "APPROVED" });
+    await database.insert(authSessions).values({ id: sessionId, tokenHash: randomBytes(32), userAccountId: ownerId,
+      authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000) });
+    await database.insert(players).values(playerIds.map((id, index) => ({
+      id, memberName: `규칙회원 ${index}`, memberNameNormalized: `fair-member-${id}`,
+      nickname: `규칙회원 ${index}`, nicknameNormalized: `fair-player-${id}`, tagLine: "TEST", tagLineNormalized: "test",
+    })));
+
+    const hardTierRoster = roster.map((player, index) => index === 8 ? {
+      ...player, rating: { ...player.rating!, v1: { ...player.rating!.v1!, currentTier: "DIAMOND IV" } },
+    } : player);
+    const hardTierDraft = await legacyDraft(hardTierRoster);
+    const roleRoster = roster.map((player, index) => index === 0 ? {
+      ...player, eligiblePositions: [{ position: "MID" as const, preference: "MAIN" as const }],
+    } : player);
+    const roleDraft = await legacyDraft(roleRoster);
+    for (const draftId of [hardTierDraft, roleDraft]) {
+      await assert.rejects(service.selectCandidate(context(`legacy-auto-${draftId}`), draftId, 0, { candidateRank: 1 }, now), isFairnessFailure);
+      await assert.rejects(service.selectCandidate(context(`legacy-manual-${draftId}`), draftId, 0, { layout }, now), isFairnessFailure);
+      await assert.rejects(service.saveDraft(context(`legacy-save-${draftId}`), draftId, 0, {}, now), isFairnessFailure);
+      const after = await service.getDraft({ actorUserAccountId: ownerId, authorization: "OWNER" }, draftId);
+      assert.equal(after?.revision, 0);
+      assert.equal(after?.status, "EVALUATED");
+      assert.deepEqual(after?.candidates[0]?.score, legacyScore, "legacy score JSON remains immutable");
+      assert.equal((await database.select().from(teamBalanceOutbox).where(eq(teamBalanceOutbox.draftId, draftId))).length, 0);
+      assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetId, draftId))).length, 0);
+    }
+    assert.equal((await database.select().from(teamBalanceCommandReceipts).where(eq(teamBalanceCommandReceipts.actorUserAccountId, ownerId))).length, 0);
+
+    provider.snapshot = { generation: 2, ratings: new Map(hardTierRoster.map((player) => [player.playerId, player.rating!])) };
+    const impossibleBody = { title: "편성 불가 계약", participants: roster.map(({ playerId, eligiblePositions }) => ({ playerId, eligiblePositions })) };
+    const noFeasible = (error: unknown) => error instanceof TeamBalanceDomainError && error.code === "NO_FEASIBLE_LAYOUT";
+    await assert.rejects(service.createDraft(context("no-feasible-create"), impossibleBody, now), noFeasible);
+    await assert.rejects(service.reevaluateDraft(context("no-feasible-reevaluate"), hardTierDraft, 0, {}, now), noFeasible);
+    assert.equal((await service.getDraft({ actorUserAccountId: ownerId, authorization: "OWNER" }, hardTierDraft))?.evaluationRound, 1);
+
+    const validLegacyDraft = await legacyDraft(roster);
+    // A changed provider does not silently replace an evaluation-round snapshot.
+    const savedContext = context("valid-legacy-save");
+    const saved = await service.saveDraft(savedContext, validLegacyDraft, 0, {}, now);
+    assert.equal(saved.revision, 1);
+    assert.equal((await service.saveDraft(savedContext, validLegacyDraft, 0, {}, now)).replayed, true);
+    const preserved = await service.getDraft({ actorUserAccountId: ownerId, authorization: "OWNER" }, validLegacyDraft);
+    assert.equal(preserved?.status, "SAVED");
+    assert.deepEqual(preserved?.candidates[0]?.score, legacyScore);
+
+    provider.snapshot = { generation: 3, ratings: new Map(roster.map((player) => [player.playerId, player.rating!])) };
+    const modern = await service.createDraft(context("modern-fairness-create"), { ...impossibleBody, title: "현재 편성 규칙 계약" }, now);
+    const modernId = String(modern.body.draftId);
+    const readModern = await service.getDraft({ actorUserAccountId: ownerId, authorization: "OWNER" }, modernId);
+    assert.equal(readModern?.candidates[0]?.score.fairness?.status, "BALANCED");
+    const manualSelected = await service.selectCandidate(context("modern-manual"), modernId, 0, {
+      layout: readModern!.candidates[0]!.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })),
+    }, now);
+    assert.equal(manualSelected.revision, 1);
   } finally {
     await pool.end();
   }

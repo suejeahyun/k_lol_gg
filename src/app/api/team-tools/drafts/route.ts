@@ -12,6 +12,7 @@ import {
 } from "@/modules/team-tools/infrastructure/team-balance-http";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const authorization = await requireTeamBalanceApiSession("USER", request);

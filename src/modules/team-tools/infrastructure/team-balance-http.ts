@@ -21,9 +21,12 @@ import {
 import type { TeamBalanceCommandContext } from "../application/team-balance-service";
 import type { TeamBalanceMutationResult } from "../application/ports/team-balance-repository";
 import { TeamBalanceServiceError } from "../domain/team-balance-draft";
+import { TeamBalanceDomainError } from "../domain/team-balance";
 
 const problems = Object.freeze({
   forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "이 팀 초안에 접근할 수 있는 계정으로 다시 시도해 주세요." }),
+  fairnessConstraint: definePublicProblem({ code: "TEAM_BALANCE_FAIRNESS_CONSTRAINT", status: 422, title: "내전 필수 조건을 충족하지 못했습니다.", detail: "허용한 포지션만 배치하고, 원딜끼리·서폿끼리의 현재 티어 차이가 큰 등급 3단계 미만이 되도록 바꿔 주세요." }),
+  noFeasibleLayout: definePublicProblem({ code: "NO_FEASIBLE_TEAM_BALANCE", status: 422, title: "현재 조건으로 팀을 편성할 수 없습니다.", detail: "허용 포지션으로 양 팀의 5개 역할을 채우고 바텀 맞대결의 큰 티어 3단계 제한을 지킬 수 있도록 참가자나 가능 포지션을 조정해 주세요." }),
   idempotencyMismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 이미 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
   invalidInput: definePublicProblem({ code: "INVALID_INPUT", status: 400, title: "팀 입력이 올바르지 않습니다.", detail: "참가자 10명과 포지션·팀 배치를 확인해 주세요." }),
   invalidTransition: definePublicProblem({ code: "INVALID_TRANSITION", status: 409, title: "현재 상태에서는 변경할 수 없습니다.", detail: "최신 팀 초안 상태를 확인한 뒤 다시 시도해 주세요." }),
@@ -101,6 +104,11 @@ export function teamBalanceReadResponse(body: unknown, revision?: number, traceI
 }
 
 export function teamBalanceErrorResponse(error: unknown, traceId?: string) {
+  if (error instanceof TeamBalanceDomainError) {
+    if (error.code === "FAIRNESS_CONSTRAINT") return problemResponse(problems.fairnessConstraint, { traceId });
+    if (error.code === "NO_FEASIBLE_LAYOUT") return problemResponse(problems.noFeasibleLayout, { traceId });
+    return problemResponse(problems.invalidInput, { traceId });
+  }
   if (error instanceof TeamBalanceServiceError) {
     const problem = {
       FORBIDDEN: problems.forbidden,

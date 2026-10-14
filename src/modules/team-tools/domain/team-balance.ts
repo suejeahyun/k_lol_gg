@@ -1,7 +1,12 @@
+import { evaluateInhouseFairness, measureInhouseMatchup, type InhouseFairnessAssignment, type InhouseFairnessReport, type InhouseMatchupMetrics } from "./inhouse-fairness";
+import { compareInhousePriority, inhouseJointCost, selectInhouseJointLayouts } from "./inhouse-joint-search";
+
+export type { InhouseFairnessReport, InhouseFairnessCheck } from "./inhouse-fairness";
+
 export const TEAM_BALANCE_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 export const TEAM_BALANCE_TEAMS = ["BLUE", "RED"] as const;
 export const TEAM_BALANCE_PREFERENCES = ["MAIN", "SUB", "AUTO"] as const;
-export const TEAM_BALANCE_V1_FORMULA_VERSION = "V1_BLUEBLACK_AI_GLOBAL_2026_10_10";
+export const TEAM_BALANCE_V1_FORMULA_VERSION = "V2_INHOUSE_FAIRNESS_2026_10_15";
 
 export type TeamBalancePosition = (typeof TEAM_BALANCE_POSITIONS)[number];
 export type TeamBalanceTeam = (typeof TEAM_BALANCE_TEAMS)[number];
@@ -129,7 +134,7 @@ export type TeamBalancePositionBreakdown = Readonly<{
 }>;
 
 export type TeamBalanceV1ScoreBreakdown = Readonly<{
-  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION | "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
+  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION | "V1_BLUEBLACK_AI_GLOBAL_2026_10_10" | "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
   qualityScore: number;
   recommendationScore: number;
   predictedRedWinRate: number;
@@ -172,6 +177,8 @@ export type TeamBalanceScoreBreakdown = Readonly<{
   }>;
   totalPenalty: number;
   v1?: TeamBalanceV1ScoreBreakdown;
+  /** Optional only for previously stored score JSON. All new evaluations include this. */
+  fairness?: InhouseFairnessReport;
 }>;
 
 export type EvaluatedTeamBalanceLayout = Readonly<{
@@ -201,10 +208,11 @@ export type TeamBalanceDomainErrorCode =
   | "INVALID_PREFERENCE"
   | "INVALID_SCORE"
   | "INVALID_LAYOUT"
+  | "FAIRNESS_CONSTRAINT"
   | "NO_FEASIBLE_LAYOUT";
 
 export class TeamBalanceDomainError extends Error {
-  constructor(readonly code: TeamBalanceDomainErrorCode, readonly subject?: string) {
+  constructor(readonly code: TeamBalanceDomainErrorCode, readonly subject?: string, readonly fairness?: InhouseFairnessReport) {
     super(subject ? `${code}: ${subject}` : code);
     this.name = "TeamBalanceDomainError";
   }
@@ -228,7 +236,7 @@ type NormalizedPlayer = Readonly<{
   highTier: boolean;
 }>;
 
-type InternalAssignment = EvaluatedTeamBalanceAssignment & Readonly<{
+type InternalAssignment = EvaluatedTeamBalanceAssignment & InhouseFairnessAssignment & Readonly<{
   finalBaseScore: number;
   sTierBonus: number;
   highTier: boolean;
@@ -240,6 +248,7 @@ type InternalAssignment = EvaluatedTeamBalanceAssignment & Readonly<{
 }>;
 
 type PreparedTeam = Readonly<{
+  signature: string;
   assignments: readonly InternalAssignment[];
   total: number;
   mainCount: number;
@@ -251,6 +260,7 @@ type PreparedTeam = Readonly<{
 }>;
 
 type CandidateMetrics = Readonly<{
+  fairness: InhouseMatchupMetrics;
   blue: PreparedTeam;
   red: PreparedTeam;
   assignments: readonly InternalAssignment[];
@@ -430,7 +440,6 @@ function normalizePlayer(player: TeamBalancePlayer): NormalizedPlayer {
     if (preferences.has(eligible.position)) throw new TeamBalanceDomainError("DUPLICATE_ELIGIBLE_POSITION", playerId);
     preferences.set(eligible.position, eligible.preference);
   }
-  for (const position of TEAM_BALANCE_POSITIONS) if (!preferences.has(position)) preferences.set(position, "AUTO");
   const rating = normalizeRating(playerId, player.rating);
   const finalBaseScore = rating.v1 ? v1BaseScore(rating.v1) : round(50 + (rating.overall - 50) * rating.confidence);
   const peakScore = tierScore(rating.v1?.peakTier ?? null) ?? 0;
@@ -453,10 +462,17 @@ function normalizePlayers(input: readonly TeamBalancePlayer[]): readonly Normali
     right.rating.v1?.legacyPlayerId ?? null,
     right.playerId,
   ));
-  for (let index = 1; index < normalized.length; index += 1) {
-    if (normalized[index - 1]!.playerId === normalized[index]!.playerId) throw new TeamBalanceDomainError("DUPLICATE_PLAYER_ID", normalized[index]!.playerId);
+  const seen = new Set<string>();
+  for (const player of normalized) {
+    if (seen.has(player.playerId)) throw new TeamBalanceDomainError("DUPLICATE_PLAYER_ID", player.playerId);
+    seen.add(player.playerId);
   }
   return normalized;
+}
+
+/** Validate request shape/rating data without running the combinatorial search. */
+export function validateTeamBalancePlayers(input: readonly TeamBalancePlayer[]): void {
+  normalizePlayers(input);
 }
 
 function comparePlayerOrder(leftLegacyId: number | null, leftId: string, rightLegacyId: number | null, rightId: string) {
@@ -467,7 +483,8 @@ function comparePlayerOrder(leftLegacyId: number | null, leftId: string, rightLe
 }
 
 function preference(player: NormalizedPlayer, position: TeamBalancePosition) {
-  return player.eligiblePositions.get(position)!;
+  // Score previews still explain every role; eligibility is checked at assignment boundaries.
+  return player.eligiblePositions.get(position) ?? "AUTO";
 }
 
 function reliabilityRate(count: number, bands: readonly (readonly [number, number])[]) {
@@ -584,29 +601,34 @@ function combinationsWithRedAnchor(length: number) {
   return result;
 }
 
-function prepareTeam(team: TeamBalanceTeam, players: readonly NormalizedPlayer[]): PreparedTeam {
-  let best: PreparedTeam | null = null;
-  let bestKey = Number.NEGATIVE_INFINITY;
+function createAssignment(player: NormalizedPlayer, team: TeamBalanceTeam, position: TeamBalancePosition): InternalAssignment {
+  const v1 = player.rating.v1;
+  const rating = resolveRating(player, position);
+  const role = preference(player, position);
+  return {
+    playerId: player.playerId, team, position, preference: role, roleType: role,
+    rating, score: rating.effectiveScore, finalBaseScore: player.finalBaseScore,
+    currentTier: v1?.currentTier ?? "", peakTier: v1?.peakTier ?? "",
+    mainPositions: [...player.eligiblePositions].filter(([, value]) => value === "MAIN").map(([value]) => value),
+    subPositions: [...player.eligiblePositions].filter(([, value]) => value === "SUB").map(([value]) => value),
+    allowedPositions: [...player.eligiblePositions.keys()],
+    sTierBonus: player.sTierBonus, highTier: player.highTier,
+    internalGames: v1?.internalGames ?? player.rating.sampleSize ?? 0,
+    internalPositionGames: v1?.internalPositionGames[position] ?? player.rating.positions[position]?.sampleSize ?? 0,
+    recentSoloGames: v1?.recentSolo?.games ?? 0, missingSources: v1?.missingSources ?? [],
+    legacyPlayerId: v1?.legacyPlayerId ?? null,
+  };
+}
+
+function prepareTeams(team: TeamBalanceTeam, players: readonly NormalizedPlayer[]): PreparedTeam[] {
+  const layouts: PreparedTeam[] = [];
+  // Each position score is computed once per player/team, preserving the existing score formula.
+  const byPlayer = new Map(players.map((player) => [player.playerId, new Map(
+    [...player.eligiblePositions.keys()].map((position) => [position, createAssignment(player, team, position)]),
+  )]));
   for (const ordered of permute(players)) {
-    const assignments = ordered.map((player, index): InternalAssignment => {
-      const position = TEAM_BALANCE_POSITIONS[index]!;
-      const v1 = player.rating.v1;
-      return {
-        playerId: player.playerId,
-        team,
-        position,
-        preference: preference(player, position),
-        rating: resolveRating(player, position),
-        finalBaseScore: player.finalBaseScore,
-        sTierBonus: player.sTierBonus,
-        highTier: player.highTier,
-        internalGames: v1?.internalGames ?? player.rating.sampleSize ?? 0,
-        internalPositionGames: v1?.internalPositionGames[position] ?? player.rating.positions[position]?.sampleSize ?? 0,
-        recentSoloGames: v1?.recentSolo?.games ?? 0,
-        missingSources: v1?.missingSources ?? [],
-        legacyPlayerId: v1?.legacyPlayerId ?? null,
-      };
-    });
+    if (ordered.some((player, index) => !player.eligiblePositions.has(TEAM_BALANCE_POSITIONS[index]!))) continue;
+    const assignments = ordered.map((player, index) => byPlayer.get(player.playerId)!.get(TEAM_BALANCE_POSITIONS[index]!)!);
     const mainCount = assignments.filter((entry) => entry.preference === "MAIN").length;
     const subCount = assignments.filter((entry) => entry.preference === "SUB").length;
     const autoCount = assignments.filter((entry) => entry.preference === "AUTO").length;
@@ -614,13 +636,9 @@ function prepareTeam(team: TeamBalanceTeam, players: readonly NormalizedPlayer[]
     const prioritySubCount = assignments.filter((entry) => entry.highTier && entry.preference === "SUB").length;
     const priorityAutoCount = assignments.filter((entry) => entry.highTier && entry.preference === "AUTO").length;
     const total = round(assignments.reduce((sum, entry) => sum + entry.rating.effectiveScore, 0));
-    const key = priorityMainCount * 100_000_000 + prioritySubCount * 1_000_000 - priorityAutoCount * 1_000_000 + mainCount * 100_000 + subCount * 10_000 - autoCount * 100 - total;
-    if (!best || key > bestKey) {
-      best = { assignments, total, mainCount, subCount, autoCount, priorityMainCount, prioritySubCount, priorityAutoCount };
-      bestKey = key;
-    }
+    layouts.push({ signature: assignments.map((entry) => entry.playerId).join(","), assignments, total, mainCount, subCount, autoCount, priorityMainCount, prioritySubCount, priorityAutoCount });
   }
-  return best!;
+  return layouts;
 }
 
 function assignmentAt(assignments: readonly InternalAssignment[], team: TeamBalanceTeam, position: TeamBalancePosition) {
@@ -664,6 +682,7 @@ function getRecommendationScore(candidate: Omit<CandidateMetrics, "recommendatio
 }
 
 function evaluateCandidate(red: PreparedTeam, blue: PreparedTeam): CandidateMetrics {
+  const fairness = measureInhouseMatchup(red.assignments, blue.assignments);
   const assignments = [...red.assignments, ...blue.assignments];
   const differences = TEAM_BALANCE_POSITIONS.map((position) => lineDiff(assignments, position));
   const diff = round(Math.abs(red.total - blue.total));
@@ -708,7 +727,7 @@ function evaluateCandidate(red: PreparedTeam, blue: PreparedTeam): CandidateMetr
   const highTierPriorityPenalty = round(highTierRolePenalty + highTierSplitPenalty + highTierLinePenalty);
   const remainingMainPriorityPenalty = round(assignments.reduce((sum, entry) => sum + (entry.highTier || entry.preference === "MAIN" ? 0 : entry.preference === "SUB" ? 2 : 8), 0));
   const balanceCost = round(highTierPriorityPenalty * 10 + remainingMainPriorityPenalty * 2 + diff * 1.2 + weightedLineDiff * 0.7 + maxLineDiff + midJglDiff * 0.45 + bottomDiff * 0.45 + autoLinePenalty + mainImbalancePenalty * 0.6 + topRankStackPenalty * 0.35 + sTierStackPenalty * 0.35 + dataReliabilityPenalty * 0.4 + stompPenalty * 0.45);
-  const base = { blue, red, assignments, signature: `${blue.assignments.map((entry) => entry.playerId).join(",")}|${red.assignments.map((entry) => entry.playerId).join(",")}`, diff, lineDiffTotal, maxLineDiff, topPlayerDiff, topRankStackPenalty, sTierStackPenalty, weightedLineDiff, frontSideDiff, midJglDiff, bottomDiff, autoLinePenalty, mainImbalancePenalty, dataReliabilityPenalty, stompPenalty, highTierPriorityPenalty, remainingMainPriorityPenalty, balanceCost };
+  const base = { fairness, blue, red, assignments, signature: `${blue.assignments.map((entry) => entry.playerId).join(",")}|${red.assignments.map((entry) => entry.playerId).join(",")}`, diff, lineDiffTotal, maxLineDiff, topPlayerDiff, topRankStackPenalty, sTierStackPenalty, weightedLineDiff, frontSideDiff, midJglDiff, bottomDiff, autoLinePenalty, mainImbalancePenalty, dataReliabilityPenalty, stompPenalty, highTierPriorityPenalty, remainingMainPriorityPenalty, balanceCost };
   const metrics = normalizedMetrics(base);
   const qualityScore = round(clamp(metrics.total * 0.24 + metrics.line * 0.28 + metrics.position * 0.2 + metrics.carry * 0.14 + metrics.reliability * 0.14, 0, 100), 1);
   const withQuality = { ...base, qualityScore };
@@ -727,17 +746,14 @@ function evaluateCandidate(red: PreparedTeam, blue: PreparedTeam): CandidateMetr
 }
 
 function compareCandidates(left: CandidateMetrics, right: CandidateMetrics) {
-  return right.recommendationScore - left.recommendationScore ||
-    right.qualityScore - left.qualityScore ||
-    left.diff - right.diff ||
-    left.maxLineDiff - right.maxLineDiff ||
-    left.midJglDiff - right.midJglDiff ||
-    left.bottomDiff - right.bottomDiff ||
-    (left.blue.autoCount + left.red.autoCount) - (right.blue.autoCount + right.red.autoCount) ||
-    left.balanceCost - right.balanceCost;
+  return compareInhousePriority(left.fairness, right.fairness) ||
+    inhouseJointCost(left.fairness, left.red.subCount + left.blue.subCount) - inhouseJointCost(right.fairness, right.red.subCount + right.blue.subCount) ||
+    compareText(left.blue.signature, right.blue.signature) || compareText(left.red.signature, right.red.signature);
 }
 
 function materialize(candidate: CandidateMetrics): EvaluatedTeamBalanceLayout {
+  const fairness = evaluateInhouseFairness(candidate.assignments);
+  if (fairness.hardViolations.length) throw new TeamBalanceDomainError("FAIRNESS_CONSTRAINT", fairness.hardViolations.join(" "), fairness);
   const assignments: EvaluatedTeamBalanceAssignment[] = candidate.assignments
     .map((entry) => ({
       playerId: entry.playerId,
@@ -759,6 +775,7 @@ function materialize(candidate: CandidateMetrics): EvaluatedTeamBalanceLayout {
     signature: candidate.signature,
     assignments,
     score: {
+      fairness,
       teamStrength: { blueTotal: candidate.blue.total, redTotal: candidate.red.total, difference: candidate.diff, weightedPenalty: round(candidate.diff * 1.2) },
       positions,
       positionDifferenceTotal: candidate.lineDiffTotal,
@@ -792,7 +809,7 @@ function materialize(candidate: CandidateMetrics): EvaluatedTeamBalanceLayout {
         remainingMainPriorityPenalty: candidate.remainingMainPriorityPenalty,
         carryDistributionPenalty: candidate.topRankStackPenalty + candidate.sTierStackPenalty,
         stompPenalty: candidate.stompPenalty,
-        warnings: candidate.warningMessages,
+        warnings: [...new Set([...candidate.warningMessages, ...fairness.warnings])],
         missingSources,
       },
     },
@@ -809,19 +826,7 @@ function evaluateNormalizedLayout(players: readonly NormalizedPlayer[], layout: 
     const player = playerById.get(entry.playerId);
     if (!player || seen.has(entry.playerId)) throw new TeamBalanceDomainError("INVALID_LAYOUT", entry.playerId);
     seen.add(entry.playerId);
-    assignments.push({
-      ...entry,
-      preference: preference(player, entry.position),
-      rating: resolveRating(player, entry.position),
-      finalBaseScore: player.finalBaseScore,
-      sTierBonus: player.sTierBonus,
-      highTier: player.highTier,
-      internalGames: player.rating.v1?.internalGames ?? player.rating.sampleSize ?? 0,
-      internalPositionGames: player.rating.v1?.internalPositionGames[entry.position] ?? player.rating.positions[entry.position]?.sampleSize ?? 0,
-      recentSoloGames: player.rating.v1?.recentSolo?.games ?? 0,
-      missingSources: player.rating.v1?.missingSources ?? [],
-      legacyPlayerId: player.rating.v1?.legacyPlayerId ?? null,
-    });
+    assignments.push(createAssignment(player, entry.team, entry.position));
   }
   for (const team of TEAM_BALANCE_TEAMS) for (const position of TEAM_BALANCE_POSITIONS) {
     if (assignments.filter((entry) => entry.team === team && entry.position === position).length !== 1) throw new TeamBalanceDomainError("INVALID_LAYOUT", `${team}:${position}`);
@@ -829,6 +834,7 @@ function evaluateNormalizedLayout(players: readonly NormalizedPlayer[], layout: 
   const toPrepared = (team: TeamBalanceTeam): PreparedTeam => {
     const teamAssignments = TEAM_BALANCE_POSITIONS.map((position) => assignmentAt(assignments, team, position));
     return {
+      signature: teamAssignments.map((entry) => entry.playerId).join(","),
       assignments: teamAssignments,
       total: round(teamAssignments.reduce((sum, entry) => sum + entry.rating.effectiveScore, 0)),
       mainCount: teamAssignments.filter((entry) => entry.preference === "MAIN").length,
@@ -848,24 +854,27 @@ export function evaluateTeamBalanceLayout(input: readonly TeamBalancePlayer[], l
 }
 
 /**
- * V1-compatible search: anchor the first legacy-ordered player in RED, choose each
- * team's best position permutation, then select one AI-global recommendation.
+ * Keep the legacy-ordered RED anchor and existing role score formula. Compare
+ * both teams' permitted role layouts together before choosing one recommendation.
  */
 export function calculateTeamBalanceCandidates(input: readonly TeamBalancePlayer[], limit = 1): TeamBalanceCalculation {
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > 3) throw new RangeError("Team balance candidate limit must be between 1 and 3.");
   const players = normalizePlayers(input);
   const combinations = combinationsWithRedAnchor(players.length);
   const candidates: CandidateMetrics[] = [];
+  let feasibleLayoutCount = 0;
   for (const redIndexes of combinations) {
     const redSet = new Set(redIndexes);
-    const red = prepareTeam("RED", players.filter((_, index) => redSet.has(index)));
-    const blue = prepareTeam("BLUE", players.filter((_, index) => !redSet.has(index)));
-    candidates.push(evaluateCandidate(red, blue));
+    const red = prepareTeams("RED", players.filter((_, index) => redSet.has(index)));
+    const blue = prepareTeams("BLUE", players.filter((_, index) => !redSet.has(index)));
+    const selected = selectInhouseJointLayouts(red, blue);
+    feasibleLayoutCount += selected.feasibleLayoutCount;
+    for (const pair of selected.pairs) candidates.push(evaluateCandidate(pair.red, pair.blue));
   }
-  if (candidates.length === 0) throw new TeamBalanceDomainError("NO_FEASIBLE_LAYOUT");
+  if (candidates.length === 0) throw new TeamBalanceDomainError("NO_FEASIBLE_LAYOUT", "등록된 가능 포지션과 바텀 큰 티어 3단계 제한을 함께 만족하는 편성이 없습니다.");
   candidates.sort(compareCandidates);
   return {
     candidates: [{ ...materialize(candidates[0]!), rank: 1 }],
-    search: { symmetryAnchorPlayerId: players[0]!.playerId, teamCombinationCount: combinations.length, feasibleLayoutCount: candidates.length },
+    search: { symmetryAnchorPlayerId: players[0]!.playerId, teamCombinationCount: combinations.length, feasibleLayoutCount },
   };
 }

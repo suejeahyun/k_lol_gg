@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-10-14T23:16:21.833Z",
+  "releaseCheck": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "contracts": {
+      "pass": 709,
+      "fail": 0
+    },
+    "unit": {
+      "pass": 1137,
+      "fail": 0,
+      "skip": 1
+    },
+    "lint": {
+      "errors": 0,
+      "warnings": 58
+    },
+    "typecheck": "PASS",
+    "erd": {
+      "tables": 114,
+      "foreignKeys": 175,
+      "status": "PASS"
+    },
+    "build": "PASS"
+  },
+  "focused": {
+    "domainTests": 42,
+    "httpTests": 5,
+    "uiAndRetryTests": 24,
+    "database": {
+      "command": "V2_DB_CONTRACT_SCOPE=team-tools npm run test:db",
+      "postgresMajor": 18,
+      "pass": 6,
+      "fail": 0,
+      "isolated": true
+    }
+  },
+  "exhaustiveSearch": {
+    "layouts": 1814400,
+    "focusedElapsedMsApprox": 1950,
+    "fullSuiteElapsedMs": 2023.3335,
+    "runtime": "local",
+    "apiMaxDurationSeconds": 60
+  },
+  "secretScan": {
+    "currentTree": "PASS",
+    "completeLocalHistory": "PENDING"
+  },
+  "productionDependencyAudit": {
+    "vulnerabilities": 0,
+    "status": "PASS"
+  },
+  "migration": {
+    "changed": false,
+    "head": "0049_stable-recruit-codes"
+  },
+  "productionAuthenticatedCalculation": "NOT_PERFORMED",
+  "authenticationHttp": "PASS: guards, limits, administrator password, cookie, roles, headers, logout, production fixture lockout"
+}

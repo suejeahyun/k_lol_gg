@@ -135,9 +135,9 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   }
   for (const contract of [
     "추천 결과",
-    "AI 최적 팀 추천",
+    "내전 규칙 팀 추천",
     "selectedCandidate.score.v1?.recommendationScore",
-    "AI 최적 추천",
+    "내전 규칙 추천",
     "추천 기준",
     "실력과 포지션으로 재평가",
     "formatTeamBalanceShareText",

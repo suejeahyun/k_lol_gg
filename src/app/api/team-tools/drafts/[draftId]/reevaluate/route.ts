@@ -1,6 +1,8 @@
 import { getRuntimeTeamBalanceService } from "@/modules/team-tools/infrastructure/runtime-team-balance";
 import { prepareTeamBalanceMutation, requireTeamBalanceApiSession, teamBalanceErrorResponse, teamBalanceMutationResponse, teamBalanceUnavailableResponse } from "@/modules/team-tools/infrastructure/team-balance-http";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request, context: { params: Promise<{ draftId: string }> }) {
   const auth = await requireTeamBalanceApiSession("USER", request); if (!auth.ok) return auth.response;
   const prepared = await prepareTeamBalanceMutation(request, "team-tools:drafts:reevaluate", auth.session); if (!prepared.ok) return prepared.response;

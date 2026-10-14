@@ -27,7 +27,7 @@ const share = load("modules/team-tools/domain/team-balance-share.ts", { "./team-
 
 // A small event harness runs the real component handlers and request-key store.
 // Effects and presentation components are omitted; no network or database is used.
-function harness(file, exportName, send, withSelectedPlayers = false) {
+function harness(file, exportName, send, withSelectedPlayers = false, evaluateLayout = () => ({})) {
   const slots = [];
   let cursor = 0;
   const requests = [];
@@ -61,7 +61,7 @@ function harness(file, exportName, send, withSelectedPlayers = false) {
     "next/navigation": { useRouter: () => ({ push: (href) => navigation.push(href), refresh: () => navigation.push("refresh") }) },
     "@/components/usage/usage-actions": { recordUsageAction: () => {} },
     "@/components/theme/theme-icons": new Proxy({}, { get: () => () => null }),
-    "@/modules/team-tools": { ...share, TEAM_BALANCE_POSITIONS: positions, TEAM_BALANCE_PREFERENCES: ["MAIN", "SUB", "AUTO"], TEAM_BALANCE_TEAMS: ["BLUE", "RED"] },
+    "@/modules/team-tools": { ...share, evaluateTeamBalanceLayout: evaluateLayout, TEAM_BALANCE_POSITIONS: positions, TEAM_BALANCE_PREFERENCES: ["MAIN", "SUB", "AUTO"], TEAM_BALANCE_TEAMS: ["BLUE", "RED"] },
     "@/modules/seasons/application/client-mutation-key-store": keys,
     "../team-tools.module.css": css,
     "../../../team-tools.module.css": css,
@@ -232,4 +232,70 @@ test("failed manual evaluation preserves edited slots and retries the same revis
   assert.equal(requestKey(subject.requests[0]), requestKey(subject.requests[1]));
   assert.equal(subject.requests[1].headers["If-Match"], '"1"');
   assert.deepEqual(subject.navigation, []);
+});
+
+test("a single selected role stays locked until the participant explicitly allows autofill", async () => {
+  const subject = harness(builderFile, "TeamBalanceBuilder", () => ({ ok: false, json: async () => ({ detail: "합성 입력 검사" }) }), true);
+  await subject.render().props.onSubmit({ preventDefault() {} });
+  const original = JSON.parse(subject.requests[0].body).participants;
+  assert.deepEqual(original[0].eligiblePositions, [{ position: "TOP", preference: "MAIN" }]);
+  assert.ok(original.every((participant) => participant.eligiblePositions.length === 1));
+  find(subject.render(), (node) => node.type === "button" && node.props["aria-expanded"] === false).props.onClick();
+  find(subject.render(), (node) => node.type === "input" && node.props.type === "checkbox").props.onChange({ target: { checked: true } });
+  await subject.render().props.onSubmit({ preventDefault() {} });
+  const optedIn = JSON.parse(subject.requests[1].body).participants;
+  assert.deepEqual(optedIn[0].eligiblePositions, positions.map((position) => ({ position, preference: position === "TOP" ? "MAIN" : "AUTO" })));
+  assert.deepEqual(optedIn[1].eligiblePositions, original[1].eligiblePositions, "one player's consent does not unlock another player's roles");
+});
+
+test("keyboard and drag swaps preserve players when either role is not eligible", () => {
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+  const props = { draft: selectedDraft() };
+  find(slot(subject.render(props), 0), (node) => node.type === "button").props.onClick();
+  find(slot(subject.render(props), 1), (node) => node.type === "button").props.onClick();
+  assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-0/u);
+  assert.ok(find(subject.render(props), (node) => node.props.role === "status" && String(node.props.children).includes("허용하지 않은 포지션")));
+  slot(subject.render(props), 1).props.onDrop({ preventDefault() {}, dataTransfer: { getData: () => "0" } });
+  assert.match(slot(subject.render(props), 1).props["aria-label"], /synthetic-player-1/u);
+  assert.equal(subject.requests.length, 0);
+});
+
+test("a domain-rejected matchup leaves manual slots unchanged instead of announcing a successful swap", () => {
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, () => { throw new Error("FAIRNESS_CONSTRAINT"); });
+  const props = { draft: selectedDraft() };
+  swapCards(subject, props);
+  assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-0/u);
+  assert.ok(find(subject.render(props), (node) => node.props.role === "status" && String(node.props.children).includes("큰 티어 3단계 제한")));
+  assert.equal(find(subject.render(props), (node) => node.props.children === "수동 변경 · 평가 필요"), null);
+});
+
+test("invalid server reports block save, copying and match links; conditional reports remain explicit", async () => {
+  for (const [status, label] of [["INVALID", "필수 조건 위반"], ["CONDITIONAL", "조건부 편성"], ["REVIEW_REQUIRED", "정보 확인 필요"]]) {
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+    const draft = selectedDraft();
+    draft.candidates[0].score.fairness = { status, hardViolations: status === "INVALID" ? ["합성 필수 제한 위반"] : [], warnings: [], checks: [] };
+    const props = { draft };
+    const tree = subject.render(props);
+    assert.ok(find(tree, (node) => node.type === "strong" && node.props.children === label));
+    assert.equal(buttonNamed(tree, "선택 팀 저장").props.disabled, status === "INVALID");
+    if (status === "INVALID") {
+      await buttonNamed(tree, "선택 팀 저장").props.onClick();
+      await buttonNamed(tree, "팀 결과 복사").props.onClick();
+      assert.equal(subject.requests.length, 0);
+      assert.equal(subject.clipboard.length, 0);
+      assert.equal(find(tree, (node) => typeof node.props.href === "string" && node.props.href.includes("/matches/")), null);
+    }
+  }
+});
+
+test("shared results retain fairness warnings and distinguish unverified legacy predictions", () => {
+  const draft = selectedDraft();
+  const candidate = draft.candidates[0];
+  const legacy = share.formatTeamBalanceShareText(candidate, draft.participants);
+  assert.match(legacy, /규칙 재평가 필요/u);
+  assert.match(legacy, /검증된 실제 승률이 아닙니다/u);
+  candidate.score.fairness = { status: "CONDITIONAL", hardViolations: [], warnings: ["큰 대면 격차가 두 곳입니다."], checks: [] };
+  const current = share.formatTeamBalanceShareText(candidate, draft.participants);
+  assert.match(current, /내전 규칙: 조건부 편성/u);
+  assert.match(current, /큰 대면 격차가 두 곳입니다/u);
 });
