@@ -32,6 +32,7 @@ function metricsAgree(players: Assignment[]) {
     players.find((a) => a.team === team && a.position === position)!);
   const metric = measureInhouseMatchup(ordered("RED"), ordered("BLUE"));
   assert.equal(metric.hardViolationCount, report.hardViolations.length);
+  assert.deepEqual(metric.ruleViolations, report.ruleViolations, "fast/full numbered-rule priorities disagree");
   for (const field of ["qualityViolationCount", "directionalPenalty", "unknownTierCount", "autoCount",
     "autoImbalance", "maxLaneGap", "totalGap", "largeLaneCount", "bottomGap", "lineGapTotal"] as const) {
     assert.equal(metric[field], report[field], `metric/report disagree: ${field}`);
@@ -81,6 +82,7 @@ check("ADC and SUP limits are independent and cannot cancel each other", () => {
   const report = metricsAgree(players);
   assert.equal(report.hardViolations.length, 2);
   assert.equal(report.status, "INVALID");
+  assert.equal(report.ruleViolations?.[3], 2, "rule 4 counts both forbidden bottom matchups");
 });
 
 check("role discount and peak tier cannot bypass current-tier limits", () => {
@@ -133,6 +135,7 @@ check("compensation stacking retains both teams' usable carry lanes", () => {
   assert.equal(status(report, "SUPPORT_JUNGLE"), "PASS");
   assert.equal(status(report, "JUNGLE_CARRY_LANE"), "WARN");
   assert.equal(status(report, "BOTH_WIN_PATHS"), "WARN");
+  assert.equal(report.ruleViolations?.[2], 1, "two explanations of the same missing carry path count once");
   const repaired = metricsAgree(roster([57, 80, 56, 56, 52]));
   assert.equal(status(repaired, "JUNGLE_CARRY_LANE"), "PASS", "a tied lane is usable");
   assert.equal(status(repaired, "BOTH_WIN_PATHS"), "PASS");
@@ -249,5 +252,6 @@ check("search metrics match full evaluation and stay symmetric across 200 varied
       assert.equal(original[field], mirrored[field], `side-dependent result: ${field}, fixture ${n}`);
     }
     assert.equal(original.hardViolations.length, mirrored.hardViolations.length);
+    assert.deepEqual(original.ruleViolations, mirrored.ruleViolations, "numbered priority must be team-color neutral");
   }
 });

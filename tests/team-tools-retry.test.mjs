@@ -23,11 +23,12 @@ const season = load("modules/seasons/domain/season.ts", {});
 const keys = load("modules/seasons/application/client-mutation-key-store.ts", { "../domain/season": season });
 const css = { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) };
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"];
-const share = load("modules/team-tools/domain/team-balance-share.ts", { "./team-balance": { TEAM_BALANCE_POSITIONS: positions } });
+const formulaVersion = "V2_INHOUSE_PRIORITY_2026_10_15";
+const share = load("modules/team-tools/domain/team-balance-share.ts", { "./team-balance": { TEAM_BALANCE_POSITIONS: positions, TEAM_BALANCE_V1_FORMULA_VERSION: formulaVersion } });
 
 // A small event harness runs the real component handlers and request-key store.
 // Effects and presentation components are omitted; no network or database is used.
-function harness(file, exportName, send, withSelectedPlayers = false, evaluateLayout = () => ({})) {
+function harness(file, exportName, send, withSelectedPlayers = false, evaluateLayout = () => ({ score: { teamStrength: { redTotal: 250, blueTotal: 250, difference: 0 } } })) {
   const slots = [];
   let cursor = 0;
   const requests = [];
@@ -61,7 +62,7 @@ function harness(file, exportName, send, withSelectedPlayers = false, evaluateLa
     "next/navigation": { useRouter: () => ({ push: (href) => navigation.push(href), refresh: () => navigation.push("refresh") }) },
     "@/components/usage/usage-actions": { recordUsageAction: () => {} },
     "@/components/theme/theme-icons": new Proxy({}, { get: () => () => null }),
-    "@/modules/team-tools": { ...share, evaluateTeamBalanceLayout: evaluateLayout, TEAM_BALANCE_POSITIONS: positions, TEAM_BALANCE_PREFERENCES: ["MAIN", "SUB", "AUTO"], TEAM_BALANCE_TEAMS: ["BLUE", "RED"] },
+    "@/modules/team-tools": { ...share, evaluateTeamBalanceLayout: evaluateLayout, TEAM_BALANCE_V1_FORMULA_VERSION: formulaVersion, TEAM_BALANCE_POSITIONS: positions, TEAM_BALANCE_PREFERENCES: ["MAIN", "SUB", "AUTO"], TEAM_BALANCE_TEAMS: ["BLUE", "RED"] },
     "@/modules/seasons/application/client-mutation-key-store": keys,
     "../team-tools.module.css": css,
     "../../../team-tools.module.css": css,
@@ -273,6 +274,7 @@ test("invalid server reports block save, copying and match links; conditional re
   for (const [status, label] of [["INVALID", "필수 조건 위반"], ["CONDITIONAL", "조건부 편성"], ["REVIEW_REQUIRED", "정보 확인 필요"]]) {
     const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
     const draft = selectedDraft();
+    draft.candidates[0].score.v1 = { formulaVersion, missingSources: [] };
     draft.candidates[0].score.fairness = { status, hardViolations: status === "INVALID" ? ["합성 필수 제한 위반"] : [], warnings: [], checks: [] };
     const props = { draft };
     const tree = subject.render(props);
@@ -288,14 +290,61 @@ test("invalid server reports block save, copying and match links; conditional re
   }
 });
 
-test("shared results retain fairness warnings and distinguish unverified legacy predictions", () => {
+test("shared results retain fairness warnings and team scores without publishing an uncalibrated win probability", () => {
   const draft = selectedDraft();
   const candidate = draft.candidates[0];
   const legacy = share.formatTeamBalanceShareText(candidate, draft.participants);
-  assert.match(legacy, /규칙 재평가 필요/u);
-  assert.match(legacy, /검증된 실제 승률이 아닙니다/u);
+  assert.match(legacy, /최신 기준 재평가 필요/u);
+  assert.match(legacy, /점수 차이는 실제 승률을 뜻하지 않습니다/u);
+  assert.match(legacy, /팀 점수: RED 250\.0 \/ BLUE 250\.0 \/ 차이 0\.0/u);
+  assert.doesNotMatch(legacy, /\d+(?:\.\d+)?%/u);
   candidate.score.fairness = { status: "CONDITIONAL", hardViolations: [], warnings: ["큰 대면 격차가 두 곳입니다."], checks: [] };
+  candidate.score.v1 = { formulaVersion, missingSources: [], predictedRedWinRate: 90.9, predictedBlueWinRate: 9.1 };
   const current = share.formatTeamBalanceShareText(candidate, draft.participants);
   assert.match(current, /내전 규칙: 조건부 편성/u);
   assert.match(current, /큰 대면 격차가 두 곳입니다/u);
+  assert.doesNotMatch(current, /90\.9|9\.1|%/u);
+  assert.equal(candidate.score.v1.predictedRedWinRate, 90.9, "legacy score fields are preserved");
+});
+
+function visibleText(node) {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (!React.isValidElement(node)) return "";
+  return React.Children.toArray(node.props.children).map(visibleText).join("");
+}
+
+test("manual swap previews show before and after team totals once and label the unchanged applied report", () => {
+  let evaluations = 0;
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, () => {
+    evaluations += 1;
+    return { score: { teamStrength: { redTotal: 270, blueTotal: 230, difference: 40 } } };
+  });
+  const props = { draft: selectedDraft() };
+  props.draft.candidates[0].score.v1 = { formulaVersion, missingSources: [], predictedRedWinRate: 90.9, predictedBlueWinRate: 9.1 };
+  swapCards(subject, props);
+  const tree = subject.render(props);
+  const preview = find(tree, (node) => node.props["aria-label"] === "수동 변경 점수 미리보기");
+  assert.ok(preview);
+  assert.match(visibleText(preview), /250\.0 → 270\.0/u);
+  assert.match(visibleText(preview), /250\.0 → 230\.0/u);
+  assert.match(visibleText(preview), /0\.0 → 40\.0/u);
+  assert.match(visibleText(tree), /적용 전 배치 기준/u);
+  assert.match(visibleText(tree), /미리보기 · 서버 평가 후 적용/u);
+  assert.doesNotMatch(visibleText(tree), /90\.9|9\.1|예상 승률/u);
+  subject.render(props);
+  assert.equal(evaluations, 1, "the successful hard-rule check is reused for the preview");
+  assert.equal(subject.requests.length, 0, "the preview does not apply the layout to the server");
+});
+
+test("older fairness reports still require reevaluation under the current ordered rules", () => {
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+  const draft = selectedDraft();
+  const candidate = draft.candidates[0];
+  candidate.score.fairness = { status: "BALANCED", hardViolations: [], warnings: [], checks: [] };
+  candidate.score.v1 = { formulaVersion: "V2_INHOUSE_FAIRNESS_2026_10_15", missingSources: [] };
+  const text = visibleText(subject.render({ draft }));
+  assert.match(text, /최신 기준 재평가 필요/u);
+  assert.match(text, /최신 1→6 우선순위가 적용되지 않았습니다/u);
+  assert.doesNotMatch(text, /균형 추천/u);
+  assert.match(share.formatTeamBalanceShareText(candidate, draft.participants), /최신 1→6 우선순위가 적용되지 않은 결과/u);
 });

@@ -5,7 +5,7 @@ import {
   type InhouseMatchupMetrics,
 } from "./inhouse-fairness";
 
-type Priority = Pick<InhouseMatchupMetrics, "qualityViolationCount" | "unknownTierCount" | "autoCount" | "autoImbalance" | "maxLaneGap" | "totalGap" | "bottomGap" | "largeLaneCount">;
+type Priority = Pick<InhouseMatchupMetrics, "qualityViolationCount" | "unknownTierCount" | "autoCount" | "autoImbalance" | "maxLaneGap" | "totalGap" | "bottomGap" | "largeLaneCount" | "ruleViolations">;
 
 function excessRisk(value: Priority) {
   return Math.max(0, value.maxLaneGap - INHOUSE_FAIRNESS_LIMITS.maxLaneGap)
@@ -14,18 +14,25 @@ function excessRisk(value: Priority) {
     + Math.max(0, value.largeLaneCount - INHOUSE_FAIRNESS_LIMITS.maxLargeLaneCount) * INHOUSE_FAIRNESS_LIMITS.largeLaneGap;
 }
 
-/** Quality violations cannot be purchased with role preference or directional rewards. */
+/** Safety and off-role burden stay first; then rule 1 outranks 2, through rule 6. */
 export function compareInhousePriority(a: Priority, b: Priority) {
-  return a.qualityViolationCount - b.qualityViolationCount
+  const safety = a.qualityViolationCount - b.qualityViolationCount
     || excessRisk(a) - excessRisk(b)
     || a.unknownTierCount - b.unknownTierCount
     || a.autoCount - b.autoCount
     || a.autoImbalance - b.autoImbalance;
+  if (safety) return safety;
+  for (let index = 0; index < a.ruleViolations.length; index += 1) {
+    const difference = a.ruleViolations[index] - b.ruleViolations[index];
+    if (difference) return difference;
+  }
+  return 0;
 }
 
-export function inhouseJointCost(value: Pick<InhouseMatchupMetrics, "totalGap" | "lineGapTotal" | "maxLaneGap" | "bottomGap" | "directionalPenalty">, subCount: number) {
+/** Numeric gaps only break ties after every numbered rule has been compared. */
+export function inhouseJointCost(value: Pick<InhouseMatchupMetrics, "totalGap" | "lineGapTotal" | "maxLaneGap" | "bottomGap">, subCount: number) {
   return value.totalGap * 1.4 + value.lineGapTotal * 0.6 + value.maxLaneGap
-    + value.bottomGap * 0.8 + value.directionalPenalty * 4 + subCount;
+    + value.bottomGap * 0.8 + subCount;
 }
 
 type SearchTeam = { assignments: readonly InhouseFairnessAssignment[]; subCount: number; signature: string };

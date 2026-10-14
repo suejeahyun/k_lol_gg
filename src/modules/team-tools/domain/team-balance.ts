@@ -1,12 +1,12 @@
 import { evaluateInhouseFairness, measureInhouseMatchup, type InhouseFairnessAssignment, type InhouseFairnessReport, type InhouseMatchupMetrics } from "./inhouse-fairness";
 import { compareInhousePriority, inhouseJointCost, selectInhouseJointLayouts } from "./inhouse-joint-search";
 
-export type { InhouseFairnessReport, InhouseFairnessCheck } from "./inhouse-fairness";
+export type { InhouseFairnessReport, InhouseFairnessCheck, InhouseRuleViolations } from "./inhouse-fairness";
 
 export const TEAM_BALANCE_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 export const TEAM_BALANCE_TEAMS = ["BLUE", "RED"] as const;
 export const TEAM_BALANCE_PREFERENCES = ["MAIN", "SUB", "AUTO"] as const;
-export const TEAM_BALANCE_V1_FORMULA_VERSION = "V2_INHOUSE_FAIRNESS_2026_10_15";
+export const TEAM_BALANCE_V1_FORMULA_VERSION = "V2_INHOUSE_PRIORITY_2026_10_15";
 
 export type TeamBalancePosition = (typeof TEAM_BALANCE_POSITIONS)[number];
 export type TeamBalanceTeam = (typeof TEAM_BALANCE_TEAMS)[number];
@@ -134,7 +134,7 @@ export type TeamBalancePositionBreakdown = Readonly<{
 }>;
 
 export type TeamBalanceV1ScoreBreakdown = Readonly<{
-  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION | "V1_BLUEBLACK_AI_GLOBAL_2026_10_10" | "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
+  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION | "V2_INHOUSE_FAIRNESS_2026_10_15" | "V1_BLUEBLACK_AI_GLOBAL_2026_10_10" | "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
   qualityScore: number;
   recommendationScore: number;
   predictedRedWinRate: number;

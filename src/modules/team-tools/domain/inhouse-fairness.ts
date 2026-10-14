@@ -45,12 +45,17 @@ export type InhouseFairnessCheck = {
   detail: string;
 };
 
+/** User rules 1 through 6, compared in order; smaller rule numbers take precedence. */
+export type InhouseRuleViolations = readonly [number, number, number, number, number, number];
+
 export type InhouseFairnessReport = {
   status: "BALANCED" | "CONDITIONAL" | "REVIEW_REQUIRED" | "INVALID";
   hardViolations: string[];
   warnings: string[];
   qualityViolationCount: number;
   directionalPenalty: number;
+  /** Absent in old stored reports or when the roster cannot be evaluated. */
+  ruleViolations?: InhouseRuleViolations;
   autoCount: number;
   autoImbalance: number;
   maxLaneGap: number;
@@ -125,6 +130,7 @@ export type InhouseMatchupMetrics = {
   unknownTierCount: number;
   qualityViolationCount: number;
   directionalPenalty: number;
+  ruleViolations: InhouseRuleViolations;
   autoCount: number;
   autoImbalance: number;
   maxLaneGap: number;
@@ -159,6 +165,7 @@ export function measureInhouseMatchup(
   let largeLaneCount = 0;
   let unknownTierCount = 0;
   let hardViolationCount = 0;
+  let bottomTierViolationCount = 0;
   let autoRed = 0;
   let autoBlue = 0;
   let highest = -Infinity;
@@ -176,7 +183,10 @@ export function measureInhouseMatchup(
     const bt = parseInhouseMajorTier(b.currentTier);
     if (rt === null) unknownTierCount += 1;
     if (bt === null) unknownTierCount += 1;
-    if (i >= 3 && rt !== null && bt !== null && Math.abs(rt - bt) >= INHOUSE_FAIRNESS_LIMITS.bottomMajorTierGap) hardViolationCount += 1;
+    if (i >= 3 && rt !== null && bt !== null && Math.abs(rt - bt) >= INHOUSE_FAIRNESS_LIMITS.bottomMajorTierGap) {
+      hardViolationCount += 1;
+      bottomTierViolationCount += 1;
+    }
     if (r.roleType === "AUTO") autoRed += 1;
     if (b.roleType === "AUTO") autoBlue += 1;
     if (r.allowedPositions && !r.allowedPositions.includes(r.position)) hardViolationCount += 1;
@@ -233,6 +243,16 @@ export function measureInhouseMatchup(
   const jungleWithoutCarry = jgl !== 0 && top * jgl < 0 && mid * jgl < 0 && adc * jgl < 0;
   const redHasPath = top >= 0 || mid >= 0 || adc >= 0;
   const blueHasPath = top <= 0 || mid <= 0 || adc <= 0;
+  const ruleViolations: InhouseRuleViolations = [
+    Number(!topPlayersSplit) + Number(midJunglePossible && !assignedMidJungle),
+    Number(bottomStack),
+    // One lack of a usable carry path is one rule violation, even when both checks detect it.
+    Number(jungleWithoutCarry || !redHasPath || !blueHasPath),
+    bottomTierViolationCount,
+    Number(unsupportedSupport),
+    Number(topMidStack),
+  ];
+  // Retained as a legacy diagnostic score. Selection uses ruleViolations lexicographically.
   const directionalPenalty = Number(!topPlayersSplit) * INHOUSE_DIRECTIONAL_PENALTIES.topPlayersTogether +
     Number(midJunglePossible && !assignedMidJungle) * INHOUSE_DIRECTIONAL_PENALTIES.topPlayersOutsideMidJungle +
     Number(topMidStack) * INHOUSE_DIRECTIONAL_PENALTIES.topMidStack +
@@ -240,7 +260,7 @@ export function measureInhouseMatchup(
     Number(unsupportedSupport) * INHOUSE_DIRECTIONAL_PENALTIES.weakSupportWithoutJungle +
     Number(jungleWithoutCarry) * INHOUSE_DIRECTIONAL_PENALTIES.jungleWithoutCarryLane +
     Number(!redHasPath || !blueHasPath) * INHOUSE_DIRECTIONAL_PENALTIES.missingWinPath;
-  return { hardViolationCount, unknownTierCount, qualityViolationCount, directionalPenalty,
+  return { hardViolationCount, unknownTierCount, qualityViolationCount, directionalPenalty, ruleViolations,
     autoCount: autoRed + autoBlue, autoImbalance: Math.abs(autoRed - autoBlue),
     maxLaneGap, totalGap, largeLaneCount, bottomGap, lineGapTotal: round(lineGapTotal),
     topPlayersSplit, midJunglePossible, assignedMidJungle, topMidStack, bottomStack,
@@ -287,6 +307,7 @@ export function evaluateInhouseFairness(
     status: hardViolations.length ? "INVALID" : unknownTierCount ? "REVIEW_REQUIRED" :
       qualityViolationCount || directionalPenalty || autoCount ? "CONDITIONAL" : "BALANCED",
     hardViolations, warnings, qualityViolationCount, directionalPenalty,
+    ruleViolations: metrics?.ruleViolations,
     autoCount, autoImbalance, maxLaneGap, totalGap, unknownTierCount, checks,
     largeLaneCount: metrics?.largeLaneCount ?? 0,
     bottomGap: metrics?.bottomGap ?? 0,

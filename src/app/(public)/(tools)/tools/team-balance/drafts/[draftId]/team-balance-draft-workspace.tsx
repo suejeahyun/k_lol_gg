@@ -8,6 +8,7 @@ import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mut
 
 import {
   TEAM_BALANCE_TEAMS,
+  TEAM_BALANCE_V1_FORMULA_VERSION,
   evaluateTeamBalanceLayout,
   formatTeamBalanceShareText,
   type TeamBalanceDraftCandidate,
@@ -40,13 +41,18 @@ function differenceTone(value: number) {
 }
 
 function fairnessLabel(candidate: TeamBalanceDraftCandidate) {
+  if (candidate.score.fairness?.status === "INVALID") return "필수 조건 위반";
+  if (!hasCurrentRules(candidate)) return "최신 기준 재평가 필요";
   switch (candidate.score.fairness?.status) {
     case "BALANCED": return "균형 추천";
     case "CONDITIONAL": return "조건부 편성";
     case "REVIEW_REQUIRED": return "정보 확인 필요";
-    case "INVALID": return "필수 조건 위반";
     default: return "규칙 재평가 필요";
   }
+}
+
+function hasCurrentRules(candidate: TeamBalanceDraftCandidate) {
+  return Boolean(candidate.score.fairness) && candidate.score.v1?.formulaVersion === TEAM_BALANCE_V1_FORMULA_VERSION;
 }
 
 export function TeamBalanceDraftWorkspace({
@@ -62,9 +68,14 @@ export function TeamBalanceDraftWorkspace({
   const autoCandidates = draft.candidates.filter((candidate) => candidate.source === "AUTO");
   const selectedCandidate = draft.candidates.find((candidate) => candidate.signature === draft.selectedCandidateSignature) ?? null;
   const selectedInvalid = selectedCandidate?.score.fairness?.status === "INVALID";
-  const hasLegacyCandidates = autoCandidates.some((candidate) => !candidate.score.fairness || !candidate.criterion || candidate.criterion === "LEGACY");
+  const hasLegacyCandidates = autoCandidates.some((candidate) => !hasCurrentRules(candidate) || !candidate.criterion || candidate.criterion === "LEGACY");
   const initialLayout = (selectedCandidate ?? autoCandidates[0])?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? [];
   const [manualLayout, setManualLayout] = useState<TeamBalanceLayoutEntry[]>(initialLayout);
+  const [checkedManualLayout, setCheckedManualLayout] = useState<{
+    layout: TeamBalanceLayoutEntry[];
+    participants: TeamBalanceDraft["participants"];
+    evaluation: ReturnType<typeof evaluateTeamBalanceLayout>;
+  } | null>(null);
   const [draggingSlot, setDraggingSlot] = useState<number | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const [keyboardSlot, setKeyboardSlot] = useState<number | null>(null);
@@ -81,6 +92,17 @@ export function TeamBalanceDraftWorkspace({
   const resultLabel = mode === "OWNER" ? "이 팀으로 경기 결과 접수" : "선택 팀으로 경기 등록";
   const participantById = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant])), [draft.participants]);
   const participantName = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant.displayName])), [draft.participants]);
+  const manualPreview = useMemo(() => {
+    if (!manualChanged) return null;
+    // Reuse the swap's hard-rule check so one changed layout is scored once.
+    if (checkedManualLayout?.layout === manualLayout && checkedManualLayout.participants === draft.participants) return checkedManualLayout.evaluation;
+    try {
+      return evaluateTeamBalanceLayout(draft.participants, manualLayout);
+    } catch {
+      return null;
+    }
+  }, [manualChanged, manualLayout, draft.participants, checkedManualLayout]);
+  const beforeScore = (selectedCandidate ?? autoCandidates[0])?.score.teamStrength;
 
   async function mutate(action: "select" | "save" | "reevaluate" | "archive" | "restore", body: unknown) {
     if (busy || sending.current) return;
@@ -151,7 +173,8 @@ export function TeamBalanceDraftWorkspace({
           ? { ...entry, playerId: source.playerId }
           : entry);
     try {
-      evaluateTeamBalanceLayout(draft.participants, nextLayout);
+      const evaluation = evaluateTeamBalanceLayout(draft.participants, nextLayout);
+      setCheckedManualLayout({ layout: nextLayout, participants: draft.participants, evaluation });
     } catch {
       setMessage("현재 참가자 정보로는 이 교체가 필수 조건을 충족하지 못해요. 허용 포지션과 바텀의 큰 티어 3단계 제한을 확인해 주세요.");
       return false;
@@ -186,20 +209,22 @@ export function TeamBalanceDraftWorkspace({
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
         <div className={styles.heading}><div><h2 id="candidate-title">내전 규칙 팀 추천</h2></div></div>
+        {manualChanged ? <p className={styles.notice} role="status"><strong>적용 전 배치 기준</strong> · 아래 추천과 판정은 현재 적용된 팀의 결과입니다. 교체한 카드의 점수는 수동 배치 미리보기에서 확인하고 서버 평가 후 적용해 주세요.</p> : null}
         {selectedCandidate ? <>
-          <div className={styles.evaluationOverview} data-balance={selectedCandidate.score.fairness?.status === "BALANCED" ? differenceTone(selectedCandidate.score.teamStrength.difference) : "open"} role="status"><div><span>내전 규칙 판정</span><strong>{fairnessLabel(selectedCandidate)}</strong></div><div><span>참고 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div>
-          <p className={styles.fieldHint}>추천 기준: {candidateCriterion(selectedCandidate).label} · 승률은 점수 기반 참고 추정이며 검증된 실제 승률이 아닙니다.</p>
+          <div className={styles.evaluationOverview} data-balance={hasCurrentRules(selectedCandidate) && selectedCandidate.score.fairness?.status === "BALANCED" ? differenceTone(selectedCandidate.score.teamStrength.difference) : "open"} role="status"><div><span>내전 규칙 판정</span><strong>{fairnessLabel(selectedCandidate)}</strong></div><div><span>RED 팀 점수</span><strong>{selectedCandidate.score.teamStrength.redTotal.toFixed(1)}</strong></div><div><span>BLUE 팀 점수</span><strong>{selectedCandidate.score.teamStrength.blueTotal.toFixed(1)}</strong></div><div><span>팀 점수 차이</span><strong>{selectedCandidate.score.teamStrength.difference.toFixed(1)}</strong></div></div>
+          <p className={styles.fieldHint}>추천 기준: {candidateCriterion(selectedCandidate).label} · 참고 점수 {selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()} · 점수 차이는 실제 승률을 뜻하지 않습니다.</p>
+          {!hasCurrentRules(selectedCandidate) ? <p className={styles.notice} role="status">이전 계산 결과에는 최신 1→6 우선순위가 적용되지 않았습니다. 최신 통계로 재평가한 뒤 확인해 주세요.</p> : null}
           {selectedCandidate.score.fairness ? <div className={styles.notice}>
             {selectedCandidate.score.fairness.hardViolations.length ? <p role="alert">{selectedCandidate.score.fairness.hardViolations.join(" / ")}</p> : null}
             {selectedCandidate.score.fairness.warnings.length ? <ul>{selectedCandidate.score.fairness.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul> : null}
-            <details><summary>내전 규칙 세부 검사 {selectedCandidate.score.fairness.checks.length}개</summary><ul>{selectedCandidate.score.fairness.checks.map((check) => <li key={check.code}><strong>{check.status === "PASS" ? "통과" : check.status === "WARN" ? "주의" : "위반"} · {check.label}</strong> — {check.detail}</li>)}</ul></details>
-          </div> : <p className={styles.notice} role="status">이전 계산 결과에는 새 규칙 판정이 없습니다. 최신 통계로 재평가한 뒤 확인해 주세요.</p>}
+            <details><summary>{hasCurrentRules(selectedCandidate) ? "내전 규칙" : "이전 기준"} 세부 검사 {selectedCandidate.score.fairness.checks.length}개</summary><ul>{selectedCandidate.score.fairness.checks.map((check) => <li key={check.code}><strong>{check.status === "PASS" ? "통과" : check.status === "WARN" ? "주의" : "위반"} · {check.label}</strong> — {check.detail}</li>)}</ul></details>
+          </div> : null}
         </> : null}
         <div className={styles.candidateGrid}>
           {autoCandidates.slice(0, 1).map((candidate) => {
             const criterion = candidateCriterion(candidate);
             const selected = draft.selectedCandidateSignature === candidate.signature;
-            return <article key={candidate.id} data-selected={selected} data-balance={candidate.score.fairness?.status === "BALANCED" ? differenceTone(candidate.score.teamStrength.difference) : "open"}>
+            return <article key={candidate.id} data-selected={selected} data-balance={hasCurrentRules(candidate) && candidate.score.fairness?.status === "BALANCED" ? differenceTone(candidate.score.teamStrength.difference) : "open"}>
               <header><strong>{criterion.label}</strong><span>{selected ? "적용 중" : "추천 결과"}</span></header>
               <p><strong>{fairnessLabel(candidate)}</strong></p>
               {criterion.description ? <p>{criterion.description}</p> : null}
@@ -214,6 +239,13 @@ export function TeamBalanceDraftWorkspace({
 
       <section className={styles.manualSection} aria-labelledby="manual-title">
         <div className={styles.heading}><div><h2 id="manual-title">수동 팀 배치</h2></div>{manualChanged ? <strong role="status">수동 변경 · 평가 필요</strong> : null}</div>
+        <p className={styles.fieldHint}>같은 팀 안에서 역할만 바꿔도 주·부 포지션 감점과 역할별 숙련도 보정이 달라져 팀 점수가 변할 수 있습니다.</p>
+        {manualChanged && beforeScore && manualPreview ? <div className={styles.evaluationOverview} aria-label="수동 변경 점수 미리보기" role="status">
+          <div><span>적용 상태</span><strong>미리보기 · 서버 평가 후 적용</strong></div>
+          <div><span>RED 교환 전 → 후</span><strong>{beforeScore.redTotal.toFixed(1)} → {manualPreview.score.teamStrength.redTotal.toFixed(1)}</strong></div>
+          <div><span>BLUE 교환 전 → 후</span><strong>{beforeScore.blueTotal.toFixed(1)} → {manualPreview.score.teamStrength.blueTotal.toFixed(1)}</strong></div>
+          <div><span>팀 차이 교환 전 → 후</span><strong>{beforeScore.difference.toFixed(1)} → {manualPreview.score.teamStrength.difference.toFixed(1)}</strong></div>
+        </div> : manualChanged ? <p className={styles.notice} role="status">변경 배치의 점수 미리보기를 확인할 수 없습니다. 서버 평가로 확인해 주세요.</p> : null}
         <div className={styles.manualTeams}>
           {TEAM_BALANCE_TEAMS.map((team) => <section key={team} data-team={team} aria-labelledby={`manual-${team.toLowerCase()}-title`}>
             <header><h3 id={`manual-${team.toLowerCase()}-title`}>{teamLabel[team]} 팀</h3><span>5명</span></header>

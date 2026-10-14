@@ -268,7 +268,7 @@ test("[V1 blueblack golden] score uses tier, inhouse, position experience and th
 
   assert.equal(player.rating.source, "V1");
   assert.equal(player.rating.effectiveScore, 66.7);
-  assert.equal(evaluated.score.v1?.formulaVersion, "V2_INHOUSE_FAIRNESS_2026_10_15");
+  assert.equal(evaluated.score.v1?.formulaVersion, "V2_INHOUSE_PRIORITY_2026_10_15");
   assert.deepEqual(evaluated.score.v1?.missingSources, ["RECENT_SOLO", "BALANCE_OVERRIDE"]);
 });
 
@@ -280,8 +280,10 @@ test("share text keeps the V1 line order and excludes draft ids, account ids and
   );
 
   assert.match(text, /^BLUE .+\nRED .+\n내전 규칙:/u);
-  assert.match(text, /밸런스 판단: 내전 규칙 전체탐색 추천 \/ RED \d+\.\d% vs BLUE \d+\.\d%/u);
-  assert.match(text, /검증된 실제 승률이 아닙니다/u);
+  assert.match(text, /밸런스 판단: 내전 규칙 전체탐색 추천/u);
+  assert.match(text, /팀 점수: RED \d+\.\d \/ BLUE \d+\.\d \/ 차이 \d+\.\d/u);
+  assert.match(text, /점수 차이는 실제 승률을 뜻하지 않습니다/u);
+  assert.doesNotMatch(text, /\d+(?:\.\d+)?%/u);
   assert.doesNotMatch(text, /https?:|draft|account|player-/u);
   assert.match(text, /닉네임 0/u);
 });

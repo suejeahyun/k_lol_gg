@@ -14,7 +14,7 @@ import {
   type InhouseFairnessAssignment,
   type InhouseFairnessReport,
 } from "../src/modules/team-tools/domain/inhouse-fairness";
-import { selectInhouseJointLayouts } from "../src/modules/team-tools/domain/inhouse-joint-search";
+import { compareInhousePriority, selectInhouseJointLayouts } from "../src/modules/team-tools/domain/inhouse-joint-search";
 
 function neutralPlayers(): TeamBalancePlayer[] {
   return Array.from({ length: 10 }, (_, index) => ({
@@ -110,9 +110,17 @@ function searchTeam(team: "RED" | "BLUE", variant: number, scores: number[]): Se
 function oracleKey(report: InhouseFairnessReport, red: SearchTeam, blue: SearchTeam): (number | string)[] {
   const excess = Math.max(0, report.maxLaneGap - 25) + Math.max(0, report.totalGap - 15) +
     Math.max(0, report.bottomGap - 10) + Math.max(0, report.largeLaneCount - 1) * 15;
+  const warns = (code: string) => report.checks.some((check) => check.code === code && check.status === "WARN");
+  const fails = (code: string) => report.checks.some((check) => check.code === code && check.status === "FAIL");
+  // Derive the numbered priorities from the detailed checks independently of
+  // both the fast metric's tuple and the production comparator.
   return [report.qualityViolationCount, excess, report.unknownTierCount, report.autoCount, report.autoImbalance,
+    Number(warns("TOP_PLAYERS_SPLIT")) + Number(warns("TOP_PLAYERS_MID_JUNGLE")),
+    Number(warns("BOTTOM_SPLIT")), Number(warns("JUNGLE_CARRY_LANE") || warns("BOTH_WIN_PATHS")),
+    Number(fails("BOTTOM_TIER_ADC")) + Number(fails("BOTTOM_TIER_SUP")),
+    Number(warns("SUPPORT_JUNGLE")), Number(warns("TOP_MID_SPLIT")),
     report.totalGap * 1.4 + report.lineGapTotal * 0.6 + report.maxLaneGap + report.bottomGap * 0.8 +
-    report.directionalPenalty * 4 + red.subCount + blue.subCount, blue.signature, red.signature];
+    red.subCount + blue.subCount, blue.signature, red.signature];
 }
 function compareKeys(a: (number | string)[], b: (number | string)[]) {
   for (let index = 0; index < a.length; index += 1) {
@@ -140,4 +148,78 @@ test("joint shortlist is the exact oracle optimum including canonical tie-breaki
     assert.deepEqual(selected.pairs.map((pair) => [pair.blue.signature, pair.red.signature]),
       oracle.slice(0, 3).map((pair) => [pair.blue.signature, pair.red.signature]));
   }
+});
+
+test("rule 1 cannot be traded for several lower rules or a better numeric gap", () => {
+  const blue = searchTeam("BLUE", 0, [50, 50, 50, 50, 50]);
+  blue.assignments[2]!.finalBaseScore = 99;
+  const preferred = searchTeam("RED", 0, [54, 42, 54, 54, 54]);
+  preferred.assignments[1]!.finalBaseScore = 100;
+  const reordered = [preferred.assignments[1]!, preferred.assignments[0]!, ...preferred.assignments.slice(2)]
+    .map((entry, index) => ({ ...entry, position: TEAM_BALANCE_POSITIONS[index]!, score: 50 }));
+  const lowerRules = { assignments: reordered, subCount: 0, signature: reordered.map((entry) => entry.playerId).join(",") };
+  const good = evaluateInhouseFairness([...preferred.assignments, ...blue.assignments]);
+  const alternative = evaluateInhouseFairness([...lowerRules.assignments, ...blue.assignments]);
+  assert.equal(good.qualityViolationCount, 0);
+  assert.equal(alternative.qualityViolationCount, 0);
+  assert.deepEqual(good.ruleViolations, [0, 1, 1, 0, 0, 1]);
+  assert.deepEqual(alternative.ruleViolations, [1, 0, 0, 0, 0, 0]);
+  assert.ok(good.directionalPenalty > alternative.directionalPenalty, "legacy weighted scoring prefers the wrong layout");
+  assert.ok(good.totalGap > alternative.totalGap);
+  assert.equal(selectInhouseJointLayouts([lowerRules, preferred], [blue]).pairs[0]!.red.signature, preferred.signature);
+});
+
+test("rule 2 wins over rules 3, 5 and 6 together after equal safety and role burden", () => {
+  const blue = searchTeam("BLUE", 0, [50, 50, 50, 50, 50]);
+  const preferred = searchTeam("RED", 0, [54, 42, 54, 54, 46]);
+  const lowerRules = searchTeam("RED", 2, [46, 50, 50, 54, 54]);
+  const good = evaluateInhouseFairness([...preferred.assignments, ...blue.assignments]);
+  const alternative = evaluateInhouseFairness([...lowerRules.assignments, ...blue.assignments]);
+  assert.deepEqual(good.ruleViolations, [0, 0, 1, 0, 1, 1]);
+  assert.deepEqual(alternative.ruleViolations, [0, 1, 0, 0, 0, 0]);
+  assert.equal(good.qualityViolationCount, 0);
+  assert.equal(alternative.qualityViolationCount, 0);
+  assert.ok(good.directionalPenalty > alternative.directionalPenalty);
+  assert.equal(selectInhouseJointLayouts([lowerRules, preferred], [blue]).pairs[0]!.red.signature, preferred.signature);
+});
+
+test("rule 5 takes precedence over rule 6 even though the legacy weight of rule 6 was larger", () => {
+  const blue = searchTeam("BLUE", 0, [50, 50, 50, 50, 50]);
+  const preferred = searchTeam("RED", 0, [54, 46, 54, 50, 54]);
+  const lowerRule = searchTeam("RED", 2, [54, 54, 46, 50, 54]);
+  const good = evaluateInhouseFairness([...preferred.assignments, ...blue.assignments]);
+  const alternative = evaluateInhouseFairness([...lowerRule.assignments, ...blue.assignments]);
+  assert.deepEqual(good.ruleViolations, [0, 0, 0, 0, 0, 1]);
+  assert.deepEqual(alternative.ruleViolations, [0, 0, 0, 0, 1, 0]);
+  assert.equal(good.qualityViolationCount, 0);
+  assert.equal(alternative.qualityViolationCount, 0);
+  assert.ok(good.directionalPenalty > alternative.directionalPenalty);
+  assert.equal(selectInhouseJointLayouts([lowerRule, preferred], [blue]).pairs[0]!.red.signature, preferred.signature);
+});
+
+test("rule 4 remains a hard exclusion and cannot be relaxed to satisfy higher numbered priorities", () => {
+  const blue = searchTeam("BLUE", 0, [50, 50, 50, 50, 50]);
+  const forbidden = searchTeam("RED", 0, [50, 50, 50, 50, 50]);
+  forbidden.assignments[3]!.currentTier = "다이아4";
+  const permitted = searchTeam("RED", 2, [54, 46, 54, 50, 54]);
+  const selected = selectInhouseJointLayouts([forbidden, permitted], [blue]);
+  assert.equal(selected.feasibleLayoutCount, 1);
+  assert.equal(selected.pairs[0]!.red.signature, permitted.signature);
+});
+
+test("each earlier soft rule outranks all later soft rules while safety and AUTO burden remain first", () => {
+  const common = { qualityViolationCount: 0, unknownTierCount: 0, autoCount: 0, autoImbalance: 0,
+    maxLaneGap: 0, totalGap: 0, bottomGap: 0, largeLaneCount: 0 };
+  const priorities = [0, 1, 2, 4, 5];
+  for (const index of priorities.slice(0, -1)) {
+    const earlier: [number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0];
+    const later: [number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0];
+    later[index] = 1;
+    for (const lower of priorities.filter((value) => value > index)) earlier[lower] = 1;
+    assert.ok(compareInhousePriority({ ...common, ruleViolations: earlier }, { ...common, ruleViolations: later }) < 0);
+  }
+  const allRulesMet = { ...common, ruleViolations: [0, 0, 0, 0, 0, 0] as const };
+  const firstRuleBroken = { ...common, ruleViolations: [1, 0, 0, 0, 0, 0] as const };
+  assert.ok(compareInhousePriority({ ...allRulesMet, qualityViolationCount: 1 }, firstRuleBroken) > 0);
+  assert.ok(compareInhousePriority({ ...allRulesMet, autoCount: 1, autoImbalance: 1 }, firstRuleBroken) > 0);
 });

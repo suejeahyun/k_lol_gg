@@ -1,0 +1,33 @@
+{
+  "releaseCheck": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "contracts": { "pass": 711, "fail": 0 },
+    "unit": { "pass": 1145, "fail": 0, "skip": 1 },
+    "lint": { "errors": 0, "existingWarnings": 58 },
+    "typecheck": "PASS",
+    "erd": "PASS",
+    "homeGuideArt": "PASS: 68 images",
+    "build": "PASS"
+  },
+  "focused": {
+    "fairnessJointAndDomain": 47,
+    "swapRegression": 3,
+    "uiInteractionAndRetry": 22,
+    "database": {
+      "command": "V2_DB_CONTRACT_SCOPE=team-tools npm run test:db",
+      "postgresMajor": 18,
+      "pass": 6,
+      "fail": 0,
+      "isolated": true
+    }
+  },
+  "exhaustiveSearch": { "layouts": 1814400, "fullSuiteElapsedMs": 1972.1679, "runtime": "local" },
+  "authenticationHttp": "PASS: guards, limits, administrator password, cookie, roles, headers, logout, production fixture lockout",
+  "currentTreeSecretScan": "PASS",
+  "independentCodeReview": "No release-blocking regressions identified",
+  "migration": { "changed": false, "head": "0049_stable-recruit-codes" },
+  "productionAuthenticatedCalculation": "NOT_PERFORMED",
+  "actualReportedDraftInspected": false,
+  "winProbabilityCalibration": "NOT_PERFORMED; uncalibrated percentage removed from UI and copied results"
+}
