@@ -1,5 +1,8 @@
 # K-LOL.GG V2
 
+**2026-10-15 내전 공정성 1.1.0 운영 반영**: 조합 규칙 1→6 우선순위, 교환 전후 전력 미리보기, 미검증 예상 승률 표시 제거. 개인 점수·저장 이력·바텀 3등급 필수 제한 유지. [규칙 설명](docs/inhouse-balance-rules.md), [검증·배포](docs/qa-evidence/inhouse-fairness-v1.1.0-2026-10-15/production.md).
+
+
 **2026-10-15 내전 공정성 규칙 1.0.0 운영 반영**: 허용 포지션 고정, 바텀 큰 등급 3단계 제한, 팀·포지션 동시 탐색과 수동 선택·저장 검사를 적용했습니다. source `3e8a84f5`, main READY·동일 SHA·운영 주소·health와 HTTP 8조건을 확인했습니다. [내전 규칙](docs/inhouse-balance-rules.md), [변경 안내](docs/patch-notes/inhouse-fairness-v1.0.0.md), [배포·검증·복구](docs/qa-evidence/inhouse-fairness-2026-10-15/production.md).
 
 **2026-10-14 사이트·카카오 봇 안정성 1.0.0 운영 반영**: 재점검 9건을 수정했습니다. 고정 코드 복사, 신청 대상·재전송 보호, 예비 등록, 초안 복구와 설정 저장을 보완했습니다. source `cf32d4f9`, main READY·운영 health·HTTP/서명 조회 확인 완료. **휴대폰 R29 파일 교체는 대기 중입니다.** [변경 안내](docs/patch-notes/site-kakao-reliability-v1.0.0.md), [배포·검증·복구](docs/qa-evidence/site-kakao-reliability-2026-10-14/production.md). 아래는 이전 릴리스의 시점별 기록입니다.

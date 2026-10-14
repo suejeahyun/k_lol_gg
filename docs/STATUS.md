@@ -1,5 +1,12 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-15 내전 공정성 1.1.0 운영 반영
+
+`inhouse-fairness@1.1.0`, source `69127364dd8bf567fb21d9abcdafcb082245f50d`, tag `inhouse-fairness-v1.1.0`. 조합 우선순위를 1→6으로 고정하고 미검증 승률 표시를 팀 점수로 바꿨다. 수동 교환 전후 미리보기 및 과거 계산식 재평가 안내를 추가했다. 개인 점수·저장 이력·필수 제한은 유지한다.
+
+전체 check 계약 711·단위 1,145 pass/1 skip·lint 오류 0/기존 경고 58·typecheck·ERD·build, 격리 DB 6, 인증 HTTP PASS. main `dpl_kUH56WuhFGXS9Xt6C9EmoQbeWxdU` READY·동일 SHA·canonical alias, 운영 HTTP 8조건과 정적 코드, GitHub CI success를 확인했다. migration 0049 유지. 실제 사용자 초안과 경기 승률 보정은 검사하지 않았다. [검증·배포·복구](qa-evidence/inhouse-fairness-v1.1.0-2026-10-15/production.md).
+
+
 ## 2026-10-15 내전 공정성 규칙 1.0.0 운영 반영
 
 `inhouse-fairness@1.0.0`, source `3e8a84f5aff5497c6d01b92fc0039149c1419df9`, tag `inhouse-fairness-v1.0.0`. 허용 포지션과 원포 고정, 바텀 큰 등급 3단계 제한, 양 팀·역할 동시 탐색, 공정성 판정 및 수동 선택·저장 경계 재검사를 적용했다. 기존 개인 점수·관리자 보정과 과거 초안 JSON을 보존한다.

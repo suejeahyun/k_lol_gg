@@ -1,0 +1,80 @@
+{
+  "checkedAt": "2026-10-14T23:51:14.891Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "scope": "Public team-balance page JavaScript only; verifies deployed ordered policy markers, not authenticated draft interactions.",
+  "assets": [
+    {
+      "path": "/_next/static/immutable/chunks/0zrdz3f6i828l.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/3hzjxwzosh99u.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/1p_8a1ezvxkxe.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/turbopack-2iqvvrachm5-u.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/3t0_lyr4ub980.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/3c_zm2yq9ujvg.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/3p_u8bn_emzd7.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/2yvfvi5p9dvme.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/07l08vc55qwnn.js",
+      "status": 200,
+      "matches": [
+        "V2_INHOUSE_PRIORITY_2026_10_15",
+        "ruleViolations"
+      ]
+    },
+    {
+      "path": "/_next/static/immutable/chunks/01hgg74s0z3et.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/18jlhvcm0d2vh.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0c0hxoamwjsbw.js",
+      "status": 200,
+      "matches": []
+    },
+    {
+      "path": "/_next/static/immutable/chunks/0y2gw0x2t4ujt.js",
+      "status": 200,
+      "matches": []
+    }
+  ],
+  "markers": [
+    "V2_INHOUSE_PRIORITY_2026_10_15",
+    "ruleViolations"
+  ],
+  "pass": true
+}
