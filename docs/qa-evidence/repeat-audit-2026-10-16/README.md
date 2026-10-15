@@ -16,3 +16,11 @@
 6. 팀 초안 수정 충돌에서는 최신 상태를 확인하고 수동 배치를 유지할지 버릴지 선택한 후 다시 작업하도록 한다.
 
 검증 중 발견한 실패와 수정 후 PASS를 구분한다. 최종 검증 수치와 배포 근거는 완료 시 아래 기록에 연결한다. 스키마 변경은 없고 migration head는 `0049_stable-recruit-codes`다. 휴대폰 파일 변경 없이 서버·사이트에서 수정하며 R29 실기기 설치 상태를 새로 확인했다는 의미는 아니다.
+
+## 최종 로컬 검증
+
+소스 동결 뒤 전체 check: 계약 717/717, 단위 1,147 pass/1 skip, lint 오류 0/기존 경고 58, typecheck·ERD·가이드 이미지·production build PASS. 격리 recruiting DB 112/112, team-tools DB 8/8, 사이트 회귀 43/43, R29 VM 48/48 통과. 실제 브라우저의 경기 입력 보존·재저장·320px 확인과 전체 Git 이력 비밀정보 검사도 통과했다. [검증 수치](validation.json), [카카오](kakao.md), [팀 데이터](team-data.md), [사이트](site.md), [브라우저](browser.json).
+
+## 운영 반영
+
+source `daab5eb44997674968dcea118f6ff81c9d217700`, tag `site-kakao-reliability-v1.0.1`, main `dpl_HBvtYAMgEAt8VGmRD3DtXmJ9bKjr` READY·동일source·canonical alias 및 운영 HTTP12·카카오 서명조회2·DB catalog 읽기전용 검사 모두 PASS. [배포·복구 기록](production.md).

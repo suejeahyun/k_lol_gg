@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-16 사이트·카카오 안정성 1.0.1 운영 반영**: 경기 입력 보존, 내전 예비삭제, 자모 닉네임과 팀 조회·충돌 복구 6건을 수정했습니다. source `daab5eb4`, 운영 READY·health·HTTP12·서명조회2 확인. [배포·검증·복구](docs/qa-evidence/repeat-audit-2026-10-16/production.md). 휴대폰 R29 파일은 변경하지 않았습니다.
+
 **2026-10-15 내전 공정성 1.1.0 운영 반영**: 조합 규칙 1→6 우선순위, 교환 전후 전력 미리보기, 미검증 예상 승률 표시 제거. 개인 점수·저장 이력·바텀 3등급 필수 제한 유지. [규칙 설명](docs/inhouse-balance-rules.md), [검증·배포](docs/qa-evidence/inhouse-fairness-v1.1.0-2026-10-15/production.md).
 
 

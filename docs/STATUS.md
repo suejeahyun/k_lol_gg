@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-16 사이트·카카오 안정성 1.0.1 운영 반영
+
+source `daab5eb44997674968dcea118f6ff81c9d217700`, tag `site-kakao-reliability-v1.0.1`. 경기 저장 중 입력 보존, 내전 예비삭제 대상, 자모 닉네임, 팀 조회 일관성·06시 경계·동시 편집 복구 6건 수정. 기존 내전 공정성1.1.0 유지. 전체check 계약717/단위1,147 pass+1skip, 격리DB112+8, 브라우저 및 보안 검사 통과. main `dpl_HBvtYAMgEAt8VGmRD3DtXmJ9bKjr` READY·동일source·canonical alias, HTTP12·서명조회2·DB읽기전용 확인 PASS. migration0049/휴대폰R29 파일 유지. [검증·배포·복구](qa-evidence/repeat-audit-2026-10-16/production.md).
+
+이 대화의 반복 점검은 1시간 간격으로 활성화했다. 새 발견·수정·배포·실패·사용자 조치가 있을 때만 알린다.
+
 ## 2026-10-15 내전 공정성 1.1.0 운영 반영
 
 `inhouse-fairness@1.1.0`, source `69127364dd8bf567fb21d9abcdafcb082245f50d`, tag `inhouse-fairness-v1.1.0`. 조합 우선순위를 1→6으로 고정하고 미검증 승률 표시를 팀 점수로 바꿨다. 수동 교환 전후 미리보기 및 과거 계산식 재평가 안내를 추가했다. 개인 점수·저장 이력·필수 제한은 유지한다.

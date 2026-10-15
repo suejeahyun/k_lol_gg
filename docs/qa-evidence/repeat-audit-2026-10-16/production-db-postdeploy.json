@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-10-15T18:48:48.271Z",
+  "status": "PASS",
+  "mode": "production-read-only",
+  "schemaCatalogChecked": true,
+  "writesAttempted": false,
+  "privilegedHttpInvoked": false,
+  "applicationRowsRead": 0,
+  "connectionClosed": true,
+  "targetFingerprint": "c5918218dd171001",
+  "bindingEvidence": {
+    "backup": "../stable-recruit-codes-2026-10-14/production-backup-restore.json",
+    "migration": "../stable-recruit-codes-2026-10-14/production-migration.json",
+    "note": "Historical 0049 application evidence; this release has no DDL or migration."
+  },
+  "transaction": {
+    "read_only": "on",
+    "isolation": "repeatable read",
+    "snapshot_at": "2026-10-15T18:48:49.387Z"
+  },
+  "migration": {
+    "count": 50,
+    "tag": "0049_stable-recruit-codes",
+    "hash": "2f2428fb5f9d308a06936f3e608773fce43cf0a469682fc3169712de4cc66c35",
+    "created_at": "1791907441396",
+    "exactMatch": true
+  },
+  "tables": {
+    "expected": 2,
+    "present": 2,
+    "ordinaryTables": true
+  },
+  "constraints": {
+    "expected": 10,
+    "present": 10,
+    "expectedNamesAndTypesMatch": true,
+    "invalid": 0
+  }
+}

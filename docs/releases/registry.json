@@ -2220,6 +2220,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "site-kakao-reliability",
+      "version": "1.0.1",
+      "gitTag": "site-kakao-reliability-v1.0.1",
+      "commit": "daab5eb44997674968dcea118f6ff81c9d217700",
+      "releasedAt": "2026-10-15T18:48:18.240Z",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/repeat-audit-2026-10-16/production.md",
+      "patchNotes": "docs/patch-notes/site-kakao-reliability-v1.0.1.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_HBvtYAMgEAt8VGmRD3DtXmJ9bKjr",
+        "url": "https://k-lol-44oy5js0t-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-15T18:49:01.194Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

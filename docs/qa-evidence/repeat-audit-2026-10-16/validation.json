@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-10-15T18:48:39.351Z",
+  "status": "PASS",
+  "integrated": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "contracts": {
+      "pass": 717,
+      "fail": 0
+    },
+    "unit": {
+      "pass": 1147,
+      "fail": 0,
+      "skip": 1
+    },
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 58
+    },
+    "typecheck": "PASS",
+    "erd": {
+      "tables": 114,
+      "foreignKeys": 175
+    },
+    "guideImages": 68,
+    "productionBuild": "PASS"
+  },
+  "database": {
+    "recruiting": {
+      "pass": 112,
+      "fail": 0,
+      "skip": 0
+    },
+    "teamTools": {
+      "pass": 8,
+      "fail": 0,
+      "skip": 0
+    },
+    "disposableClustersStoppedAndRemoved": true
+  },
+  "focused": {
+    "site": 43,
+    "kakao": 104,
+    "kakaoDbOnlySkip": 1,
+    "phoneVm": 48
+  },
+  "browser": "browser.json",
+  "secrets": {
+    "completeGitHistory": "PASS"
+  },
+  "productionDependencies": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "logs": [
+    {
+      "path": ".tmp/repeat-check-release.log",
+      "sha256": "11e62b4ec4ad7fd335b6d59d75ebc6274ab09ee630c14e431996fddb7b58d185"
+    },
+    {
+      "path": ".tmp/repeat-secrets-history.log",
+      "sha256": "0f80a5ed105ab5ff76273703a6b3f8f3e7ef1106a6b6977c8704b33014cefe9a"
+    },
+    {
+      "path": ".tmp/repeat-kakao-recruiting-db.log",
+      "sha256": "b9d7e28ba710addb5aea540c72ff69adfd72200dd1c36d4d5c2dfe3ee1238b14"
+    },
+    {
+      "path": ".tmp/repeat-security-team-db-final.log",
+      "sha256": "91e568f0a008ccaca77a4f89247522f0d51052bb8b1a8295469cf80e696bc6d7"
+    },
+    {
+      "path": ".tmp/repeat-site-focused.log",
+      "sha256": "3b4a60cd2ac3161c4921ac26f70e26180ff52806422518baa01b72d5d970bbe1"
+    }
+  ],
+  "notes": "The earlier integrated pass preceded the final same-revision conflict recovery regression. These counts are from the complete rerun after source freeze. Initial reproduction failures and test fixture type repairs are described in the focused evidence. No phone artifact or DB schema changes."
+}
