@@ -337,6 +337,8 @@ export function SubmissionForm({
           <h2 id="new-submission-title">새 결과 접수</h2>
           {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>팀 초안 연결</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"}</small></div> : null}
           <form className={styles.form} onSubmit={createSubmission}>
+            <fieldset className={`${styles.form} ${styles.formFields}`} disabled={busy}>
+            <legend className="sr-only">새 경기 접수 정보</legend>
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} placeholder="예: 화요일 저녁 내전" defaultValue={teamBalanceDraft?.title ?? ""} /></label>
             <label>주최자<input name="organizer" required maxLength={100} placeholder="경기를 진행한 사람의 닉네임" /></label>
             <label>경기한 날짜<input name="playedOn" type="date" required /></label>
@@ -351,6 +353,7 @@ export function SubmissionForm({
               </div>
             </details>
             <button type="submit" disabled={busy}>{busy ? "저장 중…" : "다음: 결과 이미지 올리기"}</button>
+            </fieldset>
           </form>
         </section>
       ) : (
@@ -367,6 +370,8 @@ export function SubmissionForm({
           </div>
           {submission.status === "AWAITING_UPLOAD" ? <div className={styles.actions}><button type="button" disabled={busy || conflict} onClick={() => setEditing((current) => !current)}>{editing ? "수정 닫기" : "접수 정보 수정"}</button><button type="button" disabled={busy || conflict} data-danger="true" onClick={cancelSubmission}>접수 취소</button></div> : submission.status === "PENDING_REVIEW" ? <div className={styles.actions}><button type="button" disabled={busy || conflict} data-danger="true" onClick={cancelSubmission}>검토 요청 취소</button></div> : null}
           {editing ? <form key={formVersion} className={styles.form} onSubmit={updateSubmission}>
+            <fieldset className={`${styles.form} ${styles.formFields}`} disabled={busy}>
+            <legend className="sr-only">경기 접수 정보 수정</legend>
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} defaultValue={submission.title} /></label>
             <label>주최자<input name="organizer" required maxLength={100} defaultValue={submission.organizer} /></label>
             <label>회차<input name="seriesNumber" type="number" min={1} defaultValue={submission.seriesNumber} required /></label>
@@ -376,6 +381,7 @@ export function SubmissionForm({
             <label>시즌(선택)<select name="seasonId" defaultValue={submission.seasonId ?? ""}><option value="">운영자가 확인 후 선택</option>{seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
             <label className={styles.wide}>비공개 전달 메모<textarea name="note" maxLength={1000} defaultValue={submission.note ?? ""} /></label>
             <button type="submit" disabled={busy || conflict}>수정 저장</button>
+            </fieldset>
           </form> : null}
           <div className={styles.uploadGrid}>
             {Array.from({ length: submission.expectedGameCount }, (_, index) => index + 1).map((gameNumber) => {

@@ -1040,6 +1040,22 @@ test("scrim status requests only the scrim projection", async () => {
   assert.match(result.legacyReply, /K-LOL\.GG 스크림 현황/u);
 });
 
+test("inhouse reserve removal carries its scope from the chat command to persistence", async () => {
+  for (const action of ["예비삭제", "대기 삭제", "삭제"]) {
+    const text = `내전상세 7 ${action} 합성참가자`;
+    const state = harness();
+    const request = { ...context, envelope: { ...context.envelope, text, profileId: "FEATURES" as const },
+      authorization: { ...context.authorization, capabilityProfile: "FEATURES" as const } };
+    const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "FEATURES", text }), request.envelope, request.now);
+    assert.ok(command?.domain === "SEASON" && command.action === "REMOVE_MEMBER");
+    await state.dispatcher.dispatch(request, command);
+    assert.deepEqual(state.seasonCalls[0]?.command, {
+      action: "REMOVE_PARTICIPANT", seasonId: null, applyDate: command.applyDate,
+      recruitNo: 7, name: "합성참가자", reserve: action !== "삭제", participants: [],
+    });
+  }
+});
+
 test("season authoritative zero-person snapshot writes once then reads the overview", async () => {
   const state = harness();
   const featuresContext: KakaoV4DispatchContext = {

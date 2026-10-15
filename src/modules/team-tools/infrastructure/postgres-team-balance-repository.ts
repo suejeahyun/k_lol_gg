@@ -373,18 +373,20 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
   }
 
   async getDraft(viewer: TeamBalanceViewer, draftId: string): Promise<TeamBalanceDraft | null> {
-    const row = (
-      await this.database.select().from(teamBalanceDrafts).where(eq(teamBalanceDrafts.id, draftId)).limit(1)
-    )[0];
-    if (!row) return null;
-    assertViewerAccess(row, viewer);
-    const [participantRows, candidateRows] = await Promise.all([
-      this.database
+    // Reevaluation replaces participant ratings and advances the draft round in
+    // one transaction. Keep all DTO reads on the same snapshot across its commit.
+    return this.database.transaction(async (transaction) => {
+      const row = (
+        await transaction.select().from(teamBalanceDrafts).where(eq(teamBalanceDrafts.id, draftId)).limit(1)
+      )[0];
+      if (!row) return null;
+      assertViewerAccess(row, viewer);
+      const participantRows = await transaction
         .select()
         .from(teamBalanceDraftParticipants)
         .where(eq(teamBalanceDraftParticipants.draftId, draftId))
-        .orderBy(asc(teamBalanceDraftParticipants.ordinal)),
-      this.database
+        .orderBy(asc(teamBalanceDraftParticipants.ordinal));
+      const candidateRows = await transaction
         .select()
         .from(teamBalanceDraftCandidates)
         .where(
@@ -393,23 +395,23 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
             eq(teamBalanceDraftCandidates.evaluationRound, row.evaluationRound),
           ),
         )
-        .orderBy(asc(teamBalanceDraftCandidates.rank), asc(teamBalanceDraftCandidates.signature)),
-    ]);
-    return {
-      id: row.id,
-      ownerUserAccountId: row.ownerUserAccountId,
-      title: row.title,
-      status: row.status,
-      evaluationRound: row.evaluationRound,
-      ratingGeneration: row.ratingGeneration,
-      selectedCandidateSource: row.selectedCandidateSource,
-      selectedCandidateSignature: row.selectedCandidateSignature,
-      revision: row.revision,
-      participants: participantRows.map(participantFromRow),
-      candidates: candidateRows.map(candidateFromRow),
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    };
+        .orderBy(asc(teamBalanceDraftCandidates.rank), asc(teamBalanceDraftCandidates.signature));
+      return {
+        id: row.id,
+        ownerUserAccountId: row.ownerUserAccountId,
+        title: row.title,
+        status: row.status,
+        evaluationRound: row.evaluationRound,
+        ratingGeneration: row.ratingGeneration,
+        selectedCandidateSource: row.selectedCandidateSource,
+        selectedCandidateSignature: row.selectedCandidateSignature,
+        revision: row.revision,
+        participants: participantRows.map(participantFromRow),
+        candidates: candidateRows.map(candidateFromRow),
+        createdAt: row.createdAt.toISOString(),
+        updatedAt: row.updatedAt.toISOString(),
+      };
+    }, { isolationLevel: "repeatable read", accessMode: "read only" });
   }
 
   async createDraft(

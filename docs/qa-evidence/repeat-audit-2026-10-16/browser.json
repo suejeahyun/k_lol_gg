@@ -1,0 +1,22 @@
+{
+  "checkedDateKst": "2026-10-16",
+  "status": "PASS",
+  "mode": "actual browser with real React SubmissionForm and synthetic deferred fetch",
+  "operatingApiConnected": false,
+  "productionDataModified": false,
+  "checks": {
+    "newSubmissionEightInputsDisabledWhilePending": true,
+    "newSubmissionFailureRetainsValuesAndUnlocks": true,
+    "newSubmissionReeditAndSuccessfulTransition": true,
+    "editSubmissionEightInputsDisabledWhilePending": true,
+    "editFailureRetainsTitleAndNoteAndUnlocks": true,
+    "editReinputAndSuccessfulClose": true,
+    "mobileViewportWidth": 320,
+    "mobileDocumentWidth": 305
+  },
+  "screenshot": "match-mobile.png",
+  "viewportReset": true,
+  "temporaryTabClosed": true,
+  "fixtureServerStopped": true,
+  "limitations": "Synthetic fixture does not include the authenticated production shell or real uploads. Team draft recovery is covered by component handler regression, not a production browser mutation."
+}

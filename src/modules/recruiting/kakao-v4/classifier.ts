@@ -336,7 +336,9 @@ function classifyParty(text: string): KakaoV4RecognizedCommand | null {
 
 function classifyPartyCodeCommand(text: string): KakaoV4RecognizedCommand | null {
   if (/[\r\n\u2028\u2029]/u.test(text)) return null;
-  const normalized = text.normalize("NFKC");
+  // The command boundary already normalizes structure while preserving jamo.
+  // Normalizing again would rewrite nicknames such as `ㅁㅂㅅ` or `ㄱㅏ`.
+  const normalized = text.normalize("NFC");
   const detail = /^(?:구인상세|상세)\s+(\S+)(?:\s+(.+))?$/u.exec(normalized);
   if (detail) {
     const recruitCode = normalizeRecruitCode(detail[1]!);
@@ -375,7 +377,7 @@ function detailMemberMutation(text: string, prefixes: readonly string[], allowSt
   const match = new RegExp(
     `^(?:${prefixPattern})\\s*(?:\\\\?#\\s*)?(\\d{1,2})\\s+((?:(?:예비|대기)\\s*)?(?:추가(?:해|하기)?|추기|등록|참가|수정(?:해|하기)?|삭제(?:해|하기)?|삭재|제외|탈퇴))\\s+(.+)$`,
     "u",
-  ).exec(text.normalize("NFKC"));
+  ).exec(text.normalize("NFC"));
   if (!match) return null;
   const recruitNumber = Number(match[1]);
   const name = match[3]!.trim().replace(/\s+/gu, " ");

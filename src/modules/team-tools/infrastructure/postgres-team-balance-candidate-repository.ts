@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, like, or, sql } from "drizzle-orm";
 
 import { kstDateKey, type SeasonApplicationSource } from "@/modules/seasons";
+import { recruitingOperatingDateKey } from "@/modules/recruiting/domain/operating-day";
 import { players } from "@/platform/db/schema/registry";
 import { seasonApplications, seasons } from "@/platform/db/schema/seasons";
 import type { V2Database } from "@/platform/db/database";
@@ -24,7 +25,7 @@ function escapeLikePrefix(value: string) {
 }
 
 function firstKstDate(now: Date, days: number) {
-  const today = kstDateKey(now);
+  const today = recruitingOperatingDateKey(now);
   const first = new Date(`${today}T00:00:00+09:00`);
   first.setUTCDate(first.getUTCDate() - (days - 1));
   return kstDateKey(first);

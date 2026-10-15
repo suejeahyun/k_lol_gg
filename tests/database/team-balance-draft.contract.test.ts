@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import type { TransactionSessionActor } from "../../src/modules/auth/domain/transaction-session";
 import {
@@ -18,9 +18,12 @@ import {
 } from "../../src/modules/team-tools";
 import { PostgresTeamBalanceRepository } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-repository";
 import { PostgresTeamBalanceRatingProvider } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-rating-provider";
+import { PostgresTeamBalanceCandidateRepository } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-candidate-repository";
 import { teamBalanceCommandEnvelope } from "../../src/modules/team-tools/application/team-balance-service";
 import { PostgresTeamBalanceRecommendationRepository } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-recommendation-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
+import type { V2Database } from "../../src/platform/db/database";
+import type { DatabaseExecutor, V2Transaction } from "../../src/platform/db/transaction";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
   auditEvents,
@@ -35,6 +38,7 @@ import {
   riotSummaries,
   mmrManualAdjustments,
   seasonProjectionStates,
+  seasonApplications,
   seasons,
   teamBalanceCommandReceipts,
   teamBalanceDraftCandidates,
@@ -237,6 +241,123 @@ function commandContext(
 function serviceError(code: TeamBalanceServiceError["code"]) {
   return (error: unknown) => error instanceof TeamBalanceServiceError && error.code === code;
 }
+
+test("draft reads retain one snapshot when a real reevaluation commits between its queries", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const ownerId = randomUUID();
+  const sessionId = randomUUID();
+  const ids = Array.from({ length: 10 }, () => randomUUID());
+  const now = new Date();
+  const actor = { userAccountId: ownerId, sessionId, role: "USER", authVersion: 0 } as const;
+  const viewer = { actorUserAccountId: ownerId, authorization: "OWNER" } as const;
+  const provider = new MutableRatingProvider();
+  const ratings = (score: number) => new Map(ids.map((id) => [id, { overall: score, confidence: 1, sampleSize: 20, positions: null }]));
+  provider.snapshot = { generation: 1, ratings: ratings(50) };
+  const service = new TeamBalanceService(new PostgresTeamBalanceRepository(database, provider));
+  let committed = false;
+  let draftId = "";
+  // Keep every SQL query real. The wrapper only schedules a concurrent service
+  // mutation immediately after the initial draft SELECT returns its rows.
+  const observe = (executor: DatabaseExecutor): DatabaseExecutor => new Proxy(executor, {
+    get(target, property, receiver) {
+      if (property === "transaction") return (work: (transaction: V2Transaction) => Promise<unknown>, options: unknown) =>
+        Reflect.apply(target.transaction, target, [async (transaction: V2Transaction) => {
+          const setting = (await transaction.execute<{ isolation: string; readonly: string }>(sql`select current_setting('transaction_isolation') as isolation, current_setting('transaction_read_only') as readonly`)).rows[0]!;
+          assert.equal(setting.isolation, "repeatable read");
+          assert.equal(setting.readonly, "on");
+          return work(observe(transaction) as V2Transaction);
+        }, options]);
+      if (property !== "select") return Reflect.get(target, property, receiver);
+      return (...args: unknown[]) => {
+        const builder = Reflect.apply(target.select, target, args);
+        return new Proxy(builder, { get(select, key, selectReceiver) {
+          if (key !== "from") return Reflect.get(select, key, selectReceiver);
+          return (table: unknown) => {
+            const query = Reflect.apply(select.from, select, [table]) as {
+              then: (resolve: (rows: unknown) => unknown, reject: (error: unknown) => unknown) => unknown;
+            };
+            if (table !== teamBalanceDrafts) return query;
+            // where returns this query; intercept its final await through then.
+            const then = query.then.bind(query);
+            query.then = (resolve: (rows: unknown) => unknown, reject: (error: unknown) => unknown) => then(async (rows: unknown) => {
+              if (!committed) {
+                committed = true;
+                provider.snapshot = { generation: 2, ratings: ratings(90) };
+                await service.reevaluateDraft(commandContext(actor, "APPROVED_ACCOUNT_MUTATION", randomUUID()), draftId, 0, {}, now);
+              }
+              return resolve(rows);
+            }, reject);
+            return query;
+          };
+        } });
+      };
+    },
+  });
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: ownerId, loginId: `snapshot-${ownerId}`, loginIdNormalized: `snapshot-${ownerId}`, status: "APPROVED" });
+    await database.insert(authSessions).values({ id: sessionId, tokenHash: randomBytes(32), userAccountId: ownerId, authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000) });
+    await database.insert(players).values(ids.map((id) => ({ id, memberName: `Snapshot${id}`, memberNameNormalized: `snapshot${id}`, nickname: `Snapshot${id}`, nicknameNormalized: `snapshot${id}`, tagLine: "TEST", tagLineNormalized: "test" })));
+    const created = await service.createDraft(commandContext(actor, "APPROVED_ACCOUNT_MUTATION", randomUUID()), {
+      title: "Concurrent snapshot contract",
+      participants: ids.map((playerId, index) => ({ playerId, eligiblePositions: [{ position: positions[index % 5], preference: "MAIN" }] })),
+    }, now);
+    draftId = String(created.body.draftId);
+    const snapshot = await new PostgresTeamBalanceRepository(observe(database) as V2Database).getDraft(viewer, draftId);
+    assert.equal(committed, true);
+    assert.equal(snapshot?.revision, 0);
+    assert.equal(snapshot?.evaluationRound, 1);
+    assert.equal(snapshot?.ratingGeneration, 1);
+    assert.ok(snapshot?.participants.every((participant) => participant.rating?.overall === 50));
+    assert.ok(snapshot?.candidates.every((candidate) => candidate.evaluationRound === 1 && candidate.assignments.every((assignment) => assignment.rating.effectiveScore === 50)));
+    const fresh = await service.getDraft(viewer, draftId);
+    assert.equal(fresh?.revision, 1);
+    assert.equal(fresh?.evaluationRound, 2);
+    assert.equal(fresh?.ratingGeneration, 2);
+    assert.ok(fresh?.participants.every((participant) => participant.rating?.overall === 90));
+    assert.ok(fresh?.candidates.every((candidate) => candidate.evaluationRound === 2 && candidate.assignments.every((assignment) => assignment.rating.effectiveScore === 90)));
+    await assert.rejects(service.getDraft({ actorUserAccountId: randomUUID(), authorization: "OWNER" }, draftId), serviceError("NOT_FOUND"));
+    assert.equal(await service.getDraft(viewer, randomUUID()), null);
+  } finally { await pool.end(); }
+});
+
+test("season team candidates retain the current recruiting day until 06:00 KST", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const ids: string[] = Array.from({ length: 3 }, () => randomUUID());
+  const applicationIds = ids.map(() => randomUUID());
+  let createdSeasonId: string | null = null;
+  try {
+    await applyMigrations(database);
+    let seasonId = (await database.select({ id: seasons.id }).from(seasons).where(eq(seasons.status, "ACTIVE")).limit(1))[0]?.id;
+    if (!seasonId) {
+      seasonId = randomUUID();
+      createdSeasonId = seasonId;
+      await database.insert(seasons).values({ id: seasonId, name: "Operating day candidates", nameNormalized: `operating-${seasonId}`, status: "ACTIVE", activatedAt: new Date() });
+    }
+    await database.insert(players).values(ids.map((id) => ({ id, memberName: `Day${id}`, memberNameNormalized: `day${id}`, nickname: `Day${id}`, nicknameNormalized: `day${id}`, tagLine: "TEST", tagLineNormalized: "test" })));
+    await database.insert(seasonApplications).values(ids.map((playerId, index) => ({ id: applicationIds[index], seasonId: seasonId!, playerId, applyDate: `2026-10-${13 + index}`, mainPosition: "MID" as const })));
+    const repository = new PostgresTeamBalanceCandidateRepository(database);
+    const dates = async (now: string, days: number) => (await repository.listSeasonGroups({ origin: "ALL", days, now: new Date(now) })).groups
+      .filter((group) => group.players.some((player) => ids.includes(player.playerId))).map((group) => group.applyDate).sort();
+    for (const instant of ["2026-10-15T23:59:59+09:00", "2026-10-16T00:00:00+09:00", "2026-10-16T05:59:59+09:00"]) {
+      assert.deepEqual(await dates(instant, 1), ["2026-10-15"]);
+      assert.deepEqual(await dates(instant, 3), ["2026-10-13", "2026-10-14", "2026-10-15"]);
+    }
+    assert.deepEqual(await dates("2026-10-16T06:00:00+09:00", 1), []);
+    assert.deepEqual(await dates("2026-10-16T06:00:00+09:00", 3), ["2026-10-14", "2026-10-15"]);
+  } finally {
+    await database.delete(seasonApplications).where(inArray(seasonApplications.id, applicationIds));
+    await database.delete(players).where(inArray(players.id, ids));
+    if (createdSeasonId) await database.delete(seasons).where(eq(seasons.id, createdSeasonId));
+    await pool.end();
+  }
+});
 
 test("S06 draft lifecycle is owner/admin authorized, append-only, transactional, and idempotent", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;

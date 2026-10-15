@@ -48,7 +48,7 @@ function harness(file, name, initialProps, send) {
         if (specifier === "react") return hooks;
         if (specifier === "react/jsx-runtime") return jsx;
         if (specifier === "next/link") return Link;
-        if (specifier === "next/navigation") return { useRouter: () => ({ push: href => navigation.push(href), refresh: () => refreshed++ }) };
+        if (specifier === "next/navigation") return { useRouter: () => ({ push: href => navigation.push(href), replace: href => navigation.push(href), refresh: () => refreshed++ }) };
         if (specifier === "@/components/ui/button") return { Button };
         if (specifier === "@/components/ui/input") return { Input: props => React.createElement("input", props) };
         if (specifier.endsWith("theme-icons")) return new Proxy({}, { get: () => () => null });
@@ -111,6 +111,38 @@ test("an expired round that no longer exists keeps the draft instead of refreshi
 const submissionFixture = { id: "11111111-1111-4111-8111-111111111111", publicCode: "MR2AAAAAAAAAAAAAAAA", seasonId: null, seasonName: null, title: "합성 경기", organizer: "합성", seriesNumber: 1, note: null, playedOn: "2026-10-14", startedAt: null, expectedGameCount: 2, teamBalanceDraftId: null, source: "WEB", receivedGameNumbers: [], status: "AWAITING_UPLOAD", publicReviewReason: null, approvedMatchSeriesId: null, revision: 1, updatedAt: "2026-10-14T00:00:00Z" };
 const submissionProps = { viewer: "APPROVED", seasons: [], initial: submissionFixture, requestedCode: submissionFixture.publicCode, requestedTeamBalanceDraftId: null, teamBalanceDraft: null };
 const submissionInput = { title: "내 작성값", organizer: "합성", seriesNumber: "1", playedOn: "2026-10-14", expectedGameCount: "2" };
+
+test("new and edited match submissions lock their fields until delayed saves settle", async () => {
+  for (const creating of [true, false]) {
+    for (const accepted of [true, false]) {
+      let respond;
+      const subject = harness("app/(public)/(matches)/matches/submit/submission-form.tsx", "SubmissionForm",
+        creating ? { ...submissionProps, initial: null, requestedCode: null } : submissionProps,
+        () => new Promise(resolve => { respond = resolve; }));
+      if (!creating) find(subject.render(), node => node.props.children === "접수 정보 수정").props.onClick();
+      const pending = subject.submit({ ...submissionInput, note: "요청에 포함한 메모" });
+      const form = find(subject.render(), node => node.type === "form");
+      const fields = find(form, node => node.type === "fieldset");
+      assert.ok(fields, "all mutable fields share a disabled fieldset");
+      assert.equal(fields.props.disabled, true, "typing cannot continue into a form that will be replaced on success");
+      for (const name of ["title", "organizer", "playedOn", "seriesNumber", "expectedGameCount", "seasonId", "startedAt", "note"]) {
+        assert.ok(find(fields, node => node.props.name === name), `${name} is inside the locked fieldset`);
+      }
+      await subject.submit(submissionInput);
+      assert.equal(subject.requests.length, 1, "a pending save cannot be submitted twice");
+      assert.equal(JSON.parse(subject.requests[0].body).note, "요청에 포함한 메모");
+      respond(accepted ? success({ submissionId: submissionFixture.id, publicCode: submissionFixture.publicCode, status: "AWAITING_UPLOAD", revision: 2 }) : { ok: false, status: 503, json: async () => ({}) });
+      await pending;
+      const tree = subject.render();
+      if (accepted) {
+        assert.equal(find(tree, node => node.props.name === "title"), null, "successful saving exits the editor");
+      } else {
+        assert.equal(find(tree, node => node.type === "fieldset").props.disabled, false, "failed saving leaves the form available for retry");
+        assert.match(renderToStaticMarkup(tree), /요청을 처리하지 못했어요/u);
+      }
+    }
+  }
+});
 
 test("match submission conflicts compare latest values and retry preserved input with the accepted revision", async () => {
   const latest = { ...submissionFixture, revision: 2, title: "다른 탭 제목", note: "다른 탭 메모" };

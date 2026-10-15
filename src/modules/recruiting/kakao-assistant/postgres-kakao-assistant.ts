@@ -1189,7 +1189,8 @@ export class PostgresKakaoAssistant {
         if (command.action === "ADD_PARTICIPANT" && sourceMode === "RIFT" && command.mainPosition === undefined) {
           throw new KakaoAssistantError("INVALID_INPUT", "협곡은 라인이 필요해요. 예: 내전상세 번호 추가 이름/top,mid 또는 이름/all");
         }
-        const matching = state.rows.filter((row) => normalizedIdentity(row.name) === normalizedIdentity(command.name));
+        const matching = state.rows.filter((row) => normalizedIdentity(row.name) === normalizedIdentity(command.name) &&
+          (command.action !== "REMOVE_PARTICIPANT" || command.reserve !== true || row.reserve));
         if (matching.length > 1) throw new KakaoAssistantError("CONFLICT", "동명이인이 있어요. 내전상세 번호에서 이름(닉네임)으로 구분해 주세요.");
         const participants: KakaoSeasonSnapshotParticipant[] = state.rows.map((row) => ({
           slotNo: row.slotNo, name: row.name, riotId: null, mainPosition: row.mainPosition,

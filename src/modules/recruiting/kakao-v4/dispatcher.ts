@@ -1524,6 +1524,7 @@ export class KakaoV4CommandDispatcher {
                 applyDate: command.applyDate,
                 recruitNo: command.recruitNumber,
                 name: command.name,
+                reserve: command.reserve ?? false,
                 participants: [],
               },
         });

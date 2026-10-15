@@ -491,16 +491,37 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
     assert.equal(quickReserveEntry?.mainPosition, "MID");
     assert.deepEqual(quickReserveEntry?.subPositions, ["ADC"]);
     sequence += 1;
+    const mainBefore = await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.recruitNo, 62),
+      eq(seasonKakaoPendingApplications.suppliedName, "재현"),
+    ));
+    const reserveOnlyMiss = await assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId,
+      intent: intent(`nonce-draft-${suffix}-${String(sequence).padStart(4, "0")}`, `reserve-main-miss-${suffix}`, roomA),
+      requestKey: `reserve-main-miss-${suffix}`,
+      scope: "kakao:season-applications:draft-regression",
+      command: { action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 62, name: "재현", reserve: true, participants: [] },
+      requestId: randomUUID(), now,
+    });
+    assert.equal(reserveOnlyMiss.body.cancelledCount, 0, "reserve-only removal must not withdraw a primary participant");
+    assert.equal(reserveOnlyMiss.body.entries.some((entry) => entry.suppliedName === "재현" && !entry.reserve), true);
+    assert.equal(reserveOnlyMiss.body.entries.some((entry) => entry.suppliedName === `예비-${suffix}` && entry.reserve), true);
+    assert.deepEqual(await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.recruitNo, 62),
+      eq(seasonKakaoPendingApplications.suppliedName, "재현"),
+    )), mainBefore, "the primary row remains byte-for-byte unchanged");
+    sequence += 1;
     const quickReserveRemoved = await assistant.syncSeasonSnapshot({
       actorPrincipalId: principalId,
       intent: intent(`nonce-draft-${suffix}-${String(sequence).padStart(4, "0")}`, `reserve-remove-${suffix}`, roomA),
       requestKey: `reserve-remove-${suffix}`,
       scope: "kakao:season-applications:draft-regression",
-      command: { action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 62, name: `예비-${suffix}`, participants: [] },
+      command: { action: "REMOVE_PARTICIPANT", seasonId, applyDate: today, recruitNo: 62, name: `예비-${suffix}`, reserve: true, participants: [] },
       requestId: randomUUID(),
       now,
     });
     assert.equal(quickReserveRemoved.body.entries.some((entry) => entry.suppliedName === `예비-${suffix}`), false);
+    assert.equal(quickReserveRemoved.body.entries.some((entry) => entry.suppliedName === "재현" && !entry.reserve), true);
     sequence += 1;
     const removedOrganizer = await assistant.syncSeasonSnapshot({
       actorPrincipalId: principalId,

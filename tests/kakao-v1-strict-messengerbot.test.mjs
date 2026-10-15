@@ -1263,6 +1263,24 @@ test("R28 fixed recruitment code routing ignores malformed edits, prose and bot 
   assert.equal(echo.http.calls, 0);
 });
 
+test("R29 sends reserve-removal intent and jamo nicknames unchanged to the server", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const [message, profileId] of [
+    ["내전상세 7 예비삭제 합성참가자", "FEATURES"],
+    ["내전상세 7 대기 삭제 합성참가자", "FEATURES"],
+    ["상세 3 추가 ㅁㅂㅅ", "RECRUIT"],
+    ["상세 ABCDE-23456 추가 ㄱㅏ", "RECRUIT"],
+    ["상세 ＡＢＣＤＥ－２３４５６ 추가 별빛 ㅋㅋ", "RECRUIT"],
+  ]) {
+    const runtime = evaluate(artifact);
+    assert.deepEqual(replyFor(runtime, message), ["[V1 server reply]"], message);
+    assert.equal(runtime.http.calls, 1, message);
+    const body = JSON.parse(runtime.http.body);
+    assert.equal(body.profileId, profileId, message);
+    assert.equal(body.text, message, message);
+  }
+});
+
 test("R29 retries an undelivered reply without suppressing the later successful delivery", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const failure of ["false", "throw"]) {

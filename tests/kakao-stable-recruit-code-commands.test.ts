@@ -4,6 +4,7 @@ import test from "node:test";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
 import { canonicalizeKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import type { KakaoV4CommandEnvelope } from "../src/modules/recruiting/kakao-v4/domain";
+import { createRecruitParty, mutateRecruitPartyMember } from "../src/modules/recruiting/domain/recruiting";
 
 const code = "ABCDE-23456";
 const envelope = (text: string, timestamp = Date.parse("2026-10-13T20:59:59Z") / 1_000): KakaoV4CommandEnvelope => ({
@@ -48,6 +49,23 @@ test("fixed code commands reject malformed identity, multiple edits, and ordinar
     `상세 ${code} 추가 가;나`, `상세 ${code} 추가 가\n삭제 나`, `상세 ${code} 삭제 삭제 가`,
     `상세 ${code} 추가 ${"가".repeat(81)}`, `상세 ${code} 삭제 가\u202e나`,
   ]) assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text }).kind, "UNKNOWN", text);
+});
+
+test("party quick additions preserve compatibility-jamo nicknames through storage", () => {
+  for (const target of ["3", code, "ＡＢＣＤＥ－２３４５６"]) {
+    for (const name of ["ㅁㅂㅅ", "ㄱㅏ", "별빛 ㅋㅋ"]) {
+      const text = `상세 ${target} 추가 ${name}`;
+      const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+      const command = canonicalizeKakaoV4Command(classification, envelope(text), new Date("2026-10-13T12:00:00Z"));
+      assert.ok(command?.domain === "PARTY" && (command.action === "ADD_MEMBER" || command.action === "BY_CODE" && command.operation === "ADD_MEMBER"));
+      assert.equal(command.name, name);
+      const party = createRecruitParty({ id: "synthetic-jamo-party", sourceRoomId: "synthetic-room", sourceSenderId: "synthetic-sender",
+        recruitDate: "2026-10-13", resetSequence: 0, recruitNumber: 3, type: "PARTY_NUMBER", title: "5인 파티", maximumMembers: 5,
+        members: [], now: new Date("2026-10-13T12:00:00Z") });
+      const stored = mutateRecruitPartyMember({ party, mutation: { action: "ADD", name: command.name }, now: new Date("2026-10-13T12:00:01Z") });
+      assert.equal(stored.party.members[0]?.name, name);
+    }
+  }
 });
 
 test("numeric commands keep current-day targets and canonicalizer validates code parameters again", () => {

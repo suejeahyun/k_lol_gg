@@ -56,8 +56,8 @@ function hasCurrentRules(candidate: TeamBalanceDraftCandidate) {
 }
 
 export function TeamBalanceDraftWorkspace({
-  draft,
-  endpointBase = `/api/team-tools/drafts/${draft.id}`,
+  draft: serverDraft,
+  endpointBase = `/api/team-tools/drafts/${serverDraft.id}`,
   mode = "OWNER",
 }: {
   draft: TeamBalanceDraft;
@@ -65,6 +65,8 @@ export function TeamBalanceDraftWorkspace({
   mode?: "OWNER" | "ADMIN";
 }) {
   const router = useRouter();
+  const [acceptedDraft, setAcceptedDraft] = useState<TeamBalanceDraft | null>(null);
+  const draft = acceptedDraft?.id === serverDraft.id && acceptedDraft.revision > serverDraft.revision ? acceptedDraft : serverDraft;
   const autoCandidates = draft.candidates.filter((candidate) => candidate.source === "AUTO");
   const selectedCandidate = draft.candidates.find((candidate) => candidate.signature === draft.selectedCandidateSignature) ?? null;
   const selectedInvalid = selectedCandidate?.score.fairness?.status === "INVALID";
@@ -81,13 +83,16 @@ export function TeamBalanceDraftWorkspace({
   const [keyboardSlot, setKeyboardSlot] = useState<number | null>(null);
   const [pending, setPending] = useState("");
   const [message, setMessage] = useState("");
+  const [conflict, setConflict] = useState(false);
+  const [latestDraft, setLatestDraft] = useState<TeamBalanceDraft | null>(null);
   const mutationKeys = useRef(new ClientMutationKeyStore("team-balance-draft")).current;
   const sending = useRef(false);
   const [refreshing, startRefresh] = useTransition();
   const busy = Boolean(pending) || refreshing;
+  const mutationLocked = busy || conflict;
   const manualChanged = manualLayout.length !== initialLayout.length || manualLayout.some((entry) =>
     !initialLayout.some((selected) => selected.playerId === entry.playerId && selected.team === entry.team && selected.position === entry.position));
-  const manualLocked = busy || draft.status === "ARCHIVED";
+  const manualLocked = mutationLocked || draft.status === "ARCHIVED";
   const resultHref = mode === "OWNER" ? `/matches/submit?teamBalanceDraftId=${encodeURIComponent(draft.id)}` : `/admin/matches/new?teamBalanceDraftId=${encodeURIComponent(draft.id)}`;
   const resultLabel = mode === "OWNER" ? "이 팀으로 경기 결과 접수" : "선택 팀으로 경기 등록";
   const participantById = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant])), [draft.participants]);
@@ -103,9 +108,49 @@ export function TeamBalanceDraftWorkspace({
     }
   }, [manualChanged, manualLayout, draft.participants, checkedManualLayout]);
   const beforeScore = (selectedCandidate ?? autoCandidates[0])?.score.teamStrength;
+  const canKeepManual = useMemo(() => {
+    if (!manualChanged || !latestDraft || latestDraft.status === "ARCHIVED" || latestDraft.participants.length !== manualLayout.length ||
+      latestDraft.participants.some((participant) => !manualLayout.some((entry) => entry.playerId === participant.playerId))) return false;
+    try {
+      evaluateTeamBalanceLayout(latestDraft.participants, manualLayout);
+      return true;
+    } catch { return false; }
+  }, [manualChanged, latestDraft, manualLayout]);
+
+  async function recoverConflict() {
+    setConflict(true);
+    setLatestDraft(null);
+    setPending("latest");
+    setMessage("다른 작업으로 팀 초안이 변경됐어요. 수동 배치는 유지했습니다. 최신값과 비교해 주세요.");
+    try {
+      const response = await fetch(endpointBase, { cache: "no-store", headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("latest draft unavailable");
+      const result = await response.json() as { draft?: TeamBalanceDraft };
+      if (!result.draft || result.draft.id !== draft.id || !Number.isSafeInteger(result.draft.revision) || result.draft.revision < draft.revision ||
+        !Array.isArray(result.draft.participants) || !Array.isArray(result.draft.candidates)) throw new Error("latest draft mismatch");
+      setLatestDraft(result.draft);
+    } catch {
+      setMessage("최신 초안을 불러오지 못했어요. 수동 배치는 유지했습니다. 다시 불러온 뒤 비교해 주세요.");
+    } finally { setPending(""); }
+  }
+
+  function acceptLatest(keepManual: boolean) {
+    if (busy || !latestDraft || (keepManual && !canKeepManual)) return;
+    if (latestDraft.revision < draft.revision) { void recoverConflict(); return; }
+    if (!keepManual) {
+      const selection = latestDraft.candidates.find((candidate) => candidate.signature === latestDraft.selectedCandidateSignature)
+        ?? latestDraft.candidates.find((candidate) => candidate.source === "AUTO");
+      setManualLayout(selection?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? []);
+    }
+    setAcceptedDraft(latestDraft);
+    setCheckedManualLayout(null);
+    setKeyboardSlot(null); setDraggingSlot(null); setDragOverSlot(null);
+    setLatestDraft(null); setConflict(false);
+    setMessage(keepManual ? "수동 배치를 유지했어요. 최신 정보로 다시 평가한 뒤 적용해 주세요." : "수동 변경을 버리고 최신 초안을 불러왔어요.");
+  }
 
   async function mutate(action: "select" | "save" | "reevaluate" | "archive" | "restore", body: unknown) {
-    if (busy || sending.current) return;
+    if (mutationLocked || sending.current) return;
     if (manualChanged && (action === "save" || action === "reevaluate")) return;
     if (action === "save" && selectedInvalid) return;
     if (action === "select" && typeof body === "object" && body !== null && "candidateRank" in body &&
@@ -124,6 +169,7 @@ export function TeamBalanceDraftWorkspace({
         },
         body: JSON.stringify(body),
       });
+      if (response.status === 412) { mutationKeys.complete(ticket); await recoverConflict(); return; }
       const result = await response.json() as { detail?: string };
       if (!response.ok) throw new Error(result.detail ?? "팀 초안을 변경하지 못했어요.");
       mutationKeys.complete(ticket);
@@ -146,7 +192,7 @@ export function TeamBalanceDraftWorkspace({
   }
 
   async function copySelectedResult() {
-    if (!selectedCandidate || selectedInvalid || manualChanged || busy || sending.current) return;
+    if (!selectedCandidate || selectedInvalid || manualChanged || mutationLocked || sending.current) return;
     setMessage("");
     try {
       if (!navigator.clipboard?.writeText) throw new Error("이 브라우저에서는 클립보드 복사를 사용할 수 없어요.");
@@ -207,6 +253,21 @@ export function TeamBalanceDraftWorkspace({
         <strong data-status={draft.status}>{draft.status === "ARCHIVED" ? "보관됨" : draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
       </section>
 
+      {conflict ? <section className={styles.notice} role="alert" aria-busy={busy}>
+        <h2>최신 팀 초안과 비교</h2>
+        <p>{message}</p>
+        {latestDraft ? <>
+          <p>{latestDraft.title} · {latestDraft.status === "ARCHIVED" ? "보관됨" : latestDraft.status === "SAVED" ? "저장됨" : "평가 완료"}</p>
+          <ul>{latestDraft.candidates.find((candidate) => candidate.signature === latestDraft.selectedCandidateSignature)?.assignments.map((entry) =>
+            <li key={`${entry.team}-${entry.position}`}>{teamLabel[entry.team]} · {positionLabel[entry.position]} · {latestDraft.participants.find((participant) => participant.playerId === entry.playerId)?.displayName ?? "참가자 확인 필요"}</li>)}</ul>
+          {manualChanged && !canKeepManual ? <p>참가자·허용 포지션이나 초안 상태가 바뀌어 수동 배치를 그대로 적용할 수 없어요.</p> : null}
+          <div className={styles.draftActions}>
+            {canKeepManual ? <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => acceptLatest(true)}>내 수동 배치 유지</button> : null}
+            <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => acceptLatest(false)}>수동 변경 버리고 최신값 사용</button>
+          </div>
+        </> : <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => recoverConflict()}>최신 초안 다시 불러오기</button>}
+      </section> : null}
+
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
         <div className={styles.heading}><div><h2 id="candidate-title">내전 규칙 팀 추천</h2></div></div>
         {manualChanged ? <p className={styles.notice} role="status"><strong>적용 전 배치 기준</strong> · 아래 추천과 판정은 현재 적용된 팀의 결과입니다. 교체한 카드의 점수는 수동 배치 미리보기에서 확인하고 서버 평가 후 적용해 주세요.</p> : null}
@@ -231,7 +292,7 @@ export function TeamBalanceDraftWorkspace({
               {candidate.score.v1?.missingSources.length ? <p role="note">최근 솔로 상세가 없거나 갱신 후 24시간이 지난 경우, 또는 팀 편성 보정이 미설정인 경우 해당 보조값은 0으로 계산합니다.</p> : null}
               <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>
               <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
-              <button type="button" aria-pressed={selected} disabled={busy || selected || candidate.score.fairness?.status === "INVALID" || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
+              <button type="button" aria-pressed={selected} disabled={mutationLocked || selected || candidate.score.fairness?.status === "INVALID" || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
             </article>;
           })}
         </div>
@@ -283,14 +344,14 @@ export function TeamBalanceDraftWorkspace({
       </section>
 
       <section className={styles.draftActions} data-pending={pending || (refreshing ? "refresh" : undefined)} aria-busy={busy} aria-label="초안 작업">
-        <button className={styles.primaryButton} type="button" disabled={busy || manualChanged || selectedInvalid || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
-        <button className={styles.secondaryButton} type="button" disabled={busy || manualChanged || selectedInvalid || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
-        <button className={styles.secondaryButton} type="button" disabled={busy || manualChanged || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "실력과 포지션으로 재평가" : "최신 통계로 재평가"}</button>
-        {draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? busy || manualChanged || selectedInvalid
+        <button className={styles.primaryButton} type="button" disabled={mutationLocked || manualChanged || selectedInvalid || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
+        <button className={styles.secondaryButton} type="button" disabled={mutationLocked || manualChanged || selectedInvalid || !selectedCandidate} onClick={() => void copySelectedResult()}><Copy size={17} aria-hidden="true" /> 팀 결과 복사</button>
+        <button className={styles.secondaryButton} type="button" disabled={mutationLocked || manualChanged || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "실력과 포지션으로 재평가" : "최신 통계로 재평가"}</button>
+        {draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? mutationLocked || manualChanged || selectedInvalid
           ? <button className={styles.primaryButton} type="button" disabled>{resultLabel} <ArrowRight size={16} aria-hidden="true" /></button>
           : <Link className={styles.primaryLink} href={resultHref}>{resultLabel} <ArrowRight size={16} aria-hidden="true" /></Link> : null}
-        {mode === "ADMIN" && draft.status !== "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => mutate("archive", {})}><Archive size={17} aria-hidden="true" /> 초안 보관</button> : null}
-        {mode === "ADMIN" && draft.status === "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={busy} onClick={() => mutate("restore", {})}><RotateCcw size={17} aria-hidden="true" /> 초안 복구</button> : null}
+        {mode === "ADMIN" && draft.status !== "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={mutationLocked} onClick={() => mutate("archive", {})}><Archive size={17} aria-hidden="true" /> 초안 보관</button> : null}
+        {mode === "ADMIN" && draft.status === "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={mutationLocked} onClick={() => mutate("restore", {})}><RotateCcw size={17} aria-hidden="true" /> 초안 복구</button> : null}
         <p role="status" aria-live="polite">{pending ? "처리 중…" : refreshing ? "최신 팀 상태를 불러오는 중…" : message}</p>
       </section>
     </>

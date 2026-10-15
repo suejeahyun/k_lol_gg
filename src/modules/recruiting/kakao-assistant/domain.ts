@@ -192,6 +192,8 @@ export type KakaoSeasonSnapshotCommand =
       action: "REMOVE_PARTICIPANT";
       recruitNo: number;
       name: string;
+      /** Only an explicitly requested reserve removal limits the target group. */
+      reserve?: boolean;
       participants: readonly [];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{

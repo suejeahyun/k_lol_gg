@@ -155,6 +155,98 @@ function swapCards(subject, props) {
   find(slot(subject.render(props), 5), (node) => node.type === "button").props.onClick();
 }
 
+test("a draft conflict preserves manual slots and blocks stale retries until the latest draft is accepted", async () => {
+  for (const mode of ["OWNER", "ADMIN"]) {
+    const draft = selectedDraft();
+    const latest = { ...selectedDraft(), revision: 2, title: "다른 작업의 최신 팀" };
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", attempt => attempt === 1
+      ? { ok: false, status: 412, json: async () => ({ detail: "다른 작업이 먼저 저장됨" }) }
+      : attempt === 2 ? { ok: true, json: async () => ({ draft: latest }) } : mutationResult);
+    const props = { draft, mode, endpointBase: `/api/${mode === "ADMIN" ? "admin/" : ""}team-tools/drafts/${draft.id}` };
+    swapCards(subject, props);
+    await buttonNamed(subject.render(props), "수동 배치 평가·선택").props.onClick();
+    let tree = subject.render(props);
+    assert.equal(subject.requests.length, 2, "412 reads the complete latest draft without refreshing away local slots");
+    assert.equal(subject.requests[1].url, props.endpointBase);
+    assert.deepEqual(subject.navigation, []);
+    assert.match(slot(tree, 0).props["aria-label"], /synthetic-player-5/u);
+    assert.equal(buttonNamed(tree, "수동 배치 평가·선택").props.disabled, true);
+    await buttonNamed(tree, "수동 배치 평가·선택").props.onClick();
+    assert.equal(subject.requests.length, 2, "a stale layout cannot be posted again while comparison is pending");
+    assert.match(visibleText(tree), /다른 작업의 최신 팀/u);
+    buttonNamed(tree, "내 수동 배치 유지").props.onClick();
+    tree = subject.render(props);
+    await buttonNamed(tree, "수동 배치 평가·선택").props.onClick();
+    assert.equal(subject.requests[2].headers["If-Match"], '"2"');
+    assert.equal(JSON.parse(subject.requests[2].body).layout[0].playerId, "synthetic-player-5");
+    assert.notEqual(requestKey(subject.requests[0]), requestKey(subject.requests[2]));
+  }
+});
+
+test("failed conflict reads retain manual input and offer a read-only retry before discard", async () => {
+  const latest = { ...selectedDraft(), revision: 2, status: "ARCHIVED" };
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", attempt => attempt === 1
+    ? { ok: false, status: 412, json: async () => ({}) }
+    : attempt === 2 ? Promise.reject(new Error("offline")) : { ok: true, json: async () => ({ draft: latest }) });
+  const props = { draft: selectedDraft() };
+  swapCards(subject, props);
+  await buttonNamed(subject.render(props), "수동 배치 평가·선택").props.onClick();
+  let tree = subject.render(props);
+  assert.match(slot(tree, 0).props["aria-label"], /synthetic-player-5/u);
+  assert.equal(buttonNamed(tree, "수동 배치 평가·선택").props.disabled, true);
+  await buttonNamed(tree, "최신 초안 다시 불러오기").props.onClick();
+  tree = subject.render(props);
+  assert.equal(buttonNamed(tree, "내 수동 배치 유지"), null, "archived drafts cannot accept local edits");
+  buttonNamed(tree, "수동 변경 버리고 최신값 사용").props.onClick();
+  tree = subject.render(props);
+  assert.match(slot(tree, 0).props["aria-label"], /synthetic-player-0/u);
+  assert.equal(buttonNamed(tree, "수동 배치 평가·선택").props.disabled, true);
+});
+
+test("a newer server prop during comparison can be reconciled with a read at the same revision", async () => {
+  const latest = { ...selectedDraft(), revision: 2 };
+  const newest = { ...selectedDraft(), revision: 3 };
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", attempt => attempt === 1
+    ? { ok: false, status: 412, json: async () => ({}) }
+    : attempt < 4 ? { ok: true, json: async () => ({ draft: attempt === 2 ? latest : newest }) } : mutationResult);
+  const props = { draft: selectedDraft() };
+  swapCards(subject, props);
+  await buttonNamed(subject.render(props), "수동 배치 평가·선택").props.onClick();
+  props.draft = newest;
+  buttonNamed(subject.render(props), "내 수동 배치 유지").props.onClick();
+  await new Promise(resolve => setImmediate(resolve));
+  let tree = subject.render(props);
+  assert.equal(subject.requests.length, 3, "an outdated comparison triggers another latest read");
+  assert.ok(buttonNamed(tree, "내 수동 배치 유지"), "the current revision is valid for explicit comparison");
+  assert.equal(buttonNamed(tree, "수동 배치 평가·선택").props.disabled, true);
+  buttonNamed(tree, "내 수동 배치 유지").props.onClick();
+  tree = subject.render(props);
+  await buttonNamed(tree, "수동 배치 평가·선택").props.onClick();
+  assert.equal(subject.requests[3].headers["If-Match"], '"3"');
+  assert.equal(JSON.parse(subject.requests[3].body).layout[0].playerId, "synthetic-player-5");
+});
+
+test("changed participants or newly invalid manual assignments cannot be kept over a new draft", async () => {
+  for (const participantsChanged of [true, false]) {
+    const latest = { ...selectedDraft(), revision: 2 };
+    if (participantsChanged) latest.participants[0] = { ...latest.participants[0], playerId: "replacement-player" };
+    else latest.participants[0] = { ...latest.participants[0], eligiblePositions: [] };
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", attempt => attempt === 1
+      ? { ok: false, status: 412, json: async () => ({}) }
+      : { ok: true, json: async () => ({ draft: latest }) }, false, participants => {
+      if (participants.some(participant => participant.eligiblePositions.length === 0)) throw new Error("invalid assignment");
+      return { score: { teamStrength: { redTotal: 250, blueTotal: 250, difference: 0 } } };
+    });
+    const props = { draft: selectedDraft() };
+    swapCards(subject, props);
+    await buttonNamed(subject.render(props), "수동 배치 평가·선택").props.onClick();
+    const tree = subject.render(props);
+    assert.equal(buttonNamed(tree, "내 수동 배치 유지"), null);
+    assert.ok(buttonNamed(tree, "수동 변경 버리고 최신값 사용"));
+    assert.match(slot(tree, 0).props["aria-label"], /synthetic-player-5/u);
+  }
+});
+
 test("manual edits cannot save, copy or submit the previous selected team before evaluation", async () => {
   for (const [mode, status] of [["OWNER", "EVALUATED"], ["OWNER", "SAVED"], ["ADMIN", "EVALUATED"], ["ADMIN", "SAVED"]]) {
     const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);

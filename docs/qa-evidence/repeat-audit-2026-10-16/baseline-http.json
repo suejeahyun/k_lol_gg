@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-15T18:29:49.322Z",
+  "status": "PASS",
+  "deploymentId": "dpl_kUH56WuhFGXS9Xt6C9EmoQbeWxdU",
+  "source": "69127364dd8bf567fb21d9abcdafcb082245f50d",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "bytes": 57,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 113412,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "bytes": 59525,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "bytes": 51399,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/help/kakao",
+      "status": 200,
+      "bytes": 59055,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/help/recruits",
+      "status": 200,
+      "bytes": 62009,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/api/admin/operation-forms?page=2",
+      "status": 401,
+      "bytes": 196,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/kakao-daily-close",
+      "status": 401,
+      "bytes": 187,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/security-maintenance",
+      "status": 401,
+      "bytes": 24,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    }
+  ],
+  "notes": "Canonical production alias, anonymous read-only GET. No response bodies or cookies retained."
+}
