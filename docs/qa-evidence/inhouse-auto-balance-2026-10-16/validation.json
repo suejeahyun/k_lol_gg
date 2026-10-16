@@ -2,13 +2,35 @@
   "date": "2026-10-16",
   "baseCommit": "e271112b8912469509bf742c090c3ded29be7f0d",
   "formulaVersion": "V2_INHOUSE_RELAXED_2026_10_16",
-  "check": {"status": "PASS", "contracts": 721, "unitPass": 1151, "unitSkip": 1, "fail": 0, "lintErrors": 0, "existingLintWarnings": 58, "typecheck": "PASS", "erd": "PASS", "guideArt": "PASS", "productionBuild": "PASS"},
-  "focused": {"domain": 51, "isolatedDatabase": 8, "ui": 29, "swap": 3, "status": "PASS"},
+  "check": {
+    "status": "PASS",
+    "contracts": 721,
+    "unitPass": 1151,
+    "unitSkip": 1,
+    "fail": 0,
+    "lintErrors": 0,
+    "existingLintWarnings": 58,
+    "typecheck": "PASS",
+    "erd": "PASS",
+    "guideArt": "PASS",
+    "productionBuild": "PASS"
+  },
+  "focused": {
+    "domain": 51,
+    "isolatedDatabase": 8,
+    "ui": 29,
+    "swap": 3,
+    "status": "PASS"
+  },
   "authHttp": "PASS",
   "productionDependencyVulnerabilities": 0,
   "secretScanCurrentTree": "PASS",
   "browserEvidence": "browser.json",
   "migrationHead": "0049_stable-recruit-codes",
   "productionDataMutatedForTesting": false,
-  "phoneBotChanged": false
+  "phoneBotChanged": false,
+  "sourceCommit": "1bf379eddcda98a338f41781529c23ac885baed5",
+  "secretScanCompleteHistory": "PASS",
+  "secretScanNote": "Complete history before the source commit plus the final source tree scan cover the new commit.",
+  "githubCi": "PASS"
 }

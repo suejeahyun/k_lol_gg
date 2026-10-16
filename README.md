@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-16 내전 자동 조정 2.0.0 운영 반영**: 포지션·바텀 조건 충돌로 팀 생성이 멈추지 않도록 필요한 조건을 최소 조정해 추천하고 저장까지 연결했습니다. 기존 가능한 조합·개인 점수·등록 포지션은 보존합니다. source `1bf379ed`, 운영 READY·HTTP 12조건·source CI 확인. [변경 안내](docs/patch-notes/inhouse-fairness-v2.0.0.md), [검증·배포·복구](docs/qa-evidence/inhouse-auto-balance-2026-10-16/production.md). 시간별 예약이 아니라 팀 계산 시 적용됩니다.
+
 **2026-10-16 사이트·카카오 안정성 1.0.1 운영 반영**: 경기 입력 보존, 내전 예비삭제, 자모 닉네임과 팀 조회·충돌 복구 6건을 수정했습니다. source `daab5eb4`, 운영 READY·health·HTTP12·서명조회2 확인. [배포·검증·복구](docs/qa-evidence/repeat-audit-2026-10-16/production.md). 휴대폰 R29 파일은 변경하지 않았습니다.
 
 **2026-10-15 내전 공정성 1.1.0 운영 반영**: 조합 규칙 1→6 우선순위, 교환 전후 전력 미리보기, 미검증 예상 승률 표시 제거. 개인 점수·저장 이력·바텀 3등급 필수 제한 유지. [규칙 설명](docs/inhouse-balance-rules.md), [검증·배포](docs/qa-evidence/inhouse-fairness-v1.1.0-2026-10-15/production.md).

@@ -1,10 +1,18 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-16 내전 자동 조정 2.0.0 운영 반영
+
+source `1bf379eddcda98a338f41781529c23ac885baed5`, tag `inhouse-fairness-v2.0.0`. 기존 조건을 만족하는 추천을 우선 유지하고, 불가능하면 바텀 티어 위반·초과량·포지션 이탈을 최소화해 전체 배치에서 추천한다. 조정 사유를 표시하고 선택·수동 평가·저장·재평가까지 같은 서버 정책으로 연결한다. 개인 점수·원본 포지션·과거 이력을 보존한다.
+
+전체 check 계약 721/단위 1,151 PASS+1 SKIP, 격리 DB 8, 도메인 51, 실제 합성 브라우저·인증 HTTP·보안·source CI 통과. main `dpl_cRoMJfC7eaPPwjXvX3ZwzHTF2hD4` READY·동일 source·canonical alias, 운영 HTTP 12조건 PASS. migration 0049/휴대폰 파일 유지. [검증·배포·복구](qa-evidence/inhouse-auto-balance-2026-10-16/production.md).
+
+시간별 반복 예약은 중지 상태다. 팀 생성·재평가를 실행할 때 자동 조정한다.
+
 ## 2026-10-16 사이트·카카오 안정성 1.0.1 운영 반영
 
 source `daab5eb44997674968dcea118f6ff81c9d217700`, tag `site-kakao-reliability-v1.0.1`. 경기 저장 중 입력 보존, 내전 예비삭제 대상, 자모 닉네임, 팀 조회 일관성·06시 경계·동시 편집 복구 6건 수정. 기존 내전 공정성1.1.0 유지. 전체check 계약717/단위1,147 pass+1skip, 격리DB112+8, 브라우저 및 보안 검사 통과. main `dpl_HBvtYAMgEAt8VGmRD3DtXmJ9bKjr` READY·동일source·canonical alias, HTTP12·서명조회2·DB읽기전용 확인 PASS. migration0049/휴대폰R29 파일 유지. [검증·배포·복구](qa-evidence/repeat-audit-2026-10-16/production.md).
 
-이 대화의 반복 점검은 1시간 간격으로 활성화했다. 새 발견·수정·배포·실패·사용자 조치가 있을 때만 알린다.
+반복 점검 예약은 이후 사용자의 “1시간 마다 하지는 말고” 요청으로 중지했다. 현재 팀 밸런스 변경은 계산 실행 시 자동 조정이다.
 
 ## 2026-10-15 내전 공정성 1.1.0 운영 반영
 

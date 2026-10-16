@@ -16,3 +16,7 @@
 로컬 로그: `.tmp/balance-check-release.log`, `.tmp/balance-auth-http.log`, `.tmp/balance-dependency-audit.json`, `.tmp/balance-secrets-tree.log`. 전체 Git 이력 검사와 배포 근거는 최종 릴리스 기록에 연결한다.
 
 운영 자료를 시험 변경하지 않으며 휴대폰 봇과 DB 스키마 변경은 없다. migration head는 `0049_stable-recruit-codes`다. 브라우저 저장 검사는 합성 메모리 API, 저장 계약 검사는 격리 PostgreSQL에서 수행했으며 운영 사용자 초안을 시험 생성하지 않았다.
+
+## 운영 반영
+
+`inhouse-fairness@2.0.0`, source `1bf379eddcda98a338f41781529c23ac885baed5`, tag `inhouse-fairness-v2.0.0`. 후보·운영 HTTP 각12조건과 source CI success를 확인했다. [배포·복구 근거](production.md).

@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-10-16T12:10:44.081Z",
+  "source": "1bf379eddcda98a338f41781529c23ac885baed5",
+  "id": 38898298702,
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/suejeahyun/k_lol_gg/actions/runs/38898298702",
+  "jobs": [
+    {
+      "name": "check",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Node.js",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install locked dependencies",
+          "conclusion": "success"
+        },
+        {
+          "name": "Scan current tree for secrets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check production dependency advisories",
+          "conclusion": "success"
+        },
+        {
+          "name": "Lint, typecheck, test, and build",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify administrator HTTP authentication matrix",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Node.js",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}
