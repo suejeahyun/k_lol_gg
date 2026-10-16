@@ -342,11 +342,11 @@ export function TeamBalanceBuilder() {
       <details className={styles.notice}>
         <summary>내전 밸런스 규칙</summary>
         <ul>
-          <li>선택한 주·부 포지션만 배정하며, 한 개만 선택하면 원포지션 고정입니다. 기타 포지션은 직접 허용한 경우에만 배정합니다.</li>
-          <li>원딜끼리와 서포터끼리 현재 티어의 큰 등급이 3단계 이상 차이 나면 제외합니다. 골드↔다이아는 3단계이며, 골드4↔골드1은 같은 등급입니다.</li>
+          <li>선택한 주·부 포지션을 우선합니다. 조건을 모두 만족하는 팀이 없으면 필요한 포지션·티어 조건만 최소한으로 조정해 자동 추천하고, 결과에 바뀐 배정과 이유를 표시합니다.</li>
+          <li>원딜끼리와 서포터끼리 현재 티어의 큰 등급이 3단계 이상 차이 나는 조합은 먼저 제외합니다. 피할 수 없을 때는 격차를 줄이는 조합을 찾습니다. 골드↔다이아는 3단계이며, 골드4↔골드1은 같은 등급입니다.</li>
           <li>팀 합계, 큰 대면 격차가 2곳 이상인지, 바텀 편중, 포지션 양보 부담과 양 팀이 활용할 라인을 함께 비교합니다.</li>
           <li>상위 두 명은 양 팀 분산과 가능한 미드·정글 분담을 선호합니다. 탑·미드 및 원딜·서포터 우세를 분산하고, 약한 서포터의 정글 보완이 한 팀에 중복된 전력 우세를 만들지 않는지 검사합니다.</li>
-          <li>조건을 충분히 만족하지 못하면 조건부 편성, 티어 자료가 없으면 정보 확인 필요로 표시합니다.</li>
+          <li>자동으로 조건을 조정한 결과도 바로 저장·공유할 수 있습니다. 티어 자료가 없으면 정보가 부족한 부분을 함께 표시합니다.</li>
         </ul>
       </details>
 
@@ -418,12 +418,12 @@ export function TeamBalanceBuilder() {
                   </div>
                 </div>
                 <details className={styles.balanceRowDetails}>
-                  <summary><strong>세부 설정</strong><small>{row.allPositions ? "모든 포지션 자동 배치" : row.allowAutofill ? "주·부 유지 · 기타 배정 허용" : row.additionalPositions.length === 0 ? "원포지션 고정" : `추가 가능 ${row.additionalPositions.length}개`}</small></summary>
+                  <summary><strong>세부 설정</strong><small>{row.allPositions ? "모든 포지션 자동 배치" : row.allowAutofill ? "주·부 유지 · 기타 배정 허용" : row.additionalPositions.length === 0 ? "주 포지션 우선" : `추가 가능 ${row.additionalPositions.length}개`}</small></summary>
                   <div>
                   <SingleChoice label="주 포지션 선호" value={row.mainPreference} options={preferenceOptions} disabled={row.allPositions} onChange={(mainPreference) => update(index, { mainPreference })} />
                   <fieldset className={styles.choiceField} disabled={row.allPositions}><legend>추가 가능 포지션</legend><div className={styles.choiceButtons} role="group" aria-label="추가 가능 포지션">{TEAM_BALANCE_POSITIONS.filter((position) => position !== row.mainPosition).map((position) => { const selected = row.additionalPositions.includes(position); return <button type="button" key={position} aria-pressed={selected} data-selected={selected ? "true" : undefined} onClick={() => update(index, { additionalPositions: selected ? row.additionalPositions.filter((current) => current !== position) : [...row.additionalPositions, position] })}>{positionLabel[position]}</button>; })}</div></fieldset>
                   <SingleChoice label="추가 포지션 선호" value={row.additionalPreference} options={preferenceOptions} disabled={row.allPositions || row.additionalPositions.length === 0} onChange={(additionalPreference) => update(index, { additionalPreference })} />
-                  <label><span><input type="checkbox" aria-label={`${row.playerLabel} 기타 포지션 허용`} checked={row.allowAutofill} disabled={row.allPositions || pending} onChange={(event) => update(index, { allowAutofill: event.target.checked })} /> 선택하지 않은 기타 포지션도 허용</span><small>기본은 선택한 포지션만 허용합니다. 해제 상태에서 한 개만 선택하면 해당 포지션에 고정됩니다.</small></label>
+                  <label><span><input type="checkbox" aria-label={`${row.playerLabel} 기타 포지션 허용`} checked={row.allowAutofill} disabled={row.allPositions || pending} onChange={(event) => update(index, { allowAutofill: event.target.checked })} /> 선택하지 않은 기타 포지션도 허용</span><small>켜면 처음부터 기타 포지션도 비교합니다. 꺼두면 선택한 포지션을 먼저 계산하고, 편성이 불가능할 때만 필요한 배정을 자동 조정합니다.</small></label>
                   </div>
                 </details>
               </article>
@@ -433,6 +433,7 @@ export function TeamBalanceBuilder() {
       </section>
 
       {message ? <p className={styles.error} role="alert">{message}</p> : null}
+      <p className={styles.fieldHint} role="status">{pending ? "선택한 조건을 먼저 확인하고, 필요한 경우 최소 조정으로 최선의 팀을 계산하고 있어요." : "조건이 충돌해도 다시 입력할 필요 없이 가능한 최선의 팀을 자동으로 추천합니다."}</p>
       <div className={styles.actions}>
         <button className={styles.primaryButton} data-usage-action="team-balance.quick" type="submit" disabled={pending || selectedRows.length !== 10}><Scale size={18} aria-hidden="true" /> {pending ? "계산 중…" : "균형 잡힌 팀 만들기"}</button>
         <button className={styles.secondaryButton} type="button" disabled={pending} onClick={reset}><RotateCcw size={17} aria-hidden="true" /> 입력 초기화</button>

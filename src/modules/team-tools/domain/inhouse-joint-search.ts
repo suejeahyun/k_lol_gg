@@ -35,20 +35,31 @@ export function inhouseJointCost(value: Pick<InhouseMatchupMetrics, "totalGap" |
     + value.bottomGap * 0.8 + subCount;
 }
 
+/** Only after strict search fails: avoid bottom tier violations, then minimize off-role players. */
+export function compareInhouseConstraintRelaxation(
+  a: Pick<InhouseMatchupMetrics, "bottomTierViolationCount" | "bottomTierExcess" | "roleDeviationCount">,
+  b: Pick<InhouseMatchupMetrics, "bottomTierViolationCount" | "bottomTierExcess" | "roleDeviationCount">,
+) {
+  return a.bottomTierViolationCount - b.bottomTierViolationCount || a.bottomTierExcess - b.bottomTierExcess ||
+    a.roleDeviationCount - b.roleDeviationCount;
+}
+
 type SearchTeam = { assignments: readonly InhouseFairnessAssignment[]; subCount: number; signature: string };
 export type InhouseJointPair<T extends SearchTeam> = { red: T; blue: T; metrics: InhouseMatchupMetrics };
 
 /** Every permitted role pair is inspected; no independently optimal team is discarded first. */
-export function selectInhouseJointLayouts<T extends SearchTeam>(redLayouts: readonly T[], blueLayouts: readonly T[]) {
+export function selectInhouseJointLayouts<T extends SearchTeam>(redLayouts: readonly T[], blueLayouts: readonly T[],
+  options: Readonly<{ allowConstraintRelaxation?: boolean }> = {}) {
   const pairs: InhouseJointPair<T>[] = [];
   let feasibleLayoutCount = 0;
   for (const red of redLayouts) for (const blue of blueLayouts) {
     const metrics = measureInhouseMatchup(red.assignments, blue.assignments);
-    if (metrics.hardViolationCount > 0) continue;
+    if (metrics.hardViolationCount > 0 && !options.allowConstraintRelaxation) continue;
     feasibleLayoutCount += 1;
     const cost = inhouseJointCost(metrics, red.subCount + blue.subCount);
     const before = pairs.findIndex((other) => {
-      const priority = compareInhousePriority(metrics, other.metrics);
+      const priority = (options.allowConstraintRelaxation ? compareInhouseConstraintRelaxation(metrics, other.metrics) : 0)
+        || compareInhousePriority(metrics, other.metrics);
       if (priority) return priority < 0;
       const costDifference = cost - inhouseJointCost(other.metrics, other.red.subCount + other.blue.subCount);
       if (costDifference) return costDifference < 0;

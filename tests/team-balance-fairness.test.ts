@@ -233,6 +233,42 @@ check("invalid roster, duplicate player, duplicate role and nonfinite scores fai
   assert.equal(evaluateInhouseFairness(invalid).totalGap, 0);
 });
 
+check("explicit relaxation discloses original role and bottom-tier exceptions without altering scores", () => {
+  const players = roster();
+  players[0].allowedPositions = ["MID"];
+  players[0].roleType = "AUTO";
+  players[3].currentTier = "다이아4";
+  const original = JSON.stringify(players);
+  const strict = evaluateInhouseFairness(players);
+  assert.equal(strict.status, "INVALID");
+  assert.equal(strict.hardViolations.length, 2);
+  const relaxed = evaluateInhouseFairness(players, { allowConstraintRelaxation: true });
+  assert.equal(relaxed.status, "REVIEW_REQUIRED");
+  assert.deepEqual(relaxed.hardViolations, []);
+  assert.equal(status(relaxed, "ALLOWED_POSITION_1"), "WARN");
+  assert.equal(status(relaxed, "BOTTOM_TIER_ADC"), "WARN");
+  assert.equal(relaxed.constraintRelaxation?.applied, true);
+  assert.equal(relaxed.constraintRelaxation?.roleDeviationCount, 1);
+  assert.equal(relaxed.constraintRelaxation?.bottomTierViolationCount, 1);
+  assert.deepEqual(relaxed.constraintRelaxation?.reasons.map(({ code, playerIds, position }) => ({ code, playerIds, position })), [
+    { code: "UNREGISTERED_POSITION", playerIds: ["1"], position: "TOP" },
+    { code: "BOTTOM_TIER_GAP", playerIds: ["4", "9"], position: "ADC" },
+  ]);
+  assert.match(relaxed.constraintRelaxation!.reasons[1]!.detail, /3단계/u);
+  assert.equal(relaxed.totalGap, strict.totalGap);
+  assert.equal(relaxed.maxLaneGap, strict.maxLaneGap);
+  assert.deepEqual(relaxed.ruleViolations, strict.ruleViolations);
+  assert.equal(JSON.stringify(players), original);
+  assert.equal(evaluateInhouseFairness(roster(), { allowConstraintRelaxation: true }).constraintRelaxation, undefined);
+  for (const invalid of [players.slice(1), players.map((player, index) => index === 1 ? { ...player, playerId: players[0]!.playerId } : player),
+    players.map((player, index) => index === 1 ? { ...player, position: "TOP" as const } : player)]) {
+    const report = evaluateInhouseFairness(invalid, { allowConstraintRelaxation: true });
+    assert.equal(report.status, "INVALID");
+    assert.equal(status(report, "ROSTER"), "FAIL");
+    assert.equal(report.constraintRelaxation, undefined);
+  }
+});
+
 check("search metrics match full evaluation and stay symmetric across 200 varied cases", () => {
   let seed = 42;
   const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 2 ** 32; };

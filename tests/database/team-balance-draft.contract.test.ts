@@ -741,7 +741,7 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
 });
 
 // These rows model pre-policy snapshots without changing append-only candidates.
-test("fairness guards legacy auto/manual selection and saving without rewriting history or failed-command evidence", async () => {
+test("fairness keeps legacy rounds strict and restores server-established relaxation through the draft lifecycle", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
@@ -819,11 +819,50 @@ test("fairness guards legacy auto/manual selection and saving without rewriting 
     assert.equal((await database.select().from(teamBalanceCommandReceipts).where(eq(teamBalanceCommandReceipts.actorUserAccountId, ownerId))).length, 0);
 
     provider.snapshot = { generation: 2, ratings: new Map(hardTierRoster.map((player) => [player.playerId, player.rating!])) };
-    const impossibleBody = { title: "편성 불가 계약", participants: roster.map(({ playerId, eligiblePositions }) => ({ playerId, eligiblePositions })) };
-    const noFeasible = (error: unknown) => error instanceof TeamBalanceDomainError && error.code === "NO_FEASIBLE_LAYOUT";
-    await assert.rejects(service.createDraft(context("no-feasible-create"), impossibleBody, now), noFeasible);
-    await assert.rejects(service.reevaluateDraft(context("no-feasible-reevaluate"), hardTierDraft, 0, {}, now), noFeasible);
-    assert.equal((await service.getDraft({ actorUserAccountId: ownerId, authorization: "OWNER" }, hardTierDraft))?.evaluationRound, 1);
+    const impossibleBody = { title: "최소 완화 편성 계약", participants: roster.map(({ playerId, eligiblePositions }) => ({ playerId, eligiblePositions })) };
+    const viewer = { actorUserAccountId: ownerId, authorization: "OWNER" } as const;
+    const relaxedContext = context("relaxed-create");
+    const relaxed = await service.createDraft(relaxedContext, impossibleBody, now);
+    const relaxedId = String(relaxed.body.draftId);
+    assert.equal((await service.createDraft(relaxedContext, impossibleBody, now)).replayed, true);
+    const relaxedDraft = await service.getDraft(viewer, relaxedId);
+    assert.equal(relaxedDraft?.candidates[0]?.score.fairness?.constraintRelaxation?.applied, true);
+    assert.equal(relaxedDraft?.candidates[0]?.score.fairness?.status, "REVIEW_REQUIRED");
+    assert.ok(relaxedDraft!.candidates[0]!.score.fairness!.constraintRelaxation!.reasons.length > 0);
+    for (const participant of relaxedDraft!.participants) {
+      const original = hardTierRoster.find((player) => player.playerId === participant.playerId)!;
+      assert.deepEqual(participant.eligiblePositions, original.eligiblePositions, "fallback does not overwrite role input");
+      assert.deepEqual(participant.rating, original.rating, "fallback does not manufacture stronger player ratings");
+    }
+    const autoSelected = await service.selectCandidate(context("relaxed-auto"), relaxedId, 0, { candidateRank: 1 }, now);
+    assert.equal(autoSelected.revision, 1);
+    const savedRelaxedContext = context("relaxed-save");
+    assert.equal((await service.saveDraft(savedRelaxedContext, relaxedId, 1, {}, now)).revision, 2);
+    assert.equal((await service.saveDraft(savedRelaxedContext, relaxedId, 1, {}, now)).replayed, true);
+    const relaxedLayout = relaxedDraft!.candidates[0]!.assignments.map(({ playerId, team, position }) => ({ playerId, team, position }));
+    // The generated fallback can avoid the bottom gap by moving roles. A manual
+    // return to the requested roles must retain an explicit bottom-gap warning.
+    const manualLayout = layout;
+    assert.equal((await service.selectCandidate(context("relaxed-manual"), relaxedId, 2, { layout: manualLayout }, now)).revision, 3);
+    const manualDraft = await service.getDraft(viewer, relaxedId);
+    const manual = manualDraft!.candidates.find((candidate) => candidate.signature === manualDraft!.selectedCandidateSignature)!;
+    assert.equal(manual.source, "MANUAL");
+    assert.equal(manual.score.fairness?.constraintRelaxation?.applied, true);
+    assert.equal(manual.score.fairness?.constraintRelaxation?.roleDeviationCount, 0);
+    assert.equal(manual.score.fairness?.constraintRelaxation?.bottomTierViolationCount, 1);
+    assert.equal((await service.saveDraft(context("relaxed-manual-save"), relaxedId, 3, {}, now)).revision, 4);
+    assert.equal((await service.reevaluateDraft(context("relaxed-recalculate"), relaxedId, 4, {}, now)).revision, 5);
+    assert.equal((await service.getDraft(viewer, relaxedId))?.evaluationRound, 2);
+    assert.equal((await service.saveDraft(context("relaxed-reevaluated-save"), relaxedId, 5, {}, now)).revision, 6);
+
+    // A legacy round can opt into the new policy only by running the server's
+    // generator. Its old append-only candidate JSON is retained unchanged.
+    assert.equal((await service.reevaluateDraft(context("legacy-relaxed-recalculate"), hardTierDraft, 0, {}, now)).revision, 1);
+    assert.equal((await service.getDraft(viewer, hardTierDraft))?.evaluationRound, 2);
+    assert.equal((await service.saveDraft(context("legacy-relaxed-save"), hardTierDraft, 1, {}, now)).revision, 2);
+    assert.deepEqual((await database.select().from(teamBalanceDraftCandidates).where(and(
+      eq(teamBalanceDraftCandidates.draftId, hardTierDraft), eq(teamBalanceDraftCandidates.evaluationRound, 1),
+    )))[0]?.scoreJson, legacyScore);
 
     const validLegacyDraft = await legacyDraft(roster);
     // A changed provider does not silently replace an evaluation-round snapshot.
@@ -836,6 +875,27 @@ test("fairness guards legacy auto/manual selection and saving without rewriting 
     assert.deepEqual(preserved?.candidates[0]?.score, legacyScore);
 
     provider.snapshot = { generation: 3, ratings: new Map(roster.map((player) => [player.playerId, player.rating!])) };
+    assert.equal((await service.reevaluateDraft(context("role-relaxed-recalculate"), roleDraft, 0, {}, now)).revision, 1);
+    const roleRelaxed = await service.getDraft(viewer, roleDraft);
+    assert.equal(roleRelaxed?.candidates[0]?.score.fairness?.constraintRelaxation?.applied, true);
+    assert.equal(roleRelaxed?.candidates[0]?.score.fairness?.constraintRelaxation?.roleDeviationCount, 1);
+    assert.deepEqual(roleRelaxed?.participants.find((participant) => participant.playerId === playerIds[0])?.eligiblePositions, roleRoster[0]!.eligiblePositions);
+    assert.equal((await service.saveDraft(context("role-relaxed-save"), roleDraft, 1, {}, now)).revision, 2);
+
+    // Relaxation belongs to one server evaluation round, not the draft forever.
+    assert.equal((await service.reevaluateDraft(context("back-to-strict"), relaxedId, 6, {}, now)).revision, 7);
+    const strictAgain = await service.getDraft(viewer, relaxedId);
+    assert.equal(strictAgain?.evaluationRound, 3);
+    assert.equal(strictAgain?.candidates[0]?.score.fairness?.constraintRelaxation, undefined);
+    const wrongRoleLayout = strictAgain!.candidates[0]!.assignments.map(({ playerId, team, position }) => ({
+      playerId, team, position: team === "BLUE" && position === "TOP" ? "MID" as const : team === "BLUE" && position === "MID" ? "TOP" as const : position,
+    }));
+    await assert.rejects(service.selectCandidate(context("strict-round-cannot-relax"), relaxedId, 7, { layout: wrongRoleLayout }, now), isFairnessFailure);
+    assert.throws(() => service.selectCandidate(context("client-cannot-relax"), relaxedId, 7, { layout: wrongRoleLayout, allowConstraintRelaxation: true }, now), serviceError("INVALID_INPUT"));
+    assert.throws(() => service.createDraft(context("client-cannot-relax-create"), { ...impossibleBody, allowConstraintRelaxation: true }, now), serviceError("INVALID_INPUT"));
+    const malformed = relaxedLayout.map((entry, index) => index === 1 ? { ...entry, playerId: relaxedLayout[0]!.playerId } : entry);
+    await assert.rejects(service.selectCandidate(context("relaxed-still-validates-roster"), roleDraft, 2, { layout: malformed }, now), serviceError("INVALID_INPUT"));
+
     const modern = await service.createDraft(context("modern-fairness-create"), { ...impossibleBody, title: "현재 편성 규칙 계약" }, now);
     const modernId = String(modern.body.draftId);
     const readModern = await service.getDraft({ actorUserAccountId: ownerId, authorization: "OWNER" }, modernId);

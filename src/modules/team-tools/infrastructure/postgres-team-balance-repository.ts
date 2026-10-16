@@ -506,18 +506,34 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
     }));
   }
 
+  private async evaluationOptions(transaction: V2Transaction, draftId: string, evaluationRound: number) {
+    const automatic = (await transaction.select({ score: teamBalanceDraftCandidates.scoreJson })
+      .from(teamBalanceDraftCandidates)
+      .where(and(
+        eq(teamBalanceDraftCandidates.draftId, draftId),
+        eq(teamBalanceDraftCandidates.evaluationRound, evaluationRound),
+        eq(teamBalanceDraftCandidates.source, "AUTO"),
+        eq(teamBalanceDraftCandidates.rank, 1),
+      )).limit(1))[0];
+    // Only the server's original recommendation can establish a relaxed round.
+    // A manual layout or request flag must not relax an otherwise feasible draft.
+    const score = automatic?.score as EvaluatedTeamBalanceLayout["score"] | undefined;
+    return { allowConstraintRelaxation: score?.fairness?.constraintRelaxation?.applied === true };
+  }
+
   private async validateStoredCandidate(
     transaction: V2Transaction,
     draftId: string,
     candidate: typeof teamBalanceDraftCandidates.$inferSelect,
   ) {
     // Candidate JSON is append-only history. Re-evaluate its layout against the
-    // authoritative inputs for this round so older candidates cannot bypass
-    // current hard rules, without silently replacing historical scores.
+    // authoritative inputs and server-established policy for this round without
+    // silently replacing historical scores or granting a client-selected policy.
     try {
       return evaluateTeamBalanceLayout(
         await this.participantInputs(transaction, draftId),
         candidate.assignmentsJson as unknown as readonly TeamBalanceLayoutEntry[],
+        await this.evaluationOptions(transaction, draftId, candidate.evaluationRound),
       );
     } catch (error) {
       if (error instanceof TeamBalanceDomainError) {
@@ -557,7 +573,11 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
       if (input.kind === "MANUAL") {
         let evaluated: EvaluatedTeamBalanceLayout;
         try {
-          evaluated = evaluateTeamBalanceLayout(await this.participantInputs(transaction, draftId), input.layout);
+          evaluated = evaluateTeamBalanceLayout(
+            await this.participantInputs(transaction, draftId),
+            input.layout,
+            await this.evaluationOptions(transaction, draftId, current.evaluationRound),
+          );
         } catch (error) {
           if (error instanceof TeamBalanceDomainError && error.code === "FAIRNESS_CONSTRAINT") throw error;
           throw new TeamBalanceServiceError("INVALID_INPUT", "수동 팀 배치의 인원·포지션을 확인해 주세요.");

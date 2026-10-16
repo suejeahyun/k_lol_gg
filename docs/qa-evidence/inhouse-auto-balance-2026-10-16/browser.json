@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-16",
+  "status": "PASS",
+  "surface": "Codex In-app Browser, local synthetic fixture on 127.0.0.1:43191",
+  "implementation": "Actual React builder/workspace and domain calculation; synthetic in-memory API with Next navigation stub",
+  "input": {"participantCount": 10, "allOriginalPositions": "TOP", "tier": "GOLD"},
+  "create": {"status": 200, "durationMs": 3001, "roleDeviationCount": 8, "bottomTierViolationCount": 0, "originalPositionsPreserved": true},
+  "manual": {"swap": "BLUE TOP and JGL", "saveDisabledBeforeEvaluation": true, "evaluationStatus": 200, "revision": 2, "heading": "수동 배치에 적용된 조정 조건", "automaticBestHeadingCount": 0},
+  "save": {"status": 200, "revision": 3, "draftStatus": "SAVED", "visibleMessage": "선택한 팀을 저장했어요."},
+  "responsive": {"viewportWidth": 320, "documentWidth": 305, "bodyWidth": 265, "adjustmentHeadingVisible": true, "horizontalOverflow": false},
+  "screenshot": "automatic-team.jpg",
+  "cleanup": "Viewport reset and temporary browser tab closed",
+  "scope": "No production account, API, DB, player or draft changed. Production write success is not claimed."
+}

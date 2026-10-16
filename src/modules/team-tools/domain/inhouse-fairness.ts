@@ -48,6 +48,18 @@ export type InhouseFairnessCheck = {
 /** User rules 1 through 6, compared in order; smaller rule numbers take precedence. */
 export type InhouseRuleViolations = readonly [number, number, number, number, number, number];
 
+export type InhouseConstraintRelaxation = {
+  applied: true;
+  roleDeviationCount: number;
+  bottomTierViolationCount: number;
+  reasons: {
+    code: "UNREGISTERED_POSITION" | "BOTTOM_TIER_GAP";
+    playerIds: string[];
+    position: FairnessPosition;
+    detail: string;
+  }[];
+};
+
 export type InhouseFairnessReport = {
   status: "BALANCED" | "CONDITIONAL" | "REVIEW_REQUIRED" | "INVALID";
   hardViolations: string[];
@@ -65,6 +77,8 @@ export type InhouseFairnessReport = {
   lineGapTotal: number;
   unknownTierCount: number;
   checks: InhouseFairnessCheck[];
+  /** Present only when this actual layout needs an explicitly enabled fallback. */
+  constraintRelaxation?: InhouseConstraintRelaxation;
 };
 
 const POSITION_LABEL: Record<FairnessPosition, string> = {
@@ -127,6 +141,9 @@ export function getInhouseLaneDirection(redMinusBlue: number): -1 | 0 | 1 {
 
 export type InhouseMatchupMetrics = {
   hardViolationCount: number;
+  roleDeviationCount: number;
+  bottomTierViolationCount: number;
+  bottomTierExcess: number;
   unknownTierCount: number;
   qualityViolationCount: number;
   directionalPenalty: number;
@@ -166,6 +183,8 @@ export function measureInhouseMatchup(
   let unknownTierCount = 0;
   let hardViolationCount = 0;
   let bottomTierViolationCount = 0;
+  let bottomTierExcess = 0;
+  let roleDeviationCount = 0;
   let autoRed = 0;
   let autoBlue = 0;
   let highest = -Infinity;
@@ -186,11 +205,12 @@ export function measureInhouseMatchup(
     if (i >= 3 && rt !== null && bt !== null && Math.abs(rt - bt) >= INHOUSE_FAIRNESS_LIMITS.bottomMajorTierGap) {
       hardViolationCount += 1;
       bottomTierViolationCount += 1;
+      bottomTierExcess += Math.abs(rt - bt) - (INHOUSE_FAIRNESS_LIMITS.bottomMajorTierGap - 1);
     }
     if (r.roleType === "AUTO") autoRed += 1;
     if (b.roleType === "AUTO") autoBlue += 1;
-    if (r.allowedPositions && !r.allowedPositions.includes(r.position)) hardViolationCount += 1;
-    if (b.allowedPositions && !b.allowedPositions.includes(b.position)) hardViolationCount += 1;
+    if (r.allowedPositions && !r.allowedPositions.includes(r.position)) { hardViolationCount += 1; roleDeviationCount += 1; }
+    if (b.allowedPositions && !b.allowedPositions.includes(b.position)) { hardViolationCount += 1; roleDeviationCount += 1; }
     for (let t = 0; t < 2; t += 1) {
       const score = t === 0 ? r.finalBaseScore : b.finalBaseScore;
       if (score > highest) { second = highest; highest = score; }
@@ -260,7 +280,8 @@ export function measureInhouseMatchup(
     Number(unsupportedSupport) * INHOUSE_DIRECTIONAL_PENALTIES.weakSupportWithoutJungle +
     Number(jungleWithoutCarry) * INHOUSE_DIRECTIONAL_PENALTIES.jungleWithoutCarryLane +
     Number(!redHasPath || !blueHasPath) * INHOUSE_DIRECTIONAL_PENALTIES.missingWinPath;
-  return { hardViolationCount, unknownTierCount, qualityViolationCount, directionalPenalty, ruleViolations,
+  return { hardViolationCount, roleDeviationCount, bottomTierViolationCount, bottomTierExcess,
+    unknownTierCount, qualityViolationCount, directionalPenalty, ruleViolations,
     autoCount: autoRed + autoBlue, autoImbalance: Math.abs(autoRed - autoBlue),
     maxLaneGap, totalGap, largeLaneCount, bottomGap, lineGapTotal: round(lineGapTotal),
     topPlayersSplit, midJunglePossible, assignedMidJungle, topMidStack, bottomStack,
@@ -273,10 +294,12 @@ export function measureInhouseMatchup(
  */
 export function evaluateInhouseFairness(
   assignments: readonly InhouseFairnessAssignment[],
+  options: Readonly<{ allowConstraintRelaxation?: boolean }> = {},
 ): InhouseFairnessReport {
   const checks: InhouseFairnessCheck[] = [];
   const hardViolations: string[] = [];
   const warnings: string[] = [];
+  const relaxationReasons: InhouseConstraintRelaxation["reasons"] = [];
   let qualityViolationCount = 0;
   let directionalPenalty = 0;
   const add = (code: string, label: string, status: InhouseFairnessCheck["status"], detail: string) => {
@@ -304,7 +327,7 @@ export function evaluateInhouseFairness(
     : "서로 다른 10명, 양 팀 각 5명, 각 포지션 1명과 유효한 점수가 필요합니다.");
 
   const report = (maxLaneGap: number, totalGap: number, metrics?: InhouseMatchupMetrics): InhouseFairnessReport => ({
-    status: hardViolations.length ? "INVALID" : unknownTierCount ? "REVIEW_REQUIRED" :
+    status: hardViolations.length ? "INVALID" : unknownTierCount || relaxationReasons.length ? "REVIEW_REQUIRED" :
       qualityViolationCount || directionalPenalty || autoCount ? "CONDITIONAL" : "BALANCED",
     hardViolations, warnings, qualityViolationCount, directionalPenalty,
     ruleViolations: metrics?.ruleViolations,
@@ -312,14 +335,21 @@ export function evaluateInhouseFairness(
     largeLaneCount: metrics?.largeLaneCount ?? 0,
     bottomGap: metrics?.bottomGap ?? 0,
     lineGapTotal: metrics?.lineGapTotal ?? 0,
+    ...(relaxationReasons.length ? { constraintRelaxation: {
+      applied: true as const,
+      roleDeviationCount: relaxationReasons.filter((reason) => reason.code === "UNREGISTERED_POSITION").length,
+      bottomTierViolationCount: relaxationReasons.filter((reason) => reason.code === "BOTTOM_TIER_GAP").length,
+      reasons: relaxationReasons,
+    } } : {}),
   });
   // Do not infer matchups or emit NaN metrics for malformed manual input.
   if (!validShape) return report(0, 0);
 
   for (const a of assignments) {
     if (a.allowedPositions && !a.allowedPositions.includes(a.position)) {
-      add(`ALLOWED_POSITION_${a.playerId}`, "가능 포지션 제한", "FAIL",
-        `선수 ${a.playerId}의 ${POSITION_LABEL[a.position]} 배치는 등록된 가능 포지션에 포함되지 않습니다.`);
+      const detail = `${POSITION_LABEL[a.position]} 배치는 등록된 가능 포지션 밖입니다.${options.allowConstraintRelaxation ? " 자동 완화하여 AUTO 점수로 계산했습니다." : ""}`;
+      add(`ALLOWED_POSITION_${a.playerId}`, "가능 포지션 제한", options.allowConstraintRelaxation ? "WARN" : "FAIL", `선수 ${a.playerId}: ${detail}`);
+      if (options.allowConstraintRelaxation) relaxationReasons.push({ code: "UNREGISTERED_POSITION", playerIds: [a.playerId], position: a.position, detail });
     }
   }
 
@@ -346,10 +376,14 @@ export function evaluateInhouseFairness(
     const r = parseInhouseMajorTier(lane.red.currentTier);
     const b = parseInhouseMajorTier(lane.blue.currentTier);
     const gap = r === null || b === null ? null : Math.abs(r - b);
-    add(`BOTTOM_TIER_${position}`, `${POSITION_LABEL[position]} 티어 제한`, gap === null ? "WARN" :
-      gap >= INHOUSE_FAIRNESS_LIMITS.bottomMajorTierGap ? "FAIL" : "PASS", gap === null
+    const exceeds = gap !== null && gap >= INHOUSE_FAIRNESS_LIMITS.bottomMajorTierGap;
+    const detail = gap === null
       ? `${POSITION_LABEL[position]} 맞대결의 현재 티어가 누락되어 큰 등급 3단계 제한을 검증할 수 없습니다.`
-      : `${POSITION_LABEL[position]} 현재 티어 차이는 큰 등급 ${gap}단계입니다.${gap >= INHOUSE_FAIRNESS_LIMITS.bottomMajorTierGap ? " 3단계 이상 맞대결은 허용하지 않습니다." : ""}`);
+      : `${POSITION_LABEL[position]} 현재 티어 차이는 큰 등급 ${gap}단계입니다.${exceeds ? options.allowConstraintRelaxation ? " 자동 완화하여 이 배치를 허용했습니다." : " 3단계 이상 맞대결은 허용하지 않습니다." : ""}`;
+    add(`BOTTOM_TIER_${position}`, `${POSITION_LABEL[position]} 티어 제한`, gap === null ? "WARN" :
+      exceeds ? options.allowConstraintRelaxation ? "WARN" : "FAIL" : "PASS", detail);
+    if (exceeds && options.allowConstraintRelaxation) relaxationReasons.push({ code: "BOTTOM_TIER_GAP",
+      playerIds: [lane.red.playerId, lane.blue.playerId], position, detail });
   }
 
   const quality = (code: string, label: string, fails: boolean, detail: string) => {

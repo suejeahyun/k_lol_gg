@@ -11,6 +11,7 @@ import {
 } from "../src/modules/team-tools/domain/team-balance";
 import {
   evaluateInhouseFairness,
+  parseInhouseMajorTier,
   type InhouseFairnessAssignment,
   type InhouseFairnessReport,
 } from "../src/modules/team-tools/domain/inhouse-fairness";
@@ -51,20 +52,29 @@ test("joint role search repairs opposing jungle/mid stomps even when it needs tw
   assert.equal(JSON.stringify(players), snapshot);
 });
 
-test("current-tier bottom cap is enforced in both generation and manual evaluation", () => {
+test("automatic fallback repairs a bottom-tier conflict while ordinary manual evaluation stays strict", () => {
   const players = neutralPlayers();
   players[3] = { ...players[3]!, rating: { ...players[3]!.rating!, v1: {
     ...players[3]!.rating!.v1!, currentTier: "DIAMOND IV", peakTier: "골드1",
   } }, eligiblePositions: [{ position: "ADC", preference: "SUB" }] };
   const layout = players.map((player, index) => ({ playerId: player.playerId,
     team: index < 5 ? "RED" as const : "BLUE" as const, position: TEAM_BALANCE_POSITIONS[index % 5]! }));
-  assert.throws(() => calculateTeamBalanceCandidates(players),
-    (error) => error instanceof TeamBalanceDomainError && error.code === "NO_FEASIBLE_LAYOUT");
+  const generated = calculateTeamBalanceCandidates(players).candidates[0]!;
+  assert.equal(generated.score.fairness?.constraintRelaxation?.bottomTierViolationCount, 0);
+  assert.equal(generated.score.fairness?.constraintRelaxation?.roleDeviationCount, 2);
+  assert.deepEqual(generated.score.fairness?.hardViolations, []);
+  assert.equal(generated.score.fairness?.status, "REVIEW_REQUIRED");
   assert.throws(() => evaluateTeamBalanceLayout(players, layout), (error) =>
     error instanceof TeamBalanceDomainError && error.code === "FAIRNESS_CONSTRAINT" &&
     error.fairness?.status === "INVALID" && error.fairness.checks.some((check) => check.code === "BOTTOM_TIER_ADC" && check.status === "FAIL"));
+  const manual = evaluateTeamBalanceLayout(players, layout, { allowConstraintRelaxation: true });
+  assert.equal(manual.score.fairness?.constraintRelaxation?.bottomTierViolationCount, 1);
+  assert.equal(manual.score.fairness?.constraintRelaxation?.roleDeviationCount, 0);
+  assert.equal(manual.score.fairness?.status, "REVIEW_REQUIRED");
   players[3] = { ...players[3], rating: { ...players[3].rating!, v1: { ...players[3].rating!.v1!, currentTier: "EMERALD IV" } } };
-  assert.equal(calculateTeamBalanceCandidates(players).candidates[0]!.score.fairness?.hardViolations.length, 0);
+  const strict = calculateTeamBalanceCandidates(players).candidates[0]!;
+  assert.equal(strict.score.fairness?.hardViolations.length, 0);
+  assert.equal(strict.score.fairness?.constraintRelaxation, undefined);
 });
 
 test("unknown current tier is reviewable and malformed layouts remain distinct from rule violations", () => {
@@ -148,6 +158,105 @@ test("joint shortlist is the exact oracle optimum including canonical tie-breaki
     assert.deepEqual(selected.pairs.map((pair) => [pair.blue.signature, pair.red.signature]),
       oracle.slice(0, 3).map((pair) => [pair.blue.signature, pair.red.signature]));
   }
+});
+
+function relaxedOracleKey(report: InhouseFairnessReport, red: SearchTeam, blue: SearchTeam) {
+  let bottomViolations = 0;
+  let excess = 0;
+  for (const position of ["ADC", "SUP"] as const) {
+    const r = parseInhouseMajorTier(red.assignments.find((entry) => entry.position === position)!.currentTier);
+    const b = parseInhouseMajorTier(blue.assignments.find((entry) => entry.position === position)!.currentTier);
+    if (r !== null && b !== null && Math.abs(r - b) >= 3) { bottomViolations += 1; excess += Math.abs(r - b) - 2; }
+  }
+  const offRoles = [...red.assignments, ...blue.assignments].filter((entry) => entry.allowedPositions && !entry.allowedPositions.includes(entry.position)).length;
+  return [bottomViolations, excess, offRoles, ...oracleKey(report, red, blue)];
+}
+
+test("relaxed joint search matches the independent bottom-risk, off-role and numbered-rule oracle", () => {
+  let seed = 812;
+  const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 2 ** 32; };
+  for (let trial = 0; trial < 20; trial += 1) {
+    const layouts = (team: "RED" | "BLUE") => Array.from({ length: 5 }, (_, variant) => {
+      const entry = searchTeam(team, variant, Array.from({ length: 5 }, () => 35 + Math.floor(random() * 35)));
+      entry.assignments.forEach((assignment) => {
+        assignment.currentTier = ["골드1", "다이아4", "아이언1", "마스터"][Math.floor(random() * 4)]!;
+        if (random() < 0.5) { assignment.allowedPositions = ["TOP"]; assignment.roleType = assignment.position === "TOP" ? "MAIN" : "AUTO"; }
+      });
+      return entry;
+    });
+    const red = layouts("RED"), blue = layouts("BLUE");
+    const oracle = red.flatMap((r) => blue.map((b) => ({ red: r, blue: b,
+      key: relaxedOracleKey(evaluateInhouseFairness([...r.assignments, ...b.assignments]), r, b) })))
+      .sort((a, b) => compareKeys(a.key, b.key));
+    const result = selectInhouseJointLayouts([...red].reverse(), [...blue].reverse(), { allowConstraintRelaxation: true });
+    assert.equal(result.feasibleLayoutCount, 25);
+    assert.deepEqual(result.pairs.map((pair) => [pair.blue.signature, pair.red.signature]),
+      oracle.slice(0, 3).map((pair) => [pair.blue.signature, pair.red.signature]));
+  }
+});
+
+// Independent assignment DP over ten role seats proves the global minimum
+// number of unregistered-role players, without using the production team split.
+function minimumOffRoles(players: readonly TeamBalancePlayer[]) {
+  let costs = new Map([[0, 0]]);
+  for (const player of players) {
+    const next = new Map<number, number>();
+    for (const [mask, cost] of costs) for (let seat = 0; seat < 10; seat += 1) {
+      if (mask & (1 << seat)) continue;
+      const assigned = mask | (1 << seat);
+      const nextCost = cost + Number(!player.eligiblePositions.some((entry) => entry.position === TEAM_BALANCE_POSITIONS[seat % 5]));
+      next.set(assigned, Math.min(next.get(assigned) ?? Infinity, nextCost));
+    }
+    costs = next;
+  }
+  return costs.get((1 << 10) - 1)!;
+}
+
+test("global fallback uses the fewest off-role players and is deterministic with original preferences intact", () => {
+  const players = neutralPlayers();
+  players[0] = { ...players[0]!, eligiblePositions: [{ position: "MID", preference: "MAIN" }] };
+  const original = JSON.stringify(players);
+  assert.equal(minimumOffRoles(players), 1);
+  const baseline = calculateTeamBalanceCandidates(players);
+  const chosen = baseline.candidates[0]!;
+  assert.equal(chosen.score.fairness?.constraintRelaxation?.roleDeviationCount, minimumOffRoles(players));
+  assert.equal(chosen.score.fairness?.constraintRelaxation?.bottomTierViolationCount, 0);
+  assert.equal(chosen.assignments.filter((entry) => entry.preference === "AUTO").length, 1);
+  assert.equal(baseline.search.feasibleLayoutCount, 126 * 120 * 120);
+  assert.deepEqual(calculateTeamBalanceCandidates([...players].reverse()).candidates, baseline.candidates);
+  assert.deepEqual(calculateTeamBalanceCandidates([...players.slice(3), ...players.slice(0, 3)]).candidates, baseline.candidates);
+  const layout = chosen.assignments.map(({ playerId, team, position }) => ({ playerId, team, position }));
+  assert.deepEqual(evaluateTeamBalanceLayout(players, layout, { allowConstraintRelaxation: true }).score, chosen.score);
+  assert.equal(JSON.stringify(players), original);
+});
+
+test("strict feasible generation keeps registered assignments and the exact pre-fallback selection order", () => {
+  const players = neutralPlayers();
+  const generated = calculateTeamBalanceCandidates(players);
+  assert.equal(generated.search.feasibleLayoutCount, 16, "no relaxed second pass is visited when strict layouts exist");
+  const selected = generated.candidates[0]!;
+  assert.equal(selected.score.fairness?.constraintRelaxation, undefined);
+  assert.ok(selected.assignments.every((assignment) => players.find((player) => player.playerId === assignment.playerId)!.eligiblePositions.some((entry) => entry.position === assignment.position)));
+  const oracle: { signature: string; key: (number | string)[] }[] = [];
+  for (let mask = 0; mask < 16; mask += 1) {
+    const layout = TEAM_BALANCE_POSITIONS.flatMap((position, index) => {
+      const swap = index > 0 && Boolean(mask & (1 << (index - 1)));
+      return [{ playerId: players[index + (swap ? 5 : 0)]!.playerId, team: "RED" as const, position },
+        { playerId: players[index + (swap ? 0 : 5)]!.playerId, team: "BLUE" as const, position }];
+    });
+    const evaluated = evaluateTeamBalanceLayout(players, layout);
+    const searchSide = (team: "RED" | "BLUE"): SearchTeam => {
+      const assignments = TEAM_BALANCE_POSITIONS.map((position) => {
+        const assignment = evaluated.assignments.find((entry) => entry.team === team && entry.position === position)!;
+        return { ...assignment, roleType: assignment.preference, score: assignment.rating.effectiveScore,
+          finalBaseScore: 46.4, currentTier: "골드1", peakTier: "골드1", mainPositions: [position], subPositions: [] };
+      });
+      return { assignments, subCount: 0, signature: assignments.map((entry) => entry.playerId).join(",") };
+    };
+    oracle.push({ signature: evaluated.signature, key: oracleKey(evaluated.score.fairness!, searchSide("RED"), searchSide("BLUE")) });
+  }
+  oracle.sort((a, b) => compareKeys(a.key, b.key));
+  assert.equal(selected.signature, oracle[0]!.signature);
 });
 
 test("rule 1 cannot be traded for several lower rules or a better numeric gap", () => {

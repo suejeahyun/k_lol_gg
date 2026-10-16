@@ -1,12 +1,12 @@
 import { evaluateInhouseFairness, measureInhouseMatchup, type InhouseFairnessAssignment, type InhouseFairnessReport, type InhouseMatchupMetrics } from "./inhouse-fairness";
-import { compareInhousePriority, inhouseJointCost, selectInhouseJointLayouts } from "./inhouse-joint-search";
+import { compareInhouseConstraintRelaxation, compareInhousePriority, inhouseJointCost, selectInhouseJointLayouts } from "./inhouse-joint-search";
 
 export type { InhouseFairnessReport, InhouseFairnessCheck, InhouseRuleViolations } from "./inhouse-fairness";
 
 export const TEAM_BALANCE_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 export const TEAM_BALANCE_TEAMS = ["BLUE", "RED"] as const;
 export const TEAM_BALANCE_PREFERENCES = ["MAIN", "SUB", "AUTO"] as const;
-export const TEAM_BALANCE_V1_FORMULA_VERSION = "V2_INHOUSE_PRIORITY_2026_10_15";
+export const TEAM_BALANCE_V1_FORMULA_VERSION = "V2_INHOUSE_RELAXED_2026_10_16";
 
 export type TeamBalancePosition = (typeof TEAM_BALANCE_POSITIONS)[number];
 export type TeamBalanceTeam = (typeof TEAM_BALANCE_TEAMS)[number];
@@ -134,7 +134,7 @@ export type TeamBalancePositionBreakdown = Readonly<{
 }>;
 
 export type TeamBalanceV1ScoreBreakdown = Readonly<{
-  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION | "V2_INHOUSE_FAIRNESS_2026_10_15" | "V1_BLUEBLACK_AI_GLOBAL_2026_10_10" | "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
+  formulaVersion: typeof TEAM_BALANCE_V1_FORMULA_VERSION | "V2_INHOUSE_PRIORITY_2026_10_15" | "V2_INHOUSE_FAIRNESS_2026_10_15" | "V1_BLUEBLACK_AI_GLOBAL_2026_10_10" | "V1_BLUEBLACK_AI_GLOBAL_2026_09_11";
   qualityScore: number;
   recommendationScore: number;
   predictedRedWinRate: number;
@@ -620,14 +620,14 @@ function createAssignment(player: NormalizedPlayer, team: TeamBalanceTeam, posit
   };
 }
 
-function prepareTeams(team: TeamBalanceTeam, players: readonly NormalizedPlayer[]): PreparedTeam[] {
+function prepareTeams(team: TeamBalanceTeam, players: readonly NormalizedPlayer[], allowConstraintRelaxation = false): PreparedTeam[] {
   const layouts: PreparedTeam[] = [];
   // Each position score is computed once per player/team, preserving the existing score formula.
   const byPlayer = new Map(players.map((player) => [player.playerId, new Map(
-    [...player.eligiblePositions.keys()].map((position) => [position, createAssignment(player, team, position)]),
+    (allowConstraintRelaxation ? TEAM_BALANCE_POSITIONS : [...player.eligiblePositions.keys()]).map((position) => [position, createAssignment(player, team, position)]),
   )]));
   for (const ordered of permute(players)) {
-    if (ordered.some((player, index) => !player.eligiblePositions.has(TEAM_BALANCE_POSITIONS[index]!))) continue;
+    if (!allowConstraintRelaxation && ordered.some((player, index) => !player.eligiblePositions.has(TEAM_BALANCE_POSITIONS[index]!))) continue;
     const assignments = ordered.map((player, index) => byPlayer.get(player.playerId)!.get(TEAM_BALANCE_POSITIONS[index]!)!);
     const mainCount = assignments.filter((entry) => entry.preference === "MAIN").length;
     const subCount = assignments.filter((entry) => entry.preference === "SUB").length;
@@ -751,8 +751,8 @@ function compareCandidates(left: CandidateMetrics, right: CandidateMetrics) {
     compareText(left.blue.signature, right.blue.signature) || compareText(left.red.signature, right.red.signature);
 }
 
-function materialize(candidate: CandidateMetrics): EvaluatedTeamBalanceLayout {
-  const fairness = evaluateInhouseFairness(candidate.assignments);
+function materialize(candidate: CandidateMetrics, options: Readonly<{ allowConstraintRelaxation?: boolean }> = {}): EvaluatedTeamBalanceLayout {
+  const fairness = evaluateInhouseFairness(candidate.assignments, options);
   if (fairness.hardViolations.length) throw new TeamBalanceDomainError("FAIRNESS_CONSTRAINT", fairness.hardViolations.join(" "), fairness);
   const assignments: EvaluatedTeamBalanceAssignment[] = candidate.assignments
     .map((entry) => ({
@@ -816,7 +816,8 @@ function materialize(candidate: CandidateMetrics): EvaluatedTeamBalanceLayout {
   };
 }
 
-function evaluateNormalizedLayout(players: readonly NormalizedPlayer[], layout: readonly TeamBalanceLayoutEntry[]) {
+function evaluateNormalizedLayout(players: readonly NormalizedPlayer[], layout: readonly TeamBalanceLayoutEntry[],
+  options: Readonly<{ allowConstraintRelaxation?: boolean }>) {
   if (layout.length !== 10) throw new TeamBalanceDomainError("INVALID_LAYOUT", `assignment-count:${layout.length}`);
   const playerById = new Map(players.map((player) => [player.playerId, player]));
   const seen = new Set<string>();
@@ -845,12 +846,13 @@ function evaluateNormalizedLayout(players: readonly NormalizedPlayer[], layout: 
       priorityAutoCount: teamAssignments.filter((entry) => entry.highTier && entry.preference === "AUTO").length,
     };
   };
-  return materialize(evaluateCandidate(toPrepared("RED"), toPrepared("BLUE")));
+  return materialize(evaluateCandidate(toPrepared("RED"), toPrepared("BLUE")), options);
 }
 
 /** Manual layouts are always recomputed on the server with the same V1 score model. */
-export function evaluateTeamBalanceLayout(input: readonly TeamBalancePlayer[], layout: readonly TeamBalanceLayoutEntry[]) {
-  return evaluateNormalizedLayout(normalizePlayers(input), layout);
+export function evaluateTeamBalanceLayout(input: readonly TeamBalancePlayer[], layout: readonly TeamBalanceLayoutEntry[],
+  options: Readonly<{ allowConstraintRelaxation?: boolean }> = {}) {
+  return evaluateNormalizedLayout(normalizePlayers(input), layout, options);
 }
 
 /**
@@ -863,18 +865,24 @@ export function calculateTeamBalanceCandidates(input: readonly TeamBalancePlayer
   const combinations = combinationsWithRedAnchor(players.length);
   const candidates: CandidateMetrics[] = [];
   let feasibleLayoutCount = 0;
-  for (const redIndexes of combinations) {
-    const redSet = new Set(redIndexes);
-    const red = prepareTeams("RED", players.filter((_, index) => redSet.has(index)));
-    const blue = prepareTeams("BLUE", players.filter((_, index) => !redSet.has(index)));
-    const selected = selectInhouseJointLayouts(red, blue);
-    feasibleLayoutCount += selected.feasibleLayoutCount;
-    for (const pair of selected.pairs) candidates.push(evaluateCandidate(pair.red, pair.blue));
+  let allowConstraintRelaxation = false;
+  for (const relaxed of [false, true]) {
+    allowConstraintRelaxation = relaxed;
+    for (const redIndexes of combinations) {
+      const redSet = new Set(redIndexes);
+      const red = prepareTeams("RED", players.filter((_, index) => redSet.has(index)), relaxed);
+      const blue = prepareTeams("BLUE", players.filter((_, index) => !redSet.has(index)), relaxed);
+      const selected = selectInhouseJointLayouts(red, blue, { allowConstraintRelaxation: relaxed });
+      feasibleLayoutCount += selected.feasibleLayoutCount;
+      for (const pair of selected.pairs) candidates.push(evaluateCandidate(pair.red, pair.blue));
+    }
+    if (candidates.length) break;
   }
-  if (candidates.length === 0) throw new TeamBalanceDomainError("NO_FEASIBLE_LAYOUT", "등록된 가능 포지션과 바텀 큰 티어 3단계 제한을 함께 만족하는 편성이 없습니다.");
-  candidates.sort(compareCandidates);
+  // Validated ten-person input always has a structural 5:5 assignment in the fallback search.
+  candidates.sort((left, right) => (allowConstraintRelaxation ? compareInhouseConstraintRelaxation(left.fairness, right.fairness) : 0)
+    || compareCandidates(left, right));
   return {
-    candidates: [{ ...materialize(candidates[0]!), rank: 1 }],
+    candidates: [{ ...materialize(candidates[0]!, { allowConstraintRelaxation }), rank: 1 }],
     search: { symmetryAnchorPlayerId: players[0]!.playerId, teamCombinationCount: combinations.length, feasibleLayoutCount },
   };
 }

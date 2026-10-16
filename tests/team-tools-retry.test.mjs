@@ -23,7 +23,7 @@ const season = load("modules/seasons/domain/season.ts", {});
 const keys = load("modules/seasons/application/client-mutation-key-store.ts", { "../domain/season": season });
 const css = { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) };
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"];
-const formulaVersion = "V2_INHOUSE_PRIORITY_2026_10_15";
+const formulaVersion = "V2_INHOUSE_RELAXED_2026_10_16";
 const share = load("modules/team-tools/domain/team-balance-share.ts", { "./team-balance": { TEAM_BALANCE_POSITIONS: positions, TEAM_BALANCE_V1_FORMULA_VERSION: formulaVersion } });
 
 // A small event harness runs the real component handlers and request-key store.
@@ -327,7 +327,7 @@ test("failed manual evaluation preserves edited slots and retries the same revis
   assert.deepEqual(subject.navigation, []);
 });
 
-test("a single selected role stays locked until the participant explicitly allows autofill", async () => {
+test("single-role preferences remain in the request unless the user enables other roles for the initial search", async () => {
   const subject = harness(builderFile, "TeamBalanceBuilder", () => ({ ok: false, json: async () => ({ detail: "합성 입력 검사" }) }), true);
   await subject.render().props.onSubmit({ preventDefault() {} });
   const original = JSON.parse(subject.requests[0].body).participants;
@@ -338,7 +338,104 @@ test("a single selected role stays locked until the participant explicitly allow
   await subject.render().props.onSubmit({ preventDefault() {} });
   const optedIn = JSON.parse(subject.requests[1].body).participants;
   assert.deepEqual(optedIn[0].eligiblePositions, positions.map((position) => ({ position, preference: position === "TOP" ? "MAIN" : "AUTO" })));
-  assert.deepEqual(optedIn[1].eligiblePositions, original[1].eligiblePositions, "one player's consent does not unlock another player's roles");
+  assert.deepEqual(optedIn[1].eligiblePositions, original[1].eligiblePositions, "one player's setting does not overwrite another player's preferences");
+});
+
+function relaxedDraft() {
+  const draft = selectedDraft();
+  draft.participants = draft.participants.map((participant, index) => ({ ...participant, displayName: `합성 선수 ${index + 1}` }));
+  const reasons = [
+    { code: "UNREGISTERED_POSITION", playerIds: ["synthetic-player-0"], position: "JGL", detail: "선택한 포지션 밖 정글 배정" },
+    { code: "BOTTOM_TIER_GAP", playerIds: ["synthetic-player-3", "synthetic-player-8"], position: "ADC", detail: "원딜 현재 티어 3단계 차이" },
+  ];
+  draft.candidates[0].score.v1 = { formulaVersion, missingSources: [] };
+  draft.candidates[0].score.fairness = { status: "REVIEW_REQUIRED", hardViolations: [], warnings: reasons.map(reason => reason.code === "UNREGISTERED_POSITION" ? `선수 ${reason.playerIds[0]}: ${reason.detail}` : reason.detail), checks: [{ code: "ALLOWED_POSITION_synthetic-player-0", label: "포지션 조건", status: "WARN", detail: "선수 synthetic-player-0: 선택한 포지션 밖 정글 배정" }],
+    constraintRelaxation: { applied: true, roleDeviationCount: 1, bottomTierViolationCount: 1, reasons } };
+  return draft;
+}
+
+test("relaxed server recommendations show named reasons and allow save, share and server-checked manual changes", async () => {
+  const evaluations = [];
+  const draft = relaxedDraft();
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, (participants, layout, options) => {
+    evaluations.push(options);
+    assert.equal(options?.allowConstraintRelaxation, true);
+    return { score: draft.candidates[0].score };
+  });
+  const props = { draft };
+  let tree = subject.render(props);
+  assert.equal(buttonNamed(tree, "선택 팀 저장").props.disabled, false);
+  assert.equal(buttonNamed(tree, "팀 결과 복사").props.disabled, false);
+  assert.ok(find(tree, node => typeof node.props.href === "string" && node.props.href.includes("/matches/")));
+  assert.match(visibleText(tree), /조건 조정 편성/u);
+  assert.match(visibleText(tree), /합성 선수 1 · 정글: 선택한 포지션 밖 정글 배정/u);
+  assert.match(visibleText(tree), /합성 선수 4 · 합성 선수 9 · 원딜: 원딜 현재 티어 3단계 차이/u);
+  assert.doesNotMatch(visibleText(tree), /synthetic-player/u);
+  assert.equal(visibleText(tree).split("선택한 포지션 밖 정글 배정").length - 1, 2, "one summary reason and one expandable detailed check, without duplicate warnings");
+  await buttonNamed(tree, "팀 결과 복사").props.onClick();
+  assert.match(subject.clipboard[0], /내전 규칙: 조건 조정 편성/u);
+  assert.match(subject.clipboard[0], /합성 선수 1 · 정글/u);
+  assert.doesNotMatch(subject.clipboard[0], /synthetic-player/u);
+  assert.equal(subject.clipboard[0].split("선택한 포지션 밖 정글 배정").length - 1, 1);
+  find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
+  find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+  tree = subject.render(props);
+  assert.match(slot(tree, 0).props["aria-label"], /합성 선수 2/u);
+  assert.match(visibleText(tree), /교체 후 조정되는 조건/u);
+  assert.equal(evaluations.length, 1, "the evaluated relaxed preview is reused");
+  await buttonNamed(tree, "수동 배치 평가·선택").props.onClick();
+  assert.equal(JSON.parse(subject.requests[0].body).layout[0].playerId, "synthetic-player-1");
+  assert.equal("allowConstraintRelaxation" in JSON.parse(subject.requests[0].body), false, "the server decides policy from the persisted draft");
+});
+
+test("only the current automatic recommendation can authorize relaxed manual swaps", () => {
+  for (const variant of ["selected-manual-strict", "manual-marker-only", "old-auto-round"]) {
+    const draft = relaxedDraft();
+    if (variant === "selected-manual-strict") {
+      draft.candidates.push({ ...selectedDraft().candidates[0], source: "MANUAL", signature: "manual-strict" });
+      draft.selectedCandidateSignature = "manual-strict";
+    } else if (variant === "manual-marker-only") draft.candidates[0].source = "MANUAL";
+    else draft.candidates[0].evaluationRound = 0;
+    let evaluated = 0;
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, (_participants, _layout, options) => {
+      evaluated++; assert.equal(options?.allowConstraintRelaxation, true); return { score: selectedDraft().candidates[0].score };
+    });
+    const props = { draft };
+    find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
+    find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+    assert.equal(evaluated, variant === "selected-manual-strict" ? 1 : 0);
+  }
+});
+
+test("manual relaxed results describe the applied conditions without claiming an optimal automatic recommendation", () => {
+  const draft = relaxedDraft();
+  const automatic = draft.candidates[0];
+  draft.candidates.push({ ...automatic, source: "MANUAL", rank: null, criterion: "MANUAL", signature: "manual-relaxed" });
+  draft.selectedCandidateSignature = "manual-relaxed";
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+  const text = visibleText(subject.render({ draft }));
+  assert.match(text, /수동 배치에 적용된 조정 조건/u);
+  assert.match(text, /현재 수동 배치에서 포지션 1명/u);
+  assert.doesNotMatch(text, /가능한 최선의 팀을 만들었어요|기존 조건을 모두 만족하는 조합이 없어/u);
+  assert.match(share.formatTeamBalanceShareText(draft.candidates[1], draft.participants), /밸런스 판단: 수동 조정안/u);
+});
+
+test("conflict preservation validates manual slots under the latest automatic recommendation policy", async () => {
+  for (const stillRelaxed of [true, false]) {
+    const draft = relaxedDraft();
+    const latest = { ...(stillRelaxed ? relaxedDraft() : selectedDraft()), revision: 2 };
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", attempt => attempt === 1
+      ? { ok: false, status: 412, json: async () => ({}) } : { ok: true, json: async () => ({ draft: latest }) }, false,
+      (_participants, _layout, options) => { if (!options?.allowConstraintRelaxation) throw new Error("unregistered position"); return { score: draft.candidates[0].score }; });
+    const props = { draft };
+    find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
+    find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+    await buttonNamed(subject.render(props), "수동 배치 평가·선택").props.onClick();
+    const tree = subject.render(props);
+    assert.equal(Boolean(buttonNamed(tree, "내 수동 배치 유지")), stillRelaxed);
+    assert.equal(buttonNamed(tree, "수동 배치 평가·선택").props.disabled, true);
+    assert.match(slot(tree, 0).props["aria-label"], /합성 선수 2/u);
+  }
 });
 
 test("keyboard and drag swaps preserve players when either role is not eligible", () => {
@@ -436,7 +533,7 @@ test("older fairness reports still require reevaluation under the current ordere
   candidate.score.v1 = { formulaVersion: "V2_INHOUSE_FAIRNESS_2026_10_15", missingSources: [] };
   const text = visibleText(subject.render({ draft }));
   assert.match(text, /최신 기준 재평가 필요/u);
-  assert.match(text, /최신 1→6 우선순위가 적용되지 않았습니다/u);
+  assert.match(text, /최신 자동 조정 기준으로 재평가/u);
   assert.doesNotMatch(text, /균형 추천/u);
-  assert.match(share.formatTeamBalanceShareText(candidate, draft.participants), /최신 1→6 우선순위가 적용되지 않은 결과/u);
+  assert.match(share.formatTeamBalanceShareText(candidate, draft.participants), /최신 자동 조정 기준으로 재평가/u);
 });

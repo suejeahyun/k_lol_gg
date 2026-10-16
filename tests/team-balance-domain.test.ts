@@ -227,18 +227,31 @@ test("position rating overrides overall and confidence shrinks unknown data towa
   });
 });
 
-test("positions omitted from the request stay forbidden; explicit AUTO remains permitted", () => {
+test("role conflicts produce the least off-role fallback without rewriting registered preferences", () => {
   const topOnly = pairedPlayers(false).map((player) => ({
     ...player,
     eligiblePositions: [{ position: "TOP" as TeamBalancePosition, preference: "AUTO" as const }],
   }));
-  assert.throws(() => calculateTeamBalanceCandidates(topOnly), assertCode("NO_FEASIBLE_LAYOUT"));
+  const original = JSON.stringify(topOnly);
+  const fallback = calculateTeamBalanceCandidates(topOnly);
+  const candidate = fallback.candidates[0]!;
+  assert.equal(fallback.search.feasibleLayoutCount, 126 * 120 * 120);
+  assert.equal(candidate.score.fairness?.constraintRelaxation?.roleDeviationCount, 8);
+  assert.equal(candidate.score.fairness?.constraintRelaxation?.bottomTierViolationCount, 0);
+  assert.equal(candidate.score.fairness?.status, "REVIEW_REQUIRED");
+  assert.deepEqual(candidate.score.fairness?.hardViolations, []);
+  assert.equal(candidate.assignments.filter((entry) => entry.position === "TOP").length, 2);
+  assert.equal(JSON.stringify(topOnly), original);
+  const layout = candidate.assignments.map(({ playerId, team, position }) => ({ playerId, team, position }));
+  assert.throws(() => evaluateTeamBalanceLayout(topOnly, layout), assertCode("FAIRNESS_CONSTRAINT"));
+  assert.deepEqual(evaluateTeamBalanceLayout(topOnly, layout, { allowConstraintRelaxation: true }).score, candidate.score);
   const explicit = pairedPlayers(false).map((player) => ({
     ...player, eligiblePositions: player.eligiblePositions.map((entry) => ({ ...entry, preference: "AUTO" as const })),
   }));
   const result = calculateTeamBalanceCandidates(explicit);
   assert.equal(result.candidates[0]?.assignments.length, 10);
   assert.ok(result.candidates[0]?.assignments.every((entry) => entry.preference === "AUTO"));
+  assert.equal(result.candidates[0]?.score.fairness?.constraintRelaxation, undefined);
 });
 
 test("[V1 blueblack golden] score uses tier, inhouse, position experience and the data-missing path", () => {
@@ -268,7 +281,7 @@ test("[V1 blueblack golden] score uses tier, inhouse, position experience and th
 
   assert.equal(player.rating.source, "V1");
   assert.equal(player.rating.effectiveScore, 66.7);
-  assert.equal(evaluated.score.v1?.formulaVersion, "V2_INHOUSE_PRIORITY_2026_10_15");
+  assert.equal(evaluated.score.v1?.formulaVersion, "V2_INHOUSE_RELAXED_2026_10_16");
   assert.deepEqual(evaluated.score.v1?.missingSources, ["RECENT_SOLO", "BALANCE_OVERRIDE"]);
 });
 
@@ -296,5 +309,8 @@ test("manual evaluation rejects duplicate players and incomplete team-position c
 
   assert.throws(() => evaluateTeamBalanceLayout(players, duplicate), assertCode("INVALID_LAYOUT"));
   assert.throws(() => evaluateTeamBalanceLayout(players, missingPosition), assertCode("INVALID_LAYOUT"));
+  assert.throws(() => evaluateTeamBalanceLayout(players, duplicate, { allowConstraintRelaxation: true }), assertCode("INVALID_LAYOUT"));
+  assert.throws(() => evaluateTeamBalanceLayout(players, missingPosition, { allowConstraintRelaxation: true }), assertCode("INVALID_LAYOUT"));
+  assert.throws(() => evaluateTeamBalanceLayout(players, layout.slice(1), { allowConstraintRelaxation: true }), assertCode("INVALID_LAYOUT"));
   assert.notEqual(layoutSignature(layout), "");
 });
