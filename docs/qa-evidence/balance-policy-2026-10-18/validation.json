@@ -1,7 +1,7 @@
 {
   "checkedAt": "2026-10-17T20:10:56.451Z",
   "status": "PASS",
-  "scope": "Drag-only manual swaps, immediate shared-domain preview, authorized registered-name display and exact two-line copy; frozen scoring retained unless separately accepted research activates a version.",
+  "scope": "Drag-only manual swaps, immediate shared-domain preview, authorized registered-name display and exact two-line copy. ANCHORED_PARETO failed preregistered role-sample/confidence gates; production scoring and recommendation policy remain unchanged.",
   "completeCheck": {
     "command": "npm run check",
     "exitCode": 0,
@@ -69,6 +69,12 @@
     "command": "npm run security:secrets -- --tree-only",
     "status": "PASS"
   },
+  "releaseEvidence": {
+    "command": "npm run release:evidence:check",
+    "releases": 106,
+    "gitTags": 106,
+    "status": "PASS"
+  },
   "priorReleaseEvidence": {
     "command": "npm run release:evidence:check",
     "releases": 105,
@@ -80,5 +86,21 @@
     "scope": "Read-only second-agent review of pointer cancellation, owner/admin name access, shared MANUAL preview, copy and old-draft compatibility",
     "remainingP1P2": 0
   },
-  "evidenceNotes": "Ignored logs contain local verification output. Browser screenshots use synthetic identities. Development-browser and overlapping focused tests are not added again to production-browser/full-check totals."
+  "evidenceNotes": "Ignored logs contain local verification output. Browser screenshots use synthetic identities. Development-browser and overlapping focused tests are not added again to production-browser/full-check totals.",
+  "source": "6964bb58eefc166d1341b8bdc24e73eb00a93613",
+  "formulaVersion": "V2_INHOUSE_RELAXED_2026_10_16",
+  "researchDecision": "REJECTED: preregistered role-sample/confidence regression gates",
+  "sourceCi": {
+    "id": 39065911120,
+    "url": "https://github.com/suejeahyun/k_lol_gg/actions/runs/39065911120",
+    "conclusion": "success"
+  },
+  "finalTreeSecrets": {
+    "status": "PASS",
+    "log": {
+      "path": ".tmp/policy-final-secrets.log",
+      "sha256": "3215a2ec67522df50fc8566d7a3e915aba705025a25588b673a5f61b8a3c9095",
+      "completedAt": "2026-10-17T20:18:38.858Z"
+    }
+  }
 }

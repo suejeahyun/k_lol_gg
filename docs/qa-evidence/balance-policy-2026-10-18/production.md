@@ -1,6 +1,19 @@
 # 내전 팀 배치 2.1.0 검증·배포 근거
 
-현재 문서는 배포 준비 기록이다. 새 릴리스의 운영 반영 판정은 아래 배포 ID·source·READY·운영 alias·HTTP 확인이 채워진 뒤에만 유효하다.
+**운영 반영 완료: inhouse-fairness@2.1.0.** source `6964bb58eefc166d1341b8bdc24e73eb00a93613`, tag `inhouse-fairness-v2.1.0`의 READY·운영 canonical alias·읽기 전용 HTTP 12조건을 확인했다. [K-LOL.GG](https://k-lol-gg.vercel.app)에 드래그·점수 미리보기·이름 표시·두 줄 복사 개선을 반영했다. 추천 계산식은 `V2_INHOUSE_RELAXED_2026_10_16`을 유지한다.
+
+| 운영 근거 | 확인 결과 |
+|---|---|
+| deployment | `dpl_6B2a4crdWnPW6WctV4GoGP24bH2v` |
+| immutable 주소 | [확인한 배포](https://k-lol-nfze3to26-tjdmswo11-3715s-projects.vercel.app) |
+| source·READY·alias | [메타데이터](production-deployment.json) |
+| health·공개 화면·인증 경계 | [운영 HTTP 12조건 PASS](production-http.json) |
+| 확인 시각 | `2026-10-17T20:16:43.205Z` |
+| 동일 source CI | [V2 CI 성공](https://github.com/suejeahyun/k_lol_gg/actions/runs/39065911120) · [검사 내역](source-ci.json) |
+
+새 `ANCHORED_PARETO` 추천은 **기각·운영 비활성**이다. 새 500개 실제 선수 조합·462,889,392개 고유 배치에서 보호 지표 개선 129개, 동일 371개, 보호 지표 악화/혼합 0개였고 사전 정의한 유의미한 개선은 24개(4.8%)였다. 그러나 역할 표본 부족과 일부 신규·저표본 집단의 신뢰도 기준을 위반해 채택하지 않았다. 아직 열지 않은 검증·최종 500개는 실험 완료 수에 넣지 않았다. 기존 6개 조합 규칙과 개인 점수 계수는 유지한다.
+
+검증한 배포 후보 source는 `6964bb58eefc166d1341b8bdc24e73eb00a93613`, deployment는 `dpl_4tfwrnK28LTpWYLD1JK9Uxg8jT8Y`다. `--prod --skip-domain`으로 생성하여 운영 canonical alias 연결과 분리했다. [후보 READY·source](candidate-deployment.json), [후보 HTTP 12조건 PASS](candidate-http.json), [비공개 입력 제외 확인](deployment-input.json)을 기록했다. 후보 주소는 [immutable 배포](https://k-lol-an0xjyn24-tjdmswo11-3715s-projects.vercel.app)다.
 
 ## 변경 범위
 

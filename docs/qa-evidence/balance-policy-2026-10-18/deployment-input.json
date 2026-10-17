@@ -1,0 +1,8 @@
+{
+  "checkedAt": "2026-10-17T20:13:22.5602742Z",
+  "fileCount": 4597,
+  "excludedPrivateAndTemporary": true,
+  "excludedEnvironmentSecrets": true,
+  "unexpectedPrivateFiles": 0,
+  "note": "CLI dry inventory checked after candidate creation; new public deployment evidence may increase file count. The unchanged ignore rules exclude private, temporary and environment secret inputs."
+}

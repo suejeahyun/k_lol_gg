@@ -1,0 +1,93 @@
+{
+  "at": "2026-10-17T20:16:43.205Z",
+  "status": "PASS",
+  "deploymentId": "dpl_6B2a4crdWnPW6WctV4GoGP24bH2v",
+  "source": "6964bb58eefc166d1341b8bdc24e73eb00a93613",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "bytes": 57,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 110907,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "bytes": 60793,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/applications",
+      "status": 200,
+      "bytes": 57787,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "bytes": 51413,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/help/kakao",
+      "status": 200,
+      "bytes": 59055,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/help/recruits",
+      "status": 200,
+      "bytes": 62009,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/api/admin/operation-forms?page=2",
+      "status": 401,
+      "bytes": 196,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/kakao-daily-close",
+      "status": 401,
+      "bytes": 187,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/cron/security-maintenance",
+      "status": 401,
+      "bytes": 24,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/team-tools/candidates",
+      "status": 401,
+      "bytes": 200,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "path": "/api/team-tools/drafts/11111111-1111-4111-8111-111111111111",
+      "status": 401,
+      "bytes": 200,
+      "contentType": "application/problem+json; charset=utf-8",
+      "cacheControl": "no-store, max-age=0"
+    }
+  ],
+  "notes": "Canonical production alias, anonymous read-only GET. No response bodies or cookies retained."
+}
