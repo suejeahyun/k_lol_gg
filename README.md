@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-18 실제 자료 비교·표본 진단 2.0.2 운영 반영**: 1,000개 고유 조합·921,331,808개 배치를 조사했습니다. 새 선택 후보는 효과 없음 또는 5.6% 악화로 기각하여 기존 추천 계산식을 유지하고, 표본 0건 누락 진단만 정정했습니다. source `131abbf7`, 후보·운영 HTTP 각 12조건 및 source CI 확인. [전체 보고](docs/qa-evidence/balance-research-2026-10-18/README.md), [배포·복구](docs/qa-evidence/balance-research-2026-10-18/production.md). 실제 승률 개선을 주장하지 않습니다.
+
 **2026-10-18 내전 점수 표시 2.0.1 운영 반영**: 신규 참가자를 일괄 기본 50점으로 보이게 하던 카드를 실제 배정 점수로 수정하고 티어·표본을 분리했습니다. 임의 문자열을 정상 티어로 계산하는 입력 검증도 보완했습니다. source `48e82aef`, 운영 READY·HTTP 8조건·실제 소유 초안 10개 점수 카드 확인. 누락 티어를 보완한 로컬 조합 비교와 운영 자료 저장 상태는 구분합니다. [변경 안내](docs/patch-notes/inhouse-fairness-v2.0.1.md), [검증·배포·남은 작업](docs/qa-evidence/inhouse-newcomer-score-2026-10-18/production.md).
 
 **2026-10-16 내전 자동 조정 2.0.0 운영 반영**: 포지션·바텀 조건 충돌로 팀 생성이 멈추지 않도록 필요한 조건을 최소 조정해 추천하고 저장까지 연결했습니다. 기존 가능한 조합·개인 점수·등록 포지션은 보존합니다. source `1bf379ed`, 운영 READY·HTTP 12조건·source CI 확인. [변경 안내](docs/patch-notes/inhouse-fairness-v2.0.0.md), [검증·배포·복구](docs/qa-evidence/inhouse-auto-balance-2026-10-16/production.md). 시간별 예약이 아니라 팀 계산 시 적용됩니다.

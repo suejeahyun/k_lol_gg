@@ -79,5 +79,50 @@
       "completedAt": "2026-10-17T16:13:00.381Z"
     }
   },
-  "evidenceNotes": "Local logs remain ignored; only hashes, aggregate counts and synthetic browser artifacts are published. Existing lint warnings are disclosed, not counted as new findings."
+  "evidenceNotes": "Local logs remain ignored; only hashes, aggregate counts and synthetic browser artifacts are published. Existing lint warnings are disclosed, not counted as new findings.",
+  "source": "131abbf777a331b056a96ab587957cf654387a78",
+  "finalResearchHelperChecks": {
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "log": {
+      "path": ".tmp/research-focused-final.log",
+      "sha256": "b784562b9f9cc50d146a17479753638c2373ba85c8c163b461cd6c8d4d90e2e1",
+      "completedAt": "2026-10-17T16:20:34.821Z"
+    }
+  },
+  "finalTreeSecrets": {
+    "status": "PASS",
+    "log": {
+      "path": ".tmp/research-secrets-final.log",
+      "sha256": "3215a2ec67522df50fc8566d7a3e915aba705025a25588b673a5f61b8a3c9095",
+      "completedAt": "2026-10-17T16:21:26.481Z"
+    }
+  },
+  "historySecrets": {
+    "command": "npm run security:secrets",
+    "status": "PASS",
+    "log": {
+      "path": ".tmp/research-secrets-history.log",
+      "sha256": "0f80a5ed105ab5ff76273703a6b3f8f3e7ef1106a6b6977c8704b33014cefe9a",
+      "completedAt": "2026-10-17T16:30:41.455Z"
+    }
+  },
+  "releaseEvidence": {
+    "status": "PASS",
+    "releases": 105,
+    "gitTags": 105,
+    "log": {
+      "path": ".tmp/research-release-evidence.log",
+      "sha256": "0e9bc74a6f041c883ce83f1d503a2cb3cbc0dee83f29292bbc69eae941756f1f",
+      "completedAt": "2026-10-17T16:30:29.962Z"
+    }
+  },
+  "releaseTreeSecrets": {
+    "status": "PASS",
+    "log": {
+      "path": ".tmp/research-release-secrets.log",
+      "sha256": "3215a2ec67522df50fc8566d7a3e915aba705025a25588b673a5f61b8a3c9095",
+      "completedAt": "2026-10-17T16:30:56.075Z"
+    }
+  }
 }

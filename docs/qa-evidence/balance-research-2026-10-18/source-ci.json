@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-10-17T16:30:11.540Z",
+  "source": "131abbf777a331b056a96ab587957cf654387a78",
+  "id": 39049230363,
+  "url": "https://github.com/suejeahyun/k_lol_gg/actions/runs/39049230363",
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "createdAt": "2026-10-17T16:23:59Z",
+  "updatedAt": "2026-10-17T16:29:16Z",
+  "jobs": [
+    {
+      "name": "check",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Node.js",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Scan current tree for secrets",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check production dependency advisories",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Lint, typecheck, test, and build",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify administrator HTTP authentication matrix",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Node.js",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

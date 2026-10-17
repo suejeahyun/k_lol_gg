@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-18 실제 자료 비교·표본 진단 2.0.2 운영 반영
+
+source `131abbf777a331b056a96ab587957cf654387a78`, tag `inhouse-fairness-v2.0.2`. 고유 1,000조합·921,331,808배치를 확인했고 선택 후보 2개를 효과 없음/악화로 기각했다. 기존 `V2_INHOUSE_RELAXED_2026_10_16`을 유지하고 역할 표본 0건의 자료 부족 누락만 정정했다.
+
+전체 check 계약 728·단위 1,159 PASS+기존 1 SKIP, 대상 DB 9, production build 실제 브라우저 17, oracle 33 및 독립 평가 2,000건 통과. 후보와 운영 HTTP 각 12조건, 운영 READY·동일 source·canonical alias, source CI 확인. 운영 자료 쓰기와 신규 예약은 0건이다. [전체 보고](qa-evidence/balance-research-2026-10-18/README.md), [배포·복구](qa-evidence/balance-research-2026-10-18/production.md).
+
 ## 2026-10-18 내전 점수 표시 2.0.1 운영 반영
 
 source `48e82aef77d0dc69d30d1bbccf34b3938437c85a`, tag `inhouse-fairness-v2.0.1`. 선수 카드가 실제 배정 점수를 표시하고 현재·최고 티어 및 내전 표본을 구분한다. 잘못된 티어 문구는 기존 엄격 파서로 검증한다. 정상 점수 가중치·자동 조정·과거 스냅샷은 유지한다.
