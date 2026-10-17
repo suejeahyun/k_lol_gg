@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-17T15:13:39.5900838Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "source": "48e82aef77d0dc69d30d1bbccf34b3938437c85a",
+  "scope": "Authenticated owner draft read-only DOM after production deployment; no draft/profile mutations.",
+  "appliedScoreCards": 10,
+  "wrongDefault50Cards": 0,
+  "unknownTierCards": 1,
+  "evaluationRound": 1,
+  "draftStatus": "SAVED",
+  "viewportWidth": 2458,
+  "horizontalOverflow": false,
+  "screenshot": "Capture unavailable; DOM verification only."
+}

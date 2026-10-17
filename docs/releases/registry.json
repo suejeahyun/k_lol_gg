@@ -2260,6 +2260,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "inhouse-fairness",
+      "version": "2.0.1",
+      "gitTag": "inhouse-fairness-v2.0.1",
+      "commit": "48e82aef77d0dc69d30d1bbccf34b3938437c85a",
+      "releasedAt": "2026-10-17T15:12:28.286Z",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/inhouse-newcomer-score-2026-10-18/production.md",
+      "patchNotes": "docs/patch-notes/inhouse-fairness-v2.0.1.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_BNbgQurdEkcrstoJEdkinsv8Ke8Z",
+        "url": "https://k-lol-fwynqbv5j-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-10-17T15:12:55.108Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

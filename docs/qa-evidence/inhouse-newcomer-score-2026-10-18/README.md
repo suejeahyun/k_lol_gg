@@ -17,7 +17,7 @@
 - 점수 파서 보완 후 도메인 focused TypeScript 70/70, JavaScript 6/6 PASS. 잘못된 현재/최고 티어의 대체값과 정상 한영 별칭·로마 숫자·LP·마스터 층 점수를 검사했다.
 - 최종 `npm run check`: 계약 728/728, 단위 1,154 PASS / 1 SKIP, lint 오류 0 / 기존 경고 58, 타입·ERD·가이드 이미지·production build PASS. 현재 트리 비밀정보 검사 PASS.
 
-인증 HTTP 검사도 PASS: 개발·production의 권한, 요청 제한, 관리자 암호, 쿠키, 역할, 보안 헤더, 로그아웃과 production fixture 차단을 확인했다. 운영 배포는 준비 중이며 배포 ID·소스·상태를 확인하기 전에는 반영 완료로 간주하지 않는다. migration head `0049_stable-recruit-codes`, DB 스키마 변경 없음.
+인증 HTTP 검사도 PASS: 개발·production의 권한, 요청 제한, 관리자 암호, 쿠키, 역할, 보안 헤더, 로그아웃과 production fixture 차단을 확인했다. source `48e82aef`의 운영 READY·canonical alias·HTTP 8조건과 실제 소유 초안 10개 점수 카드를 확인했다. [운영 및 남은 자료 수정](production.md). migration head `0049_stable-recruit-codes`, DB 스키마 변경 없음.
 
 실행 로그: `.tmp/newcomer-check-final.log`, `.tmp/newcomer-db-final.log`, `.tmp/newcomer-domain-focused.log`, `.tmp/newcomer-auth-http.log`, `.tmp/newcomer-secrets.log`. 로그에는 원본 운영 참가자 자료나 인증 정보를 기록하지 않는다.
 

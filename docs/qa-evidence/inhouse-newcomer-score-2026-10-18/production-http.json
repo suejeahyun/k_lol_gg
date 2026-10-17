@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-10-17T15:12:55.108Z",
+  "origin": "https://k-lol-gg.vercel.app",
+  "scope": "Anonymous public GET and authentication boundary only; no draft creation or production member writes.",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "expectedStatus": 200,
+      "location": null,
+      "elapsedMs": 1191,
+      "pass": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "expectedStatus": 200,
+      "location": null,
+      "elapsedMs": 1167,
+      "pass": true
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "expectedStatus": 200,
+      "location": null,
+      "elapsedMs": 302,
+      "pass": true
+    },
+    {
+      "path": "/tools/team-balance/drafts",
+      "status": 200,
+      "expectedStatus": 200,
+      "location": null,
+      "elapsedMs": 754,
+      "pass": true
+    },
+    {
+      "path": "/api/team-tools/drafts",
+      "status": 401,
+      "expectedStatus": 401,
+      "location": null,
+      "elapsedMs": 596,
+      "pass": true
+    },
+    {
+      "path": "/api/admin/team-tools/drafts/00000000-0000-4000-8000-000000000000",
+      "status": 401,
+      "expectedStatus": 401,
+      "location": null,
+      "elapsedMs": 540,
+      "pass": true
+    },
+    {
+      "path": "/admin/balance",
+      "status": 307,
+      "expectedStatus": 307,
+      "location": "/admin/login?next=%2Fadmin%2Fbalance",
+      "elapsedMs": 616,
+      "pass": true
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "expectedStatus": 200,
+      "location": null,
+      "elapsedMs": 479,
+      "pass": true
+    }
+  ],
+  "pass": true
+}

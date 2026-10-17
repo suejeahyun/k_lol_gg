@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-17T15:10:39.1639168Z",
+  "id": "dpl_HSVUnFYjg9RMKMCuPxuRnbmxsPTu",
+  "source": "48e82aef77d0dc69d30d1bbccf34b3938437c85a",
+  "readyState": "READY",
+  "target": "production",
+  "url": "k-lol-7okhaio0p-tjdmswo11-3715s-projects.vercel.app",
+  "alias": [
+    "k-lol-gg-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "projectId": "prj_yeGD9GzHJk6pZCcIIjJ8grGPgW8q",
+  "ready": 1792249821126,
+  "createdAt": 1792249759785,
+  "errorCode": null,
+  "errorMessage": null
+}

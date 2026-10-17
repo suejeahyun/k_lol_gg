@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-10-17T15:11:13.3784013Z",
+  "deployment": "k-lol-7okhaio0p-tjdmswo11-3715s-projects.vercel.app",
+  "scope": "GET requests through authenticated Vercel protection bypass; no application account session or draft writes.",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "expectedStatus": 200,
+      "pass": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "expectedStatus": 200,
+      "pass": true
+    },
+    {
+      "path": "/tools/team-balance",
+      "status": 200,
+      "expectedStatus": 200,
+      "pass": true
+    },
+    {
+      "path": "/tools/team-balance/drafts",
+      "status": 200,
+      "expectedStatus": 200,
+      "pass": true
+    },
+    {
+      "path": "/api/team-tools/drafts",
+      "status": 401,
+      "expectedStatus": 401,
+      "pass": true
+    },
+    {
+      "path": "/api/admin/team-tools/drafts/00000000-0000-4000-8000-000000000000",
+      "status": 401,
+      "expectedStatus": 401,
+      "pass": true
+    },
+    {
+      "path": "/admin/balance",
+      "status": 307,
+      "expectedStatus": 307,
+      "pass": true
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "expectedStatus": 200,
+      "pass": true
+    }
+  ],
+  "pass": true
+}
