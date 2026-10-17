@@ -136,7 +136,7 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   for (const contract of [
     "추천 결과",
     "내전 규칙 팀 추천",
-    "selectedCandidate.score.v1?.recommendationScore",
+    "displayedCandidate.score.v1?.recommendationScore",
     "내전 규칙 추천",
     "추천 기준",
     "실력과 포지션으로 재평가",
@@ -169,7 +169,8 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   assert.equal(detailPage.includes("초안 목록"), true, "상세 화면은 공용 초안 목록으로 돌아간다");
   assert.equal(detail.includes("플레이어 카드를 클릭한 채 원하는 자리로 끌어 놓으세요"), false, "수동 배치의 중복 드래그 설명은 노출하지 않는다");
   assert.equal(detail.includes("<small>드래그해 교체</small>"), false, "플레이어 카드의 반복 드래그 문구를 제거한다");
-  assert.equal(detail.includes("교체할 카드 선택"), true, "키보드 교체 버튼은 선택 대상을 설명한다");
+  assert.equal(detail.includes("교체할 카드 선택"), false, "클릭 교환 버튼은 제거한다");
+  assert.ok(detail.includes("onKeyDown") && detail.includes("Space·Enter"), "카드 키보드 드래그 접근성을 유지한다");
   assert.equal(submission.includes("현재 적용된 최신 팀 배치"), true, "결과 접수는 적용된 배치를 안내한다");
   const currentTeamBalanceCopy = [page, drafts, builder, detail, detailPage, navigation, submission].join("\n");
   for (const legacyCopy of ["내 팀 밸런스 초안", "내 초안", "가장 균형 잡힌 세 가지", "팀 후보를 계산", "팀 후보를 선택", "교체 시작", "끌어서 이동"]) {

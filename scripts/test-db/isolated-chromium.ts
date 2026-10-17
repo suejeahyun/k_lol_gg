@@ -325,6 +325,60 @@ export class IsolatedChromium {
     await this.client.call("Input.dispatchKeyEvent", { type: "keyUp", ...event });
   }
 
+  /** Real browser input, including native HTML drag and touch pointer capture. */
+  async drag(sourceSelector: string, targetSelector: string, input: "mouse" | "touch") {
+    const points = await this.evaluate<{ source: { x: number; y: number }; target: { x: number; y: number } }>(`(async () => {
+      const source = document.querySelector(${JSON.stringify(sourceSelector)});
+      const target = document.querySelector(${JSON.stringify(targetSelector)});
+      if (!source || !target) throw new Error('Drag elements missing');
+      source.scrollIntoView({ block: 'center', behavior: 'instant' });
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const point = node => { const rect = node.getBoundingClientRect(); return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }; };
+      return { source: point(source), target: point(target) };
+    })()`);
+    const { source, target } = points;
+    if (input === "touch") {
+      await this.client.call("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+      try {
+        await this.client.call("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ ...source, id: 1 }] });
+        let from = source;
+        let destination = target;
+        for (let attempt = 0; attempt < 120; attempt++) {
+          const viewport = await this.evaluate<{ height: number; x: number; y: number }>(`(() => { const rect = document.querySelector(${JSON.stringify(targetSelector)}).getBoundingClientRect(); return { height: innerHeight, x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }; })()`);
+          destination = { x: viewport.x, y: viewport.y };
+          if (viewport.y >= 120 && viewport.y <= viewport.height - 120) break;
+          from = { x: source.x, y: viewport.y < 120 ? 82 : viewport.height - 82 };
+          await this.client.call("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ ...from, id: 1 }] });
+          await this.evaluate("new Promise(resolve => setTimeout(resolve, 50))");
+          if (attempt === 119) throw new Error("Touch edge scrolling did not reveal the target card.");
+        }
+        for (let step = 1; step <= 8; step++) {
+          await this.client.call("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: from.x + (destination.x - from.x) * step / 8, y: from.y + (destination.y - from.y) * step / 8, id: 1 }] });
+        }
+        await this.client.call("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      } finally {
+        await this.client.call("Emulation.setTouchEmulationEnabled", { enabled: false });
+      }
+      return;
+    }
+    await this.client.call("Input.setInterceptDrags", { enabled: true });
+    try {
+      await this.client.call("Input.dispatchMouseEvent", { type: "mouseMoved", ...source });
+      await this.client.call("Input.dispatchMouseEvent", { type: "mousePressed", ...source, button: "left", clickCount: 1 });
+      const intercepted = this.client.waitFor("Input.dragIntercepted");
+      await this.client.call("Input.dispatchMouseEvent", { type: "mouseMoved", x: source.x, y: source.y + 12, button: "left", buttons: 1 });
+      await this.client.call("Input.dispatchMouseEvent", { type: "mouseMoved", ...target, button: "left", buttons: 1 });
+      const { data } = await intercepted;
+      await this.evaluate("new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))");
+      await this.client.call("Input.dispatchDragEvent", { type: "dragEnter", ...target, data });
+      await this.client.call("Input.dispatchDragEvent", { type: "dragOver", ...target, data });
+      await this.client.call("Input.dispatchDragEvent", { type: "drop", ...target, data });
+      await this.client.call("Input.dispatchMouseEvent", { type: "mouseReleased", ...target, button: "left", clickCount: 1 });
+    } finally {
+      await this.client.call("Input.setInterceptDrags", { enabled: false });
+    }
+  }
+
   async waitFor(expression: string, description: string, timeoutMs = 15_000) {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {

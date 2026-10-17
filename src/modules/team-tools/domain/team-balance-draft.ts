@@ -24,6 +24,8 @@ export function automaticTeamBalanceCriterion(rank: number): TeamBalanceCandidat
 export type TeamBalanceDraftParticipant = Readonly<{
   playerId: string;
   displayName: string;
+  /** Current registered name, exposed only by an authorized owner/admin draft read. */
+  registeredName?: string | null;
   ordinal: number;
   eligiblePositions: readonly TeamBalanceEligibility[];
   rating: TeamBalanceRatingProviderDto | null;

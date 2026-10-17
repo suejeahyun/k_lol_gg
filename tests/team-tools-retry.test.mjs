@@ -31,7 +31,7 @@ const share = load("modules/team-tools/domain/team-balance-share.ts", { "./team-
 
 // A small event harness runs the real component handlers and request-key store.
 // Effects and presentation components are omitted; no network or database is used.
-function harness(file, exportName, send, withSelectedPlayers = false, evaluateLayout = () => ({ score: { teamStrength: { redTotal: 250, blueTotal: 250, difference: 0 } } })) {
+function harness(file, exportName, send, withSelectedPlayers = false, evaluateLayout = () => ({ score: { teamStrength: { redTotal: 250, blueTotal: 250, difference: 0 } } }), globals = {}) {
   const slots = [];
   let cursor = 0;
   const requests = [];
@@ -70,7 +70,7 @@ function harness(file, exportName, send, withSelectedPlayers = false, evaluateLa
     "@/modules/seasons/application/client-mutation-key-store": keys,
     "../team-tools.module.css": css,
     "../../../team-tools.module.css": css,
-  }, { navigator: { clipboard: { writeText: async (value) => { clipboard.push(value); } } }, fetch: async (url, options) => { requests.push({ url, ...options }); return send(requests.length); } })[exportName];
+  }, { navigator: { clipboard: { writeText: async (value) => { clipboard.push(value); } } }, fetch: async (url, options) => { requests.push({ url, ...options }); return send(requests.length); }, ...globals })[exportName];
   return { render: (props) => { cursor = 0; return component(props); }, requests, navigation, clipboard, finishTransitions: () => transitions.splice(0).forEach((finish) => finish()) };
 }
 
@@ -149,15 +149,87 @@ function selectedDraft(status = "EVALUATED") {
   const candidate = { id: "synthetic-candidate", evaluationRound: 1, rank: 1, source: "AUTO", criterion: "V1_AI_GLOBAL", signature: "synthetic-selected", assignments,
     score: { totalPenalty: 0, teamStrength: { blueTotal: 250, redTotal: 250, difference: 0 }, positionDifferenceTotal: 0, preference: { mainCount: 10, subCount: 0, autoCount: 0 }, positions: [] } };
   return { id: "synthetic-draft", title: "합성 팀", revision: 1, evaluationRound: 1, status, candidates: [candidate], selectedCandidateSignature: candidate.signature,
-    participants: assignments.map((entry) => ({ playerId: entry.playerId, displayName: entry.playerId, eligiblePositions: [{ position: entry.position, preference: "MAIN" }], rating: null })) };
+    participants: assignments.map((entry, index) => ({ playerId: entry.playerId, displayName: entry.playerId, registeredName: `등록이름${index}`, eligiblePositions: [{ position: entry.position, preference: "MAIN" }], rating: null })) };
 }
 const buttonText = (node) => React.Children.toArray(node.props.children).filter((child) => typeof child === "string").join("").trim();
 const buttonNamed = (tree, label) => find(tree, (node) => node.type === "button" && buttonText(node) === label);
 const slot = (tree, index) => find(tree, (node) => node.props["data-manual-slot"] === index);
-function swapCards(subject, props) {
-  find(slot(subject.render(props), 0), (node) => node.type === "button").props.onClick();
-  find(slot(subject.render(props), 5), (node) => node.type === "button").props.onClick();
+function pickCard(subject, props, index) {
+  slot(subject.render(props), index).props.onKeyDown({ key: " ", preventDefault() {} });
 }
+function swapCards(subject, props) {
+  pickCard(subject, props, 0);
+  pickCard(subject, props, 5);
+}
+
+test("cards show registered names beside nicknames and missing names remain explicit", () => {
+  const draft = selectedDraft();
+  draft.participants[0].registeredName = "";
+  delete draft.participants[1].registeredName;
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+  const tree = subject.render({ draft });
+  assert.match(visibleText(slot(tree, 0)), /synthetic-player-0등록 이름 없음/u);
+  assert.match(visibleText(slot(tree, 1)), /등록 이름 없음/u);
+  assert.match(visibleText(slot(tree, 2)), /synthetic-player-2등록이름2/u);
+  assert.match(visibleText(slot(tree, 2)), /주 포지션 배정/u);
+  assert.match(visibleText(slot(tree, 2)), /역할 표본 확인 필요/u);
+  assert.equal(find(slot(tree, 0), node => node.type === "button"), null);
+  assert.equal(slot(tree, 0).props.onClick, undefined);
+  assert.equal(share.formatTeamBalanceShareText(draft.candidates[0], draft.participants), "BLUE 이름미등록 이름미등록 등록이름2 등록이름3 등록이름4\nRED 등록이름5 등록이름6 등록이름7 등록이름8 등록이름9");
+});
+
+test("native card drops require an internal drag and reuse the domain preview", () => {
+  let evaluated = 0;
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, () => {
+    evaluated++;
+    return { score: selectedDraft().candidates[0].score };
+  });
+  const props = { draft: selectedDraft() };
+  const values = new Map();
+  const event = { preventDefault() {}, dataTransfer: { setData: (type, value) => values.set(type, value), getData: type => values.get(type) ?? "" } };
+  slot(subject.render(props), 5).props.onDrop(event);
+  assert.equal(evaluated, 0, "an unrelated or empty external drop cannot swap slot zero");
+  slot(subject.render(props), 0).props.onDragStart(event);
+  slot(subject.render(props), 5).props.onDrop(event);
+  assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-5/u);
+  assert.equal(evaluated, 1);
+  assert.equal(subject.requests.length, 0);
+});
+
+test("keyboard dragging can be cancelled without moving cards", () => {
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+  const props = { draft: selectedDraft() };
+  pickCard(subject, props, 0);
+  assert.equal(slot(subject.render(props), 0).props["aria-pressed"], true);
+  slot(subject.render(props), 0).props.onKeyDown({ key: "Escape" });
+  pickCard(subject, props, 5);
+  assert.equal(slot(subject.render(props), 5).props["aria-pressed"], true);
+  assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-0/u);
+});
+
+test("touch dragging ignores other fingers and reset releases capture and pending edge scrolling", () => {
+  class TouchHandle { closest() { return this; } }
+  const captured = new Set();
+  const cancelledFrames = [];
+  const card = { setPointerCapture: id => captured.add(id), hasPointerCapture: id => captured.has(id), releasePointerCapture: id => captured.delete(id), closest: () => ({ contains: () => true }) };
+  const event = (pointerId, x = 0) => ({ pointerId, pointerType: "touch", currentTarget: card, target: new TouchHandle(), clientX: x, clientY: 100, preventDefault() {} });
+  const globals = { Element: TouchHandle, document: { elementFromPoint: () => ({ closest: () => ({ dataset: { manualSlot: "5" } }) }) }, requestAnimationFrame: () => 9, cancelAnimationFrame: id => cancelledFrames.push(id) };
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, () => ({ score: selectedDraft().candidates[0].score }), globals);
+  const props = { draft: selectedDraft() };
+  swapCards(subject, props);
+  slot(subject.render(props), 0).props.onPointerDown(event(1));
+  slot(subject.render(props), 0).props.onPointerMove(event(1, 20));
+  slot(subject.render(props), 1).props.onPointerDown(event(2));
+  slot(subject.render(props), 1).props.onLostPointerCapture(event(2));
+  assert.equal(slot(subject.render(props), 0).props["data-dragging"], "true", "another finger cannot replace or cancel the active gesture");
+  assert.deepEqual([...captured], [1]);
+  buttonNamed(subject.render(props), "선택한 배치로 되돌리기").props.onClick();
+  assert.equal(captured.size, 0);
+  assert.deepEqual(cancelledFrames, [9]);
+  slot(subject.render(props), 0).props.onPointerUp(event(1, 20));
+  assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-0/u);
+  assert.equal(buttonNamed(subject.render(props), "선택한 배치로 되돌리기"), null, "the old pointer release cannot reapply a change after reset");
+});
 
 test("a draft conflict preserves manual slots and blocks stale retries until the latest draft is accepted", async () => {
   for (const mode of ["OWNER", "ADMIN"]) {
@@ -272,7 +344,7 @@ test("manual edits cannot save, copy or submit the previous selected team before
     const destination = find(restored, (node) => typeof node.props.href === "string" && node.props.href.includes("/matches/"));
     assert.equal(destination?.props.href, `${mode === "OWNER" ? "/matches/submit" : "/admin/matches/new"}?teamBalanceDraftId=${props.draft.id}`);
     await buttonNamed(restored, "팀 결과 복사").props.onClick();
-    assert.match(subject.clipboard[0], /^BLUE synthetic-player-0/u);
+    assert.match(subject.clipboard[0], /^BLUE 등록이름0/u);
   }
 });
 
@@ -288,7 +360,7 @@ test("manual selection sends edited players and keeps them locked through respon
   for (const phase of ["response", "refresh"]) {
     const tree = subject.render(props);
     assert.equal(slot(tree, 0).props.draggable, false, phase);
-    assert.equal(find(slot(tree, 0), (node) => node.type === "button").props.disabled, true, phase);
+    assert.equal(slot(tree, 0).props["aria-disabled"], true, phase);
     assert.equal(find(tree, (node) => typeof node.props.href === "string" && node.props.href.includes("/matches/")), null, phase);
     swapCards(subject, props);
     assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-5/u);
@@ -299,7 +371,7 @@ test("manual selection sends edited players and keeps them locked through respon
   const settled = subject.render({ draft: current });
   assert.equal(buttonNamed(settled, "선택 팀 저장").props.disabled, false);
   await buttonNamed(settled, "팀 결과 복사").props.onClick();
-  assert.match(subject.clipboard[0], /^BLUE synthetic-player-5/u);
+  assert.match(subject.clipboard[0], /^BLUE 등록이름5/u);
 });
 
 test("archived team drafts cannot be rearranged by keyboard or drag handlers", () => {
@@ -307,7 +379,7 @@ test("archived team drafts cannot be rearranged by keyboard or drag handlers", (
   const props = { draft: selectedDraft("ARCHIVED"), mode: "ADMIN" };
   const tree = subject.render(props);
   assert.equal(slot(tree, 0).props.draggable, false);
-  assert.equal(find(slot(tree, 0), (node) => node.type === "button").props.disabled, true);
+  assert.equal(slot(tree, 0).props["aria-disabled"], true);
   swapCards(subject, props);
   slot(subject.render(props), 5).props.onDrop({ preventDefault() {}, dataTransfer: { getData: () => "0" } });
   assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-0/u);
@@ -377,12 +449,9 @@ test("relaxed server recommendations show named reasons and allow save, share an
   assert.doesNotMatch(visibleText(tree), /synthetic-player/u);
   assert.equal(visibleText(tree).split("선택한 포지션 밖 정글 배정").length - 1, 2, "one summary reason and one expandable detailed check, without duplicate warnings");
   await buttonNamed(tree, "팀 결과 복사").props.onClick();
-  assert.match(subject.clipboard[0], /내전 규칙: 조건 조정 편성/u);
-  assert.match(subject.clipboard[0], /합성 선수 1 · 정글/u);
-  assert.doesNotMatch(subject.clipboard[0], /synthetic-player/u);
-  assert.equal(subject.clipboard[0].split("선택한 포지션 밖 정글 배정").length - 1, 1);
-  find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
-  find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+  assert.equal(subject.clipboard[0], "BLUE 등록이름0 등록이름1 등록이름2 등록이름3 등록이름4\nRED 등록이름5 등록이름6 등록이름7 등록이름8 등록이름9");
+  pickCard(subject, props, 0);
+  pickCard(subject, props, 1);
   tree = subject.render(props);
   assert.match(slot(tree, 0).props["aria-label"], /합성 선수 2/u);
   assert.match(visibleText(tree), /교체 후 조정되는 조건/u);
@@ -405,8 +474,8 @@ test("only the current automatic recommendation can authorize relaxed manual swa
       evaluated++; assert.equal(options?.allowConstraintRelaxation, true); return { score: selectedDraft().candidates[0].score };
     });
     const props = { draft };
-    find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
-    find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+    pickCard(subject, props, 0);
+    pickCard(subject, props, 1);
     assert.equal(evaluated, variant === "selected-manual-strict" ? 1 : 0);
   }
 });
@@ -421,7 +490,7 @@ test("manual relaxed results describe the applied conditions without claiming an
   assert.match(text, /수동 배치에 적용된 조정 조건/u);
   assert.match(text, /현재 수동 배치에서 포지션 1명/u);
   assert.doesNotMatch(text, /가능한 최선의 팀을 만들었어요|기존 조건을 모두 만족하는 조합이 없어/u);
-  assert.match(share.formatTeamBalanceShareText(draft.candidates[1], draft.participants), /밸런스 판단: 수동 조정안/u);
+  assert.equal(share.formatTeamBalanceShareText(draft.candidates[1], draft.participants).split("\n").length, 2);
 });
 
 test("conflict preservation validates manual slots under the latest automatic recommendation policy", async () => {
@@ -432,8 +501,8 @@ test("conflict preservation validates manual slots under the latest automatic re
       ? { ok: false, status: 412, json: async () => ({}) } : { ok: true, json: async () => ({ draft: latest }) }, false,
       (_participants, _layout, options) => { if (!options?.allowConstraintRelaxation) throw new Error("unregistered position"); return { score: draft.candidates[0].score }; });
     const props = { draft };
-    find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
-    find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+    pickCard(subject, props, 0);
+    pickCard(subject, props, 1);
     await buttonNamed(subject.render(props), "수동 배치 평가·선택").props.onClick();
     const tree = subject.render(props);
     assert.equal(Boolean(buttonNamed(tree, "내 수동 배치 유지")), stillRelaxed);
@@ -445,8 +514,8 @@ test("conflict preservation validates manual slots under the latest automatic re
 test("keyboard and drag swaps preserve players when either role is not eligible", () => {
   const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
   const props = { draft: selectedDraft() };
-  find(slot(subject.render(props), 0), (node) => node.type === "button").props.onClick();
-  find(slot(subject.render(props), 1), (node) => node.type === "button").props.onClick();
+  pickCard(subject, props, 0);
+  pickCard(subject, props, 1);
   assert.match(slot(subject.render(props), 0).props["aria-label"], /synthetic-player-0/u);
   assert.ok(find(subject.render(props), (node) => node.props.role === "status" && String(node.props.children).includes("허용하지 않은 포지션")));
   slot(subject.render(props), 1).props.onDrop({ preventDefault() {}, dataTransfer: { getData: () => "0" } });
@@ -483,20 +552,14 @@ test("invalid server reports block save, copying and match links; conditional re
   }
 });
 
-test("shared results retain fairness warnings and team scores without publishing an uncalibrated win probability", () => {
+test("sharing is exactly two registered-name lines regardless of scores, warnings or legacy version", () => {
   const draft = selectedDraft();
   const candidate = draft.candidates[0];
-  const legacy = share.formatTeamBalanceShareText(candidate, draft.participants);
-  assert.match(legacy, /최신 기준 재평가 필요/u);
-  assert.match(legacy, /점수 차이는 실제 승률을 뜻하지 않습니다/u);
-  assert.match(legacy, /팀 점수: RED 250\.0 \/ BLUE 250\.0 \/ 차이 0\.0/u);
-  assert.doesNotMatch(legacy, /\d+(?:\.\d+)?%/u);
+  const expected = "BLUE 등록이름0 등록이름1 등록이름2 등록이름3 등록이름4\nRED 등록이름5 등록이름6 등록이름7 등록이름8 등록이름9";
+  assert.equal(share.formatTeamBalanceShareText(candidate, draft.participants), expected);
   candidate.score.fairness = { status: "CONDITIONAL", hardViolations: [], warnings: ["큰 대면 격차가 두 곳입니다."], checks: [] };
   candidate.score.v1 = { formulaVersion, missingSources: [], predictedRedWinRate: 90.9, predictedBlueWinRate: 9.1 };
-  const current = share.formatTeamBalanceShareText(candidate, draft.participants);
-  assert.match(current, /내전 규칙: 조건부 편성/u);
-  assert.match(current, /큰 대면 격차가 두 곳입니다/u);
-  assert.doesNotMatch(current, /90\.9|9\.1|%/u);
+  assert.equal(share.formatTeamBalanceShareText(candidate, draft.participants), expected);
   assert.equal(candidate.score.v1.predictedRedWinRate, 90.9, "legacy score fields are preserved");
 });
 
@@ -506,11 +569,11 @@ function visibleText(node) {
   return React.Children.toArray(node.props.children).map(visibleText).join("");
 }
 
-test("manual swap previews show before and after team totals once and label the unchanged applied report", () => {
+test("manual swap previews update the team overview and balance score from one common evaluation", () => {
   let evaluations = 0;
   const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, () => {
     evaluations += 1;
-    return { score: { teamStrength: { redTotal: 270, blueTotal: 230, difference: 40 } } };
+    return { score: { teamStrength: { redTotal: 270, blueTotal: 230, difference: 40 }, v1: { recommendationScore: 81.25 } } };
   });
   const props = { draft: selectedDraft() };
   props.draft.candidates[0].score.v1 = { formulaVersion, missingSources: [], predictedRedWinRate: 90.9, predictedBlueWinRate: 9.1 };
@@ -521,8 +584,10 @@ test("manual swap previews show before and after team totals once and label the 
   assert.match(visibleText(preview), /250\.0 → 270\.0/u);
   assert.match(visibleText(preview), /250\.0 → 230\.0/u);
   assert.match(visibleText(preview), /0\.0 → 40\.0/u);
-  assert.match(visibleText(tree), /적용 전 배치 기준/u);
+  assert.match(visibleText(tree), /수동 배치 미리보기/u);
   assert.match(visibleText(tree), /미리보기 · 서버 평가 후 적용/u);
+  assert.match(visibleText(tree), /밸런스 점수 81.25/u);
+  assert.match(visibleText(tree), /RED 팀 점수270.0BLUE 팀 점수230.0팀 점수 차이40.0/u);
   assert.doesNotMatch(visibleText(tree), /90\.9|9\.1|예상 승률/u);
   subject.render(props);
   assert.equal(evaluations, 1, "the successful hard-rule check is reused for the preview");
@@ -539,7 +604,7 @@ test("older fairness reports still require reevaluation under the current ordere
   assert.match(text, /최신 기준 재평가 필요/u);
   assert.match(text, /최신 자동 조정 기준으로 재평가/u);
   assert.doesNotMatch(text, /균형 추천/u);
-  assert.match(share.formatTeamBalanceShareText(candidate, draft.participants), /최신 자동 조정 기준으로 재평가/u);
+  assert.equal(share.formatTeamBalanceShareText(candidate, draft.participants).split("\n").length, 2);
 });
 
 function newcomerDraft(currentTier = "DIAMOND IV") {
@@ -632,13 +697,13 @@ test("role swaps show checked preview scores on each exact slot and preserve the
     return teamBalance.evaluateTeamBalanceLayout(...args);
   });
   const props = { draft };
-  find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
-  find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+  pickCard(subject, props, 0);
+  pickCard(subject, props, 1);
   let tree = subject.render(props);
   assert.match(visibleText(slot(tree, 1)), /미리보기 점수 63\.0/u);
   assert.match(visibleText(slot(tree, 1)), /현재 DIAMOND IV/u);
   assert.match(visibleText(slot(tree, 0)), /미리보기 점수 36\.0/u);
-  assert.match(visibleText(tree), /적용 전 배치 기준/u);
+  assert.match(visibleText(tree), /수동 배치 미리보기/u);
   assert.equal(evaluations, 1, "the cached full layout supplies the preview and every card");
   assert.equal(draft.candidates[0].assignments[0].rating.effectiveScore, 68, "the stored result remains unchanged");
   buttonNamed(tree, "선택한 배치로 되돌리기").props.onClick();

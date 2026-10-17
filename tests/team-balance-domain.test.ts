@@ -307,20 +307,17 @@ test("[V1 blueblack golden] score uses tier, inhouse, position experience and th
   assert.deepEqual(evaluated.score.v1?.missingSources, ["RECENT_SOLO", "BALANCE_OVERRIDE"]);
 });
 
-test("share text keeps the V1 line order and excludes draft ids, account ids and links", () => {
+test("share text contains exactly registered names in BLUE/RED role order", () => {
   const candidate = calculateTeamBalanceCandidates(pairedPlayers(), 1).candidates[0]!;
-  const text = formatTeamBalanceShareText(
-    { ...candidate, source: "AUTO" },
-    pairedPlayers().map((player, ordinal) => ({ playerId: player.playerId, displayName: ordinal === 0 ? "닉네임\n0" : `닉네임${ordinal}` })),
-  );
-
-  assert.match(text, /^BLUE .+\nRED .+\n내전 규칙:/u);
-  assert.match(text, /밸런스 판단: 내전 규칙 전체탐색 추천/u);
-  assert.match(text, /팀 점수: RED \d+\.\d \/ BLUE \d+\.\d \/ 차이 \d+\.\d/u);
-  assert.match(text, /점수 차이는 실제 승률을 뜻하지 않습니다/u);
-  assert.doesNotMatch(text, /\d+(?:\.\d+)?%/u);
-  assert.doesNotMatch(text, /https?:|draft|account|player-/u);
-  assert.match(text, /닉네임 0/u);
+  const participants = pairedPlayers().map((player, ordinal) => ({ playerId: player.playerId, displayName: `닉네임${ordinal}`, registeredName: ordinal === 0 ? "등록\n이름0" : `이름${ordinal}` }));
+  const names = new Map(participants.map(player => [player.playerId, player.registeredName.replace(/\s+/gu, " ")]));
+  const expected = (["BLUE", "RED"] as const).map(team => `${team} ${TEAM_BALANCE_POSITIONS.map(position => names.get(candidate.assignments.find(entry => entry.team === team && entry.position === position)!.playerId)).join(" ")}`).join("\n");
+  const text = formatTeamBalanceShareText({ ...candidate, source: "AUTO" }, participants);
+  assert.equal(text, expected);
+  assert.equal(text.split("\n").length, 2);
+  assert.doesNotMatch(text, /닉네임|https?:|draft|account|player-|점수|주의|승률/u);
+  const missing = formatTeamBalanceShareText({ ...candidate, source: "MANUAL" }, participants.map(({ playerId, displayName }) => ({ playerId, displayName })));
+  assert.equal(missing, "BLUE 이름미등록 이름미등록 이름미등록 이름미등록 이름미등록\nRED 이름미등록 이름미등록 이름미등록 이름미등록 이름미등록");
 });
 
 test("manual evaluation rejects duplicate players and incomplete team-position coverage", () => {

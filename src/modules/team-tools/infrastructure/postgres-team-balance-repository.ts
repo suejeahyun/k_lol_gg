@@ -382,8 +382,9 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
       if (!row) return null;
       assertViewerAccess(row, viewer);
       const participantRows = await transaction
-        .select()
+        .select({ participant: teamBalanceDraftParticipants, registeredName: players.memberName })
         .from(teamBalanceDraftParticipants)
+        .leftJoin(players, eq(players.id, teamBalanceDraftParticipants.playerId))
         .where(eq(teamBalanceDraftParticipants.draftId, draftId))
         .orderBy(asc(teamBalanceDraftParticipants.ordinal));
       const candidateRows = await transaction
@@ -406,7 +407,10 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
         selectedCandidateSource: row.selectedCandidateSource,
         selectedCandidateSignature: row.selectedCandidateSignature,
         revision: row.revision,
-        participants: participantRows.map(participantFromRow),
+        participants: participantRows.map(({ participant, registeredName }) => ({
+          ...participantFromRow(participant),
+          registeredName: registeredName?.trim() || null,
+        })),
         candidates: candidateRows.map(candidateFromRow),
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),

@@ -1,0 +1,84 @@
+{
+  "checkedAt": "2026-10-17T20:10:56.451Z",
+  "status": "PASS",
+  "scope": "Drag-only manual swaps, immediate shared-domain preview, authorized registered-name display and exact two-line copy; frozen scoring retained unless separately accepted research activates a version.",
+  "completeCheck": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "lint": {
+      "errors": 0,
+      "warnings": 58
+    },
+    "typecheck": "PASS",
+    "erd": {
+      "tables": 114,
+      "foreignKeys": 175,
+      "status": "PASS"
+    },
+    "contracts": {
+      "passed": 732,
+      "failed": 0
+    },
+    "unit": {
+      "passed": 1191,
+      "failed": 0,
+      "skipped": 1,
+      "skipReason": "Existing multiuser PostgreSQL fixture requires its separate isolated harness."
+    },
+    "homeGuideImages": "PASS",
+    "productionBuild": "PASS",
+    "log": {
+      "path": ".tmp/policy-check.log",
+      "sha256": "09e73b1ffe07c1ef1c8b68f4d6a05214da1862a66bc8c348a5494200cbaaca33",
+      "completedAt": "2026-10-17T20:09:01.209Z"
+    }
+  },
+  "focusedDatabase": {
+    "command": "PG_BIN_DIR=<PostgreSQL 18 bin> V2_DB_CONTRACT_SCOPE=team-tools npm run test:db",
+    "passed": 9,
+    "failed": 0,
+    "scope": "7 draft and 2 score contracts",
+    "disposablePostgres": true,
+    "log": {
+      "path": ".tmp/policy-db.log",
+      "sha256": "e8628a9725752cfc02e358a5e79e82d89f8502ded8ae87d42b3158a8cf971bdc",
+      "completedAt": "2026-10-17T20:02:17.950Z"
+    }
+  },
+  "browser": {
+    "evidence": "browser.json",
+    "runtime": "next start",
+    "checks": 25,
+    "status": "PASS",
+    "productionWrites": 0
+  },
+  "authHttp": {
+    "command": "npm run verify:auth-http",
+    "status": "PASS",
+    "log": {
+      "path": ".tmp/policy-auth-http.log",
+      "sha256": "9a8b9b4e3bf6eeb64484221631f332bf325a6e3bcf1a78b8690d56692eb761d6",
+      "completedAt": "2026-10-17T20:10:50.669Z"
+    }
+  },
+  "productionDependencyAudit": {
+    "command": "npm audit --omit=dev --audit-level=high",
+    "vulnerabilities": 0
+  },
+  "treeSecrets": {
+    "command": "npm run security:secrets -- --tree-only",
+    "status": "PASS"
+  },
+  "priorReleaseEvidence": {
+    "command": "npm run release:evidence:check",
+    "releases": 105,
+    "gitTags": 105,
+    "status": "PASS"
+  },
+  "independentUiReview": {
+    "status": "PASS",
+    "scope": "Read-only second-agent review of pointer cancellation, owner/admin name access, shared MANUAL preview, copy and old-draft compatibility",
+    "remainingP1P2": 0
+  },
+  "evidenceNotes": "Ignored logs contain local verification output. Browser screenshots use synthetic identities. Development-browser and overlapping focused tests are not added again to production-browser/full-check totals."
+}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Archive, ArrowRight, Check, Copy, GripVertical, RefreshCw, RotateCcw, Save, SlidersHorizontal } from "@/components/theme/theme-icons";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 import { parseInhouseMajorTier } from "@/modules/team-tools/domain/inhouse-fairness";
 
@@ -79,8 +79,6 @@ export function TeamBalanceDraftWorkspace({
   const selectedCandidate = draft.candidates.find((candidate) => candidate.signature === draft.selectedCandidateSignature) ?? null;
   const selectedInvalid = selectedCandidate?.score.fairness?.status === "INVALID";
   const allowConstraintRelaxation = allowsConstraintRelaxation(draft);
-  const selectedRelaxation = selectedCandidate?.score.fairness?.constraintRelaxation;
-  const selectedWarnings = selectedCandidate?.score.fairness?.warnings.filter((warning) => !selectedRelaxation?.reasons.some((reason) => reason.detail === warning || warning.endsWith(`: ${reason.detail}`))) ?? [];
   const hasLegacyCandidates = autoCandidates.some((candidate) => !hasCurrentRules(candidate) || !candidate.criterion || candidate.criterion === "LEGACY");
   const initialLayout = (selectedCandidate ?? autoCandidates[0])?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? [];
   const [manualLayout, setManualLayout] = useState<TeamBalanceLayoutEntry[]>(initialLayout);
@@ -92,7 +90,16 @@ export function TeamBalanceDraftWorkspace({
   } | null>(null);
   const [draggingSlot, setDraggingSlot] = useState<number | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
+  const nativeDragSlot = useRef<number | null>(null);
   const [keyboardSlot, setKeyboardSlot] = useState<number | null>(null);
+  const touchDrag = useRef<{ pointerId: number; card: HTMLElement; sourceSlot: number; startX: number; startY: number; x: number; y: number; moved: boolean } | null>(null);
+  const touchScrollFrame = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (touchScrollFrame.current !== null) cancelAnimationFrame(touchScrollFrame.current);
+    const drag = touchDrag.current;
+    touchDrag.current = null;
+    if (drag?.card.hasPointerCapture(drag.pointerId)) drag.card.releasePointerCapture(drag.pointerId);
+  }, []);
   const [pending, setPending] = useState("");
   const [message, setMessage] = useState("");
   const [conflict, setConflict] = useState(false);
@@ -123,6 +130,11 @@ export function TeamBalanceDraftWorkspace({
       return null;
     }
   }, [manualChanged, manualLayout, draft.participants, checkedManualLayout, allowConstraintRelaxation]);
+  const displayedCandidate = manualChanged && manualPreview && selectedCandidate
+    ? { ...selectedCandidate, ...manualPreview, source: "MANUAL" as const, criterion: "MANUAL" as const }
+    : selectedCandidate;
+  const selectedRelaxation = displayedCandidate?.score.fairness?.constraintRelaxation;
+  const selectedWarnings = displayedCandidate?.score.fairness?.warnings.filter((warning) => !selectedRelaxation?.reasons.some((reason) => reason.detail === warning || warning.endsWith(`: ${reason.detail}`))) ?? [];
   const beforeScore = (selectedCandidate ?? autoCandidates[0])?.score.teamStrength;
   const cardAssignments = manualChanged ? manualPreview?.assignments : (selectedCandidate ?? autoCandidates[0])?.assignments;
   const canKeepManual = useMemo(() => {
@@ -161,7 +173,7 @@ export function TeamBalanceDraftWorkspace({
     }
     setAcceptedDraft(latestDraft);
     setCheckedManualLayout(null);
-    setKeyboardSlot(null); setDraggingSlot(null); setDragOverSlot(null);
+    cancelCardDrag();
     setLatestDraft(null); setConflict(false);
     setMessage(keepManual ? "수동 배치를 유지했어요. 최신 정보로 다시 평가한 뒤 적용해 주세요." : "수동 변경을 버리고 최신 초안을 불러왔어요.");
   }
@@ -172,6 +184,7 @@ export function TeamBalanceDraftWorkspace({
     if (action === "save" && selectedInvalid) return;
     if (action === "select" && typeof body === "object" && body !== null && "candidateRank" in body &&
       draft.candidates.some((candidate) => candidate.rank === body.candidateRank && candidate.score.fairness?.status === "INVALID")) return;
+    cancelCardDrag();
     sending.current = true;
     setPending(action);
     setMessage("");
@@ -251,7 +264,7 @@ export function TeamBalanceDraftWorkspace({
     if (manualLocked || sending.current) return;
     if (keyboardSlot === null) {
       setKeyboardSlot(slot);
-      setMessage("교체할 두 번째 슬롯을 선택해 주세요.");
+      setMessage("카드를 집었어요. 교체할 카드로 이동해 Space 또는 Enter를 누르세요. Esc로 취소할 수 있어요.");
       return;
     }
     if (keyboardSlot === slot) {
@@ -261,6 +274,36 @@ export function TeamBalanceDraftWorkspace({
     }
     swapManual(keyboardSlot, slot);
     setKeyboardSlot(null);
+  }
+
+  function touchTargetSlot(card: HTMLElement, x: number, y: number) {
+    const target = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-manual-slot]");
+    if (!target || !card.closest("[data-manual-team-board]")?.contains(target)) return null;
+    const slot = Number(target.dataset.manualSlot);
+    return Number.isInteger(slot) && manualLayout[slot] ? slot : null;
+  }
+
+  function cancelCardDrag() {
+    const drag = touchDrag.current;
+    touchDrag.current = null;
+    nativeDragSlot.current = null;
+    if (touchScrollFrame.current !== null) cancelAnimationFrame(touchScrollFrame.current);
+    touchScrollFrame.current = null;
+    setKeyboardSlot(null); setDraggingSlot(null); setDragOverSlot(null);
+    if (drag?.card.hasPointerCapture(drag.pointerId)) drag.card.releasePointerCapture(drag.pointerId);
+  }
+
+  function scrollTouchDrag() {
+    const drag = touchDrag.current;
+    if (!drag?.moved) { touchScrollFrame.current = null; return; }
+    const edge = 112;
+    const delta = drag.y < edge ? -Math.min(18, (edge - drag.y) / 3)
+      : drag.y > window.innerHeight - edge ? Math.min(18, (drag.y - window.innerHeight + edge) / 3) : 0;
+    if (delta) {
+      window.scrollBy({ top: delta, behavior: "instant" });
+      setDragOverSlot(touchTargetSlot(drag.card, drag.x, drag.y));
+    }
+    touchScrollFrame.current = requestAnimationFrame(scrollTouchDrag);
   }
 
   return (
@@ -287,34 +330,34 @@ export function TeamBalanceDraftWorkspace({
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
         <div className={styles.heading}><div><h2 id="candidate-title">내전 규칙 팀 추천</h2></div></div>
-        {manualChanged ? <p className={styles.notice} role="status"><strong>적용 전 배치 기준</strong> · 아래 추천과 판정은 현재 적용된 팀의 결과입니다. 교체한 카드의 점수는 수동 배치 미리보기에서 확인하고 서버 평가 후 적용해 주세요.</p> : null}
-        {selectedCandidate ? <>
-          <div className={styles.evaluationOverview} data-balance={hasCurrentRules(selectedCandidate) && selectedCandidate.score.fairness?.status === "BALANCED" ? differenceTone(selectedCandidate.score.teamStrength.difference) : "open"} role="status"><div><span>내전 규칙 판정</span><strong>{fairnessLabel(selectedCandidate)}</strong></div><div><span>RED 팀 점수</span><strong>{selectedCandidate.score.teamStrength.redTotal.toFixed(1)}</strong></div><div><span>BLUE 팀 점수</span><strong>{selectedCandidate.score.teamStrength.blueTotal.toFixed(1)}</strong></div><div><span>팀 점수 차이</span><strong>{selectedCandidate.score.teamStrength.difference.toFixed(1)}</strong></div></div>
-          <p className={styles.fieldHint}>추천 기준: {candidateCriterion(selectedCandidate).label} · 참고 점수 {selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()} · 점수 차이는 실제 승률을 뜻하지 않습니다.</p>
-          {selectedRelaxation?.applied ? <section className={styles.notice} role="status" aria-label={selectedCandidate.source === "MANUAL" ? "수동 배치에 적용된 조정 조건" : "자동 조정한 편성 조건"}>
-            <h3>{selectedCandidate.source === "MANUAL" ? "수동 배치에 적용된 조정 조건" : "조건을 조정해 가능한 최선의 팀을 만들었어요"}</h3>
-            <p>{selectedCandidate.source === "MANUAL" ? "현재 수동 배치에서" : "기존 조건을 모두 만족하는 조합이 없어"} 포지션 {selectedRelaxation.roleDeviationCount}명 · 바텀 티어 조건 {selectedRelaxation.bottomTierViolationCount}곳을 조정했습니다. 이 팀으로 바로 저장·공유하거나 수동 조정할 수 있어요.</p>
-            <ul>{formatTeamBalanceRelaxationReasons(selectedCandidate, draft.participants).map((reason, index) => <li key={index}>{reason}</li>)}</ul>
+        {manualChanged ? <p className={styles.notice} role="status"><strong>수동 배치 미리보기</strong> · {manualPreview ? "교환한 카드와 아래 점수·판정을 즉시 계산했습니다. 서버 평가 후 적용해 주세요." : "변경 배치의 점수를 확인할 수 없어 이전 적용 결과를 표시합니다. 서버 평가로 확인해 주세요."}</p> : null}
+        {displayedCandidate ? <>
+          <div className={styles.evaluationOverview} aria-label="현재 팀 평가" data-balance={hasCurrentRules(displayedCandidate) && displayedCandidate.score.fairness?.status === "BALANCED" ? differenceTone(displayedCandidate.score.teamStrength.difference) : "open"} role="status"><div><span>내전 규칙 판정</span><strong>{fairnessLabel(displayedCandidate)}</strong></div><div><span>RED 팀 점수</span><strong>{displayedCandidate.score.teamStrength.redTotal.toFixed(1)}</strong></div><div><span>BLUE 팀 점수</span><strong>{displayedCandidate.score.teamStrength.blueTotal.toFixed(1)}</strong></div><div><span>팀 점수 차이</span><strong>{displayedCandidate.score.teamStrength.difference.toFixed(1)}</strong></div></div>
+          <p className={styles.fieldHint}>{manualChanged ? "미리보기 기준" : "추천 기준"}: {candidateCriterion(displayedCandidate).label} · 밸런스 점수 {displayedCandidate.score.v1?.recommendationScore ?? displayedCandidate.score.totalPenalty?.toLocaleString() ?? "확인 필요"} · 점수 차이는 실제 승률을 뜻하지 않습니다.</p>
+          {selectedRelaxation?.applied ? <section className={styles.notice} role="status" aria-label={displayedCandidate.source === "MANUAL" ? "수동 배치에 적용된 조정 조건" : "자동 조정한 편성 조건"}>
+            <h3>{displayedCandidate.source === "MANUAL" ? "수동 배치에 적용된 조정 조건" : "조건을 조정해 가능한 최선의 팀을 만들었어요"}</h3>
+            <p>{displayedCandidate.source === "MANUAL" ? "현재 수동 배치에서" : "기존 조건을 모두 만족하는 조합이 없어"} 포지션 {selectedRelaxation.roleDeviationCount}명 · 바텀 티어 조건 {selectedRelaxation.bottomTierViolationCount}곳을 조정했습니다. {manualChanged ? "서버 평가 후 저장·복사할 수 있어요." : "이 팀으로 저장·복사하거나 수동 조정할 수 있어요."}</p>
+            <ul>{formatTeamBalanceRelaxationReasons(displayedCandidate, draft.participants).map((reason, index) => <li key={index}>{reason}</li>)}</ul>
           </section> : null}
-          {!hasCurrentRules(selectedCandidate) ? <p className={styles.notice} role="status">이전 계산 결과입니다. 최신 자동 조정 기준으로 재평가한 뒤 확인해 주세요.</p> : null}
-          {selectedCandidate.score.fairness ? <div className={styles.notice}>
-            {selectedCandidate.score.fairness.hardViolations.length ? <p role="alert">{displayDetail(selectedCandidate.score.fairness.hardViolations.join(" / "))}</p> : null}
+          {!hasCurrentRules(displayedCandidate) ? <p className={styles.notice} role="status">이전 계산 결과입니다. 최신 자동 조정 기준으로 재평가한 뒤 확인해 주세요.</p> : null}
+          {displayedCandidate.score.fairness ? <div className={styles.notice}>
+            {displayedCandidate.score.fairness.hardViolations.length ? <p role="alert">{displayDetail(displayedCandidate.score.fairness.hardViolations.join(" / "))}</p> : null}
             {selectedWarnings.length ? <ul>{selectedWarnings.map((warning, index) => <li key={index}>{displayDetail(warning)}</li>)}</ul> : null}
-            <details><summary>{hasCurrentRules(selectedCandidate) ? "내전 규칙" : "이전 기준"} 세부 검사 {selectedCandidate.score.fairness.checks.length}개</summary><ul>{selectedCandidate.score.fairness.checks.map((check) => <li key={check.code}><strong>{check.status === "PASS" ? "통과" : check.status === "WARN" ? "주의" : "위반"} · {check.label}</strong> — {displayDetail(check.detail)}</li>)}</ul></details>
+            <details><summary>{hasCurrentRules(displayedCandidate) ? "내전 규칙" : "이전 기준"} 세부 검사 {displayedCandidate.score.fairness.checks.length}개</summary><ul>{displayedCandidate.score.fairness.checks.map((check) => <li key={check.code}><strong>{check.status === "PASS" ? "통과" : check.status === "WARN" ? "주의" : "위반"} · {check.label}</strong> — {displayDetail(check.detail)}</li>)}</ul></details>
           </div> : null}
         </> : null}
         <div className={styles.candidateGrid}>
           {autoCandidates.slice(0, 1).map((candidate) => {
             const criterion = candidateCriterion(candidate);
-            const selected = draft.selectedCandidateSignature === candidate.signature;
+            const selected = !manualChanged && draft.selectedCandidateSignature === candidate.signature;
             return <article key={candidate.id} data-selected={selected} data-balance={hasCurrentRules(candidate) && candidate.score.fairness?.status === "BALANCED" ? differenceTone(candidate.score.teamStrength.difference) : "open"}>
               <header><strong>{criterion.label}</strong><span>{selected ? "적용 중" : "추천 결과"}</span></header>
               <p><strong>{fairnessLabel(candidate)}</strong></p>
               {criterion.description ? <p>{criterion.description}</p> : null}
               {candidate.score.v1?.missingSources.length ? <p role="note">최근 솔로 상세가 없거나 갱신 후 24시간이 지난 경우, 또는 팀 편성 보정이 미설정인 경우 해당 보조값은 0으로 계산합니다.</p> : null}
               <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>
-              <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
-              <button type="button" aria-pressed={selected} disabled={mutationLocked || selected || candidate.score.fairness?.status === "INVALID" || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
+              <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span data-difference={differenceTone(line.difference)} key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? <><span>{participantName.get(blue.playerId)}</span><small>{participantById.get(blue.playerId)?.registeredName?.trim() || "등록 이름 없음"}</small></> : "-"}</em><small>↔</small><em>{red ? <><span>{participantName.get(red.playerId)}</span><small>{participantById.get(red.playerId)?.registeredName?.trim() || "등록 이름 없음"}</small></> : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
+              <button type="button" aria-pressed={selected} disabled={mutationLocked || manualChanged || selected || candidate.score.fairness?.status === "INVALID" || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
             </article>;
           })}
         </div>
@@ -322,7 +365,7 @@ export function TeamBalanceDraftWorkspace({
 
       <section className={styles.manualSection} aria-labelledby="manual-title">
         <div className={styles.heading}><div><h2 id="manual-title">수동 팀 배치</h2></div>{manualChanged ? <strong role="status">수동 변경 · 평가 필요</strong> : null}</div>
-        <p className={styles.fieldHint}>같은 팀 안에서 역할만 바꿔도 주·부 포지션 감점과 역할별 숙련도 보정이 달라져 팀 점수가 변할 수 있습니다.</p>
+        <p id="manual-drag-help" className={styles.fieldHint}>카드를 다른 카드 위로 드래그하면 서로 교환합니다. 모바일은 카드의 이름 부분을 끌어 주세요. 키보드: Space·Enter로 집기와 놓기, Esc로 취소. 배정 포지션을 반영한 점수는 즉시 갱신됩니다.</p>
         {allowConstraintRelaxation ? <p className={styles.fieldHint}>자동 조정으로 만든 초안입니다. 다른 포지션으로 교체할 수 있으며, 바뀐 조건은 서버 평가 후 결과에 표시됩니다.</p> : null}
         {manualChanged && beforeScore && manualPreview ? <div className={styles.evaluationOverview} aria-label="수동 변경 점수 미리보기" role="status">
           <div><span>적용 상태</span><strong>미리보기 · 서버 평가 후 적용</strong></div>
@@ -330,8 +373,8 @@ export function TeamBalanceDraftWorkspace({
           <div><span>BLUE 교환 전 → 후</span><strong>{beforeScore.blueTotal.toFixed(1)} → {manualPreview.score.teamStrength.blueTotal.toFixed(1)}</strong></div>
           <div><span>팀 차이 교환 전 → 후</span><strong>{beforeScore.difference.toFixed(1)} → {manualPreview.score.teamStrength.difference.toFixed(1)}</strong></div>
         </div> : manualChanged ? <p className={styles.notice} role="status">변경 배치의 점수 미리보기를 확인할 수 없습니다. 서버 평가로 확인해 주세요.</p> : null}
-        {manualChanged && manualPreview?.score.fairness?.constraintRelaxation?.applied ? <div className={styles.notice} role="status"><strong>교체 후 조정되는 조건</strong><ul>{formatTeamBalanceRelaxationReasons(manualPreview, draft.participants).map((reason, index) => <li key={index}>{reason}</li>)}</ul></div> : null}
-        <div className={styles.manualTeams}>
+        {manualChanged && manualPreview?.score.fairness?.constraintRelaxation?.applied ? <details className={styles.notice}><summary>교체 후 조정되는 조건 · 포지션 {manualPreview.score.fairness.constraintRelaxation.roleDeviationCount}명 · 바텀 {manualPreview.score.fairness.constraintRelaxation.bottomTierViolationCount}곳</summary><ul>{formatTeamBalanceRelaxationReasons(manualPreview, draft.participants).map((reason, index) => <li key={index}>{reason}</li>)}</ul></details> : null}
+        <div className={styles.manualTeams} data-manual-team-board>
           {TEAM_BALANCE_TEAMS.map((team) => <section key={team} data-team={team} aria-labelledby={`manual-${team.toLowerCase()}-title`}>
             <header><h3 id={`manual-${team.toLowerCase()}-title`}>{teamLabel[team]} 팀</h3><span>5명</span></header>
             <div>{manualLayout.map((entry, index) => {
@@ -359,27 +402,64 @@ export function TeamBalanceDraftWorkspace({
                 : internalGames === 0
                   ? "내전 0판 · 전적 표본 없음"
                   : `내전 ${internalGames}판${internalGames < 20 ? " · 표본 부족" : ""}`;
+              const assignedPreference = participant?.eligiblePositions.find((eligible) => eligible.position === entry.position)?.preference;
+              const fitSummary = assignedPreference === "MAIN" ? "주 포지션 배정" : assignedPreference === "SUB" ? "부 포지션 배정" : assignedPreference === "AUTO" ? "기타 가능 포지션" : "미등록 포지션 배정";
+              const roleGames = v1?.internalPositionGames[entry.position] ?? rating?.positions?.[entry.position]?.sampleSize;
+              const roleSummary = roleGames === null || roleGames === undefined ? "역할 표본 확인 필요" : `이 역할 내전 ${roleGames}판`;
               return <article
                 key={`${entry.team}-${entry.position}`}
                 draggable={!manualLocked}
+                role="button"
+                aria-roledescription="드래그 카드"
+                aria-pressed={keyboardSlot === index}
+                tabIndex={manualLocked ? -1 : 0}
+                aria-disabled={manualLocked}
+                aria-describedby={`manual-drag-help manual-info-${index} manual-fit-${index}`}
                 data-manual-slot={index}
                 data-dragging={draggingSlot === index ? "true" : undefined}
                 data-drop-target={dragOverSlot === index && draggingSlot !== index ? "true" : undefined}
                 data-keyboard-selected={keyboardSlot === index ? "true" : undefined}
-                aria-label={`${teamLabel[team]} 팀 ${positionLabel[entry.position]} ${participantName.get(entry.playerId) ?? entry.playerId}. 다른 카드와 자리 교체 가능`}
-                onDragStart={(event) => { if (manualLocked || sending.current) { event.preventDefault(); return; } event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(index)); setDraggingSlot(index); setDragOverSlot(index); setMessage("교체할 자리 위에 카드를 놓아 주세요."); }}
-                onDragEnd={() => { setDraggingSlot(null); setDragOverSlot(null); }}
-                onDragOver={(event) => { if (manualLocked || sending.current) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverSlot(index); }}
-                onDrop={(event) => { if (manualLocked || sending.current) return; event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) swapManual(sourceSlot, index); setDraggingSlot(null); setDragOverSlot(null); }}
+                aria-label={`${teamLabel[team]} 팀 ${positionLabel[entry.position]} ${participantName.get(entry.playerId) ?? "참가자 확인 필요"} · ${participant?.registeredName?.trim() || "등록 이름 없음"}. 다른 카드와 자리 교체 가능`}
+                onPointerDown={(event) => {
+                  if (event.pointerType !== "touch" || touchDrag.current || manualLocked || sending.current || !(event.target instanceof Element) || !event.target.closest("[data-card-drag-handle]")) return;
+                  event.preventDefault();
+                  touchDrag.current = { pointerId: event.pointerId, card: event.currentTarget, sourceSlot: index, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY, moved: false };
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  setKeyboardSlot(null);
+                }}
+                onPointerMove={(event) => {
+                  const drag = touchDrag.current;
+                  if (!drag || drag.pointerId !== event.pointerId || manualLocked || sending.current) return;
+                  drag.x = event.clientX; drag.y = event.clientY;
+                  if (!drag.moved && Math.hypot(drag.x - drag.startX, drag.y - drag.startY) < 8) return;
+                  drag.moved = true;
+                  setDraggingSlot(drag.sourceSlot);
+                  setDragOverSlot(touchTargetSlot(event.currentTarget, event.clientX, event.clientY));
+                  if (touchScrollFrame.current === null) touchScrollFrame.current = requestAnimationFrame(scrollTouchDrag);
+                }}
+                onPointerUp={(event) => {
+                  const drag = touchDrag.current;
+                  if (!drag || drag.pointerId !== event.pointerId) return;
+                  const target = touchTargetSlot(event.currentTarget, event.clientX, event.clientY);
+                  cancelCardDrag();
+                  if (drag.moved && target !== null) swapManual(drag.sourceSlot, target);
+                }}
+                onPointerCancel={(event) => { if (touchDrag.current?.pointerId === event.pointerId) cancelCardDrag(); }}
+                onLostPointerCapture={(event) => { if (touchDrag.current?.pointerId === event.pointerId) cancelCardDrag(); }}
+                onKeyDown={(event) => { if (event.key === "Escape") { cancelCardDrag(); setMessage("카드 이동을 취소했어요."); } else if (event.key === " " || event.key === "Enter") { event.preventDefault(); selectKeyboardSlot(index); } }}
+                onDragStart={(event) => { if (manualLocked || sending.current) { event.preventDefault(); return; } event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(index)); nativeDragSlot.current = index; setKeyboardSlot(null); setDraggingSlot(index); setDragOverSlot(index); setMessage("교체할 자리 위에 카드를 놓아 주세요."); }}
+                onDragEnd={() => { nativeDragSlot.current = null; setDraggingSlot(null); setDragOverSlot(null); }}
+                onDragOver={(event) => { if (manualLocked || sending.current || nativeDragSlot.current === null) return; event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverSlot(index); }}
+                onDrop={(event) => { if (manualLocked || sending.current || nativeDragSlot.current === null) return; event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (sourceSlot === nativeDragSlot.current && sourceSlot !== index) swapManual(sourceSlot, index); nativeDragSlot.current = null; setDraggingSlot(null); setDragOverSlot(null); }}
               >
-                <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong></div>
-                <div className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small><small>{tierSummary}</small><small>{experienceSummary}</small></div>
-                <button type="button" disabled={manualLocked} aria-pressed={keyboardSlot === index} onClick={() => selectKeyboardSlot(index)}>{keyboardSlot === null ? "교체할 카드 선택" : keyboardSlot === index ? "선택 취소" : "이 카드와 교체"}</button>
+                <div className={styles.manualPlayerName} data-card-drag-handle><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><span><strong>{participantName.get(entry.playerId) ?? "참가자 확인 필요"}</strong><small>{participant?.registeredName?.trim() || "등록 이름 없음"}</small></span></div>
+                <div id={`manual-info-${index}`} className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small><small>{tierSummary}</small><small>{experienceSummary}</small></div>
+                <div id={`manual-fit-${index}`} className={styles.manualAssignmentInfo}><strong>{fitSummary}</strong><small>{roleSummary}</small></div>
               </article>;
             })}</div>
           </section>)}
         </div>
-        <div className={styles.manualEvaluation}><button className={styles.secondaryButton} type="button" disabled={manualLocked || manualLayout.length !== 10} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button>{manualChanged ? <button className={styles.secondaryButton} type="button" disabled={manualLocked} onClick={() => { if (manualLocked || sending.current) return; setManualLayout(initialLayout); setKeyboardSlot(null); setDraggingSlot(null); setDragOverSlot(null); setMessage("선택한 배치로 되돌렸어요."); }}><RotateCcw size={17} aria-hidden="true" /> 선택한 배치로 되돌리기</button> : null}</div>
+        <div className={styles.manualEvaluation}><button className={styles.secondaryButton} type="button" disabled={manualLocked || manualLayout.length !== 10} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button>{manualChanged ? <button className={styles.secondaryButton} type="button" disabled={manualLocked} onClick={() => { if (manualLocked || sending.current) return; setManualLayout(initialLayout); cancelCardDrag(); setMessage("선택한 배치로 되돌렸어요."); }}><RotateCcw size={17} aria-hidden="true" /> 선택한 배치로 되돌리기</button> : null}</div>
       </section>
 
       <section className={styles.draftActions} data-pending={pending || (refreshing ? "refresh" : undefined)} aria-busy={busy} aria-label="초안 작업">

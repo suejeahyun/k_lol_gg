@@ -654,6 +654,8 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     assert.equal(draft.status, "EVALUATED");
     assert.equal(draft.evaluationRound, 2);
     assert.equal(draft.ratingGeneration, 7);
+    assert.deepEqual(draft.participants.map(participant => participant.registeredName), playerIds.map((_, index) => `S06 회원 ${index + 1}`));
+    assert.deepEqual(draft.participants.map(participant => participant.displayName), playerIds.map((_, index) => `S06플레이어${index + 1}`));
     assert.ok(draft.selectedCandidateSignature);
     assert.equal(draft.candidates.length, 1);
     assert.deepEqual(

@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-17T19:53:47.437Z",
+  "id": "dpl_HvxXc1nShJhxNndox6HhiU4zfRjq",
+  "source": "131abbf777a331b056a96ab587957cf654387a78",
+  "readyState": "READY",
+  "target": "production",
+  "url": "k-lol-7siucpmza-tjdmswo11-3715s-projects.vercel.app",
+  "alias": [
+    "k-lol-gg.vercel.app",
+    "k-lol-gg-tjdmswo11-3715s-projects.vercel.app",
+    "k-lol-gg-git-main-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "canonicalAliasVerified": true,
+  "projectId": "prj_yeGD9GzHJk6pZCcIIjJ8grGPgW8q",
+  "ready": 1792254299368,
+  "createdAt": 1792254239730,
+  "errorCode": null,
+  "errorMessage": null
+}
