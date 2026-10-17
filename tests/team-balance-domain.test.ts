@@ -86,6 +86,28 @@ test("team balance vocabulary and neutral provider defaults are explicit", () =>
   assert.ok(candidate.assignments.every((entry) => entry.rating.source === "DEFAULT"));
 });
 
+test("zero and absent assigned-role samples are disclosed equally without changing scores or recommendation", () => {
+  const players = pairedPlayers().map((player, index) => ({ ...player,
+    rating: { ...player.rating!, sampleSize: index % 3 === 0 ? null : index % 3 === 1 ? 0 : 20 },
+  }));
+  // A populated overall profile must not conceal a zero-sample assigned role.
+  players[2] = { ...players[2]!, rating: { ...players[2]!.rating!, positions: {
+    MID: { score: 45, confidence: 1, sampleSize: 0 },
+  } } };
+  const absentInstead = players.map((player) => ({ ...player, rating: { ...player.rating,
+    sampleSize: player.rating.sampleSize === 0 ? null : player.rating.sampleSize,
+    positions: player.rating.positions ? { MID: { ...player.rating.positions.MID!, sampleSize: null } } : null,
+  } }));
+  const zero = calculateTeamBalanceCandidates(players);
+  const absent = calculateTeamBalanceCandidates(absentInstead);
+  const candidate = zero.candidates[0]!;
+  assert.equal(candidate.score.uncertainty.noSampleCount, 8);
+  assert.equal(candidate.signature, absent.candidates[0]!.signature);
+  assert.deepEqual(candidate.score, absent.candidates[0]!.score);
+  assert.deepEqual(zero.search, absent.search);
+  assert.deepEqual(evaluateTeamBalanceLayout(players, candidate.assignments).score, candidate.score);
+});
+
 test("input rejects oversized, duplicate, missing-position, and invalid-score cases", () => {
   const base = pairedPlayers();
   assert.throws(

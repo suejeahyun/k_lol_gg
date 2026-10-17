@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-17T16:07:02.236Z",
+  "projectId": "prj_yeGD9GzHJk6pZCcIIjJ8grGPgW8q",
+  "database": [
+    {
+      "id": "TCZKGgqlkfCkOrjK",
+      "type": "sensitive",
+      "updatedAt": 1778069493392,
+      "target": [
+        "production"
+      ]
+    }
+  ],
+  "metadataUnchanged": true,
+  "priorEvidence": "docs/qa-evidence/stable-recruit-codes-2026-10-14/production-before.json",
+  "limitation": "Sensitive value cannot be retrieved from Vercel; unchanged metadata plus prior verified local target fingerprint bind this read-only snapshot. No secret value retained."
+}

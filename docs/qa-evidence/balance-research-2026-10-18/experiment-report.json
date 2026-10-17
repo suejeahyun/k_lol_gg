@@ -1,0 +1,4517 @@
+{
+  "baselineCommit": "c679a1849bad2623da1339b87a83ecaa9fff485b",
+  "baselineFormula": "V2_INHOUSE_RELAXED_2026_10_16",
+  "adoptedRankingFormula": "BASELINE_RETAINED",
+  "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+  "baselineFiles": [
+    {
+      "name": "team-balance.ts",
+      "normalizedSha256": "4dedcad458955c1e733649c81596f32943e20293572b30aaab7ef18dc0e502c3"
+    },
+    {
+      "name": "inhouse-fairness.ts",
+      "normalizedSha256": "4463d66fba1a2acebbc13a5e89ea3ad3ae91d9e7b649cbc5e72cd245f39c2cd0"
+    },
+    {
+      "name": "inhouse-joint-search.ts",
+      "normalizedSha256": "23ced4d8fb18c40e1b27df7abb6a74fdb6475dcb4f67086607b8eb732e8e8323"
+    }
+  ],
+  "protocolSha256": "1a9c6c3339af97365373b714f35c0c7cc4835fcf3f50341921b57e1bac1007d4",
+  "capturedAt": "2026-10-17T16:09:33.538Z",
+  "counts": {
+    "uniqueRealRosters": 1000,
+    "observedRosters": 103,
+    "recombinedRealRosters": 897,
+    "syntheticIncludedInRealDenominator": 0,
+    "selectionFormulasTestedOnTuning": 3,
+    "personalRatingFormulasTested": 1,
+    "uniqueCandidatePlacements": 921331808,
+    "repeatedPilotAndOraclePlacementsExcluded": true,
+    "baselineOracleComparisons": 33,
+    "independentLayoutReevaluations": 2000
+  },
+  "sourceStratumSplitCounts": [
+    {
+      "key": "OBSERVED_MATCH|OBSERVED|tuning",
+      "count": 19
+    },
+    {
+      "key": "OBSERVED_MATCH|OBSERVED|final",
+      "count": 9
+    },
+    {
+      "key": "OBSERVED_MATCH|OBSERVED|validation",
+      "count": 10
+    },
+    {
+      "key": "OBSERVED_DRAFT|OBSERVED|tuning",
+      "count": 27
+    },
+    {
+      "key": "OBSERVED_DRAFT|OBSERVED|validation",
+      "count": 14
+    },
+    {
+      "key": "OBSERVED_DRAFT|OBSERVED|final",
+      "count": 14
+    },
+    {
+      "key": "OBSERVED_APPLICATION|OBSERVED|tuning",
+      "count": 6
+    },
+    {
+      "key": "OBSERVED_APPLICATION|OBSERVED|final",
+      "count": 2
+    },
+    {
+      "key": "OBSERVED_APPLICATION|OBSERVED|validation",
+      "count": 2
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|SIMILAR_TIER|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|MIXED_TIERS|tuning",
+      "count": 57
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|MAIN_CONGESTION|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|JUNGLE_SHORTAGE|tuning",
+      "count": 56
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|SUPPORT_SHORTAGE|tuning",
+      "count": 56
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|LOW_SAMPLE|final",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|UNKNOWN_TIER|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|BROAD_POOL|tuning",
+      "count": 56
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|SIMILAR_TIER|tuning",
+      "count": 54
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|MAIN_CONGESTION|final",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|SUPPORT_SHORTAGE|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|LOW_SAMPLE|tuning",
+      "count": 56
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|UNKNOWN_TIER|tuning",
+      "count": 56
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|MAIN_CONGESTION|tuning",
+      "count": 57
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|JUNGLE_SHORTAGE|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|LOW_SAMPLE|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|MIXED_TIERS|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|SUPPORT_SHORTAGE|final",
+      "count": 29
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|BROAD_POOL|validation",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|JUNGLE_SHORTAGE|final",
+      "count": 29
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|UNKNOWN_TIER|final",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|BROAD_POOL|final",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|MIXED_TIERS|final",
+      "count": 28
+    },
+    {
+      "key": "RECOMBINED_REAL_PLAYERS|SIMILAR_TIER|final",
+      "count": 27
+    }
+  ],
+  "baselineMetrics": {
+    "teamGap": {
+      "mean": 6.164969999999992,
+      "median": 5.01,
+      "p95": 14.44,
+      "max": 59.76
+    },
+    "laneSum": {
+      "mean": 61.605509999999946,
+      "median": 53.71,
+      "p95": 127.49,
+      "max": 250.99
+    },
+    "maxLaneGap": {
+      "mean": 25.002959999999998,
+      "median": 22.87,
+      "p95": 51.47,
+      "max": 88.65
+    },
+    "largeLaneCount": {
+      "mean": 1.4,
+      "median": 1,
+      "p95": 4,
+      "max": 5
+    },
+    "adcGap": {
+      "mean": 12.213730000000007,
+      "median": 8.3,
+      "p95": 34.58,
+      "max": 88.65
+    },
+    "supportGap": {
+      "mean": 10.956090000000003,
+      "median": 8,
+      "p95": 32.1,
+      "max": 58.7
+    },
+    "bottomGap": {
+      "mean": 8.27392000000001,
+      "median": 5.96,
+      "p95": 26.25,
+      "max": 79.6
+    },
+    "mainCount": {
+      "mean": 4.407,
+      "median": 4,
+      "p95": 7,
+      "max": 10
+    },
+    "subCount": {
+      "mean": 3.555,
+      "median": 4,
+      "p95": 6,
+      "max": 8
+    },
+    "autoCount": {
+      "mean": 2.038,
+      "median": 2,
+      "p95": 4,
+      "max": 10
+    },
+    "registeredAutoCount": {
+      "mean": 1.193,
+      "median": 1,
+      "p95": 3,
+      "max": 10
+    },
+    "unregistered": {
+      "mean": 0.845,
+      "median": 1,
+      "p95": 2,
+      "max": 4
+    },
+    "burdenImbalance": {
+      "mean": 1.297,
+      "median": 1,
+      "p95": 3,
+      "max": 7
+    },
+    "subImbalance": {
+      "mean": 1.021,
+      "median": 1,
+      "p95": 3,
+      "max": 4
+    },
+    "bottomViolations": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "bottomExcess": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "unknownTier": {
+      "mean": 1.631,
+      "median": 1,
+      "p95": 4,
+      "max": 7
+    },
+    "confidence": {
+      "mean": 0.08663000000000004,
+      "median": 0.06,
+      "p95": 0.23,
+      "max": 0.48
+    },
+    "zeroSampleCount": {
+      "mean": 5.831,
+      "median": 6,
+      "p95": 9,
+      "max": 10
+    },
+    "cost": {
+      "mean": 80.77135999999997,
+      "median": 74.00200000000001,
+      "p95": 150.87199999999999,
+      "max": 298.57199999999995
+    }
+  },
+  "baselineRuleViolations": [
+    {
+      "rule": 1,
+      "violatingRosters": 213,
+      "totalViolations": 220
+    },
+    {
+      "rule": 2,
+      "violatingRosters": 13,
+      "totalViolations": 13
+    },
+    {
+      "rule": 3,
+      "violatingRosters": 23,
+      "totalViolations": 23
+    },
+    {
+      "rule": 4,
+      "violatingRosters": 0,
+      "totalViolations": 0
+    },
+    {
+      "rule": 5,
+      "violatingRosters": 139,
+      "totalViolations": 139
+    },
+    {
+      "rule": 6,
+      "violatingRosters": 108,
+      "totalViolations": 108
+    }
+  ],
+  "relaxedRosters": 504,
+  "currentTierVerification": {
+    "rostersWithAnyMissingCurrentTier": 688,
+    "allParticipantsCurrentTierKnownRosters": 312,
+    "knownBottomViolations": 0,
+    "bottomRolesVerifiedAcrossAllRosters": null,
+    "limitation": "Full-population stored metrics count all unknown tiers, not their assigned slots. Therefore zero known violations is not reported as all bottom restrictions verified. Exact ADC/SUP verification is supplied only for separately replayed representative cases."
+  },
+  "timings": {
+    "singleProcessPilot": {
+      "n": 9,
+      "baselineMs": {
+        "mean": 744.7005111111108,
+        "median": 48.16030000000001,
+        "p95": 2365.706699999999,
+        "max": 2365.706699999999
+      },
+      "sharedThreeVariantMs": {
+        "mean": 782.4906555555556,
+        "median": 42.82499999999999,
+        "p95": 2646.9683000000005,
+        "max": 2646.9683000000005
+      }
+    },
+    "fourWorkerSharedEnumeration": {
+      "mean": 1642.7528176000014,
+      "median": 1860.6532000000002,
+      "p95": 3820.1224,
+      "max": 5927.275699999998
+    }
+  },
+  "stages": [
+    {
+      "stage": "tuning",
+      "mode": "PREDECLARED_CANDIDATE_EVALUATION",
+      "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+      "protocolSha256": "1a9c6c3339af97365373b714f35c0c7cc4835fcf3f50341921b57e1bac1007d4",
+      "uniqueRosters": 500,
+      "observed": 52,
+      "recombined": 448,
+      "uniqueCandidatePlacements": 459361632,
+      "rawInspections": 459371696,
+      "feasiblePlacements": 458248544,
+      "relaxedRosters": 251,
+      "baselineMetrics": {
+        "teamGap": {
+          "mean": 6.36274,
+          "median": 5.23,
+          "p95": 14.49,
+          "max": 59.76
+        },
+        "laneSum": {
+          "mean": 62.130460000000014,
+          "median": 53.05,
+          "p95": 129.45,
+          "max": 250.99
+        },
+        "maxLaneGap": {
+          "mean": 25.087979999999995,
+          "median": 22.49,
+          "p95": 52.25,
+          "max": 85.17
+        },
+        "largeLaneCount": {
+          "mean": 1.414,
+          "median": 1,
+          "p95": 4,
+          "max": 5
+        },
+        "adcGap": {
+          "mean": 11.972020000000004,
+          "median": 8.19,
+          "p95": 33.6,
+          "max": 83.22
+        },
+        "supportGap": {
+          "mean": 10.880499999999994,
+          "median": 7.77,
+          "p95": 32.31,
+          "max": 58.7
+        },
+        "bottomGap": {
+          "mean": 8.328440000000011,
+          "median": 5.98,
+          "p95": 25.48,
+          "max": 79.6
+        },
+        "mainCount": {
+          "mean": 4.376,
+          "median": 4,
+          "p95": 7,
+          "max": 9
+        },
+        "subCount": {
+          "mean": 3.558,
+          "median": 4,
+          "p95": 6,
+          "max": 8
+        },
+        "autoCount": {
+          "mean": 2.066,
+          "median": 2,
+          "p95": 4,
+          "max": 10
+        },
+        "registeredAutoCount": {
+          "mean": 1.234,
+          "median": 1,
+          "p95": 3,
+          "max": 10
+        },
+        "unregistered": {
+          "mean": 0.832,
+          "median": 1,
+          "p95": 2,
+          "max": 4
+        },
+        "burdenImbalance": {
+          "mean": 1.334,
+          "median": 1,
+          "p95": 3,
+          "max": 7
+        },
+        "subImbalance": {
+          "mean": 1.042,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "bottomViolations": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "bottomExcess": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "unknownTier": {
+          "mean": 1.652,
+          "median": 1,
+          "p95": 4,
+          "max": 7
+        },
+        "confidence": {
+          "mean": 0.08464000000000002,
+          "median": 0.06,
+          "p95": 0.22,
+          "max": 0.48
+        },
+        "zeroSampleCount": {
+          "mean": 5.878,
+          "median": 6,
+          "p95": 9,
+          "max": 10
+        },
+        "cost": {
+          "mean": 81.49484400000001,
+          "median": 72.656,
+          "p95": 159.994,
+          "max": 298.57199999999995
+        }
+      },
+      "sharedEnumerationTiming": {
+        "workers": 4,
+        "mean": 1611.9829168,
+        "median": 1949.3832000000002,
+        "p95": 3731.2700999999943,
+        "max": 5369.358100000001,
+        "note": "Contended multi-process shared-enumeration timing; production single-process timings are reported separately from pilot."
+      },
+      "elapsedWallMs": 211674.45870000002,
+      "baselineOracleComparisons": 8,
+      "independentLayoutReevaluations": 1500,
+      "survivors": [],
+      "selected": null,
+      "summaries": [
+        {
+          "variant": "SUB_TIE",
+          "accepted": false,
+          "improved": 0,
+          "maintained": 500,
+          "worse": 0,
+          "assignmentChanges": 0,
+          "riskRegressions": 0,
+          "subgroupRegressions": 0,
+          "metricChanges": {
+            "teamGap": {
+              "baseline": {
+                "mean": 6.36274,
+                "median": 5.23,
+                "p95": 14.49,
+                "max": 59.76
+              },
+              "candidate": {
+                "mean": 6.36274,
+                "median": 5.23,
+                "p95": 14.49,
+                "max": 59.76
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "laneSum": {
+              "baseline": {
+                "mean": 62.130460000000014,
+                "median": 53.05,
+                "p95": 129.45,
+                "max": 250.99
+              },
+              "candidate": {
+                "mean": 62.130460000000014,
+                "median": 53.05,
+                "p95": 129.45,
+                "max": 250.99
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "maxLaneGap": {
+              "baseline": {
+                "mean": 25.087979999999995,
+                "median": 22.49,
+                "p95": 52.25,
+                "max": 85.17
+              },
+              "candidate": {
+                "mean": 25.087979999999995,
+                "median": 22.49,
+                "p95": 52.25,
+                "max": 85.17
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "largeLaneCount": {
+              "baseline": {
+                "mean": 1.414,
+                "median": 1,
+                "p95": 4,
+                "max": 5
+              },
+              "candidate": {
+                "mean": 1.414,
+                "median": 1,
+                "p95": 4,
+                "max": 5
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "adcGap": {
+              "baseline": {
+                "mean": 11.972020000000004,
+                "median": 8.19,
+                "p95": 33.6,
+                "max": 83.22
+              },
+              "candidate": {
+                "mean": 11.972020000000004,
+                "median": 8.19,
+                "p95": 33.6,
+                "max": 83.22
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "supportGap": {
+              "baseline": {
+                "mean": 10.880499999999994,
+                "median": 7.77,
+                "p95": 32.31,
+                "max": 58.7
+              },
+              "candidate": {
+                "mean": 10.880499999999994,
+                "median": 7.77,
+                "p95": 32.31,
+                "max": 58.7
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "bottomGap": {
+              "baseline": {
+                "mean": 8.328440000000011,
+                "median": 5.98,
+                "p95": 25.48,
+                "max": 79.6
+              },
+              "candidate": {
+                "mean": 8.328440000000011,
+                "median": 5.98,
+                "p95": 25.48,
+                "max": 79.6
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "mainCount": {
+              "baseline": {
+                "mean": 4.376,
+                "median": 4,
+                "p95": 7,
+                "max": 9
+              },
+              "candidate": {
+                "mean": 4.376,
+                "median": 4,
+                "p95": 7,
+                "max": 9
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "subCount": {
+              "baseline": {
+                "mean": 3.558,
+                "median": 4,
+                "p95": 6,
+                "max": 8
+              },
+              "candidate": {
+                "mean": 3.558,
+                "median": 4,
+                "p95": 6,
+                "max": 8
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "autoCount": {
+              "baseline": {
+                "mean": 2.066,
+                "median": 2,
+                "p95": 4,
+                "max": 10
+              },
+              "candidate": {
+                "mean": 2.066,
+                "median": 2,
+                "p95": 4,
+                "max": 10
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "registeredAutoCount": {
+              "baseline": {
+                "mean": 1.234,
+                "median": 1,
+                "p95": 3,
+                "max": 10
+              },
+              "candidate": {
+                "mean": 1.234,
+                "median": 1,
+                "p95": 3,
+                "max": 10
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "unregistered": {
+              "baseline": {
+                "mean": 0.832,
+                "median": 1,
+                "p95": 2,
+                "max": 4
+              },
+              "candidate": {
+                "mean": 0.832,
+                "median": 1,
+                "p95": 2,
+                "max": 4
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "burdenImbalance": {
+              "baseline": {
+                "mean": 1.334,
+                "median": 1,
+                "p95": 3,
+                "max": 7
+              },
+              "candidate": {
+                "mean": 1.334,
+                "median": 1,
+                "p95": 3,
+                "max": 7
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "subImbalance": {
+              "baseline": {
+                "mean": 1.042,
+                "median": 1,
+                "p95": 3,
+                "max": 4
+              },
+              "candidate": {
+                "mean": 1.042,
+                "median": 1,
+                "p95": 3,
+                "max": 4
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "bottomViolations": {
+              "baseline": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "candidate": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "bottomExcess": {
+              "baseline": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "candidate": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "unknownTier": {
+              "baseline": {
+                "mean": 1.652,
+                "median": 1,
+                "p95": 4,
+                "max": 7
+              },
+              "candidate": {
+                "mean": 1.652,
+                "median": 1,
+                "p95": 4,
+                "max": 7
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "confidence": {
+              "baseline": {
+                "mean": 0.08464000000000002,
+                "median": 0.06,
+                "p95": 0.22,
+                "max": 0.48
+              },
+              "candidate": {
+                "mean": 0.08464000000000002,
+                "median": 0.06,
+                "p95": 0.22,
+                "max": 0.48
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "zeroSampleCount": {
+              "baseline": {
+                "mean": 5.878,
+                "median": 6,
+                "p95": 9,
+                "max": 10
+              },
+              "candidate": {
+                "mean": 5.878,
+                "median": 6,
+                "p95": 9,
+                "max": 10
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "cost": {
+              "baseline": {
+                "mean": 81.49484400000001,
+                "median": 72.656,
+                "p95": 159.994,
+                "max": 298.57199999999995
+              },
+              "candidate": {
+                "mean": 81.49484400000001,
+                "median": 72.656,
+                "p95": 159.994,
+                "max": 298.57199999999995
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            }
+          },
+          "strata": [
+            {
+              "name": "OBSERVED",
+              "count": 52,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_LOW_TIER",
+              "count": 248,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_HIGH_TIER",
+              "count": 456,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_UNKNOWN_TIER",
+              "count": 345,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_NEW_PLAYER",
+              "count": 463,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "ACTUAL_LOW_SAMPLE_MAJORITY",
+              "count": 332,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "MIXED_TIERS",
+              "count": 57,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "SIMILAR_TIER",
+              "count": 54,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "UNKNOWN_TIER",
+              "count": 56,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "MAIN_CONGESTION",
+              "count": 57,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "BROAD_POOL",
+              "count": 56,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "JUNGLE_SHORTAGE",
+              "count": 56,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "LOW_SAMPLE",
+              "count": 56,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "SUPPORT_SHORTAGE",
+              "count": 56,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            }
+          ],
+          "representativeChanges": [],
+          "worstCases": [
+            {
+              "id": "R-e4934456e08d",
+              "source": "OBSERVED_MATCH",
+              "stratum": "OBSERVED",
+              "subgroups": [
+                "OBSERVED",
+                "INCLUDES_LOW_TIER",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 864,
+              "rawInspections": 864,
+              "feasibleLayouts": 672,
+              "sharedMs": 70.51570000000001,
+              "oracleMs": 58.155099999999976,
+              "baseline": {
+                "teamGap": 2.23,
+                "lanes": [
+                  7.35,
+                  4.62,
+                  13.29,
+                  9.75,
+                  1.42
+                ],
+                "laneSum": 36.43,
+                "maxLaneGap": 13.29,
+                "largeLaneCount": 0,
+                "adcGap": 9.75,
+                "supportGap": 1.42,
+                "bottomGap": 8.33,
+                "mainCount": 2,
+                "subCount": 5,
+                "autoCount": 3,
+                "registeredAutoCount": 3,
+                "unregistered": 0,
+                "burdenImbalance": 1,
+                "subImbalance": 1,
+                "rules": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 1,
+                "confidence": 0.24,
+                "zeroSampleCount": 3,
+                "missingSourceCount": 13,
+                "cost": 49.934,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  3,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  49.934
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 2.23,
+                    "lanes": [
+                      7.35,
+                      4.62,
+                      13.29,
+                      9.75,
+                      1.42
+                    ],
+                    "laneSum": 36.43,
+                    "maxLaneGap": 13.29,
+                    "largeLaneCount": 0,
+                    "adcGap": 9.75,
+                    "supportGap": 1.42,
+                    "bottomGap": 8.33,
+                    "mainCount": 2,
+                    "subCount": 5,
+                    "autoCount": 3,
+                    "registeredAutoCount": 3,
+                    "unregistered": 0,
+                    "burdenImbalance": 1,
+                    "subImbalance": 1,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.24,
+                    "zeroSampleCount": 3,
+                    "missingSourceCount": 13,
+                    "cost": 49.934,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      3,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      49.934
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 2.23,
+                    "lanes": [
+                      7.35,
+                      4.62,
+                      13.29,
+                      9.75,
+                      1.42
+                    ],
+                    "laneSum": 36.43,
+                    "maxLaneGap": 13.29,
+                    "largeLaneCount": 0,
+                    "adcGap": 9.75,
+                    "supportGap": 1.42,
+                    "bottomGap": 8.33,
+                    "mainCount": 2,
+                    "subCount": 5,
+                    "autoCount": 3,
+                    "registeredAutoCount": 3,
+                    "unregistered": 0,
+                    "burdenImbalance": 1,
+                    "subImbalance": 1,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.24,
+                    "zeroSampleCount": 3,
+                    "missingSourceCount": 13,
+                    "cost": 49.934,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      3,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      49.934
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                }
+              }
+            },
+            {
+              "id": "R-3ed1e0192aa3",
+              "source": "OBSERVED_MATCH",
+              "stratum": "OBSERVED",
+              "subgroups": [
+                "OBSERVED",
+                "INCLUDES_LOW_TIER",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 416,
+              "rawInspections": 416,
+              "feasibleLayouts": 160,
+              "sharedMs": 83.68610000000001,
+              "oracleMs": 55.173,
+              "baseline": {
+                "teamGap": 12.55,
+                "lanes": [
+                  33.36,
+                  1.38,
+                  10.34,
+                  19.17,
+                  10.08
+                ],
+                "laneSum": 74.33,
+                "maxLaneGap": 33.36,
+                "largeLaneCount": 2,
+                "adcGap": 19.17,
+                "supportGap": 10.08,
+                "bottomGap": 9.09,
+                "mainCount": 6,
+                "subCount": 3,
+                "autoCount": 1,
+                "registeredAutoCount": 1,
+                "unregistered": 0,
+                "burdenImbalance": 3,
+                "subImbalance": 1,
+                "rules": [
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 2,
+                "confidence": 0.37,
+                "zeroSampleCount": 1,
+                "missingSourceCount": 13,
+                "cost": 105.8,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  2,
+                  23.36,
+                  2,
+                  1,
+                  1,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  105.8
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 12.55,
+                    "lanes": [
+                      33.36,
+                      1.38,
+                      10.34,
+                      19.17,
+                      10.08
+                    ],
+                    "laneSum": 74.33,
+                    "maxLaneGap": 33.36,
+                    "largeLaneCount": 2,
+                    "adcGap": 19.17,
+                    "supportGap": 10.08,
+                    "bottomGap": 9.09,
+                    "mainCount": 6,
+                    "subCount": 3,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 3,
+                    "subImbalance": 1,
+                    "rules": [
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 2,
+                    "confidence": 0.37,
+                    "zeroSampleCount": 1,
+                    "missingSourceCount": 13,
+                    "cost": 105.8,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      2,
+                      23.36,
+                      2,
+                      1,
+                      1,
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      105.8
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 12.55,
+                    "lanes": [
+                      33.36,
+                      1.38,
+                      10.34,
+                      19.17,
+                      10.08
+                    ],
+                    "laneSum": 74.33,
+                    "maxLaneGap": 33.36,
+                    "largeLaneCount": 2,
+                    "adcGap": 19.17,
+                    "supportGap": 10.08,
+                    "bottomGap": 9.09,
+                    "mainCount": 6,
+                    "subCount": 3,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 3,
+                    "subImbalance": 1,
+                    "rules": [
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 2,
+                    "confidence": 0.37,
+                    "zeroSampleCount": 1,
+                    "missingSourceCount": 13,
+                    "cost": 105.8,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      2,
+                      23.36,
+                      2,
+                      1,
+                      1,
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      105.8
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                }
+              }
+            },
+            {
+              "id": "R-2621e6053ed0",
+              "source": "OBSERVED_MATCH",
+              "stratum": "OBSERVED",
+              "subgroups": [
+                "OBSERVED",
+                "INCLUDES_LOW_TIER",
+                "INCLUDES_HIGH_TIER"
+              ],
+              "relaxed": true,
+              "uniqueLayouts": 1814400,
+              "rawInspections": 1814544,
+              "feasibleLayouts": 1814400,
+              "sharedMs": 2025.0334000000003,
+              "oracleMs": null,
+              "baseline": {
+                "teamGap": 13.68,
+                "lanes": [
+                  2.03,
+                  2.8,
+                  20.59,
+                  0.41,
+                  1.67
+                ],
+                "laneSum": 27.5,
+                "maxLaneGap": 20.59,
+                "largeLaneCount": 1,
+                "adcGap": 0.41,
+                "supportGap": 1.67,
+                "bottomGap": 2.08,
+                "mainCount": 3,
+                "subCount": 2,
+                "autoCount": 5,
+                "registeredAutoCount": 4,
+                "unregistered": 1,
+                "burdenImbalance": 0,
+                "subImbalance": 2,
+                "rules": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 0,
+                "confidence": 0.19,
+                "zeroSampleCount": 4,
+                "missingSourceCount": 14,
+                "cost": 59.906000000000006,
+                "risk": [
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  5,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  59.906000000000006
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 13.68,
+                    "lanes": [
+                      2.03,
+                      2.8,
+                      20.59,
+                      0.41,
+                      1.67
+                    ],
+                    "laneSum": 27.5,
+                    "maxLaneGap": 20.59,
+                    "largeLaneCount": 1,
+                    "adcGap": 0.41,
+                    "supportGap": 1.67,
+                    "bottomGap": 2.08,
+                    "mainCount": 3,
+                    "subCount": 2,
+                    "autoCount": 5,
+                    "registeredAutoCount": 4,
+                    "unregistered": 1,
+                    "burdenImbalance": 0,
+                    "subImbalance": 2,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 0,
+                    "confidence": 0.19,
+                    "zeroSampleCount": 4,
+                    "missingSourceCount": 14,
+                    "cost": 59.906000000000006,
+                    "risk": [
+                      0,
+                      0,
+                      1,
+                      0,
+                      0,
+                      0,
+                      5,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      59.906000000000006
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 13.68,
+                    "lanes": [
+                      2.03,
+                      2.8,
+                      20.59,
+                      0.41,
+                      1.67
+                    ],
+                    "laneSum": 27.5,
+                    "maxLaneGap": 20.59,
+                    "largeLaneCount": 1,
+                    "adcGap": 0.41,
+                    "supportGap": 1.67,
+                    "bottomGap": 2.08,
+                    "mainCount": 3,
+                    "subCount": 2,
+                    "autoCount": 5,
+                    "registeredAutoCount": 4,
+                    "unregistered": 1,
+                    "burdenImbalance": 0,
+                    "subImbalance": 2,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 0,
+                    "confidence": 0.19,
+                    "zeroSampleCount": 4,
+                    "missingSourceCount": 14,
+                    "cost": 59.906000000000006,
+                    "risk": [
+                      0,
+                      0,
+                      1,
+                      0,
+                      0,
+                      0,
+                      5,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      59.906000000000006
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "variant": "SUB_SOFT_1",
+          "accepted": false,
+          "improved": 0,
+          "maintained": 472,
+          "worse": 28,
+          "assignmentChanges": 28,
+          "riskRegressions": 28,
+          "subgroupRegressions": 8,
+          "metricChanges": {
+            "teamGap": {
+              "baseline": {
+                "mean": 6.36274,
+                "median": 5.23,
+                "p95": 14.49,
+                "max": 59.76
+              },
+              "candidate": {
+                "mean": 6.407580000000001,
+                "median": 5.33,
+                "p95": 14.49,
+                "max": 59.76
+              },
+              "improved": 4,
+              "maintained": 472,
+              "worsened": 24,
+              "largestIncrease": 4.0600000000000005,
+              "largestDecrease": -4.640000000000001
+            },
+            "laneSum": {
+              "baseline": {
+                "mean": 62.130460000000014,
+                "median": 53.05,
+                "p95": 129.45,
+                "max": 250.99
+              },
+              "candidate": {
+                "mean": 62.152180000000016,
+                "median": 53.05,
+                "p95": 129.45,
+                "max": 250.99
+              },
+              "improved": 3,
+              "maintained": 492,
+              "worsened": 5,
+              "largestIncrease": 5.040000000000003,
+              "largestDecrease": -4.780000000000001
+            },
+            "maxLaneGap": {
+              "baseline": {
+                "mean": 25.087979999999995,
+                "median": 22.49,
+                "p95": 52.25,
+                "max": 85.17
+              },
+              "candidate": {
+                "mean": 25.082359999999998,
+                "median": 22.49,
+                "p95": 52.25,
+                "max": 85.17
+              },
+              "improved": 2,
+              "maintained": 497,
+              "worsened": 1,
+              "largestIncrease": 3.16,
+              "largestDecrease": -4.640000000000001
+            },
+            "largeLaneCount": {
+              "baseline": {
+                "mean": 1.414,
+                "median": 1,
+                "p95": 4,
+                "max": 5
+              },
+              "candidate": {
+                "mean": 1.414,
+                "median": 1,
+                "p95": 4,
+                "max": 5
+              },
+              "improved": 1,
+              "maintained": 498,
+              "worsened": 1,
+              "largestIncrease": 1,
+              "largestDecrease": -1
+            },
+            "adcGap": {
+              "baseline": {
+                "mean": 11.972020000000004,
+                "median": 8.19,
+                "p95": 33.6,
+                "max": 83.22
+              },
+              "candidate": {
+                "mean": 11.961440000000007,
+                "median": 8.18,
+                "p95": 33.6,
+                "max": 83.22
+              },
+              "improved": 2,
+              "maintained": 496,
+              "worsened": 2,
+              "largestIncrease": 2.17,
+              "largestDecrease": -5.959999999999999
+            },
+            "supportGap": {
+              "baseline": {
+                "mean": 10.880499999999994,
+                "median": 7.77,
+                "p95": 32.31,
+                "max": 58.7
+              },
+              "candidate": {
+                "mean": 10.888499999999995,
+                "median": 7.77,
+                "p95": 32.31,
+                "max": 58.7
+              },
+              "improved": 3,
+              "maintained": 495,
+              "worsened": 2,
+              "largestIncrease": 7.29,
+              "largestDecrease": -2.6300000000000003
+            },
+            "bottomGap": {
+              "baseline": {
+                "mean": 8.328440000000011,
+                "median": 5.98,
+                "p95": 25.48,
+                "max": 79.6
+              },
+              "candidate": {
+                "mean": 8.31166000000001,
+                "median": 5.93,
+                "p95": 25.48,
+                "max": 79.6
+              },
+              "improved": 8,
+              "maintained": 484,
+              "worsened": 8,
+              "largestIncrease": 3.6799999999999997,
+              "largestDecrease": -5.21
+            },
+            "mainCount": {
+              "baseline": {
+                "mean": 4.376,
+                "median": 4,
+                "p95": 7,
+                "max": 9
+              },
+              "candidate": {
+                "mean": 4.372,
+                "median": 4,
+                "p95": 7,
+                "max": 9
+              },
+              "improved": 3,
+              "maintained": 493,
+              "worsened": 4,
+              "largestIncrease": 2,
+              "largestDecrease": -3
+            },
+            "subCount": {
+              "baseline": {
+                "mean": 3.558,
+                "median": 4,
+                "p95": 6,
+                "max": 8
+              },
+              "candidate": {
+                "mean": 3.562,
+                "median": 4,
+                "p95": 6,
+                "max": 8
+              },
+              "improved": 3,
+              "maintained": 493,
+              "worsened": 4,
+              "largestIncrease": 3,
+              "largestDecrease": -2
+            },
+            "autoCount": {
+              "baseline": {
+                "mean": 2.066,
+                "median": 2,
+                "p95": 4,
+                "max": 10
+              },
+              "candidate": {
+                "mean": 2.066,
+                "median": 2,
+                "p95": 4,
+                "max": 10
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "registeredAutoCount": {
+              "baseline": {
+                "mean": 1.234,
+                "median": 1,
+                "p95": 3,
+                "max": 10
+              },
+              "candidate": {
+                "mean": 1.234,
+                "median": 1,
+                "p95": 3,
+                "max": 10
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "unregistered": {
+              "baseline": {
+                "mean": 0.832,
+                "median": 1,
+                "p95": 2,
+                "max": 4
+              },
+              "candidate": {
+                "mean": 0.832,
+                "median": 1,
+                "p95": 2,
+                "max": 4
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "burdenImbalance": {
+              "baseline": {
+                "mean": 1.334,
+                "median": 1,
+                "p95": 3,
+                "max": 7
+              },
+              "candidate": {
+                "mean": 1.29,
+                "median": 1,
+                "p95": 3,
+                "max": 7
+              },
+              "improved": 18,
+              "maintained": 474,
+              "worsened": 8,
+              "largestIncrease": 2,
+              "largestDecrease": -4
+            },
+            "subImbalance": {
+              "baseline": {
+                "mean": 1.042,
+                "median": 1,
+                "p95": 3,
+                "max": 4
+              },
+              "candidate": {
+                "mean": 0.93,
+                "median": 1,
+                "p95": 2,
+                "max": 3
+              },
+              "improved": 28,
+              "maintained": 472,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": -4
+            },
+            "bottomViolations": {
+              "baseline": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "candidate": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "bottomExcess": {
+              "baseline": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "candidate": {
+                "mean": 0,
+                "median": 0,
+                "p95": 0,
+                "max": 0
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "unknownTier": {
+              "baseline": {
+                "mean": 1.652,
+                "median": 1,
+                "p95": 4,
+                "max": 7
+              },
+              "candidate": {
+                "mean": 1.652,
+                "median": 1,
+                "p95": 4,
+                "max": 7
+              },
+              "improved": 0,
+              "maintained": 500,
+              "worsened": 0,
+              "largestIncrease": 0,
+              "largestDecrease": 0
+            },
+            "confidence": {
+              "baseline": {
+                "mean": 0.08464000000000002,
+                "median": 0.06,
+                "p95": 0.22,
+                "max": 0.48
+              },
+              "candidate": {
+                "mean": 0.0845,
+                "median": 0.06,
+                "p95": 0.22,
+                "max": 0.43
+              },
+              "improved": 4,
+              "maintained": 492,
+              "worsened": 4,
+              "largestIncrease": 0.11,
+              "largestDecrease": -0.14
+            },
+            "zeroSampleCount": {
+              "baseline": {
+                "mean": 5.878,
+                "median": 6,
+                "p95": 9,
+                "max": 10
+              },
+              "candidate": {
+                "mean": 5.878,
+                "median": 6,
+                "p95": 9,
+                "max": 10
+              },
+              "improved": 3,
+              "maintained": 494,
+              "worsened": 3,
+              "largestIncrease": 2,
+              "largestDecrease": -2
+            },
+            "cost": {
+              "baseline": {
+                "mean": 81.49484400000001,
+                "median": 72.656,
+                "p95": 159.994,
+                "max": 298.57199999999995
+              },
+              "candidate": {
+                "mean": 81.555608,
+                "median": 72.656,
+                "p95": 159.994,
+                "max": 298.57199999999995
+              },
+              "improved": 0,
+              "maintained": 472,
+              "worsened": 28,
+              "largestIncrease": 2.831999999999997,
+              "largestDecrease": 0
+            }
+          },
+          "strata": [
+            {
+              "name": "OBSERVED",
+              "count": 52,
+              "worse": 9,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "maxLaneGap"
+              ],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_LOW_TIER",
+              "count": 248,
+              "worse": 11,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_HIGH_TIER",
+              "count": 456,
+              "worse": 26,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "supportGap"
+              ],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_UNKNOWN_TIER",
+              "count": 345,
+              "worse": 18,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "supportGap"
+              ],
+              "gateApplies": true
+            },
+            {
+              "name": "INCLUDES_NEW_PLAYER",
+              "count": 463,
+              "worse": 20,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "supportGap"
+              ],
+              "gateApplies": true
+            },
+            {
+              "name": "ACTUAL_LOW_SAMPLE_MAJORITY",
+              "count": 332,
+              "worse": 10,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "MIXED_TIERS",
+              "count": 57,
+              "worse": 2,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "burdenImbalance"
+              ],
+              "gateApplies": true
+            },
+            {
+              "name": "SIMILAR_TIER",
+              "count": 54,
+              "worse": 4,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "supportGap"
+              ],
+              "gateApplies": true
+            },
+            {
+              "name": "UNKNOWN_TIER",
+              "count": 56,
+              "worse": 3,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "MAIN_CONGESTION",
+              "count": 57,
+              "worse": 0,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "BROAD_POOL",
+              "count": 56,
+              "worse": 1,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "burdenImbalance"
+              ],
+              "gateApplies": true
+            },
+            {
+              "name": "JUNGLE_SHORTAGE",
+              "count": 56,
+              "worse": 3,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "LOW_SAMPLE",
+              "count": 56,
+              "worse": 3,
+              "improved": 0,
+              "meanOrMaximumRegressions": [],
+              "gateApplies": true
+            },
+            {
+              "name": "SUPPORT_SHORTAGE",
+              "count": 56,
+              "worse": 3,
+              "improved": 0,
+              "meanOrMaximumRegressions": [
+                "adcGap",
+                "supportGap"
+              ],
+              "gateApplies": true
+            }
+          ],
+          "representativeChanges": [
+            {
+              "id": "R-83b6b9886286",
+              "source": "RECOMBINED_REAL_PLAYERS",
+              "stratum": "SIMILAR_TIER",
+              "subgroups": [
+                "SIMILAR_TIER",
+                "INCLUDES_LOW_TIER",
+                "INCLUDES_NEW_PLAYER",
+                "ACTUAL_LOW_SAMPLE_MAJORITY"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 48,
+              "rawInspections": 48,
+              "feasibleLayouts": 48,
+              "sharedMs": 27.431799999998475,
+              "oracleMs": null,
+              "baseline": {
+                "teamGap": 4.69,
+                "lanes": [
+                  26.92,
+                  1.7,
+                  11.81,
+                  1.06,
+                  7.66
+                ],
+                "laneSum": 49.150000000000006,
+                "maxLaneGap": 26.92,
+                "largeLaneCount": 1,
+                "adcGap": 1.06,
+                "supportGap": 7.66,
+                "bottomGap": 8.72,
+                "mainCount": 5,
+                "subCount": 5,
+                "autoCount": 0,
+                "registeredAutoCount": 0,
+                "unregistered": 0,
+                "burdenImbalance": 3,
+                "subImbalance": 3,
+                "rules": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 0,
+                "confidence": 0.07,
+                "zeroSampleCount": 6,
+                "missingSourceCount": 15,
+                "cost": 74.95200000000001,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  1.9200000000000017,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  74.95200000000001
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 4.69,
+                    "lanes": [
+                      26.92,
+                      1.7,
+                      11.81,
+                      1.06,
+                      7.66
+                    ],
+                    "laneSum": 49.150000000000006,
+                    "maxLaneGap": 26.92,
+                    "largeLaneCount": 1,
+                    "adcGap": 1.06,
+                    "supportGap": 7.66,
+                    "bottomGap": 8.72,
+                    "mainCount": 5,
+                    "subCount": 5,
+                    "autoCount": 0,
+                    "registeredAutoCount": 0,
+                    "unregistered": 0,
+                    "burdenImbalance": 3,
+                    "subImbalance": 3,
+                    "rules": [
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 0,
+                    "confidence": 0.07,
+                    "zeroSampleCount": 6,
+                    "missingSourceCount": 15,
+                    "cost": 74.95200000000001,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      1,
+                      1.9200000000000017,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      74.95200000000001
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 6.81,
+                    "lanes": [
+                      26.92,
+                      1.7,
+                      11.81,
+                      1.06,
+                      7.66
+                    ],
+                    "laneSum": 49.150000000000006,
+                    "maxLaneGap": 26.92,
+                    "largeLaneCount": 1,
+                    "adcGap": 1.06,
+                    "supportGap": 7.66,
+                    "bottomGap": 6.6,
+                    "mainCount": 5,
+                    "subCount": 5,
+                    "autoCount": 0,
+                    "registeredAutoCount": 0,
+                    "unregistered": 0,
+                    "burdenImbalance": 1,
+                    "subImbalance": 1,
+                    "rules": [
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 0,
+                    "confidence": 0.07,
+                    "zeroSampleCount": 6,
+                    "missingSourceCount": 15,
+                    "cost": 76.224,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      1,
+                      1.9200000000000017,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      76.224
+                    ]
+                  },
+                  "changed": true,
+                  "classification": "worse"
+                }
+              }
+            },
+            {
+              "id": "R-f0790f7b83b8",
+              "source": "RECOMBINED_REAL_PLAYERS",
+              "stratum": "UNKNOWN_TIER",
+              "subgroups": [
+                "UNKNOWN_TIER",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER",
+                "INCLUDES_NEW_PLAYER",
+                "ACTUAL_LOW_SAMPLE_MAJORITY"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 768,
+              "rawInspections": 768,
+              "feasibleLayouts": 768,
+              "sharedMs": 35.94649999999092,
+              "oracleMs": null,
+              "baseline": {
+                "teamGap": 10.87,
+                "lanes": [
+                  0.23,
+                  3.73,
+                  12.21,
+                  25.89,
+                  6.31
+                ],
+                "laneSum": 48.370000000000005,
+                "maxLaneGap": 25.89,
+                "largeLaneCount": 1,
+                "adcGap": 25.89,
+                "supportGap": 6.31,
+                "bottomGap": 19.58,
+                "mainCount": 3,
+                "subCount": 6,
+                "autoCount": 1,
+                "registeredAutoCount": 1,
+                "unregistered": 0,
+                "burdenImbalance": 0,
+                "subImbalance": 2,
+                "rules": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 3,
+                "confidence": 0.03,
+                "zeroSampleCount": 7,
+                "missingSourceCount": 16,
+                "cost": 91.794,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  2,
+                  10.469999999999999,
+                  3,
+                  1,
+                  1,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  91.794
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 10.87,
+                    "lanes": [
+                      0.23,
+                      3.73,
+                      12.21,
+                      25.89,
+                      6.31
+                    ],
+                    "laneSum": 48.370000000000005,
+                    "maxLaneGap": 25.89,
+                    "largeLaneCount": 1,
+                    "adcGap": 25.89,
+                    "supportGap": 6.31,
+                    "bottomGap": 19.58,
+                    "mainCount": 3,
+                    "subCount": 6,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 0,
+                    "subImbalance": 2,
+                    "rules": [
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 3,
+                    "confidence": 0.03,
+                    "zeroSampleCount": 7,
+                    "missingSourceCount": 16,
+                    "cost": 91.794,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      2,
+                      10.469999999999999,
+                      3,
+                      1,
+                      1,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      91.794
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 11.33,
+                    "lanes": [
+                      0.23,
+                      3.73,
+                      12.21,
+                      25.89,
+                      6.31
+                    ],
+                    "laneSum": 48.370000000000005,
+                    "maxLaneGap": 25.89,
+                    "largeLaneCount": 1,
+                    "adcGap": 25.89,
+                    "supportGap": 6.31,
+                    "bottomGap": 19.58,
+                    "mainCount": 3,
+                    "subCount": 6,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 2,
+                    "subImbalance": 0,
+                    "rules": [
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 3,
+                    "confidence": 0.03,
+                    "zeroSampleCount": 7,
+                    "missingSourceCount": 16,
+                    "cost": 92.438,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      2,
+                      10.469999999999999,
+                      3,
+                      1,
+                      1,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      92.438
+                    ]
+                  },
+                  "changed": true,
+                  "classification": "worse"
+                }
+              }
+            },
+            {
+              "id": "R-c2dc2dc7b4af",
+              "source": "RECOMBINED_REAL_PLAYERS",
+              "stratum": "UNKNOWN_TIER",
+              "subgroups": [
+                "UNKNOWN_TIER",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER",
+                "INCLUDES_NEW_PLAYER",
+                "ACTUAL_LOW_SAMPLE_MAJORITY"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 608,
+              "rawInspections": 608,
+              "feasibleLayouts": 608,
+              "sharedMs": 28.737799999988056,
+              "oracleMs": null,
+              "baseline": {
+                "teamGap": 1,
+                "lanes": [
+                  3.43,
+                  12.63,
+                  8.52,
+                  1.54,
+                  5
+                ],
+                "laneSum": 31.12,
+                "maxLaneGap": 12.63,
+                "largeLaneCount": 0,
+                "adcGap": 1.54,
+                "supportGap": 5,
+                "bottomGap": 6.54,
+                "mainCount": 3,
+                "subCount": 5,
+                "autoCount": 2,
+                "registeredAutoCount": 2,
+                "unregistered": 0,
+                "burdenImbalance": 3,
+                "subImbalance": 3,
+                "rules": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 3,
+                "confidence": 0.01,
+                "zeroSampleCount": 9,
+                "missingSourceCount": 14,
+                "cost": 42.934,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  3,
+                  2,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  42.934
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 1,
+                    "lanes": [
+                      3.43,
+                      12.63,
+                      8.52,
+                      1.54,
+                      5
+                    ],
+                    "laneSum": 31.12,
+                    "maxLaneGap": 12.63,
+                    "largeLaneCount": 0,
+                    "adcGap": 1.54,
+                    "supportGap": 5,
+                    "bottomGap": 6.54,
+                    "mainCount": 3,
+                    "subCount": 5,
+                    "autoCount": 2,
+                    "registeredAutoCount": 2,
+                    "unregistered": 0,
+                    "burdenImbalance": 3,
+                    "subImbalance": 3,
+                    "rules": [
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 3,
+                    "confidence": 0.01,
+                    "zeroSampleCount": 9,
+                    "missingSourceCount": 14,
+                    "cost": 42.934,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      3,
+                      2,
+                      0,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      42.934
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 4.08,
+                    "lanes": [
+                      3.43,
+                      12.63,
+                      8.52,
+                      1.54,
+                      5
+                    ],
+                    "laneSum": 31.12,
+                    "maxLaneGap": 12.63,
+                    "largeLaneCount": 0,
+                    "adcGap": 1.54,
+                    "supportGap": 5,
+                    "bottomGap": 3.46,
+                    "mainCount": 3,
+                    "subCount": 5,
+                    "autoCount": 2,
+                    "registeredAutoCount": 2,
+                    "unregistered": 0,
+                    "burdenImbalance": 1,
+                    "subImbalance": 1,
+                    "rules": [
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 3,
+                    "confidence": 0.01,
+                    "zeroSampleCount": 9,
+                    "missingSourceCount": 14,
+                    "cost": 44.782000000000004,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      3,
+                      2,
+                      0,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      44.782000000000004
+                    ]
+                  },
+                  "changed": true,
+                  "classification": "worse"
+                }
+              }
+            },
+            {
+              "id": "R-a85cec1d3289",
+              "source": "RECOMBINED_REAL_PLAYERS",
+              "stratum": "SIMILAR_TIER",
+              "subgroups": [
+                "SIMILAR_TIER",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_NEW_PLAYER"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 336,
+              "rawInspections": 336,
+              "feasibleLayouts": 336,
+              "sharedMs": 38.78399999999965,
+              "oracleMs": null,
+              "baseline": {
+                "teamGap": 5.14,
+                "lanes": [
+                  20.51,
+                  3.76,
+                  7.22,
+                  3.94,
+                  0.45
+                ],
+                "laneSum": 35.88,
+                "maxLaneGap": 20.51,
+                "largeLaneCount": 1,
+                "adcGap": 3.94,
+                "supportGap": 0.45,
+                "bottomGap": 4.39,
+                "mainCount": 6,
+                "subCount": 2,
+                "autoCount": 2,
+                "registeredAutoCount": 2,
+                "unregistered": 0,
+                "burdenImbalance": 2,
+                "subImbalance": 2,
+                "rules": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 0,
+                "confidence": 0.08,
+                "zeroSampleCount": 4,
+                "missingSourceCount": 12,
+                "cost": 54.746,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  54.746
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 5.14,
+                    "lanes": [
+                      20.51,
+                      3.76,
+                      7.22,
+                      3.94,
+                      0.45
+                    ],
+                    "laneSum": 35.88,
+                    "maxLaneGap": 20.51,
+                    "largeLaneCount": 1,
+                    "adcGap": 3.94,
+                    "supportGap": 0.45,
+                    "bottomGap": 4.39,
+                    "mainCount": 6,
+                    "subCount": 2,
+                    "autoCount": 2,
+                    "registeredAutoCount": 2,
+                    "unregistered": 0,
+                    "burdenImbalance": 2,
+                    "subImbalance": 2,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 0,
+                    "confidence": 0.08,
+                    "zeroSampleCount": 4,
+                    "missingSourceCount": 12,
+                    "cost": 54.746,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      54.746
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 6.04,
+                    "lanes": [
+                      20.51,
+                      3.76,
+                      7.22,
+                      3.94,
+                      0.45
+                    ],
+                    "laneSum": 35.88,
+                    "maxLaneGap": 20.51,
+                    "largeLaneCount": 1,
+                    "adcGap": 3.94,
+                    "supportGap": 0.45,
+                    "bottomGap": 3.49,
+                    "mainCount": 6,
+                    "subCount": 2,
+                    "autoCount": 2,
+                    "registeredAutoCount": 2,
+                    "unregistered": 0,
+                    "burdenImbalance": 0,
+                    "subImbalance": 0,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 0,
+                    "confidence": 0.08,
+                    "zeroSampleCount": 4,
+                    "missingSourceCount": 12,
+                    "cost": 55.286,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      55.286
+                    ]
+                  },
+                  "changed": true,
+                  "classification": "worse"
+                }
+              }
+            },
+            {
+              "id": "R-a8ef514127b5",
+              "source": "OBSERVED_MATCH",
+              "stratum": "OBSERVED",
+              "subgroups": [
+                "OBSERVED",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 480,
+              "rawInspections": 480,
+              "feasibleLayouts": 480,
+              "sharedMs": 48.53290000000004,
+              "oracleMs": null,
+              "baseline": {
+                "teamGap": 0.99,
+                "lanes": [
+                  13.97,
+                  13.16,
+                  0.9,
+                  1.04,
+                  2.12
+                ],
+                "laneSum": 31.19,
+                "maxLaneGap": 13.97,
+                "largeLaneCount": 0,
+                "adcGap": 1.04,
+                "supportGap": 2.12,
+                "bottomGap": 1.08,
+                "mainCount": 5,
+                "subCount": 4,
+                "autoCount": 1,
+                "registeredAutoCount": 1,
+                "unregistered": 0,
+                "burdenImbalance": 4,
+                "subImbalance": 2,
+                "rules": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 1,
+                "confidence": 0.39,
+                "zeroSampleCount": 1,
+                "missingSourceCount": 12,
+                "cost": 38.934,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  1,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  38.934
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 0.99,
+                    "lanes": [
+                      13.97,
+                      13.16,
+                      0.9,
+                      1.04,
+                      2.12
+                    ],
+                    "laneSum": 31.19,
+                    "maxLaneGap": 13.97,
+                    "largeLaneCount": 0,
+                    "adcGap": 1.04,
+                    "supportGap": 2.12,
+                    "bottomGap": 1.08,
+                    "mainCount": 5,
+                    "subCount": 4,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 4,
+                    "subImbalance": 2,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.39,
+                    "zeroSampleCount": 1,
+                    "missingSourceCount": 12,
+                    "cost": 38.934,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      1,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      38.934
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 1.17,
+                    "lanes": [
+                      13.97,
+                      13.16,
+                      0.9,
+                      1.04,
+                      2.12
+                    ],
+                    "laneSum": 31.19,
+                    "maxLaneGap": 13.97,
+                    "largeLaneCount": 0,
+                    "adcGap": 1.04,
+                    "supportGap": 2.12,
+                    "bottomGap": 1.08,
+                    "mainCount": 5,
+                    "subCount": 4,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 2,
+                    "subImbalance": 0,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.39,
+                    "zeroSampleCount": 1,
+                    "missingSourceCount": 12,
+                    "cost": 39.18599999999999,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      1,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      39.18599999999999
+                    ]
+                  },
+                  "changed": true,
+                  "classification": "worse"
+                }
+              }
+            }
+          ],
+          "worstCases": [
+            {
+              "id": "R-46292d0e6e61",
+              "source": "OBSERVED_MATCH",
+              "stratum": "OBSERVED",
+              "subgroups": [
+                "OBSERVED",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 3936,
+              "rawInspections": 3936,
+              "feasibleLayouts": 1792,
+              "sharedMs": 56.29259999999999,
+              "oracleMs": null,
+              "baseline": {
+                "teamGap": 2.1,
+                "lanes": [
+                  3.23,
+                  1.11,
+                  7.56,
+                  12.53,
+                  4.99
+                ],
+                "laneSum": 29.42,
+                "maxLaneGap": 12.53,
+                "largeLaneCount": 0,
+                "adcGap": 12.53,
+                "supportGap": 4.99,
+                "bottomGap": 7.54,
+                "mainCount": 1,
+                "subCount": 6,
+                "autoCount": 3,
+                "registeredAutoCount": 3,
+                "unregistered": 0,
+                "burdenImbalance": 0,
+                "subImbalance": 2,
+                "rules": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 1,
+                "confidence": 0.05,
+                "zeroSampleCount": 4,
+                "missingSourceCount": 11,
+                "cost": 45.153999999999996,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  3,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  45.153999999999996
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 2.1,
+                    "lanes": [
+                      3.23,
+                      1.11,
+                      7.56,
+                      12.53,
+                      4.99
+                    ],
+                    "laneSum": 29.42,
+                    "maxLaneGap": 12.53,
+                    "largeLaneCount": 0,
+                    "adcGap": 12.53,
+                    "supportGap": 4.99,
+                    "bottomGap": 7.54,
+                    "mainCount": 1,
+                    "subCount": 6,
+                    "autoCount": 3,
+                    "registeredAutoCount": 3,
+                    "unregistered": 0,
+                    "burdenImbalance": 0,
+                    "subImbalance": 2,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.05,
+                    "zeroSampleCount": 4,
+                    "missingSourceCount": 11,
+                    "cost": 45.153999999999996,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      3,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      45.153999999999996
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 2.73,
+                    "lanes": [
+                      15.69,
+                      8.21,
+                      0.54,
+                      6.57,
+                      2.36
+                    ],
+                    "laneSum": 33.37,
+                    "maxLaneGap": 15.69,
+                    "largeLaneCount": 1,
+                    "adcGap": 6.57,
+                    "supportGap": 2.36,
+                    "bottomGap": 4.21,
+                    "mainCount": 3,
+                    "subCount": 4,
+                    "autoCount": 3,
+                    "registeredAutoCount": 3,
+                    "unregistered": 0,
+                    "burdenImbalance": 2,
+                    "subImbalance": 0,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.08,
+                    "zeroSampleCount": 3,
+                    "missingSourceCount": 11,
+                    "cost": 46.902,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      3,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      46.902
+                    ]
+                  },
+                  "changed": true,
+                  "classification": "worse"
+                }
+              }
+            },
+            {
+              "id": "R-e4934456e08d",
+              "source": "OBSERVED_MATCH",
+              "stratum": "OBSERVED",
+              "subgroups": [
+                "OBSERVED",
+                "INCLUDES_LOW_TIER",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 864,
+              "rawInspections": 864,
+              "feasibleLayouts": 672,
+              "sharedMs": 70.51570000000001,
+              "oracleMs": 58.155099999999976,
+              "baseline": {
+                "teamGap": 2.23,
+                "lanes": [
+                  7.35,
+                  4.62,
+                  13.29,
+                  9.75,
+                  1.42
+                ],
+                "laneSum": 36.43,
+                "maxLaneGap": 13.29,
+                "largeLaneCount": 0,
+                "adcGap": 9.75,
+                "supportGap": 1.42,
+                "bottomGap": 8.33,
+                "mainCount": 2,
+                "subCount": 5,
+                "autoCount": 3,
+                "registeredAutoCount": 3,
+                "unregistered": 0,
+                "burdenImbalance": 1,
+                "subImbalance": 1,
+                "rules": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 1,
+                "confidence": 0.24,
+                "zeroSampleCount": 3,
+                "missingSourceCount": 13,
+                "cost": 49.934,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  3,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  49.934
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 2.23,
+                    "lanes": [
+                      7.35,
+                      4.62,
+                      13.29,
+                      9.75,
+                      1.42
+                    ],
+                    "laneSum": 36.43,
+                    "maxLaneGap": 13.29,
+                    "largeLaneCount": 0,
+                    "adcGap": 9.75,
+                    "supportGap": 1.42,
+                    "bottomGap": 8.33,
+                    "mainCount": 2,
+                    "subCount": 5,
+                    "autoCount": 3,
+                    "registeredAutoCount": 3,
+                    "unregistered": 0,
+                    "burdenImbalance": 1,
+                    "subImbalance": 1,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.24,
+                    "zeroSampleCount": 3,
+                    "missingSourceCount": 13,
+                    "cost": 49.934,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      3,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      49.934
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 2.23,
+                    "lanes": [
+                      7.35,
+                      4.62,
+                      13.29,
+                      9.75,
+                      1.42
+                    ],
+                    "laneSum": 36.43,
+                    "maxLaneGap": 13.29,
+                    "largeLaneCount": 0,
+                    "adcGap": 9.75,
+                    "supportGap": 1.42,
+                    "bottomGap": 8.33,
+                    "mainCount": 2,
+                    "subCount": 5,
+                    "autoCount": 3,
+                    "registeredAutoCount": 3,
+                    "unregistered": 0,
+                    "burdenImbalance": 1,
+                    "subImbalance": 1,
+                    "rules": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 1,
+                    "confidence": 0.24,
+                    "zeroSampleCount": 3,
+                    "missingSourceCount": 13,
+                    "cost": 49.934,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      3,
+                      1,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      49.934
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                }
+              }
+            },
+            {
+              "id": "R-3ed1e0192aa3",
+              "source": "OBSERVED_MATCH",
+              "stratum": "OBSERVED",
+              "subgroups": [
+                "OBSERVED",
+                "INCLUDES_LOW_TIER",
+                "INCLUDES_HIGH_TIER",
+                "INCLUDES_UNKNOWN_TIER"
+              ],
+              "relaxed": false,
+              "uniqueLayouts": 416,
+              "rawInspections": 416,
+              "feasibleLayouts": 160,
+              "sharedMs": 83.68610000000001,
+              "oracleMs": 55.173,
+              "baseline": {
+                "teamGap": 12.55,
+                "lanes": [
+                  33.36,
+                  1.38,
+                  10.34,
+                  19.17,
+                  10.08
+                ],
+                "laneSum": 74.33,
+                "maxLaneGap": 33.36,
+                "largeLaneCount": 2,
+                "adcGap": 19.17,
+                "supportGap": 10.08,
+                "bottomGap": 9.09,
+                "mainCount": 6,
+                "subCount": 3,
+                "autoCount": 1,
+                "registeredAutoCount": 1,
+                "unregistered": 0,
+                "burdenImbalance": 3,
+                "subImbalance": 1,
+                "rules": [
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "bottomViolations": 0,
+                "bottomExcess": 0,
+                "unknownTier": 2,
+                "confidence": 0.37,
+                "zeroSampleCount": 1,
+                "missingSourceCount": 13,
+                "cost": 105.8,
+                "risk": [
+                  0,
+                  0,
+                  0,
+                  2,
+                  23.36,
+                  2,
+                  1,
+                  1,
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  105.8
+                ]
+              },
+              "candidates": {
+                "SUB_TIE": {
+                  "metrics": {
+                    "teamGap": 12.55,
+                    "lanes": [
+                      33.36,
+                      1.38,
+                      10.34,
+                      19.17,
+                      10.08
+                    ],
+                    "laneSum": 74.33,
+                    "maxLaneGap": 33.36,
+                    "largeLaneCount": 2,
+                    "adcGap": 19.17,
+                    "supportGap": 10.08,
+                    "bottomGap": 9.09,
+                    "mainCount": 6,
+                    "subCount": 3,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 3,
+                    "subImbalance": 1,
+                    "rules": [
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 2,
+                    "confidence": 0.37,
+                    "zeroSampleCount": 1,
+                    "missingSourceCount": 13,
+                    "cost": 105.8,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      2,
+                      23.36,
+                      2,
+                      1,
+                      1,
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      105.8
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                },
+                "SUB_SOFT_1": {
+                  "metrics": {
+                    "teamGap": 12.55,
+                    "lanes": [
+                      33.36,
+                      1.38,
+                      10.34,
+                      19.17,
+                      10.08
+                    ],
+                    "laneSum": 74.33,
+                    "maxLaneGap": 33.36,
+                    "largeLaneCount": 2,
+                    "adcGap": 19.17,
+                    "supportGap": 10.08,
+                    "bottomGap": 9.09,
+                    "mainCount": 6,
+                    "subCount": 3,
+                    "autoCount": 1,
+                    "registeredAutoCount": 1,
+                    "unregistered": 0,
+                    "burdenImbalance": 3,
+                    "subImbalance": 1,
+                    "rules": [
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0
+                    ],
+                    "bottomViolations": 0,
+                    "bottomExcess": 0,
+                    "unknownTier": 2,
+                    "confidence": 0.37,
+                    "zeroSampleCount": 1,
+                    "missingSourceCount": 13,
+                    "cost": 105.8,
+                    "risk": [
+                      0,
+                      0,
+                      0,
+                      2,
+                      23.36,
+                      2,
+                      1,
+                      1,
+                      2,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      105.8
+                    ]
+                  },
+                  "changed": false,
+                  "classification": "maintained"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "validation",
+      "mode": "BASELINE_COVERAGE_AUDIT_AFTER_CANDIDATE_REJECTION",
+      "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+      "protocolSha256": "1a9c6c3339af97365373b714f35c0c7cc4835fcf3f50341921b57e1bac1007d4",
+      "rosterManifestSha256": "b98861124c356a5928603acf365a8f2e4db322d8dc5ff1306c770df30db979bc",
+      "uniqueRosters": 250,
+      "observed": 26,
+      "recombined": 224,
+      "uniqueCandidatePlacements": 227065264,
+      "rawInspections": 227068640,
+      "feasiblePlacements": 226928592,
+      "relaxedRosters": 125,
+      "baselineMetrics": {
+        "teamGap": {
+          "mean": 6.001879999999996,
+          "median": 5.07,
+          "p95": 14.22,
+          "max": 25.99
+        },
+        "laneSum": {
+          "mean": 59.92172000000003,
+          "median": 54.089999999999996,
+          "p95": 117.57,
+          "max": 204.97000000000003
+        },
+        "maxLaneGap": {
+          "mean": 24.193239999999996,
+          "median": 23.15,
+          "p95": 49.15,
+          "max": 88.65
+        },
+        "largeLaneCount": {
+          "mean": 1.352,
+          "median": 1,
+          "p95": 4,
+          "max": 5
+        },
+        "adcGap": {
+          "mean": 12.859560000000002,
+          "median": 9.02,
+          "p95": 37,
+          "max": 88.65
+        },
+        "supportGap": {
+          "mean": 11.498959999999993,
+          "median": 8.81,
+          "p95": 33.05,
+          "max": 46.66
+        },
+        "bottomGap": {
+          "mean": 8.012919999999998,
+          "median": 5.51,
+          "p95": 27.33,
+          "max": 69.01
+        },
+        "mainCount": {
+          "mean": 4.388,
+          "median": 4,
+          "p95": 7,
+          "max": 10
+        },
+        "subCount": {
+          "mean": 3.652,
+          "median": 4,
+          "p95": 6,
+          "max": 8
+        },
+        "autoCount": {
+          "mean": 1.96,
+          "median": 2,
+          "p95": 4,
+          "max": 6
+        },
+        "registeredAutoCount": {
+          "mean": 1.128,
+          "median": 1,
+          "p95": 3,
+          "max": 6
+        },
+        "unregistered": {
+          "mean": 0.832,
+          "median": 0,
+          "p95": 2,
+          "max": 4
+        },
+        "burdenImbalance": {
+          "mean": 1.188,
+          "median": 1,
+          "p95": 3,
+          "max": 5
+        },
+        "subImbalance": {
+          "mean": 0.964,
+          "median": 1,
+          "p95": 3,
+          "max": 3
+        },
+        "bottomViolations": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "bottomExcess": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "unknownTier": {
+          "mean": 1.596,
+          "median": 1,
+          "p95": 4,
+          "max": 7
+        },
+        "confidence": {
+          "mean": 0.08788000000000001,
+          "median": 0.06,
+          "p95": 0.25,
+          "max": 0.47
+        },
+        "zeroSampleCount": {
+          "mean": 5.78,
+          "median": 6,
+          "p95": 9,
+          "max": 10
+        },
+        "cost": {
+          "mean": 78.61124000000001,
+          "median": 75.112,
+          "p95": 147.622,
+          "max": 269.55400000000003
+        }
+      },
+      "sharedEnumerationTiming": {
+        "workers": 4,
+        "mean": 1798.2301916000001,
+        "median": 220.7597,
+        "p95": 4945.286300000007,
+        "max": 5927.275699999998,
+        "note": "Contended multi-process shared-enumeration timing; production single-process timings are reported separately from pilot."
+      },
+      "elapsedWallMs": 125236.2133,
+      "baselineOracleComparisons": 8,
+      "independentLayoutReevaluations": 250,
+      "survivors": [],
+      "selected": null,
+      "summaries": []
+    },
+    {
+      "stage": "final",
+      "mode": "BASELINE_COVERAGE_AUDIT_AFTER_CANDIDATE_REJECTION",
+      "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+      "protocolSha256": "1a9c6c3339af97365373b714f35c0c7cc4835fcf3f50341921b57e1bac1007d4",
+      "rosterManifestSha256": "b98861124c356a5928603acf365a8f2e4db322d8dc5ff1306c770df30db979bc",
+      "uniqueRosters": 250,
+      "observed": 25,
+      "recombined": 225,
+      "uniqueCandidatePlacements": 234904912,
+      "rawInspections": 234910496,
+      "feasiblePlacements": 233622752,
+      "relaxedRosters": 128,
+      "baselineMetrics": {
+        "teamGap": {
+          "mean": 5.932519999999998,
+          "median": 4.65,
+          "p95": 14.56,
+          "max": 29.51
+        },
+        "laneSum": {
+          "mean": 62.239399999999996,
+          "median": 54.84,
+          "p95": 119.69000000000001,
+          "max": 177.16
+        },
+        "maxLaneGap": {
+          "mean": 25.642639999999993,
+          "median": 23.09,
+          "p95": 51.66,
+          "max": 85.17
+        },
+        "largeLaneCount": {
+          "mean": 1.42,
+          "median": 1,
+          "p95": 4,
+          "max": 4
+        },
+        "adcGap": {
+          "mean": 12.051320000000008,
+          "median": 7.99,
+          "p95": 33.92,
+          "max": 74.25
+        },
+        "supportGap": {
+          "mean": 10.564399999999997,
+          "median": 8.08,
+          "p95": 29.43,
+          "max": 57.39
+        },
+        "bottomGap": {
+          "mean": 8.425880000000005,
+          "median": 6.03,
+          "p95": 24.79,
+          "max": 56.59
+        },
+        "mainCount": {
+          "mean": 4.488,
+          "median": 5,
+          "p95": 7,
+          "max": 10
+        },
+        "subCount": {
+          "mean": 3.452,
+          "median": 3,
+          "p95": 6,
+          "max": 8
+        },
+        "autoCount": {
+          "mean": 2.06,
+          "median": 2,
+          "p95": 4,
+          "max": 10
+        },
+        "registeredAutoCount": {
+          "mean": 1.176,
+          "median": 1,
+          "p95": 4,
+          "max": 10
+        },
+        "unregistered": {
+          "mean": 0.884,
+          "median": 1,
+          "p95": 2,
+          "max": 4
+        },
+        "burdenImbalance": {
+          "mean": 1.332,
+          "median": 1,
+          "p95": 3,
+          "max": 5
+        },
+        "subImbalance": {
+          "mean": 1.036,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "bottomViolations": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "bottomExcess": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "unknownTier": {
+          "mean": 1.624,
+          "median": 1,
+          "p95": 4,
+          "max": 6
+        },
+        "confidence": {
+          "mean": 0.08935999999999997,
+          "median": 0.06,
+          "p95": 0.27,
+          "max": 0.46
+        },
+        "zeroSampleCount": {
+          "mean": 5.788,
+          "median": 6,
+          "p95": 9,
+          "max": 10
+        },
+        "cost": {
+          "mean": 81.48451199999995,
+          "median": 74.17800000000001,
+          "p95": 149.65200000000002,
+          "max": 232.30200000000002
+        }
+      },
+      "sharedEnumerationTiming": {
+        "workers": 4,
+        "mean": 1548.8152451999997,
+        "median": 1773.3172000000004,
+        "p95": 3428.1141000000025,
+        "max": 3766.970499999996,
+        "note": "Contended multi-process shared-enumeration timing; production single-process timings are reported separately from pilot."
+      },
+      "elapsedWallMs": 103833.17030000001,
+      "baselineOracleComparisons": 8,
+      "independentLayoutReevaluations": 250,
+      "survivors": [],
+      "selected": null,
+      "summaries": []
+    }
+  ],
+  "representativeBaselineCases": {
+    "worstLaneGap": [
+      {
+        "roster": "R-886841e512d5",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "LOW_SAMPLE",
+        "relaxed": true,
+        "metrics": {
+          "teamGap": 0.51,
+          "lanes": [
+            42.79,
+            39.8,
+            14.09,
+            88.65,
+            19.64
+          ],
+          "laneSum": 204.97000000000003,
+          "maxLaneGap": 88.65,
+          "largeLaneCount": 4,
+          "adcGap": 88.65,
+          "supportGap": 19.64,
+          "bottomGap": 69.01,
+          "mainCount": 6,
+          "subCount": 2,
+          "autoCount": 2,
+          "registeredAutoCount": 0,
+          "unregistered": 2,
+          "burdenImbalance": 2,
+          "subImbalance": 2,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 2,
+          "confidence": 0.07,
+          "zeroSampleCount": 7,
+          "missingSourceCount": 15,
+          "cost": 269.55400000000003,
+          "risk": [
+            0,
+            0,
+            2,
+            3,
+            167.66000000000003,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            269.55400000000003
+          ]
+        }
+      },
+      {
+        "roster": "R-ef44ed0aa3dd",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "MIXED_TIERS",
+        "relaxed": false,
+        "metrics": {
+          "teamGap": 8.02,
+          "lanes": [
+            41.08,
+            30.88,
+            85.17,
+            4.69,
+            0.5
+          ],
+          "laneSum": 162.32,
+          "maxLaneGap": 85.17,
+          "largeLaneCount": 3,
+          "adcGap": 4.69,
+          "supportGap": 0.5,
+          "bottomGap": 5.19,
+          "mainCount": 4,
+          "subCount": 2,
+          "autoCount": 4,
+          "registeredAutoCount": 4,
+          "unregistered": 0,
+          "burdenImbalance": 0,
+          "subImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.06,
+          "zeroSampleCount": 5,
+          "missingSourceCount": 14,
+          "cost": 199.94199999999998,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            90.17,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            199.94199999999998
+          ]
+        }
+      },
+      {
+        "roster": "R-c7c54d690497",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "MIXED_TIERS",
+        "relaxed": false,
+        "metrics": {
+          "teamGap": 53.77,
+          "lanes": [
+            9.3,
+            12.47,
+            85.17,
+            5.03,
+            4.6
+          ],
+          "laneSum": 116.57,
+          "maxLaneGap": 85.17,
+          "largeLaneCount": 1,
+          "adcGap": 5.03,
+          "supportGap": 4.6,
+          "bottomGap": 9.63,
+          "mainCount": 3,
+          "subCount": 3,
+          "autoCount": 4,
+          "registeredAutoCount": 4,
+          "unregistered": 0,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            0,
+            1,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.07,
+          "zeroSampleCount": 5,
+          "missingSourceCount": 13,
+          "cost": 241.094,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            98.94,
+            0,
+            4,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            241.094
+          ]
+        }
+      }
+    ],
+    "balancedTotalLargeLanes": [
+      {
+        "roster": "R-886841e512d5",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "LOW_SAMPLE",
+        "relaxed": true,
+        "metrics": {
+          "teamGap": 0.51,
+          "lanes": [
+            42.79,
+            39.8,
+            14.09,
+            88.65,
+            19.64
+          ],
+          "laneSum": 204.97000000000003,
+          "maxLaneGap": 88.65,
+          "largeLaneCount": 4,
+          "adcGap": 88.65,
+          "supportGap": 19.64,
+          "bottomGap": 69.01,
+          "mainCount": 6,
+          "subCount": 2,
+          "autoCount": 2,
+          "registeredAutoCount": 0,
+          "unregistered": 2,
+          "burdenImbalance": 2,
+          "subImbalance": 2,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 2,
+          "confidence": 0.07,
+          "zeroSampleCount": 7,
+          "missingSourceCount": 15,
+          "cost": 269.55400000000003,
+          "risk": [
+            0,
+            0,
+            2,
+            3,
+            167.66000000000003,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            269.55400000000003
+          ]
+        }
+      },
+      {
+        "roster": "R-e5147640c2a9",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "MIXED_TIERS",
+        "relaxed": false,
+        "metrics": {
+          "teamGap": 2.28,
+          "lanes": [
+            4.47,
+            51.51,
+            63.59,
+            5.52,
+            15.41
+          ],
+          "laneSum": 140.5,
+          "maxLaneGap": 63.59,
+          "largeLaneCount": 3,
+          "adcGap": 5.52,
+          "supportGap": 15.41,
+          "bottomGap": 9.89,
+          "mainCount": 7,
+          "subCount": 1,
+          "autoCount": 2,
+          "registeredAutoCount": 2,
+          "unregistered": 0,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.08,
+          "zeroSampleCount": 4,
+          "missingSourceCount": 13,
+          "cost": 159.994,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            68.59,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            159.994
+          ]
+        }
+      },
+      {
+        "roster": "R-608e26936550",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "MIXED_TIERS",
+        "relaxed": true,
+        "metrics": {
+          "teamGap": 1.1,
+          "lanes": [
+            50.02,
+            4.69,
+            60.45,
+            16.14,
+            11.5
+          ],
+          "laneSum": 142.8,
+          "maxLaneGap": 60.45,
+          "largeLaneCount": 3,
+          "adcGap": 16.14,
+          "supportGap": 11.5,
+          "bottomGap": 4.64,
+          "mainCount": 3,
+          "subCount": 5,
+          "autoCount": 2,
+          "registeredAutoCount": 1,
+          "unregistered": 1,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.09,
+          "zeroSampleCount": 5,
+          "missingSourceCount": 15,
+          "cost": 156.382,
+          "risk": [
+            0,
+            0,
+            1,
+            2,
+            65.45,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            156.382
+          ]
+        }
+      }
+    ],
+    "unavoidableRoleDeviation": [
+      {
+        "roster": "R-78882eed3a7f",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "JUNGLE_SHORTAGE",
+        "relaxed": true,
+        "metrics": {
+          "teamGap": 0.65,
+          "lanes": [
+            6.39,
+            4.73,
+            1.29,
+            0.28,
+            0
+          ],
+          "laneSum": 12.69,
+          "maxLaneGap": 6.39,
+          "largeLaneCount": 0,
+          "adcGap": 0.28,
+          "supportGap": 0,
+          "bottomGap": 0.28,
+          "mainCount": 4,
+          "subCount": 2,
+          "autoCount": 4,
+          "registeredAutoCount": 0,
+          "unregistered": 4,
+          "burdenImbalance": 0,
+          "subImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 3,
+          "confidence": 0.01,
+          "zeroSampleCount": 9,
+          "missingSourceCount": 15,
+          "cost": 17.137999999999998,
+          "risk": [
+            0,
+            0,
+            4,
+            0,
+            0,
+            3,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            17.137999999999998
+          ]
+        }
+      },
+      {
+        "roster": "R-22fc6bbdd541",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "SUPPORT_SHORTAGE",
+        "relaxed": true,
+        "metrics": {
+          "teamGap": 3.56,
+          "lanes": [
+            9.48,
+            13.86,
+            4.47,
+            1.28,
+            4.01
+          ],
+          "laneSum": 33.1,
+          "maxLaneGap": 13.86,
+          "largeLaneCount": 0,
+          "adcGap": 1.28,
+          "supportGap": 4.01,
+          "bottomGap": 5.29,
+          "mainCount": 2,
+          "subCount": 4,
+          "autoCount": 4,
+          "registeredAutoCount": 0,
+          "unregistered": 4,
+          "burdenImbalance": 0,
+          "subImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.01,
+          "zeroSampleCount": 9,
+          "missingSourceCount": 13,
+          "cost": 46.936,
+          "risk": [
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            46.936
+          ]
+        }
+      },
+      {
+        "roster": "R-1627fe773b25",
+        "source": "RECOMBINED_REAL_PLAYERS",
+        "stratum": "SUPPORT_SHORTAGE",
+        "relaxed": true,
+        "metrics": {
+          "teamGap": 5.92,
+          "lanes": [
+            2.06,
+            11.2,
+            7.32,
+            14.05,
+            9.95
+          ],
+          "laneSum": 44.58,
+          "maxLaneGap": 14.05,
+          "largeLaneCount": 0,
+          "adcGap": 14.05,
+          "supportGap": 9.95,
+          "bottomGap": 4.1,
+          "mainCount": 4,
+          "subCount": 2,
+          "autoCount": 4,
+          "registeredAutoCount": 0,
+          "unregistered": 4,
+          "burdenImbalance": 0,
+          "subImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 1,
+          "confidence": 0.05,
+          "zeroSampleCount": 6,
+          "missingSourceCount": 13,
+          "cost": 54.366,
+          "risk": [
+            0,
+            0,
+            4,
+            0,
+            0,
+            1,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            54.366
+          ]
+        }
+      }
+    ]
+  },
+  "exclusionsAndLimits": [
+    "Tuning candidates are selected only by the preregistered gates. Rejected candidates are never reconsidered on held-out baseline audits.",
+    "No original member names, UUIDs, legacy IDs, account IDs or credentials are contained in this artifact.",
+    "Observed rosters use one present snapshot; no historical outcome-prediction claim is made.",
+    "There are zero published series linked to pregame drafts, so temporal predictive validation is unavailable.",
+    "All lane metrics use the frozen baseline formula, not candidate-specific rating scores. No empirical win-rate improvement is claimed.",
+    "Aggregate largeLaneCount counts severe pairwise gaps across five roles; team-specific disadvantage counts are reported separately in stability/case replay evidence.",
+    "The initial legacy-ordered anonymization pilot and two interrupted setup runs are excluded. Final counts use only corrected UUID-order anonymous labels."
+  ]
+}

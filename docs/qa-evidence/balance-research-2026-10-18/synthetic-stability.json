@@ -1,0 +1,990 @@
+{
+  "at": "2026-10-17T16:07:19.736Z",
+  "baselineFormula": "V2_INHOUSE_RELAXED_2026_10_16",
+  "currentFormula": "V2_INHOUSE_RELAXED_2026_10_16",
+  "syntheticCases": 9,
+  "uniqueRealRosters": 0,
+  "pairSwaps": 405,
+  "timing": {
+    "baseline": {
+      "n": 9,
+      "medianMs": 46.379099999999994,
+      "p95Ms": 4446.009299999998,
+      "maxMs": 4446.009299999998
+    },
+    "current": {
+      "n": 9,
+      "medianMs": 42.5694,
+      "p95Ms": 4785.1498,
+      "maxMs": 4785.1498
+    }
+  },
+  "notes": [
+    "Synthetic stress outcomes are excluded from real-data improvement rates.",
+    "No outcome probabilities are estimated.",
+    "Timing is sequential single-process, after no explicit JIT warmup; small synthetic sample only.",
+    "Low-confidence perturbation can produce an actual score delta of zero; report the measured delta rather than counting it as a meaningful perturbation."
+  ],
+  "results": [
+    {
+      "name": "similar-tier",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 544,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 5,
+        "rejectedByPolicy": 40,
+        "maxTeamGapChange": 0,
+        "maxLaneGapChange": 0,
+        "worstPair": []
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 0.1,
+          "laneGaps": [
+            0.1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "maximumLaneGap": 0.1,
+          "largeLaneCount": 0,
+          "bottomGap": 0,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "BALANCED",
+          "roleDeviations": 0,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "mixed-extreme-tiers",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 0.9,
+        "laneGaps": [
+          2.7,
+          9,
+          9,
+          5.4,
+          9
+        ],
+        "maximumLaneGap": 9,
+        "largeLaneCount": 0,
+        "bottomGap": 3.6,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 0.9,
+        "laneGaps": [
+          2.7,
+          9,
+          9,
+          5.4,
+          9
+        ],
+        "maximumLaneGap": 9,
+        "largeLaneCount": 0,
+        "bottomGap": 3.6,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 32,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 5,
+        "rejectedByPolicy": 40,
+        "maxTeamGapChange": 18,
+        "maxLaneGapChange": 0,
+        "worstPair": [
+          1,
+          6
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 0.8,
+          "laneGaps": [
+            2.8,
+            9,
+            9,
+            5.4,
+            9
+          ],
+          "maximumLaneGap": 9,
+          "largeLaneCount": 0,
+          "bottomGap": 3.6,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "BALANCED",
+          "roleDeviations": 0,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "main-role-congestion",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 5,
+        "laneGaps": [
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        "maximumLaneGap": 5,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 1,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 5,
+        "laneGaps": [
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        "maximumLaneGap": 5,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 1,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 96,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 6,
+        "rejectedByPolicy": 39,
+        "maxTeamGapChange": 2,
+        "maxLaneGapChange": 2,
+        "worstPair": [
+          1,
+          7
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 4.9,
+          "laneGaps": [
+            0,
+            0,
+            5,
+            0.1,
+            0
+          ],
+          "maximumLaneGap": 5,
+          "largeLaneCount": 0,
+          "bottomGap": 0.1,
+          "burdenImbalance": 1,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "BALANCED",
+          "roleDeviations": 0,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "jungle-support-shortage",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 4,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 4,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 1814400,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 45,
+        "rejectedByPolicy": 0,
+        "maxTeamGapChange": 20,
+        "maxLaneGapChange": 10,
+        "worstPair": [
+          0,
+          2
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 0.1,
+          "laneGaps": [
+            0,
+            0.1,
+            0,
+            0,
+            0
+          ],
+          "maximumLaneGap": 0.1,
+          "largeLaneCount": 0,
+          "bottomGap": 0,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "REVIEW_REQUIRED",
+          "roleDeviations": 4,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "unregistered-unavoidable",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 8,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 8,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 1814400,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 45,
+        "rejectedByPolicy": 0,
+        "maxTeamGapChange": 4,
+        "maxLaneGapChange": 2,
+        "worstPair": [
+          5,
+          6
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 0.1,
+          "laneGaps": [
+            0,
+            0.1,
+            0,
+            0,
+            0
+          ],
+          "maximumLaneGap": 0.1,
+          "largeLaneCount": 0,
+          "bottomGap": 0,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "REVIEW_REQUIRED",
+          "roleDeviations": 8,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "bottom-tier-conflict",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 15,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          27,
+          12
+        ],
+        "maximumLaneGap": 27,
+        "largeLaneCount": 1,
+        "bottomGap": 15,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 2,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 15,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          27,
+          12
+        ],
+        "maximumLaneGap": 27,
+        "largeLaneCount": 1,
+        "bottomGap": 15,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 2,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 1814400,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 45,
+        "rejectedByPolicy": 0,
+        "maxTeamGapChange": 103.8,
+        "maxLaneGapChange": 44.400000000000006,
+        "worstPair": [
+          4,
+          8
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 14.9,
+          "laneGaps": [
+            0.1,
+            0,
+            0,
+            27,
+            12
+          ],
+          "maximumLaneGap": 27,
+          "largeLaneCount": 1,
+          "bottomGap": 15,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "REVIEW_REQUIRED",
+          "roleDeviations": 2,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "new-sparse-missing-tier",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 0,
+        "laneGaps": [
+          14.4,
+          14.4,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 14.4,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 2,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 0,
+        "laneGaps": [
+          14.4,
+          14.4,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 14.4,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 2,
+        "status": "REVIEW_REQUIRED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 544,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 5,
+        "rejectedByPolicy": 40,
+        "maxTeamGapChange": 28.8,
+        "maxLaneGapChange": 0,
+        "worstPair": [
+          0,
+          5
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 0,
+          "laneGaps": [
+            14.4,
+            14.4,
+            0,
+            0,
+            0
+          ],
+          "maximumLaneGap": 14.4,
+          "largeLaneCount": 0,
+          "bottomGap": 0,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 2,
+          "status": "REVIEW_REQUIRED",
+          "roleDeviations": 0,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "equal-total-multiple-large-lanes",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 0,
+        "laneGaps": [
+          59.4,
+          0,
+          59.4,
+          0,
+          0
+        ],
+        "maximumLaneGap": 59.4,
+        "largeLaneCount": 2,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "CONDITIONAL",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 0,
+        "laneGaps": [
+          59.4,
+          0,
+          59.4,
+          0,
+          0
+        ],
+        "maximumLaneGap": 59.4,
+        "largeLaneCount": 2,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "CONDITIONAL",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 16,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 5,
+        "rejectedByPolicy": 40,
+        "maxTeamGapChange": 118.8,
+        "maxLaneGapChange": 0,
+        "worstPair": [
+          0,
+          5
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 0.1,
+          "laneGaps": [
+            59.5,
+            0,
+            59.4,
+            0,
+            0
+          ],
+          "maximumLaneGap": 59.5,
+          "largeLaneCount": 2,
+          "bottomGap": 0,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "CONDITIONAL",
+          "roleDeviations": 0,
+          "bottomTierViolations": 0
+        }
+      }
+    },
+    {
+      "name": "high-tier-role-swap-sensitivity",
+      "source": "SYNTHETIC_BOUNDARY",
+      "baseline": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "current": {
+        "totalGap": 0,
+        "laneGaps": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "maximumLaneGap": 0,
+        "largeLaneCount": 0,
+        "bottomGap": 0,
+        "burdenImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unknownTierCount": 0,
+        "status": "BALANCED",
+        "roleDeviations": 0,
+        "bottomTierViolations": 0
+      },
+      "selectedLayoutChanged": false,
+      "feasibleLayoutCount": 1814400,
+      "reverseOrderPassed": true,
+      "teamColorPassed": true,
+      "swaps": {
+        "considered": 45,
+        "accepted": 45,
+        "rejectedByPolicy": 0,
+        "maxTeamGapChange": 74,
+        "maxLaneGapChange": 37,
+        "worstPair": [
+          0,
+          2
+        ]
+      },
+      "perturbation": {
+        "effectiveRoleScoreDeltas": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "layoutChanged": false,
+        "metrics": {
+          "totalGap": 0.1,
+          "laneGaps": [
+            0.1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "maximumLaneGap": 0.1,
+          "largeLaneCount": 0,
+          "bottomGap": 0,
+          "burdenImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknownTierCount": 0,
+          "status": "BALANCED",
+          "roleDeviations": 0,
+          "bottomTierViolations": 0
+        }
+      }
+    }
+  ]
+}

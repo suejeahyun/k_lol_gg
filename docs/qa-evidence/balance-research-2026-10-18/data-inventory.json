@@ -1,0 +1,400 @@
+{
+  "capturedAt": "2026-10-17T16:09:33.538Z",
+  "transaction": {
+    "readOnly": "on",
+    "isolation": "repeatable read"
+  },
+  "productionBinding": {
+    "targetFingerprint": "c5918218dd171001",
+    "matchesPriorProductionMigration": true,
+    "evidence": "docs/qa-evidence/stable-recruit-codes-2026-10-14/production-migration.json",
+    "limitation": "Fresh Vercel DATABASE_URL is masked; current binding corroborated separately using environment metadata."
+  },
+  "baselineCommit": "c679a1849bad2623da1339b87a83ecaa9fff485b",
+  "providerGeneration": 2,
+  "coverage": {
+    "totalPlayers": 249,
+    "activePlayers": 170,
+    "usableRegisteredPlayers": 138,
+    "unregisteredPositionPlayers": 32,
+    "currentTierMissing": 43,
+    "peakTierMissing": 41,
+    "zeroInternalGames": 78,
+    "underFiveInternalGames": 117,
+    "recentSoloConsumed": 100,
+    "overridesPresent": 0,
+    "mmrSamplesAvailable": 92,
+    "currentSnapshotHistoricalUniqueRosters": 103,
+    "historicalGames": 104,
+    "roles": [
+      {
+        "position": "TOP",
+        "registered": 56,
+        "main": 18,
+        "mmrSamplePlayers": 30
+      },
+      {
+        "position": "JGL",
+        "registered": 57,
+        "main": 13,
+        "mmrSamplePlayers": 26
+      },
+      {
+        "position": "MID",
+        "registered": 77,
+        "main": 25,
+        "mmrSamplePlayers": 40
+      },
+      {
+        "position": "ADC",
+        "registered": 68,
+        "main": 30,
+        "mmrSamplePlayers": 33
+      },
+      {
+        "position": "SUP",
+        "registered": 62,
+        "main": 28,
+        "mmrSamplePlayers": 41
+      }
+    ]
+  },
+  "matchAggregate": [
+    {
+      "status": "DRAFT",
+      "series": 1,
+      "declared_games": 2,
+      "first_day": "2026-10-04",
+      "last_day": "2026-10-04",
+      "draft_linked": 0
+    },
+    {
+      "status": "PUBLISHED",
+      "series": 47,
+      "declared_games": 104,
+      "first_day": "2026-04-29",
+      "last_day": "2026-09-24",
+      "draft_linked": 0
+    }
+  ],
+  "roleSamples": [
+    {
+      "position": "TOP",
+      "samples": 208,
+      "players": 30
+    },
+    {
+      "position": "JGL",
+      "samples": 208,
+      "players": 27
+    },
+    {
+      "position": "MID",
+      "samples": 208,
+      "players": 40
+    },
+    {
+      "position": "ADC",
+      "samples": 208,
+      "players": 33
+    },
+    {
+      "position": "SUP",
+      "samples": 208,
+      "players": 41
+    }
+  ],
+  "mmr": [
+    {
+      "generation": "2",
+      "status": "READY",
+      "formula_version": "V2_DETERMINISTIC_1",
+      "source_match_count": 47,
+      "source_game_count": 104,
+      "source_adjustment_count": 0,
+      "calculated_at": "2026-10-07T15:57:52.679Z"
+    }
+  ],
+  "seasonal": [
+    {
+      "generation": "6",
+      "status": "READY",
+      "source_match_count": 47,
+      "source_game_count": 104,
+      "calculated_at": "2026-09-24T21:00:16.294Z",
+      "season_status": "ACTIVE"
+    }
+  ],
+  "recent": [
+    {
+      "stored": 120,
+      "with_recent": 105,
+      "recent_within_24h": 100,
+      "earliest_sync": "2026-05-02T05:51:43.267Z",
+      "latest_sync": "2026-10-17T16:05:46.890Z",
+      "earliest_recent": "2026-09-27T06:00:51.200Z",
+      "latest_recent": "2026-10-17T16:05:46.890Z"
+    }
+  ],
+  "draftAggregate": [
+    {
+      "status": "EVALUATED",
+      "count": 53,
+      "first_created": "2026-09-08T01:16:58.006Z",
+      "last_created": "2026-10-17T14:51:38.151Z"
+    },
+    {
+      "status": "SAVED",
+      "count": 79,
+      "first_created": "2026-04-29T12:08:54.229Z",
+      "last_created": "2026-10-17T14:51:07.273Z"
+    }
+  ],
+  "pregame": [
+    {
+      "linked_series": 0,
+      "timestamp_eligible_series": 0
+    }
+  ],
+  "limitations": [
+    "Registry updated_at is not a rank-specific observation timestamp.",
+    "Latest registered application/draft positions are observed preferences, not inferred match roles.",
+    "No historical predictions use current MMR, present rank or postgame records.",
+    "Observed participant groups are replayed against one current snapshot, not called historical predictive validation.",
+    "Player-level snapshots remain ignored private files; no source identifiers or account data are persisted.",
+    "Preference source is latest valid application, otherwise latest draft; newer draft preferences do not override an existing application.",
+    "Preference source record age uses application/participant updated_at; a rating refresh can update a draft participant without reconfirming its registered positions, so this is not a position-observation timestamp.",
+    "No linked pregame drafts exist; no current snapshot is used to predict past games."
+  ],
+  "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+  "coverageDetails": {
+    "denominator": 170,
+    "usablePool": {
+      "players": 138,
+      "currentTierMissing": 25,
+      "peakTierMissing": 24,
+      "zeroInternalGames": 48,
+      "recentSoloConsumed": 82
+    },
+    "currentTier": {
+      "empty": 43,
+      "nonemptyUnrecognized": 0,
+      "available": 127,
+      "histogram": [
+        {
+          "rank": 0,
+          "count": 4
+        },
+        {
+          "rank": 1,
+          "count": 6
+        },
+        {
+          "rank": 2,
+          "count": 7
+        },
+        {
+          "rank": 3,
+          "count": 14
+        },
+        {
+          "rank": 4,
+          "count": 33
+        },
+        {
+          "rank": 5,
+          "count": 25
+        },
+        {
+          "rank": 6,
+          "count": 21
+        },
+        {
+          "rank": 7,
+          "count": 15
+        },
+        {
+          "rank": 8,
+          "count": 2
+        },
+        {
+          "rank": 9,
+          "count": 0
+        }
+      ]
+    },
+    "peakTier": {
+      "empty": 41,
+      "nonemptyUnrecognized": 0,
+      "available": 129,
+      "histogram": [
+        {
+          "rank": 0,
+          "count": 2
+        },
+        {
+          "rank": 1,
+          "count": 3
+        },
+        {
+          "rank": 2,
+          "count": 7
+        },
+        {
+          "rank": 3,
+          "count": 11
+        },
+        {
+          "rank": 4,
+          "count": 18
+        },
+        {
+          "rank": 5,
+          "count": 36
+        },
+        {
+          "rank": 6,
+          "count": 17
+        },
+        {
+          "rank": 7,
+          "count": 33
+        },
+        {
+          "rank": 8,
+          "count": 0
+        },
+        {
+          "rank": 9,
+          "count": 2
+        }
+      ]
+    },
+    "positionSources": [
+      {
+        "source": "LATEST_APPLICATION",
+        "count": 111
+      },
+      {
+        "source": "LATEST_DRAFT",
+        "count": 27
+      },
+      {
+        "source": "NONE",
+        "count": 32
+      }
+    ],
+    "preferenceSourceRecordAgeDays": {
+      "mean": 55.09046019130774,
+      "median": 16.245584918981482,
+      "p95": 166.17360495370372,
+      "max": 171.17148631944445
+    },
+    "roles": [
+      {
+        "position": "TOP",
+        "mmrSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 6,
+          "max": 51
+        },
+        "internalSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 6,
+          "max": 51
+        }
+      },
+      {
+        "position": "JGL",
+        "mmrSampleSize": {
+          "mean": 1.1941176470588235,
+          "median": 0,
+          "p95": 8,
+          "max": 40
+        },
+        "internalSampleSize": {
+          "mean": 1.1941176470588235,
+          "median": 0,
+          "p95": 8,
+          "max": 40
+        }
+      },
+      {
+        "position": "MID",
+        "mmrSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 7,
+          "max": 21
+        },
+        "internalSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 7,
+          "max": 21
+        }
+      },
+      {
+        "position": "ADC",
+        "mmrSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 5,
+          "max": 27
+        },
+        "internalSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 5,
+          "max": 27
+        }
+      },
+      {
+        "position": "SUP",
+        "mmrSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 7,
+          "max": 27
+        },
+        "internalSampleSize": {
+          "mean": 1.223529411764706,
+          "median": 0,
+          "p95": 7,
+          "max": 27
+        }
+      }
+    ],
+    "confidence": {
+      "mean": 0.17549235294117663,
+      "median": 0.0667,
+      "p95": 1,
+      "max": 1
+    },
+    "internalGames": {
+      "mean": 6.088235294117647,
+      "median": 2,
+      "p95": 33,
+      "max": 62
+    },
+    "historicalCohort": {
+      "totalGames": 104,
+      "totalUniqueRosters": 45,
+      "usableGames": 89,
+      "usableUniqueRosters": 38,
+      "excludedGames": 15,
+      "excludedReason": "At least one participant is inactive or has no retained registered position data.",
+      "historicalDistinctPlayers": 93
+    },
+    "recentSoloGames": {
+      "mean": 18.64,
+      "median": 20,
+      "p95": 20,
+      "max": 20
+    },
+    "historicalTenDistinctPlayers": 104,
+    "historicalCompleteRoles": 104
+  }
+}

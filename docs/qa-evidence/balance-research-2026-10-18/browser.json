@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-17T16:11:49.689Z",
+  "formulaVersion": "V2_INHOUSE_RELAXED_2026_10_16",
+  "runtime": "next start",
+  "browser": "isolated headless Chromium",
+  "syntheticDataOnly": true,
+  "actualPostgres": true,
+  "actualHttpAndReact": true,
+  "productionWrites": 0,
+  "checks": [
+    "ordinary-owner-and-other-account-login",
+    "ui-search-select-ten-and-create",
+    "relaxed-recommendation-original-positions-preserved",
+    "automatic-and-domain-evaluation-identical",
+    "keyboard-swap-score-preview",
+    "save-blocked-before-server-evaluation",
+    "manual-and-domain-evaluation-identical",
+    "manual-not-labelled-best-automatic",
+    "no-predicted-win-rate",
+    "ui-save-and-postgres-persistence",
+    "desktop-mobile-narrow-no-overflow",
+    "ui-reevaluation-and-append-only-old-scores",
+    "anonymous-401-other-owner-404",
+    "cross-origin-403",
+    "stale-revision-412",
+    "idempotent-replay-no-duplicate-write",
+    "idempotency-mismatch-409"
+  ],
+  "timings": {
+    "createMs": 4747
+  },
+  "screenshots": [
+    "browser-screenshots/automatic.png",
+    "browser-screenshots/saved-1440.png",
+    "browser-screenshots/saved-390.png",
+    "browser-screenshots/saved-320.png"
+  ],
+  "cleanup": {
+    "nextStartProcessesRemaining": 0,
+    "runnerProcessesRemaining": 0,
+    "isolatedBrowserProcessesRemaining": 0,
+    "scriptExitCode": 0,
+    "disposablePostgresStoppedAndRemoved": true
+  },
+  "limitation": "This verifies the built current runtime with the 2026-10-16 formula. Repeat after adopting any calculation or policy change; no production database write was performed."
+}

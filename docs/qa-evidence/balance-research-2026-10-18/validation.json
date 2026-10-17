@@ -1,0 +1,83 @@
+{
+  "checkedAt": "2026-10-17T16:19:06.905Z",
+  "status": "PASS",
+  "scope": "Final runtime change: include sampleSize=0 in noSampleCount. Recommendation formula and input data unchanged.",
+  "completeCheck": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "lint": {
+      "errors": 0,
+      "warnings": 58
+    },
+    "typecheck": "PASS",
+    "erd": {
+      "tables": 114,
+      "foreignKeys": 175,
+      "status": "PASS"
+    },
+    "contracts": {
+      "passed": 728,
+      "failed": 0
+    },
+    "unit": {
+      "passed": 1159,
+      "failed": 0,
+      "skipped": 1,
+      "skipReason": "Existing multiuser PostgreSQL fixture requires its separate isolated harness; unrelated to team-balance changes."
+    },
+    "homeGuideImages": "PASS",
+    "productionBuild": "PASS",
+    "log": {
+      "path": ".tmp/research-check-final.log",
+      "sha256": "2f8ee23dbd0b301f6614c80e2198aa34887bdc51e00962c5e14d81903ab62245",
+      "completedAt": "2026-10-17T16:15:38.358Z"
+    }
+  },
+  "focusedDatabase": {
+    "command": "PG_BIN_DIR=<PostgreSQL 18 bin> V2_DB_CONTRACT_SCOPE=team-tools npm run test:db",
+    "passed": 9,
+    "failed": 0,
+    "scope": "7 draft and 2 score contracts",
+    "disposablePostgres": true,
+    "log": {
+      "path": ".tmp/research-db.log",
+      "sha256": "08d12bafec98d9ce794df4d814eb5f55a40226f1bb0d3df5a5858c2099fb651b",
+      "completedAt": "2026-10-17T16:11:10.412Z"
+    }
+  },
+  "browser": {
+    "evidence": "browser.json",
+    "runtime": "next start",
+    "checks": 17,
+    "status": "PASS",
+    "productionWrites": 0
+  },
+  "authHttp": {
+    "command": "npm run verify:auth-http",
+    "status": "PASS",
+    "log": {
+      "path": ".tmp/research-auth-http.log",
+      "sha256": "9a8b9b4e3bf6eeb64484221631f332bf325a6e3bcf1a78b8690d56692eb761d6",
+      "completedAt": "2026-10-17T16:12:50.375Z"
+    }
+  },
+  "productionDependencyAudit": {
+    "command": "npm audit --omit=dev --audit-level=high",
+    "vulnerabilities": 0,
+    "log": {
+      "path": ".tmp/research-audit.log",
+      "sha256": "4b02d4a3c23d969c46bd2041360f80bfcb1fe760d9db864009acdd710f9de601",
+      "completedAt": "2026-10-17T16:13:02.075Z"
+    }
+  },
+  "treeSecrets": {
+    "command": "npm run security:secrets -- --tree-only",
+    "status": "PASS",
+    "log": {
+      "path": ".tmp/research-secrets.log",
+      "sha256": "3215a2ec67522df50fc8566d7a3e915aba705025a25588b673a5f61b8a3c9095",
+      "completedAt": "2026-10-17T16:13:00.381Z"
+    }
+  },
+  "evidenceNotes": "Local logs remain ignored; only hashes, aggregate counts and synthetic browser artifacts are published. Existing lint warnings are disclosed, not counted as new findings."
+}

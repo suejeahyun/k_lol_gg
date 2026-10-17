@@ -789,7 +789,7 @@ function materialize(candidate: CandidateMetrics, options: Readonly<{ allowConst
       },
       uncertainty: {
         averageConfidence: round(totalConfidence / 10),
-        noSampleCount: assignments.filter((entry) => entry.rating.sampleSize === null).length,
+        noSampleCount: assignments.filter((entry) => entry.rating.sampleSize === null || entry.rating.sampleSize === 0).length,
         rawPenalty: candidate.dataReliabilityPenalty,
         weightedPenalty: candidate.stompPenalty,
       },

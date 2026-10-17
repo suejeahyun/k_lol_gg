@@ -1,0 +1,439 @@
+{
+  "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+  "countedAsAdditionalUniqueRosters": false,
+  "results": [
+    {
+      "roster": "R-46292d0e6e61",
+      "reason": "REJECTED_SUB_BURDEN_TRADEOFF",
+      "source": "OBSERVED_MATCH",
+      "stratum": "OBSERVED",
+      "split": "tuning",
+      "baseline": {
+        "metrics": {
+          "teamGap": 2.1,
+          "lanes": [
+            3.23,
+            1.11,
+            7.56,
+            12.53,
+            4.99
+          ],
+          "laneSum": 29.42,
+          "maxLaneGap": 12.53,
+          "largeLaneCount": 0,
+          "adcGap": 12.53,
+          "supportGap": 4.99,
+          "bottomGap": 7.54,
+          "mainCount": 1,
+          "subCount": 6,
+          "autoCount": 3,
+          "registeredAutoCount": 3,
+          "unregistered": 0,
+          "burdenImbalance": 0,
+          "subImbalance": 2,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 1,
+          "confidence": 0.05,
+          "zeroSampleCount": 4,
+          "missingSourceCount": 11,
+          "cost": 45.153999999999996,
+          "risk": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            45.153999999999996
+          ]
+        },
+        "signedLaneGaps": [
+          {
+            "position": "TOP",
+            "blueMinusRed": 3.23
+          },
+          {
+            "position": "JGL",
+            "blueMinusRed": -1.11
+          },
+          {
+            "position": "MID",
+            "blueMinusRed": -7.56
+          },
+          {
+            "position": "ADC",
+            "blueMinusRed": 12.53
+          },
+          {
+            "position": "SUP",
+            "blueMinusRed": -4.99
+          }
+        ],
+        "severelyDisadvantagedLanes": {
+          "BLUE": 0,
+          "RED": 0
+        },
+        "bottomTierVerification": [
+          {
+            "position": "ADC",
+            "verified": true,
+            "majorTierGap": 1
+          },
+          {
+            "position": "SUP",
+            "verified": false,
+            "majorTierGap": null
+          }
+        ],
+        "unregisteredRoles": []
+      },
+      "rejectedSubSoftCandidate": {
+        "metrics": {
+          "teamGap": 2.73,
+          "lanes": [
+            15.69,
+            8.21,
+            0.54,
+            6.57,
+            2.36
+          ],
+          "laneSum": 33.37,
+          "maxLaneGap": 15.69,
+          "largeLaneCount": 1,
+          "adcGap": 6.57,
+          "supportGap": 2.36,
+          "bottomGap": 4.21,
+          "mainCount": 3,
+          "subCount": 4,
+          "autoCount": 3,
+          "registeredAutoCount": 3,
+          "unregistered": 0,
+          "burdenImbalance": 2,
+          "subImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 1,
+          "confidence": 0.08,
+          "zeroSampleCount": 3,
+          "missingSourceCount": 11,
+          "cost": 46.902,
+          "risk": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            46.902
+          ]
+        },
+        "signedLaneGaps": [
+          {
+            "position": "TOP",
+            "blueMinusRed": -15.69
+          },
+          {
+            "position": "JGL",
+            "blueMinusRed": 8.21
+          },
+          {
+            "position": "MID",
+            "blueMinusRed": 0.54
+          },
+          {
+            "position": "ADC",
+            "blueMinusRed": 6.57
+          },
+          {
+            "position": "SUP",
+            "blueMinusRed": -2.36
+          }
+        ],
+        "severelyDisadvantagedLanes": {
+          "BLUE": 1,
+          "RED": 0
+        },
+        "bottomTierVerification": [
+          {
+            "position": "ADC",
+            "verified": true,
+            "majorTierGap": 0
+          },
+          {
+            "position": "SUP",
+            "verified": true,
+            "majorTierGap": 2
+          }
+        ],
+        "unregisteredRoles": []
+      }
+    },
+    {
+      "roster": "R-886841e512d5",
+      "reason": "SIMILAR_TEAM_TOTAL_LARGE_LANES",
+      "source": "RECOMBINED_REAL_PLAYERS",
+      "stratum": "LOW_SAMPLE",
+      "split": "validation",
+      "baseline": {
+        "metrics": {
+          "teamGap": 0.51,
+          "lanes": [
+            42.79,
+            39.8,
+            14.09,
+            88.65,
+            19.64
+          ],
+          "laneSum": 204.97000000000003,
+          "maxLaneGap": 88.65,
+          "largeLaneCount": 4,
+          "adcGap": 88.65,
+          "supportGap": 19.64,
+          "bottomGap": 69.01,
+          "mainCount": 6,
+          "subCount": 2,
+          "autoCount": 2,
+          "registeredAutoCount": 0,
+          "unregistered": 2,
+          "burdenImbalance": 2,
+          "subImbalance": 2,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 2,
+          "confidence": 0.07,
+          "zeroSampleCount": 7,
+          "missingSourceCount": 15,
+          "cost": 269.55400000000003,
+          "risk": [
+            0,
+            0,
+            2,
+            3,
+            167.66000000000003,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            269.55400000000003
+          ]
+        },
+        "signedLaneGaps": [
+          {
+            "position": "TOP",
+            "blueMinusRed": 42.79
+          },
+          {
+            "position": "JGL",
+            "blueMinusRed": 39.8
+          },
+          {
+            "position": "MID",
+            "blueMinusRed": -14.09
+          },
+          {
+            "position": "ADC",
+            "blueMinusRed": -88.65
+          },
+          {
+            "position": "SUP",
+            "blueMinusRed": 19.64
+          }
+        ],
+        "severelyDisadvantagedLanes": {
+          "BLUE": 1,
+          "RED": 3
+        },
+        "bottomTierVerification": [
+          {
+            "position": "ADC",
+            "verified": false,
+            "majorTierGap": null
+          },
+          {
+            "position": "SUP",
+            "verified": true,
+            "majorTierGap": 2
+          }
+        ],
+        "unregisteredRoles": [
+          {
+            "team": "BLUE",
+            "position": "JGL"
+          },
+          {
+            "team": "RED",
+            "position": "TOP"
+          }
+        ]
+      },
+      "rejectedSubSoftCandidate": null
+    },
+    {
+      "roster": "R-78882eed3a7f",
+      "reason": "UNAVOIDABLE_UNREGISTERED_ROLES",
+      "source": "RECOMBINED_REAL_PLAYERS",
+      "stratum": "JUNGLE_SHORTAGE",
+      "split": "tuning",
+      "baseline": {
+        "metrics": {
+          "teamGap": 0.65,
+          "lanes": [
+            6.39,
+            4.73,
+            1.29,
+            0.28,
+            0
+          ],
+          "laneSum": 12.69,
+          "maxLaneGap": 6.39,
+          "largeLaneCount": 0,
+          "adcGap": 0.28,
+          "supportGap": 0,
+          "bottomGap": 0.28,
+          "mainCount": 4,
+          "subCount": 2,
+          "autoCount": 4,
+          "registeredAutoCount": 0,
+          "unregistered": 4,
+          "burdenImbalance": 0,
+          "subImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 3,
+          "confidence": 0.01,
+          "zeroSampleCount": 9,
+          "missingSourceCount": 15,
+          "cost": 17.137999999999998,
+          "risk": [
+            0,
+            0,
+            4,
+            0,
+            0,
+            3,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            17.137999999999998
+          ]
+        },
+        "signedLaneGaps": [
+          {
+            "position": "TOP",
+            "blueMinusRed": 6.39
+          },
+          {
+            "position": "JGL",
+            "blueMinusRed": -4.73
+          },
+          {
+            "position": "MID",
+            "blueMinusRed": -1.29
+          },
+          {
+            "position": "ADC",
+            "blueMinusRed": 0.28
+          },
+          {
+            "position": "SUP",
+            "blueMinusRed": 0
+          }
+        ],
+        "severelyDisadvantagedLanes": {
+          "BLUE": 0,
+          "RED": 0
+        },
+        "bottomTierVerification": [
+          {
+            "position": "ADC",
+            "verified": true,
+            "majorTierGap": 0
+          },
+          {
+            "position": "SUP",
+            "verified": false,
+            "majorTierGap": null
+          }
+        ],
+        "unregisteredRoles": [
+          {
+            "team": "BLUE",
+            "position": "JGL"
+          },
+          {
+            "team": "BLUE",
+            "position": "ADC"
+          },
+          {
+            "team": "RED",
+            "position": "JGL"
+          },
+          {
+            "team": "RED",
+            "position": "ADC"
+          }
+        ]
+      },
+      "rejectedSubSoftCandidate": null
+    }
+  ]
+}
