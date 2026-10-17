@@ -1,0 +1,3365 @@
+{
+  "study": "ONE_PREDECLARED_EXCESS_FIRST_CANDIDATE",
+  "baselineCommit": "131abbf777a331b056a96ab587957cf654387a78",
+  "baselineFormula": "V2_INHOUSE_RELAXED_2026_10_16",
+  "candidate": "EXCESS_FIRST",
+  "adopted": false,
+  "retainedFormula": "V2_INHOUSE_RELAXED_2026_10_16",
+  "data": {
+    "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+    "capturedAt": "2026-10-17T16:09:33.538Z",
+    "eligiblePlayers": 138,
+    "sourceInventory": "../balance-research-2026-10-18/data-inventory.json",
+    "newProductionReads": 0,
+    "scoresOrSourcePositionsChanged": false,
+    "temporalValidationAvailable": false,
+    "playerIndependent": false,
+    "interpretation": "New combinations within the same real-player pool and fixed snapshot. Novel layouts have no observed outcomes; these measurements do not establish win-rate improvement."
+  },
+  "samples": {
+    "uniqueRosters": 1000,
+    "observed": 0,
+    "recombinedRealPlayers": 1000,
+    "syntheticCountedAsReal": 0,
+    "comparedCandidateRosters": 500,
+    "baselineOnlyAuditedRosters": 500,
+    "uniqueCandidatePlacements": 936747904,
+    "rawInspections": 936757392,
+    "feasiblePlacements": 936563584,
+    "relaxedRosters": 516,
+    "variantCount": 2,
+    "priorStudyExactOverlap": 0,
+    "ninePlayerOverlapWithPriorOrWithinNewStudy": 0,
+    "stageCounts": {
+      "tuning": 500,
+      "validation": 250,
+      "final": 250
+    }
+  },
+  "bottomTierVerification": {
+    "baseline": {
+      "bothBottomRolesVerified": 471,
+      "atLeastOneBottomRoleUnverifiable": 529,
+      "roles": {
+        "ADC": {
+          "verified": 714,
+          "unverified": 286,
+          "knownPass": 714,
+          "knownViolation": 0,
+          "missingAssignedPlayerSlots": 344
+        },
+        "SUP": {
+          "verified": 599,
+          "unverified": 401,
+          "knownPass": 599,
+          "knownViolation": 0,
+          "missingAssignedPlayerSlots": 509
+        }
+      }
+    },
+    "candidate": {
+      "bothBottomRolesVerified": 240,
+      "atLeastOneBottomRoleUnverifiable": 260,
+      "roles": {
+        "ADC": {
+          "verified": 363,
+          "unverified": 137,
+          "knownPass": 363,
+          "knownViolation": 0,
+          "missingAssignedPlayerSlots": 169
+        },
+        "SUP": {
+          "verified": 305,
+          "unverified": 195,
+          "knownPass": 305,
+          "knownViolation": 0,
+          "missingAssignedPlayerSlots": 262
+        }
+      }
+    },
+    "interpretation": "Zero known violations does not imply verification when either assigned player's current tier is missing."
+  },
+  "baselineMetrics": {
+    "teamGap": {
+      "mean": 6.150179999999998,
+      "median": 4.55,
+      "p95": 14.65,
+      "max": 45.53
+    },
+    "laneSum": {
+      "mean": 61.99670000000003,
+      "median": 54.830000000000005,
+      "p95": 129.82,
+      "max": 201.98999999999998
+    },
+    "maxLaneGap": {
+      "mean": 25.220590000000026,
+      "median": 22.29,
+      "p95": 54.9,
+      "max": 87.74
+    },
+    "largeLaneCount": {
+      "mean": 1.408,
+      "median": 1,
+      "p95": 4,
+      "max": 5
+    },
+    "adcGap": {
+      "mean": 12.079210000000018,
+      "median": 7.99,
+      "p95": 33.8,
+      "max": 83.22
+    },
+    "supportGap": {
+      "mean": 11.758660000000019,
+      "median": 8.6,
+      "p95": 33.71,
+      "max": 58.7
+    },
+    "bottomGap": {
+      "mean": 8.56761,
+      "median": 5.75,
+      "p95": 28.42,
+      "max": 81.89
+    },
+    "mainCount": {
+      "mean": 4.349,
+      "median": 4,
+      "p95": 7,
+      "max": 9
+    },
+    "subCount": {
+      "mean": 3.609,
+      "median": 4,
+      "p95": 6,
+      "max": 8
+    },
+    "autoCount": {
+      "mean": 2.042,
+      "median": 2,
+      "p95": 4,
+      "max": 5
+    },
+    "registeredAutoCount": {
+      "mean": 1.14,
+      "median": 1,
+      "p95": 3,
+      "max": 5
+    },
+    "unregistered": {
+      "mean": 0.902,
+      "median": 1,
+      "p95": 3,
+      "max": 4
+    },
+    "burdenImbalance": {
+      "mean": 1.305,
+      "median": 1,
+      "p95": 3,
+      "max": 5
+    },
+    "subImbalance": {
+      "mean": 1.021,
+      "median": 1,
+      "p95": 2,
+      "max": 4
+    },
+    "bottomViolations": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "bottomExcess": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+    },
+    "unknownTier": {
+      "mean": 1.663,
+      "median": 1,
+      "p95": 4,
+      "max": 8
+    },
+    "confidence": {
+      "mean": 0.07215000000000002,
+      "median": 0.06,
+      "p95": 0.17,
+      "max": 0.26
+    },
+    "zeroSampleCount": {
+      "mean": 6.092,
+      "median": 6,
+      "p95": 9,
+      "max": 10
+    },
+    "cost": {
+      "mean": 81.49195000000002,
+      "median": 73.22399999999999,
+      "p95": 164.18,
+      "max": 268.056
+    },
+    "qualityViolationCount": {
+      "mean": 1.021,
+      "median": 1,
+      "p95": 3,
+      "max": 4
+    },
+    "excessRisk": {
+      "mean": 18.25240000000002,
+      "median": 2.0700000000000003,
+      "p95": 72.32,
+      "max": 170.91
+    },
+    "lanesOver25": {
+      "mean": 0.623,
+      "median": 0,
+      "p95": 2,
+      "max": 5
+    },
+    "laneExcessOver25": {
+      "mean": 7.345349999999999,
+      "median": 0,
+      "p95": 43.02,
+      "max": 104.86000000000001
+    },
+    "blueSeverelyDisadvantagedLanes": {
+      "mean": 0.71,
+      "median": 1,
+      "p95": 2,
+      "max": 3
+    },
+    "redSeverelyDisadvantagedLanes": {
+      "mean": 0.698,
+      "median": 1,
+      "p95": 2,
+      "max": 3
+    }
+  },
+  "stages": [
+    {
+      "stage": "tuning",
+      "mode": "PREDECLARED_EXCESS_FIRST_EVALUATION",
+      "inputLockSha256": "d7bed367e4ee67073bd745fd14106aeba91f2dea682b7ef79882f8f385361a54",
+      "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+      "protocolSha256": "4c5ee684c1f7c6b39a468fba9ede176993002425b4cb897e582dcbcebff8072f",
+      "uniqueRosters": 500,
+      "observed": 0,
+      "recombined": 500,
+      "uniqueCandidatePlacements": 466571408,
+      "rawInspections": 466575040,
+      "feasiblePlacements": 466469632,
+      "relaxedRosters": 257,
+      "accepted": false,
+      "gates": {
+        "accepted": false,
+        "failures": [
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-d163e8d823da",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-d575d15f0374",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-d575d15f0374",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-aae026c3ce1b",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-91b5ea31b697",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-91b5ea31b697",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-e385418721e3",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-c04243da5223",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-c04243da5223",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-f3833e83765a",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-f3833e83765a",
+          "INDIVIDUAL_INCREASE_OVER_3:supportGap:S-f7d141fbee29",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-f7d141fbee29",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-a1d854b6c186",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-a1d854b6c186",
+          "INDIVIDUAL_INCREASE_OVER_3:supportGap:S-a1d854b6c186",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-a1d854b6c186",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-e3a7bd7d6403",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-e3a7bd7d6403",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-c1d2e71ef547",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-df9ee9706c9c",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-9427189e5b67",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-9427189e5b67",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-3181c68a3743",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-3181c68a3743",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-517cdc8c2279",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-81eaaeb5b533",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-81eaaeb5b533",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-0c87b33c9cdd",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-0c87b33c9cdd",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-561c351d3360",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-dd4bf1a1e749",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-99133b97817a",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-99133b97817a",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-e3380e093d8b",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-c1a1f39a8440",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-c1a1f39a8440",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-d5b2914a090b",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-d5b2914a090b",
+          "INDIVIDUAL_INCREASE_OVER_3:supportGap:S-d5b2914a090b",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-d5b2914a090b",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-0ce8cc8ff3a2",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-1261285d3271",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-b3654923d0a9",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-b3654923d0a9",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-980415ed1242",
+          "INDIVIDUAL_INCREASE_OVER_3:supportGap:S-980415ed1242",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-980415ed1242",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-6b3291b85423",
+          "INDIVIDUAL_INCREASE_OVER_3:supportGap:S-6b3291b85423",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-6b3291b85423",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-be66c758b852",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-5058e4123462",
+          "INDIVIDUAL_INCREASE_OVER_3:supportGap:S-5058e4123462",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-5058e4123462",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-ecab3220d3b5",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-ecab3220d3b5",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-5a335badeb8a",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-5a335badeb8a",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-cad4b8a40142",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-2b42b9f0a5f1",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-748027990e33",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-748027990e33",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-f1e044f40122",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-f1e044f40122",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-8fa7caa20e69",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-993976ee993f",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-993976ee993f",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-8b64b72f52b9",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-edc2e6b983e7",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-72439358142c",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-72439358142c",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-72439358142c",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-7bdbf1f02c6b",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-5e33c473b99e",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-5e33c473b99e",
+          "INDIVIDUAL_INCREASE_OVER_1:burdenImbalance:S-5e33c473b99e",
+          "INDIVIDUAL_INCREASE_OVER_3:maxLaneGap:S-b03d0313eee4",
+          "INDIVIDUAL_INCREASE_OVER_3:teamGap:S-b03d0313eee4",
+          "INDIVIDUAL_INCREASE_OVER_3:adcGap:S-1da7c84f456b",
+          "INDIVIDUAL_INCREASE_OVER_3:bottomGap:S-1da7c84f456b",
+          "OVERALL_REGRESSION:teamGap:mean",
+          "OVERALL_REGRESSION:teamGap:p95",
+          "OVERALL_REGRESSION:bottomGap:mean",
+          "OVERALL_REGRESSION:burdenImbalance:mean",
+          "OVERALL_REGRESSION:burdenImbalance:max",
+          "PROTECTED_GROUP_REGRESSION:ACTUAL_LOW_SAMPLE_MAJORITY:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:ACTUAL_LOW_SAMPLE_MAJORITY:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:ACTUAL_LOW_SAMPLE_MAJORITY:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:ACTUAL_LOW_SAMPLE_MAJORITY:burdenImbalance:max",
+          "PROTECTED_GROUP_REGRESSION:BROAD_POOL:teamGap:mean",
+          "PROTECTED_GROUP_REGRESSION:BROAD_POOL:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:BROAD_POOL:teamGap:max",
+          "PROTECTED_GROUP_REGRESSION:BROAD_POOL:adcGap:mean",
+          "PROTECTED_GROUP_REGRESSION:BROAD_POOL:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_HIGH_TIER:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_HIGH_TIER:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_HIGH_TIER:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_HIGH_TIER:burdenImbalance:max",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_LOW_TIER:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_LOW_TIER:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_LOW_TIER:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_LOW_TIER:burdenImbalance:max",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_NEW_PLAYER:teamGap:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_NEW_PLAYER:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_NEW_PLAYER:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_NEW_PLAYER:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_NEW_PLAYER:burdenImbalance:max",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_UNKNOWN_TIER:teamGap:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_UNKNOWN_TIER:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_UNKNOWN_TIER:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_UNKNOWN_TIER:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:INCLUDES_UNKNOWN_TIER:burdenImbalance:max",
+          "PROTECTED_GROUP_REGRESSION:JUNGLE_SHORTAGE:maxLaneGap:mean",
+          "PROTECTED_GROUP_REGRESSION:JUNGLE_SHORTAGE:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:JUNGLE_SHORTAGE:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:JUNGLE_SHORTAGE:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:LOW_SAMPLE:teamGap:mean",
+          "PROTECTED_GROUP_REGRESSION:LOW_SAMPLE:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:LOW_SAMPLE:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:LOW_SAMPLE:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:LOW_SAMPLE:subImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:MAIN_CONGESTION:adcGap:mean",
+          "PROTECTED_GROUP_REGRESSION:MAIN_CONGESTION:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:MIXED_TIERS:teamGap:mean",
+          "PROTECTED_GROUP_REGRESSION:MIXED_TIERS:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:MIXED_TIERS:burdenImbalance:mean",
+          "PROTECTED_GROUP_REGRESSION:MIXED_TIERS:burdenImbalance:max",
+          "PROTECTED_GROUP_REGRESSION:SIMILAR_TIER:adcGap:mean",
+          "PROTECTED_GROUP_REGRESSION:SIMILAR_TIER:adcGap:p95",
+          "PROTECTED_GROUP_REGRESSION:SIMILAR_TIER:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:SUPPORT_SHORTAGE:supportGap:mean",
+          "PROTECTED_GROUP_REGRESSION:SUPPORT_SHORTAGE:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:UNKNOWN_TIER:maxLaneGap:mean",
+          "PROTECTED_GROUP_REGRESSION:UNKNOWN_TIER:teamGap:mean",
+          "PROTECTED_GROUP_REGRESSION:UNKNOWN_TIER:teamGap:p95",
+          "PROTECTED_GROUP_REGRESSION:UNKNOWN_TIER:bottomGap:mean",
+          "PROTECTED_GROUP_REGRESSION:UNKNOWN_TIER:burdenImbalance:max"
+        ],
+        "groups": [
+          {
+            "name": "ACTUAL_LOW_SAMPLE_MAJORITY",
+            "count": 365,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:mean",
+              "burdenImbalance:max"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 25.08035616438357,
+                  "median": 22.22,
+                  "p95": 50.51,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 24.936054794520558,
+                  "median": 22.31,
+                  "p95": 50.29,
+                  "max": 81.07
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 6.124712328767121,
+                  "median": 4.58,
+                  "p95": 14.35,
+                  "max": 43.2
+                },
+                "candidate": {
+                  "mean": 6.09942465753424,
+                  "median": 4.58,
+                  "p95": 15.95,
+                  "max": 39.47
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 11.76030136986301,
+                  "median": 7.59,
+                  "p95": 33.6,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 11.430684931506846,
+                  "median": 7.58,
+                  "p95": 33.49,
+                  "max": 81.07
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 11.736630136986307,
+                  "median": 7.99,
+                  "p95": 37.85,
+                  "max": 58.7
+                },
+                "candidate": {
+                  "mean": 11.57578082191781,
+                  "median": 7.96,
+                  "p95": 35.29,
+                  "max": 47.59
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 8.626356164383562,
+                  "median": 6.08,
+                  "p95": 30.28,
+                  "max": 63.99
+                },
+                "candidate": {
+                  "mean": 9.127452054794519,
+                  "median": 6.31,
+                  "p95": 28.07,
+                  "max": 63.99
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 1.936986301369863,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.936986301369863,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.2684931506849315,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.2876712328767124,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 6
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.0657534246575342,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0520547945205478,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "BROAD_POOL",
+            "count": 62,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:mean",
+              "teamGap:p95",
+              "teamGap:max",
+              "adcGap:mean",
+              "bottomGap:mean"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 26.67967741935483,
+                  "median": 22.31,
+                  "p95": 54.15,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 26.3016129032258,
+                  "median": 23.02,
+                  "p95": 51.47,
+                  "max": 81.07
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 6.314999999999999,
+                  "median": 4.88,
+                  "p95": 14.77,
+                  "max": 19.8
+                },
+                "candidate": {
+                  "mean": 6.474516129032256,
+                  "median": 4.61,
+                  "p95": 14.91,
+                  "max": 24.15
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 13.886129032258063,
+                  "median": 8.26,
+                  "p95": 45.19,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 14.321290322580646,
+                  "median": 8.94,
+                  "p95": 45.19,
+                  "max": 81.07
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 11.973548387096773,
+                  "median": 9,
+                  "p95": 33.71,
+                  "max": 35.29
+                },
+                "candidate": {
+                  "mean": 11.706451612903225,
+                  "median": 9,
+                  "p95": 33.71,
+                  "max": 35.29
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 9.31677419354839,
+                  "median": 6.18,
+                  "p95": 31.52,
+                  "max": 47.76
+                },
+                "candidate": {
+                  "mean": 9.53354838709678,
+                  "median": 6.18,
+                  "p95": 31.52,
+                  "max": 47.76
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 2.096774193548387,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 2.096774193548387,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.6774193548387097,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 1.6774193548387097,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 4
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.2580645161290323,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.2258064516129032,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "INCLUDES_HIGH_TIER",
+            "count": 453,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:mean",
+              "burdenImbalance:max"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 25.562052980132453,
+                  "median": 22.66,
+                  "p95": 51.47,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 25.266158940397354,
+                  "median": 22.97,
+                  "p95": 50.29,
+                  "max": 81.07
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 6.241699779249447,
+                  "median": 4.68,
+                  "p95": 14.63,
+                  "max": 43.2
+                },
+                "candidate": {
+                  "mean": 6.235783664459161,
+                  "median": 4.66,
+                  "p95": 15.7,
+                  "max": 39.47
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 12.245430463576154,
+                  "median": 8.2,
+                  "p95": 33.8,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 12.091037527593816,
+                  "median": 8.08,
+                  "p95": 33.6,
+                  "max": 81.07
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 11.805386313465796,
+                  "median": 8.5,
+                  "p95": 37.77,
+                  "max": 58.7
+                },
+                "candidate": {
+                  "mean": 11.635584988962485,
+                  "median": 8.43,
+                  "p95": 35.29,
+                  "max": 50.93
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 8.75673289183223,
+                  "median": 6.06,
+                  "p95": 30.28,
+                  "max": 63.99
+                },
+                "candidate": {
+                  "mean": 9.268167770419423,
+                  "median": 6.32,
+                  "p95": 28.95,
+                  "max": 63.99
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 2.068432671081678,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 2.068432671081678,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.3002207505518764,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.3090507726269316,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 6
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.0794701986754967,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0618101545253864,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "INCLUDES_LOW_TIER",
+            "count": 233,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:mean",
+              "burdenImbalance:max"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 26.195321888412035,
+                  "median": 23.3,
+                  "p95": 51.47,
+                  "max": 75.18
+                },
+                "candidate": {
+                  "mean": 25.669570815450655,
+                  "median": 23.46,
+                  "p95": 49.77,
+                  "max": 75.18
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 6.675193133047214,
+                  "median": 4.72,
+                  "p95": 14.98,
+                  "max": 43.2
+                },
+                "candidate": {
+                  "mean": 6.551673819742491,
+                  "median": 4.9,
+                  "p95": 15.95,
+                  "max": 39.47
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 12.326824034334756,
+                  "median": 8.94,
+                  "p95": 37.49,
+                  "max": 70.3
+                },
+                "candidate": {
+                  "mean": 12.018111587982824,
+                  "median": 8.52,
+                  "p95": 33.6,
+                  "max": 70.3
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 12.12476394849786,
+                  "median": 8.5,
+                  "p95": 37.85,
+                  "max": 58.7
+                },
+                "candidate": {
+                  "mean": 11.87218884120172,
+                  "median": 8.43,
+                  "p95": 37.85,
+                  "max": 50.93
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 8.727381974248924,
+                  "median": 5.7,
+                  "p95": 33.46,
+                  "max": 63.99
+                },
+                "candidate": {
+                  "mean": 9.358283261802573,
+                  "median": 6.21,
+                  "p95": 28.07,
+                  "max": 63.99
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 2.3261802575107295,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 2.3261802575107295,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.3004291845493563,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.3304721030042919,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 6
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.0343347639484979,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0214592274678111,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "INCLUDES_NEW_PLAYER",
+            "count": 493,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:mean",
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:mean",
+              "burdenImbalance:max"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 24.66643002028399,
+                  "median": 22.05,
+                  "p95": 50.93,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 24.39454361054768,
+                  "median": 22.25,
+                  "p95": 50.05,
+                  "max": 81.07
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 6.0840567951318425,
+                  "median": 4.58,
+                  "p95": 14.52,
+                  "max": 43.2
+                },
+                "candidate": {
+                  "mean": 6.092048681541579,
+                  "median": 4.58,
+                  "p95": 15.3,
+                  "max": 39.47
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 11.86951318458417,
+                  "median": 7.99,
+                  "p95": 33.6,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 11.647139959432042,
+                  "median": 7.97,
+                  "p95": 33.49,
+                  "max": 81.07
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 11.5030425963489,
+                  "median": 8.42,
+                  "p95": 35.2,
+                  "max": 58.7
+                },
+                "candidate": {
+                  "mean": 11.339533468559853,
+                  "median": 8,
+                  "p95": 35,
+                  "max": 50.93
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 8.499776876267749,
+                  "median": 5.75,
+                  "p95": 28.95,
+                  "max": 63.99
+                },
+                "candidate": {
+                  "mean": 9.006835699797163,
+                  "median": 6.12,
+                  "p95": 27.84,
+                  "max": 63.99
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 2.0182555780933065,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 2.0182555780933065,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.2920892494929006,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.3022312373225151,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 6
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.0649087221095335,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0466531440162272,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "INCLUDES_UNKNOWN_TIER",
+            "count": 337,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:mean",
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:mean",
+              "burdenImbalance:max"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 26.145608308605357,
+                  "median": 23,
+                  "p95": 53.07,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 25.91308605341248,
+                  "median": 23.25,
+                  "p95": 51.09,
+                  "max": 81.07
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 6.325252225519287,
+                  "median": 4.72,
+                  "p95": 14.65,
+                  "max": 43.2
+                },
+                "candidate": {
+                  "mean": 6.346350148367951,
+                  "median": 4.72,
+                  "p95": 15.95,
+                  "max": 39.47
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 12.886379821958457,
+                  "median": 8.08,
+                  "p95": 36.35,
+                  "max": 81.07
+                },
+                "candidate": {
+                  "mean": 12.572818991097918,
+                  "median": 8.01,
+                  "p95": 33.6,
+                  "max": 81.07
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 12.540830860534125,
+                  "median": 8.43,
+                  "p95": 37.85,
+                  "max": 58.7
+                },
+                "candidate": {
+                  "mean": 12.276201780415436,
+                  "median": 8.42,
+                  "p95": 37.85,
+                  "max": 50.93
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 9.256468842729968,
+                  "median": 6.32,
+                  "p95": 33.46,
+                  "max": 63.99
+                },
+                "candidate": {
+                  "mean": 9.76243323442136,
+                  "median": 6.88,
+                  "p95": 29.95,
+                  "max": 63.99
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 1.9258160237388724,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.9258160237388724,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.3056379821958457,
+                  "median": 1,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.3234421364985163,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 6
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.1157270029673592,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.1038575667655786,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "JUNGLE_SHORTAGE",
+            "count": 62,
+            "gateApplies": true,
+            "regressions": [
+              "maxLaneGap:mean",
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:mean"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 21.885161290322582,
+                  "median": 21.14,
+                  "p95": 43.27,
+                  "max": 57.96
+                },
+                "candidate": {
+                  "mean": 21.92709677419355,
+                  "median": 21.14,
+                  "p95": 43.27,
+                  "max": 57.96
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 5.786935483870971,
+                  "median": 3.94,
+                  "p95": 14.24,
+                  "max": 34.78
+                },
+                "candidate": {
+                  "mean": 5.194677419354841,
+                  "median": 2.95,
+                  "p95": 15.54,
+                  "max": 31.26
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 9.408870967741935,
+                  "median": 6.32,
+                  "p95": 26.52,
+                  "max": 36.35
+                },
+                "candidate": {
+                  "mean": 9.035322580645161,
+                  "median": 6.67,
+                  "p95": 26.52,
+                  "max": 36.35
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 11.49354838709677,
+                  "median": 8.43,
+                  "p95": 31.35,
+                  "max": 41.6
+                },
+                "candidate": {
+                  "mean": 11.36145161290322,
+                  "median": 8.42,
+                  "p95": 31.35,
+                  "max": 41.6
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 7.980161290322581,
+                  "median": 5.31,
+                  "p95": 23.68,
+                  "max": 36.91
+                },
+                "candidate": {
+                  "mean": 8.843548387096776,
+                  "median": 6.06,
+                  "p95": 23.68,
+                  "max": 36.91
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 2.225806451612903,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 2.225806451612903,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 4
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 0.9354838709677419,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 1,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 4
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 0.967741935483871,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 0.967741935483871,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "LOW_SAMPLE",
+            "count": 63,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:mean",
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:mean",
+              "subImbalance:mean"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 30.86269841269841,
+                  "median": 28.05,
+                  "p95": 54.93,
+                  "max": 63.97
+                },
+                "candidate": {
+                  "mean": 30.434126984126987,
+                  "median": 28.05,
+                  "p95": 54.65,
+                  "max": 63.97
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 6.49063492063492,
+                  "median": 5.81,
+                  "p95": 14.14,
+                  "max": 20.71
+                },
+                "candidate": {
+                  "mean": 7.2752380952380955,
+                  "median": 7.07,
+                  "p95": 16.5,
+                  "max": 20.71
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 17.010158730158736,
+                  "median": 12.6,
+                  "p95": 45.57,
+                  "max": 63.97
+                },
+                "candidate": {
+                  "mean": 15.70904761904762,
+                  "median": 10.7,
+                  "p95": 41.4,
+                  "max": 63.97
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 15.469047619047624,
+                  "median": 10,
+                  "p95": 44.4,
+                  "max": 58.7
+                },
+                "candidate": {
+                  "mean": 15.24650793650794,
+                  "median": 10,
+                  "p95": 40.29,
+                  "max": 47.59
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 10.206190476190478,
+                  "median": 7.5,
+                  "p95": 35.22,
+                  "max": 40.35
+                },
+                "candidate": {
+                  "mean": 10.929206349206348,
+                  "median": 9.17,
+                  "p95": 33.52,
+                  "max": 40.35
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 1.7619047619047619,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 1.7619047619047619,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 4
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.3968253968253967,
+                  "median": 1,
+                  "p95": 4,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 1.4603174603174602,
+                  "median": 1,
+                  "p95": 4,
+                  "max": 4
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.0158730158730158,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0476190476190477,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "MAIN_CONGESTION",
+            "count": 62,
+            "gateApplies": true,
+            "regressions": [
+              "adcGap:mean",
+              "bottomGap:mean"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 22.612741935483868,
+                  "median": 19.72,
+                  "p95": 46.09,
+                  "max": 62.04
+                },
+                "candidate": {
+                  "mean": 22.018064516129026,
+                  "median": 19.72,
+                  "p95": 44.4,
+                  "max": 47.59
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 5.955645161290324,
+                  "median": 4.01,
+                  "p95": 14.65,
+                  "max": 37.78
+                },
+                "candidate": {
+                  "mean": 5.378225806451614,
+                  "median": 3.79,
+                  "p95": 13.66,
+                  "max": 17.85
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 10.693870967741933,
+                  "median": 8.52,
+                  "p95": 32.18,
+                  "max": 37.49
+                },
+                "candidate": {
+                  "mean": 11.314838709677417,
+                  "median": 9.1,
+                  "p95": 32.18,
+                  "max": 37.49
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 11.29258064516129,
+                  "median": 7.96,
+                  "p95": 44.4,
+                  "max": 47.59
+                },
+                "candidate": {
+                  "mean": 10.934516129032257,
+                  "median": 7.96,
+                  "p95": 44.4,
+                  "max": 47.59
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 8.553225806451612,
+                  "median": 5.8,
+                  "p95": 25.51,
+                  "max": 35.63
+                },
+                "candidate": {
+                  "mean": 8.810645161290322,
+                  "median": 5.99,
+                  "p95": 24.17,
+                  "max": 35.63
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 1.9193548387096775,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.9193548387096775,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.1612903225806452,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.1451612903225807,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.096774193548387,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0161290322580645,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "MIXED_TIERS",
+            "count": 63,
+            "gateApplies": true,
+            "regressions": [
+              "teamGap:mean",
+              "bottomGap:mean",
+              "burdenImbalance:mean",
+              "burdenImbalance:max"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 28.321111111111108,
+                  "median": 24.72,
+                  "p95": 51.01,
+                  "max": 75.18
+                },
+                "candidate": {
+                  "mean": 27.716984126984126,
+                  "median": 26.17,
+                  "p95": 49.77,
+                  "max": 75.18
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 7.473174603174599,
+                  "median": 6.28,
+                  "p95": 17.3,
+                  "max": 38.61
+                },
+                "candidate": {
+                  "mean": 7.62428571428571,
+                  "median": 6.11,
+                  "p95": 15.7,
+                  "max": 38.61
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 12.68904761904762,
+                  "median": 10.56,
+                  "p95": 35.88,
+                  "max": 57.65
+                },
+                "candidate": {
+                  "mean": 12.608253968253967,
+                  "median": 10.39,
+                  "p95": 35.88,
+                  "max": 57.65
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 11.223968253968248,
+                  "median": 9.88,
+                  "p95": 24.05,
+                  "max": 38.19
+                },
+                "candidate": {
+                  "mean": 11.111111111111107,
+                  "median": 10.16,
+                  "p95": 24.05,
+                  "max": 38.19
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 8.034603174603173,
+                  "median": 5.07,
+                  "p95": 24.69,
+                  "max": 49.3
+                },
+                "candidate": {
+                  "mean": 8.826031746031743,
+                  "median": 5.9,
+                  "p95": 24.69,
+                  "max": 49.3
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 2.4761904761904763,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 2.4761904761904763,
+                  "median": 2,
+                  "p95": 4,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.5238095238095237,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 1.5555555555555556,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 5
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 0.9841269841269841,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 0.9523809523809523,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "SIMILAR_TIER",
+            "count": 63,
+            "gateApplies": true,
+            "regressions": [
+              "adcGap:mean",
+              "adcGap:p95",
+              "bottomGap:mean"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 16.165714285714284,
+                  "median": 16.35,
+                  "p95": 27.5,
+                  "max": 41.5
+                },
+                "candidate": {
+                  "mean": 15.98142857142857,
+                  "median": 16.35,
+                  "p95": 27.5,
+                  "max": 33.12
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 3.783492063492064,
+                  "median": 2.81,
+                  "p95": 12.54,
+                  "max": 17.89
+                },
+                "candidate": {
+                  "mean": 3.712539682539682,
+                  "median": 2.66,
+                  "p95": 12.54,
+                  "max": 17.89
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 7.375079365079364,
+                  "median": 5.34,
+                  "p95": 19.02,
+                  "max": 33.12
+                },
+                "candidate": {
+                  "mean": 7.540317460317459,
+                  "median": 5.34,
+                  "p95": 20.77,
+                  "max": 33.12
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 8.739206349206349,
+                  "median": 6.47,
+                  "p95": 22.97,
+                  "max": 29.31
+                },
+                "candidate": {
+                  "mean": 8.739206349206349,
+                  "median": 6.47,
+                  "p95": 22.97,
+                  "max": 29.31
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 6.142539682539681,
+                  "median": 4.47,
+                  "p95": 19.84,
+                  "max": 30.49
+                },
+                "candidate": {
+                  "mean": 6.307777777777777,
+                  "median": 4.6,
+                  "p95": 19.84,
+                  "max": 30.49
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 1.6984126984126984,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.6984126984126984,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 5
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.0158730158730158,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0158730158730158,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 0.8888888888888888,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 0.8888888888888888,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "SUPPORT_SHORTAGE",
+            "count": 63,
+            "gateApplies": true,
+            "regressions": [
+              "supportGap:mean",
+              "bottomGap:mean"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 21.023333333333323,
+                  "median": 19.83,
+                  "p95": 39.93,
+                  "max": 56.27
+                },
+                "candidate": {
+                  "mean": 21.023333333333323,
+                  "median": 19.83,
+                  "p95": 39.93,
+                  "max": 56.27
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 5.027142857142856,
+                  "median": 4.19,
+                  "p95": 13.81,
+                  "max": 25.11
+                },
+                "candidate": {
+                  "mean": 5.0023809523809515,
+                  "median": 4.19,
+                  "p95": 13.81,
+                  "max": 25.11
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 8.68714285714286,
+                  "median": 5.52,
+                  "p95": 28.32,
+                  "max": 51.47
+                },
+                "candidate": {
+                  "mean": 8.68714285714286,
+                  "median": 5.52,
+                  "p95": 28.32,
+                  "max": 51.47
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 8.229047619047616,
+                  "median": 5.08,
+                  "p95": 23.01,
+                  "max": 34.68
+                },
+                "candidate": {
+                  "mean": 8.269047619047615,
+                  "median": 5.08,
+                  "p95": 23.01,
+                  "max": 34.68
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 5.288571428571429,
+                  "median": 4.11,
+                  "p95": 12.27,
+                  "max": 29.95
+                },
+                "candidate": {
+                  "mean": 5.328571428571429,
+                  "median": 4.11,
+                  "p95": 12.27,
+                  "max": 29.95
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 2.3333333333333335,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 2.3333333333333335,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 4
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.2063492063492063,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 1.1904761904761905,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 4
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.1111111111111112,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.0952380952380953,
+                  "median": 1,
+                  "p95": 2,
+                  "max": 3
+                }
+              }
+            }
+          },
+          {
+            "name": "UNKNOWN_TIER",
+            "count": 62,
+            "gateApplies": true,
+            "regressions": [
+              "maxLaneGap:mean",
+              "teamGap:mean",
+              "teamGap:p95",
+              "bottomGap:mean",
+              "burdenImbalance:max"
+            ],
+            "metrics": {
+              "maxLaneGap": {
+                "baseline": {
+                  "mean": 29.15048387096774,
+                  "median": 26.15,
+                  "p95": 55.05,
+                  "max": 70.3
+                },
+                "candidate": {
+                  "mean": 29.15596774193548,
+                  "median": 26.15,
+                  "p95": 55.05,
+                  "max": 70.3
+                }
+              },
+              "teamGap": {
+                "baseline": {
+                  "mean": 7.8217741935483875,
+                  "median": 5.71,
+                  "p95": 14.93,
+                  "max": 43.2
+                },
+                "candidate": {
+                  "mean": 8.041935483870969,
+                  "median": 6.48,
+                  "p95": 18.5,
+                  "max": 39.47
+                }
+              },
+              "adcGap": {
+                "baseline": {
+                  "mean": 14.664677419354843,
+                  "median": 9.62,
+                  "p95": 43.52,
+                  "max": 70.3
+                },
+                "candidate": {
+                  "mean": 13.450161290322585,
+                  "median": 7.97,
+                  "p95": 43.52,
+                  "max": 70.3
+                }
+              },
+              "supportGap": {
+                "baseline": {
+                  "mean": 13.365967741935485,
+                  "median": 8.42,
+                  "p95": 37.85,
+                  "max": 50.93
+                },
+                "candidate": {
+                  "mean": 13.123225806451613,
+                  "median": 8.42,
+                  "p95": 37.85,
+                  "max": 50.93
+                }
+              },
+              "bottomGap": {
+                "baseline": {
+                  "mean": 12.10161290322581,
+                  "median": 8.26,
+                  "p95": 40.76,
+                  "max": 63.99
+                },
+                "candidate": {
+                  "mean": 13.048548387096778,
+                  "median": 9.06,
+                  "p95": 40.76,
+                  "max": 63.99
+                }
+              },
+              "autoCount": {
+                "baseline": {
+                  "mean": 1.6612903225806452,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 4
+                },
+                "candidate": {
+                  "mean": 1.6612903225806452,
+                  "median": 2,
+                  "p95": 3,
+                  "max": 4
+                }
+              },
+              "burdenImbalance": {
+                "baseline": {
+                  "mean": 1.403225806451613,
+                  "median": 1,
+                  "p95": 4,
+                  "max": 5
+                },
+                "candidate": {
+                  "mean": 1.3548387096774193,
+                  "median": 1,
+                  "p95": 4,
+                  "max": 6
+                }
+              },
+              "subImbalance": {
+                "baseline": {
+                  "mean": 1.1774193548387097,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                },
+                "candidate": {
+                  "mean": 1.1612903225806452,
+                  "median": 1,
+                  "p95": 3,
+                  "max": 3
+                }
+              }
+            }
+          }
+        ]
+      },
+      "metricChanges": {
+        "teamGap": {
+          "baseline": {
+            "mean": 6.0786199999999955,
+            "median": 4.53,
+            "p95": 14.52,
+            "max": 43.2
+          },
+          "candidate": {
+            "mean": 6.086499999999998,
+            "median": 4.54,
+            "p95": 15.08,
+            "max": 39.47
+          },
+          "improved": 23,
+          "identical": 454,
+          "worsened": 23,
+          "largestIncrease": 16.619999999999997,
+          "largestDecrease": -25.37
+        },
+        "laneSum": {
+          "baseline": {
+            "mean": 60.153540000000014,
+            "median": 52.57,
+            "p95": 126.16,
+            "max": 177.39000000000001
+          },
+          "candidate": {
+            "mean": 58.61102000000001,
+            "median": 52.56,
+            "p95": 113.62,
+            "max": 177.39000000000001
+          },
+          "improved": 33,
+          "identical": 457,
+          "worsened": 10,
+          "largestIncrease": 25.88000000000001,
+          "largestDecrease": -76.42999999999998
+        },
+        "maxLaneGap": {
+          "baseline": {
+            "mean": 24.583660000000005,
+            "median": 21.88,
+            "p95": 50.51,
+            "max": 81.07
+          },
+          "candidate": {
+            "mean": 24.31558000000001,
+            "median": 22.05,
+            "p95": 49.77,
+            "max": 81.07
+          },
+          "improved": 19,
+          "identical": 470,
+          "worsened": 11,
+          "largestIncrease": 15.560000000000002,
+          "largestDecrease": -36.87
+        },
+        "largeLaneCount": {
+          "baseline": {
+            "mean": 1.352,
+            "median": 1,
+            "p95": 4,
+            "max": 5
+          },
+          "candidate": {
+            "mean": 1.286,
+            "median": 1,
+            "p95": 3,
+            "max": 5
+          },
+          "improved": 27,
+          "identical": 470,
+          "worsened": 3,
+          "largestIncrease": 1,
+          "largestDecrease": -3
+        },
+        "adcGap": {
+          "baseline": {
+            "mean": 11.798979999999995,
+            "median": 7.99,
+            "p95": 33.6,
+            "max": 81.07
+          },
+          "candidate": {
+            "mean": 11.579719999999995,
+            "median": 7.97,
+            "p95": 33.12,
+            "max": 81.07
+          },
+          "improved": 18,
+          "identical": 470,
+          "worsened": 12,
+          "largestIncrease": 22.880000000000003,
+          "largestDecrease": -31.459999999999997
+        },
+        "supportGap": {
+          "baseline": {
+            "mean": 11.468900000000014,
+            "median": 8.42,
+            "p95": 35,
+            "max": 58.7
+          },
+          "candidate": {
+            "mean": 11.307680000000015,
+            "median": 8,
+            "p95": 34.98,
+            "max": 50.93
+          },
+          "improved": 11,
+          "identical": 482,
+          "worsened": 7,
+          "largestIncrease": 16.82,
+          "largestDecrease": -30.610000000000003
+        },
+        "bottomGap": {
+          "baseline": {
+            "mean": 8.44468,
+            "median": 5.7,
+            "p95": 28.07,
+            "max": 63.99
+          },
+          "candidate": {
+            "mean": 8.944640000000003,
+            "median": 6.1,
+            "p95": 25.88,
+            "max": 63.99
+          },
+          "improved": 8,
+          "identical": 459,
+          "worsened": 33,
+          "largestIncrease": 22.2,
+          "largestDecrease": -22.880000000000003
+        },
+        "mainCount": {
+          "baseline": {
+            "mean": 4.308,
+            "median": 4,
+            "p95": 7,
+            "max": 9
+          },
+          "candidate": {
+            "mean": 4.306,
+            "median": 4,
+            "p95": 7,
+            "max": 9
+          },
+          "improved": 15,
+          "identical": 470,
+          "worsened": 15,
+          "largestIncrease": 2,
+          "largestDecrease": -3
+        },
+        "subCount": {
+          "baseline": {
+            "mean": 3.67,
+            "median": 4,
+            "p95": 6,
+            "max": 8
+          },
+          "candidate": {
+            "mean": 3.672,
+            "median": 4,
+            "p95": 6,
+            "max": 8
+          },
+          "improved": 15,
+          "identical": 470,
+          "worsened": 15,
+          "largestIncrease": 3,
+          "largestDecrease": -2
+        },
+        "autoCount": {
+          "baseline": {
+            "mean": 2.022,
+            "median": 2,
+            "p95": 4,
+            "max": 5
+          },
+          "candidate": {
+            "mean": 2.022,
+            "median": 2,
+            "p95": 4,
+            "max": 5
+          },
+          "improved": 0,
+          "identical": 500,
+          "worsened": 0,
+          "largestIncrease": 0,
+          "largestDecrease": 0
+        },
+        "registeredAutoCount": {
+          "baseline": {
+            "mean": 1.112,
+            "median": 1,
+            "p95": 3,
+            "max": 5
+          },
+          "candidate": {
+            "mean": 1.112,
+            "median": 1,
+            "p95": 3,
+            "max": 5
+          },
+          "improved": 0,
+          "identical": 500,
+          "worsened": 0,
+          "largestIncrease": 0,
+          "largestDecrease": 0
+        },
+        "unregistered": {
+          "baseline": {
+            "mean": 0.91,
+            "median": 1,
+            "p95": 3,
+            "max": 4
+          },
+          "candidate": {
+            "mean": 0.91,
+            "median": 1,
+            "p95": 3,
+            "max": 4
+          },
+          "improved": 0,
+          "identical": 500,
+          "worsened": 0,
+          "largestIncrease": 0,
+          "largestDecrease": 0
+        },
+        "burdenImbalance": {
+          "baseline": {
+            "mean": 1.29,
+            "median": 1,
+            "p95": 3,
+            "max": 5
+          },
+          "candidate": {
+            "mean": 1.3,
+            "median": 1,
+            "p95": 3,
+            "max": 6
+          },
+          "improved": 15,
+          "identical": 468,
+          "worsened": 17,
+          "largestIncrease": 3,
+          "largestDecrease": -4
+        },
+        "subImbalance": {
+          "baseline": {
+            "mean": 1.062,
+            "median": 1,
+            "p95": 2,
+            "max": 3
+          },
+          "candidate": {
+            "mean": 1.044,
+            "median": 1,
+            "p95": 2,
+            "max": 3
+          },
+          "improved": 15,
+          "identical": 473,
+          "worsened": 12,
+          "largestIncrease": 1,
+          "largestDecrease": -2
+        },
+        "bottomViolations": {
+          "baseline": {
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "candidate": {
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "improved": 0,
+          "identical": 500,
+          "worsened": 0,
+          "largestIncrease": 0,
+          "largestDecrease": 0
+        },
+        "bottomExcess": {
+          "baseline": {
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "candidate": {
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "improved": 0,
+          "identical": 500,
+          "worsened": 0,
+          "largestIncrease": 0,
+          "largestDecrease": 0
+        },
+        "unknownTier": {
+          "baseline": {
+            "mean": 1.65,
+            "median": 1,
+            "p95": 5,
+            "max": 8
+          },
+          "candidate": {
+            "mean": 1.65,
+            "median": 1,
+            "p95": 5,
+            "max": 8
+          },
+          "improved": 0,
+          "identical": 500,
+          "worsened": 0,
+          "largestIncrease": 0,
+          "largestDecrease": 0
+        },
+        "confidence": {
+          "baseline": {
+            "mean": 0.07194,
+            "median": 0.06,
+            "p95": 0.17,
+            "max": 0.26
+          },
+          "candidate": {
+            "mean": 0.07193999999999998,
+            "median": 0.06,
+            "p95": 0.17,
+            "max": 0.26
+          },
+          "improved": 14,
+          "identical": 472,
+          "worsened": 14,
+          "largestIncrease": 0.1,
+          "largestDecrease": -0.08
+        },
+        "zeroSampleCount": {
+          "baseline": {
+            "mean": 6.14,
+            "median": 6,
+            "p95": 9,
+            "max": 10
+          },
+          "candidate": {
+            "mean": 6.142,
+            "median": 6,
+            "p95": 9,
+            "max": 10
+          },
+          "improved": 13,
+          "identical": 475,
+          "worsened": 12,
+          "largestIncrease": 2,
+          "largestDecrease": -1
+        },
+        "cost": {
+          "baseline": {
+            "mean": 79.61159600000003,
+            "median": 71.384,
+            "p95": 158.08599999999998,
+            "max": 241.428
+          },
+          "candidate": {
+            "mean": 78.83100400000001,
+            "median": 71.384,
+            "p95": 150.99399999999997,
+            "max": 241.428
+          },
+          "improved": 30,
+          "identical": 454,
+          "worsened": 16,
+          "largestIncrease": 29.09999999999998,
+          "largestDecrease": -78.94999999999999
+        },
+        "qualityViolationCount": {
+          "baseline": {
+            "mean": 0.982,
+            "median": 1,
+            "p95": 3,
+            "max": 3
+          },
+          "candidate": {
+            "mean": 1.076,
+            "median": 1,
+            "p95": 3,
+            "max": 4
+          },
+          "improved": 0,
+          "identical": 454,
+          "worsened": 46,
+          "largestIncrease": 2,
+          "largestDecrease": 0
+        },
+        "excessRisk": {
+          "baseline": {
+            "mean": 16.820720000000005,
+            "median": 1.2400000000000002,
+            "p95": 67.52,
+            "max": 123.82999999999998
+          },
+          "candidate": {
+            "mean": 15.737400000000003,
+            "median": 1.2400000000000002,
+            "p95": 64.07000000000001,
+            "max": 123.82999999999998
+          },
+          "improved": 46,
+          "identical": 454,
+          "worsened": 0,
+          "largestIncrease": 0,
+          "largestDecrease": -55.76999999999999
+        },
+        "lanesOver25": {
+          "baseline": {
+            "mean": 0.606,
+            "median": 0,
+            "p95": 2,
+            "max": 5
+          },
+          "candidate": {
+            "mean": 0.606,
+            "median": 0,
+            "p95": 2,
+            "max": 5
+          },
+          "improved": 13,
+          "identical": 471,
+          "worsened": 16,
+          "largestIncrease": 2,
+          "largestDecrease": -2
+        },
+        "laneExcessOver25": {
+          "baseline": {
+            "mean": 6.592840000000002,
+            "median": 0,
+            "p95": 38.35999999999999,
+            "max": 68.39
+          },
+          "candidate": {
+            "mean": 5.9660400000000005,
+            "median": 0,
+            "p95": 32.410000000000004,
+            "max": 66.34
+          },
+          "improved": 22,
+          "identical": 465,
+          "worsened": 13,
+          "largestIncrease": 15.799999999999997,
+          "largestDecrease": -54.61
+        },
+        "blueSeverelyDisadvantagedLanes": {
+          "baseline": {
+            "mean": 0.684,
+            "median": 1,
+            "p95": 2,
+            "max": 3
+          },
+          "candidate": {
+            "mean": 0.65,
+            "median": 1,
+            "p95": 2,
+            "max": 3
+          },
+          "improved": 19,
+          "identical": 478,
+          "worsened": 3,
+          "largestIncrease": 1,
+          "largestDecrease": -2
+        },
+        "redSeverelyDisadvantagedLanes": {
+          "baseline": {
+            "mean": 0.668,
+            "median": 1,
+            "p95": 2,
+            "max": 2
+          },
+          "candidate": {
+            "mean": 0.636,
+            "median": 1,
+            "p95": 2,
+            "max": 2
+          },
+          "improved": 17,
+          "identical": 482,
+          "worsened": 1,
+          "largestIncrease": 1,
+          "largestDecrease": -1
+        }
+      },
+      "pareto": {
+        "improved": 0,
+        "identical": 454,
+        "mixed": 46,
+        "worsened": 0
+      },
+      "assignmentChanges": 46,
+      "oldRankingDiagnostic": {
+        "improved": 0,
+        "identical": 454,
+        "worsened": 46,
+        "adoptionGate": false
+      },
+      "ruleChanges": [
+        {
+          "rule": 1,
+          "baseline": {
+            "mean": 0.206,
+            "median": 0,
+            "p95": 1,
+            "max": 2
+          },
+          "candidate": {
+            "mean": 0.224,
+            "median": 0,
+            "p95": 1,
+            "max": 2
+          },
+          "improved": 4,
+          "identical": 485,
+          "worsened": 11
+        },
+        {
+          "rule": 2,
+          "baseline": {
+            "mean": 0.014,
+            "median": 0,
+            "p95": 0,
+            "max": 1
+          },
+          "candidate": {
+            "mean": 0.022,
+            "median": 0,
+            "p95": 0,
+            "max": 1
+          },
+          "improved": 1,
+          "identical": 494,
+          "worsened": 5
+        },
+        {
+          "rule": 3,
+          "baseline": {
+            "mean": 0.034,
+            "median": 0,
+            "p95": 0,
+            "max": 1
+          },
+          "candidate": {
+            "mean": 0.026,
+            "median": 0,
+            "p95": 0,
+            "max": 1
+          },
+          "improved": 5,
+          "identical": 494,
+          "worsened": 1
+        },
+        {
+          "rule": 4,
+          "baseline": {
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "candidate": {
+            "mean": 0,
+            "median": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "improved": 0,
+          "identical": 500,
+          "worsened": 0
+        },
+        {
+          "rule": 5,
+          "baseline": {
+            "mean": 0.142,
+            "median": 0,
+            "p95": 1,
+            "max": 1
+          },
+          "candidate": {
+            "mean": 0.146,
+            "median": 0,
+            "p95": 1,
+            "max": 1
+          },
+          "improved": 7,
+          "identical": 484,
+          "worsened": 9
+        },
+        {
+          "rule": 6,
+          "baseline": {
+            "mean": 0.106,
+            "median": 0,
+            "p95": 1,
+            "max": 1
+          },
+          "candidate": {
+            "mean": 0.104,
+            "median": 0,
+            "p95": 1,
+            "max": 1
+          },
+          "improved": 6,
+          "identical": 489,
+          "worsened": 5
+        }
+      ],
+      "baselineMetrics": {
+        "teamGap": {
+          "mean": 6.0786199999999955,
+          "median": 4.53,
+          "p95": 14.52,
+          "max": 43.2
+        },
+        "laneSum": {
+          "mean": 60.153540000000014,
+          "median": 52.57,
+          "p95": 126.16,
+          "max": 177.39000000000001
+        },
+        "maxLaneGap": {
+          "mean": 24.583660000000005,
+          "median": 21.88,
+          "p95": 50.51,
+          "max": 81.07
+        },
+        "largeLaneCount": {
+          "mean": 1.352,
+          "median": 1,
+          "p95": 4,
+          "max": 5
+        },
+        "adcGap": {
+          "mean": 11.798979999999995,
+          "median": 7.99,
+          "p95": 33.6,
+          "max": 81.07
+        },
+        "supportGap": {
+          "mean": 11.468900000000014,
+          "median": 8.42,
+          "p95": 35,
+          "max": 58.7
+        },
+        "bottomGap": {
+          "mean": 8.44468,
+          "median": 5.7,
+          "p95": 28.07,
+          "max": 63.99
+        },
+        "mainCount": {
+          "mean": 4.308,
+          "median": 4,
+          "p95": 7,
+          "max": 9
+        },
+        "subCount": {
+          "mean": 3.67,
+          "median": 4,
+          "p95": 6,
+          "max": 8
+        },
+        "autoCount": {
+          "mean": 2.022,
+          "median": 2,
+          "p95": 4,
+          "max": 5
+        },
+        "registeredAutoCount": {
+          "mean": 1.112,
+          "median": 1,
+          "p95": 3,
+          "max": 5
+        },
+        "unregistered": {
+          "mean": 0.91,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "burdenImbalance": {
+          "mean": 1.29,
+          "median": 1,
+          "p95": 3,
+          "max": 5
+        },
+        "subImbalance": {
+          "mean": 1.062,
+          "median": 1,
+          "p95": 2,
+          "max": 3
+        },
+        "bottomViolations": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "bottomExcess": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "unknownTier": {
+          "mean": 1.65,
+          "median": 1,
+          "p95": 5,
+          "max": 8
+        },
+        "confidence": {
+          "mean": 0.07194,
+          "median": 0.06,
+          "p95": 0.17,
+          "max": 0.26
+        },
+        "zeroSampleCount": {
+          "mean": 6.14,
+          "median": 6,
+          "p95": 9,
+          "max": 10
+        },
+        "cost": {
+          "mean": 79.61159600000003,
+          "median": 71.384,
+          "p95": 158.08599999999998,
+          "max": 241.428
+        },
+        "qualityViolationCount": {
+          "mean": 0.982,
+          "median": 1,
+          "p95": 3,
+          "max": 3
+        },
+        "excessRisk": {
+          "mean": 16.820720000000005,
+          "median": 1.2400000000000002,
+          "p95": 67.52,
+          "max": 123.82999999999998
+        },
+        "lanesOver25": {
+          "mean": 0.606,
+          "median": 0,
+          "p95": 2,
+          "max": 5
+        },
+        "laneExcessOver25": {
+          "mean": 6.592840000000002,
+          "median": 0,
+          "p95": 38.35999999999999,
+          "max": 68.39
+        },
+        "blueSeverelyDisadvantagedLanes": {
+          "mean": 0.684,
+          "median": 1,
+          "p95": 2,
+          "max": 3
+        },
+        "redSeverelyDisadvantagedLanes": {
+          "mean": 0.668,
+          "median": 1,
+          "p95": 2,
+          "max": 2
+        }
+      },
+      "sharedEnumerationTiming": {
+        "workers": 4,
+        "mean": 1511.0576195999986,
+        "median": 2201.84209999998,
+        "p95": 3339.480499999976,
+        "max": 4007.2411999999895,
+        "note": "Contended worker timing; see separate single-process pilot."
+      },
+      "elapsedWallMs": 214726.5766,
+      "baselineOracleComparisons": 15,
+      "candidateOracleComparisons": 15,
+      "oracleModes": [
+        "STRICT",
+        "RELAXED"
+      ],
+      "inputOrderAndColorVerifiedRosters": 15,
+      "inputsPreservedRosters": 500,
+      "independentLayoutReevaluations": 1000,
+      "frozenCurrentScoreComparisons": 1000
+    },
+    {
+      "stage": "validation",
+      "mode": "BASELINE_COVERAGE_AUDIT_AFTER_REJECTION",
+      "inputLockSha256": "d7bed367e4ee67073bd745fd14106aeba91f2dea682b7ef79882f8f385361a54",
+      "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+      "protocolSha256": "4c5ee684c1f7c6b39a468fba9ede176993002425b4cb897e582dcbcebff8072f",
+      "uniqueRosters": 250,
+      "observed": 0,
+      "recombined": 250,
+      "uniqueCandidatePlacements": 239631280,
+      "rawInspections": 239635984,
+      "feasiblePlacements": 239594688,
+      "relaxedRosters": 132,
+      "accepted": false,
+      "gates": null,
+      "metricChanges": null,
+      "pareto": null,
+      "assignmentChanges": 0,
+      "oldRankingDiagnostic": null,
+      "ruleChanges": null,
+      "baselineMetrics": {
+        "teamGap": {
+          "mean": 6.39152,
+          "median": 4.68,
+          "p95": 16.54,
+          "max": 43.81
+        },
+        "laneSum": {
+          "mean": 67.36551999999998,
+          "median": 59.6,
+          "p95": 147.45,
+          "max": 201.98999999999998
+        },
+        "maxLaneGap": {
+          "mean": 26.984199999999984,
+          "median": 23.48,
+          "p95": 61.2,
+          "max": 85.17
+        },
+        "largeLaneCount": {
+          "mean": 1.52,
+          "median": 1,
+          "p95": 4,
+          "max": 5
+        },
+        "adcGap": {
+          "mean": 12.65552000000001,
+          "median": 8.28,
+          "p95": 35.43,
+          "max": 79.9
+        },
+        "supportGap": {
+          "mean": 12.742759999999993,
+          "median": 10.02,
+          "p95": 33.34,
+          "max": 57.39
+        },
+        "bottomGap": {
+          "mean": 8.95612,
+          "median": 6.23,
+          "p95": 26.67,
+          "max": 81.89
+        },
+        "mainCount": {
+          "mean": 4.432,
+          "median": 4,
+          "p95": 7,
+          "max": 9
+        },
+        "subCount": {
+          "mean": 3.54,
+          "median": 3,
+          "p95": 6,
+          "max": 8
+        },
+        "autoCount": {
+          "mean": 2.028,
+          "median": 2,
+          "p95": 4,
+          "max": 5
+        },
+        "registeredAutoCount": {
+          "mean": 1.14,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "unregistered": {
+          "mean": 0.888,
+          "median": 1,
+          "p95": 2,
+          "max": 3
+        },
+        "burdenImbalance": {
+          "mean": 1.292,
+          "median": 1,
+          "p95": 3,
+          "max": 5
+        },
+        "subImbalance": {
+          "mean": 0.988,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "bottomViolations": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "bottomExcess": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "unknownTier": {
+          "mean": 1.628,
+          "median": 1,
+          "p95": 4,
+          "max": 7
+        },
+        "confidence": {
+          "mean": 0.07479999999999991,
+          "median": 0.06,
+          "p95": 0.17,
+          "max": 0.26
+        },
+        "zeroSampleCount": {
+          "mean": 5.932,
+          "median": 6,
+          "p95": 8,
+          "max": 10
+        },
+        "cost": {
+          "mean": 87.05653600000001,
+          "median": 76.75800000000001,
+          "p95": 175.172,
+          "max": 268.056
+        },
+        "qualityViolationCount": {
+          "mean": 1.108,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "excessRisk": {
+          "mean": 21.06596,
+          "median": 7.780000000000001,
+          "p95": 84.63,
+          "max": 170.91
+        },
+        "lanesOver25": {
+          "mean": 0.7,
+          "median": 0,
+          "p95": 3,
+          "max": 4
+        },
+        "laneExcessOver25": {
+          "mean": 9.602440000000003,
+          "median": 0,
+          "p95": 56.029999999999994,
+          "max": 104.86000000000001
+        },
+        "blueSeverelyDisadvantagedLanes": {
+          "mean": 0.776,
+          "median": 1,
+          "p95": 2,
+          "max": 3
+        },
+        "redSeverelyDisadvantagedLanes": {
+          "mean": 0.744,
+          "median": 1,
+          "p95": 2,
+          "max": 2
+        }
+      },
+      "sharedEnumerationTiming": {
+        "workers": 4,
+        "mean": 1537.1849607999998,
+        "median": 2360.7044999999925,
+        "p95": 3298.711200000005,
+        "max": 3628.4190000000017,
+        "note": "Contended worker timing; see separate single-process pilot."
+      },
+      "elapsedWallMs": 121654.44900000001,
+      "baselineOracleComparisons": 14,
+      "candidateOracleComparisons": 0,
+      "oracleModes": [
+        "RELAXED",
+        "STRICT"
+      ],
+      "inputOrderAndColorVerifiedRosters": 14,
+      "inputsPreservedRosters": 250,
+      "independentLayoutReevaluations": 250,
+      "frozenCurrentScoreComparisons": 250
+    },
+    {
+      "stage": "final",
+      "mode": "BASELINE_COVERAGE_AUDIT_AFTER_REJECTION",
+      "inputLockSha256": "d7bed367e4ee67073bd745fd14106aeba91f2dea682b7ef79882f8f385361a54",
+      "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+      "protocolSha256": "4c5ee684c1f7c6b39a468fba9ede176993002425b4cb897e582dcbcebff8072f",
+      "uniqueRosters": 250,
+      "observed": 0,
+      "recombined": 250,
+      "uniqueCandidatePlacements": 230545216,
+      "rawInspections": 230546368,
+      "feasiblePlacements": 230499264,
+      "relaxedRosters": 127,
+      "accepted": false,
+      "gates": null,
+      "metricChanges": null,
+      "pareto": null,
+      "assignmentChanges": 0,
+      "oldRankingDiagnostic": null,
+      "ruleChanges": null,
+      "baselineMetrics": {
+        "teamGap": {
+          "mean": 6.051960000000003,
+          "median": 4.53,
+          "p95": 14.16,
+          "max": 45.53
+        },
+        "laneSum": {
+          "mean": 60.3142,
+          "median": 55.410000000000004,
+          "p95": 125.28,
+          "max": 195.79999999999998
+        },
+        "maxLaneGap": {
+          "mean": 24.73083999999999,
+          "median": 21.43,
+          "p95": 54.9,
+          "max": 87.74
+        },
+        "largeLaneCount": {
+          "mean": 1.408,
+          "median": 1,
+          "p95": 4,
+          "max": 5
+        },
+        "adcGap": {
+          "mean": 12.06336,
+          "median": 7.85,
+          "p95": 38.87,
+          "max": 83.22
+        },
+        "supportGap": {
+          "mean": 11.354080000000002,
+          "median": 8.29,
+          "p95": 30.91,
+          "max": 57.39
+        },
+        "bottomGap": {
+          "mean": 8.424960000000006,
+          "median": 5.53,
+          "p95": 28.93,
+          "max": 62.77
+        },
+        "mainCount": {
+          "mean": 4.348,
+          "median": 4,
+          "p95": 7,
+          "max": 8
+        },
+        "subCount": {
+          "mean": 3.556,
+          "median": 4,
+          "p95": 6,
+          "max": 7
+        },
+        "autoCount": {
+          "mean": 2.096,
+          "median": 2,
+          "p95": 4,
+          "max": 5
+        },
+        "registeredAutoCount": {
+          "mean": 1.196,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "unregistered": {
+          "mean": 0.9,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "burdenImbalance": {
+          "mean": 1.348,
+          "median": 1,
+          "p95": 3,
+          "max": 5
+        },
+        "subImbalance": {
+          "mean": 0.972,
+          "median": 1,
+          "p95": 2,
+          "max": 3
+        },
+        "bottomViolations": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "bottomExcess": {
+          "mean": 0,
+          "median": 0,
+          "p95": 0,
+          "max": 0
+        },
+        "unknownTier": {
+          "mean": 1.724,
+          "median": 2,
+          "p95": 4,
+          "max": 7
+        },
+        "confidence": {
+          "mean": 0.06991999999999995,
+          "median": 0.06,
+          "p95": 0.17,
+          "max": 0.23
+        },
+        "zeroSampleCount": {
+          "mean": 6.156,
+          "median": 6,
+          "p95": 9,
+          "max": 10
+        },
+        "cost": {
+          "mean": 79.68807199999999,
+          "median": 72.652,
+          "p95": 159.97400000000002,
+          "max": 257.596
+        },
+        "qualityViolationCount": {
+          "mean": 1.012,
+          "median": 1,
+          "p95": 3,
+          "max": 4
+        },
+        "excessRisk": {
+          "mean": 18.302199999999996,
+          "median": 0.9700000000000006,
+          "p95": 77.16,
+          "max": 155.99
+        },
+        "lanesOver25": {
+          "mean": 0.58,
+          "median": 0,
+          "p95": 2,
+          "max": 4
+        },
+        "laneExcessOver25": {
+          "mean": 6.593280000000002,
+          "median": 0,
+          "p95": 36.72,
+          "max": 81.53
+        },
+        "blueSeverelyDisadvantagedLanes": {
+          "mean": 0.696,
+          "median": 1,
+          "p95": 2,
+          "max": 3
+        },
+        "redSeverelyDisadvantagedLanes": {
+          "mean": 0.712,
+          "median": 1,
+          "p95": 2,
+          "max": 3
+        }
+      },
+      "sharedEnumerationTiming": {
+        "workers": 4,
+        "mean": 1465.5666871999997,
+        "median": 2005.3385,
+        "p95": 3235.138999999999,
+        "max": 4125.5154,
+        "note": "Contended worker timing; see separate single-process pilot."
+      },
+      "elapsedWallMs": 116826.25360000001,
+      "baselineOracleComparisons": 15,
+      "candidateOracleComparisons": 0,
+      "oracleModes": [
+        "STRICT",
+        "RELAXED"
+      ],
+      "inputOrderAndColorVerifiedRosters": 15,
+      "inputsPreservedRosters": 250,
+      "independentLayoutReevaluations": 250,
+      "frozenCurrentScoreComparisons": 250
+    }
+  ],
+  "timing": {
+    "singleProcessFinalPilot": {
+      "phase": "final",
+      "source": "PREVIOUS_STUDY_ROSTERS_EXCLUDED_FROM_NEW_EVALUATION",
+      "uniqueNewStudyRosters": 0,
+      "countedStudyPlacements": 0,
+      "sampleCount": 9,
+      "baseline": {
+        "mean": 729.4141999999998,
+        "median": 50.42090000000002,
+        "p95": 2208.7270000000008,
+        "max": 2208.7270000000008
+      },
+      "candidate": {
+        "mean": 750.4504666666666,
+        "median": 47.115899999998874,
+        "p95": 2265.8822,
+        "max": 2265.8822
+      },
+      "sharedEnumeration": {
+        "mean": 736.3807555555552,
+        "median": 42.62280000000001,
+        "p95": 2319.6390999999985,
+        "max": 2319.6390999999985
+      },
+      "results": [
+        {
+          "id": "R-e4934456e08d",
+          "stratum": "OBSERVED",
+          "sharedMs": 42.62280000000001,
+          "baselineMs": 38.83809999999997,
+          "candidateMs": 46.6721,
+          "relaxed": false
+        },
+        {
+          "id": "R-5306d7dd3eb0",
+          "stratum": "MIXED_TIERS",
+          "sharedMs": 39.76850000000002,
+          "baselineMs": 50.42090000000002,
+          "candidateMs": 48.65180000000004,
+          "relaxed": false
+        },
+        {
+          "id": "R-c18758b690fd",
+          "stratum": "JUNGLE_SHORTAGE",
+          "sharedMs": 1845.3067999999998,
+          "baselineMs": 1922.2712999999999,
+          "candidateMs": 2150.6881000000003,
+          "relaxed": true
+        },
+        {
+          "id": "R-e372e8a55f73",
+          "stratum": "SUPPORT_SHORTAGE",
+          "sharedMs": 2260.1552,
+          "baselineMs": 2208.7270000000008,
+          "candidateMs": 2106.7196000000004,
+          "relaxed": true
+        },
+        {
+          "id": "R-264ede1cfd9a",
+          "stratum": "BROAD_POOL",
+          "sharedMs": 43.42319999999927,
+          "baselineMs": 53.646600000000035,
+          "candidateMs": 47.115899999998874,
+          "relaxed": false
+        },
+        {
+          "id": "R-3ce3bd7321c9",
+          "stratum": "SIMILAR_TIER",
+          "sharedMs": 22.408699999999953,
+          "baselineMs": 28.04819999999927,
+          "candidateMs": 26.670899999999165,
+          "relaxed": false
+        },
+        {
+          "id": "R-d74d43dddfdb",
+          "stratum": "LOW_SAMPLE",
+          "sharedMs": 31.878999999998996,
+          "baselineMs": 39.187299999999595,
+          "candidateMs": 38.652100000001155,
+          "relaxed": false
+        },
+        {
+          "id": "R-8f0215fc7ea0",
+          "stratum": "UNKNOWN_TIER",
+          "sharedMs": 22.223500000000058,
+          "baselineMs": 29.45809999999983,
+          "candidateMs": 23.001499999998487,
+          "relaxed": false
+        },
+        {
+          "id": "R-f664b28ae378",
+          "stratum": "MAIN_CONGESTION",
+          "sharedMs": 2319.6390999999985,
+          "baselineMs": 2194.130299999999,
+          "candidateMs": 2265.8822,
+          "relaxed": true
+        }
+      ]
+    },
+    "contendedSharedEnumeration": {
+      "workers": 4,
+      "mean": 1506.2167218000013,
+      "median": 2224.4401999999973,
+      "p95": 3306.1628999999957,
+      "max": 4125.5154
+    }
+  },
+  "checks": {
+    "baselineFullSearchOracleComparisons": 44,
+    "independentCandidateFullSearchOracleComparisons": 15,
+    "independentFrozenLayoutReevaluations": 1500,
+    "frozenCurrentScoreComparisons": 1500,
+    "inputOrderAndColorVerifiedRosters": 44,
+    "inputsPreservedRosters": 1000,
+    "pilotOracleRepetitionsExcludedFromRosterAndPlacementCounts": true
+  },
+  "inputLock": {
+    "snapshotSha256": "aecb6d6f5767f21ec1225427aea5c32e53a657bd4ede4319b50d0e498cd5e75d",
+    "oldManifestSha256": "b98861124c356a5928603acf365a8f2e4db322d8dc5ff1306c770df30db979bc",
+    "rosterManifestSha256": "c9ddfb0a0478389b6749ed76514fbc00524f8f6573c642458b2d764536f9af5b",
+    "baselineCommit": "131abbf777a331b056a96ab587957cf654387a78",
+    "baselineFiles": {
+      "team-balance.ts": "21851705dedac8d5595ba4c585fd19f9a64eb3ae72d14d9b92254085635d45b6",
+      "inhouse-fairness.ts": "4463d66fba1a2acebbc13a5e89ea3ad3ae91d9e7b649cbc5e72cd245f39c2cd0",
+      "inhouse-joint-search.ts": "23ced4d8fb18c40e1b27df7abb6a74fdb6475dcb4f67086607b8eb732e8e8323"
+    },
+    "sources": {
+      "scripts/balance-severity/PROTOCOL.md": "4c5ee684c1f7c6b39a468fba9ede176993002425b4cb897e582dcbcebff8072f",
+      "scripts/balance-severity/stability.ts": "4f526ca60f6499b577fb449e1c5b7232274bde603bcacfb188cf878100550a37",
+      "scripts/balance-severity/prepare.ts": "4eb4f14ea70a4b83e4a81f0411080f561d016d1177c23ef39ef368dcc8648d15",
+      "scripts/balance-severity/pilot.ts": "04d0fb7fa99363d45e6a0a3d93929e284b19165663e5f0e95cc27ff3787468de",
+      "scripts/balance-severity/publish-report.ts": "0a0a79259cd1982c1a918ac1baaf33e6d092b1a806d8449628a70946224be866",
+      "scripts/balance-severity/selector.ts": "abaf0349274852e7def793d25a749c50be21940025fd54b88b21a141c8df8aed",
+      "scripts/balance-severity/oracle.ts": "755d69870fb1f23cda0d7c6ba8ef544f7eaccf2cfd3433bf53932ee7bc199d30",
+      "scripts/balance-severity/metrics.ts": "6b4e10de8ade6b5fbb302a84589d06633eadb6b8641818536b4d0e1c1827048e",
+      "scripts/balance-severity/gates.ts": "c3ae823161c1f3825553098bc4ead29e9070c620b22256c5a3acef0d64ce3275",
+      "scripts/balance-severity/run.ts": "0ba730c64bd7700e04ea8b5cfca2762a8ce6df8aa15843083bc43300cf9957f1",
+      "scripts/balance-severity/study.ts": "1573653ab0f90fb776baf61bb573cd822c55841532de4bbbe23277c1711a3956",
+      "scripts/balance-research/kernel.ts": "5817cdd1a7a4b184ee9f68571e1210cde144b149323720bcbaa5cb5ecf3bb194",
+      "scripts/balance-research/metrics.ts": "d542c89df71e703ee47fa08d657703e7167b3b303979cb95fb24cdb4a5e30c57",
+      "src/modules/team-tools/domain/team-balance.ts": "21851705dedac8d5595ba4c585fd19f9a64eb3ae72d14d9b92254085635d45b6",
+      "src/modules/team-tools/domain/inhouse-fairness.ts": "4463d66fba1a2acebbc13a5e89ea3ad3ae91d9e7b649cbc5e72cd245f39c2cd0",
+      "src/modules/team-tools/domain/inhouse-joint-search.ts": "049d9602995217a5b811cf64c8d3bc73f04c42687faaeb77b2d0667d1962e1fe"
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-18 추가 조정 실험 기각·기존 운영 유지**: 이전과 겹치지 않는 실제 선수 1,000조합·936,747,904배치를 확인했습니다. 초과 격차 우선 후보는 500개 비교에서 동일 454개·상충 46개, 개별 악화 상한 위반 45개로 기각했습니다. 신규 계산식 배포 없이 2.0.2 운영 source와 HTTP 12조건을 재확인했습니다. [추가 보고](docs/qa-evidence/balance-severity-2026-10-18/README.md), [운영 상태](docs/qa-evidence/balance-severity-2026-10-18/production.md). 점수 0.1 변화에 대한 경계 민감도는 남아 있습니다.
+
 **2026-10-18 실제 자료 비교·표본 진단 2.0.2 운영 반영**: 1,000개 고유 조합·921,331,808개 배치를 조사했습니다. 새 선택 후보는 효과 없음 또는 5.6% 악화로 기각하여 기존 추천 계산식을 유지하고, 표본 0건 누락 진단만 정정했습니다. source `131abbf7`, 후보·운영 HTTP 각 12조건 및 source CI 확인. [전체 보고](docs/qa-evidence/balance-research-2026-10-18/README.md), [배포·복구](docs/qa-evidence/balance-research-2026-10-18/production.md). 실제 승률 개선을 주장하지 않습니다.
 
 **2026-10-18 내전 점수 표시 2.0.1 운영 반영**: 신규 참가자를 일괄 기본 50점으로 보이게 하던 카드를 실제 배정 점수로 수정하고 티어·표본을 분리했습니다. 임의 문자열을 정상 티어로 계산하는 입력 검증도 보완했습니다. source `48e82aef`, 운영 READY·HTTP 8조건·실제 소유 초안 10개 점수 카드 확인. 누락 티어를 보완한 로컬 조합 비교와 운영 자료 저장 상태는 구분합니다. [변경 안내](docs/patch-notes/inhouse-fairness-v2.0.1.md), [검증·배포·남은 작업](docs/qa-evidence/inhouse-newcomer-score-2026-10-18/production.md).

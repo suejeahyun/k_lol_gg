@@ -1,0 +1,40 @@
+{
+  "researchSourceCommit": "62228709d99b2c5e8eddd7cc8254794766447dd4",
+  "nodeVersion": "v24.14.1",
+  "activeFormulaChanged": false,
+  "completeCheck": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "lintErrors": 0,
+    "preexistingLintWarnings": 58,
+    "typecheck": "PASS",
+    "erd": "PASS",
+    "contracts": { "passed": 728, "failed": 0 },
+    "unit": { "passed": 1178, "failed": 0, "skipped": 1, "skipReason": "Existing unrelated test requiring a dedicated database fixture." },
+    "guideImages": "PASS",
+    "productionBuild": "PASS"
+  },
+  "focusedResearchChecks": {
+    "command": "node --import tsx --test tests/team-balance-severity.test.ts tests/team-balance-severity-gates.test.ts",
+    "passed": 19,
+    "failed": 0,
+    "coverage": "Independent small and full exhaustive selection oracles; unchanged policy order; threshold equality; individual and protected-group adoption ceilings; finite-number validation."
+  },
+  "security": {
+    "currentTreeSecrets": "PASS",
+    "currentTreeCommand": "npm run security:secrets -- --tree-only",
+    "productionDependencyAudit": { "command": "npm audit --omit=dev --audit-level=high", "vulnerabilities": 0 },
+    "fullHistory": "Previously passed for the retained production release. A redundant full-history scan in this study was stopped; it is not claimed as a new pass."
+  },
+  "priorProductionFlowEvidence": {
+    "sourceCommit": "131abbf777a331b056a96ab587957cf654387a78",
+    "evidence": "../balance-research-2026-10-18/production.md",
+    "disposableDatabaseContracts": { "passed": 9, "failed": 0 },
+    "actualChromiumDisposableDatabaseFlow": { "passed": 17, "failed": 0 },
+    "interpretation": "Previously executed in this task for the retained production source. These are not newly executed browser/DB tests of an activated severity formula."
+  },
+  "productionDataMutations": 0,
+  "releaseEvidenceCheck": { "status": "PASS", "existingReleases": 105, "existingGitTags": 105, "newRuntimeRelease": false },
+  "finalProductionReadChecks": { "status": "PASS", "count": 12, "deploymentEvidence": "production-deployment.json", "httpEvidence": "production-http.json" },
+  "newAutomations": 0
+}

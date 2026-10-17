@@ -1,0 +1,1843 @@
+{
+  "maximumLaneImprovementExamples": [
+    {
+      "id": "S-0c87b33c9cdd",
+      "stage": "tuning",
+      "stratum": "MAIN_CONGESTION",
+      "relaxed": true,
+      "baseline": {
+        "teamGap": 37.78,
+        "lanes": [
+          62.04,
+          7.58,
+          7.64,
+          4.62,
+          4.42
+        ],
+        "laneSum": 86.30000000000001,
+        "maxLaneGap": 62.04,
+        "largeLaneCount": 1,
+        "adcGap": 4.62,
+        "supportGap": 4.42,
+        "bottomGap": 9.04,
+        "mainCount": 4,
+        "subCount": 5,
+        "autoCount": 1,
+        "registeredAutoCount": 0,
+        "unregistered": 1,
+        "burdenImbalance": 1,
+        "subImbalance": 3,
+        "rules": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 1,
+        "confidence": 0.05,
+        "zeroSampleCount": 6,
+        "missingSourceCount": 16,
+        "cost": 178.944,
+        "risk": [
+          0,
+          0,
+          1,
+          2,
+          59.82,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          178.944
+        ],
+        "signedLaneGaps": [
+          62.04,
+          -7.58,
+          -7.64,
+          -4.62,
+          -4.42
+        ],
+        "blueSeverelyDisadvantagedLanes": 0,
+        "redSeverelyDisadvantagedLanes": 1,
+        "lanesOver25": 1,
+        "laneExcessOver25": 37.04,
+        "qualityViolationCount": 2,
+        "excessRisk": 59.82,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 1,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 1
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 12.41,
+          "lanes": [
+            16.32,
+            10.91,
+            2.93,
+            25.17,
+            4.42
+          ],
+          "laneSum": 59.75,
+          "maxLaneGap": 25.17,
+          "largeLaneCount": 2,
+          "adcGap": 25.17,
+          "supportGap": 4.42,
+          "bottomGap": 20.75,
+          "mainCount": 4,
+          "subCount": 5,
+          "autoCount": 1,
+          "registeredAutoCount": 0,
+          "unregistered": 1,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 1,
+          "confidence": 0.05,
+          "zeroSampleCount": 5,
+          "missingSourceCount": 16,
+          "cost": 99.994,
+          "risk": [
+            0,
+            0,
+            1,
+            3,
+            25.92,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            99.994
+          ],
+          "signedLaneGaps": [
+            -16.32,
+            10.91,
+            -2.93,
+            25.17,
+            -4.42
+          ],
+          "blueSeverelyDisadvantagedLanes": 1,
+          "redSeverelyDisadvantagedLanes": 1,
+          "lanesOver25": 1,
+          "laneExcessOver25": 0.1700000000000017,
+          "qualityViolationCount": 3,
+          "excessRisk": 25.92,
+          "verification": {
+            "ADC": {
+              "known": true,
+              "currentMajorTierGap": 2,
+              "passes": true,
+              "missingPlayerCount": 0
+            },
+            "SUP": {
+              "known": false,
+              "currentMajorTierGap": null,
+              "passes": null,
+              "missingPlayerCount": 1
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    },
+    {
+      "id": "S-1da7c84f456b",
+      "stage": "tuning",
+      "stratum": "BROAD_POOL",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 14.98,
+        "lanes": [
+          44.02,
+          10.84,
+          60.78,
+          2.39,
+          6.67
+        ],
+        "laneSum": 124.7,
+        "maxLaneGap": 60.78,
+        "largeLaneCount": 2,
+        "adcGap": 2.39,
+        "supportGap": 6.67,
+        "bottomGap": 9.06,
+        "mainCount": 4,
+        "subCount": 4,
+        "autoCount": 2,
+        "registeredAutoCount": 2,
+        "unregistered": 0,
+        "burdenImbalance": 2,
+        "subImbalance": 2,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 1,
+        "confidence": 0.09,
+        "zeroSampleCount": 5,
+        "missingSourceCount": 12,
+        "cost": 167.82,
+        "risk": [
+          0,
+          0,
+          0,
+          2,
+          50.78,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          167.82
+        ],
+        "signedLaneGaps": [
+          44.02,
+          10.84,
+          -60.78,
+          -2.39,
+          -6.67
+        ],
+        "blueSeverelyDisadvantagedLanes": 1,
+        "redSeverelyDisadvantagedLanes": 1,
+        "lanesOver25": 2,
+        "laneExcessOver25": 54.800000000000004,
+        "qualityViolationCount": 2,
+        "excessRisk": 50.78,
+        "verification": {
+          "ADC": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 1
+          },
+          "SUP": {
+            "known": true,
+            "currentMajorTierGap": 1,
+            "passes": true,
+            "missingPlayerCount": 0
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 13.21,
+          "lanes": [
+            3.61,
+            10.84,
+            19.76,
+            25.19,
+            6.67
+          ],
+          "laneSum": 66.07000000000001,
+          "maxLaneGap": 25.19,
+          "largeLaneCount": 2,
+          "adcGap": 25.19,
+          "supportGap": 6.67,
+          "bottomGap": 18.52,
+          "mainCount": 6,
+          "subCount": 2,
+          "autoCount": 2,
+          "registeredAutoCount": 2,
+          "unregistered": 0,
+          "burdenImbalance": 0,
+          "subImbalance": 0,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 1,
+          "confidence": 0.12,
+          "zeroSampleCount": 4,
+          "missingSourceCount": 12,
+          "cost": 100.14200000000001,
+          "risk": [
+            0,
+            0,
+            0,
+            3,
+            23.71,
+            1,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            100.14200000000001
+          ],
+          "signedLaneGaps": [
+            3.61,
+            10.84,
+            -19.76,
+            25.19,
+            -6.67
+          ],
+          "blueSeverelyDisadvantagedLanes": 1,
+          "redSeverelyDisadvantagedLanes": 1,
+          "lanesOver25": 1,
+          "laneExcessOver25": 0.19000000000000128,
+          "qualityViolationCount": 3,
+          "excessRisk": 23.71,
+          "verification": {
+            "ADC": {
+              "known": false,
+              "currentMajorTierGap": null,
+              "passes": null,
+              "missingPlayerCount": 1
+            },
+            "SUP": {
+              "known": true,
+              "currentMajorTierGap": 1,
+              "passes": true,
+              "missingPlayerCount": 0
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    },
+    {
+      "id": "S-91b5ea31b697",
+      "stage": "tuning",
+      "stratum": "MIXED_TIERS",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 0.49,
+        "lanes": [
+          47.71,
+          20.46,
+          62.68,
+          11.9,
+          16.9
+        ],
+        "laneSum": 159.65,
+        "maxLaneGap": 62.68,
+        "largeLaneCount": 4,
+        "adcGap": 11.9,
+        "supportGap": 16.9,
+        "bottomGap": 5,
+        "mainCount": 3,
+        "subCount": 5,
+        "autoCount": 2,
+        "registeredAutoCount": 2,
+        "unregistered": 0,
+        "burdenImbalance": 1,
+        "subImbalance": 3,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 0,
+        "confidence": 0.12,
+        "zeroSampleCount": 3,
+        "missingSourceCount": 10,
+        "cost": 168.156,
+        "risk": [
+          0,
+          0,
+          0,
+          2,
+          82.68,
+          0,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          168.156
+        ],
+        "signedLaneGaps": [
+          -47.71,
+          -20.46,
+          62.68,
+          -11.9,
+          16.9
+        ],
+        "blueSeverelyDisadvantagedLanes": 2,
+        "redSeverelyDisadvantagedLanes": 2,
+        "lanesOver25": 2,
+        "laneExcessOver25": 60.39,
+        "qualityViolationCount": 2,
+        "excessRisk": 82.68,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 2,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": true,
+            "currentMajorTierGap": 2,
+            "passes": true,
+            "missingPlayerCount": 0
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 13.51,
+          "lanes": [
+            31.11,
+            40.9,
+            39.59,
+            0.61,
+            16.9
+          ],
+          "laneSum": 129.10999999999999,
+          "maxLaneGap": 40.9,
+          "largeLaneCount": 4,
+          "adcGap": 0.61,
+          "supportGap": 16.9,
+          "bottomGap": 16.29,
+          "mainCount": 5,
+          "subCount": 3,
+          "autoCount": 2,
+          "registeredAutoCount": 2,
+          "unregistered": 0,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.1,
+          "zeroSampleCount": 2,
+          "missingSourceCount": 10,
+          "cost": 153.312,
+          "risk": [
+            0,
+            0,
+            0,
+            3,
+            67.19,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            153.312
+          ],
+          "signedLaneGaps": [
+            -31.11,
+            40.9,
+            -39.59,
+            -0.61,
+            16.9
+          ],
+          "blueSeverelyDisadvantagedLanes": 2,
+          "redSeverelyDisadvantagedLanes": 2,
+          "lanesOver25": 3,
+          "laneExcessOver25": 36.6,
+          "qualityViolationCount": 3,
+          "excessRisk": 67.19,
+          "verification": {
+            "ADC": {
+              "known": true,
+              "currentMajorTierGap": 1,
+              "passes": true,
+              "missingPlayerCount": 0
+            },
+            "SUP": {
+              "known": true,
+              "currentMajorTierGap": 2,
+              "passes": true,
+              "missingPlayerCount": 0
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    }
+  ],
+  "mixedExamples": [
+    {
+      "id": "S-d163e8d823da",
+      "stage": "tuning",
+      "stratum": "MIXED_TIERS",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 0.63,
+        "lanes": [
+          16.32,
+          24.56,
+          10.7,
+          22.03,
+          18.94
+        ],
+        "laneSum": 92.55,
+        "maxLaneGap": 24.56,
+        "largeLaneCount": 4,
+        "adcGap": 22.03,
+        "supportGap": 18.94,
+        "bottomGap": 3.09,
+        "mainCount": 4,
+        "subCount": 3,
+        "autoCount": 3,
+        "registeredAutoCount": 3,
+        "unregistered": 0,
+        "burdenImbalance": 1,
+        "subImbalance": 1,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 0,
+        "confidence": 0.11,
+        "zeroSampleCount": 5,
+        "missingSourceCount": 15,
+        "cost": 86.44399999999999,
+        "risk": [
+          0,
+          0,
+          0,
+          1,
+          45,
+          0,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          86.44399999999999
+        ],
+        "signedLaneGaps": [
+          -16.32,
+          24.56,
+          -10.7,
+          22.03,
+          -18.94
+        ],
+        "blueSeverelyDisadvantagedLanes": 2,
+        "redSeverelyDisadvantagedLanes": 2,
+        "lanesOver25": 0,
+        "laneExcessOver25": 0,
+        "qualityViolationCount": 1,
+        "excessRisk": 45,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 1,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": true,
+            "currentMajorTierGap": 0,
+            "passes": true,
+            "missingPlayerCount": 0
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 2.76,
+          "lanes": [
+            16.32,
+            4.21,
+            10.7,
+            6.35,
+            18.94
+          ],
+          "laneSum": 56.519999999999996,
+          "maxLaneGap": 18.94,
+          "largeLaneCount": 2,
+          "adcGap": 6.35,
+          "supportGap": 18.94,
+          "bottomGap": 12.59,
+          "mainCount": 5,
+          "subCount": 2,
+          "autoCount": 3,
+          "registeredAutoCount": 3,
+          "unregistered": 0,
+          "burdenImbalance": 0,
+          "subImbalance": 2,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.11,
+          "zeroSampleCount": 5,
+          "missingSourceCount": 15,
+          "cost": 68.788,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            17.59,
+            0,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            68.788
+          ],
+          "signedLaneGaps": [
+            16.32,
+            4.21,
+            -10.7,
+            6.35,
+            -18.94
+          ],
+          "blueSeverelyDisadvantagedLanes": 1,
+          "redSeverelyDisadvantagedLanes": 1,
+          "lanesOver25": 0,
+          "laneExcessOver25": 0,
+          "qualityViolationCount": 2,
+          "excessRisk": 17.59,
+          "verification": {
+            "ADC": {
+              "known": true,
+              "currentMajorTierGap": 0,
+              "passes": true,
+              "missingPlayerCount": 0
+            },
+            "SUP": {
+              "known": true,
+              "currentMajorTierGap": 0,
+              "passes": true,
+              "missingPlayerCount": 0
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    },
+    {
+      "id": "S-d575d15f0374",
+      "stage": "tuning",
+      "stratum": "MIXED_TIERS",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 2.39,
+        "lanes": [
+          22.72,
+          4.44,
+          15.92,
+          10.84,
+          19.69
+        ],
+        "laneSum": 73.61,
+        "maxLaneGap": 22.72,
+        "largeLaneCount": 3,
+        "adcGap": 10.84,
+        "supportGap": 19.69,
+        "bottomGap": 8.85,
+        "mainCount": 2,
+        "subCount": 5,
+        "autoCount": 3,
+        "registeredAutoCount": 3,
+        "unregistered": 0,
+        "burdenImbalance": 1,
+        "subImbalance": 1,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 0,
+        "confidence": 0.07,
+        "zeroSampleCount": 5,
+        "missingSourceCount": 12,
+        "cost": 82.312,
+        "risk": [
+          0,
+          0,
+          0,
+          1,
+          30,
+          0,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          82.312
+        ],
+        "signedLaneGaps": [
+          -22.72,
+          -4.44,
+          15.92,
+          -10.84,
+          19.69
+        ],
+        "blueSeverelyDisadvantagedLanes": 1,
+        "redSeverelyDisadvantagedLanes": 2,
+        "lanesOver25": 0,
+        "laneExcessOver25": 0,
+        "qualityViolationCount": 1,
+        "excessRisk": 30,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 1,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": true,
+            "currentMajorTierGap": 0,
+            "passes": true,
+            "missingPlayerCount": 0
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 5.05,
+          "lanes": [
+            11.72,
+            9.04,
+            34.66,
+            10.84,
+            19.69
+          ],
+          "laneSum": 85.94999999999999,
+          "maxLaneGap": 34.66,
+          "largeLaneCount": 2,
+          "adcGap": 10.84,
+          "supportGap": 19.69,
+          "bottomGap": 8.85,
+          "mainCount": 1,
+          "subCount": 6,
+          "autoCount": 3,
+          "registeredAutoCount": 3,
+          "unregistered": 0,
+          "burdenImbalance": 4,
+          "subImbalance": 2,
+          "rules": [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.07,
+          "zeroSampleCount": 5,
+          "missingSourceCount": 12,
+          "cost": 106.37999999999998,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            24.659999999999997,
+            0,
+            3,
+            3,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            106.37999999999998
+          ],
+          "signedLaneGaps": [
+            11.72,
+            9.04,
+            -34.66,
+            -10.84,
+            19.69
+          ],
+          "blueSeverelyDisadvantagedLanes": 1,
+          "redSeverelyDisadvantagedLanes": 1,
+          "lanesOver25": 1,
+          "laneExcessOver25": 9.659999999999997,
+          "qualityViolationCount": 2,
+          "excessRisk": 24.659999999999997,
+          "verification": {
+            "ADC": {
+              "known": true,
+              "currentMajorTierGap": 1,
+              "passes": true,
+              "missingPlayerCount": 0
+            },
+            "SUP": {
+              "known": true,
+              "currentMajorTierGap": 0,
+              "passes": true,
+              "missingPlayerCount": 0
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    },
+    {
+      "id": "S-aae026c3ce1b",
+      "stage": "tuning",
+      "stratum": "MIXED_TIERS",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 25.12,
+        "lanes": [
+          1.38,
+          11.09,
+          42.65,
+          4.71,
+          9.77
+        ],
+        "laneSum": 69.6,
+        "maxLaneGap": 42.65,
+        "largeLaneCount": 1,
+        "adcGap": 4.71,
+        "supportGap": 9.77,
+        "bottomGap": 5.06,
+        "mainCount": 4,
+        "subCount": 5,
+        "autoCount": 1,
+        "registeredAutoCount": 1,
+        "unregistered": 0,
+        "burdenImbalance": 3,
+        "subImbalance": 1,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 0,
+        "confidence": 0.18,
+        "zeroSampleCount": 5,
+        "missingSourceCount": 14,
+        "cost": 128.626,
+        "risk": [
+          0,
+          0,
+          0,
+          2,
+          27.77,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          128.626
+        ],
+        "signedLaneGaps": [
+          -1.38,
+          -11.09,
+          42.65,
+          4.71,
+          -9.77
+        ],
+        "blueSeverelyDisadvantagedLanes": 0,
+        "redSeverelyDisadvantagedLanes": 1,
+        "lanesOver25": 1,
+        "laneExcessOver25": 17.65,
+        "qualityViolationCount": 2,
+        "excessRisk": 27.77,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 2,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": true,
+            "currentMajorTierGap": 0,
+            "passes": true,
+            "missingPlayerCount": 0
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 15.7,
+          "lanes": [
+            1.38,
+            11.09,
+            42.65,
+            4.71,
+            9.77
+          ],
+          "laneSum": 69.6,
+          "maxLaneGap": 42.65,
+          "largeLaneCount": 1,
+          "adcGap": 4.71,
+          "supportGap": 9.77,
+          "bottomGap": 14.48,
+          "mainCount": 4,
+          "subCount": 5,
+          "autoCount": 1,
+          "registeredAutoCount": 1,
+          "unregistered": 0,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            0,
+            1,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 0,
+          "confidence": 0.18,
+          "zeroSampleCount": 5,
+          "missingSourceCount": 14,
+          "cost": 122.97399999999999,
+          "risk": [
+            0,
+            0,
+            0,
+            3,
+            22.83,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            122.97399999999999
+          ],
+          "signedLaneGaps": [
+            -1.38,
+            -11.09,
+            42.65,
+            -4.71,
+            -9.77
+          ],
+          "blueSeverelyDisadvantagedLanes": 0,
+          "redSeverelyDisadvantagedLanes": 1,
+          "lanesOver25": 1,
+          "laneExcessOver25": 17.65,
+          "qualityViolationCount": 3,
+          "excessRisk": 22.83,
+          "verification": {
+            "ADC": {
+              "known": true,
+              "currentMajorTierGap": 2,
+              "passes": true,
+              "missingPlayerCount": 0
+            },
+            "SUP": {
+              "known": true,
+              "currentMajorTierGap": 0,
+              "passes": true,
+              "missingPlayerCount": 0
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    }
+  ],
+  "maximumLaneRegressionExamples": [
+    {
+      "id": "S-72439358142c",
+      "stage": "tuning",
+      "stratum": "LOW_SAMPLE",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 5.53,
+        "lanes": [
+          7.96,
+          16.67,
+          23.57,
+          11.59,
+          5
+        ],
+        "laneSum": 64.79,
+        "maxLaneGap": 23.57,
+        "largeLaneCount": 2,
+        "adcGap": 11.59,
+        "supportGap": 5,
+        "bottomGap": 6.59,
+        "mainCount": 4,
+        "subCount": 4,
+        "autoCount": 2,
+        "registeredAutoCount": 2,
+        "unregistered": 0,
+        "burdenImbalance": 0,
+        "subImbalance": 0,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 2,
+        "confidence": 0.03,
+        "zeroSampleCount": 7,
+        "missingSourceCount": 14,
+        "cost": 79.45800000000001,
+        "risk": [
+          0,
+          0,
+          0,
+          1,
+          15,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          79.45800000000001
+        ],
+        "signedLaneGaps": [
+          7.96,
+          16.67,
+          -23.57,
+          -11.59,
+          5
+        ],
+        "blueSeverelyDisadvantagedLanes": 1,
+        "redSeverelyDisadvantagedLanes": 1,
+        "lanesOver25": 0,
+        "laneExcessOver25": 0,
+        "qualityViolationCount": 1,
+        "excessRisk": 15,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 2,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 2
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 9.16,
+          "lanes": [
+            13.51,
+            6.28,
+            39.13,
+            5.18,
+            5
+          ],
+          "laneSum": 69.1,
+          "maxLaneGap": 39.13,
+          "largeLaneCount": 1,
+          "adcGap": 5.18,
+          "supportGap": 5,
+          "bottomGap": 10.18,
+          "mainCount": 1,
+          "subCount": 7,
+          "autoCount": 2,
+          "registeredAutoCount": 2,
+          "unregistered": 0,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 2,
+          "confidence": 0.01,
+          "zeroSampleCount": 9,
+          "missingSourceCount": 14,
+          "cost": 108.55799999999999,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            14.310000000000002,
+            2,
+            2,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            108.55799999999999
+          ],
+          "signedLaneGaps": [
+            -13.51,
+            -6.28,
+            39.13,
+            -5.18,
+            -5
+          ],
+          "blueSeverelyDisadvantagedLanes": 0,
+          "redSeverelyDisadvantagedLanes": 1,
+          "lanesOver25": 1,
+          "laneExcessOver25": 14.130000000000003,
+          "qualityViolationCount": 2,
+          "excessRisk": 14.310000000000002,
+          "verification": {
+            "ADC": {
+              "known": true,
+              "currentMajorTierGap": 0,
+              "passes": true,
+              "missingPlayerCount": 0
+            },
+            "SUP": {
+              "known": false,
+              "currentMajorTierGap": null,
+              "passes": null,
+              "missingPlayerCount": 2
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    },
+    {
+      "id": "S-b03d0313eee4",
+      "stage": "tuning",
+      "stratum": "BROAD_POOL",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 8.91,
+        "lanes": [
+          7.8,
+          17.1,
+          4.61,
+          17.74,
+          13.52
+        ],
+        "laneSum": 60.769999999999996,
+        "maxLaneGap": 17.74,
+        "largeLaneCount": 2,
+        "adcGap": 17.74,
+        "supportGap": 13.52,
+        "bottomGap": 4.22,
+        "mainCount": 2,
+        "subCount": 6,
+        "autoCount": 2,
+        "registeredAutoCount": 2,
+        "unregistered": 0,
+        "burdenImbalance": 2,
+        "subImbalance": 2,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 2,
+        "confidence": 0.07,
+        "zeroSampleCount": 7,
+        "missingSourceCount": 14,
+        "cost": 76.05199999999999,
+        "risk": [
+          0,
+          0,
+          0,
+          1,
+          15,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          76.05199999999999
+        ],
+        "signedLaneGaps": [
+          -7.8,
+          17.1,
+          -4.61,
+          17.74,
+          -13.52
+        ],
+        "blueSeverelyDisadvantagedLanes": 0,
+        "redSeverelyDisadvantagedLanes": 2,
+        "lanesOver25": 0,
+        "laneExcessOver25": 0,
+        "qualityViolationCount": 1,
+        "excessRisk": 15,
+        "verification": {
+          "ADC": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 1
+          },
+          "SUP": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 1
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 16.74,
+          "lanes": [
+            7.8,
+            29.87,
+            4.61,
+            12.8,
+            13.52
+          ],
+          "laneSum": 68.6,
+          "maxLaneGap": 29.87,
+          "largeLaneCount": 1,
+          "adcGap": 12.8,
+          "supportGap": 13.52,
+          "bottomGap": 0.72,
+          "mainCount": 4,
+          "subCount": 4,
+          "autoCount": 2,
+          "registeredAutoCount": 2,
+          "unregistered": 0,
+          "burdenImbalance": 2,
+          "subImbalance": 2,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 2,
+          "confidence": 0.17,
+          "zeroSampleCount": 6,
+          "missingSourceCount": 14,
+          "cost": 99.04199999999999,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            6.609999999999999,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            99.04199999999999
+          ],
+          "signedLaneGaps": [
+            -7.8,
+            29.87,
+            -4.61,
+            12.8,
+            -13.52
+          ],
+          "blueSeverelyDisadvantagedLanes": 0,
+          "redSeverelyDisadvantagedLanes": 1,
+          "lanesOver25": 1,
+          "laneExcessOver25": 4.870000000000001,
+          "qualityViolationCount": 2,
+          "excessRisk": 6.609999999999999,
+          "verification": {
+            "ADC": {
+              "known": false,
+              "currentMajorTierGap": null,
+              "passes": null,
+              "missingPlayerCount": 1
+            },
+            "SUP": {
+              "known": false,
+              "currentMajorTierGap": null,
+              "passes": null,
+              "missingPlayerCount": 1
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    },
+    {
+      "id": "S-d5b2914a090b",
+      "stage": "tuning",
+      "stratum": "LOW_SAMPLE",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 2.73,
+        "lanes": [
+          5.14,
+          15.18,
+          9.7,
+          7.91,
+          15.8
+        ],
+        "laneSum": 53.730000000000004,
+        "maxLaneGap": 15.8,
+        "largeLaneCount": 2,
+        "adcGap": 7.91,
+        "supportGap": 15.8,
+        "bottomGap": 7.89,
+        "mainCount": 4,
+        "subCount": 5,
+        "autoCount": 1,
+        "registeredAutoCount": 1,
+        "unregistered": 0,
+        "burdenImbalance": 3,
+        "subImbalance": 1,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 1,
+        "confidence": 0.02,
+        "zeroSampleCount": 7,
+        "missingSourceCount": 15,
+        "cost": 63.172,
+        "risk": [
+          0,
+          0,
+          0,
+          1,
+          15,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          63.172
+        ],
+        "signedLaneGaps": [
+          5.14,
+          15.18,
+          -9.7,
+          7.91,
+          -15.8
+        ],
+        "blueSeverelyDisadvantagedLanes": 1,
+        "redSeverelyDisadvantagedLanes": 1,
+        "lanesOver25": 0,
+        "laneExcessOver25": 0,
+        "qualityViolationCount": 1,
+        "excessRisk": 15,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 2,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 1
+          }
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "teamGap": 6.98,
+          "lanes": [
+            5.14,
+            6.64,
+            11.43,
+            7.98,
+            27.89
+          ],
+          "laneSum": 59.08,
+          "maxLaneGap": 27.89,
+          "largeLaneCount": 1,
+          "adcGap": 7.98,
+          "supportGap": 27.89,
+          "bottomGap": 19.91,
+          "mainCount": 6,
+          "subCount": 3,
+          "autoCount": 1,
+          "registeredAutoCount": 1,
+          "unregistered": 0,
+          "burdenImbalance": 1,
+          "subImbalance": 1,
+          "rules": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomViolations": 0,
+          "bottomExcess": 0,
+          "unknownTier": 1,
+          "confidence": 0.06,
+          "zeroSampleCount": 6,
+          "missingSourceCount": 15,
+          "cost": 92.038,
+          "risk": [
+            0,
+            0,
+            0,
+            2,
+            12.8,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            92.038
+          ],
+          "signedLaneGaps": [
+            -5.14,
+            6.64,
+            11.43,
+            7.98,
+            -27.89
+          ],
+          "blueSeverelyDisadvantagedLanes": 1,
+          "redSeverelyDisadvantagedLanes": 0,
+          "lanesOver25": 1,
+          "laneExcessOver25": 2.8900000000000006,
+          "qualityViolationCount": 2,
+          "excessRisk": 12.8,
+          "verification": {
+            "ADC": {
+              "known": true,
+              "currentMajorTierGap": 1,
+              "passes": true,
+              "missingPlayerCount": 0
+            },
+            "SUP": {
+              "known": false,
+              "currentMajorTierGap": null,
+              "passes": null,
+              "missingPlayerCount": 1
+            }
+          }
+        },
+        "changed": true,
+        "classification": "mixed"
+      }
+    }
+  ],
+  "worstRemainingBaseline": [
+    {
+      "id": "S-9a5d6d02a16b",
+      "stage": "final",
+      "stratum": "MAIN_CONGESTION",
+      "relaxed": true,
+      "baseline": {
+        "teamGap": 45.53,
+        "lanes": [
+          6.67,
+          6.61,
+          87.74,
+          5.96,
+          22.97
+        ],
+        "laneSum": 129.95,
+        "maxLaneGap": 87.74,
+        "largeLaneCount": 2,
+        "adcGap": 5.96,
+        "supportGap": 22.97,
+        "bottomGap": 28.93,
+        "mainCount": 4,
+        "subCount": 5,
+        "autoCount": 1,
+        "registeredAutoCount": 0,
+        "unregistered": 1,
+        "burdenImbalance": 3,
+        "subImbalance": 1,
+        "rules": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 0,
+        "confidence": 0.07,
+        "zeroSampleCount": 6,
+        "missingSourceCount": 14,
+        "cost": 257.596,
+        "risk": [
+          0,
+          0,
+          1,
+          4,
+          127.19999999999999,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          257.596
+        ],
+        "signedLaneGaps": [
+          -6.67,
+          -6.61,
+          87.74,
+          -5.96,
+          -22.97
+        ],
+        "blueSeverelyDisadvantagedLanes": 1,
+        "redSeverelyDisadvantagedLanes": 1,
+        "lanesOver25": 1,
+        "laneExcessOver25": 62.739999999999995,
+        "qualityViolationCount": 4,
+        "excessRisk": 127.19999999999999,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 2,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": true,
+            "currentMajorTierGap": 2,
+            "passes": true,
+            "missingPlayerCount": 0
+          }
+        }
+      },
+      "candidate": null
+    },
+    {
+      "id": "S-c8eae2b2b9e3",
+      "stage": "validation",
+      "stratum": "MIXED_TIERS",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 43.81,
+        "lanes": [
+          17.6,
+          19.05,
+          85.17,
+          7.77,
+          12.48
+        ],
+        "laneSum": 142.07,
+        "maxLaneGap": 85.17,
+        "largeLaneCount": 3,
+        "adcGap": 7.77,
+        "supportGap": 12.48,
+        "bottomGap": 4.71,
+        "mainCount": 3,
+        "subCount": 4,
+        "autoCount": 3,
+        "registeredAutoCount": 3,
+        "unregistered": 0,
+        "burdenImbalance": 0,
+        "subImbalance": 2,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 0,
+        "confidence": 0.09,
+        "zeroSampleCount": 5,
+        "missingSourceCount": 13,
+        "cost": 239.51399999999998,
+        "risk": [
+          0,
+          0,
+          0,
+          3,
+          118.98,
+          0,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          239.51399999999998
+        ],
+        "signedLaneGaps": [
+          17.6,
+          19.05,
+          -85.17,
+          -7.77,
+          12.48
+        ],
+        "blueSeverelyDisadvantagedLanes": 1,
+        "redSeverelyDisadvantagedLanes": 2,
+        "lanesOver25": 1,
+        "laneExcessOver25": 60.17,
+        "qualityViolationCount": 3,
+        "excessRisk": 118.98,
+        "verification": {
+          "ADC": {
+            "known": true,
+            "currentMajorTierGap": 1,
+            "passes": true,
+            "missingPlayerCount": 0
+          },
+          "SUP": {
+            "known": true,
+            "currentMajorTierGap": 0,
+            "passes": true,
+            "missingPlayerCount": 0
+          }
+        }
+      },
+      "candidate": null
+    },
+    {
+      "id": "S-c2275522093d",
+      "stage": "validation",
+      "stratum": "UNKNOWN_TIER",
+      "relaxed": false,
+      "baseline": {
+        "teamGap": 16.14,
+        "lanes": [
+          53.07,
+          1.03,
+          83.65,
+          21.88,
+          35.29
+        ],
+        "laneSum": 194.92,
+        "maxLaneGap": 83.65,
+        "largeLaneCount": 4,
+        "adcGap": 21.88,
+        "supportGap": 35.29,
+        "bottomGap": 13.41,
+        "mainCount": 7,
+        "subCount": 1,
+        "autoCount": 2,
+        "registeredAutoCount": 2,
+        "unregistered": 0,
+        "burdenImbalance": 1,
+        "subImbalance": 1,
+        "rules": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "bottomViolations": 0,
+        "bottomExcess": 0,
+        "unknownTier": 4,
+        "confidence": 0.04,
+        "zeroSampleCount": 6,
+        "missingSourceCount": 15,
+        "cost": 234.926,
+        "risk": [
+          0,
+          0,
+          0,
+          4,
+          108.2,
+          4,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          234.926
+        ],
+        "signedLaneGaps": [
+          53.07,
+          1.03,
+          -83.65,
+          -21.88,
+          35.29
+        ],
+        "blueSeverelyDisadvantagedLanes": 2,
+        "redSeverelyDisadvantagedLanes": 2,
+        "lanesOver25": 3,
+        "laneExcessOver25": 97.00999999999999,
+        "qualityViolationCount": 4,
+        "excessRisk": 108.2,
+        "verification": {
+          "ADC": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 1
+          },
+          "SUP": {
+            "known": false,
+            "currentMajorTierGap": null,
+            "passes": null,
+            "missingPlayerCount": 1
+          }
+        }
+      },
+      "candidate": null
+    }
+  ]
+}
