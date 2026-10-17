@@ -1,4 +1,4 @@
-import { evaluateInhouseFairness, measureInhouseMatchup, type InhouseFairnessAssignment, type InhouseFairnessReport, type InhouseMatchupMetrics } from "./inhouse-fairness";
+import { evaluateInhouseFairness, measureInhouseMatchup, parseInhouseMajorTier, type InhouseFairnessAssignment, type InhouseFairnessReport, type InhouseMatchupMetrics } from "./inhouse-fairness";
 import { compareInhouseConstraintRelaxation, compareInhousePriority, inhouseJointCost, selectInhouseJointLayouts } from "./inhouse-joint-search";
 
 export type { InhouseFairnessReport, InhouseFairnessCheck, InhouseRuleViolations } from "./inhouse-fairness";
@@ -389,12 +389,12 @@ function extractDivision(raw: string) {
 
 function tierScore(raw: string | null) {
   const value = raw?.normalize("NFKC").trim() ?? "";
+  if (parseInhouseMajorTier(value) === null) return null;
   const compact = value.replace(/\s/gu, "").toLowerCase();
   const matches = (aliases: readonly string[]) => aliases.some((alias) => compact === alias || compact.startsWith(alias));
   const division = extractDivision(value);
   const divisionBonus = division === 1 ? 6 : division === 2 ? 4 : division === 3 ? 2 : 0;
   const lpBonus = (unit: number, max: number) => Math.min(max, Math.floor((extractLp(value) ?? 0) / unit));
-  if (!compact) return null;
   if (matches(["챌린저", "챌", "challenger", "ch", "c"])) return 118 + lpBonus(200, 7);
   if (matches(["그랜드마스터", "그마", "grandmaster", "gm"])) return 112 + lpBonus(200, 4);
   if (matches(["마스터", "마", "master", "m"])) {

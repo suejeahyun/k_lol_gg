@@ -21,6 +21,9 @@ function load(file, dependencies, globals = {}) {
 
 const season = load("modules/seasons/domain/season.ts", {});
 const keys = load("modules/seasons/application/client-mutation-key-store.ts", { "../domain/season": season });
+const fairness = load("modules/team-tools/domain/inhouse-fairness.ts", {});
+const jointSearch = load("modules/team-tools/domain/inhouse-joint-search.ts", { "./inhouse-fairness": fairness });
+const teamBalance = load("modules/team-tools/domain/team-balance.ts", { "./inhouse-fairness": fairness, "./inhouse-joint-search": jointSearch });
 const css = { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) };
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"];
 const formulaVersion = "V2_INHOUSE_RELAXED_2026_10_16";
@@ -63,6 +66,7 @@ function harness(file, exportName, send, withSelectedPlayers = false, evaluateLa
     "@/components/usage/usage-actions": { recordUsageAction: () => {} },
     "@/components/theme/theme-icons": new Proxy({}, { get: () => () => null }),
     "@/modules/team-tools": { ...share, evaluateTeamBalanceLayout: evaluateLayout, TEAM_BALANCE_V1_FORMULA_VERSION: formulaVersion, TEAM_BALANCE_POSITIONS: positions, TEAM_BALANCE_PREFERENCES: ["MAIN", "SUB", "AUTO"], TEAM_BALANCE_TEAMS: ["BLUE", "RED"] },
+    "@/modules/team-tools/domain/inhouse-fairness": fairness,
     "@/modules/seasons/application/client-mutation-key-store": keys,
     "../team-tools.module.css": css,
     "../../../team-tools.module.css": css,
@@ -536,4 +540,142 @@ test("older fairness reports still require reevaluation under the current ordere
   assert.match(text, /최신 자동 조정 기준으로 재평가/u);
   assert.doesNotMatch(text, /균형 추천/u);
   assert.match(share.formatTeamBalanceShareText(candidate, draft.participants), /최신 자동 조정 기준으로 재평가/u);
+});
+
+function newcomerDraft(currentTier = "DIAMOND IV") {
+  const draft = selectedDraft();
+  draft.ratingGeneration = null;
+  draft.participants = draft.participants.map((participant, index) => ({
+    ...participant,
+    rating: {
+      overall: null, confidence: null, sampleSize: null, positions: null,
+      v1: {
+        legacyPlayerId: null, currentTier: index === 0 ? currentTier : "GOLD IV", peakTier: null,
+        season: null, internalGames: 0, internalPositionGames: {}, recentSolo: null,
+        balanceOverrideScore: 0, mmr: { overall: 50, confidence: 0, positions: {} }, missingSources: [],
+      },
+    },
+  }));
+  const evaluated = teamBalance.evaluateTeamBalanceLayout(draft.participants, draft.candidates[0].assignments);
+  draft.candidates[0] = { ...draft.candidates[0], ...evaluated };
+  draft.selectedCandidateSignature = evaluated.signature;
+  return draft;
+}
+
+test("newcomer cards show the assigned tier score even without an MMR profile or projection", () => {
+  for (const [tier, expected] of [["DIAMOND IV", "68.0"], ["PLATINUM IV", "50.0"], [null, "32.0"], ["UNRANKED", "32.0"]]) {
+    const draft = newcomerDraft(tier);
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+    const tree = subject.render({ draft });
+    const cardText = visibleText(slot(tree, 0));
+    assert.match(cardText, new RegExp(`적용 점수 ${expected.replace(".", "\\.")}`, "u"));
+    assert.match(cardText, /내전 0판 · 전적 표본 없음/u);
+    assert.match(cardText, /최고 티어 확인 필요/u);
+    if (tier === "DIAMOND IV" || tier === "PLATINUM IV") assert.ok(cardText.includes(`현재 ${tier}`));
+    else assert.match(cardText, /현재 티어 확인 필요/u);
+    assert.doesNotMatch(visibleText(tree), /기본 점수 50|기본 점수 적용|신뢰도 0%|중립값 적용/u);
+    assert.match(visibleText(tree), /평가 시점의 등록 정보로 계산/u);
+    for (const team of ["BLUE", "RED"]) {
+      const assignments = draft.candidates[0].assignments.filter(entry => entry.team === team);
+      const sum = assignments.reduce((total, entry) => total + entry.rating.effectiveScore, 0);
+      assert.equal(Number(sum.toFixed(2)), draft.candidates[0].score.teamStrength[team === "BLUE" ? "blueTotal" : "redTotal"]);
+    }
+    assert.equal(subject.requests.length, 0);
+  }
+});
+
+test("cards preserve stored scores and identify old snapshots instead of recomputing them on render", () => {
+  for (const withTierInputs of [false, true]) {
+    const draft = newcomerDraft();
+    const candidate = draft.candidates[0];
+    candidate.score.v1.formulaVersion = "stored-older-formula";
+    candidate.assignments[0].rating.effectiveScore = withTierInputs ? 73.25 : 50;
+    if (!withTierInputs) draft.participants[0].rating = null;
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, () => {
+      throw new Error("Rendering a stored result must not recalculate it");
+    });
+    const tree = subject.render({ draft });
+    const text = visibleText(slot(tree, 0));
+    assert.ok(text.includes(`적용 점수 ${withTierInputs ? "73.3" : "50.0"}`));
+    assert.doesNotMatch(text, /68\.0/u);
+    if (!withTierInputs) {
+      assert.match(text, /티어 입력 정보가 없는 이전 초안 · 재평가 필요/u);
+      assert.match(text, /내전 표본 확인 필요/u);
+    }
+    assert.match(visibleText(tree), /최신 기준 재평가 필요/u);
+  }
+});
+
+test("limited in-house experience is disclosed separately from the assigned score", () => {
+  for (const games of [3, 20]) {
+    const draft = newcomerDraft();
+    draft.participants[0].rating.v1.internalGames = games;
+    const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+    const tree = subject.render({ draft });
+    const text = visibleText(slot(tree, 0));
+    assert.match(text, /적용 점수 68\.0/u);
+    assert.ok(text.includes(`내전 ${games}판`));
+    assert.equal(text.includes("표본 부족"), games < 20);
+    assert.equal(draft.ratingGeneration, null);
+    assert.match(visibleText(tree), /평가 시점의 등록 정보로 계산/u);
+    assert.doesNotMatch(visibleText(tree), /내전 통계 없음/u);
+  }
+});
+
+test("role swaps show checked preview scores on each exact slot and preserve the applied totals", () => {
+  const draft = newcomerDraft();
+  draft.participants[0].eligiblePositions.push({ position: "JGL", preference: "SUB" });
+  draft.participants[1].eligiblePositions.push({ position: "TOP", preference: "SUB" });
+  let evaluations = 0;
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, (...args) => {
+    evaluations++;
+    return teamBalance.evaluateTeamBalanceLayout(...args);
+  });
+  const props = { draft };
+  find(slot(subject.render(props), 0), node => node.type === "button").props.onClick();
+  find(slot(subject.render(props), 1), node => node.type === "button").props.onClick();
+  let tree = subject.render(props);
+  assert.match(visibleText(slot(tree, 1)), /미리보기 점수 63\.0/u);
+  assert.match(visibleText(slot(tree, 1)), /현재 DIAMOND IV/u);
+  assert.match(visibleText(slot(tree, 0)), /미리보기 점수 36\.0/u);
+  assert.match(visibleText(tree), /적용 전 배치 기준/u);
+  assert.equal(evaluations, 1, "the cached full layout supplies the preview and every card");
+  assert.equal(draft.candidates[0].assignments[0].rating.effectiveScore, 68, "the stored result remains unchanged");
+  buttonNamed(tree, "선택한 배치로 되돌리기").props.onClick();
+  tree = subject.render(props);
+  assert.match(visibleText(slot(tree, 0)), /적용 점수 68\.0/u);
+  assert.doesNotMatch(visibleText(slot(tree, 0)), /미리보기 점수/u);
+});
+
+test("missing preview scores are explicit instead of reusing a stored score for another slot", () => {
+  const draft = newcomerDraft();
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult, false, teamBalance.evaluateTeamBalanceLayout);
+  const props = { draft };
+  swapCards(subject, props);
+  props.draft = { ...draft, participants: draft.participants.map((participant, index) => index === 0
+    ? { ...participant, rating: { ...participant.rating, confidence: Number.NaN } } : participant) };
+  const text = visibleText(slot(subject.render(props), 5));
+  assert.match(text, /배정 점수 확인 필요/u);
+  assert.doesNotMatch(text, /점수 68\.0|점수 50|점수 0/u);
+});
+
+test("automatically relaxed role assignments show the actual discounted newcomer score", () => {
+  const draft = newcomerDraft();
+  draft.participants[0].eligiblePositions = [{ position: "MID", preference: "MAIN" }];
+  const evaluated = teamBalance.evaluateTeamBalanceLayout(draft.participants, draft.candidates[0].assignments, { allowConstraintRelaxation: true });
+  draft.candidates[0] = { ...draft.candidates[0], ...evaluated };
+  draft.selectedCandidateSignature = evaluated.signature;
+  const subject = harness(workspaceFile, "TeamBalanceDraftWorkspace", () => mutationResult);
+  const tree = subject.render({ draft });
+  assert.match(visibleText(slot(tree, 0)), /적용 점수 58\.0/u);
+  assert.match(visibleText(slot(tree, 0)), /현재 DIAMOND IV/u);
+  assert.match(visibleText(tree), /조건 조정 편성/u);
+  assert.equal(buttonNamed(tree, "선택 팀 저장").props.disabled, false);
+});
+
+test("builder guidance distinguishes a first participant from a uniform neutral score", () => {
+  const subject = harness(builderFile, "TeamBalanceBuilder", () => createResult);
+  const text = visibleText(subject.render());
+  assert.match(text, /첫 참가자도 등록된 현재·최고 티어를 반영합니다/u);
+  assert.doesNotMatch(text, /중립 점수 50/u);
 });

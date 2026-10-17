@@ -5,6 +5,7 @@ import { Archive, ArrowRight, Check, Copy, GripVertical, RefreshCw, RotateCcw, S
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
+import { parseInhouseMajorTier } from "@/modules/team-tools/domain/inhouse-fairness";
 
 import {
   TEAM_BALANCE_TEAMS,
@@ -123,6 +124,7 @@ export function TeamBalanceDraftWorkspace({
     }
   }, [manualChanged, manualLayout, draft.participants, checkedManualLayout, allowConstraintRelaxation]);
   const beforeScore = (selectedCandidate ?? autoCandidates[0])?.score.teamStrength;
+  const cardAssignments = manualChanged ? manualPreview?.assignments : (selectedCandidate ?? autoCandidates[0])?.assignments;
   const canKeepManual = useMemo(() => {
     if (!manualChanged || !latestDraft || latestDraft.status === "ARCHIVED" || latestDraft.participants.length !== manualLayout.length ||
       latestDraft.participants.some((participant) => !manualLayout.some((entry) => entry.playerId === participant.playerId))) return false;
@@ -264,7 +266,7 @@ export function TeamBalanceDraftWorkspace({
   return (
     <>
       <section className={styles.draftHeader} data-status={draft.status}>
-        <div><span>{mode === "ADMIN" ? "관리자 검토 · " : ""}평가 {draft.evaluationRound}회</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>
+        <div><span>{mode === "ADMIN" ? "관리자 검토 · " : ""}평가 {draft.evaluationRound}회</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 등록 자료로 평가"} · revision ${draft.revision}` : draft.ratingGeneration ? `평가 시점의 등록 정보와 통계 ${draft.ratingGeneration}차 반영` : "평가 시점의 등록 정보로 계산"}</p></div>
         <strong data-status={draft.status}>{draft.status === "ARCHIVED" ? "보관됨" : draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
       </section>
 
@@ -338,10 +340,25 @@ export function TeamBalanceDraftWorkspace({
               const eligibility = participant?.eligiblePositions
                 .map((eligible) => `${positionLabel[eligible.position]} ${preferenceLabel[eligible.preference]}`)
                 .join(" · ") ?? "포지션 정보 없음";
+              // Show the stored result, or the checked preview for these exact slots, never the raw MMR fallback.
+              const assignment = cardAssignments?.find((assigned) => assigned.playerId === entry.playerId && assigned.team === entry.team && assigned.position === entry.position);
+              const effectiveScore = assignment?.rating?.effectiveScore;
+              const ratingSummary = typeof effectiveScore === "number" && Number.isFinite(effectiveScore)
+                ? `${manualChanged ? "미리보기" : "적용"} 점수 ${effectiveScore.toFixed(1)}`
+                : "배정 점수 확인 필요";
               const rating = participant?.rating;
-              const ratingSummary = rating?.overall === null || rating?.overall === undefined
-                ? "기본 점수 50 · 전적 표본 없음"
-                : `밸런스 ${rating.overall} · 신뢰도 ${Math.round((rating.confidence ?? 0) * 100)}% · 표본 ${rating.sampleSize ?? 0}`;
+              const v1 = rating?.v1;
+              const currentTierKnown = parseInhouseMajorTier(v1?.currentTier ?? "") !== null;
+              const peakTierKnown = parseInhouseMajorTier(v1?.peakTier ?? "") !== null;
+              const tierSummary = v1
+                ? `현재 ${currentTierKnown ? v1.currentTier : "티어 확인 필요"} · 최고 ${peakTierKnown ? v1.peakTier : "티어 확인 필요"}`
+                : "티어 입력 정보가 없는 이전 초안 · 재평가 필요";
+              const internalGames = v1?.internalGames ?? rating?.sampleSize;
+              const experienceSummary = internalGames === null || internalGames === undefined
+                ? "내전 표본 확인 필요"
+                : internalGames === 0
+                  ? "내전 0판 · 전적 표본 없음"
+                  : `내전 ${internalGames}판${internalGames < 20 ? " · 표본 부족" : ""}`;
               return <article
                 key={`${entry.team}-${entry.position}`}
                 draggable={!manualLocked}
@@ -356,7 +373,7 @@ export function TeamBalanceDraftWorkspace({
                 onDrop={(event) => { if (manualLocked || sending.current) return; event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) swapManual(sourceSlot, index); setDraggingSlot(null); setDragOverSlot(null); }}
               >
                 <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong></div>
-                <div className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small></div>
+                <div className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small><small>{tierSummary}</small><small>{experienceSummary}</small></div>
                 <button type="button" disabled={manualLocked} aria-pressed={keyboardSlot === index} onClick={() => selectKeyboardSlot(index)}>{keyboardSlot === null ? "교체할 카드 선택" : keyboardSlot === index ? "선택 취소" : "이 카드와 교체"}</button>
               </article>;
             })}</div>

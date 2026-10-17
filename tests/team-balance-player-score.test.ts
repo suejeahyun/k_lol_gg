@@ -92,6 +92,38 @@ test("missing-tier fallback and established component weights remain unchanged",
   assert.equal(score.positions[0]?.effectiveScore, 66.7);
 });
 
+test("tier-like arbitrary text receives the same fallback and role penalties as missing tier data", () => {
+  const eligiblePositions = [{ position: "TOP", preference: "MAIN" }, { position: "MID", preference: "SUB" }] as const;
+  const missing = evaluateTeamBalancePlayerScore({ ...player(null), eligiblePositions });
+  assert.equal(missing.baseScore, 32);
+  for (const tier of ["masterpiece", "garbage", "silverfish", "diamondplate", "challenger?", "ironwood", "마스터입니다", "GOLD IV unexpected", "GOLD 5"]) {
+    const subject = { ...player(tier), eligiblePositions };
+    assert.deepEqual(evaluateTeamBalancePlayerScore(subject), missing, tier);
+    assert.equal(layoutWith(subject).assignments.find((entry) => entry.playerId === subject.playerId)?.rating.effectiveScore, 32, tier);
+  }
+});
+
+test("an invalid current or peak tier preserves the established one-known-tier fallback", () => {
+  const missingCurrent = evaluateTeamBalancePlayerScore(player(null, { peakTier: "GOLD II" }));
+  const missingPeak = evaluateTeamBalancePlayerScore(player("GOLD II", { peakTier: null }));
+  assert.equal(missingCurrent.baseScore, 41.96);
+  assert.equal(missingPeak.baseScore, 44.6);
+  for (const tier of ["masterpiece", "garbage", "silverfish", "challenger?"]) {
+    assert.deepEqual(evaluateTeamBalancePlayerScore(player(tier, { peakTier: "GOLD II" })), missingCurrent, tier);
+    assert.deepEqual(evaluateTeamBalancePlayerScore(player("GOLD II", { peakTier: tier })), missingPeak, tier);
+  }
+});
+
+test("recognized short aliases, Roman divisions, LP and master floors retain their scores", () => {
+  for (const [alias, canonical] of [
+    ["골1", "GOLD I"], ["gI", "GOLD I"], ["플래 IV", "PLATINUM IV"], ["pIV", "PLATINUM IV"],
+    ["다4", "DIAMOND IV"], ["dIV", "DIAMOND IV"], ["마3층", "MASTER 200"], ["m200LP", "MASTER 200"],
+    ["gm450LP", "GRANDMASTER 450"], ["ch1000점", "CHALLENGER 1000"],
+  ]) {
+    assert.deepEqual(evaluateTeamBalancePlayerScore(player(alias!)), evaluateTeamBalancePlayerScore(player(canonical!)), alias);
+  }
+});
+
 test("editing legacy master floors preserves their score when the form saves canonical LP", () => {
   for (let floor = 1; floor <= 10; floor++) {
     const original = `마스터 ${floor}층`;

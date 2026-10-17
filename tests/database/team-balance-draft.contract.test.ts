@@ -37,6 +37,7 @@ import {
   riotAccountLinks,
   riotSummaries,
   mmrManualAdjustments,
+  mmrPlayerProfiles,
   seasonProjectionStates,
   seasonApplications,
   seasons,
@@ -241,6 +242,90 @@ function commandContext(
 function serviceError(code: TeamBalanceServiceError["code"]) {
   return (error: unknown) => error instanceof TeamBalanceServiceError && error.code === code;
 }
+
+test("newcomers use registered tiers without inhouse or MMR history and refresh only on explicit draft reevaluation", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString, "Only the disposable database harness may run this contract.");
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const ownerId = randomUUID();
+  const sessionId = randomUUID();
+  const ids: string[] = Array.from({ length: 10 }, () => randomUUID());
+  const tiers = ["GOLD IV", "MASTER 100", "DIAMOND IV", "PLATINUM II", "SILVER III"] as const;
+  const expectedScores = [41, 81.5, 68, 53.6, 33.8] as const;
+  const now = new Date();
+  const actor = { userAccountId: ownerId, sessionId, role: "USER", authVersion: 0 } as const;
+  const viewer = { actorUserAccountId: ownerId, authorization: "OWNER" } as const;
+  const provider = new PostgresTeamBalanceRatingProvider(() => now);
+  const service = new TeamBalanceService(new PostgresTeamBalanceRepository(database, provider));
+  const context = () => commandContext(actor, "APPROVED_ACCOUNT_MUTATION", randomUUID());
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: ownerId, loginId: `newcomer-${ownerId}`, loginIdNormalized: `newcomer-${ownerId}`, status: "APPROVED" });
+    await database.insert(authSessions).values({ id: sessionId, tokenHash: randomBytes(32), userAccountId: ownerId,
+      authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000) });
+    await database.insert(players).values(ids.map((id, index) => ({ id, memberName: `Newcomer${id}`, memberNameNormalized: `newcomer${id}`,
+      nickname: `Newcomer${id}`, nicknameNormalized: `newcomer${id}`, tagLine: "TEST", tagLineNormalized: "test",
+      currentTier: tiers[index % 5], peakTier: tiers[index % 5] })));
+    assert.deepEqual(await database.select({ playerId: mmrPlayerProfiles.playerId }).from(mmrPlayerProfiles)
+      .where(inArray(mmrPlayerProfiles.playerId, ids)), []);
+    assert.deepEqual(await database.select({ playerId: matchParticipants.playerId }).from(matchParticipants)
+      .where(inArray(matchParticipants.playerId, ids)), []);
+    const initialRatings = await provider.load(database, ids);
+    for (const [index, playerId] of ids.entries()) {
+      const rating = initialRatings.ratings.get(playerId);
+      assert.ok(rating?.v1);
+      assert.equal(rating.overall, null);
+      assert.equal(rating.confidence, null);
+      assert.equal(rating.v1.currentTier, tiers[index % 5]);
+      assert.equal(rating.v1.peakTier, tiers[index % 5]);
+      assert.equal(rating.v1.internalGames, 0);
+      assert.equal(rating.v1.season, null);
+      assert.equal(rating.v1.mmr.confidence, 0);
+    }
+    const created = await service.createDraft(context(), { title: "Registered-tier newcomers",
+      participants: ids.map((playerId, index) => ({ playerId, eligiblePositions: [{ position: positions[index % 5], preference: "MAIN" }] })),
+    }, now);
+    const draftId = String(created.body.draftId);
+    const initial = await service.getDraft(viewer, draftId);
+    assert.ok(initial);
+    assert.equal(initial.evaluationRound, 1);
+    assert.ok(initial.candidates.length > 0);
+    for (const candidate of initial.candidates) {
+      assert.equal(candidate.assignments.length, 10);
+      for (const assignment of candidate.assignments) {
+        assert.equal(assignment.rating.effectiveScore, expectedScores[ids.indexOf(assignment.playerId) % 5],
+          "a newcomer retains the registered tier score even when MMR confidence is zero");
+      }
+    }
+    assert.deepEqual(initial.participants.map((participant) => participant.rating), ids.map((id) => initialRatings.ratings.get(id)));
+    const originalCandidates = await database.select().from(teamBalanceDraftCandidates).where(and(
+      eq(teamBalanceDraftCandidates.draftId, draftId), eq(teamBalanceDraftCandidates.evaluationRound, 1),
+    ));
+    await database.update(players).set({ currentTier: "DIAMOND IV", peakTier: "DIAMOND II", updatedAt: now })
+      .where(eq(players.id, ids[0]!));
+    const liveRating = (await provider.load(database, [ids[0]!])).ratings.get(ids[0]!)!;
+    assert.equal(liveRating.v1?.currentTier, "DIAMOND IV");
+    assert.equal(liveRating.v1?.peakTier, "DIAMOND II");
+    const unchanged = await service.getDraft(viewer, draftId);
+    assert.deepEqual(unchanged, initial, "reading an existing draft does not mix changed registry tiers into its frozen round");
+    const reevaluated = await service.reevaluateDraft(context(), draftId, initial.revision, {}, now);
+    assert.equal(reevaluated.body.evaluationRound, 2);
+    const refreshed = await service.getDraft(viewer, draftId);
+    assert.ok(refreshed);
+    assert.equal(refreshed.evaluationRound, 2);
+    assert.equal(refreshed.revision, initial.revision + 1);
+    assert.deepEqual(refreshed.participants.find((participant) => participant.playerId === ids[0])?.rating, liveRating);
+    for (const candidate of refreshed.candidates) {
+      for (const assignment of candidate.assignments) {
+        assert.equal(assignment.rating.effectiveScore, assignment.playerId === ids[0] ? 70.4 : expectedScores[ids.indexOf(assignment.playerId) % 5]);
+      }
+    }
+    assert.deepEqual(await database.select().from(teamBalanceDraftCandidates).where(and(
+      eq(teamBalanceDraftCandidates.draftId, draftId), eq(teamBalanceDraftCandidates.evaluationRound, 1),
+    )), originalCandidates, "reevaluation appends a new round without rewriting the original scores or assignments");
+  } finally { await pool.end(); }
+});
 
 test("draft reads retain one snapshot when a real reevaluation commits between its queries", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
