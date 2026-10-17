@@ -26,6 +26,13 @@ type PreparedTeam = {
 type Pair = { red: PreparedTeam; blue: PreparedTeam; metrics: InhouseMatchupMetrics; cost: number; subImbalance: number };
 type RelaxationOptions = Readonly<{ allowConstraintRelaxation?: boolean }>;
 
+export type ExperimentSelectionValue = Pick<Pair, "metrics" | "cost" | "subImbalance">;
+/** Custom comparisons cannot replace structural constraints, the fallback prefix, or the final canonical tie-break. */
+export type ExperimentSelector<Name extends string = string> = {
+  name: Name;
+  compare(a: ExperimentSelectionValue, b: ExperimentSelectionValue): number;
+};
+
 /** The bridge exposes existing pure functions from the frozen source without changing the application API. */
 type FrozenKernel = {
   normalizePlayers(input: readonly TeamBalancePlayer[]): readonly unknown[];
@@ -41,8 +48,8 @@ type FrozenKernel = {
   inhouseJointCost(metrics: InhouseMatchupMetrics, subCount: number): number;
 };
 
-export type ExperimentCalculation = {
-  variants: Record<ExperimentVariant, EvaluatedTeamBalanceLayout>;
+export type SelectorCalculation<Name extends string> = {
+  variants: Record<Name, EvaluatedTeamBalanceLayout>;
   search: {
     teamCombinationCount: number;
     /** Raw inspections; fallback revisits strict pairs. Use uniqueEvaluatedLayoutCount for case totals. */
@@ -55,6 +62,7 @@ export type ExperimentCalculation = {
   };
   elapsedMs: number;
 };
+export type ExperimentCalculation = SelectorCalculation<ExperimentVariant>;
 
 function signatureOrder(a: Pair, b: Pair): number {
   if (a.blue.signature !== b.blue.signature) return a.blue.signature < b.blue.signature ? -1 : 1;
@@ -62,14 +70,13 @@ function signatureOrder(a: Pair, b: Pair): number {
   return 0;
 }
 
-function comparePair(kernel: FrozenKernel, a: Pair, b: Pair, variant: ExperimentVariant, relaxed: boolean): number {
-  const priority = (relaxed ? kernel.compareInhouseConstraintRelaxation(a.metrics, b.metrics) : 0)
-    || kernel.compareInhousePriority(a.metrics, b.metrics);
+function compareLegacySelection(kernel: FrozenKernel, a: ExperimentSelectionValue, b: ExperimentSelectionValue, variant: ExperimentVariant): number {
+  const priority = kernel.compareInhousePriority(a.metrics, b.metrics);
   if (priority) return priority;
   const costDifference = variant === "SUB_SOFT_1"
     ? (a.cost + a.subImbalance) - (b.cost + b.subImbalance)
     : a.cost - b.cost;
-  return costDifference || (variant === "SUB_TIE" ? a.subImbalance - b.subImbalance : 0) || signatureOrder(a, b);
+  return costDifference || (variant === "SUB_TIE" ? a.subImbalance - b.subImbalance : 0);
 }
 
 /**
@@ -92,14 +99,12 @@ export async function loadBalanceExperimentKernel(sourceDirectory: string, scrat
   await writeFile(entry, scoreSource + bridge, "utf8");
   const kernel = await import(pathToFileURL(entry).href) as FrozenKernel;
 
-  return {
-    calculateBaseline: kernel.calculateTeamBalanceCandidates,
-    evaluateFrozenLayout: kernel.evaluateTeamBalanceLayout,
-    calculate(input: readonly TeamBalancePlayer[]): ExperimentCalculation {
+  const baselineSelector: ExperimentSelector<"BASELINE"> = { name: "BASELINE", compare: (a, b) => compareLegacySelection(kernel, a, b, "BASELINE") };
+  function enumerate<Name extends string>(input: readonly TeamBalancePlayer[], selectors: readonly ExperimentSelector<Name>[]): SelectorCalculation<Name> {
       const started = performance.now();
       const players = kernel.normalizePlayers(input);
       const combinations = kernel.combinationsWithRedAnchor(players.length);
-      const best: Partial<Record<ExperimentVariant, Pair>> = {};
+      const best = new Map<Name, Pair>();
       let evaluatedLayoutCount = 0;
       let feasibleLayoutCount = 0;
       let relaxed = false;
@@ -117,23 +122,37 @@ export async function loadBalanceExperimentKernel(sourceDirectory: string, scrat
             const pair: Pair = { red, blue, metrics,
               cost: kernel.inhouseJointCost(metrics, red.subCount + blue.subCount),
               subImbalance: Math.abs(red.subCount - blue.subCount) };
-            for (const variant of EXPERIMENT_VARIANTS) {
-              const current = best[variant];
-              if (!current || comparePair(kernel, pair, current, variant, relax) < 0) best[variant] = pair;
+            for (const selector of selectors) {
+              const current = best.get(selector.name);
+              const comparison = current ? (relax ? kernel.compareInhouseConstraintRelaxation(pair.metrics, current.metrics) : 0)
+                || selector.compare(pair, current) || signatureOrder(pair, current) : -1;
+              if (comparison < 0) best.set(selector.name, pair);
             }
           }
         }
-        if (best.BASELINE) break;
+        if (best.size) break;
       }
-      const variants = Object.fromEntries(EXPERIMENT_VARIANTS.map((variant) => {
-        const pair = best[variant];
+      const variants = Object.fromEntries(selectors.map(({ name }) => {
+        const pair = best.get(name);
         if (!pair) throw new Error("Validated ten-player input unexpectedly has no structural layout.");
-        return [variant, kernel.materialize(kernel.evaluateCandidate(pair.red, pair.blue), { allowConstraintRelaxation: relaxed })];
-      })) as Record<ExperimentVariant, EvaluatedTeamBalanceLayout>;
+        return [name, kernel.materialize(kernel.evaluateCandidate(pair.red, pair.blue), { allowConstraintRelaxation: relaxed })];
+      })) as Record<Name, EvaluatedTeamBalanceLayout>;
       return { variants, search: { teamCombinationCount: combinations.length, evaluatedLayoutCount,
         uniqueEvaluatedLayoutCount: relaxed ? combinations.length * 120 * 120 : evaluatedLayoutCount,
         feasibleLayoutCount, relaxed },
         elapsedMs: performance.now() - started };
+  }
+  return {
+    calculateBaseline: kernel.calculateTeamBalanceCandidates,
+    evaluateFrozenLayout: kernel.evaluateTeamBalanceLayout,
+    calculate(input: readonly TeamBalancePlayer[]): ExperimentCalculation {
+      return enumerate(input, EXPERIMENT_VARIANTS.map(name => ({ name, compare: (a, b) => compareLegacySelection(kernel, a, b, name) })));
+    },
+    calculateWithSelectors<Name extends string>(input: readonly TeamBalancePlayer[], selectors: readonly ExperimentSelector<Name>[]): SelectorCalculation<"BASELINE" | Name> {
+      if (selectors.some(selector => selector.name === "BASELINE") || new Set(selectors.map(selector => selector.name)).size !== selectors.length) {
+        throw new Error("Custom selector names must be distinct and may not replace BASELINE.");
+      }
+      return enumerate<"BASELINE" | Name>(input, [baselineSelector, ...selectors]);
     },
   };
 }

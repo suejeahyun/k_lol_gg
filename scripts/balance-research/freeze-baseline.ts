@@ -5,7 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 const commit = process.argv[2] ?? "c679a1849bad2623da1339b87a83ecaa9fff485b";
 if (!/^[a-f0-9]{40}$/.test(commit)) throw new Error("FULL_BASELINE_COMMIT_REQUIRED");
-const directory = ".private/balance-research/baseline";
+const directory = process.argv[3] ?? ".private/balance-research/baseline";
 await mkdir(directory, { recursive: true });
 const files = [];
 for (const name of ["team-balance.ts", "inhouse-fairness.ts", "inhouse-joint-search.ts"]) {

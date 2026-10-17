@@ -29,6 +29,13 @@ export function compareInhousePriority(a: Priority, b: Priority) {
   return 0;
 }
 
+/** Isolated research candidate; the active selector continues to call compareInhousePriority. */
+export function compareInhouseSeverityPriority(a: Priority, b: Priority) {
+  return excessRisk(a) - excessRisk(b)
+    || a.qualityViolationCount - b.qualityViolationCount
+    || compareInhousePriority(a, b);
+}
+
 /** Numeric gaps only break ties after every numbered rule has been compared. */
 export function inhouseJointCost(value: Pick<InhouseMatchupMetrics, "totalGap" | "lineGapTotal" | "maxLaneGap" | "bottomGap">, subCount: number) {
   return value.totalGap * 1.4 + value.lineGapTotal * 0.6 + value.maxLaneGap
