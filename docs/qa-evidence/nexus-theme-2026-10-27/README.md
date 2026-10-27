@@ -3,7 +3,7 @@
 - 날짜: 2026-10-27
 - 대상: NEXUS 전용 서비스. 기존 K-LOL 서비스 분기는 유지.
 - migration head: `0049_stable-recruit-codes` (DB/schema/권한 변경 없음)
-- 배포 근거: 완료 후 같은 폴더의 production.json과 release registry에 기록.
+- 배포 완료: source `9e6a8b39806aae7b6aa2f17a464687d77c70ca84`, tag `nexus-mascot-theme-v1.0.0`. production.json과 release registry에 기록.
 
 ## 구현
 
@@ -40,3 +40,11 @@ local-desktop.png, local-mobile-390.png, local-mobile-320.png, local-recruits.pn
 ## 복구
 
 직전 NEXUS 운영 배포 `dpl_4GjqAJgoZPD6oezmXDELPkpUe3zn` (source `1ad03788f170a2d0b02dc48d62f1f4a39a03e803`, tag `nexus-service-v1.0.2`)로 Vercel production alias를 되돌릴 수 있다. DB migration이 없어 데이터 복구는 필요하지 않다. 기존 K-LOL 프로젝트는 배포하지 않는다.
+
+## 운영 확인
+
+- Vercel `dpl_2ywfbAB34CCFdB6XtcPCAfkFsSGG`, READY, 동일 source와 canonical alias 확인.
+- 홈·manifest·원본 이미지 SHA·앱 아이콘·health·비인증 관리자 차단·Riot 소유 인증 파일 7조건 PASS.
+- 실제 운영 브라우저 1440/390/320px 가로 넘침 없음, 5개 마스코트 모두 로드, 레거시 atlas 아이콘 0, console error 0.
+- production-desktop.png, production-mobile-390.png, browser.json 참조.
+- K-LOL 배포와 Neon 데이터는 수정하지 않음. Git push는 수행하지 않았으며 태그와 커밋은 로컬 보관.

@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-27 NEXUS 마스코트 테마 1.0.0 운영 반영
+
+source `9e6a8b39806aae7b6aa2f17a464687d77c70ca84`, tag `nexus-mascot-theme-v1.0.0`. 사용자 원본 NEXUS 보드로 NEXI 홈 배너와 5개 마스코트 카드, 어두운 공통 화면, 서비스별 아이콘·PWA·공유 이미지를 적용했다. NEXUS Vercel READY, 동일 source/alias, 운영 HTTP 7조건과 1440/390/320px 화면·이미지·콘솔 오류 0건을 확인했다.
+
+전체 check 계약 741 PASS·단위 1,201 PASS+기존 1 SKIP, 최종 CSS build·비밀정보 검사 PASS. DB·권한·카카오·기존 K-LOL 배포 변경 없음. Riot 키 Pending Review와 휴대폰 설치 대기는 이전 상태 그대로다. [검증·복구](qa-evidence/nexus-theme-2026-10-27/README.md), [운영 근거](qa-evidence/nexus-theme-2026-10-27/production.json).
+
 ## 2026-10-27 NEXUS Riot 신청·사이트 인증 1.0.2
 
 NEXUS.GG 별도 운영 키 신청 `898158`을 접수하고 포털에서 `Verification code found and validated!`를 확인했다. 현재 상태는 **Pending Review**이며 승인·키 발급 완료로 간주하지 않는다. 참가비·상금은 없음, 대회 방식·최소 경기 수·공지 일정은 미정으로 제출했다. 내전 MMR·공개 순위·팀 배치·대회 등급 산정에 대한 정책 검토 요청을 포함했다.
