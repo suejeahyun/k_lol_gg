@@ -41,6 +41,7 @@ const content = load("components/not-found-content.tsx", { "next/link": Link, "@
 const common = { "next/link": Link, "@/components/not-found-content": content };
 const publicShell = load("components/site-shell.tsx", {
   "next/link": Link,
+  "next/image": ({ alt, src, className, width, height, sizes }) => React.createElement("img", { alt, src, className, width, height, sizes }),
   "@/components/theme/theme-icons": icons,
   "@/modules/auth/infrastructure/runtime-session": { getCurrentSession: async () => null },
   "@/components/navigation/user-site-navigation": {

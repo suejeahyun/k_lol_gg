@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HomeRankingCarousel } from "@/components/home/home-ranking-carousel";
 import { HomeGuideArt } from "@/components/home/home-guide-art";
+import { NexusHomeHero, NexusMascotCrew } from "@/components/home/nexus-home";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { MediaCarousel } from "@/app/(public)/(media)/media-carousel";
 import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
@@ -123,8 +125,8 @@ export default async function HomePage() {
     : [];
 
   return (
-    <div className={`page-wrap home-page ${effects.effectsRoot}`}>
-      <section className="hero-panel" aria-labelledby="home-title">
+    <div className={`page-wrap home-page ${SERVICE_BRAND.id === "nexus" ? "" : effects.effectsRoot}`}>
+      {SERVICE_BRAND.id === "nexus" ? <NexusHomeHero /> : <section className="hero-panel" aria-labelledby="home-title">
         <div className="hero-copy">
           <h1 id="home-title">
             우리 같이
@@ -171,7 +173,7 @@ export default async function HomePage() {
             <strong>{displayChampion.displayName}</strong>
           </div>
         </div>
-      </section>
+      </section>}
 
       <section className="home-ranking-section" aria-labelledby="home-ranking-title">
         <div className="section-heading">
@@ -231,6 +233,8 @@ export default async function HomePage() {
           })}
         </div>
       </section>
+
+      {SERVICE_BRAND.id === "nexus" ? <NexusMascotCrew /> : null}
 
       <section className="home-overview-section" aria-labelledby="home-overview-title">
         <div className="section-heading">

@@ -1,0 +1,867 @@
+/*
+ * NEXUS is an opt-in skin. Keep every selector under the service boundary:
+ * K-LOL and its existing artwork continue to use their original styles.
+ */
+[data-service="nexus"] {
+  color-scheme: dark;
+  --background: #060a14;
+  --foreground: #e9efff;
+  --card: #101827;
+  --card-foreground: #e9efff;
+  --popover: #111b2d;
+  --popover-foreground: #e9efff;
+  --primary: #3860db;
+  --primary-hover: #2d50c5;
+  --primary-foreground: #ffffff;
+  --secondary: #1b2944;
+  --secondary-foreground: #e1eaff;
+  --muted: #172239;
+  --muted-foreground: #a8b8d3;
+  --accent: #1b2f55;
+  --accent-foreground: #c6d8ff;
+  --destructive: #ff91ae;
+  --border: #2a3b59;
+  --input: #405778;
+  --ring: #7aa7ff;
+  --chart-1: #75a5ff;
+  --chart-2: #bb98ff;
+  --chart-3: #f49ccc;
+  --chart-4: #76dbc7;
+  --chart-5: #f6d091;
+  --sidebar: #0d1423;
+  --sidebar-foreground: #e9efff;
+  --sidebar-primary: #3860db;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1b2f55;
+  --sidebar-accent-foreground: #c6d8ff;
+  --sidebar-border: #2a3b59;
+  --sidebar-ring: #7aa7ff;
+  --sky: #132e54;
+  --lilac: #30234c;
+  --peach: #3b2037;
+  --mint: #133c38;
+  --cream: #3b3020;
+  --ink-strong: #f2f6ff;
+  --text-muted: #a8b8d3;
+  --text-accent: #9dbbff;
+  --text-accent-purple: #c5a7ff;
+  --surface-glass: #111b2de8;
+  --surface-raised: #142039;
+  --surface-subtle: #17243c;
+  --shadow-soft: 0 16px 48px #00000038;
+  --shadow-1: 0 5px 18px #00000030;
+  --shadow-2: 0 12px 36px #00000048;
+  --shadow-3: 0 24px 64px #00000059;
+  --glow-sky: 0 0 28px #3d80ff22;
+  --glow-lilac: 0 0 28px #a66aff20;
+  --glow-pink: 0 0 28px #ed78c61c;
+  --glow-gold: 0 0 28px #f3c5751c;
+  --theme-world-image: none;
+  --theme-arena-image: none;
+  --theme-panel-image: none;
+  --theme-surface-background: linear-gradient(135deg, #121d30, #0d1524);
+  --theme-feature-background: linear-gradient(120deg, #142748, #11192b 60%, #211931);
+  --theme-page-background: radial-gradient(ellipse at 18% 0%, #16377166, transparent 45rem), radial-gradient(ellipse at 96% 34%, #43276924, transparent 36rem), #060a14;
+  scrollbar-color: #425b85 #0a101d;
+}
+
+[data-service="nexus"] body {
+  color: var(--foreground);
+  background: var(--theme-page-background);
+}
+
+[data-service="nexus"] ::selection {
+  color: #ffffff;
+  background: #365eb9;
+}
+
+[data-service="nexus"] .site-header,
+html[data-service="nexus"][data-ui-scrolled="true"] .site-header {
+  border-bottom-color: #365b9566;
+  background: #090f1eeb;
+  box-shadow: 0 8px 32px #00000035;
+  backdrop-filter: blur(18px);
+}
+
+[data-service="nexus"] .site-header::after {
+  background: linear-gradient(90deg, transparent, #558cff88 30%, #9169ee66 75%, transparent);
+}
+
+[data-service="nexus"] .site-header__inner {
+  gap: 18px;
+}
+
+[data-service="nexus"] .brand {
+  gap: 10px;
+}
+
+[data-service="nexus"] .brand__mark.nexus-brand__mark {
+  position: relative;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid #4c75c4;
+  border-radius: 12px;
+  background: #080e1c;
+  box-shadow: 0 0 22px #3e80ff30, inset 0 0 0 2px #090e1a;
+}
+
+[data-service="nexus"] .nexus-brand__image {
+  position: absolute;
+  top: -157.5%;
+  left: -4.62%;
+  width: 520%;
+  max-width: none;
+  height: auto;
+}
+
+[data-service="nexus"] .brand strong {
+  color: #edf4ff;
+  font-size: 19px;
+  font-weight: 950;
+  letter-spacing: -.045em;
+  text-shadow: 0 0 24px #6b9fff30;
+}
+
+[data-service="nexus"] .nexus-brand__tagline {
+  margin-top: 2px;
+  color: #a5bdeb;
+  font-size: 7px;
+  font-weight: 750;
+  letter-spacing: .14em;
+}
+
+[data-service="nexus"] .desktop-nav {
+  border-color: #2a3b59;
+  border-radius: 13px;
+  background: #101a2bbd;
+}
+
+[data-service="nexus"] .desktop-nav a,
+[data-service="nexus"] .task-menu summary {
+  color: #b8c7e2;
+}
+
+[data-service="nexus"] .desktop-nav a:hover,
+[data-service="nexus"] .desktop-nav a[aria-current="page"],
+[data-service="nexus"] .task-menu[open] summary,
+[data-service="nexus"] .task-menu[data-active] summary {
+  color: #d3e2ff;
+  background: #1c3153;
+  box-shadow: inset 0 0 0 1px #4c76b94d;
+}
+
+[data-service="nexus"] .desktop-nav a::after {
+  background: linear-gradient(90deg, #6fa5ff, #ad88ff);
+}
+
+[data-service="nexus"] .task-menu__links {
+  border-color: #3d5278;
+  background: #111c30;
+  box-shadow: 0 16px 48px #00000080;
+}
+
+[data-service="nexus"] :is(.header-icon-action, .header-search, .user-dialog__close) {
+  border-color: #344868;
+  color: #d2dff7;
+  background: #14213a;
+}
+
+[data-service="nexus"] :is(.header-icon-action, .header-search, .user-dialog__close):hover {
+  color: #ffffff;
+  background: #22395e;
+}
+
+[data-service="nexus"] .header-account {
+  border-color: #5c85ed;
+  color: #ffffff;
+  background: linear-gradient(130deg, #315bd4, #5941b7);
+  box-shadow: 0 5px 22px #345fdf24;
+}
+
+[data-service="nexus"] .site-footer {
+  border: 1px solid #293d60;
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+  padding: 28px;
+  color: var(--text-muted);
+  background: linear-gradient(120deg, #101a2d, #0b1221);
+}
+
+[data-service="nexus"] .site-footer strong {
+  color: #edf4ff;
+  letter-spacing: .04em;
+}
+
+[data-service="nexus"] .nexus-footer__tagline {
+  display: block;
+  margin-block: 6px 12px;
+  color: #adc3ed;
+  font-size: 12px;
+}
+
+[data-service="nexus"] .site-footer a {
+  color: #b7ceff;
+  text-underline-offset: .2em;
+}
+
+[data-service="nexus"] .site-footer a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+[data-service="nexus"] .riot-disclaimer {
+  border-color: #33476a;
+  border-left-color: #739cff;
+  color: #b7c6e0;
+  background: #152038;
+}
+
+[data-service="nexus"] .mobile-nav {
+  border-color: #36527b;
+  background: #0d1729f5;
+  box-shadow: 0 -8px 32px #00000050;
+  backdrop-filter: blur(16px);
+}
+
+[data-service="nexus"] .mobile-nav :is(a, button) {
+  color: #b6c6e2;
+}
+
+[data-service="nexus"] .mobile-nav :is(a, button)[aria-current="page"],
+[data-service="nexus"] .mobile-nav button[aria-expanded="true"] {
+  color: #d6e6ff;
+  background: #1d355a;
+  box-shadow: inset 0 0 0 1px #486ca54d;
+}
+
+/* Native dialogs and shared primitives also appear outside the page's main. */
+[data-service="nexus"] .user-dialog {
+  border-color: #46638e;
+  color: var(--foreground);
+  background: #101b2e;
+  box-shadow: 0 28px 90px #00000099;
+}
+
+[data-service="nexus"] .user-dialog::backdrop,
+[data-service="nexus"] dialog::backdrop {
+  background: #01050cbd;
+  backdrop-filter: blur(8px);
+}
+
+[data-service="nexus"] :is(.user-dialog__panel, .all-menu-section, [data-slot="card"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"], [data-slot="select-content"], [data-slot="dropdown-menu-content"]) {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: var(--theme-surface-background);
+}
+
+[data-service="nexus"] :is(.all-menu-grid h3, .command-palette-results li strong, .user-dialog__heading h2, .global-search-form > label) {
+  color: var(--ink-strong);
+}
+
+[data-service="nexus"] :is(.all-menu-grid li > a, .command-palette-results li > a) {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #16233a;
+}
+
+[data-service="nexus"] :is(.all-menu-grid li > a, .command-palette-results li > a):is(:hover, :focus-visible) {
+  border-color: #6089c8;
+  color: #ffffff;
+  background: #22395a;
+}
+
+[data-service="nexus"] :is(.all-menu-grid li > a span, .all-menu-grid li > span small, .command-palette-results li small, .command-palette-results li em, .command-palette-empty) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] :is(.global-search-form > div, .player-search-form > div) {
+  border-color: var(--input);
+  color: var(--text-muted);
+  background: #0a1324;
+}
+
+[data-service="nexus"] .global-search-form__shortcut {
+  border-color: var(--border);
+  color: #c6d6f4;
+  background: #182741;
+}
+
+[data-service="nexus"] :is(.global-search-form__player, .search-player-link, .return-link, .back-link, .workflow-nav a, .task-links a, .recruit-actions a, .recruit-actions button, .task-card > strong) {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] .workflow-nav a[aria-current="page"] {
+  color: #ffffff;
+}
+
+html[data-service="nexus"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]), select, textarea) {
+  border-color: var(--input);
+  color: #eaf1ff;
+  background-color: #0c1628;
+  caret-color: #afcaff;
+}
+
+[data-service="nexus"] :is(input, textarea)::placeholder {
+  color: #8fa4c5;
+  opacity: 1;
+}
+
+[data-service="nexus"] :is(input[type="checkbox"], input[type="radio"], input[type="range"]) {
+  accent-color: #779fff;
+}
+
+[data-service="nexus"] input::file-selector-button {
+  border: 1px solid #5473a3;
+  border-radius: 6px;
+  color: #eaf1ff;
+  background: #203456;
+}
+
+[data-service="nexus"] :is(input, textarea):autofill {
+  -webkit-text-fill-color: #eaf1ff;
+  box-shadow: 0 0 0 1000px #0c1628 inset;
+}
+
+[data-service="nexus"] :is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+[data-service="nexus"] :is(.player-card, .empty-state, .status-panel, .players-hero) {
+  border-color: var(--border);
+  background: var(--theme-surface-background);
+}
+
+[data-service="nexus"] :is(.player-card__identity > span, .status-panel__mark) {
+  border-color: #5270ad;
+  color: #b8ceff;
+  background: linear-gradient(135deg, #213964, #34244e);
+}
+
+[data-service="nexus"] .player-card__stats > div {
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: #19263e;
+}
+
+[data-service="nexus"] :is(.player-card__link, .status-panel__link--secondary) {
+  border-color: #3f5b88;
+  color: #c2d6ff;
+  background: #1c3052;
+}
+
+[data-service="nexus"] :is(.player-card__link, .status-panel__link--secondary):hover {
+  color: #ffffff;
+  background: #2b4470;
+}
+
+[data-service="nexus"] .player-tier-filters a {
+  border-color: #3d5274;
+  color: #bed0ee;
+  background: #17263f;
+}
+
+[data-service="nexus"] .player-tier-filters a:hover {
+  border-color: #7195cb;
+  color: #eef4ff;
+  background: #223b61;
+}
+
+[data-service="nexus"] .player-tier-filters a[aria-current="page"] {
+  border-color: #789cff;
+  color: #ffffff;
+  background: #315bd4;
+  box-shadow: 0 5px 18px #254cba30;
+}
+
+[data-service="nexus"] .player-tier-filters a:focus-visible {
+  border-color: var(--ring);
+  outline-color: var(--ring);
+}
+
+[data-service="nexus"] .home-data-state {
+  border-color: #3b5074;
+  background: #14223a;
+}
+
+[data-service="nexus"] .home-data-state > span {
+  color: #b8ceff;
+}
+
+[data-service="nexus"] .home-data-state--ready {
+  border-color: #3c6c70;
+  background: linear-gradient(135deg, #102d34, #142438);
+}
+
+[data-service="nexus"] .home-data-state--ready > span {
+  color: #a4edd5;
+}
+
+[data-service="nexus"] .home-data-state--error {
+  border-color: #92516c;
+  background: #321e2d;
+}
+
+[data-service="nexus"] .task-link__icon,
+[data-service="nexus"] .home-feed-panel > header > svg {
+  color: #a9c5ff;
+  background: #1a2c4a;
+  box-shadow: inset 0 0 0 1px #3e5b844d;
+}
+
+/* CSS Modules retain their layout. These shared surface roles only change paint. */
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
+  [class$="__card"], [class$="__panel"], [class$="__tableWrap"],
+  [class$="__formCard"], [class$="__contract"], [class$="__filters"],
+  [class$="__search"], [class$="__searchPanel"], [class$="__toolbar"],
+  [class$="__editor"], [class$="__dialog"], [class$="__modal"],
+  [class$="__empty"], [class$="__state"], [class$="__policy"],
+  [class$="__board"], [class$="__explanation"], [class$="__summaryPanel"]
+) {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: var(--theme-surface-background);
+  box-shadow: var(--shadow-1);
+}
+
+[data-service="nexus"] :is(main, [data-ui-scope="admin"]) :is(h1, h2, h3, h4, label, legend, dt, dd) {
+  color: var(--foreground);
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
+  [class$="__description"], [class$="__subtitle"], [class$="__hint"],
+  [class$="__muted"], [class$="__summaryBar"], [class$="__check"]
+) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
+  [class$="__guides"], [class$="__state"], [class$="__filters"],
+  [class$="__recoveryLinks"], [class$="__quickLinks"]
+) > a {
+  border-color: #3f5b88;
+  color: #c2d6ff;
+  background: #1c3052;
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
+  [class$="__header"], [class$="__hero"], [class$="__panel"], [class$="__formCard"],
+  [class$="__intro"], [class$="__policy"], [class$="__state"]
+) > p {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] :is(main, [data-ui-scope="admin"]) :is(table, thead, tbody, tr, th, td) {
+  border-color: var(--border);
+}
+
+[data-service="nexus"] :is(main, [data-ui-scope="admin"]) table {
+  color: var(--foreground);
+  background: #101a2d;
+}
+
+[data-service="nexus"] :is(main, [data-ui-scope="admin"]) th {
+  color: #bed0ee;
+  background: #1a2942;
+}
+
+[data-service="nexus"] :is(main, [data-ui-scope="admin"]) td {
+  color: #d7e2f5;
+  background-color: #101a2d;
+}
+
+[data-service="nexus"] :is(main, [data-ui-scope="admin"]) tbody tr:hover td {
+  background-color: #1a2c48;
+}
+
+[data-service="nexus"] :is(main, [data-ui-scope="admin"]) td :is(a, strong) {
+  color: #b5ceff;
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__tabs"], [class$="__tabBar"]) :is(a, button) {
+  border-color: var(--border);
+  color: #b5c6e3;
+  background: #142139;
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__tabs"], [class$="__tabBar"]) :is(a, button):is([aria-current="page"], [aria-selected="true"]) {
+  border-color: #7299e4;
+  color: #e7f0ff;
+  background: #264579;
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
+  [class$="__badge"], [class$="__eyebrow"], [class$="__foundation"],
+  [class$="__emptyIcon"], [class$="__status"], [class$="__tierField"],
+  [class$="__heroBadge"]
+) {
+  border-color: #3d557e;
+  color: #c3d7ff;
+  background: #1d2c48;
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__notice"], [class$="__message"]) {
+  border-color: #4c6086;
+  color: #c3d3ee;
+  background: #18253c;
+}
+
+[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__notice"], [class$="__message"]) > p {
+  color: inherit;
+}
+
+[data-service="nexus"] [class*="-module__"]:is([class$="__error"], [class$="__logoutError"], [data-tone="error"], [data-state="REJECTED"], [data-state="SUSPENDED"]) {
+  border-color: #b15d7b;
+  color: #ffc0d3;
+  background: #3a1e30;
+}
+
+[data-service="nexus"] [class*="-module__"]:is([class$="__success"], [data-tone="success"], [data-state="APPROVED"]) {
+  border-color: #408f7e;
+  color: #a4edd5;
+  background: #10362f;
+}
+
+/* Account and admin pages define local tokens, so override at their own boundary. */
+[data-service="nexus"] [class*="account-access-module__"] {
+  --account-surface: #101827;
+  --account-surface-muted: #172239;
+  --account-border: #2a3b59;
+  --account-border-strong: #5676a8;
+  --account-text: #e9efff;
+  --account-muted: #a8b8d3;
+  --account-accent: #9dbbff;
+  --account-focus: #7aa7ff;
+  --account-success: #a4edd5;
+  --account-warning: #f2d296;
+  --account-danger: #ffc0d3;
+}
+
+[data-service="nexus"] [class*="account-access-module__"]:is([class$="__intro"], [class$="__accountHero"]) {
+  border-color: var(--border);
+  background: var(--theme-feature-background);
+}
+
+[data-service="nexus"] [class*="account-access-module__"]:is([class$="__facts"], [class$="__disciplineCounts"]) > div,
+[data-service="nexus"] [class*="account-access-module__"][class$="__activityGrid"] a,
+[data-service="nexus"] [class*="account-access-module__"][class$="__promise"] span,
+[data-service="nexus"] [class*="admin-workspace-page-module__"][class$="__contract"] li {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #18263e;
+}
+
+[data-service="nexus"] [class*="account-access-module__"][class$="__activityGrid"] span,
+[data-service="nexus"] [class*="account-access-module__"][class$="__policy"] a,
+[data-service="nexus"] [class*="account-access-module__"][class$="__check"] a {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] [class*="account-access-module__"][class$="__accountHero"] form button {
+  border-color: #5270a1;
+  color: #cfddf8;
+  background: #1b2c48;
+}
+
+[data-service="nexus"] [class*="account-access-module__"]:is([class$="__submit"], [class$="__primaryLink"]) {
+  color: #ffffff;
+  background: linear-gradient(120deg, #315bd4, #5941b7);
+}
+
+[data-service="nexus"] [class*="account-access-module__"][class$="__notice"] {
+  border-color: #927444;
+  color: #f2d296;
+  background: #30291d;
+}
+
+[data-service="nexus"] [data-ui-scope="admin"],
+[data-service="nexus"] [class*="admin-workspace-page-module__"] {
+  --admin-surface: #101827;
+  --admin-surface-muted: #172239;
+  --admin-border: #2a3b59;
+  --admin-border-strong: #5676a8;
+  --admin-text: #e9efff;
+  --admin-muted: #a8b8d3;
+  --admin-accent: #9dbbff;
+  --admin-accent-soft: #1b2f55;
+  --admin-focus: #7aa7ff;
+  --admin-danger: #ffc0d3;
+  --workspace-border: #2a3b59;
+  --workspace-border-strong: #5676a8;
+  --workspace-text: #e9efff;
+  --workspace-muted: #a8b8d3;
+  --workspace-accent: #9dbbff;
+  --workspace-focus: #7aa7ff;
+}
+
+[data-service="nexus"] [class*="admin-shell-module__"]:is([class$="__mode"], [class$="__avatar"], [class$="__environment"]),
+[data-service="nexus"] [class*="admin-shell-module__"][class$="__brand"] > span,
+[data-service="nexus"] [class*="admin-login-page-module__"][class$="__brandMark"] {
+  border-color: #46648e;
+  color: #b9d0ff;
+  background: linear-gradient(130deg, #1c355b, #30244b);
+}
+
+[data-service="nexus"] [class*="admin-shell-module__"]:is([class$="__nav"], [class$="__mobileBottom"], [class$="__mobileMenu"], [class$="__topActions"], [class$="__operationsNav"], [class$="__breadcrumb"]) :is(a, button) {
+  color: #c2d2ed;
+}
+
+[data-service="nexus"] [class*="admin-shell-module__"]:is([class$="__nav"], [class$="__mobileBottom"], [class$="__mobileMenu"]) :is(a, button):is(:hover, [aria-current="page"]) {
+  color: #e4eeff;
+  background: #233c65;
+}
+
+[data-service="nexus"] [class*="admin-shell-module__"][class$="__account"] small {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="admin-shell-module__"][class$="__brand"] b {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] [class*="admin-login-form-module__"][class$="__field"]:focus-within label {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] [class*="admin-login-form-module__"][class$="__message"] {
+  border-color: #b15d7b;
+  color: #ffc0d3;
+  background: #3a1e30;
+}
+
+/* Recruitment and ranking detail surfaces keep their state cues on dark paint. */
+[data-service="nexus"] [class*="recruits-module__"][class$="__cardTop"] span {
+  color: #ceb7ff;
+  background: #34254e;
+}
+
+[data-service="nexus"] [class*="recruits-module__"][class$="__card"][data-kind="scrim"] [class$="__cardTop"] span {
+  color: #c4d9ff;
+  background: #203452;
+}
+
+[data-service="nexus"] [class*="recruits-module__"][class$="__card"]:is([data-status="matched"], [data-status="confirmed"]) [class$="__cardTop"] span,
+[data-service="nexus"] [class*="recruits-module__"][class$="__availability"] {
+  color: #a4edd5;
+  background: #12392f;
+}
+
+[data-service="nexus"] [class*="recruits-module__"][class$="__availability"][data-full="true"] {
+  color: #ffc0d3;
+  background: #3a1e30;
+}
+
+[data-service="nexus"] [class*="recruits-module__"][class$="__card"][data-has-organizer="true"] dl div:first-child {
+  border-color: #664f8a;
+  background: linear-gradient(120deg, #2c2445, #211f35);
+}
+
+[data-service="nexus"] [class*="recruits-module__"][class$="__members"] {
+  border-color: var(--border);
+}
+
+[data-service="nexus"] [class*="recruits-module__"][class$="__members"] li {
+  border-color: #3d5274;
+  color: var(--foreground);
+  background: #1a2a44;
+}
+
+[data-service="nexus"] [class*="recruits-module__"][class$="__capacity"] {
+  background: #22334e;
+}
+
+[data-service="nexus"] [class*="rankings-module__"][class$="__podium"] a {
+  border-color: #485e83;
+  color: var(--foreground);
+  background: linear-gradient(135deg, #1d2d48, #151e31);
+}
+
+[data-service="nexus"] [class*="rankings-module__"][class$="__podium"] a[data-rank="1"] {
+  border-color: #9d824e;
+  background: linear-gradient(135deg, #352e24, #1c2335);
+}
+
+[data-service="nexus"] [class*="rankings-module__"][class$="__board"] li[data-rank] {
+  background: #19273f;
+}
+
+[data-service="nexus"] [class*="rankings-module__"][class$="__board"] li[data-own="true"] {
+  background: linear-gradient(90deg, #223e63, #29203e);
+}
+
+[data-service="nexus"] [class*="rankings-module__"][class$="__board"] li:hover {
+  background: #223654;
+}
+
+/* The assistant is rendered beside main and needs the same service palette. */
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__trigger"] {
+  border-color: #5276c2;
+  color: #ffffff;
+  background: linear-gradient(135deg, #315bd4, #5941b7);
+}
+
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] > header,
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] form {
+  border-color: var(--border);
+}
+
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] > header :is(strong, svg) {
+  color: var(--foreground);
+}
+
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] > header button {
+  color: #cadbfa;
+  background: #233654;
+}
+
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__messages"] p {
+  border-color: #3a5074;
+  color: var(--foreground);
+  background: #1a2b45;
+}
+
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__messages"] p[data-role="USER"] {
+  border-color: #6c599a;
+  background: #30264a;
+}
+
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__privacy"],
+[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__messages"] p span {
+  color: var(--text-muted);
+}
+
+@media (max-width: 820px) {
+  [data-service="nexus"] .site-header__inner {
+    width: calc(100% - 24px);
+    gap: 8px;
+  }
+
+  [data-service="nexus"] .site-footer {
+    gap: 18px;
+    padding: 22px 18px;
+  }
+
+  [data-service="nexus"] .nexus-brand__tagline {
+    font-size: 6px;
+    letter-spacing: .08em;
+  }
+
+  [data-service="nexus"] .brand strong {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 380px) {
+  [data-service="nexus"] .brand {
+    gap: 7px;
+  }
+
+  [data-service="nexus"] .brand__mark.nexus-brand__mark {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  [data-service="nexus"] .brand strong {
+    font-size: 15px;
+  }
+
+  [data-service="nexus"] .nexus-brand__tagline {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-service="nexus"],
+  [data-service="nexus"] *,
+  [data-service="nexus"] *::before,
+  [data-service="nexus"] *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  [data-service="nexus"] {
+    --background: Canvas;
+    --foreground: CanvasText;
+    --card: Canvas;
+    --card-foreground: CanvasText;
+    --popover: Canvas;
+    --popover-foreground: CanvasText;
+    --ink-strong: CanvasText;
+    --text-muted: CanvasText;
+    --muted-foreground: CanvasText;
+    --text-accent: LinkText;
+    --primary: ButtonFace;
+    --primary-foreground: ButtonText;
+    --border: CanvasText;
+    --input: CanvasText;
+    --ring: Highlight;
+    --theme-page-background: Canvas;
+    --theme-surface-background: Canvas;
+    --theme-feature-background: Canvas;
+  }
+
+  [data-service="nexus"] *,
+  [data-service="nexus"] *::before,
+  [data-service="nexus"] *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background-image: none !important;
+    forced-color-adjust: auto;
+  }
+
+  [data-service="nexus"] :is(a, button, input, select, textarea, summary):focus-visible {
+    outline-color: Highlight;
+  }
+
+  [data-service="nexus"] .brand__mark.nexus-brand__mark {
+    border-color: CanvasText;
+  }
+
+  [data-service="nexus"] .brand__mark.nexus-brand__mark::after {
+    color: CanvasText;
+    content: "N";
+    font-weight: 900;
+  }
+
+  [data-service="nexus"] .nexus-brand__image {
+    visibility: hidden;
+  }
+}
+
+@media print {
+  [data-service="nexus"] {
+    color-scheme: light;
+    --background: #fff;
+    --foreground: #111;
+    --card: #fff;
+    --card-foreground: #111;
+    --ink-strong: #111;
+    --text-muted: #333;
+    --muted-foreground: #333;
+    --text-accent: #111;
+    --border: #999;
+    --theme-page-background: #fff;
+    --theme-surface-background: #fff;
+    --theme-feature-background: #fff;
+  }
+
+  [data-service="nexus"] *,
+  [data-service="nexus"] *::before,
+  [data-service="nexus"] *::after {
+    color: #111 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  [data-service="nexus"] :is(.site-header, .mobile-nav) {
+    display: none;
+  }
+}

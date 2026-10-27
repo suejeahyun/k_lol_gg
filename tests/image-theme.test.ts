@@ -10,7 +10,7 @@ import ts from "typescript";
 import * as icons from "../src/components/theme/theme-icons";
 import { themeIconMap } from "../src/components/theme/theme-icon-map";
 
-test("every application icon import resolves to a generated image, including shared UI controls", async () => {
+test("K-LOL icons retain generated artwork and application consumers use the shared service-aware icons", async () => {
   const files = (await readdir("src", { recursive: true })).filter((file) => /\.(ts|tsx)$/.test(file));
   const consumers = new Set<string>();
   for (const file of files) {
@@ -18,7 +18,9 @@ test("every application icon import resolves to a generated image, including sha
     const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
     for (const node of ast.statements) {
       if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) continue;
-      assert.notEqual(node.moduleSpecifier.text, "lucide-react", `${file} still uses a line icon`);
+      if (node.moduleSpecifier.text === "lucide-react") {
+        assert.equal(file.replaceAll("\\", "/"), "components/theme/theme-icons.tsx", "line icons stay behind the service-aware wrapper");
+      }
       if (node.moduleSpecifier.text !== "@/components/theme/theme-icons") continue;
       consumers.add(file.replaceAll("\\", "/"));
       const bindings = node.importClause?.namedBindings;

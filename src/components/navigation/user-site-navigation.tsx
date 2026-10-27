@@ -108,7 +108,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
             <div>
               <h2 id={titleId}>전체 검색</h2>
             </div>
-            <button type="button" aria-label="검색 닫기" onClick={() => closeDialog(dialog.current)}>
+            <button className="user-dialog__close" type="button" aria-label="검색 닫기" onClick={() => closeDialog(dialog.current)}>
               <X size={20} aria-hidden="true" />
             </button>
           </div>
@@ -202,7 +202,7 @@ function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?
             <div>
               <h2 id={titleId}>전체 기능</h2>
             </div>
-            <button type="button" aria-label="전체 메뉴 닫기" onClick={() => closeDialog(dialog.current)}>
+            <button className="user-dialog__close" type="button" aria-label="전체 메뉴 닫기" onClick={() => closeDialog(dialog.current)}>
               <X size={20} aria-hidden="true" />
             </button>
           </div>

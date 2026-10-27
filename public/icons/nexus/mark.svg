@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="NEXUS">
+  <defs><linearGradient id="n" x1="12" y1="13" x2="52" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#b8d7ff"/><stop offset=".45" stop-color="#508bff"/><stop offset="1" stop-color="#9b78ff"/></linearGradient></defs>
+  <rect width="64" height="64" rx="16" fill="#080e1d"/>
+  <path d="M14 49V15l27 25V18l9-6v39L23 26v17Z" fill="url(#n)"/>
+  <path d="m14 15 27 25v6L14 21Zm27 3 9-6v5l-9 6Z" fill="#e5efff"/>
+</svg>

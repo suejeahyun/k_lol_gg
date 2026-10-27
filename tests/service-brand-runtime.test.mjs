@@ -10,6 +10,9 @@ const source = `
   import { absoluteSiteUrl, createRouteMetadata, SEO_ROUTE_CONTRACTS } from './src/modules/seo/domain/site-seo.ts';
   import { playerReportStorageKey } from './src/components/riot/player-report-snapshot.ts';
   import { ADMIN_IMPORT_RECOVERY_STORAGE_KEY } from './src/modules/matches/infrastructure/admin-import-recovery.ts';
+  import { createElement } from 'react';
+  import { renderToStaticMarkup } from 'react-dom/server';
+  import { Search, Crown } from './src/components/theme/theme-icons.tsx';
   process.stdout.write(JSON.stringify({
     name: SERVICE_BRAND.name,
     manifest: manifest(),
@@ -18,6 +21,8 @@ const source = `
     playerUrl: absoluteSiteUrl('/players'),
     reportKey: playerReportStorageKey('same-player-id', 'same-name#KR1'),
     recoveryKey: ADMIN_IMPORT_RECOVERY_STORAGE_KEY,
+    searchIcon: renderToStaticMarkup(createElement(Search, { 'aria-label': '검색', size: 20 })),
+    crownIcon: renderToStaticMarkup(createElement(Crown)),
   }));
 `;
 
@@ -37,6 +42,17 @@ test("NEXUS publishes its own install name, metadata, links and browser data key
   assert.equal(nexus.manifest.name, "NEXUS.GG");
   assert.equal(nexus.manifest.short_name, "NEXUS.GG");
   assert.equal(nexus.home.openGraph.siteName, "NEXUS.GG");
+  assert.equal(nexus.manifest.theme_color, "#080e1d");
+  assert.ok(nexus.manifest.icons.every(icon => icon.src.startsWith('/icons/nexus/')));
+  assert.equal(nexus.manifest.icons.length, 3);
+  assert.equal(nexus.manifest.shortcuts.length, 3);
+  assert.ok(nexus.manifest.shortcuts.every(shortcut => shortcut.icons[0].src === '/icons/nexus/icon-192.png'));
+  assert.equal(nexus.home.openGraph.images[0].url, '/images/nexus/mascot-board.png');
+  assert.match(nexus.searchIcon, /<path|<circle/);
+  assert.match(nexus.searchIcon, /role="img"/);
+  assert.match(nexus.searchIcon, /aria-label="검색"/);
+  assert.match(nexus.crownIcon, /aria-hidden="true"/);
+  assert.doesNotMatch(nexus.searchIcon, /<image/);
   assert.equal(nexus.playerUrl, "https://nexus.example/players");
   assert.equal(nexus.reportKey, "nexus:riot-report:v1:same-player-id:same-name%23KR1");
   assert.equal(nexus.recoveryKey, "nexus-v2:admin-match-import:pending:v1");
@@ -47,6 +63,10 @@ test("default K-LOL install, SEO and existing browser keys remain compatible", (
   const klol = inspect("", "");
   assert.equal(klol.manifest.name, "K-LOL.GG");
   assert.equal(klol.home.openGraph.siteName, "K-LOL.GG");
+  assert.equal(klol.manifest.theme_color, "#89bdf2");
+  assert.equal(klol.manifest.icons[0].src, '/icons/icon-192.png');
+  assert.equal(klol.home.openGraph.images[0].url, '/og.png');
+  assert.match(klol.searchIcon, /<image href="\/images\/theme\/v1\//);
   assert.equal(klol.playerUrl, "https://k-lol-gg.vercel.app/players");
   assert.equal(klol.reportKey, "klol:riot-report:v1:same-player-id:same-name%23KR1");
   assert.equal(klol.recoveryKey, "klol-v2:admin-match-import:pending:v1");

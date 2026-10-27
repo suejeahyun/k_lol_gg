@@ -1,12 +1,19 @@
 import { SERVICE_BRAND } from "@/lib/service-brand";
-import type { Metadata } from "next";
-import { getSiteOrigin } from "@/modules/seo/domain/site-seo";
+import type { Metadata, Viewport } from "next";
+import { getSiteOrigin, SOCIAL_IMAGE } from "@/modules/seo/domain/site-seo";
 import { PwaRegistration } from "@/components/pwa-registration";
 import { SiteAiAssistant } from "@/components/site-ai-assistant";
 import { VisualEffectsController } from "@/components/visual-effects-controller";
 import "./globals.css";
 import "./ux.css";
 import "./image-theme.css";
+import "./nexus-theme.css";
+
+const isNexus = SERVICE_BRAND.id === "nexus";
+const iconPrefix = isNexus ? "/icons/nexus" : "/icons";
+const tagline = isNexus ? "함께하는 순간, 더 특별한 우리." : "내전의 모든 순간을 더 쉽고 사랑스럽게.";
+
+export const viewport: Viewport = { themeColor: isNexus ? "#080e1d" : "#89bdf2" };
 
 export const metadata: Metadata = {
   metadataBase: getSiteOrigin(),
@@ -19,30 +26,28 @@ export const metadata: Metadata = {
   applicationName: SERVICE_BRAND.name,
   appleWebApp: { capable: true, title: SERVICE_BRAND.name, statusBarStyle: "default" },
   icons: {
-    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
-    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    icon: [
+      { url: isNexus ? "/icons/nexus/mark.svg" : "/icons/klol-mark.svg", sizes: "any", type: "image/svg+xml" },
+      { url: `${iconPrefix}/icon-192.png`, sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: `${iconPrefix}/icon-192.png`, sizes: "192x192", type: "image/png" }],
   },
   openGraph: {
     title: SERVICE_BRAND.name,
-    description: "내전의 모든 순간을 더 쉽고 사랑스럽게.",
-    images: [{
-      url: "/og.png",
-      width: 1200,
-      height: 630,
-      alt: "파스텔 하늘에서 여우불을 띄운 아리 비공식 AI 팬아트",
-    }],
+    description: tagline,
+    images: [SOCIAL_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: SERVICE_BRAND.name,
-    description: "내전의 모든 순간을 더 쉽고 사랑스럽게.",
-    images: ["/og.png"],
+    description: tagline,
+    images: [SOCIAL_IMAGE.url],
   },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko" className="h-full antialiased">
+    <html lang="ko" data-service={SERVICE_BRAND.id} className={`h-full antialiased${isNexus ? " dark" : ""}`}>
       <body className="min-h-full">{children}<VisualEffectsController /><PwaRegistration /><SiteAiAssistant /></body>
     </html>
   );

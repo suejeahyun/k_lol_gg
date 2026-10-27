@@ -17,7 +17,6 @@ test("PWA manifest and layout publish the expected install contract", async () =
 
   assert.match(manifest, /start_url:\s*"\/start\?source=pwa"/);
   assert.match(manifest, /purpose:\s*"maskable"/);
-  assert.equal((manifest.match(/src:\s*"\/icons\//g) ?? []).length, 6);
   assert.match(layout, /manifest:\s*"\/manifest\.webmanifest"/);
   assert.match(layout, /<PwaRegistration\s*\/?>/);
   assert.match(registration, /window\.isSecureContext/);
@@ -41,6 +40,9 @@ test("install icons exist and are not empty", async () => {
     "public/icons/icon-192.png",
     "public/icons/icon-512.png",
     "public/icons/icon-maskable-512.png",
+    "public/icons/nexus/icon-192.png",
+    "public/icons/nexus/icon-512.png",
+    "public/icons/nexus/icon-maskable-512.png",
   ]) {
     const info = await stat(new URL(pathname, projectRoot));
     assert.ok(info.isFile());
