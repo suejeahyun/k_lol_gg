@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-27T11:41:17.490Z",
+  "fullCheckExitCode": 0,
+  "commands": [
+    "npm run check",
+    "focused phone tests (79)",
+    "ES5/Rhino and CRLF limits",
+    "git diff --check"
+  ],
+  "tests": [
+    "ℹ tests 749",
+    "ℹ pass 749",
+    "ℹ fail 0",
+    "ℹ skipped 0",
+    "ℹ tests 1202",
+    "ℹ pass 1201",
+    "ℹ fail 0",
+    "ℹ skipped 1"
+  ],
+  "lint": {
+    "errors": 0,
+    "baselineWarnings": 87
+  },
+  "databaseObservation": {
+    "nexusStrictTargetGuard": true,
+    "readOnly": true,
+    "counts": {
+      "seasons": 0,
+      "applications": 0,
+      "rounds": 0,
+      "parties": 0,
+      "scrims": 0,
+      "siteNotices": 0,
+      "commandReceipts": 0
+    },
+    "deliveredNexusConfigMatchesProduction": true
+  },
+  "serverRuntimeChanged": false,
+  "productionWrites": false,
+  "realKakaoMessagesSent": false,
+  "phoneInstallation": "PENDING_USER_INSTALL",
+  "installerMatchesValidatedArtifact": true
+}

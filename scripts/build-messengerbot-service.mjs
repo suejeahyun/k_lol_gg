@@ -45,12 +45,17 @@ const nexusDatabase = [
 ].join("\n");
 
 const roomGuard = 'if(String(packageName||"")!=="com.kakao.talk"||(String(room)!=="NEXUS"&&String(room)!=="NEXUS 구인구직방"))return;';
+export const klolNexusRoomGuard = 'if(String(room)==="NEXUS"||String(room)==="NEXUS 구인구직방")return;';
+
+function withoutKlolNexusRoomGuard(source) {
+  return source.split("\n").filter((line) => line.trim() !== klolNexusRoomGuard).join("\n");
+}
 
 export function nexusMessengerbotSource(klolSource) {
   const marker = "var KLOL_V1_GATEWAY =";
   const start = klolSource.indexOf(marker);
   if (start < 0) throw new Error("K-LOL transport marker missing");
-  let source = klolSource.slice(start)
+  let source = withoutKlolNexusRoomGuard(klolSource.slice(start))
     .replace(/\bDataBase\./gu, "NEXUS_DB.")
     .replaceAll("K-LOL.GG", "NEXUS.GG").replaceAll("K-LOL", "NEXUS")
     .replaceAll("[KLOL_DIAG]", "[NEXUS_DIAG]").replaceAll("LOL-K 기능", "NEXUS 기능")
@@ -58,7 +63,7 @@ export function nexusMessengerbotSource(klolSource) {
     .replaceAll('"event-log-"', '"event-nexus-log-"')
     .replaceAll('"event-boot-"', '"event-nexus-boot-"')
     .replace('var BASE_URL="https://k-lol-gg.vercel.app";', 'var BASE_URL="";')
-    .replace(/KLOL_KAKAO_BOT_V40_R29_2026_10_14/gu, "NEXUS_KAKAO_BOT_V40_R29_2026_10_27");
+    .replace(/KLOL_KAKAO_BOT_V40_(?:R29_2026_10_14|R30_2026_10_27)/gu, "NEXUS_KAKAO_BOT_V40_R29_2026_10_27");
   // The new community has no approved invite links or entry code. Refer to its
   // own configured site instead of silently retaining K-LOL invites.
   source = source.replace(/sourceReplier\.reply\(joinTone\[0\] \+ .*? \+ joinTone\[1\]\);/u,
@@ -94,7 +99,7 @@ export function nexusMessengerbotSource(klolSource) {
 }
 
 export function nexusCompanionSource(klolSource) {
-  const source = klolSource.replace(/\r\n?/gu, "\n").replace(/\bDataBase\./gu, "NEXUS_DB.")
+  const source = withoutKlolNexusRoomGuard(klolSource.replace(/\r\n?/gu, "\n")).replace(/\bDataBase\./gu, "NEXUS_DB.")
     .replaceAll('"KLOL_SITE_NOTICE_COMPANION_1.0.3"', '"NEXUS_SITE_NOTICE_COMPANION_1.0.3"')
     .replace(/(function response\([^\n]+\) \{\n)/u, `$1  ${roomGuard}\n`);
   return `${nexusDatabase}\n${source}`;

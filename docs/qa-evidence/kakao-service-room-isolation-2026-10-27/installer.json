@@ -1,0 +1,15 @@
+{
+  "preparedAt": "2026-10-27T11:38:51.601Z",
+  "file": ".private/KLOL_ROOM_SAFE_EXISTING_PROFILE.js",
+  "version": "KLOL_KAKAO_BOT_V40_R30_2026_10_27",
+  "sha256": "ea5794e073c37c36cdc085c0a40ba32d7e7238209c7dcfa575c361cc2300fd65",
+  "lfCharacters": 63659,
+  "crlfCharacters": 65442,
+  "requiresExistingKlolProfile": true,
+  "containsCredentialPreamble": false,
+  "installationStatus": "PENDING_USER_INSTALL",
+  "excludedRooms": [
+    "NEXUS",
+    "NEXUS 구인구직방"
+  ]
+}

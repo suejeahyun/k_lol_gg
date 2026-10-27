@@ -37,6 +37,8 @@ node scripts/build-private-messengerbot-v1-strict.mjs --service nexus
 
 ## 휴대폰 설정
 
+2026-10-27 방 분리 수정: 기존 K-LOL R29에는 NEXUS 제외 조건이 없어 구독 대상이 겹치면 K-LOL 현황을 NEXUS 방에 답장할 수 있었다. K-LOL R30은 NEXUS 두 방을 입력 경계에서 차단한다. 기존 K-LOL 봇의 업데이트 안내는 [방 분리 검증·교체 안내](../../../docs/qa-evidence/kakao-service-room-isolation-2026-10-27/README.md)를 따른다. 이 업데이트로 NEXUS 설치본을 교체할 필요는 없다.
+
 1. 기존 K-LOL 봇의 응답 대상은 기존 K-LOL 방만 유지한다. NEXUS 두 방을 선택하지 않는다.
 2. MessengerBot R에서 별도 Legacy 봇 `NEXUSMain`을 만들고 NEXUS 비공개 파일 전체를 넣는다.
 3. 응답 대상은 `NEXUS`, `NEXUS 구인구직방` 두 곳만 선택한다. 코드도 그 두 방 이름과 카카오 패키지를 확인한다.

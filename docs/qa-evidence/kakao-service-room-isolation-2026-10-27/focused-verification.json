@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-10-27T11:39:25.676Z",
+  "scope": "Local source and synthetic VM verification; no live Kakao messages, production requests, registration, credentials changes or phone installation.",
+  "klolVersion": "KLOL_KAKAO_BOT_V40_R30_2026_10_27",
+  "nexusVersionUnchanged": "NEXUS_KAKAO_BOT_V40_R29_2026_10_27",
+  "focusedTests": {
+    "pass": 79,
+    "fail": 0,
+    "files": [
+      "tests/kakao-nexus-service-isolation.test.mjs",
+      "tests/kakao-v1-strict-messengerbot.test.mjs",
+      "tests/kakao-site-notice-phone.test.mjs",
+      "tests/kakao-v1-exact-v4-adapter-architecture.test.mjs"
+    ]
+  },
+  "checks": {
+    "nexusPublicMainByteIdentical": true,
+    "nexusPublicCompanionByteIdentical": true,
+    "klolPublicDiffOnlyEarlyRoomGuardAndVersion": true,
+    "blockedBothDirectionsZeroRequestsRepliesStorage": true,
+    "warmKlolSettingsNotOverwritten": true,
+    "allowedRoomsUseOwnServiceEndpoint": true,
+    "es5AndRhinoStaticAllFourPassed": true,
+    "focusedEslintPassed": true,
+    "gitDiffCheckPassed": true
+  },
+  "artifacts": [
+    {
+      "path": "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js",
+      "sha256": "ea5794e073c37c36cdc085c0a40ba32d7e7238209c7dcfa575c361cc2300fd65",
+      "lfChars": 63659,
+      "crlfChars": 65442,
+      "physicalLines": 1784,
+      "under65535": true
+    },
+    {
+      "path": "integrations/messengerbot-r/site-notices/KLOL_SITE_NOTICE_COMPANION.js",
+      "sha256": "25457705ded9e1fe487d61c0ca0e7f033073e27f4e7a142a29701ef130255477",
+      "lfChars": 12244,
+      "crlfChars": 12474,
+      "physicalLines": 231,
+      "under65535": true
+    },
+    {
+      "path": "integrations/messengerbot-r/nexus/NEXUS_KAKAO_BOT_MESSENGERBOT_R.js",
+      "sha256": "e18a5f7afb501a960fc5269cd3fbb46b131e670f4ba63babe08e2a7886ff7e9f",
+      "lfChars": 62619,
+      "crlfChars": 64419,
+      "physicalLines": 1801,
+      "under65535": true
+    },
+    {
+      "path": "integrations/messengerbot-r/nexus/NEXUS_SITE_NOTICE_COMPANION.js",
+      "sha256": "bf3fdd3cecf928ffd202f0e7967b7d5e6f1b3ea46e11ba68b6a5e47414171766",
+      "lfChars": 12513,
+      "crlfChars": 12747,
+      "physicalLines": 235,
+      "under65535": true
+    }
+  ]
+}

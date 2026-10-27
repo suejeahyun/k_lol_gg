@@ -4,7 +4,7 @@
 
 운영 서버의 배포·DB migration 근거는 [현재 상태](../../docs/STATUS.md)와 [기능 릴리스 기록](../../docs/releases/registry.json)을 따른다. 서버 배포와 휴대폰 JavaScript 설치는 별도로 확인한다. 고정 모집코드·명단버전이 있는 전체 양식 복사는 기존 compact copy 전달과 호환되지만, `구인상세 모집코드`·`상세 모집코드 추가/삭제 이름`·`모집코드ㅉ` 명령을 쓰려면 R29 설치가 필요하다.
 
-사용자가 확인한 **MessengerBot R 앱 버전은 0.7.29a**다. 이것은 아래 봇 JavaScript 버전과 다르다. R29는 답장 실패 후 재전송 복구와 내전 마감 별칭 전달을 보완했다. 현재 공개 생성 기준은 **R29** (`KLOL_KAKAO_BOT_V40_R29_2026_10_14`)이며 실제 휴대폰 설치는 미확인이다. 비공개 설치본을 최신 공개 생성본에서 다시 생성하고 버전·해시를 확인한 뒤 아래 **비공개 한 파일만** 전체 복사한다.
+사용자가 확인한 **MessengerBot R 앱 버전은 0.7.29a**다. 이것은 아래 봇 JavaScript 버전과 다르다. 현재 공개 생성 기준은 **R30** (`KLOL_KAKAO_BOT_V40_R30_2026_10_27`)이며 실제 휴대폰 설치는 미확인이다. R30은 R29 기능을 유지하면서 정확한 방 이름 `NEXUS`, `NEXUS 구인구직방`에서 K-LOL 봇의 응답·서버 요청·저장을 시작 전에 차단한다. 신규 프로필은 비공개 설치본을 최신 공개 생성본에서 다시 생성하고 버전·해시를 확인한 뒤 아래 **비공개 한 파일만** 전체 복사한다. 기존 설정을 유지하는 R30 교체는 [방 분리 검증·교체 안내](../../docs/qa-evidence/kakao-service-room-isolation-2026-10-27/README.md)를 따른다.
 
 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
 
@@ -19,7 +19,7 @@ V1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내�
 - 파티·구인 계열: `RECRUIT` (스크림은 종료 안내만 표시)
 - 내전·전적·랭킹·운영 양식 계열: `FEATURES`
 
-카카오 알림 parser의 방 이름은 인증이나 라우팅에 쓰지 않는다. 따라서 잘못된 방에서 명령을 보내도 명령 종류가 맞으면 실행될 수 있다. 물리적인 두 방 분리는 MessengerBot R의 구독 대상과 운영 안내로 유지한다.
+카카오 알림 parser의 방 이름은 서버 인증이나 서버 프로필 라우팅에 쓰지 않는다. R30의 두 NEXUS 방 차단을 제외하면 잘못된 방에서도 명령 종류가 맞으면 실행될 수 있다. 물리적인 방 분리는 MessengerBot R의 구독 대상과 운영 안내로 유지하며, K-LOL 프로필의 응답 대상에서 NEXUS 두 방을 제외한다.
 
 ## 일반 봇을 교체할 때의 순서
 
@@ -27,7 +27,7 @@ V1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내�
 2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
 3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
 4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
-5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R29_2026_10_14`를 검색한다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R30_2026_10_27`를 검색한다.
 6. 마지막 줄이 단독 `}`이고 파일 안에 `function response(`가 한 번만 있는지 확인한다.
 7. 저장·컴파일 후 봇을 다시 시작한다.
 8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
@@ -40,10 +40,10 @@ V1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내�
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| R29 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,595 | 65,377 | 1,783 | `ae3909a24b5fb33a93a81ac7f99a8a9067ee135fe850aec9e6173f11524bed6c` |
-| R29 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,884 | 63,667 | 1,784 | `7641aa4fa9f4e753d1059b79ce25ce0a8a53d19f0d999ec74871e52d7260a9c1` |
+| R30 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,659 | 65,442 | 1,784 | `ea5794e073c37c36cdc085c0a40ba32d7e7238209c7dcfa575c361cc2300fd65` |
+| 과거 R29 휴대폰 설치본 검증 이력 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,884 | 63,667 | 1,784 | `7641aa4fa9f4e753d1059b79ce25ce0a8a53d19f0d999ec74871e52d7260a9c1` |
 
-공개·비공개 파일 값은 2026-10-14 로컬 생성 근거이며 실기기 설치 증거가 아니다. 공개·비공개 빌드는 LF와 CRLF 모두 MessengerBot R의 65,535자 제한 미만인지, ES5 parser와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 검사한다. 원본 fixture를 바꾸지 않고 생성본의 주석·빈 줄·행 선행 들여쓰기를 제거하며 유지보수하는 어댑터·전송 코드의 토큰 사이 공백만 축약한다. 문자열·정규식과 승인 변경 밖의 V1 실행문 동일성은 보존한다. 어댑터·전송 코드는 명시적 세미콜론 뒤 닫는 중괄호 앞의 줄바꿈만 제거하며 Acorn 토큰 동일성을 검사한다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.
+공개 R30 값은 2026-10-27, 과거 비공개 R29 값은 2026-10-14 로컬 생성 근거이며 실기기 설치 증거가 아니다. 위 R29 private 해시를 현재 R30 설치본으로 사용하지 않는다. 공개·비공개 빌드는 LF와 CRLF 모두 MessengerBot R의 65,535자 제한 미만인지, ES5 parser와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 검사한다. 원본 fixture를 바꾸지 않고 생성본의 주석·빈 줄·행 선행 들여쓰기를 제거하며 유지보수하는 어댑터·전송 코드의 토큰 사이 공백만 축약한다. 문자열·정규식과 승인 변경 밖의 V1 실행문 동일성은 보존한다. 어댑터·전송 코드는 명시적 세미콜론 뒤 닫는 중괄호 앞의 줄바꿈만 제거하며 Acorn 토큰 동일성을 검사한다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.
 
 R28 private 백업: `.private/backups/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.pre-r29-reconstructed-2a787419.js` (이전 공개 소스와 동일한 비공개 설정으로 재생성하여 기존 SHA-256 `2a7874198cdfb97116a5572afdbdc77a4129654617730752fa120f4f9ee98b37` 일치 확인).
 

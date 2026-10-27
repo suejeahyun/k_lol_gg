@@ -188,6 +188,7 @@ try {
 }
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
+  if(String(room)==="NEXUS"||String(room)==="NEXUS 구인구직방")return;
   var message = String(msg);
   var diagnostic = message === "사이트알림진단" || message === "사이트알림버전" || message === "사이트알림상태";
   if (!diagnostic && !/^사이트알림연동 [a-f0-9]{32}$/.test(message)) return;

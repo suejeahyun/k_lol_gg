@@ -629,7 +629,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R29_2026_10_14\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R30_2026_10_27\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
   );
 });
 
@@ -1209,7 +1209,7 @@ test("R27 local diagnostics bypass request state, deduplication and notification
     logs.length = 0;
     const replies = replyFor(runtime, message, { imageDB });
     assert.equal(replies.length, 1, message);
-    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R29_2026_10_14/u);
+    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R30_2026_10_27/u);
     assert.match(replies[0], /내전상세 1/u);
     assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] RETURNED"]);
   }

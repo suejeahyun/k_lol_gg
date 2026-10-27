@@ -1,5 +1,10 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-27 카카오 서비스 방 분리 1.0.0 — 폰 적용 대기
+
+기존 K-LOL 봇이 NEXUS 방에서도 K-LOL 구인현황을 조회하는 동작을 합성 VM으로 재현하고, main R30과 companion 입력 경계에서 NEXUS 두 방을 차단했다. NEXUS 공개 산출물 두 개는 바이트 동일하며 기존 비공개 설치본도 변경하지 않았다. 기존 설정 유지형 K-LOL main 교체본은 CRLF 65,442자다. focused79·전체check PASS. Vercel/DB 변경 없이 PENDING_USER_INSTALL로 관리한다. [원인·검증·설치 범위](qa-evidence/kakao-service-room-isolation-2026-10-27/README.md).
+
+
 ## 2026-10-27 NEXUS 전체 점검·마스코트 테마 1.0.2 운영 반영
 
 source `4bb8f7a3bfc9fb2ca2e642fc140c221d0fc6ef3a`, tag `nexus-mascot-theme-v1.0.2`, Vercel `dpl_2YMxonJLnzyr81aCYyPS4CasSggh` READY·동일 source/alias·health와 HTTP 8조건 확인. 상세 폼 대비·선택 상태·320px 관리자 필터와 표·플레이어 수 표시를 수정했다. Next 16.4.3 보안 업데이트와 NEXUS 전용 CSS Module 안정 마커로 빌드 이름 변경에도 테마가 유지된다.
