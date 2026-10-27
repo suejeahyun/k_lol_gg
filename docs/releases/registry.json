@@ -2346,6 +2346,32 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "nexus-service",
+      "version": "1.0.1",
+      "gitTag": "nexus-service-v1.0.1",
+      "commit": "a146da47a162c7e4a298c6373505696776817b21",
+      "releasedAt": "2026-10-27T07:53:26.529Z",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/nexus-riot-2026-10-27/README.md",
+      "patchNotes": "docs/patch-notes/nexus-service-v1.0.1.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_7BzdTSXc82uTtak12hJSwfzoyk1R",
+        "url": "https://nexus-q9d1jxe1q-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://nexus-gg-kr.vercel.app",
+        "verifiedAt": "2026-10-27T07:53:26.529Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "NEXUSMain + NEXUSNotice",
+          "version": "nexus-service-v1.0.0",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }

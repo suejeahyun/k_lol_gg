@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-27 NEXUS Riot DB 선택 보완 1.0.1
+
+source `a146da47a162c7e4a298c6373505696776817b21`, tag `nexus-service-v1.0.1`, 배포 `dpl_7BzdTSXc82uTtak12hJSwfzoyk1R`의 READY·동일 source·NEXUS alias를 확인했다. Riot 설정 검사와 운영 점검이 NEXUS 전용 DB를 인식하며, 실행 환경의 서비스 ID가 누락되어도 빌드에서 고정한 값을 유지한다. 전체 check 계약 741·단위 1,201 PASS+기존 1 SKIP, 운영 HTTP 9조건 PASS, 독립 리뷰 통과.
+
+**실제 Riot 연결은 유효 키 입력 대기.** 기존 키 공유는 승인됐으나 보관된 로컬 키는 401이고 Vercel sensitive 변수는 원문을 반환하지 않는다. 환경·DB 기능 플래그는 비활성 유지. 기존 K-LOL 자원은 변경하지 않았다. 휴대폰 설치도 기존 PENDING_USER_INSTALL 상태다. [새 검증](qa-evidence/nexus-riot-2026-10-27/README.md), [배포 근거](qa-evidence/nexus-riot-2026-10-27/production.json).
+
 ## 2026-10-27 NEXUS.GG 별도 서비스 1.0.0
 
 동일 기능 코드에 서비스별 브랜드·DB·인증·폰 봇 설정을 적용하고 별도 Vercel/Neon/private Blob으로 [NEXUS.GG](https://nexus-gg-kr.vercel.app)를 배포했다. source `ef7bf797c057a9fe5f4055791a9d2f74c5f04fee`, tag `nexus-service-v1.0.0`, READY·동일 source·alias·운영 HTTP 9개·서명 카카오 진단 4개 확인. K-LOL 배포·데이터는 변경하지 않았다.

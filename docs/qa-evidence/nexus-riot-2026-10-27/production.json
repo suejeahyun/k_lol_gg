@@ -1,0 +1,51 @@
+{
+  "verifiedAt": "2026-10-27T07:53:26.529Z",
+  "source": "a146da47a162c7e4a298c6373505696776817b21",
+  "projectId": "prj_qozFsYmEO7ZoL0jZAnBNCVc1nF8i",
+  "deploymentId": "dpl_7BzdTSXc82uTtak12hJSwfzoyk1R",
+  "immutableUrl": "https://nexus-q9d1jxe1q-tjdmswo11-3715s-projects.vercel.app",
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "readyState": "READY",
+  "http": [
+    {
+      "route": "/",
+      "status": 200
+    },
+    {
+      "route": "/api/health",
+      "status": 200
+    },
+    {
+      "route": "/players",
+      "status": 200
+    },
+    {
+      "route": "/rankings",
+      "status": 200
+    },
+    {
+      "route": "/recruits",
+      "status": 200
+    },
+    {
+      "route": "/admin/login",
+      "status": 200
+    },
+    {
+      "route": "/api/site-settings",
+      "status": 200
+    },
+    {
+      "route": "/api/admin/site-settings",
+      "status": 401
+    },
+    {
+      "route": "/api/admin/riot",
+      "status": 401
+    }
+  ],
+  "riotIntegration": "PENDING_VALID_EXISTING_API_KEY",
+  "localStoredKeyProbeStatus": 401,
+  "existingKlolProjectModified": false,
+  "phoneInstallation": "PENDING_USER_INSTALL"
+}
