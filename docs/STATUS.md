@@ -1,5 +1,12 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-27 NEXUS 전체 점검·마스코트 테마 1.0.2 운영 반영
+
+source `4bb8f7a3bfc9fb2ca2e642fc140c221d0fc6ef3a`, tag `nexus-mascot-theme-v1.0.2`, Vercel `dpl_2YMxonJLnzyr81aCYyPS4CasSggh` READY·동일 source/alias·health와 HTTP 8조건 확인. 상세 폼 대비·선택 상태·320px 관리자 필터와 표·플레이어 수 표시를 수정했다. Next 16.4.3 보안 업데이트와 NEXUS 전용 CSS Module 안정 마커로 빌드 이름 변경에도 테마가 유지된다.
+
+계약 747·단위 1,201(+기존 skip1)·DB185·bootstrap9·NEXUS인증HTTP10·ADMIN/SUPER권한 검증 통과. 최종 build와 marker6검사 통과. 운영 의존성 audit0, 개발 전용 moderate4는 별도 제한으로 남긴다. 공개·합성 관리자/회원 화면 및 10인팀 저장·경기접수 연결 확인, 시험자원 정리 완료. 운영 시즌0개, Riot Pending Review, 실기기 봇 설치·송수신 미확인 상태다. [전체 근거와 제한](qa-evidence/nexus-full-audit-2026-10-27/README.md).
+
+
 ## 2026-10-27 NEXUS 마스코트 테마 1.0.0 운영 반영
 
 source `9e6a8b39806aae7b6aa2f17a464687d77c70ca84`, tag `nexus-mascot-theme-v1.0.0`. 사용자 원본 NEXUS 보드로 NEXI 홈 배너와 5개 마스코트 카드, 어두운 공통 화면, 서비스별 아이콘·PWA·공유 이미지를 적용했다. NEXUS Vercel READY, 동일 source/alias, 운영 HTTP 7조건과 1440/390/320px 화면·이미지·콘솔 오류 0건을 확인했다.

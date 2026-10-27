@@ -33,6 +33,14 @@ NEXUS의 공개·회원·관리자 화면, DB 분리와 권한, 참가·팀 배�
 
 ## 배포·복구
 
-이번 변경은 NEXUS 프로젝트에만 배포한다. K-LOL 운영 프로젝트를 수정하지 않는다. 새 migration은 없다. 최종 source·immutable URL·alias·health와 공개 화면 검증은 production.json에 기록한다. 이전 배포는 `dpl_2ywfbAB34CCFdB6XtcPCAfkFsSGG`, source `9e6a8b39806aae7b6aa2f17a464687d77c70ca84`다. 이전 버전으로 복구하면 이번 의존성 보안 수정도 되돌아가므로 장애 복구 이후 패치를 다시 적용해야 한다.
+NEXUS 프로젝트 운영 배포를 확인했다. K-LOL 운영 프로젝트 변경과 새 migration은 없다. 최종 source·immutable URL·alias·health는 [production.json](production.json)에 기록했다. 이전 배포는 `dpl_2ywfbAB34CCFdB6XtcPCAfkFsSGG`, source `9e6a8b39806aae7b6aa2f17a464687d77c70ca84`다. 이전 버전으로 복구하면 이번 의존성 보안 수정도 되돌아가므로 장애 복구 이후 패치를 다시 적용해야 한다.
 
 최종 대표 화면 검증은 [ui-final.json](ui-final.json), 합성 [팀 배치 화면](team-draft-desktop.png), [320px 관리자 화면](admin-mobile-320.png)을 참조한다. 개발 도구의 moderate 4개는 esbuild 개발 서버 advisory 한 건의 의존성 전파이며 별도 제한으로 남긴다. 운영 의존성 감사는 0개다.
+
+### 최종 운영 결과
+
+최종 source `4bb8f7a3bfc9fb2ca2e642fc140c221d0fc6ef3a`, tag `nexus-mascot-theme-v1.0.2`, deployment `dpl_2YMxonJLnzyr81aCYyPS4CasSggh` READY. [운영 주소](https://nexus-gg-kr.vercel.app)와 [immutable 배포](https://nexus-ntftk1d4o-tjdmswo11-3715s-projects.vercel.app)의 연결을 확인했고 HTTP 8조건이 통과했다.
+
+1.0.1 배포 후 직접 텍스트 범위의 공개 화면 검증에서 플레이어 결과 인원 배지의 낮은 대비 한 건을 발견했다. 1.0.2는 그 글자색만 보완한 후속 패치다. [1.0.1 배포 근거](production-v1.0.1.json)와 최초 [운영 UI 결과](production-ui.json)를 보존하고, [수정 후 결과](production-count-fix.json)에서 문제 해소를 확인했다. 나머지 공개 22개 경로의 확대 검사는 [production-public-expanded.json](production-public-expanded.json)에 있다. 단색 대비·넘침·조작 이름·이미지 검사이며 전체 접근성 인증은 아니다.
+
+합성 UI DB, 시험 서버와 이번 감사에서 시작한 PostgreSQL 인스턴스를 정리했다. 운영 DB에 시험 자료를 작성하지 않았다. 최종 후속 빌드와 module-marker 6검사도 통과했다. 화면 CSS는 후속 인원 배지 수정을 포함해 382개 NEXUS 경계 선택자를 사용한다.
