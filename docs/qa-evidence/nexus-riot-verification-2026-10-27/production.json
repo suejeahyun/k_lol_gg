@@ -1,0 +1,46 @@
+{
+  "verifiedAt": "2026-10-27T08:21:19.047Z",
+  "source": "1ad03788f170a2d0b02dc48d62f1f4a39a03e803",
+  "projectId": "prj_qozFsYmEO7ZoL0jZAnBNCVc1nF8i",
+  "deploymentId": "dpl_4GjqAJgoZPD6oezmXDELPkpUe3zn",
+  "immutableUrl": "https://nexus-khrdpnqyu-tjdmswo11-3715s-projects.vercel.app",
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "readyState": "READY",
+  "http": [
+    {
+      "route": "/riot.txt",
+      "method": "GET",
+      "status": 200,
+      "plainText": true,
+      "redirect": false,
+      "contentLength": "36"
+    },
+    {
+      "route": "/riot.txt",
+      "method": "HEAD",
+      "status": 200,
+      "plainText": true,
+      "redirect": false,
+      "contentLength": "36"
+    },
+    {
+      "route": "/api/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "route": "/api/admin/site-settings",
+      "method": "GET",
+      "status": 401
+    }
+  ],
+  "riotApplicationId": "898158",
+  "applicationReceived": true,
+  "portalDomainVerification": "VERIFIED",
+  "productionApiKey": "NOT_AVAILABLE_PENDING_REVIEW",
+  "riotIntegrationEnabled": false,
+  "existingKlolProjectModified": false,
+  "portalStatus": "Pending Review",
+  "portalVerifiedAt": "2026-10-27T08:22:05.180Z",
+  "portalApplicationUrl": "https://developer.riotgames.com/app/898158/info"
+}

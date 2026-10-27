@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-27 NEXUS Riot 신청·사이트 인증 1.0.2
+
+NEXUS.GG 별도 운영 키 신청 `898158`을 접수하고 포털에서 `Verification code found and validated!`를 확인했다. 현재 상태는 **Pending Review**이며 승인·키 발급 완료로 간주하지 않는다. 참가비·상금은 없음, 대회 방식·최소 경기 수·공지 일정은 미정으로 제출했다. 내전 MMR·공개 순위·팀 배치·대회 등급 산정에 대한 정책 검토 요청을 포함했다.
+
+source `1ad03788f170a2d0b02dc48d62f1f4a39a03e803`, tag `nexus-service-v1.0.2`, 배포 `dpl_4GjqAJgoZPD6oezmXDELPkpUe3zn` READY·동일 source·NEXUS alias 확인. 공개 `/riot.txt` GET/HEAD 200·plain text·36바이트·정확한 본문·리디렉션 없음, health 200·관리자 무인증 401 확인. 전체 check 계약 741·단위 1,201 PASS+기존 1 SKIP. 실제 Riot 연동은 비활성 유지, 기존 K-LOL 자원과 폰 설치 상태는 변경하지 않았다. [QA](qa-evidence/nexus-riot-verification-2026-10-27/README.md), [운영·포털 근거](qa-evidence/nexus-riot-verification-2026-10-27/production.json).
+
 ## 2026-10-27 NEXUS Riot DB 선택 보완 1.0.1
 
 source `a146da47a162c7e4a298c6373505696776817b21`, tag `nexus-service-v1.0.1`, 배포 `dpl_7BzdTSXc82uTtak12hJSwfzoyk1R`의 READY·동일 source·NEXUS alias를 확인했다. Riot 설정 검사와 운영 점검이 NEXUS 전용 DB를 인식하며, 실행 환경의 서비스 ID가 누락되어도 빌드에서 고정한 값을 유지한다. 전체 check 계약 741·단위 1,201 PASS+기존 1 SKIP, 운영 HTTP 9조건 PASS, 독립 리뷰 통과.

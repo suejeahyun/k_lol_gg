@@ -41,7 +41,7 @@ node --env-file=.private/nexus-migration.env --import tsx scripts/nexus/create-a
 - `NEXT_PUBLIC_*` 브랜드·주소를 바꾸면 새 빌드가 필요하다.
 - 인증 키, V4 identity/signing 키, cron 키는 각각 독립 발급한다. DB URL·private 봇 소스·관리자 비밀번호를 Git이나 채팅에 넣지 않는다.
 - Riot 외부 API·RSO, OpenAI 등 선택 연동은 해당 NEXUS 환경의 키·콜백·플래그 설정 후 활성화한다. 키를 설정하지 않은 기능을 연동 완료로 표시하지 않는다.
-- 2026-10-27: 기존 Riot API 키 공유는 승인됐으나 로컬 키가 401로 거절되어 유효한 키를 기다린다. Vercel의 기존 sensitive 변수는 원문 조회가 불가능했다. 입력은 ignored `.private/NEXUS_RIOT_API_KEY.txt`를 사용하고 키를 채팅·문서에 기록하지 않는다. API 키를 공유해도 `RIOT_ENCRYPTION_KEYS`와 인증 키는 새 NEXUS 전용 값을 사용한다. DB 선택 보완은 [1.0.1 QA](../qa-evidence/nexus-riot-2026-10-27/README.md)를 따른다.
+- 2026-10-27: 기존 키 공유 대신 별도 NEXUS 운영 키를 신청했다. [Riot 신청 898158](https://developer.riotgames.com/app/898158/info)은 사이트 소유 인증 완료·Pending Review 상태다. `/riot.txt` 공개 검증 파일을 유지한다. 실제 키 승인과 MMR·팀 배치·대회 등급 기능에 대한 심사 결과 확인 전에는 연동을 켜지 않는다. 새 키 입력은 ignored `.private/NEXUS_RIOT_API_KEY.txt`를 사용하며 채팅·Git·공개 문서에 기록하지 않는다. `RIOT_ENCRYPTION_KEYS`와 인증 키도 NEXUS 전용 값을 사용한다. [신청·검증 근거](../qa-evidence/nexus-riot-verification-2026-10-27/production.json).
 - 운영 전환 시 `.private`, `.env*`, 로컬 DB·로그가 배포에 포함되지 않는지 `vercel deploy --dry --json`으로 확인한다.
 - 복구는 NEXUS 프로젝트의 이전 정상 배포 또는 새 전진 수정으로 수행한다. K-LOL 배포·DB를 변경하지 않는다.
 

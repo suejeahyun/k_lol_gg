@@ -1,6 +1,6 @@
 # K-LOL.GG V2
 
-**2026-10-27 NEXUS.GG 별도 서비스**: [운영 사이트](https://nexus-gg-kr.vercel.app)에 같은 기능을 별도 Neon DB·인증 키·카카오 방 설정으로 배포했습니다. 기존 업무 자료를 복사하지 않고 시작합니다. 현재 NEXUS source는 `a146da47`, `nexus-service-v1.0.1`이며 Riot DB 선택을 보완했습니다. 외부 Riot 연결은 유효한 공유 키 입력 대기, 휴대폰 설치는 별도 진행 상태입니다. [운영 안내](docs/operations/NEXUS_RUNBOOK.md), [검증·배포](docs/qa-evidence/nexus-riot-2026-10-27/README.md).
+**2026-10-27 NEXUS.GG 별도 서비스**: [운영 사이트](https://nexus-gg-kr.vercel.app)에 같은 기능을 별도 Neon DB·인증 키·카카오 방 설정으로 배포했습니다. 기존 업무 자료를 복사하지 않고 시작합니다. 현재 NEXUS source는 `1ad03788`, `nexus-service-v1.0.2`입니다. 별도 Riot 운영 키 신청 `898158` 접수와 사이트 소유 인증을 완료했고 **Pending Review** 상태입니다. 키 승인 전 외부 연동은 비활성이고 휴대폰 설치는 별도 진행 상태입니다. [운영 안내](docs/operations/NEXUS_RUNBOOK.md), [검증·배포](docs/qa-evidence/nexus-riot-verification-2026-10-27/README.md).
 
 **2026-10-18 내전 팀 배치 2.1.0 운영 반영**: 드래그 전용 교환·즉시 개인/팀/밸런스 점수 갱신·닉네임 옆 이름·이름만 두 줄 복사를 적용했습니다. 새 추천 후보는 500조합에서 4.8% 유의미한 개선이 있었지만 역할 표본·집단 신뢰도 기준을 통과하지 못해 기존 계산식을 유지했습니다. source `6964bb58`, 전체 check·격리 DB 9·production 브라우저 25·후보/운영 HTTP 각 12·source CI 확인. [연구 보고](docs/qa-evidence/balance-policy-2026-10-18/README.md), [변경 안내](docs/patch-notes/inhouse-fairness-v2.1.0.md), [배포·복구](docs/qa-evidence/balance-policy-2026-10-18/production.md).
 
