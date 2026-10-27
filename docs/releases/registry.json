@@ -2458,6 +2458,27 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "kakao-service-room-isolation",
+      "version": "1.0.0",
+      "gitTag": "kakao-service-room-isolation-v1.0.0",
+      "commit": "61fbdbb2eebd85b96da637b4d83bfabdf555bccd",
+      "releasedAt": "2026-10-27T11:41:44.260Z",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/kakao-service-room-isolation-2026-10-27/README.md",
+      "patchNotes": "docs/patch-notes/kakao-service-room-isolation-v1.0.0.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED",
+        "reason": "Phone-only input boundary change; server runtime and Vercel deployment unchanged."
+      },
+      "externalInstallations": [
+        {
+          "name": "Existing KLOL main profile room-isolation update",
+          "version": "KLOL_KAKAO_BOT_V40_R30_2026_10_27",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
