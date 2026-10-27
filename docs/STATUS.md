@@ -1,5 +1,11 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-27 NEXUS.GG 별도 서비스 1.0.0
+
+동일 기능 코드에 서비스별 브랜드·DB·인증·폰 봇 설정을 적용하고 별도 Vercel/Neon/private Blob으로 [NEXUS.GG](https://nexus-gg-kr.vercel.app)를 배포했다. source `ef7bf797c057a9fe5f4055791a9d2f74c5f04fee`, tag `nexus-service-v1.0.0`, READY·동일 source·alias·운영 HTTP 9개·서명 카카오 진단 4개 확인. K-LOL 배포·데이터는 변경하지 않았다.
+
+기존 자료 복사 없이 migration 50개, 공식 챔피언 173개와 초기 관리자만 준비했다. 전체 check 계약 741·단위 1,197 PASS + 기존 1 SKIP, 격리 DB 9·NEXUS 인증 HTTP 10 PASS. 휴대폰은 설치본 준비 완료/PENDING_USER_INSTALL이며 첫 시즌 생성과 외부 Riot 키 설정은 남아 있다. [검증·운영 근거](qa-evidence/nexus-2026-10-27/README.md), [확정 프롬프트](operations/NEXUS_IMPLEMENTATION_PROMPT.md).
+
 ## 2026-10-18 내전 드래그·이름 복사 2.1.0 운영 반영
 
 source `6964bb58eefc166d1341b8bdc24e73eb00a93613`, tag `inhouse-fairness-v2.1.0`. 드래그 전용 수동 교환과 모바일 자동 스크롤, 즉시 공통 점수 미리보기, 권한이 확인된 등록 이름 표시, BLUE/RED 이름 두 줄 복사를 적용했다.

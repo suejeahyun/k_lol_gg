@@ -1,0 +1,115 @@
+{
+  "verifiedAt": "2026-10-27T07:24:14.735Z",
+  "service": "NEXUS.GG",
+  "source": "ef7bf797c057a9fe5f4055791a9d2f74c5f04fee",
+  "projectId": "prj_qozFsYmEO7ZoL0jZAnBNCVc1nF8i",
+  "deploymentId": "dpl_4iYBBP9VcNWckLnxbrxa5xzuC6XP",
+  "immutableUrl": "https://nexus-21vkfym4m-tjdmswo11-3715s-projects.vercel.app",
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "readyState": "READY",
+  "aliases": [
+    "nexus-gg-kr.vercel.app",
+    "nexus-gg-nine.vercel.app",
+    "nexus-gg-tjdmswo11-3715s-projects.vercel.app"
+  ],
+  "http": [
+    {
+      "route": "/",
+      "status": 200,
+      "brandVerified": true
+    },
+    {
+      "route": "/api/health",
+      "status": 200,
+      "brandVerified": null
+    },
+    {
+      "route": "/players",
+      "status": 200,
+      "brandVerified": true
+    },
+    {
+      "route": "/rankings",
+      "status": 200,
+      "brandVerified": true
+    },
+    {
+      "route": "/recruits",
+      "status": 200,
+      "brandVerified": true
+    },
+    {
+      "route": "/manifest.webmanifest",
+      "status": 200,
+      "brandVerified": true
+    },
+    {
+      "route": "/sitemap.xml",
+      "status": 200,
+      "brandVerified": null
+    },
+    {
+      "route": "/admin/login",
+      "status": 200,
+      "brandVerified": true
+    },
+    {
+      "route": "/api/admin/site-settings",
+      "status": 401,
+      "brandVerified": null
+    }
+  ],
+  "kakao": {
+    "origin": "https://nexus-gg-kr.vercel.app",
+    "checkedAt": "2026-10-27T07:23:24.030Z",
+    "businessMutationRequests": 0,
+    "results": [
+      {
+        "profileId": "RECRUIT",
+        "command": "V4상태",
+        "status": 200,
+        "brandedReply": true
+      },
+      {
+        "profileId": "RECRUIT",
+        "command": "도움말",
+        "status": 200,
+        "brandedReply": true
+      },
+      {
+        "profileId": "FEATURES",
+        "command": "V4상태",
+        "status": 200,
+        "brandedReply": true
+      },
+      {
+        "profileId": "FEATURES",
+        "command": "도움말",
+        "status": 200,
+        "brandedReply": true
+      }
+    ]
+  },
+  "phone": {
+    "service": "nexus",
+    "origin": "https://nexus-gg-kr.vercel.app",
+    "phoneInstallation": "PENDING_USER_INSTALL",
+    "companionRequiresRoomRegistration": true,
+    "artifacts": [
+      {
+        "file": "NEXUS_KAKAO_BOT_PRIVATE_MESSENGERBOT_R.js",
+        "lfCharacters": 62993,
+        "crlfCharacters": 64797,
+        "sha256": "8f74c16fd89c5595e3801979b0d142a22eb2a4d96f65682cfceb35a68b791cca"
+      },
+      {
+        "file": "NEXUS_SITE_NOTICE_COMPANION_PRIVATE.js",
+        "lfCharacters": 13470,
+        "crlfCharacters": 13717,
+        "sha256": "4e425fa9ae39262dce03b8d4b2be5235fa33ccbe22d716b0e8a8906ad65eba73"
+      }
+    ]
+  },
+  "phoneInstallation": "PENDING_USER_INSTALL",
+  "riotExternalIntegration": "NOT_CONFIGURED"
+}
