@@ -46,7 +46,9 @@ test("the V1 strict phone installer uses the current private artifact and omits 
     read("integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js"),
   ]);
 
-  assert.match(builder, /const executableMarker = "var KLOL_V1_GATEWAY =";/u);
+  assert.match(builder, /const executableMarker = service === "nexus" \? "var NEXUS_DB=" : "var KLOL_V1_GATEWAY =";/u);
+  assert.match(builder, /const settingsSource = service === "nexus" \? "" : await readFile\(settingsSourcePath, "utf8"\);/u,
+    "NEXUS must not read the K-LOL private installer");
   assert.match(builder, /const phoneSource = publicSource\.slice\(executableSourceIndex\);/u);
   assert.match(builder, /const output = `\$\{preamble\}\$\{phoneSource\}`;/u);
   assert.match(builder, /function isPartyMetadataActivationForm\(text\)/u);

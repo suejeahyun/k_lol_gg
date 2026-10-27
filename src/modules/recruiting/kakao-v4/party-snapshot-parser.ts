@@ -1,3 +1,5 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
+import { hasForeignKakaoServiceHeader, KAKAO_SERVICE_NAME_PATTERN } from "./service-brand";
 import type { RecruitPartyType } from "../domain/recruiting";
 import { formatRecruitFormReference, parseRecruitFormReference } from "../domain/kakao-recruit-reference";
 
@@ -14,7 +16,9 @@ const FORM_IDENTITY_SIGNAL = /^\s*(?:모집\s*코드|명단\s*버전|양식\s*�
 const START_TIME_LABEL = /^\s*[》>]?\s*(?:게임\s*)?(?:시작|출발)\s*(?:시간)?\s*[:：]\s*(.*?)\s*$/u;
 const GAME_INFO_LABEL = /^\s*[》>]?\s*게임\s*(?:정보|종류)?\s*[:：]\s*(.*?)\s*$/u;
 const ORGANIZER_LABEL = /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?\s*(.*?)\s*$/u;
-const DETAIL_HEADER = /^\s*\[\s*K-LOL\.GG\s+구인\s*상세\s*#\s*(\d+)\s*\]\s*$/iu;
+const DETAIL_HEADER = new RegExp(String.raw`^\s*\[\s*${KAKAO_SERVICE_NAME_PATTERN}\s+구인\s*상세\s*#\s*(\d+)\s*\]\s*$`, "iu");
+const BRAND_FORM_PREFIX = new RegExp(String.raw`^\s*\[?${SERVICE_BRAND.shortName}`, "u");
+const BRACKETED_BRAND_FORM_PREFIX = new RegExp(String.raw`^\s*\[${SERVICE_BRAND.shortName}`, "u");
 const DETAIL_SUMMARY = /^\s*#\s*(\d+)\s*[·ㆍ|]\s*(.*?)\s*[·ㆍ|]\s*(\d+)\s*\/\s*(\d+)(?:\s|$)/u;
 const RESERVE_COUNT_SUMMARY = /^\s*예비\s*[:：]\s*\d+\s*명(?:\s|$)/u;
 const MERGED_ROW = /\s+(?:(?:예비|후보|대기)\s*[0-9]{0,2}\s*[.):：.]|[0-9]{1,2}\s*[.)]|(?:TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：])/iu;
@@ -26,6 +30,7 @@ export type PartySlotState = "PRESENT_VALUE" | "PRESENT_EMPTY" | "ABSENT";
 export type PartySlotKind = "NUMBERED" | "POSITION" | "RESERVE";
 
 export type PartyFormDiagnosticCode =
+  | "FOREIGN_SERVICE_HEADER"
   | "MISSING_RECRUIT_NUMBER"
   | "MULTIPLE_RECRUIT_NUMBERS"
   | "RECRUIT_NUMBER_CONFLICT"
@@ -119,7 +124,7 @@ function normalizePartyText(value: string) {
       return DETAIL_HEADER.test(structural) || DETAIL_SUMMARY.test(structural) || RESERVE_COUNT_SUMMARY.test(structural) || /^\s*\[파티\s*#\d+\]/u.test(structural)
         ? structural : line;
     }).join("\n")
-    .replace(/^\s*\[파티\s*#(\d+)\]\s*(.+?)\s*·\s*(\d+)\/(\d+)명\s*$/gmu, "[K-LOL.GG 구인상세 #$1]\n#$1 · $2 · $3/$4")
+    .replace(/^\s*\[파티\s*#(\d+)\]\s*(.+?)\s*·\s*(\d+)\/(\d+)명\s*$/gmu, `[${SERVICE_BRAND.name} 구인상세 #$1]\n#$1 · $2 · $3/$4`)
     .trim();
 }
 
@@ -196,7 +201,7 @@ function partySlotContinuation(lines: readonly string[], index: number) {
     DISPLAY_SEPARATOR.test(value) || FORM_IDENTITY_SIGNAL.test(value) || /^전체 복사/u.test(value) || SAVE_REFERENCE_LABEL.test(value) || /^복사 안내:/u.test(value) || RECRUIT_LABEL.test(value) || OPERATING_DATE_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
     DETAIL_HEADER.test(value) || DETAIL_SUMMARY.test(value) || RESERVE_COUNT_SUMMARY.test(value) ||
     parsePartyReserveRow(value) || parsePartyNumberedRow(value) || parsePartyPositionRow(value) || /^\d{3,}\s*[.)]/u.test(value.normalize("NFKC")) ||
-    submittedTitle(value, index + 2) || /^\s*(?:\[?K-LOL|📢|참여해|\*?상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(value)
+    submittedTitle(value, index + 2) || BRAND_FORM_PREFIX.test(value) || /^\s*(?:📢|참여해|\*?상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(value)
   ) return null;
   return value;
 }
@@ -217,7 +222,7 @@ function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: 
       FORM_IDENTITY_SIGNAL.test(line) || /^전체 복사/u.test(line) || SAVE_REFERENCE_LABEL.test(line) || /^복사 안내:/u.test(line) || RECRUIT_LABEL.test(line) || OPERATING_DATE_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) || ORGANIZER_LABEL.test(line) ||
       DETAIL_HEADER.test(line) || DETAIL_SUMMARY.test(line) || RESERVE_COUNT_SUMMARY.test(line) ||
       parsePartyReserveRow(line) || parsePartyNumberedRow(line) || parsePartyPositionRow(line) ||
-      submittedTitle(line, index + 1) || /^\s*(?:\[K-LOL|참여해|\*상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(line)
+      submittedTitle(line, index + 1) || BRACKETED_BRAND_FORM_PREFIX.test(line) || /^\s*(?:참여해|\*상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(line)
     ) break;
     const value = normalizedValue(line);
     if (value) values.push(value);
@@ -230,6 +235,7 @@ function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: 
 }
 
 function decisionFor(diagnostics: readonly PartyFormDiagnostic[], candidate: boolean): PartyFormDecision {
+  if (diagnostics.some(({ code }) => code === "FOREIGN_SERVICE_HEADER")) return "REJECT";
   if (!candidate) return "IGNORE";
   if (diagnostics.some(({ code }) => ["INVALID_SAVE_REFERENCE", "INVALID_RECRUIT_NUMBER", "INVALID_DETAIL_SUMMARY", "INVALID_SLOT", "VALUE_TOO_LONG"].includes(code))) return "REJECT";
   if (diagnostics.some(({ code }) => [
@@ -244,6 +250,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
   const normalizedText = normalizePartyText(input);
   const lines = normalizedText.split("\n");
   const diagnostics: PartyFormDiagnostic[] = [];
+  if (hasForeignKakaoServiceHeader(input)) diagnostics.push(diagnostic("FOREIGN_SERVICE_HEADER"));
   const recruitNumbers: (number | "AUTO")[] = [];
   const titles: ParsedPartyTitle[] = [];
   const slots: ParsedPartySlot[] = [];

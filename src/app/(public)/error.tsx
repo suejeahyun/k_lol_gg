@@ -1,5 +1,7 @@
 "use client";
 
+import { SERVICE_BRAND } from "@/lib/service-brand";
+
 import { useEffect } from "react";
 
 import { StatusPanel } from "@/components/status-panel";
@@ -13,7 +15,7 @@ export default function ErrorPage({
   retry: () => void;
 }) {
   useEffect(() => {
-    console.error("K-LOL.GG V2 public route error", error);
+    console.error(`${SERVICE_BRAND.name} V2 public route error`, error);
   }, [error]);
 
   return (

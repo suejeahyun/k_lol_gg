@@ -1,4 +1,5 @@
 import "server-only";
+import { configuredRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
 
 import { resolveRuntimeAuthContext } from "@/modules/auth/infrastructure/runtime-auth-context";
 import { getDatabase } from "@/platform/db/client";
@@ -13,7 +14,7 @@ function queryService() {
 }
 
 export function getRuntimePublicChampionQueryService() {
-  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) return null;
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !configuredRuntimeDatabaseUrl()) return null;
   try { return queryService(); } catch { return null; }
 }
 

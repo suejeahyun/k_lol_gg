@@ -1,5 +1,7 @@
 "use client";
 
+import { SERVICE_BRAND } from "@/lib/service-brand";
+
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
@@ -46,7 +48,7 @@ export type GalleryUploadNavigationReport = Readonly<{
 
 function nextKey() { return globalThis.crypto.randomUUID(); }
 function assetLabel(asset: Asset) { return `${asset.width}×${asset.height} · ${(asset.byteSize / 1024).toFixed(0)} KB · ${asset.contentType.replace("image/", "").toUpperCase()}`; }
-function galleryUploadReportKey(galleryId: string) { return `klol:gallery-upload-report:${galleryId}`; }
+function galleryUploadReportKey(galleryId: string) { return `${SERVICE_BRAND.storagePrefix}:gallery-upload-report:${galleryId}`; }
 function galleryUploadReportText(report: GalleryUploadReport) {
   const connected = report.linked > 0 ? `${report.linked}장은 갤러리에 연결했습니다.` : report.uploaded > 0 ? `${report.uploaded}장은 READY 자산으로 보관되어 아래에서 다시 연결할 수 있습니다.` : "업로드된 이미지가 없습니다.";
   const failed = report.failedNames.length > 0 ? ` 실패: ${report.failedNames.join(", ")}` : "";

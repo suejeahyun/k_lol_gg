@@ -1,3 +1,4 @@
+import { SERVICE_BRAND, getServiceOrigin } from "@/lib/service-brand";
 import { createHash } from "node:crypto";
 
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
@@ -210,7 +211,7 @@ function partyMemberMutationReply(input: Readonly<{
       ? `삭제 완료: ${input.name}${slotLabel}`
       : `명단에서 찾지 못했습니다: ${input.name}`;
   return [
-    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    `[${SERVICE_BRAND.name} 파티 #${String(input.recruitNumber)} 명단]`,
     outcomeLine,
     `현재 ${String(input.memberCount)}/${String(input.maximumMembers)}명 · 예비 ${String(input.reserveCount)}명`,
   ].join("\n");
@@ -222,17 +223,17 @@ function partyMemberBusinessReply(input: Readonly<{
   reason: "TARGET_NOT_FOUND" | "AMBIGUOUS_MEMBER" | "RECRUIT_MEMBER_LIMIT_EXCEEDED";
 }>) {
   if (input.reason === "TARGET_NOT_FOUND") return [
-    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    `[${SERVICE_BRAND.name} 파티 #${String(input.recruitNumber)} 명단]`,
     "현재 운영일의 수정 가능한 모집을 찾지 못했습니다.",
     "구인현황에서 모집번호를 확인해 주세요.",
   ].join("\n");
   if (input.reason === "AMBIGUOUS_MEMBER") return [
-    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    `[${SERVICE_BRAND.name} 파티 #${String(input.recruitNumber)} 명단]`,
     `동명이인이 있어 자동 삭제할 수 없습니다: ${input.name}`,
     "상세 전체 양식에서 삭제할 사람의 줄을 비운 뒤 전송해 주세요.",
   ].join("\n");
   return [
-    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    `[${SERVICE_BRAND.name} 파티 #${String(input.recruitNumber)} 명단]`,
     "참가자와 예비 명단의 전체 한도(99명)에 도달했습니다.",
     `추가하지 못한 이름: ${input.name}`,
   ].join("\n");
@@ -301,7 +302,7 @@ function scrimMemberMutationReply(input: Readonly<{
     : input.outcome === "APPLIED"
       ? `삭제 완료: ${input.name}`
       : `명단에서 찾지 못했습니다: ${input.name}`;
-  return [`[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`, outcomeLine].join("\n");
+  return [`[${SERVICE_BRAND.name} 스크림 #${input.recruitNumber} 명단]`, outcomeLine].join("\n");
 }
 
 function scrimMemberBusinessReply(input: Readonly<{
@@ -310,25 +311,25 @@ function scrimMemberBusinessReply(input: Readonly<{
   reason: "TARGET_NOT_FOUND" | "AMBIGUOUS_SCRIM_PARTICIPANT" | "SCRIM_PARTICIPANT_LIMIT_EXCEEDED";
 }>) {
   if (input.reason === "TARGET_NOT_FOUND") return [
-    `[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`,
+    `[${SERVICE_BRAND.name} 스크림 #${input.recruitNumber} 명단]`,
     "현재 운영일의 수정 가능한 스크림을 찾지 못했습니다.",
     "스크림현황에서 번호를 확인해 주세요.",
   ].join("\n");
   if (input.reason === "AMBIGUOUS_SCRIM_PARTICIPANT") return [
-    `[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`,
+    `[${SERVICE_BRAND.name} 스크림 #${input.recruitNumber} 명단]`,
     `양 팀에 같은 이름이 있어 자동 삭제할 수 없습니다: ${input.name}`,
     "스크림 상세 양식에서 해당 라인의 이름을 지운 뒤 전송해 주세요.",
   ].join("\n");
   return [
-    `[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`,
+    `[${SERVICE_BRAND.name} 스크림 #${input.recruitNumber} 명단]`,
     "우리 팀의 다섯 라인이 모두 찼습니다.",
     `추가하지 못한 이름: ${input.name}`,
   ].join("\n");
 }
 
 function scrimStatusReply(scrims: KakaoOpenChatStatusDto["scrims"], v1Strict = false) {
-  if (scrims.length === 0) return "[K-LOL.GG 스크림 현황]\n\n현재 모집중/확정된 스크림이 없습니다.";
-  return `[K-LOL.GG 스크림 현황]\n🔎 전체 양식: 스크림상세 번호\n\n${scrims.map((scrim) => `${scrimLines(scrim, v1Strict)}\n└ 스크림상세 ${scrim.scrimNumber}`).join("\n")}`;
+  if (scrims.length === 0) return `[${SERVICE_BRAND.name} 스크림 현황]\n\n현재 모집중/확정된 스크림이 없습니다.`;
+  return `[${SERVICE_BRAND.name} 스크림 현황]\n🔎 전체 양식: 스크림상세 번호\n\n${scrims.map((scrim) => `${scrimLines(scrim, v1Strict)}\n└ 스크림상세 ${scrim.scrimNumber}`).join("\n")}`;
 }
 
 function scrimStatusLabel(status: string) {
@@ -379,13 +380,13 @@ function scrimFormLines(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Stric
 
 function scrimDetailReply(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Strict = false) {
   return [
-    "[K-LOL.GG 멸망전 스크림 상세]", "", scrimLines(scrim, v1Strict), "", ...scrimFormLines(scrim, v1Strict),
+    `[${SERVICE_BRAND.name} 멸망전 스크림 상세]`, "", scrimLines(scrim, v1Strict), "", ...scrimFormLines(scrim, v1Strict),
   ].join("\n");
 }
 
 function scrimTemplate(recruitDate: string, scrimNumber: number | null = null) {
   return [
-    "[K-LOL.GG 스크림 구인 양식]", "", `운영일: ${recruitDate}`, `번호: #${scrimNumber ?? "자동배정"}`, "",
+    `[${SERVICE_BRAND.name} 스크림 구인 양식]`, "", `운영일: ${recruitDate}`, `번호: #${scrimNumber ?? "자동배정"}`, "",
     "일시: ", "방식: 3판2선", "주최자: ", "", "우리팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ", "",
     "상대팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ",
   ].join("\n");
@@ -393,7 +394,7 @@ function scrimTemplate(recruitDate: string, scrimNumber: number | null = null) {
 
 function inhouseModeSelection(unsupportedMode: string | null) {
   return [
-    "[K-LOL.GG 내전 종목 선택]",
+    `[${SERVICE_BRAND.name} 내전 종목 선택]`,
     ...(unsupportedMode ? [`지원하지 않는 종목입니다: ${unsupportedMode}`] : []),
     "",
     "원하는 종목을 선택해주세요.",
@@ -426,7 +427,7 @@ function inhouseTemplate(command: Readonly<{
 
 function participationGuide(publicOrigin: string) {
   return [
-    "[K-LOL.GG 내전 참가 방법 안내]",
+    `[${SERVICE_BRAND.name} 내전 참가 방법 안내]`,
     "",
     "1. 내전현황에서 모집 번호 확인",
     "2. 내전상세 번호 → 최신 양식 전체 복사",
@@ -445,13 +446,13 @@ function participationGuide(publicOrigin: string) {
 }
 
 const DEPRECATED_SCRIM_REPLIES = Object.freeze({
-  DEPRECATED_JOIN: "[K-LOL.GG 스크림 참가 명령 사용 안 함]\n스크림 양식에 직접 입력해주세요.",
-  DEPRECATED_CONFIRM: "[K-LOL.GG 스크림 확정 명령 사용 안 함]\n최신 스크림 양식을 다시 보내주세요.",
-  DEPRECATED_CANCEL: "[K-LOL.GG 스크림 취소 명령 사용 안 함]\n스크림은 오전 6시에 자동 종료됩니다.",
-  DEPRECATED_FINISH: "[K-LOL.GG 스크림 수동 종료 사용 안 함]\n스크림은 매일 오전 6시에 자동 종료됩니다.",
+  DEPRECATED_JOIN: `[${SERVICE_BRAND.name} 스크림 참가 명령 사용 안 함]\n스크림 양식에 직접 입력해주세요.`,
+  DEPRECATED_CONFIRM: `[${SERVICE_BRAND.name} 스크림 확정 명령 사용 안 함]\n최신 스크림 양식을 다시 보내주세요.`,
+  DEPRECATED_CANCEL: `[${SERVICE_BRAND.name} 스크림 취소 명령 사용 안 함]\n스크림은 오전 6시에 자동 종료됩니다.`,
+  DEPRECATED_FINISH: `[${SERVICE_BRAND.name} 스크림 수동 종료 사용 안 함]\n스크림은 매일 오전 6시에 자동 종료됩니다.`,
 });
 
-function playerRecordReply(body: KakaoPlayerRecordDto, publicOrigin = "https://k-lol-gg.vercel.app") {
+function playerRecordReply(body: KakaoPlayerRecordDto, publicOrigin = getServiceOrigin().origin) {
   const title = body.player?.riotId ?? "플레이어";
   if (!body.player) return `[${title} ${body.mode === "RECENT" ? "최근 경기" : "전적"}]\n\n일치하는 플레이어를 찾지 못했습니다.`;
   const recent = body.recentMatches.slice(0, body.mode === "RECENT" ? 10 : 1).map((match, index) => `${index + 1}. ${match.won ? "승" : "패"} | ${match.championName || "챔피언 미정"} | ${match.kills}/${match.deaths}/${match.assists}`);
@@ -482,54 +483,54 @@ function legacyPercent(value: number) {
 
 function rankingReply(body: KakaoRankingDto) {
   const rows = body.rows.slice(0, 5).map((row) => `${row.rank}. ${row.riotId || row.displayName} | 승률 ${legacyPercent(row.winRate)} | 참여 ${row.participationCount}회 | ${row.totalGames}세트 | KDA ${row.kda.toFixed(2)}`);
-  return ["🏆 K-LOL.GG 랭킹 TOP 5", `기준: 내전 참여 ${body.minimumParticipation}회 이상`, "", ...(rows.length > 0 ? rows : ["표시할 랭킹 기록이 없습니다."])].join("\n");
+  return [`🏆 ${SERVICE_BRAND.name} 랭킹 TOP 5`, `기준: 내전 참여 ${body.minimumParticipation}회 이상`, "", ...(rows.length > 0 ? rows : ["표시할 랭킹 기록이 없습니다."])].join("\n");
 }
 
 const OPERATION_STATIC_REPLIES = Object.freeze({
   REGISTRATION_HUB: [
-    "[K-LOL.GG 쉬운 등록 센터]",
+    `[${SERVICE_BRAND.name} 쉬운 등록 센터]`,
     "처음 사용하셔도 괜찮아요. 필요한 항목의 링크를 누르면 됩니다.",
-    "▶ https://k-lol-gg.vercel.app/start", "",
+    `▶ ${getServiceOrigin().origin}/start`, "",
     "① 내전 결과 등록",
     "경기 정보와 결과 사진 2~3장을 한 화면에서 제출합니다.",
-    "▶ https://k-lol-gg.vercel.app/matches/submit", "",
+    `▶ ${getServiceOrigin().origin}/matches/submit`, "",
     "② 주의·경고·벤 등록 (관리자)",
     "대상 검색부터 사유·근거 사진 등록까지 한 화면에서 처리합니다.",
-    "▶ https://k-lol-gg.vercel.app/admin/discipline/new",
+    `▶ ${getServiceOrigin().origin}/admin/discipline/new`,
     "※ 관리자 로그인이 필요하며, 권한이 없으면 등록할 수 없습니다.", "",
     "③ 경고 차감 사진 제출",
     "본인의 진행 과제를 선택하고 남은 사진을 한 번에 제출합니다.",
-    "▶ https://k-lol-gg.vercel.app/discipline/evidence",
+    `▶ ${getServiceOrigin().origin}/discipline/evidence`,
     "※ 본인 계정 로그인이 필요합니다.", "",
     "등록과 사진 제출은 로그인한 본인 계정 기준으로 처리됩니다.",
   ].join("\n"),
   INHOUSE_RESULT: [
-    "[K-LOL.GG 내전 결과 등록]", "가장 쉬운 등록 방법을 안내합니다.", "",
+    `[${SERVICE_BRAND.name} 내전 결과 등록]`, "가장 쉬운 등록 방법을 안내합니다.", "",
     "1. 아래 링크를 엽니다.", "2. 세트 수·회차·팀 밸런스를 확인합니다.",
     "3. 결과 사진 2~3장을 한 번에 올리고 제출합니다.", "",
-    "▶ https://k-lol-gg.vercel.app/matches/submit", "",
+    `▶ ${getServiceOrigin().origin}/matches/submit`, "",
     "로그인하면 진행 중인 제출을 자동으로 찾아 이어서 할 수 있습니다.",
   ].join("\n"),
   INHOUSE_RESULT_STATUS: [
-    "[K-LOL.GG 내전 결과 제출 현황]",
+    `[${SERVICE_BRAND.name} 내전 결과 제출 현황]`,
     "사이트에 로그인하면 진행 중인 내 제출을 자동으로 확인할 수 있습니다.", "",
-    "▶ https://k-lol-gg.vercel.app/matches/submit",
+    `▶ ${getServiceOrigin().origin}/matches/submit`,
   ].join("\n"),
   DISCIPLINE_CREATE: [
-    "[K-LOL.GG 관리자 경고 등록]",
+    `[${SERVICE_BRAND.name} 관리자 경고 등록]`,
     "관리자 화면에서 대상 검색 → 종류 선택 → 사유·사진 등록 순서로 진행합니다.", "",
-    "▶ https://k-lol-gg.vercel.app/admin/discipline/new", "",
+    `▶ ${getServiceOrigin().origin}/admin/discipline/new`, "",
     "※ 관리자 로그인과 2차 인증이 필요하며, 완료 후 이 화면으로 돌아옵니다.",
   ].join("\n"),
   DISCIPLINE_EVIDENCE: [
-    "[K-LOL.GG 경고 차감 사진 제출]",
+    `[${SERVICE_BRAND.name} 경고 차감 사진 제출]`,
     "사이트에 로그인하면 본인의 진행 과제만 자동으로 표시됩니다.",
     "로그인 계정 기준으로 남은 사진을 한 번에 제출할 수 있습니다.", "",
-    "▶ https://k-lol-gg.vercel.app/discipline/evidence",
+    `▶ ${getServiceOrigin().origin}/discipline/evidence`,
   ].join("\n"),
   DISCIPLINE_STATUS: [
-    "[K-LOL.GG 내 경고 현황]", "내정보에서 경고 상태와 남은 사진 수를 확인하세요.", "",
-    "▶ https://k-lol-gg.vercel.app/account#discipline",
+    `[${SERVICE_BRAND.name} 내 경고 현황]`, "내정보에서 경고 상태와 남은 사진 수를 확인하세요.", "",
+    `▶ ${getServiceOrigin().origin}/account#discipline`,
   ].join("\n"),
 });
 
@@ -537,7 +538,7 @@ function scheduledNoticeReply(body: KakaoScheduledNoticeDto) {
   const labels = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
   const shortageLabels = body.shortagePositions.map((position) => labels[position]);
   return [
-    "[K-LOL.GG 내전 공지 미리보기]",
+    `[${SERVICE_BRAND.name} 내전 공지 미리보기]`,
     "읽기 전용 미리보기이며 실제 방 자동 발송은 하지 않았습니다.",
     `날짜: ${body.date}${body.slot ? ` · 시간: ${body.slot}시` : ""}`,
     body.seasonId ? "활성 시즌 신청 현황" : "활성 시즌이 없습니다.",
@@ -585,7 +586,7 @@ export function formatInhouseMemberReply(
   const reserveEntries = entries.filter(isReserve);
   const mainEntries = entries.filter((entry) => !isReserve(entry));
   return [
-    `[K-LOL.GG 내전 #${input.recruitNumber} 명단] ${outcome} 현재 ${mainEntries.length}/${capacity}명 · 예비 ${reserveEntries.length}명`, "",
+    `[${SERVICE_BRAND.name} 내전 #${input.recruitNumber} 명단] ${outcome} 현재 ${mainEntries.length}/${capacity}명 · 예비 ${reserveEntries.length}명`, "",
     ...(body.legacyReply ? [body.legacyReply] : [
       ...mainEntries.map((entry) => `${entry.slotNo}. ${inhouseMemberRosterLabel(entry)}`),
       ...reserveEntries.map((entry, index) => `예비 ${index + 1}. ${inhouseMemberRosterLabel(entry)}`),
@@ -643,7 +644,7 @@ export class KakaoV4CommandDispatcher {
         aggregate: result.body,
         legacyReply: usesKakaoV1StrictResponse(context.envelope)
           ? v1StrictOperationFormReply(command.formType)
-          : embeddedReply ?? `[K-LOL.GG 운영 양식]\n${command.formType} 양식을 접수했습니다.`,
+          : embeddedReply ?? `[${SERVICE_BRAND.name} 운영 양식]\n${command.formType} 양식을 접수했습니다.`,
         replayed: result.replayed,
       });
     }
@@ -654,7 +655,7 @@ export class KakaoV4CommandDispatcher {
     }
     if (!this.dependencies.assistant.recordV4StaticReply) throw new KakaoV4DispatcherError("UNAVAILABLE");
     const legacyReply = command.action === "INVALID_FORM"
-      ? `[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: ${command.missingFields.join(", ")}`
+      ? `[${SERVICE_BRAND.name} 양식 필드 누락]\n필수 항목을 확인해 주세요: ${command.missingFields.join(", ")}`
       : OPERATION_STATIC_REPLIES[command.action];
     const receipt = await this.dependencies.assistant.recordV4StaticReply({ ...signedInput(context), legacyReply });
     if (command.action === "INVALID_FORM") throw new KakaoV4DispatcherError("INVALID_FORM", command.missingFields);
@@ -718,7 +719,7 @@ export class KakaoV4CommandDispatcher {
       const status = await this.openChatStatus(context, "SCRIM", true);
       return `${reply}\n\n${scrimStatusReply(status.body.scrims, v1Strict)}`;
     } catch {
-      return `${reply}\n\n[K-LOL.GG 스크림 현황]\n조회 실패. 스크림현황을 입력해 주세요.`;
+      return `${reply}\n\n[${SERVICE_BRAND.name} 스크림 현황]\n조회 실패. 스크림현황을 입력해 주세요.`;
     }
   }
 
@@ -760,14 +761,14 @@ export class KakaoV4CommandDispatcher {
       allowedPartyStatuses: ["FINISHED", "CANCELED", "RESET"],
     });
     const reply = closed
-      ? `[K-LOL.GG 파티 #${target.recruitNumber}]\n이미 마감되거나 종료된 파티입니다.\n이 양식으로는 저장할 수 없어요. 구인현황에서 진행 중인 모집을 확인해 주세요.`
+      ? `[${SERVICE_BRAND.name} 파티 #${target.recruitNumber}]\n이미 마감되거나 종료된 파티입니다.\n이 양식으로는 저장할 수 없어요. 구인현황에서 진행 중인 모집을 확인해 주세요.`
       : stateChanged
-        ? `[K-LOL.GG 파티 #${target.recruitNumber}]\n모집 상태가 바뀌어 이번 요청으로는 마감하지 않았어요.\n${target.recruitCode ? `구인상세 ${target.recruitCode}` : "구인현황"}을 확인한 뒤 ${target.recruitCode ?? target.recruitNumber}ㅉ로 다시 마감해 주세요.`
+        ? `[${SERVICE_BRAND.name} 파티 #${target.recruitNumber}]\n모집 상태가 바뀌어 이번 요청으로는 마감하지 않았어요.\n${target.recruitCode ? `구인상세 ${target.recruitCode}` : "구인현황"}을 확인한 뒤 ${target.recruitCode ?? target.recruitNumber}ㅉ로 다시 마감해 주세요.`
       : action === "FINISH"
-        ? ["[K-LOL.GG 구인구직 마무리]",
+        ? [`[${SERVICE_BRAND.name} 구인구직 마무리]`,
           `현재 운영일의 진행 중인 모집번호 #${target.recruitNumber}를 찾지 못했습니다.`,
           "최신 구인현황을 확인해 주세요.", `내전 모집을 마치려면: 내전 ${target.recruitNumber}ㅉ`].join("\n")
-        : `[K-LOL.GG 파티 #${target.recruitNumber}]\n저장하지 않았어요. 현재 운영일의 이 모집을 찾지 못했습니다.\n구인현황에서 모집번호를 확인하고 최신 양식을 받아 주세요.`;
+        : `[${SERVICE_BRAND.name} 파티 #${target.recruitNumber}]\n저장하지 않았어요. 현재 운영일의 이 모집을 찾지 못했습니다.\n구인현황에서 모집번호를 확인하고 최신 양식을 받아 주세요.`;
     return Object.freeze({ kind: "PARTY", action, aggregate: null,
       legacyReply: await this.appendLatestPartyStatus(context, reply), replayed: false });
   }
@@ -819,7 +820,7 @@ export class KakaoV4CommandDispatcher {
       }
       if (resolved.status !== "DRAFT" && resolved.status !== "IN_PROGRESS") {
         return Object.freeze({ kind: "PARTY", action: command.action, aggregate: null,
-          legacyReply: `[K-LOL.GG 파티 #${resolved.recruitNumber}]\n모집코드: ${fixedCode}\n이미 마감되거나 종료된 파티입니다. 이 코드는 다른 모집에 재사용되지 않아요.`, replayed: false });
+          legacyReply: `[${SERVICE_BRAND.name} 파티 #${resolved.recruitNumber}]\n모집코드: ${fixedCode}\n이미 마감되거나 종료된 파티입니다. 이 코드는 다른 모집에 재사용되지 않아요.`, replayed: false });
       }
       const target = { recruitDate: resolved.recruitDate, recruitNumber: resolved.recruitNumber, partyId: resolved.id, recruitCode: fixedCode };
       if (command.action === "BY_CODE") {
@@ -845,7 +846,7 @@ export class KakaoV4CommandDispatcher {
             ? v1StrictPartyDetailReply(parties[0] ?? null, command.target.recruitNumber)
             : v1StrictPartyStatusReply(parties)
           : command.action === "DETAIL" && missingDetail
-            ? `[K-LOL.GG 요청 실패]\n진행 중인 파티 #${command.target.recruitNumber}을 찾지 못했습니다.`
+            ? `[${SERVICE_BRAND.name} 요청 실패]\n진행 중인 파티 #${command.target.recruitNumber}을 찾지 못했습니다.`
             : command.action === "DETAIL" ? v1StrictPartyDetailReply(parties[0]!, command.target.recruitNumber) : v1StrictPartyStatusReply(parties),
         replayed: status.replayed,
       });
@@ -1186,7 +1187,7 @@ export class KakaoV4CommandDispatcher {
       });
       if (!target) {
         const reply = [
-          "[K-LOL.GG 스크림 마무리]",
+          `[${SERVICE_BRAND.name} 스크림 마무리]`,
           `현재 운영일의 진행 중인 스크림 #${String(command.target.recruitNumber)}을 찾지 못했습니다.`,
           "최신 스크림현황을 확인해 주세요.",
         ].join("\n");
@@ -1204,7 +1205,7 @@ export class KakaoV4CommandDispatcher {
         metadata: commandMetadata(context, target.revision),
         payload: {},
       }));
-      const reply = `[K-LOL.GG 스크림 #${String(command.target.recruitNumber)}]\n모집을 마감했습니다.`;
+      const reply = `[${SERVICE_BRAND.name} 스크림 #${String(command.target.recruitNumber)}]\n모집을 마감했습니다.`;
       return Object.freeze({
         kind: "SCRIM",
         action: command.action,
@@ -1244,7 +1245,7 @@ export class KakaoV4CommandDispatcher {
             kind: "SCRIM",
             action: command.action,
             aggregate: null,
-            legacyReply: `[K-LOL.GG 멸망전 스크림 상세]\n\n스크림 #${String(command.target.recruitNumber)}을 찾지 못했습니다.`,
+            legacyReply: `[${SERVICE_BRAND.name} 멸망전 스크림 상세]\n\n스크림 #${String(command.target.recruitNumber)}을 찾지 못했습니다.`,
             replayed: status.replayed,
           });
         }
@@ -1402,7 +1403,7 @@ export class KakaoV4CommandDispatcher {
       action: command.action,
       aggregate: result.body,
       legacyReply: recruitingCommand.type === "CREATE_SCRIM"
-        ? "[K-LOL.GG 스크림 등록 완료]"
+        ? `[${SERVICE_BRAND.name} 스크림 등록 완료]`
         : command.action === "UPSERT"
           ? [`[스크림 #${resultScrim.scrimNumber} 반영]`, `상태: ${scrimStatusLabel(resultScrim.status)}`, "", ...scrimFormLines({
               ...resultScrim,
@@ -1455,7 +1456,7 @@ export class KakaoV4CommandDispatcher {
       });
     }
     if (command.action === "JOIN_GUIDE") {
-      const publicOrigin = (this.dependencies.publicOrigin ?? "https://k-lol-gg.vercel.app").replace(/\/$/u, "");
+      const publicOrigin = (this.dependencies.publicOrigin ?? getServiceOrigin().origin).replace(/\/$/u, "");
       return Object.freeze({ kind: "SEASON", action: command.action, aggregate: null, legacyReply: participationGuide(publicOrigin), replayed: false });
     }
     if (command.action === "FINISH") {
@@ -1479,7 +1480,7 @@ export class KakaoV4CommandDispatcher {
             action: command.action,
             aggregate: null,
             legacyReply: [
-              "[K-LOL.GG 내전 마무리]",
+              `[${SERVICE_BRAND.name} 내전 마무리]`,
               `현재 운영일의 진행 중인 내전 #${String(command.recruitNumber)}을 찾지 못했습니다.`,
               "최신 내전현황을 확인해 주세요.",
             ].join("\n"),
@@ -1537,7 +1538,7 @@ export class KakaoV4CommandDispatcher {
           return Object.freeze({
           kind: "SEASON", action: command.action, aggregate: null,
             legacyReply: [
-              `[K-LOL.GG 내전 #${command.recruitNumber} 명단]`,
+              `[${SERVICE_BRAND.name} 내전 #${command.recruitNumber} 명단]`,
               "현재 운영일의 수정 가능한 내전을 찾지 못했습니다.",
               "내전현황에서 번호를 확인해 주세요.",
             ].join("\n"),

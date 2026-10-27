@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import Link from "next/link";
 import { Sparkles } from "@/components/theme/theme-icons";
 import { Suspense } from "react";
@@ -20,12 +21,12 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       </a>
       <header className="site-header">
         <div className="site-header__inner">
-          <Link className="brand" href="/" aria-label="K-LOL.GG 홈">
+          <Link className="brand" href="/" aria-label={`${SERVICE_BRAND.name} 홈`}>
             <span className="brand__mark" aria-hidden="true">
               <Sparkles size={20} />
             </span>
             <span>
-              <strong>K-LOL.GG</strong>
+              <strong>{SERVICE_BRAND.name}</strong>
             </span>
           </Link>
 
@@ -41,11 +42,11 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
 
       <footer className="site-footer">
         <div>
-          <strong>K-LOL.GG</strong>
+          <strong>{SERVICE_BRAND.name}</strong>
           <p><Link href="/help">도움말·문의</Link> · <Link href="/start">처음 이용 안내</Link> · <Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보 처리 안내</Link></p>
         </div>
         <p className="riot-disclaimer">
-          K-LOL.GG는 Riot Games 소유 자산을 사용하여{" "}
+          {SERVICE_BRAND.name}는 Riot Games 소유 자산을 사용하여{" "}
           <a href="https://www.riotgames.com/en/legal">Riot Games의 Legal Jibber Jabber 정책</a>에
           따라 제작된 팬 프로젝트입니다. Riot Games는 이 프로젝트를 승인하거나 후원하지
           않습니다.

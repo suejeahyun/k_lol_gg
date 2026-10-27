@@ -1,4 +1,5 @@
-export const ADMIN_IMPORT_RECOVERY_STORAGE_KEY = "klol-v2:admin-match-import:pending:v1";
+import { SERVICE_BRAND } from "@/lib/service-brand";
+export const ADMIN_IMPORT_RECOVERY_STORAGE_KEY = `${SERVICE_BRAND.storagePrefix}-v2:admin-match-import:pending:v1`;
 export const ADMIN_IMPORT_RECOVERY_TTL_MS = 2 * 60 * 60 * 1_000;
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

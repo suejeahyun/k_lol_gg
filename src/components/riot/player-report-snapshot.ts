@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import type { RiotMatchDto } from "@/modules/riot/domain/riot-player-analytics";
 import { aggregatePlayerMatches, playerChampionAggregates, playerPositionAggregates, playerReportMetrics, type PlayerMatchFilters } from "./player-analytics";
 
@@ -11,7 +12,7 @@ export type PlayerReportSnapshot = Readonly<{
   positions: ReturnType<typeof playerPositionAggregates>;
   metrics: ReturnType<typeof playerReportMetrics>;
 }>;
-export function playerReportStorageKey(playerId: string, riotId: string) { return `klol:riot-report:v1:${encodeURIComponent(playerId)}:${encodeURIComponent(riotId.normalize("NFKC"))}`; }
+export function playerReportStorageKey(playerId: string, riotId: string) { return `${SERVICE_BRAND.storagePrefix}:riot-report:v1:${encodeURIComponent(playerId)}:${encodeURIComponent(riotId.normalize("NFKC"))}`; }
 export function createPlayerReportSnapshot(input: Readonly<{ id: string; playerId: string; riotId: string; createdAt: string; sourceUpdatedAt: string; filters: PlayerMatchFilters; matches: readonly RiotMatchDto[] }>): PlayerReportSnapshot {
   return { version: 1, formulaVersion: PLAYER_REPORT_FORMULA_VERSION, id: input.id, playerId: input.playerId, riotId: input.riotId,
     createdAt: input.createdAt, sourceUpdatedAt: input.sourceUpdatedAt, filters: { ...input.filters }, matchIds: input.matches.map((match) => match.matchId),

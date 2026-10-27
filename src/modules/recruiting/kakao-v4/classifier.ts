@@ -1,4 +1,5 @@
 import { canonicalKakaoV4CommandText, type KakaoV4ProfileId } from "./domain";
+import { hasForeignKakaoServiceHeader, KAKAO_INHOUSE_FORM_HEADER, KAKAO_SCRIM_FORM_HEADER } from "./service-brand";
 import { normalizeRecruitCode } from "../domain/kakao-recruit-reference";
 import { isKakaoV4InhouseStructuredAddName } from "./inhouse-snapshot-parser";
 import { detectKakaoV4OperationFormCandidate } from "./operation-form-parser";
@@ -225,7 +226,7 @@ function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
     }, "SNAPSHOT");
   }
   if (
-    /^\s*\[K-?LOL\.GG\s*(?:멸망전\s*)?스크림\s*(?:구인\s*양식|상세)\]/u.test(text)
+    KAKAO_SCRIM_FORM_HEADER.test(text)
   ) {
     const scrimNumber = /^\s*번호\s*:\s*#(\d+)/mu.exec(text)?.[1];
     return recognized("SCRIM_SNAPSHOT", text, { scrimNumber: scrimNumber ? Number(scrimNumber) : null }, "SNAPSHOT");
@@ -233,7 +234,7 @@ function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
 
   const inhouseNumber = /^\s*📢\s*내전하실분\s*#(\d+)\s*$/mu.exec(text)?.[1];
   const isLegacyInhouseForm = /^\s*\*참가 신청 양식\*\s*$/mu.test(text);
-  const isInhouseActivationForm = /^\s*\[K-LOL\.GG 내전 구인 양식\]\s*$/mu.test(text) &&
+  const isInhouseActivationForm = KAKAO_INHOUSE_FORM_HEADER.test(text) &&
     /^\s*》\s*게임정보\s*[:：]/mu.test(text) && /^\s*》\s*주최자\s*[:：]/mu.test(text);
   if (inhouseNumber && (isLegacyInhouseForm || isInhouseActivationForm) && /^\s*》\s*(?:협곡|칼바람|증바람|증강칼바람)\s*$/mu.test(text)) {
     const modeLabel = /^\s*》\s*(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(text)?.[1] ?? "";
@@ -497,6 +498,9 @@ export function classifyKakaoV4Command(input: Readonly<{
   const canonicalText = canonicalKakaoV4CommandText(input.text);
   if (canonicalText === null) {
     return Object.freeze({ kind: "UNKNOWN", canonicalText: null, reason: slashBoundaryReason(input.text) });
+  }
+  if (hasForeignKakaoServiceHeader(canonicalText)) {
+    return Object.freeze({ kind: "UNKNOWN", canonicalText, reason: "NO_MATCH" });
   }
 
   const snapshot = classifySnapshot(canonicalText);

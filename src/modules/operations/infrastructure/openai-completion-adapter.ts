@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import type { AiCompletionPort, AiCompletionResult } from "../application/ports";
 import { OperationsError } from "./postgres-operations-repository";
 
@@ -121,7 +122,7 @@ export class OpenAiResponsesCompletionAdapter implements AiCompletionPort {
         },
         body: JSON.stringify({
           model: this.configuration.model,
-          instructions: "K-LOL.GG 사용법과 내전 운영 질문에 한국어로 간결하고 친절하게 답하세요. 제공되지 않은 개인 정보나 운영 상태를 추측하지 마세요.",
+          instructions: `${SERVICE_BRAND.name} 사용법과 내전 운영 질문에 한국어로 간결하고 친절하게 답하세요. 제공되지 않은 개인 정보나 운영 상태를 추측하지 마세요.`,
           input: input.prompt,
           max_output_tokens: this.configuration.maximumOutputTokens,
           store: false,

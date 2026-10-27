@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import Link from "next/link";
 import { CloudSun } from "@/components/theme/theme-icons";
 import { AdminLoginForm } from "./admin-login-form";
@@ -9,7 +10,7 @@ export function AdminLoginPage({ nextPath }: { nextPath: string }) {
       <section className={styles.card} aria-labelledby="admin-login-title">
         <Link className={styles.brand} href="/">
           <span className={styles.brandMark}><CloudSun aria-hidden="true" /></span>
-          <span>K-LOL.GG</span>
+          <span>{SERVICE_BRAND.name}</span>
         </Link>
         <div className={styles.heading}>
           <h1 id="admin-login-title">관리자 로그인</h1>

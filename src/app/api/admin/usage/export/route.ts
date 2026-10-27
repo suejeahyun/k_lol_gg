@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { authorizeApiRole } from "@/modules/auth/infrastructure/server-authorization";
 import { kstDate, usageEnabled, usageRange } from "@/modules/usage/domain/usage";
 import { excludedUsageUsers, usageRepository } from "@/modules/usage/infrastructure/runtime-usage";
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
         return [d.date, missing ? "미수집" : d.date === first || d.date === kstDate(new Date()) ? "부분일" : "수집기록", ...[d.browsers, d.members, d.guests, d.visits, d.views].map((n) => missing ? "" : n), usageEnabled(process.env) ? "활성" : "중단"];
       })];
     return new Response("\uFEFF" + rows.map((r) => r.join(",")).join("\r\n"), { headers: {
-      "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="klol-usage-${range.from}-${range.to}.csv"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
+      "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${SERVICE_BRAND.storagePrefix}-usage-${range.from}-${range.to}.csv"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
     } });
   } catch { return new Response(null, { status: 503, headers: { "Cache-Control": "no-store" } }); }
 }

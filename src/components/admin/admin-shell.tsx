@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import Link from "next/link";
 import {
   CloudSun,
@@ -23,7 +24,7 @@ export function AdminShell({ session, children }: { session: AuthSession; childr
       <aside className={styles.sidebar} id="admin-workspaces">
         <Link className={styles.brand} href="/admin">
           <span><CloudSun aria-hidden="true" /></span>
-          <strong>K-LOL.GG</strong>
+          <strong>{SERVICE_BRAND.name}</strong>
         </Link>
         <div className={styles.mode}>
           <ShieldCheck aria-hidden="true" />

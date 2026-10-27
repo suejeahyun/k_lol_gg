@@ -1,4 +1,5 @@
 import "server-only";
+import { configuredRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
 
 import { getDatabase } from "@/platform/db/client";
 
@@ -15,7 +16,7 @@ export async function resolveRuntimePublicPlayerLegacyMapping(
 ): Promise<RuntimeLegacyMappingResult> {
   const legacyId = parseLegacyPlayerId(rawLegacyId);
   if (!legacyId) return { state: "ready", playerId: null };
-  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) {
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !configuredRuntimeDatabaseUrl()) {
     return { state: "unavailable" };
   }
 

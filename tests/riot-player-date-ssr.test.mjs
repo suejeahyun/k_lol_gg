@@ -12,7 +12,8 @@ function load(file, dependencies, intl) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   const result = { exports: {} };
-  vm.runInNewContext(compiled, { exports: result.exports, Intl: intl, Date, require: (specifier) => {
+  vm.runInNewContext(compiled, { exports: result.exports, Intl: intl, Date, process: { env: { NEXT_PUBLIC_SERVICE_ID: "klol" } }, require: (specifier) => {
+    if (specifier === "@/lib/service-brand") return load("lib/service-brand.ts", {}, intl);
     assert.ok(Object.hasOwn(dependencies, specifier), `Unexpected date rendering dependency: ${specifier}`);
     return dependencies[specifier];
   } });

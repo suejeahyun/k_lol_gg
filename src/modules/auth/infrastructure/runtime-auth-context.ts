@@ -2,6 +2,8 @@ import "server-only";
 
 import type { AuthRepository } from "../application/ports/auth-repository";
 import { getDatabase } from "@/platform/db/client";
+import { requireRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { isFixtureAuthRuntimeEnabled } from "./fixture-auth-repository";
 import { JoseSessionCodec } from "./jose-session-codec";
 import { PostgresAuthRepository } from "./postgres-auth-repository";
@@ -39,7 +41,7 @@ function fixtureContext(): FixtureRuntimeAuthContext | null {
 function databaseContext(): DatabaseRuntimeAuthContext | null {
   try {
     const secrets = parseDatabaseAuthRuntimeSecrets({
-      DATABASE_URL: process.env.DATABASE_URL,
+      DATABASE_URL: requireRuntimeDatabaseUrl(),
       SESSION_SIGNING_KEYS: process.env.SESSION_SIGNING_KEYS,
       TOTP_ENCRYPTION_KEYS: process.env.TOTP_ENCRYPTION_KEYS,
       V2_AUTH_RATE_LIMIT_PEPPER: process.env.V2_AUTH_RATE_LIMIT_PEPPER,
@@ -58,6 +60,6 @@ function databaseContext(): DatabaseRuntimeAuthContext | null {
 }
 
 export function resolveRuntimeAuthContext(): RuntimeAuthContext | null {
-  if (isFixtureAuthRuntimeEnabled()) return fixtureContext();
+  if (SERVICE_BRAND.id !== "nexus" && isFixtureAuthRuntimeEnabled()) return fixtureContext();
   return databaseContext();
 }

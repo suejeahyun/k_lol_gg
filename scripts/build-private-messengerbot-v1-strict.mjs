@@ -6,14 +6,16 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 import { analyzeRhinoStatic } from "./lib/messengerbot-rhino-static.mjs";
+import { messengerbotService, nexusPrivateSettings, nexusPrivatePreamble } from "./build-messengerbot-service.mjs";
 
 const require = createRequire(import.meta.url);
 const acorn = require("next/dist/compiled/acorn");
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const privateDirectory = resolve(root, ".private");
+const service = messengerbotService();
 const settingsSourcePath = resolve(privateDirectory, "KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js");
-const publicPath = resolve(root, "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js");
-const outputPath = resolve(privateDirectory, "KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js");
+const publicPath = resolve(root, service === "nexus" ? "integrations/messengerbot-r/nexus/NEXUS_KAKAO_BOT_MESSENGERBOT_R.js" : "integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js");
+const outputPath = resolve(privateDirectory, service === "nexus" ? "NEXUS_KAKAO_BOT_PRIVATE_MESSENGERBOT_R.js" : "KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js");
 
 if (outputPath !== privateDirectory && !outputPath.startsWith(`${privateDirectory}${sep}`)) {
   throw new Error("Private MessengerBot output must stay under .private/");
@@ -30,19 +32,19 @@ function privateSetting(source, name) {
   return JSON.parse(match[1]);
 }
 
-const settingsSource = await readFile(settingsSourcePath, "utf8");
-const settings = [
+const settingsSource = service === "nexus" ? "" : await readFile(settingsSourcePath, "utf8");
+const settings = service === "nexus" ? nexusPrivateSettings(process.env) : [
   "KLOL_V2_BASE_URL",
   "KLOL_V4_KAKAO_IDENTITY_SECRET",
   "KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT",
   "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT",
 ].map((name) => [name, privateSetting(settingsSource, name)]);
 const publicSource = (await readFile(publicPath, "utf8")).replace(/\r\n?/gu, "\n");
-const executableMarker = "var KLOL_V1_GATEWAY =";
+const executableMarker = service === "nexus" ? "var NEXUS_DB=" : "var KLOL_V1_GATEWAY =";
 const executableSourceIndex = publicSource.indexOf(executableMarker);
 if (executableSourceIndex < 0) throw new Error("Public V1 strict executable marker is missing");
 const phoneSource = publicSource.slice(executableSourceIndex);
-const preamble = [
+const preamble = service === "nexus" ? nexusPrivatePreamble(settings) : [
   "var KLOL_V1_PRIVATE_SETTINGS_APPLIED = (function () {",
   ...settings.map(([name, value]) => `  DataBase.setDataBase(${JSON.stringify(name)}, ${JSON.stringify(value)});`),
   "  return true;",
@@ -72,6 +74,6 @@ if (findings.statementCandidates.length || findings.unsafeSequenceOperands.lengt
 await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(outputPath, output, "utf8");
 console.log(
-  `Private V1 strict one-paste installer refreshed under .private ` +
+  `Private ${service} V1 strict one-paste installer refreshed under .private ` +
   `(version=${version}, LF=${output.length}, CRLF=${crlfLength}, SHA-256=${outputSha256}).`,
 );

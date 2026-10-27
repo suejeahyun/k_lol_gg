@@ -1,4 +1,5 @@
 import "server-only";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 import type {
   TotpMutationActor,
@@ -77,7 +78,7 @@ function mutationActor(session: AuthSession): TotpMutationActor | null {
 }
 
 function provisioningUri(userAccountId: string, secret: string): string {
-  const issuer = "K-LOL.GG";
+  const issuer = SERVICE_BRAND.name;
   const label = `${issuer}:관리자-${userAccountId.slice(0, 8)}`;
   const query = new URLSearchParams({
     secret,

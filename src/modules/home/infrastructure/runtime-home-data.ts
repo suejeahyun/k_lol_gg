@@ -1,4 +1,5 @@
 import "server-only";
+import { configuredRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
 
 import { getDatabase } from "@/platform/db/client";
 import { loadRuntimeChampions } from "@/modules/champions/infrastructure/runtime-champions";
@@ -13,7 +14,7 @@ import {
 import { PostgresHomeRepository } from "./postgres-home-repository";
 
 function postgresModeEnabled(): boolean {
-  return process.env.V2_PUBLIC_DATA_SOURCE === "postgres" && Boolean(process.env.DATABASE_URL);
+  return process.env.V2_PUBLIC_DATA_SOURCE === "postgres" && Boolean(configuredRuntimeDatabaseUrl());
 }
 export async function loadRuntimeHomeSnapshot(): Promise<HomeSnapshotResult> {
   if (!postgresModeEnabled()) return { state: "unavailable" };

@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 const PARTY_ACTIONS = Object.freeze({
   create: ["POST"],
   sync: ["POST"],
@@ -71,7 +72,7 @@ export function legacyKakaoRecruitTransitionResponse(input: Readonly<{
     title: "카카오 봇 업데이트가 필요합니다.",
     status: 410,
     detail: "이전 봇 요청은 처리하지 않습니다. V2 서명 전송 계약으로 봇을 업데이트해 주세요.",
-    reply: "[K-LOL.GG 봇 업데이트 필요]\n운영 중인 카카오 봇을 V2 서명 전송 버전으로 업데이트해 주세요.",
+    reply: `[${SERVICE_BRAND.name} 봇 업데이트 필요]\n운영 중인 카카오 봇을 V2 서명 전송 버전으로 업데이트해 주세요.`,
     successor: target,
     contractVersion: "KLOL_KAKAO_WEBHOOK_V1",
   }, 410, {

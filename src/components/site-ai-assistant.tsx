@@ -1,5 +1,7 @@
 "use client";
 
+import { SERVICE_BRAND } from "@/lib/service-brand";
+
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Bot, Send, Sparkles, X } from "@/components/theme/theme-icons";
 import { usePathname } from "next/navigation";
@@ -94,11 +96,11 @@ export function SiteAiAssistant() {
   }
 
   return (
-    <aside className={styles.root} aria-label="K-LOL.GG AI 도우미">
+    <aside className={styles.root} aria-label={`${SERVICE_BRAND.name} AI 도우미`}>
       {open ? (
         <section className={styles.panel} role="dialog" aria-modal="false" aria-labelledby="site-ai-title">
           <header>
-            <div><Sparkles aria-hidden="true" /><strong id="site-ai-title">K-LOL 도우미</strong></div>
+            <div><Sparkles aria-hidden="true" /><strong id="site-ai-title">{SERVICE_BRAND.shortName} 도우미</strong></div>
             <button type="button" onClick={close} aria-label="AI 도우미 닫기"><X aria-hidden="true" /></button>
           </header>
           <div className={styles.messages} aria-live="polite">
@@ -115,7 +117,7 @@ export function SiteAiAssistant() {
           <small className={styles.privacy}>입력 내용은 답변 생성 외 용도로 저장하지 않습니다.</small>
         </section>
       ) : null}
-      <button ref={triggerRef} className={styles.trigger} type="button" onClick={() => setOpen(true)} aria-label="K-LOL.GG AI 도우미 열기" aria-expanded={open}>
+      <button ref={triggerRef} className={styles.trigger} type="button" onClick={() => setOpen(true)} aria-label={`${SERVICE_BRAND.name} AI 도우미 열기`} aria-expanded={open}>
         <Bot aria-hidden="true" /><span>도우미</span>
       </button>
     </aside>

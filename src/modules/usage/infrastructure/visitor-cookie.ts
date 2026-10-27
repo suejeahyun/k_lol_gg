@@ -1,5 +1,6 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-export const USAGE_COOKIE = "klol_usage";
+import { SERVICE_BRAND } from "@/lib/service-brand";
+export const USAGE_COOKIE = `${SERVICE_BRAND.storagePrefix}_usage`;
 const signature = (id: string, secret: string) => createHmac("sha256", secret).update(`usage-v1:${id}`).digest("hex");
 export function readUsageVisitor(value: string | undefined, secret: string): string | null {
   if (!value || !/^[0-9a-f-]{36}\.[0-9a-f]{64}$/.test(value)) return null;

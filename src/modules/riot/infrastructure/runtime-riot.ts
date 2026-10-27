@@ -1,4 +1,5 @@
 import "server-only";
+import { configuredRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
 
 import { isFixtureAuthRuntimeEnabled } from "@/modules/auth/infrastructure/fixture-auth-repository";
 import { getDatabase } from "@/platform/db/client";
@@ -47,7 +48,7 @@ export function getRuntimeRiot(): RuntimeRiot | null {
     return globalThis.__klolV2FakeRiotRuntime;
   }
 
-  const configuration = readRiotProductionConfiguration(process.env);
+  const configuration = readRiotProductionConfiguration({ ...process.env, DATABASE_URL: configuredRuntimeDatabaseUrl() });
   if (!configuration) return null;
   try {
     const database = getDatabase();
@@ -93,7 +94,7 @@ export async function loadRuntimeRiot<T>(loader: (runtime: RuntimeRiot) => Promi
 }
 
 export async function loadRuntimePublicRiotProfile(playerId: string) {
-  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) {
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !configuredRuntimeDatabaseUrl()) {
     return { state: "unavailable" as const };
   }
   try {
@@ -105,7 +106,7 @@ export async function loadRuntimePublicRiotProfile(playerId: string) {
 }
 
 export async function loadRuntimePublicRiotAnalytics(playerId: string, cursor?: string) {
-  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) return { state: "unavailable" as const };
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !configuredRuntimeDatabaseUrl()) return { state: "unavailable" as const };
   try {
     const repository = new PostgresPublicRiotQueryRepository(getDatabase());
     return { state: "ready" as const, data: await repository.getPublicAnalytics(playerId, cursor) };
@@ -113,7 +114,7 @@ export async function loadRuntimePublicRiotAnalytics(playerId: string, cursor?: 
 }
 
 export async function loadRuntimePublicRiotMatch(playerId: string, matchId: string) {
-  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) return { state: "unavailable" as const };
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !configuredRuntimeDatabaseUrl()) return { state: "unavailable" as const };
   try {
     const repository = new PostgresPublicRiotQueryRepository(getDatabase());
     return { state: "ready" as const, data: await repository.getPublicMatch(playerId, matchId) };

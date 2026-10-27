@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Search, Sparkles, UsersRound } from "@/components/theme/theme-icons";
@@ -41,7 +42,7 @@ export default async function PlayersPage({
 
       <section className="players-hero" aria-labelledby="players-title">
         <div>
-          <Badge variant="secondary"><Sparkles size={13} aria-hidden="true" /> K-LOL · PLAYER REGISTRY</Badge>
+          <Badge variant="secondary"><Sparkles size={13} aria-hidden="true" /> {SERVICE_BRAND.shortName} · PLAYER REGISTRY</Badge>
           <h1 id="players-title">플레이어 찾기</h1>
         </div>
         <UsersRound size={86} aria-hidden="true" />

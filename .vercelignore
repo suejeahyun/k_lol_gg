@@ -8,3 +8,11 @@
 .next/**
 node_modules
 node_modules/**
+# Historical QA captures and reports are not application deployment inputs.
+docs
+docs/**
+qa
+qa/**
+output
+output/**
+*.tsbuildinfo

@@ -35,6 +35,7 @@ function harness(kind, send) {
     const code = ts.transpileModule(readFileSync(filename, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
     vm.runInNewContext(code, {
       exports: compiledModule.exports, crypto: webcrypto, AbortSignal, Error, Uint8Array, setTimeout, clearTimeout,
+      process: { env: { NEXT_PUBLIC_SERVICE_ID: "klol" } },
       sessionStorage: { setItem: (key, value) => storage.set(key, value) },
       FormData: class { constructor(values) { this.values = values; } get(name) { return this.values[name] ?? null; } },
       fetch: async (url, options) => { requests.push({ url, ...options }); return send(requests.length, url, options); },

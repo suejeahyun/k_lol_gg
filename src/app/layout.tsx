@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import type { Metadata } from "next";
 import { getSiteOrigin } from "@/modules/seo/domain/site-seo";
 import { PwaRegistration } from "@/components/pwa-registration";
@@ -10,19 +11,19 @@ import "./image-theme.css";
 export const metadata: Metadata = {
   metadataBase: getSiteOrigin(),
   title: {
-    default: "K-LOL.GG",
-    template: "%s | K-LOL.GG",
+    default: SERVICE_BRAND.name,
+    template: `%s | ${SERVICE_BRAND.name}`,
   },
   description: "함께 즐기는 리그 오브 레전드 내전 커뮤니티입니다.",
   manifest: "/manifest.webmanifest",
-  applicationName: "K-LOL.GG",
-  appleWebApp: { capable: true, title: "K-LOL.GG", statusBarStyle: "default" },
+  applicationName: SERVICE_BRAND.name,
+  appleWebApp: { capable: true, title: SERVICE_BRAND.name, statusBarStyle: "default" },
   icons: {
     icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
     apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
   openGraph: {
-    title: "K-LOL.GG",
+    title: SERVICE_BRAND.name,
     description: "내전의 모든 순간을 더 쉽고 사랑스럽게.",
     images: [{
       url: "/og.png",
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "K-LOL.GG",
+    title: SERVICE_BRAND.name,
     description: "내전의 모든 순간을 더 쉽고 사랑스럽게.",
     images: ["/og.png"],
   },

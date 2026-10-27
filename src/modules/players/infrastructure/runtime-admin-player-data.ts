@@ -1,4 +1,5 @@
 import "server-only";
+import { configuredRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
 
 import { getDatabase } from "@/platform/db/client";
 
@@ -6,7 +7,7 @@ import type { AdminPlayerListQuery, AdminPlayerDataResult, AdminPlayer, AdminPla
 import { PostgresAdminPlayerRepository } from "./postgres-admin-player-repository";
 
 function runtimeRepository(): PostgresAdminPlayerRepository | null {
-  return process.env.DATABASE_URL
+  return configuredRuntimeDatabaseUrl()
     ? new PostgresAdminPlayerRepository(getDatabase())
     : null;
 }

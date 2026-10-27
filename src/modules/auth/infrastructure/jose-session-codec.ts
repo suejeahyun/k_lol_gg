@@ -8,9 +8,8 @@ import {
   type AuthSessionSeed,
 } from "../domain/auth-session";
 import type { SessionSigningKeyring } from "./versioned-secret-keyring";
+import { SERVICE_BRAND, type ServiceId } from "../../../lib/service-brand";
 
-const ISSUER = "k-lol-gg-v2";
-const AUDIENCE = "k-lol-gg-v2-web";
 const ALGORITHM = "HS256";
 const DEFAULT_TTL_SECONDS = 30 * 60;
 const MAXIMUM_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -30,8 +29,12 @@ type DecodeOptions = {
 
 export class JoseSessionCodec {
   private readonly keyring: SessionSigningKeyring;
+  private readonly issuer: string;
+  private readonly audience: string;
 
-  constructor(secretOrKeyring: string | SessionSigningKeyring) {
+  constructor(secretOrKeyring: string | SessionSigningKeyring, serviceId: ServiceId = SERVICE_BRAND.id) {
+    this.issuer = serviceId === "nexus" ? "nexus-gg" : "k-lol-gg-v2";
+    this.audience = `${this.issuer}-web`;
     if (typeof secretOrKeyring === "string") {
       const key = new TextEncoder().encode(secretOrKeyring);
       if (key.byteLength < 32) {
@@ -77,8 +80,8 @@ export class JoseSessionCodec {
       .setProtectedHeader({ alg: ALGORITHM, typ: "JWT", kid: this.keyring.currentKeyId })
       .setSubject(seed.userId)
       .setJti(sessionId)
-      .setIssuer(ISSUER)
-      .setAudience(AUDIENCE)
+      .setIssuer(this.issuer)
+      .setAudience(this.audience)
       .setIssuedAt(nowSeconds)
       .setExpirationTime(nowSeconds + ttlSeconds)
       .sign(key);
@@ -103,8 +106,8 @@ export class JoseSessionCodec {
 
       const { payload, protectedHeader } = await jwtVerify(token, key, {
         algorithms: [ALGORITHM],
-        issuer: ISSUER,
-        audience: AUDIENCE,
+        issuer: this.issuer,
+        audience: this.audience,
         currentDate: new Date(options.nowMs ?? Date.now()),
       });
 

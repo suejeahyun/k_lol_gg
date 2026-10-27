@@ -1,15 +1,17 @@
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { analyzeRhinoStatic } from "./lib/messengerbot-rhino-static.mjs";
+import { messengerbotService, nexusMessengerbotSource, nexusCompanionSource } from "./build-messengerbot-service.mjs";
 
 const require = createRequire(import.meta.url);
 const acorn = require("next/dist/compiled/acorn");
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const directory = resolve(root, "integrations/messengerbot-r/v1-strict");
+const service = messengerbotService();
 const sourceCommit = "4f84e84aa0a4ee986c2aad2c7377d8e3bcf2e097";
 const sourcePath = "KLOL_KAKAO_BOT_V40_GUIDED_HUB.js";
 const sourceSha256Lf = "0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2";
@@ -440,8 +442,23 @@ if (
   throw new Error("V1-strict output contains Rhino static warning candidates");
 }
 
-await writeFile(resolve(directory, outputName), output, "utf8");
+if (service === "nexus") {
+  const nexusDirectory = resolve(root, "integrations/messengerbot-r/nexus");
+  const nexusSource = nexusMessengerbotSource(output);
+  const companion = nexusCompanionSource(await readFile(resolve(root, "integrations/messengerbot-r/site-notices/KLOL_SITE_NOTICE_COMPANION.js"), "utf8"));
+  for (const value of [nexusSource, companion]) {
+    const nexusFindings = analyzeRhinoStatic(acorn.parse(value, { ecmaVersion: 5, allowReserved: true }));
+    if (Object.values(nexusFindings).some((items) => items.length > 0)) throw new Error("NEXUS artifact contains Rhino static warning candidates");
+    if (value.length >= 65_535 || value.replace(/\n/gu, "\r\n").length >= 65_535) throw new Error("NEXUS artifact exceeds the phone editor limit");
+  }
+  await mkdir(nexusDirectory, { recursive: true });
+  await writeFile(resolve(nexusDirectory, "NEXUS_KAKAO_BOT_MESSENGERBOT_R.js"), nexusSource, "utf8");
+  await writeFile(resolve(nexusDirectory, "NEXUS_SITE_NOTICE_COMPANION.js"), companion, "utf8");
+  console.log(`Generated NEXUS public phone artifacts (${nexusSource.length} LF characters); HTTPS origin and independent credentials are required before use.`);
+} else {
+  await writeFile(resolve(directory, outputName), output, "utf8");
 console.log(
   `Generated integrations/messengerbot-r/v1-strict/${outputName} ` +
   `(${output.length} LF characters, ${crlfLength} CRLF characters, source=${sourceSha256Lf}, functions=${extractedNames.length})`
 );
+}

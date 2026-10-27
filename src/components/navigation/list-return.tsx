@@ -1,11 +1,13 @@
 "use client";
 
+import { SERVICE_BRAND } from "@/lib/service-brand";
+
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { isRememberedList, safeListReturn } from "@/modules/navigation/domain/list-return";
 
-const key = (pathname: string) => `klol:list:${pathname}`;
+const key = (pathname: string) => `${SERVICE_BRAND.storagePrefix}:list:${pathname}`;
 
 export function ListNavigationMemory() {
   const pathname = usePathname();
@@ -20,8 +22,8 @@ export function ListNavigationMemory() {
     let saveFrame = 0;
     const requestSave = () => { if (!saveFrame) saveFrame = requestAnimationFrame(() => { saveFrame = 0; save(); }); };
     try {
-      if (sessionStorage.getItem("klol:list:restore") === storageKey) {
-        sessionStorage.removeItem("klol:list:restore");
+      if (sessionStorage.getItem(`${SERVICE_BRAND.storagePrefix}:list:restore`) === storageKey) {
+        sessionStorage.removeItem(`${SERVICE_BRAND.storagePrefix}:list:restore`);
         const stored = JSON.parse(sessionStorage.getItem(storageKey) ?? "null") as { scroll?: number } | null;
         const scroll = stored?.scroll;
         if (typeof scroll === "number" && Number.isFinite(scroll)) frame = requestAnimationFrame(() => window.scrollTo(0, Math.max(0, scroll)));
@@ -43,7 +45,7 @@ export function BackToList({ href, children, className }: { href: string; childr
       const stored = JSON.parse(sessionStorage.getItem(key(pathname)) ?? "null") as { href?: string } | null;
       const target = safeListReturn(typeof stored?.href === "string" ? stored.href : null, href);
       if (stored && target === stored.href) {
-        event.preventDefault(); sessionStorage.setItem("klol:list:restore", key(pathname)); router.push(target, { scroll: false });
+        event.preventDefault(); sessionStorage.setItem(`${SERVICE_BRAND.storagePrefix}:list:restore`, key(pathname)); router.push(target, { scroll: false });
       }
     } catch { /* Follow the original URL if browser storage is unavailable. */ }
   }}>{children}</Link>;

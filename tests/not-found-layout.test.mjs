@@ -15,6 +15,7 @@ function load(file, dependencies) {
   vm.runInNewContext(compiled, { exports: result.exports, process: { env: { NODE_ENV: "test" } }, require: (specifier) => {
     if (specifier === "react") return React;
     if (specifier === "react/jsx-runtime") return jsxRuntime;
+    if (specifier === "@/lib/service-brand") return load("lib/service-brand.ts", {});
     assert.ok(Object.hasOwn(dependencies, specifier), `Unexpected not-found dependency: ${specifier}`);
     return dependencies[specifier];
   } });

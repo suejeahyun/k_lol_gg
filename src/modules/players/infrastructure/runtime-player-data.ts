@@ -1,4 +1,5 @@
 import "server-only";
+import { configuredRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
 
 import { getDatabase } from "@/platform/db/client";
 
@@ -8,7 +9,7 @@ import type { PlayerCatalogPage, PlayerCatalogQuery, PlayerDataResult, PlayerPro
 import { PostgresPlayerRepository } from "./postgres-player-repository";
 
 function postgresModeEnabled(): boolean {
-  return process.env.V2_PUBLIC_DATA_SOURCE === "postgres" && Boolean(process.env.DATABASE_URL);
+  return process.env.V2_PUBLIC_DATA_SOURCE === "postgres" && Boolean(configuredRuntimeDatabaseUrl());
 }
 
 function runtimeRepository(): PostgresPlayerRepository | null {

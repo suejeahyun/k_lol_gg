@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { definePublicProblem } from "@/platform/http/problem";
 
 export const ADMIN_SECURITY_PROBLEMS = Object.freeze({
@@ -35,7 +36,7 @@ export const ADMIN_SECURITY_PROBLEMS = Object.freeze({
     code: "SAME_ORIGIN_REQUIRED",
     status: 403,
     title: "허용되지 않은 요청 출처입니다.",
-    detail: "현재 K-LOL.GG 페이지에서 다시 시도해 주세요.",
+    detail: `현재 ${SERVICE_BRAND.name} 페이지에서 다시 시도해 주세요.`,
   }),
   pendingSetupExists: definePublicProblem({
     code: "TOTP_SETUP_PENDING",

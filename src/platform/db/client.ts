@@ -1,9 +1,12 @@
 import "server-only";
 
 import { createDatabaseHandle, type DatabaseHandle } from "./database";
+import { requireRuntimeDatabaseUrl } from "./runtime-database-url";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 declare global {
   var __klolV2DatabaseHandle: DatabaseHandle | undefined;
+  var __nexusDatabaseHandle: DatabaseHandle | undefined;
 }
 
 function readPoolMax(): number {
@@ -13,27 +16,18 @@ function readPoolMax(): number {
   return Number.isInteger(parsed) && parsed > 0 && parsed <= 20 ? parsed : fallback;
 }
 
-function readDatabaseUrl(): string {
-  const value = process.env.DATABASE_URL;
-  if (!value) {
-    throw new Error("DATABASE_URL is not configured for this server runtime.");
-  }
-
-  const parsed = new URL(value);
-  if (parsed.protocol !== "postgres:" && parsed.protocol !== "postgresql:") {
-    throw new Error("DATABASE_URL must use the PostgreSQL protocol.");
-  }
-
-  return value;
-}
-
 export function getDatabaseHandle(): DatabaseHandle {
   if (process.env.NEXT_RUNTIME === "edge") {
     throw new Error("The V2 PostgreSQL client requires the Node.js runtime.");
   }
 
+  const connectionString = requireRuntimeDatabaseUrl();
+  if (SERVICE_BRAND.id === "nexus") {
+    globalThis.__nexusDatabaseHandle ??= createDatabaseHandle(connectionString, { max: readPoolMax() });
+    return globalThis.__nexusDatabaseHandle;
+  }
   if (!globalThis.__klolV2DatabaseHandle) {
-    globalThis.__klolV2DatabaseHandle = createDatabaseHandle(readDatabaseUrl(), {
+    globalThis.__klolV2DatabaseHandle = createDatabaseHandle(connectionString, {
       max: readPoolMax(),
     });
   }

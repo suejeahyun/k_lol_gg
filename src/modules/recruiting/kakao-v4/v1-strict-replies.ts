@@ -1,3 +1,4 @@
+import { SERVICE_BRAND, getServiceOrigin } from "@/lib/service-brand";
 import type {
   KakaoPlayerRecordDto,
   KakaoRankingDto,
@@ -22,7 +23,7 @@ function recentLine(match: KakaoPlayerRecordDto["recentMatches"][number]) {
 /** Default V40 server formatter, backed by the V2 read DTO. */
 export function v1StrictPlayerRecordReply(
   body: KakaoPlayerRecordDto,
-  publicOrigin = "https://k-lol-gg.vercel.app",
+  publicOrigin = getServiceOrigin().origin,
 ) {
   if (!body.player) {
     return body.mode === "RECORD"
@@ -76,7 +77,7 @@ export function v1StrictPlayerRecordReply(
 export function v1StrictRankingReply(body: KakaoRankingDto) {
   if (body.rows.length === 0) return "랭킹 데이터가 없습니다.\n기준: 내전 참여 10회 이상";
   return [
-    "🏆 K-LOL.GG 랭킹 TOP 5",
+    `🏆 ${SERVICE_BRAND.name} 랭킹 TOP 5`,
     "기준: 내전 참여 10회 이상",
     "",
     ...body.rows.slice(0, 5).map((row, index) =>
@@ -86,10 +87,10 @@ export function v1StrictRankingReply(body: KakaoRankingDto) {
 }
 
 export function v1StrictOperationFormReply(type: OperationFormType) {
-  if (type === "friends") return "[K-LOL.GG 디스코드 초대 신청 접수 완료]";
-  if (type === "suggestions") return "[K-LOL.GG 건의 접수 완료]";
-  if (type === "meetups") return "[K-LOL.GG 모임 등록 접수 완료]";
-  return "[K-LOL.GG 외출 신청 접수 완료]";
+  if (type === "friends") return `[${SERVICE_BRAND.name} 디스코드 초대 신청 접수 완료]`;
+  if (type === "suggestions") return `[${SERVICE_BRAND.name} 건의 접수 완료]`;
+  if (type === "meetups") return `[${SERVICE_BRAND.name} 모임 등록 접수 완료]`;
+  return `[${SERVICE_BRAND.name} 외출 신청 접수 완료]`;
 }
 
 const INHOUSE_MODE_LABELS = { RIFT: "협곡", ARAM: "칼바람", AUGMENT_ARAM: "증바람" } as const;
@@ -156,7 +157,7 @@ export function inhouseCopyFormReply(body: KakaoSeasonSnapshotDto) {
   return lines.join("\n");
 }
 
-export function inhouseMemberLinkNotice(body: KakaoSeasonSnapshotDto, publicOrigin = "https://k-lol-gg.vercel.app") {
+export function inhouseMemberLinkNotice(body: KakaoSeasonSnapshotDto, publicOrigin = getServiceOrigin().origin) {
   const entries = activeInhouseEntries(body);
   const names = (reason: NonNullable<InhouseEntry["memberLinkStatus"]>) => [...new Set(entries.filter((entry) =>
     (entry.memberLinkStatus ?? (entry.status === "UNMATCHED" || entry.status === "AMBIGUOUS" ? entry.status : undefined)) === reason,

@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import type { KakaoOpenChatStatusDto } from "../kakao-assistant/domain";
 import { partyCopyReference } from "../application/party-copy-reference";
 import { recruitFormIdentityLines } from "../domain/kakao-recruit-reference";
@@ -141,7 +142,7 @@ export function v1StrictPartyTemplate(input: Readonly<{
     maximumMembers: input.maximumMembers, members: [], startTimeText: "미정", gameInfo: "미정",
   }, input.formCode);
   const lines = [
-    `[K-LOL.GG 구인상세 #${input.recruitNumber}]`, "",
+    `[${SERVICE_BRAND.name} 구인상세 #${input.recruitNumber}]`, "",
     `#${input.recruitNumber} · ${input.title.replace(/\s*구인\s*$/u, "")} · 0/${input.maximumMembers}`,
     `운영일: ${input.recruitDate}`,
     ...(input.id ? [`》저장기준 : ${partyCopyReference({ id: input.id, recruitDate: input.recruitDate, revision: input.revision ?? 0 })}`] : []),
@@ -164,7 +165,7 @@ export function v1StrictPartyStatusReply(parties: readonly Party[], now = new Da
 }
 
 export function v1StrictPartyDetailReply(party: Party | null, recruitNumber: number) {
-  if (!party) return `[K-LOL.GG 구인상세]\n\n모집번호 #${recruitNumber} 구인글을 찾지 못했습니다.`;
+  if (!party) return `[${SERVICE_BRAND.name} 구인상세]\n\n모집번호 #${recruitNumber} 구인글을 찾지 못했습니다.`;
   if (party.formCode) return compactCopyForm(party, party.formCode);
-  return [`[K-LOL.GG 구인상세 #${party.recruitNumber}]`, "", detailBlock(party)].join("\n");
+  return [`[${SERVICE_BRAND.name} 구인상세 #${party.recruitNumber}]`, "", detailBlock(party)].join("\n");
 }

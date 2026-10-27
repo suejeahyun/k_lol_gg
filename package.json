@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev:nexus": "next dev --port 3107",
+    "nexus:prepare-local": "node --import tsx scripts/nexus/prepare-local-env.ts",
+    "nexus:bootstrap": "node --env-file=.env.local --import tsx scripts/nexus/bootstrap.ts",
+    "nexus:create-admin": "node --env-file=.env.local --import tsx scripts/nexus/create-admin.ts",
+    "nexus:bot": "node scripts/build-messengerbot-v1-strict.mjs --service nexus",
+    "nexus:bot:private": "node --env-file=.env.local scripts/build-private-messengerbot-v1-strict.mjs --service nexus",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 export type GlobalCommandAccess = "PUBLIC" | "ACCOUNT";
 
 export type GlobalCommand = Readonly<{
@@ -12,7 +13,7 @@ export type GlobalCommand = Readonly<{
 
 const commands = [
   { id: "home", label: "홈", description: "최근 경기와 커뮤니티 현황", href: "/", group: "페이지", access: "PUBLIC", keywords: ["메인", "최근", "현황"] },
-  { id: "start", label: "시작하기", description: "K-LOL.GG 이용 흐름 안내", href: "/start", group: "페이지", access: "PUBLIC", keywords: ["가이드", "처음", "안내"] },
+  { id: "start", label: "시작하기", description: `${SERVICE_BRAND.name} 이용 흐름 안내`, href: "/start", group: "페이지", access: "PUBLIC", keywords: ["가이드", "처음", "안내"] },
   { id: "players", label: "플레이어 찾기", description: "닉네임과 Riot ID 검색", href: "/players", group: "페이지", access: "PUBLIC", keywords: ["선수", "소환사", "라이엇", "riot"] },
   { id: "matches", label: "경기 기록", description: "공개된 내전 결과와 세트", href: "/matches", group: "콘텐츠", access: "PUBLIC", keywords: ["내전", "결과", "전적", "게임"] },
   { id: "rankings", label: "시즌 랭킹", description: "공개 순위와 시즌 통계", href: "/rankings", group: "콘텐츠", access: "PUBLIC", keywords: ["순위", "통계", "시즌"] },

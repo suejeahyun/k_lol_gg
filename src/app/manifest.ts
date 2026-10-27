@@ -1,10 +1,11 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "K-LOL.GG",
-    short_name: "K-LOL.GG",
+    name: SERVICE_BRAND.name,
+    short_name: SERVICE_BRAND.name,
     description: "함께 즐기는 리그 오브 레전드 내전 커뮤니티",
     start_url: "/start?source=pwa",
     scope: "/",

@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { createHash, randomUUID } from "node:crypto";
 
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
@@ -274,9 +275,9 @@ function legacyInhouseOverview(
 ) {
   const recruitNos = [...new Set([...grouped.keys(), ...metadataByRecruitNo.keys()])].sort((left, right) => left - right);
   if (recruitNos.length === 0) {
-    return "[K-LOL.GG 내전현황]\n오늘 등록된 내전 신청이 없습니다.\n\n참가 신청: 내전참가";
+    return `[${SERVICE_BRAND.name} 내전현황]\n오늘 등록된 내전 신청이 없습니다.\n\n참가 신청: 내전참가`;
   }
-  const lines = ["[K-LOL.GG 내전현황]", "🔎 전체 명단: 내전상세 번호", ""];
+  const lines = [`[${SERVICE_BRAND.name} 내전현황]`, "🔎 전체 명단: 내전상세 번호", ""];
   for (const recruitNo of recruitNos) {
     const entries = grouped.get(recruitNo) ?? [];
     const metadata = metadataByRecruitNo.get(recruitNo);

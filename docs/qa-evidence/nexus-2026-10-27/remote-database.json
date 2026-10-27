@@ -1,0 +1,48 @@
+{
+  "verifiedAt": "2026-10-27T07:19:45.775Z",
+  "projectId": "steep-forest-46215218",
+  "database": "nexus_gg",
+  "region": "aws-ap-southeast-1",
+  "databaseEngine": "PostgreSQL 18",
+  "migrations": 50,
+  "before": {
+    "applicationTables": 0,
+    "communityRows": 0
+  },
+  "afterSchema": {
+    "emptyBusinessTables": 111,
+    "communityRows": 0
+  },
+  "reference": {
+    "source": "Riot Data Dragon",
+    "pinnedVersion": "16.17.1",
+    "rows": 173
+  },
+  "initialAdministrator": {
+    "accounts": 1,
+    "role": "SUPER_ADMIN",
+    "status": "APPROVED",
+    "temporaryPasswordChangeRequired": true,
+    "passwordHashVerified": true
+  },
+  "after": {
+    "populatedTables": {
+      "auth.user_accounts": 1,
+      "catalog.champions": 173,
+      "operations.site_settings": 1,
+      "recruiting.kakao_operation_settings": 1,
+      "usage.collection": 1
+    },
+    "otherApplicationTablesEmpty": 109,
+    "communityMembersExcludingBootstrapAdministrator": 0,
+    "seasons": 0,
+    "players": 0,
+    "matches": 0,
+    "recruitments": 0
+  },
+  "importedExistingServiceData": false,
+  "runtimeDatabaseConnection": "new-project-pooled-endpoint",
+  "migrationDatabaseConnection": "new-project-direct-endpoint",
+  "independentProductionKeysGenerated": true,
+  "credentialsIncluded": false
+}

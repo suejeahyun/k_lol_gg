@@ -1,3 +1,4 @@
+import { SERVICE_BRAND, getServiceOrigin } from "@/lib/service-brand";
 import { createHash } from "node:crypto";
 
 import {
@@ -17,7 +18,7 @@ import {
 
 type DispatchResult = Readonly<{ kind: "REPLY"; reply: string }>;
 
-export const KAKAO_V4_SCRIM_RETIRED_REPLY = "[K-LOL.GG 스크림 기능 종료]\n카카오톡 스크림 기능은 종료되었습니다.\n파티는 5인파티, 내전은 내전구인을 입력해 주세요.";
+export const KAKAO_V4_SCRIM_RETIRED_REPLY = `[${SERVICE_BRAND.name} 스크림 기능 종료]\n카카오톡 스크림 기능은 종료되었습니다.\n파티는 5인파티, 내전은 내전구인을 입력해 주세요.`;
 
 export type KakaoV4CommandResult = DispatchResult & Readonly<{ replayed: boolean }>;
 
@@ -35,28 +36,28 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   if (classification.kind === "UNKNOWN" || classification.kind === "WRONG_PROFILE") return null;
   if (classification.family === "SCRIM") return Object.freeze({ kind: "REPLY" as const, reply: KAKAO_V4_SCRIM_RETIRED_REPLY });
   if (classification.command === "LOCAL_BOT_VERSION") {
-    return Object.freeze({ kind: "REPLY" as const, reply: `[K-LOL.GG V4 봇]\n프로필: ${envelope.profileId}\n설치본: ${envelope.installationId}` });
+    return Object.freeze({ kind: "REPLY" as const, reply: `[${SERVICE_BRAND.name} V4 봇]\n프로필: ${envelope.profileId}\n설치본: ${envelope.installationId}` });
   }
   if (classification.command === "LOCAL_V4_STATUS") {
     return Object.freeze({
       kind: "REPLY" as const,
-      reply: `[K-LOL.GG V4 상태]\ncommand gateway: 정상\n프로필: ${envelope.profileId}\n계약: ${KAKAO_V4_COMMAND_CONTRACT}`,
+      reply: `[${SERVICE_BRAND.name} V4 상태]\ncommand gateway: 정상\n프로필: ${envelope.profileId}\n계약: ${KAKAO_V4_COMMAND_CONTRACT}`,
     });
   }
   if (classification.command === "LOCAL_V4_CONTRACT") {
     return Object.freeze({
       kind: "REPLY" as const,
-      reply: `[K-LOL.GG V4 계약 확인]\n${KAKAO_V4_V1_CONTRACT}\n프로필: ${envelope.profileId}`,
+      reply: `[${SERVICE_BRAND.name} V4 계약 확인]\n${KAKAO_V4_V1_CONTRACT}\n프로필: ${envelope.profileId}`,
     });
   }
   if (classification.command === "LOCAL_USER_HELP") return Object.freeze({
     kind: "REPLY" as const,
-    reply: "[K-LOL.GG 일반 도움말]\n\n파티·내전 참가\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\n협곡은 이름과 라인 필수: 이름/top,mid 또는 이름/all\n칼바람·증바람은 이름만 작성해주세요. 사이트 회원 연결은 나중에 할 수 있어요.\n새 모집 만들기: 5인파티 / 내전구인 협곡\n번호형 파티는 최신 양식에서 이름·시작·게임을 수정할 수 있어요. 취소는 이름만 지우고 번호는 남겨주세요.\n자세한 사용법: 구인도움말\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
+    reply: `[${SERVICE_BRAND.name} 일반 도움말]\n\n파티·내전 참가\n최근 봇 명단 전체 복사 → 빈칸에 내 이름 입력 → 메시지 전체 전송 = 저장\n협곡은 이름과 라인 필수: 이름/top,mid 또는 이름/all\n칼바람·증바람은 이름만 작성해주세요. 사이트 회원 연결은 나중에 할 수 있어요.\n새 모집 만들기: 5인파티 / 내전구인 협곡\n번호형 파티는 최신 양식에서 이름·시작·게임을 수정할 수 있어요. 취소는 이름만 지우고 번호는 남겨주세요.\n자세한 사용법: 구인도움말\n\n${SERVICE_BRAND.id === "nexus" ? SERVICE_BRAND.shortName : "LOL-K"} 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말`,
   });
   if (classification.command === "LOCAL_RECRUIT_HELP") return Object.freeze({
     kind: "REPLY" as const,
     reply: [
-      "[K-LOL.GG 구인 도움말]", "", "참가하기",
+      `[${SERVICE_BRAND.name} 구인 도움말]`, "", "참가하기",
       "1. 최근 봇 명단 전체 복사", "2. 빈칸에 내 이름 입력", "3. 메시지 전체 전송 = 저장", "",
       "협곡은 이름과 라인 필수: 이름/top,mid 또는 이름/all",
       "칼바람·증바람은 이름만 작성해주세요. 사이트 회원 연결은 나중에 할 수 있어요.",
@@ -81,11 +82,11 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   });
   if (classification.command === "LOCAL_RECRUIT_WEB_HELP") return Object.freeze({
     kind: "REPLY" as const,
-    reply: "[K-LOL.GG 구인도우미]\n\n현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.\n\nhttps://k-lol-gg.vercel.app/recruit-helper\n\n구인현황 바로가기:\nhttps://k-lol-gg.vercel.app/recruit",
+    reply: `[${SERVICE_BRAND.name} 구인도우미]\n\n현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.\n\n${getServiceOrigin().origin}/recruit-helper\n\n구인현황 바로가기:\n${getServiceOrigin().origin}/recruit`,
   });
   if (classification.command === "OPERATIONS_PHOTO_STATUS") return Object.freeze({
     kind: "REPLY" as const,
-    reply: "[K-LOL.GG 사진 제출 안내]\nV4 휴대폰 봇은 사진 세션 업로드를 사용하지 않습니다.\n사이트에 로그인해 사진을 제출해 주세요.\n\n내전 결과 사진:\nhttps://k-lol-gg.vercel.app/matches/submit\n\n경고 차감 사진:\nhttps://k-lol-gg.vercel.app/discipline/evidence",
+    reply: `[${SERVICE_BRAND.name} 사진 제출 안내]\nV4 휴대폰 봇은 사진 세션 업로드를 사용하지 않습니다.\n사이트에 로그인해 사진을 제출해 주세요.\n\n내전 결과 사진:\n${getServiceOrigin().origin}/matches/submit\n\n경고 차감 사진:\n${getServiceOrigin().origin}/discipline/evidence`,
   });
   if (classification.command === "INHOUSE_DETAIL" && classification.parameters.recruitNumber === null) return Object.freeze({
     kind: "REPLY" as const,
@@ -94,7 +95,7 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   if (classification.command === "OPERATIONS_INHOUSE_PREVIEW_CANCEL" || classification.command === "OPERATIONS_INHOUSE_CONFIRM") {
     return Object.freeze({
       kind: "REPLY" as const,
-      reply: "[K-LOL.GG 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n미리보기·확인 요청은 취소되었습니다.\n최근 봇 명단 전체 복사 → 빈칸에 이름 추가 → 전체 전송으로 신청해 주세요.\n사이트 회원 연결은 접수 후에도 가능합니다.\n기존 이름과 양식코드는 그대로 두고 봇의 저장 결과를 확인해 주세요.\n사이트에는 반영하지 않았으며, 이 명령으로 변경된 내용은 없습니다.",
+      reply: `[${SERVICE_BRAND.name} 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n미리보기·확인 요청은 취소되었습니다.\n최근 봇 명단 전체 복사 → 빈칸에 이름 추가 → 전체 전송으로 신청해 주세요.\n사이트 회원 연결은 접수 후에도 가능합니다.\n기존 이름과 양식코드는 그대로 두고 봇의 저장 결과를 확인해 주세요.\n사이트에는 반영하지 않았으며, 이 명령으로 변경된 내용은 없습니다.`,
     });
   }
   if (classification.audience === "INTERNAL") return null;
@@ -104,7 +105,7 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
 function deterministicFallback(classification: KakaoV4CommandClassification): DispatchResult {
   if (classification.kind === "UNKNOWN" || classification.audience === "INTERNAL") throw new KakaoV4CommandError("INVALID_FORM");
   if (classification.kind === "WRONG_PROFILE") throw new KakaoV4CommandError("WRONG_PROFILE");
-  return Object.freeze({ kind: "REPLY" as const, reply: `[K-LOL.GG V4]\n${classification.command} 요청을 접수했습니다.` });
+  return Object.freeze({ kind: "REPLY" as const, reply: `[${SERVICE_BRAND.name} V4]\n${classification.command} 요청을 접수했습니다.` });
 }
 
 export class KakaoV4CommandService {
@@ -142,7 +143,7 @@ export class KakaoV4CommandService {
       if (canonical?.domain === "OPERATIONS" && canonical.action === "INVALID_FORM") {
         result = Object.freeze({
           kind: "REPLY" as const,
-          reply: `[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: ${canonical.missingFields.join(", ")}`,
+          reply: `[${SERVICE_BRAND.name} 양식 필드 누락]\n필수 항목을 확인해 주세요: ${canonical.missingFields.join(", ")}`,
         });
       } else if (canonical) {
         const dispatched = await this.dispatcher.dispatch({ envelope, keyId, requestDigestHex: metadata?.requestDigestHex ?? digest, requestId: metadata?.requestId ?? envelope.eventId, authorization, now }, canonical);

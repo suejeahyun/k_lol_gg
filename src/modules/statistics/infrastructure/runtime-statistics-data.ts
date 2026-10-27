@@ -1,4 +1,5 @@
 import "server-only";
+import { configuredRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
 
 import { resolveRuntimeAuthContext } from "@/modules/auth/infrastructure/runtime-auth-context";
 import { getDatabase } from "@/platform/db/client";
@@ -9,7 +10,7 @@ import { PostgresStatisticsProjectionRepository } from "./postgres-statistics-pr
 import { PostgresStatisticsQueryRepository } from "./postgres-statistics-query-repository";
 
 function publicPostgresEnabled(): boolean {
-  return process.env.V2_PUBLIC_DATA_SOURCE === "postgres" && Boolean(process.env.DATABASE_URL);
+  return process.env.V2_PUBLIC_DATA_SOURCE === "postgres" && Boolean(configuredRuntimeDatabaseUrl());
 }
 
 export type RuntimeStatisticsData<T> =
@@ -69,7 +70,7 @@ export async function drainLocalRuntimeStatistics(maximumEvents: number) {
   if (
     process.env.NODE_ENV === "production" ||
     process.env.V2_ALLOW_LOCAL_STATISTICS_DRAIN !== "true" ||
-    !process.env.DATABASE_URL
+    !configuredRuntimeDatabaseUrl()
   ) {
     throw new Error("LOCAL_STATISTICS_DRAIN_DISABLED");
   }

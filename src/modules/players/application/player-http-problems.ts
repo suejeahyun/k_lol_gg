@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { definePublicProblem } from "@/platform/http";
 
 export const PLAYER_HTTP_PROBLEMS = Object.freeze({
@@ -53,7 +54,7 @@ export const PLAYER_HTTP_PROBLEMS = Object.freeze({
     code: "ORIGIN_FORBIDDEN",
     status: 403,
     title: "허용되지 않은 요청 출처입니다.",
-    detail: "K-LOL.GG 관리자 화면에서 다시 시도해 주세요.",
+    detail: `${SERVICE_BRAND.name} 관리자 화면에서 다시 시도해 주세요.`,
   }),
   revisionMismatch: definePublicProblem({
     code: "REVISION_MISMATCH",

@@ -1,3 +1,4 @@
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { getRuntimeOperationsRepository } from "@/modules/operations/infrastructure/runtime-operations";
 import { operationsActor, operationsErrorResponse, operationsUnavailableResponse, requireOperationsApiSession } from "@/modules/operations/infrastructure/operations-http";
 import { readValidatedTraceId } from "@/platform/http";
@@ -17,7 +18,7 @@ export async function GET(request: Request, context: { params: Promise<{ kind: s
     const csv = await repository.buildBackup(kind as "players" | "matches" | "mmr" | "rankings", operationsActor(authorization.session));
     return new Response(csv, { status: 200, headers: {
       "Cache-Control": "no-store", "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="klol-${kind}-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "Content-Disposition": `attachment; filename="${SERVICE_BRAND.storagePrefix}-${kind}-${new Date().toISOString().slice(0, 10)}.csv"`,
       ...(traceId ? { "X-Trace-Id": traceId } : {}),
     } });
   } catch (error) { return operationsErrorResponse(error, traceId); }

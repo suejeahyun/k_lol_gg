@@ -1,9 +1,11 @@
 "use client";
+
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { USAGE_ACTIONS, usageRoute, type UsageEvent } from "@/modules/usage/domain/usage";
 
-export const USAGE_OPT_OUT = "klol-usage-opt-out";
+export const USAGE_OPT_OUT = `${SERVICE_BRAND.storagePrefix}-usage-opt-out`;
 export function usageOptedOut() {
   try { return navigator.doNotTrack === "1" || (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true || localStorage.getItem(USAGE_OPT_OUT) === "1"; }
   catch { return true; }
@@ -59,8 +61,8 @@ export function UsageTracker() {
       const route = usageRoute(window.location.pathname);
       if (route && typeof value === "string" && Object.hasOwn(USAGE_ACTIONS, value)) send({ kind: "click", route, target: value });
     };
-    window.addEventListener("klol:usage-action", action);
-    return () => { document.removeEventListener("click", click, true); window.removeEventListener("klol:usage-action", action); };
+    window.addEventListener(`${SERVICE_BRAND.storagePrefix}:usage-action`, action);
+    return () => { document.removeEventListener("click", click, true); window.removeEventListener(`${SERVICE_BRAND.storagePrefix}:usage-action`, action); };
   }, []);
   return null;
 }

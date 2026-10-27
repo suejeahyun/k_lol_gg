@@ -1,4 +1,5 @@
 import type { SeasonApplicationPosition } from "@/modules/seasons/domain/season";
+import { hasForeignKakaoServiceHeader, KAKAO_INHOUSE_FORM_HEADER } from "./service-brand";
 
 import type { ScrimFormCommandPayload, SyncScrimCommandPayload } from "../application/commands";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
@@ -324,7 +325,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       /^》\s*20\d{2}-\d{2}-\d{2}\s+/u.test(candidate) ||
       /^》?\s*(?:(?:내전|게임)\s*정보|주최자|저장기준)\s*[:：]/u.test(candidate) ||
       /^👥\s*\d{1,3}\s*\/\s*\d{1,3}\s*명$/u.test(candidate) ||
-      /^\[K-LOL\.GG 내전 구인 양식\]$/u.test(candidate) ||
+      KAKAO_INHOUSE_FORM_HEADER.test(candidate) ||
       /^같이 내전할 사람~$/u.test(candidate) ||
       /^아래 양식의 모집번호는 유지해서 작성해주세요\.$/u.test(candidate) ||
       /^위 항목을 작성해 전체 전송해주세요\.$/u.test(candidate) ||
@@ -535,6 +536,7 @@ function scrimSnapshot(text: string, fallbackDate: string, v1Strict: boolean): K
 
 export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassification, envelope: KakaoV4CommandEnvelope, now: Date = new Date()): CanonicalKakaoV4Command | null {
   if (classification.kind === "UNKNOWN" || classification.kind === "WRONG_PROFILE") return null;
+  if (hasForeignKakaoServiceHeader(envelope.text)) return null;
   const partyDate = recruitingOperatingDateKey(now);
   const parameters = classification.parameters;
   if (classification.command === "PARTY_CREATE") {
