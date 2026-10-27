@@ -2479,6 +2479,32 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "kakao-service-room-isolation",
+      "version": "1.0.1",
+      "gitTag": "kakao-service-room-isolation-v1.0.1",
+      "commit": "1d2d5796e5512e4eac73413e7a7f175ad901c764",
+      "releasedAt": "2026-10-27T11:54:06.181Z",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/kakao-four-room-2026-10-27/README.md",
+      "patchNotes": "docs/patch-notes/kakao-service-room-isolation-v1.0.1.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED",
+        "reason": "Phone-only allowlists and four private replacement installers; server and production databases unchanged."
+      },
+      "externalInstallations": [
+        {
+          "name": "KLOLMain + NEXUS-Main",
+          "version": "R31_2026_10_27",
+          "status": "PENDING_USER_INSTALL"
+        },
+        {
+          "name": "KLOLM + NEXUS-otue",
+          "version": "SITE_NOTICE_COMPANION_1.0.4",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
