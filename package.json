@@ -55,7 +55,7 @@
     "drizzle-orm": "0.45.2",
     "jose": "^6.2.10",
     "lucide-react": "^1.38.0",
-    "next": "16.3.8",
+    "next": "16.4.3",
     "pg": "8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -73,10 +73,16 @@
     "axe-core": "4.13.0",
     "drizzle-kit": "0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.3.8",
+    "eslint-config-next": "16.4.3",
+    "postcss-selector-parser": "7.1.6",
     "shadcn": "^4.19.1",
     "tailwindcss": "^4",
     "tsx": "4.23.13",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@vercel/cli-config": {
+      "zod": "4.6.6"
+    }
   }
 }

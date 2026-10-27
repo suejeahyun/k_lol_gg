@@ -411,14 +411,19 @@ html[data-service="nexus"] :is(input:not([type="checkbox"]):not([type="radio"]):
   box-shadow: inset 0 0 0 1px #3e5b844d;
 }
 
-/* CSS Modules retain their layout. These shared surface roles only change paint. */
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
-  [class$="__card"], [class$="__panel"], [class$="__tableWrap"],
-  [class$="__formCard"], [class$="__contract"], [class$="__filters"],
-  [class$="__search"], [class$="__searchPanel"], [class$="__toolbar"],
-  [class$="__editor"], [class$="__dialog"], [class$="__modal"],
-  [class$="__empty"], [class$="__state"], [class$="__policy"],
-  [class$="__board"], [class$="__explanation"], [class$="__summaryPanel"]
+/*
+ * CSS Modules expose stable NEXUS markers through global composition at build time.
+ * Match both the final class token and a token
+ * followed by a space, so "panel form" receives the same paint as "panel".
+ * The trailing space avoids matching a different local class such as panelTitle.
+ */
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--card"], [class*="--card "]), :is([class$="--panel"], [class*="--panel "]), :is([class$="--tableWrap"], [class*="--tableWrap "]),
+  :is([class$="--formCard"], [class*="--formCard "]), :is([class$="--contract"], [class*="--contract "]), :is([class$="--filters"], [class*="--filters "]),
+  :is([class$="--search"], [class*="--search "]), :is([class$="--searchPanel"], [class*="--searchPanel "]), :is([class$="--toolbar"], [class*="--toolbar "]),
+  :is([class$="--editor"], [class*="--editor "]), :is([class$="--dialog"], [class*="--dialog "]), :is([class$="--modal"], [class*="--modal "]),
+  :is([class$="--empty"], [class*="--empty "]), :is([class$="--state"], [class*="--state "]), :is([class$="--policy"], [class*="--policy "]),
+  :is([class$="--board"], [class*="--board "]), :is([class$="--explanation"], [class*="--explanation "]), :is([class$="--summaryPanel"], [class*="--summaryPanel "])
 ) {
   border-color: var(--border);
   color: var(--foreground);
@@ -430,25 +435,25 @@ html[data-service="nexus"] :is(input:not([type="checkbox"]):not([type="radio"]):
   color: var(--foreground);
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
-  [class$="__description"], [class$="__subtitle"], [class$="__hint"],
-  [class$="__muted"], [class$="__summaryBar"], [class$="__check"]
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--description"], [class*="--description "]), :is([class$="--subtitle"], [class*="--subtitle "]), :is([class$="--hint"], [class*="--hint "]),
+  :is([class$="--muted"], [class*="--muted "]), :is([class$="--summaryBar"], [class*="--summaryBar "]), :is([class$="--check"], [class*="--check "])
 ) {
   color: var(--text-muted);
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
-  [class$="__guides"], [class$="__state"], [class$="__filters"],
-  [class$="__recoveryLinks"], [class$="__quickLinks"]
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--guides"], [class*="--guides "]), :is([class$="--state"], [class*="--state "]), :is([class$="--filters"], [class*="--filters "]),
+  :is([class$="--recoveryLinks"], [class*="--recoveryLinks "]), :is([class$="--quickLinks"], [class*="--quickLinks "])
 ) > a {
   border-color: #3f5b88;
   color: #c2d6ff;
   background: #1c3052;
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
-  [class$="__header"], [class$="__hero"], [class$="__panel"], [class$="__formCard"],
-  [class$="__intro"], [class$="__policy"], [class$="__state"]
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--header"], [class*="--header "]), :is([class$="--hero"], [class*="--hero "]), :is([class$="--panel"], [class*="--panel "]), :is([class$="--formCard"], [class*="--formCard "]),
+  :is([class$="--intro"], [class*="--intro "]), :is([class$="--policy"], [class*="--policy "]), :is([class$="--state"], [class*="--state "])
 ) > p {
   color: var(--text-muted);
 }
@@ -480,52 +485,52 @@ html[data-service="nexus"] :is(input:not([type="checkbox"]):not([type="radio"]):
   color: #b5ceff;
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__tabs"], [class$="__tabBar"]) :is(a, button) {
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(:is([class$="--tabs"], [class*="--tabs "]), :is([class$="--tabBar"], [class*="--tabBar "])) :is(a, button) {
   border-color: var(--border);
   color: #b5c6e3;
   background: #142139;
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__tabs"], [class$="__tabBar"]) :is(a, button):is([aria-current="page"], [aria-selected="true"]) {
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(:is([class$="--tabs"], [class*="--tabs "]), :is([class$="--tabBar"], [class*="--tabBar "])) :is(a, button):is([aria-current="page"], [aria-selected="true"], [data-active="true"]) {
   border-color: #7299e4;
   color: #e7f0ff;
   background: #264579;
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is(
-  [class$="__badge"], [class$="__eyebrow"], [class$="__foundation"],
-  [class$="__emptyIcon"], [class$="__status"], [class$="__tierField"],
-  [class$="__heroBadge"]
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--badge"], [class*="--badge "]), :is([class$="--eyebrow"], [class*="--eyebrow "]), :is([class$="--foundation"], [class*="--foundation "]),
+  :is([class$="--emptyIcon"], [class*="--emptyIcon "]), :is([class$="--status"], [class*="--status "]), :is([class$="--tierField"], [class*="--tierField "]),
+  :is([class$="--heroBadge"], [class*="--heroBadge "])
 ) {
   border-color: #3d557e;
   color: #c3d7ff;
   background: #1d2c48;
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__notice"], [class$="__message"]) {
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(:is([class$="--notice"], [class*="--notice "]), :is([class$="--message"], [class*="--message "])) {
   border-color: #4c6086;
   color: #c3d3ee;
   background: #18253c;
 }
 
-[data-service="nexus"] [class*="-module__"]:not([class*="home-"]):is([class$="__notice"], [class$="__message"]) > p {
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(:is([class$="--notice"], [class*="--notice "]), :is([class$="--message"], [class*="--message "])) p {
   color: inherit;
 }
 
-[data-service="nexus"] [class*="-module__"]:is([class$="__error"], [class$="__logoutError"], [data-tone="error"], [data-state="REJECTED"], [data-state="SUSPENDED"]) {
+[data-service="nexus"] [class*="nexus-"]:is(:is([class$="--error"], [class*="--error "]), :is([class$="--logoutError"], [class*="--logoutError "]), [data-tone="error"], [data-state="REJECTED"], [data-state="SUSPENDED"]) {
   border-color: #b15d7b;
   color: #ffc0d3;
   background: #3a1e30;
 }
 
-[data-service="nexus"] [class*="-module__"]:is([class$="__success"], [data-tone="success"], [data-state="APPROVED"]) {
+[data-service="nexus"] [class*="nexus-"]:is(:is([class$="--success"], [class*="--success "]), [data-tone="success"], [data-state="APPROVED"]) {
   border-color: #408f7e;
   color: #a4edd5;
   background: #10362f;
 }
 
 /* Account and admin pages define local tokens, so override at their own boundary. */
-[data-service="nexus"] [class*="account-access-module__"] {
+[data-service="nexus"] [class*="nexus-account-access--"] {
   --account-surface: #101827;
   --account-surface-muted: #172239;
   --account-border: #2a3b59;
@@ -539,45 +544,45 @@ html[data-service="nexus"] :is(input:not([type="checkbox"]):not([type="radio"]):
   --account-danger: #ffc0d3;
 }
 
-[data-service="nexus"] [class*="account-access-module__"]:is([class$="__intro"], [class$="__accountHero"]) {
+[data-service="nexus"] [class*="nexus-account-access--"]:is(:is([class$="--intro"], [class*="--intro "]), :is([class$="--accountHero"], [class*="--accountHero "])) {
   border-color: var(--border);
   background: var(--theme-feature-background);
 }
 
-[data-service="nexus"] [class*="account-access-module__"]:is([class$="__facts"], [class$="__disciplineCounts"]) > div,
-[data-service="nexus"] [class*="account-access-module__"][class$="__activityGrid"] a,
-[data-service="nexus"] [class*="account-access-module__"][class$="__promise"] span,
-[data-service="nexus"] [class*="admin-workspace-page-module__"][class$="__contract"] li {
+[data-service="nexus"] [class*="nexus-account-access--"]:is(:is([class$="--facts"], [class*="--facts "]), :is([class$="--disciplineCounts"], [class*="--disciplineCounts "])) > div,
+[data-service="nexus"] [class*="nexus-account-access--"]:is([class$="--activityGrid"], [class*="--activityGrid "]) a,
+[data-service="nexus"] [class*="nexus-account-access--"]:is([class$="--promise"], [class*="--promise "]) span,
+[data-service="nexus"] [class*="nexus-admin-workspace-page--"]:is([class$="--contract"], [class*="--contract "]) li {
   border-color: var(--border);
   color: var(--foreground);
   background: #18263e;
 }
 
-[data-service="nexus"] [class*="account-access-module__"][class$="__activityGrid"] span,
-[data-service="nexus"] [class*="account-access-module__"][class$="__policy"] a,
-[data-service="nexus"] [class*="account-access-module__"][class$="__check"] a {
+[data-service="nexus"] [class*="nexus-account-access--"]:is([class$="--activityGrid"], [class*="--activityGrid "]) span,
+[data-service="nexus"] [class*="nexus-account-access--"]:is([class$="--policy"], [class*="--policy "]) a,
+[data-service="nexus"] [class*="nexus-account-access--"]:is([class$="--check"], [class*="--check "]) a {
   color: var(--text-accent);
 }
 
-[data-service="nexus"] [class*="account-access-module__"][class$="__accountHero"] form button {
+[data-service="nexus"] [class*="nexus-account-access--"]:is([class$="--accountHero"], [class*="--accountHero "]) form button {
   border-color: #5270a1;
   color: #cfddf8;
   background: #1b2c48;
 }
 
-[data-service="nexus"] [class*="account-access-module__"]:is([class$="__submit"], [class$="__primaryLink"]) {
+[data-service="nexus"] [class*="nexus-account-access--"]:is(:is([class$="--submit"], [class*="--submit "]), :is([class$="--primaryLink"], [class*="--primaryLink "])) {
   color: #ffffff;
   background: linear-gradient(120deg, #315bd4, #5941b7);
 }
 
-[data-service="nexus"] [class*="account-access-module__"][class$="__notice"] {
+[data-service="nexus"] [class*="nexus-account-access--"]:is([class$="--notice"], [class*="--notice "]) {
   border-color: #927444;
   color: #f2d296;
   background: #30291d;
 }
 
 [data-service="nexus"] [data-ui-scope="admin"],
-[data-service="nexus"] [class*="admin-workspace-page-module__"] {
+[data-service="nexus"] [class*="nexus-admin-workspace-page--"] {
   --admin-surface: #101827;
   --admin-surface-muted: #172239;
   --admin-border: #2a3b59;
@@ -596,140 +601,881 @@ html[data-service="nexus"] :is(input:not([type="checkbox"]):not([type="radio"]):
   --workspace-focus: #7aa7ff;
 }
 
-[data-service="nexus"] [class*="admin-shell-module__"]:is([class$="__mode"], [class$="__avatar"], [class$="__environment"]),
-[data-service="nexus"] [class*="admin-shell-module__"][class$="__brand"] > span,
-[data-service="nexus"] [class*="admin-login-page-module__"][class$="__brandMark"] {
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is(:is([class$="--mode"], [class*="--mode "]), :is([class$="--avatar"], [class*="--avatar "]), :is([class$="--environment"], [class*="--environment "])),
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is([class$="--brand"], [class*="--brand "]) > span,
+[data-service="nexus"] [class*="nexus-admin-login-page--"]:is([class$="--brandMark"], [class*="--brandMark "]) {
   border-color: #46648e;
   color: #b9d0ff;
   background: linear-gradient(130deg, #1c355b, #30244b);
 }
 
-[data-service="nexus"] [class*="admin-shell-module__"]:is([class$="__nav"], [class$="__mobileBottom"], [class$="__mobileMenu"], [class$="__topActions"], [class$="__operationsNav"], [class$="__breadcrumb"]) :is(a, button) {
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is(:is([class$="--nav"], [class*="--nav "]), :is([class$="--mobileBottom"], [class*="--mobileBottom "]), :is([class$="--mobileMenu"], [class*="--mobileMenu "]), :is([class$="--topActions"], [class*="--topActions "]), :is([class$="--operationsNav"], [class*="--operationsNav "]), :is([class$="--breadcrumb"], [class*="--breadcrumb "])) :is(a, button) {
   color: #c2d2ed;
 }
 
-[data-service="nexus"] [class*="admin-shell-module__"]:is([class$="__nav"], [class$="__mobileBottom"], [class$="__mobileMenu"]) :is(a, button):is(:hover, [aria-current="page"]) {
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is(:is([class$="--nav"], [class*="--nav "]), :is([class$="--mobileBottom"], [class*="--mobileBottom "]), :is([class$="--mobileMenu"], [class*="--mobileMenu "])) :is(a, button):is(:hover, [aria-current="page"]) {
   color: #e4eeff;
   background: #233c65;
 }
 
-[data-service="nexus"] [class*="admin-shell-module__"][class$="__account"] small {
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is([class$="--account"], [class*="--account "]) small {
   color: var(--text-muted);
 }
 
-[data-service="nexus"] [class*="admin-shell-module__"][class$="__brand"] b {
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is([class$="--brand"], [class*="--brand "]) b {
   color: var(--text-accent);
 }
 
-[data-service="nexus"] [class*="admin-login-form-module__"][class$="__field"]:focus-within label {
+[data-service="nexus"] [class*="nexus-admin-login-form--"]:is([class$="--field"], [class*="--field "]):focus-within label {
   color: var(--text-accent);
 }
 
-[data-service="nexus"] [class*="admin-login-form-module__"][class$="__message"] {
+[data-service="nexus"] [class*="nexus-admin-login-form--"]:is([class$="--message"], [class*="--message "]) {
   border-color: #b15d7b;
   color: #ffc0d3;
   background: #3a1e30;
 }
 
 /* Recruitment and ranking detail surfaces keep their state cues on dark paint. */
-[data-service="nexus"] [class*="recruits-module__"][class$="__cardTop"] span {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--cardTop"], [class*="--cardTop "]) span {
   color: #ceb7ff;
   background: #34254e;
 }
 
-[data-service="nexus"] [class*="recruits-module__"][class$="__card"][data-kind="scrim"] [class$="__cardTop"] span {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--card"], [class*="--card "])[data-kind="scrim"] :is([class$="--cardTop"], [class*="--cardTop "]) span {
   color: #c4d9ff;
   background: #203452;
 }
 
-[data-service="nexus"] [class*="recruits-module__"][class$="__card"]:is([data-status="matched"], [data-status="confirmed"]) [class$="__cardTop"] span,
-[data-service="nexus"] [class*="recruits-module__"][class$="__availability"] {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--card"], [class*="--card "]):is([data-status="matched"], [data-status="confirmed"]) :is([class$="--cardTop"], [class*="--cardTop "]) span,
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--availability"], [class*="--availability "]) {
   color: #a4edd5;
   background: #12392f;
 }
 
-[data-service="nexus"] [class*="recruits-module__"][class$="__availability"][data-full="true"] {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--availability"], [class*="--availability "])[data-full="true"] {
   color: #ffc0d3;
   background: #3a1e30;
 }
 
-[data-service="nexus"] [class*="recruits-module__"][class$="__card"][data-has-organizer="true"] dl div:first-child {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--card"], [class*="--card "])[data-has-organizer="true"] dl div:first-child {
   border-color: #664f8a;
   background: linear-gradient(120deg, #2c2445, #211f35);
 }
 
-[data-service="nexus"] [class*="recruits-module__"][class$="__members"] {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--members"], [class*="--members "]) {
   border-color: var(--border);
 }
 
-[data-service="nexus"] [class*="recruits-module__"][class$="__members"] li {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--members"], [class*="--members "]) li {
   border-color: #3d5274;
   color: var(--foreground);
   background: #1a2a44;
 }
 
-[data-service="nexus"] [class*="recruits-module__"][class$="__capacity"] {
+[data-service="nexus"] [class*="nexus-recruits--"]:is([class$="--capacity"], [class*="--capacity "]) {
   background: #22334e;
 }
 
-[data-service="nexus"] [class*="rankings-module__"][class$="__podium"] a {
+[data-service="nexus"] [class*="nexus-rankings--"]:is([class$="--podium"], [class*="--podium "]) a {
   border-color: #485e83;
   color: var(--foreground);
   background: linear-gradient(135deg, #1d2d48, #151e31);
 }
 
-[data-service="nexus"] [class*="rankings-module__"][class$="__podium"] a[data-rank="1"] {
+[data-service="nexus"] [class*="nexus-rankings--"]:is([class$="--podium"], [class*="--podium "]) a[data-rank="1"] {
   border-color: #9d824e;
   background: linear-gradient(135deg, #352e24, #1c2335);
 }
 
-[data-service="nexus"] [class*="rankings-module__"][class$="__board"] li[data-rank] {
+[data-service="nexus"] [class*="nexus-rankings--"]:is([class$="--board"], [class*="--board "]) li[data-rank] {
   background: #19273f;
 }
 
-[data-service="nexus"] [class*="rankings-module__"][class$="__board"] li[data-own="true"] {
+[data-service="nexus"] [class*="nexus-rankings--"]:is([class$="--board"], [class*="--board "]) li[data-own="true"] {
   background: linear-gradient(90deg, #223e63, #29203e);
 }
 
-[data-service="nexus"] [class*="rankings-module__"][class$="__board"] li:hover {
+[data-service="nexus"] [class*="nexus-rankings--"]:is([class$="--board"], [class*="--board "]) li:hover {
   background: #223654;
 }
 
 /* The assistant is rendered beside main and needs the same service palette. */
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__trigger"] {
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--trigger"], [class*="--trigger "]) {
   border-color: #5276c2;
   color: #ffffff;
   background: linear-gradient(135deg, #315bd4, #5941b7);
 }
 
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] > header,
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] form {
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--panel"], [class*="--panel "]) > header,
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--panel"], [class*="--panel "]) form {
   border-color: var(--border);
 }
 
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] > header :is(strong, svg) {
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--panel"], [class*="--panel "]) > header :is(strong, svg) {
   color: var(--foreground);
 }
 
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__panel"] > header button {
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--panel"], [class*="--panel "]) > header button {
   color: #cadbfa;
   background: #233654;
 }
 
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__messages"] p {
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--messages"], [class*="--messages "]) p {
   border-color: #3a5074;
   color: var(--foreground);
   background: #1a2b45;
 }
 
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__messages"] p[data-role="USER"] {
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--messages"], [class*="--messages "]) p[data-role="USER"] {
   border-color: #6c599a;
   background: #30264a;
 }
 
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__privacy"],
-[data-service="nexus"] [class*="site-ai-assistant-module__"][class$="__messages"] p span {
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--privacy"], [class*="--privacy "]),
+[data-service="nexus"] [class*="nexus-site-ai-assistant--"]:is([class$="--messages"], [class*="--messages "]) p span {
   color: var(--text-muted);
+}
+
+/* Secondary route controls use the same states regardless of their local name. */
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--pagination"], [class*="--pagination "]), :is([class$="--pager"], [class*="--pager "]), :is([class$="--historyPager"], [class*="--historyPager "]),
+  :is([class$="--draftPager"], [class*="--draftPager "]), :is([class$="--toolNav"], [class*="--toolNav "]), :is([class$="--viewTabs"], [class*="--viewTabs "]),
+  :is([class$="--typeTabs"], [class*="--typeTabs "]), :is([class$="--roundTabs"], [class*="--roundTabs "]), :is([class$="--detailTabs"], [class*="--detailTabs "]),
+  :is([class$="--teamSwitch"], [class*="--teamSwitch "]), :is([class$="--modeTabs"], [class*="--modeTabs "]),
+  :is([class$="--mainPositionButtons"], [class*="--mainPositionButtons "]), :is([class$="--choiceButtons"], [class*="--choiceButtons "])
+) > :is(a, button, span, strong) {
+  border-color: #405a83;
+  color: #c2d4f4;
+  background: #182a46;
+}
+
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--toolNav"], [class*="--toolNav "]), :is([class$="--viewTabs"], [class*="--viewTabs "]), :is([class$="--typeTabs"], [class*="--typeTabs "]),
+  :is([class$="--roundTabs"], [class*="--roundTabs "]), :is([class$="--detailTabs"], [class*="--detailTabs "]), :is([class$="--teamSwitch"], [class*="--teamSwitch "]),
+  :is([class$="--modeTabs"], [class*="--modeTabs "]), :is([class$="--mainPositionButtons"], [class*="--mainPositionButtons "]), :is([class$="--choiceButtons"], [class*="--choiceButtons "])
+) > :is(a, button):is([aria-current="page"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]) {
+  border-color: #82a6ff;
+  color: #ffffff;
+  background: #315bd4;
+  box-shadow: inset 0 -3px #a9c4ff;
+}
+
+[data-service="nexus"] [class*="nexus-"]:not([class*="home-"]):is(
+  :is([class$="--secondaryButton"], [class*="--secondaryButton "]), :is([class$="--secondary"], [class*="--secondary "]), :is([class$="--ghostLink"], [class*="--ghostLink "]),
+  :is([class$="--backLink"], [class*="--backLink "]), :is([class$="--cancelButton"], [class*="--cancelButton "]), :is([class$="--confirmRow"], [class*="--confirmRow "]),
+  :is([class$="--addGame"], [class*="--addGame "]), :is([class$="--moreLink"], [class*="--moreLink "]), :is([class$="--previewLink"], [class*="--previewLink "])
+) {
+  border-color: #405a83;
+  color: #c2d4f4;
+  background: #182a46;
+}
+
+/* Public applications: nested statistics, position choices and participant rows. */
+[data-service="nexus"] [class*="nexus-applications--"]:is(
+  :is([class$="--myStatus"], [class*="--myStatus "]), :is([class$="--mergeNotice"], [class*="--mergeNotice "]), :is([class$="--positionHint"], [class*="--positionHint "])
+),
+[data-service="nexus"] [class*="nexus-applications--"]:is([class$="--stats"], [class*="--stats "]) article,
+[data-service="nexus"] [class*="nexus-applications--"]:is([class$="--applicationContext"], [class*="--applicationContext "]) > div,
+[data-service="nexus"] [class*="nexus-applications--"]:is([class$="--positionGrid"], [class*="--positionGrid "]) label,
+[data-service="nexus"] [class*="nexus-applications--"]:is([class$="--participantList"], [class*="--participantList "]) li {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-applications--"]:is([class$="--positionGrid"], [class*="--positionGrid "]) label[data-selected="true"] {
+  border-color: #82a6ff;
+  color: #ffffff;
+  background: #24477f;
+}
+
+[data-service="nexus"] [class*="nexus-applications--"]:is(:is([class$="--hero"], [class*="--hero "]), :is([class$="--sectionHeading"], [class*="--sectionHeading "]), :is([class$="--myStatus"], [class*="--myStatus "])) :is(span, p) {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] .nexus-applications--participantList em {
+  color: #ceb7ff;
+}
+
+/* Event details and voting panels also contain surfaces without card classes. */
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--application"], [class*="--application "]) button[type="submit"] {
+  color: #ffffff;
+  background: #315bd4;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is(
+  :is([class$="--application"], [class*="--application "]), :is([class$="--applicationNotice"], [class*="--applicationNotice "]), :is([class$="--modeRecord"], [class*="--modeRecord "]),
+  :is([class$="--viewTabs"], [class*="--viewTabs "]), :is([class$="--detailTabs"], [class*="--detailTabs "]), :is([class$="--eventGallery"], [class*="--eventGallery "]),
+  :is([class$="--selectedPlayer"], [class*="--selectedPlayer "])
+),
+[data-service="nexus"] [class*="nexus-events--"]:is(:is([class$="--facts"], [class*="--facts "]), :is([class$="--detailGrid"], [class*="--detailGrid "]), :is([class$="--mvpGrid"], [class*="--mvpGrid "])) > article,
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--statusJourney"], [class*="--statusJourney "]) li,
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--lightbox"], [class*="--lightbox "]) > div {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is(
+  :is([class$="--card"], [class*="--card "]), :is([class$="--hero"], [class*="--hero "]), :is([class$="--detailHero"], [class*="--detailHero "]),
+  :is([class$="--application"], [class*="--application "]), :is([class$="--applicationNotice"], [class*="--applicationNotice "])
+) p,
+[data-service="nexus"] [class*="nexus-events--"]:is(
+  :is([class$="--facts"], [class*="--facts "]), :is([class$="--fixture"], [class*="--fixture "]), :is([class$="--pointGrid"], [class*="--pointGrid "]), :is([class$="--selectedPlayer"], [class*="--selectedPlayer "])
+) :is(span, small) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is(:is([class$="--more"], [class*="--more "]), :is([class$="--back"], [class*="--back "])),
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--team"], [class*="--team "]) li span,
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--pointGrid"], [class*="--pointGrid "]) article b {
+  color: var(--text-accent);
+}
+
+/* Team selection, analysis and saved drafts share these nested surface roles. */
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(
+  :is([class$="--emptyState"], [class*="--emptyState "]), :is([class$="--balanceStep"], [class*="--balanceStep "]), :is([class$="--balanceStepToggle"], [class*="--balanceStepToggle "]),
+  :is([class$="--candidateImport"], [class*="--candidateImport "]), :is([class$="--playerPicker"], [class*="--playerPicker "]), :is([class$="--balancePositionRow"], [class*="--balancePositionRow "]),
+  :is([class$="--balanceRowDetails"], [class*="--balanceRowDetails "]), :is([class$="--evaluationOverview"], [class*="--evaluationOverview "]),
+  :is([class$="--manualEvaluation"], [class*="--manualEvaluation "]), :is([class$="--recommendationBoard"], [class*="--recommendationBoard "]),
+  :is([class$="--recommendationSelector"], [class*="--recommendationSelector "]), :is([class$="--resultSummary"], [class*="--resultSummary "])
+),
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(:is([class$="--candidateGrid"], [class*="--candidateGrid "]), :is([class$="--manualTeams"], [class*="--manualTeams "])) article,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--manualTeams"], [class*="--manualTeams "]) > section,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(:is([class$="--playerPicker"], [class*="--playerPicker "]), :is([class$="--balanceRowDetails"], [class*="--balanceRowDetails "]), :is([class$="--evaluationOverview"], [class*="--evaluationOverview "])) > div,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(:is([class$="--lineComparison"], [class*="--lineComparison "]), :is([class$="--candidateMetrics"], [class*="--candidateMetrics "])) > span,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(:is([class$="--pickCard"], [class*="--pickCard "]), :is([class$="--banGrid"], [class*="--banGrid "])) li,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--playerSearchResults"], [class*="--playerSearchResults "]) button {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--balanceRowDetails"], [class*="--balanceRowDetails "])[open] summary,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--selectedRoster"], [class*="--selectedRoster "]) :is(button, b, span[data-empty="true"]),
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--resultSummary"], [class*="--resultSummary "]) span {
+  border-color: #435c83;
+  color: #c2d4f4;
+  background: #1d3050;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--manualTeams"], [class*="--manualTeams "]) > section[data-team="RED"] > header,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--teamCard"], [class*="--teamCard "]):nth-child(2) h3 {
+  color: #ffd1e0;
+  background: #43273c;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--candidateGrid"], [class*="--candidateGrid "]) article[data-selected="true"],
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--manualTeams"], [class*="--manualTeams "]) article:is([data-drop-target="true"], [data-keyboard-selected="true"]) {
+  border-color: #b79aee;
+  background: #30284c;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--lineComparison"], [class*="--lineComparison "]) > span[data-difference="even"],
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--resultSummary"], [class*="--resultSummary "])[data-balance="perfect"] {
+  border-color: #408f7e;
+  color: #a4edd5;
+  background: #12392f;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--lineComparison"], [class*="--lineComparison "]) > span[data-difference="open"],
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--resultSummary"], [class*="--resultSummary "])[data-balance="open"] {
+  border-color: #927444;
+  color: #f2d296;
+  background: #30291d;
+}
+
+/* Populated draft data has its own value labels beyond the containing panels. */
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(
+  :is([class$="--evaluationOverview"], [class*="--evaluationOverview "]), :is([class$="--manualEvaluation"], [class*="--manualEvaluation "]),
+  :is([class$="--manualPlayerName"], [class*="--manualPlayerName "]), :is([class$="--manualPlayerInfo"], [class*="--manualPlayerInfo "]),
+  :is([class$="--manualAssignmentInfo"], [class*="--manualAssignmentInfo "]), :is([class$="--recommendationHeader"], [class*="--recommendationHeader "])
+) strong,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--candidateGrid"], [class*="--candidateGrid "]) header strong,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--candidateMetrics"], [class*="--candidateMetrics "]) b,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--pickCard"], [class*="--pickCard "]) strong,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--banGrid"], [class*="--banGrid "]) li strong {
+  color: #e4eeff;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(
+  :is([class$="--manualPlayerName"], [class*="--manualPlayerName "]), :is([class$="--manualPlayerInfo"], [class*="--manualPlayerInfo "]),
+  :is([class$="--manualAssignmentInfo"], [class*="--manualAssignmentInfo "]), :is([class$="--lineComparison"], [class*="--lineComparison "])
+) small,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--lineComparison"], [class*="--lineComparison "]) em,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--banGrid"], [class*="--banGrid "]) li :is(span, small) {
+  color: #b6c7e3;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(
+  :is([class$="--subheading"], [class*="--subheading "]), :is([class$="--draftHeader"], [class*="--draftHeader "]), :is([class$="--draftListHeader"], [class*="--draftListHeader "]),
+  :is([class$="--manualEvaluation"], [class*="--manualEvaluation "]), :is([class$="--recommendationHeader"], [class*="--recommendationHeader "])
+) span,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--lineComparison"], [class*="--lineComparison "]) :is(b, strong),
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--pickCard"], [class*="--pickCard "]) > header span,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--pickCard"], [class*="--pickCard "]) li em,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--banSection"], [class*="--banSection "]) > header span,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--banGrid"], [class*="--banGrid "]) li > em {
+  color: #bdcfff;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--lineComparison"], [class*="--lineComparison "]) > span[data-difference="open"] strong {
+  color: #f2d296;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--lineComparison"], [class*="--lineComparison "]) > span[data-difference="even"] strong {
+  color: #a4edd5;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--manualTeams"], [class*="--manualTeams "]) > section > header {
+  color: #c7dcff;
+  background: #1b3355;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(:is([class$="--modeTabs"], [class*="--modeTabs "]), :is([class$="--pickCard"], [class*="--pickCard "])),
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--selectedRoster"], [class*="--selectedRoster "]) > span {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--balancePositionHeader"], [class*="--balancePositionHeader "]) {
+  color: var(--foreground);
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--balanceRowDetails"], [class*="--balanceRowDetails "]) summary {
+  color: #bdcfff;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--manualTeams"], [class*="--manualTeams "]) article b,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--balancePlayerIdentity"], [class*="--balancePlayerIdentity "]) b,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--tierGrid"], [class*="--tierGrid "]) label > span:first-child,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--pickCard"], [class*="--pickCard "]) li > b,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--count"], [class*="--count "]) {
+  color: #d6c2ff;
+  background: #30284c;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--banGrid"], [class*="--banGrid "]) li > b {
+  color: #ffc0d3;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--draftHeader"], [class*="--draftHeader "])[data-status="ARCHIVED"] {
+  background: #1b2639;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--draftHeader"], [class*="--draftHeader "]) > strong,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--draftListCard"], [class*="--draftListCard "]) > div > span,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--balanceForm"], [class*="--balanceForm "])[data-complete="true"] :is([class$="--count"], [class*="--count "]) {
+  color: #a4edd5;
+  background: #12392f;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--draftListCard"], [class*="--draftListCard "]) > div > span[data-status="EVALUATED"] {
+  color: #c7dcff;
+  background: #1b3355;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--draftHeader"], [class*="--draftHeader "]) > strong[data-status="ARCHIVED"],
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--draftListCard"], [class*="--draftListCard "]) > div > span[data-status="ARCHIVED"] {
+  color: #c0cee3;
+  background: #28364c;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--draftActions"], [class*="--draftActions "])[data-pending] p {
+  color: #d6c2ff;
+}
+
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(:is([class$="--primaryButton"], [class*="--primaryButton "]), :is([class$="--primaryLink"], [class*="--primaryLink "])),
+[data-service="nexus"] [class*="nexus-team-tools--"]:is(:is([class$="--candidateFilters"], [class*="--candidateFilters "]), :is([class$="--recommendationSelector"], [class*="--recommendationSelector "])) button,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--candidateGrid"], [class*="--candidateGrid "]) article > button,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--balanceStepToggle"], [class*="--balanceStepToggle "]) > span > b {
+  color: #ffffff;
+  background: #315bd4;
+}
+
+/* Match upload and review workflows need readable history and picker states. */
+[data-service="nexus"] [class*="nexus-submit--"]:is(
+  :is([class$="--optionalFields"], [class*="--optionalFields "]), :is([class$="--upload"], [class*="--upload "]), :is([class$="--uploadProgress"], [class*="--uploadProgress "]),
+  :is([class$="--historyFilters"], [class*="--historyFilters "]), :is([class$="--historyCard"], [class*="--historyCard "])
+),
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is(
+  :is([class$="--gameEditor"], [class*="--gameEditor "]), :is([class$="--pickerList"], [class*="--pickerList "]), :is([class$="--paste"], [class*="--paste "])
+),
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--reviewFindings"], [class*="--reviewFindings "]) article {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] :is([class*="nexus-submit--"], [class*="nexus-matches-admin--"]):is([class$="--actions"], [class*="--actions "]) > :is(button, a),
+[data-service="nexus"] [class*="nexus-submit--"]:is([class$="--code"], [class*="--code "]) button,
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--reviewSummary"], [class*="--reviewSummary "]) button {
+  border-color: #405a83;
+  color: #c2d4f4;
+  background: #182a46;
+}
+
+[data-service="nexus"] :is([class*="nexus-submit--"], [class*="nexus-matches-admin--"]):is([class$="--actions"], [class*="--actions "]) > :is(button, a):is([type="submit"], :is([class$="--action"], [class*="--action "]), :is([class$="--primary"], [class*="--primary "])) {
+  color: #ffffff;
+  background: #315bd4;
+}
+
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--pickerList"], [class*="--pickerList "]) button {
+  color: var(--foreground);
+}
+
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--pickerList"], [class*="--pickerList "]) button:is([data-active="true"], :hover:not(:disabled)) {
+  color: #ffffff;
+  background: #294875;
+}
+
+[data-service="nexus"] .nexus-matches-admin--rosterRow > strong[data-team="BLUE"] {
+  color: #9fc8ff;
+}
+
+[data-service="nexus"] .nexus-matches-admin--rosterRow > strong[data-team="RED"] {
+  color: #ffb3ce;
+}
+
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--rosterRow"], [class*="--rosterRow "])[data-confirmed="true"],
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--confirmRow"], [class*="--confirmRow "])[data-confirmed="true"],
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--valid"], [class*="--valid "]) {
+  color: #a4edd5;
+  background: #12392f;
+}
+
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--reviewFindings"], [class*="--reviewFindings "]) article[data-severity="WARNING"] {
+  border-color: #927444;
+  color: #f2d296;
+  background: #30291d;
+}
+
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--reviewFindings"], [class*="--reviewFindings "]) article[data-severity="ERROR"],
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is(:is([class$="--validation"], [class*="--validation "]), :is([class$="--imageError"], [class*="--imageError "])),
+[data-service="nexus"] :is([class*="nexus-submit--"], [class*="nexus-matches-admin--"])[data-error="true"] {
+  border-color: #b15d7b;
+  color: #ffc0d3;
+  background: #3a1e30;
+}
+
+/* Administrator account, media and champion editors contain nested form groups. */
+[data-service="nexus"] .nexus-admin-players--field > small,
+[data-service="nexus"] .nexus-admin-players--playerLink span {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] .nexus-admin-players--private {
+  color: #ceb7ff;
+}
+
+[data-service="nexus"] [class*="nexus-admin-players--"]:is(
+  :is([class$="--identityGroup"], [class*="--identityGroup "]), :is([class$="--secretBox"], [class*="--secretBox "]), :is([class$="--danger"], [class*="--danger "]), :is([class$="--recovery"], [class*="--recovery "])
+),
+[data-service="nexus"] [class*="nexus-admin-players--"]:is([class$="--facts"], [class*="--facts "]) div,
+[data-service="nexus"] [class*="nexus-admin-media--"]:is(
+  :is([class$="--form"], [class*="--form "]), :is([class$="--item"], [class*="--item "]), :is([class$="--filePicker"], [class*="--filePicker "]), :is([class$="--assetItem"], [class*="--assetItem "])
+),
+[data-service="nexus"] [class*="nexus-admin-media--"]:is([class$="--selectedFiles"], [class*="--selectedFiles "]) li,
+[data-service="nexus"] [class*="nexus-admin-media--"]:is([class$="--assetSelector"], [class*="--assetSelector "]) button,
+[data-service="nexus"] [class*="nexus-champions--"]:is([class$="--list"], [class*="--list "]) > a {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-admin-players--"]:is(
+  :is([class$="--detailHero"], [class*="--detailHero "]), :is([class$="--accountCard"], [class*="--accountCard "]), :is([class$="--integrationCard"], [class*="--integrationCard "]), :is([class$="--danger"], [class*="--danger "]), :is([class$="--recovery"], [class*="--recovery "])
+) p,
+[data-service="nexus"] [class*="nexus-admin-players--"]:is(:is([class$="--identityHelp"], [class*="--identityHelp "]), :is([class$="--formMessage"], [class*="--formMessage "])),
+[data-service="nexus"] [class*="nexus-admin-media--"]:is(
+  :is([class$="--assetCard"], [class*="--assetCard "]), :is([class$="--assetItem"], [class*="--assetItem "]), :is([class$="--selectedFiles"], [class*="--selectedFiles "]),
+  :is([class$="--filePicker"], [class*="--filePicker "]), :is([class$="--item"], [class*="--item "]), :is([class$="--assetSelector"], [class*="--assetSelector "])
+) :is(p, span, small, time) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="nexus-admin-media--"]:is(
+  :is([class$="--assetCard"], [class*="--assetCard "]), :is([class$="--selectedFiles"], [class*="--selectedFiles "]), :is([class$="--assetSelector"], [class*="--assetSelector "])
+) strong {
+  color: var(--foreground);
+}
+
+[data-service="nexus"] [class*="nexus-admin-media--"]:is(
+  :is([class$="--header"], [class*="--header "]), :is([class$="--actions"], [class*="--actions "]), :is([class$="--orderActions"], [class*="--orderActions "]), :is([class$="--selectedFiles"], [class*="--selectedFiles "])
+) > :is(a, button),
+[data-service="nexus"] [class*="nexus-admin-media--"]:is([class$="--selectedFiles"], [class*="--selectedFiles "]) li > button,
+[data-service="nexus"] [class*="nexus-champions--"]:is([class$="--header"], [class*="--header "]) > a {
+  border-color: #405a83;
+  color: #c2d4f4;
+  background: #182a46;
+}
+
+[data-service="nexus"] [class*="nexus-champions--"]:is(:is([class$="--filters"], [class*="--filters "]), :is([class$="--actions"], [class*="--actions "])) button {
+  color: #ffffff;
+  background: #315bd4;
+}
+
+[data-service="nexus"] [class*="nexus-champions--"]:is([class$="--actions"], [class*="--actions "]) button[data-danger="true"],
+[data-service="nexus"] [class*="nexus-matches-admin--"]:is([class$="--actions"], [class*="--actions "]) button[data-danger="true"],
+[data-service="nexus"] [class*="nexus-admin-media--"]:is([class$="--dangerButton"], [class*="--dangerButton "]) {
+  border-color: #b15d7b;
+  color: #ffc0d3;
+  background: #3a1e30;
+}
+
+/* Nested record summaries across operations, seasons and discipline. */
+[data-service="nexus"] [class*="nexus-mmr-admin--"]:is(:is([class$="--list"], [class*="--list "]), :is([class$="--actions"], [class*="--actions "]), :is([class$="--reviewDrawer"], [class*="--reviewDrawer "])),
+[data-service="nexus"] [class*="nexus-mmr-admin--"]:is([class$="--reviewDrawer"], [class*="--reviewDrawer "]) dl > div,
+[data-service="nexus"] [class*="nexus-seasons--"]:is([class$="--seasonList"], [class*="--seasonList "]) :is(article, dl div),
+[data-service="nexus"] [class*="nexus-seasons--"]:is([class$="--rowActions"], [class*="--rowActions "]) details,
+[data-service="nexus"] [class*="nexus-pending--"]:is([class$="--list"], [class*="--list "]) > li,
+[data-service="nexus"] [class*="nexus-pending--"]:is(:is([class$="--list"], [class*="--list "]), :is([class$="--detailList"], [class*="--detailList "])) dl div,
+[data-service="nexus"] [class*="nexus-pending--"]:is([class$="--detailList"], [class*="--detailList "]) > div,
+[data-service="nexus"] [class*="nexus-kakao--"]:is(:is([class$="--statsSearch"], [class*="--statsSearch "]), :is([class$="--statsResults"], [class*="--statsResults "]), :is([class$="--memberStat"], [class*="--memberStat "])),
+[data-service="nexus"] [class*="nexus-kakao--"]:is([class$="--health"], [class*="--health "]) article,
+[data-service="nexus"] [class*="nexus-kakao--"]:is([class$="--statusMetrics"], [class*="--statusMetrics "]) > div,
+[data-service="nexus"] [class*="nexus-event-admin--"]:is(:is([class$="--actions"], [class*="--actions "]), :is([class$="--competitionKinds"], [class*="--competitionKinds "])),
+[data-service="nexus"] [class*="nexus-event-admin--"]:is([class$="--stages"], [class*="--stages "]) li,
+[data-service="nexus"] [class*="nexus-search--"]:is([class$="--search"], [class*="--search "]) > div,
+[data-service="nexus"] [class*="nexus-search--"]:is([class$="--page"], [class*="--page "]) li a,
+[data-service="nexus"] [class*="nexus-discipline--"]:is([class$="--facts"], [class*="--facts "]) div,
+[data-service="nexus"] [class*="nexus-discipline--"]:is([class$="--evidence"], [class*="--evidence "]) :is(a, button),
+[data-service="nexus"] [class*="nexus-usage-report--"]:is([class$="--ranking"], [class*="--ranking "]),
+[data-service="nexus"] [class*="nexus-guide--"]:is([class$="--steps"], [class*="--steps "]) li {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-mmr-admin--"]:is(
+  :is([class$="--list"], [class*="--list "]), :is([class$="--summary"], [class*="--summary "]), :is([class$="--overview"], [class*="--overview "]), :is([class$="--reviewDrawer"], [class*="--reviewDrawer "]), :is([class$="--confirmDialog"], [class*="--confirmDialog "])
+) :is(p, small, span),
+[data-service="nexus"] [class*="nexus-kakao--"]:is(:is([class$="--health"], [class*="--health "]), :is([class$="--memberStat"], [class*="--memberStat "])) :is(p, small, span) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="nexus-mmr-admin--"]:is(:is([class$="--list"], [class*="--list "]), :is([class$="--reviewDrawer"], [class*="--reviewDrawer "])) a {
+  color: var(--text-accent);
+}
+
+/* Dashboard and operations controls must not reuse a text accent as button fill. */
+[data-service="nexus"] [class*="nexus-page--"]:is(:is([class$="--areaCard"], [class*="--areaCard "]), :is([class$="--sessionCard"], [class*="--sessionCard "])) {
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+[data-service="nexus"] [class*="nexus-page--"]:is(
+  :is([class$="--areaCard"], [class*="--areaCard "]), :is([class$="--sessionCard"], [class*="--sessionCard "]), :is([class$="--sectionHeading"], [class*="--sectionHeading "])
+) :is(p, small, span),
+[data-service="nexus"] [class*="nexus-page--"]:is(:is([class$="--healthNote"], [class*="--healthNote "]), :is([class$="--stage"], [class*="--stage "])) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="nexus-page--"]:is([class$="--sessionCard"], [class*="--sessionCard "]) strong,
+[data-service="nexus"] [class*="nexus-page--"]:is([class$="--notice"], [class*="--notice "]) a {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] [class*="nexus-page--"]:is(:is([class$="--icon"], [class*="--icon "]), :is([class$="--pending"], [class*="--pending "])),
+[data-service="nexus"] [class*="nexus-page--"]:is([class$="--notice"], [class*="--notice "]) > div:first-child {
+  color: #c2d4f4;
+  background: #203654;
+}
+
+[data-service="nexus"] [class*="nexus-admin-operations--"]:is([class$="--button"], [class*="--button "]),
+[data-service="nexus"] [class*="nexus-admin-operations--"]:is(:is([class$="--filters"], [class*="--filters "]), :is([class$="--actions"], [class*="--actions "])) button {
+  border-color: #5c85ed;
+  color: #ffffff;
+  background: #315bd4;
+}
+
+[data-service="nexus"] [class*="nexus-admin-operations--"]:is([class$="--actions"], [class*="--actions "]) button:is([class$="--danger"], [class*="--danger "]),
+[data-service="nexus"] [class*="nexus-submit--"]:is([class$="--actions"], [class*="--actions "]) button[data-danger="true"] {
+  border-color: #b15d7b;
+  color: #ffc0d3;
+  background: #3a1e30;
+}
+
+[data-service="nexus"] [class*="nexus-operations--"]:is([class$="--check"], [class*="--check "]) {
+  border-color: #405a83;
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-operations--"]:is([class$="--check"], [class*="--check "]):has(input:checked) {
+  border-color: #82a6ff;
+  color: #e4eeff;
+  background: #24477f;
+}
+
+[data-service="nexus"] [class*="nexus-operations--"]:is([class$="--field"], [class*="--field "]):focus-within span {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] [class*="nexus-seasons--"]:is([class$="--rowActions"], [class*="--rowActions "]) summary {
+  color: #c2d4f4;
+  background: #203654;
+}
+
+[data-service="nexus"] [class*="nexus-seasons--"]:is(
+  :is([class$="--seasonIdentity"], [class*="--seasonIdentity "]), :is([class$="--rowActions"], [class*="--rowActions "]), :is([class$="--createForm"], [class*="--createForm "])
+) p,
+[data-service="nexus"] [class*="nexus-seasons--"]:is([class$="--applicationTable"], [class*="--applicationTable "]) :is(small, em) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is([class$="--account"], [class*="--account "]) button,
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is([class$="--mobileMenu"], [class*="--mobileMenu "]) header button,
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is([class$="--mobileAccount"], [class*="--mobileAccount "]) button {
+  color: #c2d4f4;
+  background: #203654;
+}
+
+[data-service="nexus"] [class*="nexus-admin-shell--"]:is([class$="--topActions"], [class*="--topActions "]) a:is(:hover, :focus-visible) {
+  color: #ffffff;
+  background: #294875;
+}
+
+[data-service="nexus"] :is([class*="nexus-submit--"], [class*="nexus-matches-admin--"]):is([class$="--actions"], [class*="--actions "]) > button:disabled {
+  border-color: #40516d;
+  color: #a8b8d3;
+  background: #1b2940;
+  opacity: .65;
+}
+
+[data-service="nexus"] [class*="nexus-operations--"]:is([class$="--card"], [class*="--card "]) strong,
+[data-service="nexus"] [class*="nexus-statistics--"]:is([class$="--summary"], [class*="--summary "]) svg,
+[data-service="nexus"] [class*="nexus-statistics--"]:is([class$="--list"], [class*="--list "]) header span {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] [class*="nexus-statistics--"]:is(:is([class$="--summary"], [class*="--summary "]), :is([class$="--list"], [class*="--list "])) article {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-statistics--"]:is(
+  :is([class$="--summary"], [class*="--summary "]), :is([class$="--season"], [class*="--season "]), :is([class$="--action"], [class*="--action "]), :is([class$="--list"], [class*="--list "])
+) :is(small, span, p) {
+  color: var(--text-muted);
+}
+
+[data-service="nexus"] [class*="nexus-statistics--"]:is([class$="--header"], [class*="--header "]) nav a {
+  border-color: #405a83;
+  color: #c2d4f4;
+  background: #182a46;
+}
+
+/* Existing component !important colors need equally narrow service overrides. */
+[data-service="nexus"] button[class*="nexus-admin-media--"]:is([class$="--danger"], [class*="--danger "]) {
+  border-color: #b15d7b;
+  color: #ffc0d3 !important;
+  background: #3a1e30;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--statusBadge"], [class*="--statusBadge "]) {
+  color: #c2d4f4 !important;
+  background: #223957;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--statusBadge"], [class*="--statusBadge "])[data-status="RECRUITING"] {
+  color: #a4edd5 !important;
+  background: #12392f;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--statusBadge"], [class*="--statusBadge "])[data-status="COMPLETED"] {
+  color: #f2d296 !important;
+  background: #30291d;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--statusBadge"], [class*="--statusBadge "])[data-status="CANCELLED"] {
+  color: #ffc0d3 !important;
+  background: #3a1e30;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--statusJourney"], [class*="--statusJourney "]) li[data-state="current"],
+[data-service="nexus"] [class*="nexus-event-admin--"]:is([class$="--stages"], [class*="--stages "]) li:is([class$="--current"], [class*="--current "]) {
+  border-color: #82a6ff;
+  color: #ffffff;
+  background: #24477f;
+  box-shadow: inset 0 -3px #a9c4ff;
+}
+
+[data-service="nexus"] [class*="nexus-events--"]:is([class$="--statusJourney"], [class*="--statusJourney "]) li[data-state="done"] {
+  border-color: #408f7e;
+  color: #a4edd5;
+  background: #12392f;
+}
+
+[data-service="nexus"] .nexus-events--statusJourney li > span {
+  color: #c2d4f4;
+  background: #263b5d;
+}
+
+[data-service="nexus"] .nexus-events--statusJourney li[data-state="current"] > span {
+  color: #ffffff;
+  background: #315bd4;
+}
+
+[data-service="nexus"] [class*="nexus-event-admin--"]:is([class$="--list"], [class*="--list "]) > a {
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-event-admin--"]:is(:is([class$="--list"], [class*="--list "]), :is([class$="--summary"], [class*="--summary "])) :is(span, small) {
+  color: var(--text-muted);
+}
+
+/* Published match data keeps team, winner and MVP distinctions on dark panels. */
+[data-service="nexus"] [class*="nexus-matches--"]:is(:is([class$="--game"], [class*="--game "]), :is([class$="--player"], [class*="--player "])),
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--seriesScore"], [class*="--seriesScore "]) strong,
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--heroActions"], [class*="--heroActions "]) a,
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--teamCard"], [class*="--teamCard "]) li {
+  border-color: var(--border);
+  color: var(--foreground);
+  background: #17253d;
+}
+
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--team"], [class*="--team "])[data-team="blue"][data-winner="true"],
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--teamCard"], [class*="--teamCard "]) h3 {
+  color: #d0e2ff;
+  background: #1b3355;
+}
+
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--team"], [class*="--team "])[data-team="red"][data-winner="true"],
+[data-service="nexus"] [class*="nexus-team-tools--"]:is([class$="--teamCard"], [class*="--teamCard "]):nth-child(2) h3 {
+  color: #ffd1e0;
+  background: #43273c;
+}
+
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--player"], [class*="--player "])[data-mvp="true"] {
+  border-color: #927444;
+  background: #30291d;
+}
+
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--resetFilters"], [class*="--resetFilters "]),
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--score"], [class*="--score "]) span[data-team="blue"],
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--seriesScore"], [class*="--seriesScore "]) :is(span, strong):first-child {
+  color: #9dbbff;
+}
+
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--score"], [class*="--score "]) span[data-team="red"],
+[data-service="nexus"] [class*="nexus-matches--"]:is([class$="--seriesScore"], [class*="--seriesScore "]) :is(span, strong):last-child {
+  color: #ffafcd;
+}
+
+/* Text accents have a lighter token than the blue used behind white button text. */
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is(
+  :is([class$="--textAction"], [class*="--textAction "]), :is([class$="--skillPill"], [class*="--skillPill "])
+),
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--chartTable"], [class*="--chartTable "]) summary,
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--coverage"], [class*="--coverage "]) strong,
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--formStrip"], [class*="--formStrip "]) span[data-result="win"],
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--skillOrder"], [class*="--skillOrder "]) strong,
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--events"], [class*="--events "]) time,
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--match"], [class*="--match "])[data-result="win"] :is([class$="--result"], [class*="--result "]) > strong,
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--snapshotList"], [class*="--snapshotList "]) button[aria-pressed="true"],
+[data-service="nexus"] [class*="nexus-riot-workspace--"]:is([class$="--hero"], [class*="--hero "]) span,
+[data-service="nexus"] [class*="nexus-team-balance-override--"]:is([class$="--feedback"], [class*="--feedback "]) a,
+[data-service="nexus"] [class*="nexus-admin-login-page--"]:is([class$="--brand"], [class*="--brand "]) strong {
+  color: var(--text-accent);
+}
+
+[data-service="nexus"] [class*="nexus-player-riot-profile--"]:is([class$="--table"], [class*="--table "]) tr[data-self] td {
+  background: #213d63;
+  box-shadow: inset 0 1px #5477ab55, inset 0 -1px #5477ab55;
+}
+
+/* Keep the guide illustration, but blend it into navy and reduce empty height. */
+[data-service="nexus"] [class*="nexus-guide--"]:is([class$="--hero"], [class*="--hero "]),
+[data-service="nexus"] [class*="nexus-guide--"]:is([class$="--heroArt"], [class*="--heroArt "]) {
+  min-height: 220px;
+}
+
+[data-service="nexus"] [class*="nexus-guide--"]:is([class$="--heroArt"], [class*="--heroArt "])::after {
+  background: linear-gradient(90deg, #142748, #14274830 38%, #101a2d18);
+}
+
+[data-service="nexus"] [class*="nexus-guide--"]:is([class$="--card"], [class*="--card "]) small {
+  color: #c5a7ff;
+}
+
+[data-service="nexus"] [class*="nexus-home-ranking-carousel--"]:is([class$="--control"], [class*="--control "]),
+[data-service="nexus"] [class*="nexus-home-ranking-carousel--"]:is(:is([class$="--allRankings"], [class*="--allRankings "]), :is([class$="--profile"], [class*="--profile "])) svg {
+  border-color: #5676a8;
+  color: #e5eeff;
+  background: #203759;
+}
+
+[data-service="nexus"] [class*="nexus-home-ranking-carousel--"]:is([class$="--control"], [class*="--control "]):hover {
+  background: #335582;
+}
+
+[data-service="nexus"] [class*="nexus-media--"]:is([class$="--mediaFallback"], [class*="--mediaFallback "]) {
+  color: var(--foreground);
+  background: linear-gradient(135deg, #172b46, #28203e);
+}
+
+[data-service="nexus"] [class*="nexus-media--"]:is([class$="--tag"], [class*="--tag "]) {
+  color: #d2baff;
+}
+
+[data-service="nexus"] [class*="nexus-media--"]:is([class$="--carouselControls"], [class*="--carouselControls "]) > button,
+[data-service="nexus"] [class*="nexus-media--"]:is([class$="--carouselDots"], [class*="--carouselDots "]) button {
+  border-color: #5676a8;
+  color: #e5eeff;
+  background: #203759;
+}
+
+[data-service="nexus"] [class*="nexus-media--"]:is([class$="--carouselDots"], [class*="--carouselDots "]) button[data-active="true"] {
+  border-color: #acc7ff;
+  background: #87afff;
+}
+
+[data-service="nexus"] [class~="nexus-admin-players--primaryLink"] {
+  color: #fff;
+  background: #315bd4;
+}
+
+@media (max-width: 580px) {
+  [data-service="nexus"] [class~="nexus-admin-players--search"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-service="nexus"] [class~="nexus-admin-players--search"] > label {
+    min-width: 0;
+  }
+
+  [data-service="nexus"] [class~="nexus-admin-players--search"] :is(input, select) {
+    width: 100%;
+    min-width: 0;
+  }
+
+  [data-service="nexus"] [class~="nexus-admin-players--table"] tr {
+    border-color: var(--border);
+    background: var(--card);
+  }
+
+  [data-service="nexus"] [class~="nexus-admin-players--table"] td::before {
+    color: var(--muted-foreground);
+  }
+}
+
+@media (max-width: 860px) {
+  [data-service="nexus"] [class*="nexus-guide--"]:is([class$="--hero"], [class*="--hero "]) {
+    min-height: 0;
+  }
+
+  [data-service="nexus"] [class*="nexus-guide--"]:is([class$="--heroArt"], [class*="--heroArt "]) {
+    min-height: 180px;
+  }
+
+  [data-service="nexus"] [class*="nexus-guide--"]:is([class$="--heroArt"], [class*="--heroArt "])::after {
+    background: linear-gradient(180deg, #142748, #14274830 38%, #101a2d18);
+  }
 }
 
 @media (max-width: 820px) {

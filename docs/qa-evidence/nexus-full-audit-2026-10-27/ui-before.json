@@ -1,0 +1,893 @@
+[
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(24, 37, 60)",
+        "className": "",
+        "color": "rgb(92, 108, 131)",
+        "ratio": 2.87,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(24, 37, 60)",
+        "className": "",
+        "color": "rgb(92, 108, 131)",
+        "ratio": 2.87,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(24, 37, 60)",
+        "className": "",
+        "color": "rgb(92, 108, 131)",
+        "ratio": 2.87,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(24, 37, 60)",
+        "className": "",
+        "color": "rgb(92, 108, 131)",
+        "ratio": 2.87,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(24, 37, 60)",
+        "className": "",
+        "color": "rgb(92, 108, 131)",
+        "ratio": 2.87,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(24, 37, 60)",
+        "className": "",
+        "color": "rgb(92, 108, 131)",
+        "ratio": 2.87,
+        "tag": "A"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin",
+    "scrollWidth": 1265,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 1280
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/players",
+    "scrollWidth": 1265,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 1280
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.11,
+        "tag": "LEGEND"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "admin-players-module__PQsTgG__field",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "admin-players-module__PQsTgG__field",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/players/new",
+    "scrollWidth": 1265,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 1280
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(251, 253, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.13,
+        "tag": "H3"
+      },
+      {
+        "background": "rgb(251, 253, 255)",
+        "className": "",
+        "color": "rgb(120, 134, 154)",
+        "ratio": 3.63,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(241, 246, 252)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.06,
+        "tag": "DT"
+      },
+      {
+        "background": "rgb(241, 246, 252)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.06,
+        "tag": "DD"
+      },
+      {
+        "background": "rgb(241, 246, 252)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.06,
+        "tag": "DT"
+      },
+      {
+        "background": "rgb(241, 246, 252)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.06,
+        "tag": "DD"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/seasons",
+    "scrollWidth": 1265,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 1280
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/matches",
+    "scrollWidth": 1265,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 1280
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__code",
+        "color": "rgb(106, 120, 144)",
+        "ratio": 4.47,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-media-module__cyppyW__item",
+        "color": "rgb(233, 239, 255)",
+        "ratio": 1.15,
+        "tag": "A"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/champions",
+    "scrollWidth": 1265,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 1280
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-players-module__PQsTgG__ghostLink",
+        "color": "rgb(181, 206, 255)",
+        "parentClass": "",
+        "ratio": 1.59,
+        "tag": "A"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "admin-players-module__PQsTgG__ghostLink",
+        "color": "rgb(181, 206, 255)",
+        "parentClass": "",
+        "ratio": 1.59,
+        "tag": "A"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/users",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/seasons/kakao-pending",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(247, 252, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "matches-admin-module__mRNAdW__paste matches-admin-module__mRNAdW__wide",
+        "ratio": 1.11,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(233, 238, 245)",
+        "className": "matches-admin-module__mRNAdW__action",
+        "color": "rgb(102, 117, 139)",
+        "parentClass": "matches-admin-module__mRNAdW__actions matches-admin-module__mRNAdW__wide",
+        "ratio": 4.02,
+        "tag": "BUTTON"
+      },
+      {
+        "background": "rgb(248, 252, 255)",
+        "className": "matches-admin-module__mRNAdW__addGame",
+        "color": "rgb(157, 187, 255)",
+        "parentClass": "matches-admin-module__mRNAdW__gameStack",
+        "ratio": 1.85,
+        "tag": "BUTTON"
+      },
+      {
+        "background": "rgb(233, 238, 245)",
+        "className": "matches-admin-module__mRNAdW__action",
+        "color": "rgb(102, 117, 139)",
+        "parentClass": "matches-admin-module__mRNAdW__actions",
+        "ratio": 4.02,
+        "tag": "BUTTON"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/matches/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/balance",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "mmr-admin-module__Y7DGIa__adjustmentFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "mmr-admin-module__Y7DGIa__adjustmentFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "mmr-admin-module__Y7DGIa__adjustmentFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "mmr-admin-module__Y7DGIa__adjustmentFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "mmr-admin-module__Y7DGIa__note",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "mmr-admin-module__Y7DGIa__adjustmentFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/balance-ai",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/balance/drafts",
+    "scrollWidth": 375,
+    "title": "전체 팀 밸런스 초안",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/progress/event",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/progress/event/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/progress/destruction",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/progress/destruction/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/kakao",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(157, 187, 255)",
+        "className": "",
+        "color": "rgb(255, 255, 255)",
+        "parentClass": "admin-operations-module__n68AyG__filters",
+        "ratio": 1.91,
+        "tag": "BUTTON"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/operation-forms",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/kakao",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/highlights",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "sr-only",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__createFields",
+        "ratio": 1.15,
+        "tag": "LEGEND"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__createFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__createFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__split",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__split",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/highlights/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/images",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "sr-only",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__createFields",
+        "ratio": 1.15,
+        "tag": "LEGEND"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__createFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__createFields",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/images/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/private-assets",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__form",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "admin-media-module__cyppyW__form",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/champions/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/riot",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(157, 187, 255)",
+        "className": "admin-operations-module__n68AyG__button",
+        "color": "rgb(255, 255, 255)",
+        "parentClass": "admin-operations-module__n68AyG__header",
+        "ratio": 1.91,
+        "tag": "A"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/discipline",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(157, 187, 255)",
+        "className": "admin-operations-module__n68AyG__button",
+        "color": "rgb(255, 255, 255)",
+        "parentClass": "admin-operations-module__n68AyG__panel admin-operations-module__n68AyG__form",
+        "ratio": 1.91,
+        "tag": "BUTTON"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/discipline/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/logs",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/logs",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/usage",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(238, 245, 255)",
+        "className": "operations-module__7BsgAW__check",
+        "color": "rgb(168, 184, 211)",
+        "parentClass": "operations-module__7BsgAW__checks",
+        "ratio": 1.83,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(238, 245, 255)",
+        "className": "operations-module__7BsgAW__check",
+        "color": "rgb(168, 184, 211)",
+        "parentClass": "operations-module__7BsgAW__checks",
+        "ratio": 1.83,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(238, 245, 255)",
+        "className": "operations-module__7BsgAW__check",
+        "color": "rgb(168, 184, 211)",
+        "parentClass": "operations-module__7BsgAW__checks",
+        "ratio": 1.83,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(238, 245, 255)",
+        "className": "operations-module__7BsgAW__check",
+        "color": "rgb(168, 184, 211)",
+        "parentClass": "operations-module__7BsgAW__checks",
+        "ratio": 1.83,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/admin/site-settings",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/search",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  }
+]

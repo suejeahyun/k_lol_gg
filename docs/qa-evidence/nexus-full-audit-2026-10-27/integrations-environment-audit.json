@@ -1,0 +1,310 @@
+{
+  "checkedAt": "2026-10-27T09:57:23.864Z",
+  "live": {
+    "checkedAt": "2026-10-27T09:57:23.864Z",
+    "source": "Vercel GET project environment metadata only; no decrypt/pull",
+    "projectIdentityMatches": true,
+    "keys": [
+      {
+        "key": "NEXT_PUBLIC_SERVICE_ID",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "NEXUS_DATABASE_URL",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "DATABASE_URL",
+        "present": false
+      },
+      {
+        "key": "V2_PUBLIC_DATA_SOURCE",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "NEXT_PUBLIC_SITE_URL",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "V2_PUBLIC_ORIGIN",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "KAKAO_V4_IDENTITY_SECRET",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "KAKAO_V4_WEBHOOK_SECRET_CURRENT",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "KAKAO_V4_WEBHOOK_KEY_ID_CURRENT",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "KAKAO_SITE_NOTICE_ENABLED",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "KAKAO_SITE_NOTICE_TARGET_HASH",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "V2_RIOT_INTEGRATION_ENABLED",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "V2_RIOT_FAKE_RUNTIME",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "RIOT_API_KEY",
+        "present": false
+      },
+      {
+        "key": "RIOT_ENCRYPTION_KEYS",
+        "present": false
+      },
+      {
+        "key": "RIOT_API_PLATFORM_ROUTE",
+        "present": false
+      },
+      {
+        "key": "RIOT_API_REGIONAL_ROUTE",
+        "present": false
+      },
+      {
+        "key": "RIOT_RSO_CLIENT_ID",
+        "present": false
+      },
+      {
+        "key": "RIOT_RSO_CLIENT_SECRET",
+        "present": false
+      },
+      {
+        "key": "RIOT_RSO_STATE_SECRET",
+        "present": false
+      },
+      {
+        "key": "RIOT_RSO_REDIRECT_URI",
+        "present": false
+      },
+      {
+        "key": "BLOB_READ_WRITE_TOKEN",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production",
+          "preview"
+        ]
+      },
+      {
+        "key": "OPERATIONS_JOB_SECRET",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "CRON_SECRET",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "SESSION_SIGNING_KEYS",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "TOTP_ENCRYPTION_KEYS",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "V2_AUTH_RATE_LIMIT_PEPPER",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "V2_TEST_AUTH_ENABLED",
+        "present": true,
+        "type": "encrypted",
+        "target": [
+          "production"
+        ]
+      },
+      {
+        "key": "V2_TEST_AUTH_SECRET",
+        "present": false
+      },
+      {
+        "key": "V2_TEST_AUTH_FIXTURES_JSON",
+        "present": false
+      }
+    ],
+    "finishedAt": "2026-10-27T09:59:06.319Z"
+  },
+  "safeLocal": {
+    "source": ".private/nexus-production.env; staged local artifact, not proof of currently deployed values",
+    "modifiedAt": "2026-10-27T07:25:02.745Z",
+    "flags": {
+      "NEXT_PUBLIC_SERVICE_ID": "nexus",
+      "V2_PUBLIC_DATA_SOURCE": "postgres",
+      "KAKAO_SITE_NOTICE_ENABLED": "true",
+      "V2_RIOT_INTEGRATION_ENABLED": "false",
+      "V2_RIOT_FAKE_RUNTIME": "false"
+    },
+    "present": {
+      "NEXT_PUBLIC_SERVICE_ID": true,
+      "NEXUS_DATABASE_URL": true,
+      "DATABASE_URL": false,
+      "V2_PUBLIC_DATA_SOURCE": true,
+      "NEXT_PUBLIC_SITE_URL": true,
+      "V2_PUBLIC_ORIGIN": true,
+      "KAKAO_V4_IDENTITY_SECRET": true,
+      "KAKAO_V4_WEBHOOK_SECRET_CURRENT": true,
+      "KAKAO_V4_WEBHOOK_KEY_ID_CURRENT": true,
+      "KAKAO_SITE_NOTICE_ENABLED": true,
+      "KAKAO_SITE_NOTICE_TARGET_HASH": true,
+      "V2_RIOT_INTEGRATION_ENABLED": true,
+      "V2_RIOT_FAKE_RUNTIME": true,
+      "RIOT_API_KEY": false,
+      "RIOT_ENCRYPTION_KEYS": false,
+      "RIOT_API_PLATFORM_ROUTE": false,
+      "RIOT_API_REGIONAL_ROUTE": false,
+      "RIOT_RSO_CLIENT_ID": false,
+      "RIOT_RSO_CLIENT_SECRET": false,
+      "RIOT_RSO_STATE_SECRET": false,
+      "RIOT_RSO_REDIRECT_URI": false,
+      "BLOB_READ_WRITE_TOKEN": false,
+      "OPERATIONS_JOB_SECRET": true,
+      "CRON_SECRET": true,
+      "SESSION_SIGNING_KEYS": true,
+      "TOTP_ENCRYPTION_KEYS": true,
+      "V2_AUTH_RATE_LIMIT_PEPPER": true,
+      "V2_TEST_AUTH_ENABLED": true,
+      "V2_TEST_AUTH_SECRET": false,
+      "V2_TEST_AUTH_FIXTURES_JSON": false
+    },
+    "canonicalOriginMatches": true,
+    "kakaoIdentityAndSigningDifferent": true,
+    "phoneAliasMatches": {
+      "identity": true,
+      "signing": true,
+      "keyId": true
+    }
+  },
+  "phone": {
+    "metadataStatus": "PENDING_USER_INSTALL",
+    "artifactChecks": [
+      {
+        "file": "NEXUS_KAKAO_BOT_PRIVATE_MESSENGERBOT_R.js",
+        "hashMatchesSavedMetadata": true,
+        "crlfCharacters": 64797,
+        "within65535": true
+      },
+      {
+        "file": "NEXUS_SITE_NOTICE_COMPANION_PRIVATE.js",
+        "hashMatchesSavedMetadata": true,
+        "crlfCharacters": 13717,
+        "within65535": true
+      }
+    ],
+    "actualDeviceInstallationVerified": false
+  },
+  "riotApplicationEvidence": {
+    "source": ".private/nexus-riot-verified-state.txt",
+    "modifiedAt": "2026-10-27T08:21:42.371Z",
+    "pendingReview": true,
+    "siteCodeValidated": true,
+    "currentPortalRechecked": false,
+    "laterRootVerification": {
+      "source": "riot-portal-status.json",
+      "checkedAt": "2026-10-27T10:05:28.485Z",
+      "method": "Authenticated CUA read by root agent",
+      "status": "Pending Review",
+      "editsOrMessages": false
+    }
+  },
+  "secretsDisclosed": false,
+  "databaseReadOnlyEvidence": {
+    "providedBy": "nexus_database audit agent",
+    "transactionMode": "BEGIN READ ONLY and default_transaction_read_only",
+    "checkedAt": "2026-10-27T09:59:06.319Z",
+    "brandIsNexus": true,
+    "riotIntegration": false,
+    "kakao": {
+      "global_enabled": true,
+      "player_search_enabled": true,
+      "season_applications_enabled": true,
+      "image_receive_enabled": true,
+      "recruiting_enabled": true,
+      "scheduled_notice_enabled": true,
+      "maintenance_mode": false
+    },
+    "siteNoticeStatusCounts": [],
+    "activeSiteNoticeNonceBindings": 0,
+    "limitation": "Zero nonce bindings is not conclusive historical phone-installation evidence because bindings expire; no direct device state was read."
+  }
+}

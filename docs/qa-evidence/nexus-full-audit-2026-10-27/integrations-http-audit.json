@@ -1,0 +1,403 @@
+{
+  "checkedAt": "2026-10-27T09:58:20.545Z",
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "cookiesSent": false,
+  "businessMutationRequests": 0,
+  "results": [
+    {
+      "label": "health",
+      "method": "GET",
+      "path": "/api/health",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8",
+      "ready": true
+    },
+    {
+      "label": "health-reject-query",
+      "method": "GET",
+      "path": "/api/health?audit=1",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "label": "site-settings",
+      "method": "GET",
+      "path": "/api/site-settings",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8",
+      "publicSettings": {
+        "nexusBrand": true,
+        "features": {
+          "registrations": true,
+          "matchSubmissions": true,
+          "teamBalance": true,
+          "kakaoHelp": true,
+          "riotIntegration": false,
+          "aiAssistant": false
+        },
+        "privatePolicyExcluded": true
+      }
+    },
+    {
+      "label": "anonymous-account",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8",
+      "noAccount": true
+    },
+    {
+      "label": "riot-verification",
+      "method": "GET",
+      "path": "/riot.txt",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "contentType": "text/plain; charset=utf-8",
+      "matchesLocalFile": true
+    },
+    {
+      "label": "admin-page",
+      "method": "GET",
+      "path": "/admin",
+      "status": 307,
+      "expected": [
+        307,
+        308
+      ],
+      "pass": true,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "contentType": "text/html; charset=utf-8",
+      "redirectsToLocalLogin": true
+    },
+    {
+      "label": "admin-users-page",
+      "method": "GET",
+      "path": "/admin/users",
+      "status": 307,
+      "expected": [
+        307,
+        308
+      ],
+      "pass": true,
+      "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate",
+      "contentType": "text/html; charset=utf-8",
+      "redirectsToLocalLogin": true
+    },
+    {
+      "label": "unauth-admin-session",
+      "method": "GET",
+      "path": "/api/admin/session",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store",
+      "contentType": "application/json"
+    },
+    {
+      "label": "unauth-admin-dashboard",
+      "method": "GET",
+      "path": "/api/admin/dashboard",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-admin-site-settings",
+      "method": "GET",
+      "path": "/api/admin/site-settings",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-admin-users",
+      "method": "GET",
+      "path": "/api/admin/users",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "ACCOUNT_AUTH_REQUIRED"
+    },
+    {
+      "label": "unauth-admin-kakao/settings",
+      "method": "GET",
+      "path": "/api/admin/kakao/settings",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-admin-kakao/rooms",
+      "method": "GET",
+      "path": "/api/admin/kakao/rooms",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-admin-kakao/stats",
+      "method": "GET",
+      "path": "/api/admin/kakao/stats",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-admin-kakao/recruit-health",
+      "method": "GET",
+      "path": "/api/admin/kakao/recruit-health",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-admin-riot",
+      "method": "GET",
+      "path": "/api/admin/riot",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-admin-backups/players",
+      "method": "GET",
+      "path": "/api/admin/backups/players",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "unauth-me-riot",
+      "method": "GET",
+      "path": "/api/me/riot",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "UNAUTHENTICATED"
+    },
+    {
+      "label": "rso-get-method-rejected",
+      "method": "GET",
+      "path": "/api/me/riot/rso/start",
+      "status": 405,
+      "expected": [
+        405
+      ],
+      "pass": true,
+      "cacheControl": "public, max-age=0, must-revalidate",
+      "contentType": null,
+      "note": "Source exports POST only; initial expectation of GET authentication status was a test-case mistake."
+    },
+    {
+      "label": "nonexistent-public-riot-profile",
+      "method": "GET",
+      "path": "/api/riot/player/00000000-0000-4000-8000-000000000000/summary",
+      "status": 404,
+      "expected": [
+        404,
+        503
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/problem+json; charset=utf-8",
+      "code": "NOT_FOUND"
+    },
+    {
+      "label": "public-seasons",
+      "method": "GET",
+      "path": "/api/seasons/current",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "label": "public-recruits",
+      "method": "GET",
+      "path": "/api/recruits",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "label": "public-rankings",
+      "method": "GET",
+      "path": "/api/rankings",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "label": "public-champions",
+      "method": "GET",
+      "path": "/api/champions",
+      "status": 200,
+      "expected": [
+        200
+      ],
+      "pass": true,
+      "cacheControl": "no-store, max-age=0",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "label": "unsigned-diagnostic",
+      "method": "POST",
+      "path": "/api/integrations/kakao/v4/commands",
+      "status": 401,
+      "expected": [
+        401
+      ],
+      "pass": true,
+      "code": "INVALID_SIGNATURE",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "label": "forbidden-query",
+      "method": "POST",
+      "path": "/api/integrations/kakao/v4/commands?room=NEXUS",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "code": "QUERY_FORBIDDEN",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "label": "forbidden-room-header",
+      "method": "POST",
+      "path": "/api/integrations/kakao/v4/commands",
+      "status": 400,
+      "expected": [
+        400
+      ],
+      "pass": true,
+      "code": "KAKAO_V4_FORBIDDEN_IDENTITY_HEADER",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "label": "invalid-notice-body",
+      "method": "POST",
+      "path": "/api/integrations/kakao/site-notices",
+      "status": 400,
+      "expected": [
+        400,
+        503
+      ],
+      "pass": true,
+      "code": "REQUEST_INVALID",
+      "cacheControl": "no-store, max-age=0"
+    },
+    {
+      "label": "unauth-rso-post",
+      "method": "POST",
+      "path": "/api/me/riot/rso/start",
+      "status": 401,
+      "expected": [
+        401,
+        403
+      ],
+      "pass": true,
+      "code": "UNAUTHENTICATED",
+      "cacheControl": "no-store, max-age=0"
+    }
+  ],
+  "pass": true,
+  "finishedAt": "2026-10-27T09:59:06.055Z"
+}

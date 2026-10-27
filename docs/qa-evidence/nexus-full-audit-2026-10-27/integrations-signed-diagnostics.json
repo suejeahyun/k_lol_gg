@@ -1,0 +1,33 @@
+{
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "checkedAt": "2026-10-27T09:57:32.215Z",
+  "businessMutationRequests": 0,
+  "results": [
+    {
+      "profileId": "RECRUIT",
+      "command": "V4상태",
+      "status": 200,
+      "brandedReply": true
+    },
+    {
+      "profileId": "RECRUIT",
+      "command": "도움말",
+      "status": 200,
+      "brandedReply": true
+    },
+    {
+      "profileId": "FEATURES",
+      "command": "V4상태",
+      "status": 200,
+      "brandedReply": true
+    },
+    {
+      "profileId": "FEATURES",
+      "command": "도움말",
+      "status": 200,
+      "brandedReply": true
+    }
+  ],
+  "actualDeviceInstallationVerified": false,
+  "scope": "Local HTTP diagnostic only; no real Kakao messages or business dispatcher requests."
+}

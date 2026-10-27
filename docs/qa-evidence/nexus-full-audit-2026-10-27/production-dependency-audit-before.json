@@ -1,0 +1,182 @@
+{
+  "checkedAt": "2026-10-27T10:09:22.564Z",
+  "phase": "before-remediation",
+  "command": "npm audit --omit=dev --json",
+  "exitCode": 1,
+  "packageUpdatesPerformedByThisAudit": false,
+  "counts": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 5,
+    "critical": 1,
+    "total": 6
+  },
+  "countsAreAffectedPackageEntries": true,
+  "packages": [
+    {
+      "name": "@vercel/blob",
+      "installedVersion": "2.8.0",
+      "severity": "high",
+      "direct": true,
+      "range": ">=2.4.1-b7027de-20260616193056",
+      "via": [
+        "@vercel/oidc"
+      ],
+      "npmFixAvailable": {
+        "name": "@vercel/blob",
+        "version": "2.4.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "@vercel/cli-config",
+      "installedVersion": "0.2.4",
+      "severity": "high",
+      "direct": false,
+      "range": "*",
+      "via": [
+        "zod"
+      ],
+      "npmFixAvailable": {
+        "name": "@vercel/blob",
+        "version": "2.4.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "@vercel/oidc",
+      "installedVersion": "3.8.5",
+      "severity": "high",
+      "direct": false,
+      "range": ">=3.6.0",
+      "via": [
+        "@vercel/cli-config"
+      ],
+      "npmFixAvailable": {
+        "name": "@vercel/blob",
+        "version": "2.4.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "next",
+      "installedVersion": "16.3.8",
+      "severity": "critical",
+      "direct": true,
+      "range": "16.0.0 - 16.4.0",
+      "via": [
+        {
+          "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+          "url": "https://github.com/advisories/GHSA-2464-fhr4-w9xw",
+          "severity": "critical",
+          "range": ">=16.0.0 <=16.4.0"
+        },
+        {
+          "title": "Next.js: Denial of Service in App Router using Server Actions",
+          "url": "https://github.com/advisories/GHSA-p3m5-59mp-jv5r",
+          "severity": "high",
+          "range": ">=16.0.0 <=16.4.0"
+        },
+        {
+          "title": "Next.js: Unauthenticated Remote Code Execution in `use cache` functions returning typed arrays",
+          "url": "https://github.com/advisories/GHSA-673q-mjm6-r5xr",
+          "severity": "critical",
+          "range": ">=16.0.0 <=16.4.0"
+        }
+      ],
+      "npmFixAvailable": {
+        "name": "next",
+        "version": "16.4.3",
+        "isSemVerMajor": false
+      }
+    },
+    {
+      "name": "undici",
+      "installedVersion": "6.28.1",
+      "severity": "high",
+      "direct": false,
+      "range": "6.5.0 - 6.29.0",
+      "via": [
+        {
+          "title": "undici vulnerable to Denial of Service via unbounded memory in the EventSource parser",
+          "url": "https://github.com/advisories/GHSA-4qv8-2p9j-2685",
+          "severity": "moderate",
+          "range": ">=6.5.0 <6.29.1"
+        },
+        {
+          "title": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
+          "url": "https://github.com/advisories/GHSA-xjj6-f33q-929c",
+          "severity": "high",
+          "range": ">=6.23.0 <6.29.1"
+        }
+      ],
+      "npmFixAvailable": true
+    },
+    {
+      "name": "zod",
+      "installedVersion": "4.1.11",
+      "severity": "high",
+      "direct": false,
+      "range": "<4.6.6",
+      "via": [
+        {
+          "title": "Zod can exhaust memory while validating oversized constrained collections",
+          "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5",
+          "severity": "high",
+          "range": "<4.6.6"
+        }
+      ],
+      "npmFixAvailable": {
+        "name": "@vercel/blob",
+        "version": "2.4.0",
+        "isSemVerMajor": true
+      }
+    }
+  ],
+  "reachability": {
+    "nextSvg": {
+      "resolvedSharpVersion": "0.35.5",
+      "resolvedSameAsRoot": true,
+      "dangerouslyAllowSVG": false,
+      "assessment": "Official sharp workaround is present in the audited installed tree."
+    },
+    "nextServerActions": {
+      "nodeManifestEntries": 0,
+      "edgeManifestEntries": 0,
+      "sourceDirectivesFound": 0,
+      "assessment": "Advisory precondition not found in current source and build."
+    },
+    "nextCacheComponents": {
+      "cacheComponents": false,
+      "useCacheDirectivesFound": 0,
+      "assessment": "Advisory precondition not found in current source and build."
+    },
+    "undici": {
+      "runtimeFetchUsedByBlob": true,
+      "applicationEventSourceFound": false,
+      "requestPathsValidated": true,
+      "assessment": "Malicious upstream response is required for fetch DoS; ordinary client-selected arbitrary origins not found in Blob adapter. No exploit attempted."
+    },
+    "zod": {
+      "dependencyPath": "@vercel/blob -> @vercel/oidc -> @vercel/cli-config -> zod",
+      "directApplicationImportFound": false,
+      "assessment": "Observed path parses local CLI configuration; public request-array validation path not found. No exploit attempted."
+    }
+  },
+  "proposedRemediation": {
+    "next": "16.4.3",
+    "eslintConfigNext": "16.4.3",
+    "officialNextMinimumPatched": "16.4.1",
+    "keepBlob": "2.8.0",
+    "scopedOverrides": {
+      "@vercel/blob": {
+        "undici": "6.29.1"
+      },
+      "@vercel/cli-config": {
+        "zod": "4.6.6"
+      }
+    },
+    "note": "Proposal only. Blob downgrade to 2.4.0 from npm audit is not selected; latest Blob and CLI config still retain vulnerable pinned Zod. Requires audit and full checks after implementation."
+  }
+}

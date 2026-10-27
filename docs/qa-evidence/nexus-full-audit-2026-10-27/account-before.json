@@ -1,0 +1,306 @@
+[
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DT"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DD"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DT"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DD"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DT"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DD"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DT"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.11,
+        "tag": "DD"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "applications-module__URC3ZG__positionGrid",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "applications-module__URC3ZG__positionGrid",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "applications-module__URC3ZG__positionGrid",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "applications-module__URC3ZG__positionGrid",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "applications-module__URC3ZG__positionGrid",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "applications-module__URC3ZG__positionGrid",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 251, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "applications-module__URC3ZG__positionGrid",
+        "ratio": 1.11,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/applications",
+    "scrollWidth": 375,
+    "title": "내전 참가 신청 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(248, 250, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "submit-module__TuwQzW__optionalGrid",
+        "ratio": 1.1,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 250, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "submit-module__TuwQzW__optionalGrid",
+        "ratio": 1.1,
+        "tag": "LABEL"
+      },
+      {
+        "background": "rgb(248, 250, 255)",
+        "className": "submit-module__TuwQzW__wide",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "submit-module__TuwQzW__optionalGrid",
+        "ratio": 1.1,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/matches/submit",
+    "scrollWidth": 375,
+    "title": "경기 결과 접수 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/account",
+    "scrollWidth": 375,
+    "title": "내 계정 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/account/riot",
+    "scrollWidth": 375,
+    "title": "내 Riot 계정 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/account/discipline",
+    "scrollWidth": 375,
+    "title": "내 징계 과제 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "submit-module__TuwQzW__historyFilters",
+        "ratio": 1.15,
+        "tag": "LABEL"
+      }
+    ],
+    "nameless": [],
+    "path": "/matches/submissions",
+    "scrollWidth": 375,
+    "title": "NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/tools/team-balance/drafts",
+    "scrollWidth": 375,
+    "title": "내 팀 밸런스 초안 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/players/66253943-3ef1-4b1b-acbd-26920d9eedf5",
+    "scrollWidth": 375,
+    "title": "넥서스합성01 전적 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/matches/c9f49f68-0257-41cd-b8b7-d3e6f66e64da",
+    "scrollWidth": 375,
+    "title": "NEXUS 합성 점검 경기 1 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "events-module__prnxca__application",
+        "ratio": 1.15,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(75, 120, 189)",
+        "className": "",
+        "color": "rgb(255, 255, 255)",
+        "parentClass": "",
+        "ratio": 4.45,
+        "tag": "BUTTON"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.15,
+        "tag": "P"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.15,
+        "tag": "H2"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "className": "",
+        "color": "rgb(233, 239, 255)",
+        "parentClass": "",
+        "ratio": 1.15,
+        "tag": "P"
+      }
+    ],
+    "nameless": [],
+    "path": "/competitions/events/f6e8072b-e153-4a94-8952-121ceed60170",
+    "scrollWidth": 375,
+    "title": "NEXUS 합성 이벤트 모집 | NEXUS.GG",
+    "viewport": 390
+  }
+]

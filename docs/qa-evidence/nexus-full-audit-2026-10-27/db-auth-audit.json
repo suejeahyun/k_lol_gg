@@ -1,0 +1,423 @@
+{
+  "checkedAt": "2026-10-27T10:05:14.964Z",
+  "scope": "NEXUS database, authentication and administrator authorization",
+  "applicationSourceChanged": false,
+  "productionWritesPerformed": false,
+  "production": {
+    "transactionReadOnly": true,
+    "targetGuardPassed": true,
+    "runtimeTargetMatches": true,
+    "legacyDatabaseEnvironmentAbsent": true,
+    "serviceEnvironmentCorrect": true,
+    "brandMatches": true,
+    "riotIntegrationEnabled": false,
+    "accounts": [
+      {
+        "label": "owner",
+        "exactTargetFound": true,
+        "role": "SUPER_ADMIN",
+        "approved": true,
+        "active": true,
+        "passwordConfigured": true,
+        "mustChangePassword": false,
+        "authVersionAdvanced": true,
+        "revisionAdvanced": true,
+        "roleChangeAudited": true
+      },
+      {
+        "label": "delegated-admin",
+        "exactTargetFound": true,
+        "role": "ADMIN",
+        "approved": true,
+        "active": true,
+        "passwordConfigured": true,
+        "mustChangePassword": false,
+        "authVersionAdvanced": true,
+        "revisionAdvanced": true,
+        "roleChangeAudited": true
+      }
+    ],
+    "migrations": {
+      "actual": 50,
+      "expected": 50,
+      "allHashesAndHeadMatch": true
+    },
+    "seasons": {
+      "total": 0,
+      "active": 0,
+      "inherited": 0,
+      "activeWithOpenApplications": 0
+    },
+    "counts": {
+      "accounts": 3,
+      "players": 2,
+      "champions": 173,
+      "fixtureSessions": 0,
+      "staleUnrevokedUnexpiredSessions": 0
+    },
+    "kakaoSettings": {
+      "globalEnabled": true,
+      "maintenanceMode": false,
+      "playerSearchEnabled": true,
+      "seasonApplicationsEnabled": true,
+      "imageReceiveEnabled": true,
+      "recruitingEnabled": true,
+      "scheduledNoticeEnabled": true
+    },
+    "kakaoNoticeCount": 0,
+    "siteNoticePrincipalBindingCount": 0
+  },
+  "localNexusBootstrap": {
+    "passed": true,
+    "checks": 9,
+    "migrationCount": 50,
+    "emptyBusinessTables": 111,
+    "referenceVersion": "16.17.1",
+    "referenceCount": 173,
+    "checksCovered": [
+      "fresh migrations",
+      "empty business tables",
+      "empty bootstrap replay",
+      "wrong target refusal",
+      "nonempty refusal",
+      "sentinel preservation",
+      "pinned references only",
+      "reference replay",
+      "administrator reference edits preserved"
+    ]
+  },
+  "localNexusAuthHttp": {
+    "passed": true,
+    "checks": 10,
+    "checksCovered": [
+      "initial administrator creation",
+      "duplicate setup refused",
+      "temporary password cannot elevate",
+      "account login without player",
+      "first password change",
+      "admin login",
+      "NEXUS session cookie",
+      "SUPER settings access",
+      "legacy service cookie rejected",
+      "no player created"
+    ]
+  },
+  "localNexusAdminBoundaryHttp": {
+    "passed": true,
+    "derivedFrom": "scripts/test-db/run-admin-password-http.ts",
+    "nexusDatabaseEnvironmentInjected": true,
+    "nextStartOnly": true,
+    "checksCovered": [
+      "ADMIN SUPER_ADMIN and legacy TOTP account login",
+      "USER PENDING and temporary-password administrator denied",
+      "wrong password denied",
+      "cross-origin login and mutation denied",
+      "HttpOnly SameSite Strict 30-minute cookies",
+      "persisted real database sessions",
+      "ADMIN settings denied and SUPER read-write allowed",
+      "stale authVersion denied",
+      "tampered token denied",
+      "logout revokes session",
+      "retired TOTP endpoints preserve authorization",
+      "legacy TOTP credential preserved"
+    ],
+    "harnessAdaptation": "The original introductory text assertion is stale. The private copy asserts the actual administrator login and password fields instead; authorization assertions are unchanged."
+  },
+  "sharedPostgresDomainContracts": {
+    "completedAt": "2026-10-27T10:03:51.491Z",
+    "selectedSuites": 35,
+    "suites": [
+      {
+        "file": "tests/database/data-platform.contract.test.ts",
+        "passed": true,
+        "tests": 8,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/usage.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/inhouse-migration.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/auth-totp-lifecycle.contract.test.ts",
+        "passed": true,
+        "tests": 7,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/player-admin.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/season-platform.contract.test.ts",
+        "passed": true,
+        "tests": 25,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/kakao-site-notices.contract.test.ts",
+        "passed": true,
+        "tests": 9,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/account-lifecycle.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/match-snapshot.contract.test.ts",
+        "passed": true,
+        "tests": 7,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/match-authorization.contract.test.ts",
+        "passed": true,
+        "tests": 15,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/statistics-projection.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/media.contract.test.ts",
+        "passed": true,
+        "tests": 3,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/team-balance-draft.contract.test.ts",
+        "passed": true,
+        "tests": 7,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/team-score.contract.test.ts",
+        "passed": true,
+        "tests": 2,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/mmr-projection.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/mmr-history.contract.test.ts",
+        "passed": true,
+        "tests": 3,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/recruiting.contract.test.ts",
+        "passed": true,
+        "tests": 8,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/operation-forms.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/kakao-assistant.contract.test.ts",
+        "passed": true,
+        "tests": 14,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/kakao-form-snapshots.contract.test.ts",
+        "passed": true,
+        "tests": 7,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/kakao-recruit-form-snapshots.contract.test.ts",
+        "passed": true,
+        "tests": 11,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/kakao-room-registry.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/kakao-party-overview.contract.test.ts",
+        "passed": true,
+        "tests": 2,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/kakao-v4-input-tolerance-p0.test.ts",
+        "passed": true,
+        "tests": 33,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/event-competition.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/destruction-competition.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/operations.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/storage-probe.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/operational-health.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/riot.contract.test.ts",
+        "passed": true,
+        "tests": 3,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/riot-production.contract.test.ts",
+        "passed": true,
+        "tests": 3,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/discipline.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/champion-catalog.contract.test.ts",
+        "passed": true,
+        "tests": 2,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/database-recovery.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "file": "tests/database/cleanup-readiness.contract.test.ts",
+        "passed": true,
+        "tests": 1,
+        "failures": 0,
+        "skipped": 0
+      }
+    ],
+    "passed": true,
+    "temporaryDatabaseRemoved": true,
+    "nextBuildOrDevStarted": false,
+    "browserStarted": false,
+    "totalTests": 185,
+    "totalFailures": 0,
+    "totalSkipped": 0,
+    "scopeNote": "The existing 35-file allTestFiles list runs in its existing shared-schema environment; NEXUS runtime selection and cookies are covered separately above. Only test files execute, without the all-runner Next or browser stages."
+  },
+  "cleanup": {
+    "verificationDatabasesRemoved": true,
+    "verificationHttpServersStopped": true,
+    "uiFixtureRetainedForRootCua": true,
+    "uiFixtureLocalOnly": true
+  },
+  "findings": [
+    {
+      "kind": "setup",
+      "severity": "information",
+      "message": "No production season exists. This preserves the requested empty start; an administrator must create and activate a season before normal in-house applications can open."
+    },
+    {
+      "kind": "test-harness",
+      "severity": "low",
+      "message": "The existing password HTTP verifier asserts introductory copy that is no longer rendered. Application authentication is unaffected; only the private audit copy was adapted."
+    }
+  ],
+  "limitations": [
+    "Production checks query state in a read-only transaction; live account passwords were not used.",
+    "Phone installation and actual message delivery are outside this database/authentication audit.",
+    "The synthetic UI database remains available until its owner stops the UI server and runs the guarded teardown."
+  ],
+  "postDependencyUpdateRetest": {
+    "checkedAt": "2026-10-27T10:16:55.730Z",
+    "nextVersion": "16.4.3",
+    "buildId": "WXcD3d2kuofrTZgz0gtum",
+    "passed": true,
+    "nexusAuthHttpChecks": 10,
+    "adminBoundaryHttpPassed": true,
+    "localOnly": true,
+    "isolatedRandomPorts": true,
+    "productionAccessed": false,
+    "buildExecuted": false,
+    "temporaryHttpServersStopped": true,
+    "temporaryVerificationDatabasesRemoved": true,
+    "uiDatabaseRetained": true
+  }
+}

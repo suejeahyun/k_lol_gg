@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-10-27T10:11:27.124Z",
+  "localOnly": true,
+  "transactionReadOnly": true,
+  "productionAccessed": false,
+  "passed": true,
+  "application": {
+    "foundExactlyOnce": true,
+    "activeCountBefore": 6,
+    "activeCountAfter": 7,
+    "status": "APPLIED",
+    "source": "SITE",
+    "main_position": "TOP",
+    "sub_positions": [
+      "JGL"
+    ],
+    "revision": 1
+  },
+  "draft": {
+    "found": true,
+    "status": "SAVED",
+    "savedTimestampPresent": true,
+    "revision": 1,
+    "evaluationRound": 1,
+    "selectedCandidateSource": "AUTO",
+    "ownedByFixtureUser": true,
+    "participantCount": 10,
+    "assignmentCount": 10,
+    "distinctAssignedPlayers": 10,
+    "distinctTeamPositions": 10,
+    "teamCounts": {
+      "BLUE": 5,
+      "RED": 5
+    },
+    "assignmentsMatchRoster": true,
+    "auditCount": 2
+  },
+  "scope": "Read-only persistence confirmation after parent CUA application and save actions. Does not itself operate a browser or verify the match submission link."
+}

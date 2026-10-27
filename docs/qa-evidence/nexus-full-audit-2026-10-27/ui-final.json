@@ -1,0 +1,184 @@
+[
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/applications",
+    "scrollWidth": 375,
+    "title": "내전 참가 신청 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/competitions/events/f6e8072b-e153-4a94-8952-121ceed60170",
+    "scrollWidth": 375,
+    "title": "NEXUS 합성 이벤트 모집 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/players/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/matches/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/users",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/tools/team-balance/drafts/83b10edc-7e32-433d-b604-6563e825c1e1",
+    "scrollWidth": 375,
+    "title": "팀 밸런스 초안 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/matches/submit",
+    "scrollWidth": 375,
+    "title": "경기 결과 접수 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/seasons",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/highlights/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/images/new",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/admin/site-settings",
+    "scrollWidth": 375,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/rankings",
+    "scrollWidth": 375,
+    "title": "LoL 내전 시즌 랭킹 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/install",
+    "scrollWidth": 375,
+    "title": "NEXUS.GG 앱 설치 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/",
+    "scrollWidth": 305,
+    "title": "한국 LoL 내전 커뮤니티 | NEXUS.GG",
+    "viewport": 320
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/tools/team-balance/drafts/83b10edc-7e32-433d-b604-6563e825c1e1",
+    "scrollWidth": 305,
+    "title": "팀 밸런스 초안 | NEXUS.GG",
+    "viewport": 320
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/applications",
+    "scrollWidth": 305,
+    "title": "내전 참가 신청 | NEXUS.GG",
+    "viewport": 320
+  },
+  {
+    "brokenImages": [],
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "path": "/tools/team-balance/drafts/83b10edc-7e32-433d-b604-6563e825c1e1",
+    "scrollWidth": 1425,
+    "title": "팀 밸런스 초안 | NEXUS.GG",
+    "viewport": 1440
+  },
+  {
+    "brokenImages": [],
+    "clientWidth": 305,
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "overflowPixels": 0,
+    "path": "/admin/users",
+    "scrollWidth": 305,
+    "title": "관리자 | NEXUS.GG",
+    "viewport": 320
+  }
+]

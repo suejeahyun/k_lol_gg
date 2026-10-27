@@ -1,0 +1,52 @@
+{
+  "phase": "after-root-remediation",
+  "date": "2026-10-27",
+  "production": {
+    "command": "npm audit --omit=dev --json",
+    "exitCode": 0,
+    "counts": { "info": 0, "low": 0, "moderate": 0, "high": 0, "critical": 0, "total": 0 }
+  },
+  "allDependencies": {
+    "command": "npm audit --json",
+    "exitCode": 1,
+    "counts": { "info": 0, "low": 0, "moderate": 4, "high": 0, "critical": 0, "total": 4 },
+    "remaining": [
+      { "name": "drizzle-kit", "version": "0.31.10", "dev": true, "severity": "moderate" },
+      { "name": "@esbuild-kit/esm-loader", "version": "2.6.5", "dev": true, "severity": "moderate" },
+      { "name": "@esbuild-kit/core-utils", "version": "3.3.2", "dev": true, "severity": "moderate" },
+      { "name": "esbuild", "version": "0.18.20", "dev": true, "severity": "moderate" }
+    ]
+  },
+  "dependencyTreeExitCode": 0,
+  "verifiedInstalledVersions": {
+    "next": "16.4.3",
+    "eslint-config-next": "16.4.3",
+    "@vercel/blob": "2.8.0",
+    "@vercel/blob > undici": "6.29.1",
+    "@vercel/oidc": "3.8.5",
+    "@vercel/cli-config": "0.2.4",
+    "@vercel/cli-config > zod": "4.6.6",
+    "shadcn": "4.22.2",
+    "body-parser": "2.4.0",
+    "fast-uri": "3.1.9",
+    "hono": "4.13.14",
+    "ip-address": "10.7.5",
+    "shadcn > undici": "7.30.1",
+    "shadcn > zod": "4.6.6"
+  },
+  "remainingAssessment": {
+    "path": "drizzle-kit -> @esbuild-kit/esm-loader -> @esbuild-kit/core-utils -> esbuild",
+    "underlyingAdvisoryCount": 1,
+    "affectedPackageEntries": 4,
+    "advisory": "https://github.com/evanw/esbuild/security/advisories/GHSA-67mh-4wv8-2f99",
+    "minimumPatchedEsbuild": "0.25.0",
+    "repositoryDrizzleCommand": "drizzle-kit generate",
+    "coreUtilsUsesTransform": true,
+    "coreUtilsServeCallFound": false,
+    "repositoryEsbuildServeOrDrizzleStudioScriptFound": false,
+    "assessment": "The advisory requires the affected esbuild serve development server. No such call was found in the configured repository scripts or inspected loader. Residual development-only dependency warning remains."
+  },
+  "packageChangesPerformedBy": "root agent",
+  "independentAuditPerformedBy": "kakao_separation_analysis agent",
+  "fullCheckAndDeploymentConfirmedByThisFile": false
+}

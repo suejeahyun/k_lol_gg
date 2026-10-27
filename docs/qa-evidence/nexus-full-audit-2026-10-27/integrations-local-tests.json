@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-10-27T09:59:06.320Z",
+  "tests": 115,
+  "pass": 115,
+  "fail": 0,
+  "skipped": 0,
+  "command": "node --import tsx --test tests/nexus-database-isolation.test.ts tests/service-brand.test.ts tests/service-brand-runtime.test.mjs tests/kakao-nexus-service-isolation.test.mjs tests/kakao-service-brand.test.mjs tests/kakao-v1-exact-v4-adapter-architecture.test.mjs tests/kakao-v1-strict-messengerbot.test.mjs tests/kakao-site-notice-phone.test.mjs tests/kakao-site-notices.test.ts tests/riot-activation.test.ts tests/riot-public-profile-state.test.ts tests/auth-session.test.ts tests/auth-keyring.test.ts",
+  "summaryVerified": true
+}
