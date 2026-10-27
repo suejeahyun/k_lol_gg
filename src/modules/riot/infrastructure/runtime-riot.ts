@@ -48,7 +48,7 @@ export function getRuntimeRiot(): RuntimeRiot | null {
     return globalThis.__klolV2FakeRiotRuntime;
   }
 
-  const configuration = readRiotProductionConfiguration({ ...process.env, DATABASE_URL: configuredRuntimeDatabaseUrl() });
+  const configuration = readRiotProductionConfiguration(process.env);
   if (!configuration) return null;
   try {
     const database = getDatabase();

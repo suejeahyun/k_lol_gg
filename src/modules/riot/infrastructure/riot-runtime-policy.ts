@@ -1,4 +1,6 @@
 import { parseRiotEncryptionKeyring } from "./riot-identity-protector";
+import { requireRuntimeDatabaseUrl } from "@/platform/db/runtime-database-url";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 export function isRiotFeatureEnabled(environment: Readonly<{ V2_RIOT_INTEGRATION_ENABLED?: string }>) {
   return environment.V2_RIOT_INTEGRATION_ENABLED === "true";
@@ -53,9 +55,17 @@ export function readRiotProductionConfiguration(
   if (
     !isRiotFeatureEnabled(environment) ||
     environment.V2_RIOT_FAKE_RUNTIME === "true" ||
-    environment.V2_PUBLIC_DATA_SOURCE !== "postgres" ||
-    !environment.DATABASE_URL
+    environment.V2_PUBLIC_DATA_SOURCE !== "postgres"
   ) return null;
+  // All callers (including health/probe/rating workers) use the same service DB
+  // boundary. NEXUS must not depend on or fall back to a DATABASE_URL alias.
+  try {
+    requireRuntimeDatabaseUrl({
+      ...environment,
+      NEXT_PUBLIC_SERVICE_ID: environment.NEXT_PUBLIC_SERVICE_ID ?? SERVICE_BRAND.id,
+    });
+  }
+  catch { return null; }
   const regional = environment.RIOT_API_REGIONAL_ROUTE?.toLocaleLowerCase("en-US");
   const platform = environment.RIOT_API_PLATFORM_ROUTE?.toLocaleLowerCase("en-US");
   const publicOrigin = canonicalOrigin(environment.V2_PUBLIC_ORIGIN, environment.NODE_ENV);

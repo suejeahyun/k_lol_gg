@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
@@ -141,6 +142,87 @@ test("production API configuration is independent of optional RSO and binds the 
     integrationEnabled: false, apiConfigured: true, rsoConfigured: false,
   });
   assert.equal(readRiotProductionConfiguration({ ...complete, V2_RIOT_FAKE_RUNTIME: "true" }), null);
+});
+
+function nexusApiEnvironment(): Record<string, string | undefined> {
+  return {
+    NODE_ENV: "production",
+    NEXT_PUBLIC_SERVICE_ID: "nexus",
+    V2_RIOT_INTEGRATION_ENABLED: "true",
+    V2_PUBLIC_DATA_SOURCE: "postgres",
+    NEXUS_DATABASE_URL: "postgresql://nexus@ep-nexus.c-2.ap-southeast-1.aws.neon.tech/nexus",
+    V2_PUBLIC_ORIGIN: "https://nexus.example",
+    RIOT_API_REGIONAL_ROUTE: "asia",
+    RIOT_API_PLATFORM_ROUTE: "kr",
+    RIOT_API_KEY: "synthetic-nexus-riot-api-key",
+    RIOT_ENCRYPTION_KEYS: keyring(),
+    OPERATIONS_JOB_SECRET: "synthetic-nexus-job-secret-32-bytes-or-more",
+  };
+}
+
+test("raw NEXUS environment configures Riot API and readiness without a legacy DATABASE_URL alias", () => {
+  const environment = nexusApiEnvironment();
+  assert.equal(environment.DATABASE_URL, undefined);
+  const configuration = readRiotProductionConfiguration(environment);
+  assert.ok(configuration);
+  assert.equal(configuration.regionalBaseUrl, "https://asia.api.riotgames.com/");
+  assert.equal(configuration.platformBaseUrl, "https://kr.api.riotgames.com/");
+  assert.equal(configuration.rso, null);
+  assert.deepEqual(readRiotConfigurationReadiness(environment), { integrationEnabled: true, apiConfigured: true, rsoConfigured: false });
+  assert.deepEqual(readRiotConfigurationReadiness({ ...environment, V2_RIOT_INTEGRATION_ENABLED: "false" }), { integrationEnabled: false, apiConfigured: true, rsoConfigured: false });
+});
+
+test("NEXUS Riot configuration fails closed for missing, malformed, or shared service database targets", () => {
+  const environment = nexusApiEnvironment();
+  const oldDatabase = "postgresql://klol@ep-klol.c-2.ap-southeast-1.aws.neon.tech/klol";
+  const missing = { ...environment, NEXUS_DATABASE_URL: undefined, DATABASE_URL: oldDatabase };
+  assert.equal(readRiotProductionConfiguration(missing), null, "NEXUS must not fall back to the existing database");
+  assert.equal(readRiotConfigurationReadiness(missing).apiConfigured, false);
+  assert.equal(readRiotProductionConfiguration({ ...environment, NEXUS_DATABASE_URL: "not-a-url" }), null);
+  assert.equal(readRiotProductionConfiguration({ ...environment, NEXUS_DATABASE_URL: "https://database.example/nexus" }), null);
+  assert.equal(readRiotProductionConfiguration({ ...environment, DATABASE_URL: environment.NEXUS_DATABASE_URL }), null);
+  assert.equal(readRiotProductionConfiguration({ ...environment, DATABASE_URL: environment.NEXUS_DATABASE_URL,
+    NEXUS_DATABASE_URL: "postgresql://other@ep-nexus-pooler.c-2.ap-southeast-1.aws.neon.tech/nexus?sslmode=require" }), null,
+  "direct and pooled aliases of the same Neon DB must be rejected");
+  assert.ok(readRiotProductionConfiguration({ ...environment, DATABASE_URL: oldDatabase }), "separate service databases remain valid");
+});
+
+test("K-LOL Riot configuration retains its own DATABASE_URL selection", () => {
+  const environment = { ...nexusApiEnvironment(), NEXT_PUBLIC_SERVICE_ID: "klol", DATABASE_URL: "postgresql://database.example/klol" };
+  assert.ok(readRiotProductionConfiguration(environment));
+  assert.ok(readRiotProductionConfiguration({ ...environment, NEXT_PUBLIC_SERVICE_ID: undefined }));
+  assert.equal(readRiotProductionConfiguration({ ...environment, DATABASE_URL: undefined }), null,
+    "legacy service must not select NEXUS's database");
+  assert.equal(readRiotProductionConfiguration({ ...environment, NEXT_PUBLIC_SERVICE_ID: "unknown" }), null);
+});
+
+test("a NEXUS build retains its database boundary when the runtime service env is omitted", () => {
+  const source = `
+    import { readRiotProductionConfiguration, readRiotConfigurationReadiness } from './src/modules/riot/infrastructure/riot-runtime-policy.ts';
+    delete process.env.NEXT_PUBLIC_SERVICE_ID;
+    const environment = ${JSON.stringify(nexusApiEnvironment())};
+    delete environment.NEXT_PUBLIC_SERVICE_ID;
+    const missingNexus = { ...environment, NEXUS_DATABASE_URL: undefined, DATABASE_URL: 'postgresql://database.example/klol' };
+    console.log(JSON.stringify({
+      nexusReady: readRiotConfigurationReadiness(environment),
+      noLegacyFallback: readRiotProductionConfiguration(missingNexus) === null,
+      explicitKlol: readRiotProductionConfiguration({ ...missingNexus, NEXT_PUBLIC_SERVICE_ID: 'klol' }) !== null,
+      invalidExplicitService: readRiotProductionConfiguration({ ...environment, NEXT_PUBLIC_SERVICE_ID: 'typo' }) === null,
+    }));
+  `;
+  const result = spawnSync(process.execPath, ["--import", "tsx", "--input-type=module", "--eval", source], {
+    cwd: new URL("..", import.meta.url),
+    env: { ...process.env, NEXT_PUBLIC_SERVICE_ID: "nexus" },
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  assert.equal(result.status, 0, "synthetic NEXUS process must finish without accessing a database");
+  assert.deepEqual(JSON.parse(result.stdout.trim()), {
+    nexusReady: { integrationEnabled: true, apiConfigured: true, rsoConfigured: false },
+    noLegacyFallback: true,
+    explicitKlol: true,
+    invalidExplicitService: true,
+  });
 });
 
 test("RSO state is HMAC-bound and authorization URL never includes the client secret", () => {
