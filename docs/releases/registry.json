@@ -2418,6 +2418,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "nexus-mascot-theme",
+      "version": "1.0.1",
+      "gitTag": "nexus-mascot-theme-v1.0.1",
+      "commit": "9ae7047c69f7fda600ca6eb99f286a16bb623346",
+      "releasedAt": "2026-10-27T10:31:38.336Z",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/nexus-full-audit-2026-10-27/README.md",
+      "patchNotes": "docs/patch-notes/nexus-mascot-theme-v1.0.1.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_9KMsCSgh7D5nbwaNNxMxCxZ6DsAE",
+        "url": "https://nexus-83c1e7gjg-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://nexus-gg-kr.vercel.app",
+        "verifiedAt": "2026-10-27T10:31:38.336Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

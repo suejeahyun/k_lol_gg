@@ -1,0 +1,71 @@
+[
+  {
+    "brokenImages": [],
+    "clientWidth": 375,
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "overflowPixels": 0,
+    "path": "/",
+    "scrollWidth": 375,
+    "title": "한국 LoL 내전 커뮤니티 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "clientWidth": 375,
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "overflowPixels": 0,
+    "path": "/install",
+    "scrollWidth": 375,
+    "title": "NEXUS.GG 앱 설치 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "clientWidth": 375,
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "overflowPixels": 0,
+    "path": "/login",
+    "scrollWidth": 375,
+    "title": "로그인 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "clientWidth": 375,
+    "h1Count": 1,
+    "lowContrast": [],
+    "nameless": [],
+    "overflowPixels": 0,
+    "path": "/admin/login",
+    "scrollWidth": 375,
+    "title": "관리자 로그인 | NEXUS.GG",
+    "viewport": 390
+  },
+  {
+    "brokenImages": [],
+    "clientWidth": 375,
+    "h1Count": 1,
+    "lowContrast": [
+      {
+        "background": "rgb(48, 35, 76)",
+        "className": "",
+        "color": "rgb(90, 78, 138)",
+        "parentClass": "player-results__heading",
+        "ratio": 1.97,
+        "tag": "SPAN"
+      }
+    ],
+    "nameless": [],
+    "overflowPixels": 0,
+    "path": "/players",
+    "scrollWidth": 375,
+    "title": "LoL 내전 플레이어 전적 검색 | NEXUS.GG",
+    "viewport": 390
+  }
+]

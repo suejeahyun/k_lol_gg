@@ -1440,6 +1440,10 @@ html[data-service="nexus"] :is(input:not([type="checkbox"]):not([type="radio"]):
   background: #315bd4;
 }
 
+[data-service="nexus"] .player-results__heading > span {
+  color: #d2baff;
+}
+
 @media (max-width: 580px) {
   [data-service="nexus"] [class~="nexus-admin-players--search"] {
     grid-template-columns: minmax(0, 1fr);

@@ -1,0 +1,73 @@
+{
+  "verifiedAt": "2026-10-27T10:31:38.336Z",
+  "source": "9ae7047c69f7fda600ca6eb99f286a16bb623346",
+  "projectId": "prj_qozFsYmEO7ZoL0jZAnBNCVc1nF8i",
+  "deploymentId": "dpl_9KMsCSgh7D5nbwaNNxMxCxZ6DsAE",
+  "immutableUrl": "https://nexus-83c1e7gjg-tjdmswo11-3715s-projects.vercel.app",
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "readyState": "READY",
+  "http": [
+    {
+      "route": "/install",
+      "status": 200,
+      "details": {
+        "stableModuleMarkers": true
+      }
+    },
+    {
+      "route": "/",
+      "status": 200,
+      "details": {
+        "service": "nexus",
+        "mascotCount": 5,
+        "themedFavicon": true
+      }
+    },
+    {
+      "route": "/manifest.webmanifest",
+      "status": 200,
+      "details": {
+        "service": "nexus",
+        "themeColor": "#080e1d"
+      }
+    },
+    {
+      "route": "/images/nexus/mascot-board.png",
+      "status": 200,
+      "details": {
+        "bytes": 2609437,
+        "sha256": "7c13469abe4c14aa0072bfe9bfcbc43f06cce687f6926bb7c7e4712038f2a724"
+      }
+    },
+    {
+      "route": "/icons/nexus/icon-192.png",
+      "status": 200,
+      "details": {
+        "bytes": 5422
+      }
+    },
+    {
+      "route": "/api/health",
+      "status": 200,
+      "details": {
+        "status": "ready"
+      }
+    },
+    {
+      "route": "/api/admin/site-settings",
+      "status": 401,
+      "details": {
+        "unauthenticatedAccess": "denied"
+      }
+    },
+    {
+      "route": "/riot.txt",
+      "status": 200,
+      "details": {
+        "ownershipVerificationPreserved": true
+      }
+    }
+  ],
+  "existingKlolProjectModified": false,
+  "databaseMigration": false
+}
