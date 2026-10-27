@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { analyzeRhinoStatic } from "./lib/messengerbot-rhino-static.mjs";
-import { messengerbotService, nexusMessengerbotSource, nexusCompanionSource, klolNexusRoomGuard } from "./build-messengerbot-service.mjs";
+import { messengerbotService, nexusMessengerbotSource, nexusCompanionSource, klolMainRoomGuard } from "./build-messengerbot-service.mjs";
 
 const require = createRequire(import.meta.url);
 const acorn = require("next/dist/compiled/acorn");
@@ -261,7 +261,7 @@ const provenance = [
 ].join("\n");
 const entry = [
   "function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {",
-  klolNexusRoomGuard,
+  klolMainRoomGuard,
   "  var localText = String(msg || \"\");",
   "  var diagnostic = normalizeCommandText(localText.replace(/[\\u200B-\\u200D\\u2060\\uFEFF]/g, \"\"));",
   "  if (/^\\/?봇(?:속도|버전|진단)$/.test(diagnostic)) {",

@@ -2,7 +2,7 @@
 
 이 디렉터리는 사용자가 제공한 V1/V40 원본을 기준으로 전송 경계를 V4 HMAC 명령 API에 연결한다. 원본 fixture는 불변이며, 승인된 [ADR0011 파티 편집](../../../docs/architecture/0011-kakao-party-editable-copy-flow.md)·[ADR0012 내전 편집](../../../docs/architecture/0012-kakao-inhouse-editable-copy-flow.md)의 제품 동작을 현재 생성본에 반영한다. 승인 범위 밖의 `response()` 순서, 로컬 명령, 무응답과 echo 방지는 원본 계약을 유지한다.
 
-현재 공개 생성본은 `KLOL_KAKAO_BOT_V40_R30_2026_10_27`다. R30은 정확한 방 이름 `NEXUS`, `NEXUS 구인구직방`에서 K-LOL 봇의 처리를 진입 전에 차단하며, 기존 K-LOL 설정과 다른 방의 기능을 유지한다. NEXUS 생성본과 설치본은 변경하지 않는다. 신규 프로필용 비공개 설치본은 공개 생성본에서 다시 생성해야 하며 실제 휴대폰 R30 설치는 미확인이다. 기존 설정을 유지하는 R30 교체는 [방 분리 검증·교체 안내](../../../docs/qa-evidence/kakao-service-room-isolation-2026-10-27/README.md)를 따른다. 서버의 양식 호환과 휴대폰 설치는 별개다. 사용자 확인 앱 버전 **MessengerBot R 0.7.29a**는 봇 JS 버전과 다르다. 사이트 충원 알림은 일반 봇과 분리된 [기본 OFF companion](../site-notices/README.md)으로 설치한다.
+현재 공개 생성본은 `KLOL_KAKAO_BOT_V40_R31_2026_10_27`다. R31은 카카오 패키지와 지정 방 `LOL - K`, `K롤방 구인구직방`만 허용하며, 공백·보이지 않는 문자 차이를 정규화한 뒤 다른 방을 조회·답장 전에 차단한다. NEXUS 일반 봇도 독립 R31로 갱신한다. 네 기존 프로필 전체 교체는 [방 제한 검증·설치 안내](../../../docs/qa-evidence/kakao-four-room-2026-10-27/README.md)를 따른다. 서버의 양식 호환과 휴대폰 설치는 별개다. 사용자 확인 앱 버전 **MessengerBot R 0.7.29a**는 봇 JS 버전과 다르다. 사이트 충원 알림은 일반 봇과 분리된 [기본 OFF companion](../site-notices/README.md)으로 설치한다.
 
 - 원본: Git `4f84e84aa0a4ee986c2aad2c7377d8e3bcf2e097:KLOL_KAKAO_BOT_V40_GUIDED_HUB.js`
 - Git LF blob SHA-256: `0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2`

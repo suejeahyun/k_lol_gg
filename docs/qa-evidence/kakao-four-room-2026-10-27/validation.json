@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-10-27T11:53:38.842Z",
+  "checks": {
+    "fullCheck": {
+      "command": "npm run check",
+      "passed": true,
+      "contracts": {
+        "passed": 750,
+        "failed": 0
+      },
+      "unit": {
+        "passed": 1201,
+        "skipped": 1,
+        "failed": 0
+      },
+      "lint": {
+        "errors": 0,
+        "baselineWarnings": 87
+      },
+      "typecheck": "PASS",
+      "erd": "PASS",
+      "homeGuideArt": "PASS",
+      "productionBuild": "PASS"
+    },
+    "privateInstallers": {
+      "passed": true,
+      "evidence": "installer-validation.json",
+      "networkRequests": 0
+    },
+    "secretScan": {
+      "command": "node scripts/check-secrets.mjs --tree-only",
+      "passed": true
+    },
+    "diffCheck": {
+      "command": "git diff --check",
+      "passed": true
+    }
+  },
+  "initialFailure": "Two operation-form test assertions used unapproved placeholder room/package values. Four fixture callback invocations were corrected to the legitimate LOL - K/com.kakao.talk context, including two negative cases to avoid vacuous passes. Full check then passed.",
+  "deployment": {
+    "status": "NOT_DEPLOYED",
+    "reason": "Phone code and local installers only; server and production databases unchanged."
+  },
+  "phoneInstallation": "PENDING_USER_INSTALL"
+}

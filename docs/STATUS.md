@@ -1,5 +1,9 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-27 카카오 네 프로필 방 제한 1.0.1 — 폰 적용 대기
+
+사용자 사진에서 NEXUS 구인구직방의 K-LOL R30 응답을 확인했다. 폰에 실제 전달된 방 문자열·전체 설치 코드는 확인하지 못했으므로 R30 실기기 문제의 원인을 확정하지 않는다. R31은 제외 목록을 지정 방 허용 목록으로 교체하고 공백·zero-width 차이를 정규화한다. 일반 봇은 서비스별 두 방, companion 1.0.4는 각 구인구직방만 처리한다. 전체 코드 4개·새 알림 등록 코드를 로컬 비공개 파일로 준비한다. 서버·DB 변경 없이 실제 기기 설치는 PENDING_USER_INSTALL이다. [최신 검증·설치 범위](qa-evidence/kakao-four-room-2026-10-27/README.md).
+
 ## 2026-10-27 카카오 서비스 방 분리 1.0.0 — 폰 적용 대기
 
 기존 K-LOL 봇이 NEXUS 방에서도 K-LOL 구인현황을 조회하는 동작을 합성 VM으로 재현하고, main R30과 companion 입력 경계에서 NEXUS 두 방을 차단했다. NEXUS 공개 산출물 두 개는 바이트 동일하며 기존 비공개 설치본도 변경하지 않았다. 기존 설정 유지형 K-LOL main 교체본은 CRLF 65,442자다. focused79·전체check PASS. Vercel/DB 변경 없이 PENDING_USER_INSTALL로 관리한다. [원인·검증·설치 범위](qa-evidence/kakao-service-room-isolation-2026-10-27/README.md).

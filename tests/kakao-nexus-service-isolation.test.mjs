@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import test from "node:test";
 import vm from "node:vm";
-import { klolNexusRoomGuard, nexusCompanionSource, nexusMessengerbotSource, nexusPrivatePreamble, nexusPrivateSettings } from "../scripts/build-messengerbot-service.mjs";
+import { klolMainRoomGuard, klolNoticeRoomGuard, nexusMainRoomGuard, nexusNoticeRoomGuard, nexusCompanionSource, nexusMessengerbotSource, nexusPrivatePreamble, nexusPrivateSettings } from "../scripts/build-messengerbot-service.mjs";
 import { analyzeRhinoStatic } from "../scripts/lib/messengerbot-rhino-static.mjs";
 
 const root = resolve(import.meta.dirname, "..");
@@ -29,7 +29,7 @@ const klolSettings = {
 };
 
 function runtime(source, data = new Map()) {
-  const calls = [], reads = [], writes = [], timers = [];
+  const calls = [], reads = [], writes = [], timers = [], logs = [];
   function JavaString(value) { this.value = String(value); }
   JavaString.prototype.getBytes = function () { return Buffer.from(this.value, "utf8"); };
   function StringBuilder() { this.value = ""; }
@@ -63,10 +63,10 @@ function runtime(source, data = new Map()) {
       };
       return chain;
     } } } },
-    Log: { i() {} }, setInterval(fn) { timers.push(fn); return timers.length; }, clearInterval() {},
+    Log: { i(value) { logs.push(value); } }, setInterval(fn) { timers.push(fn); return timers.length; }, clearInterval() {},
   });
   vm.runInContext(source, context, { timeout: 2000 });
-  return { context, calls, reads, writes, data, timers };
+  return { context, calls, reads, writes, data, timers, logs };
 }
 
 function reply(bot, message, room = "NEXUS", packageName = "com.kakao.talk", sender = "합성참가자") {
@@ -75,25 +75,35 @@ function reply(bot, message, room = "NEXUS", packageName = "com.kakao.talk", sen
   return replies;
 }
 
-test("R30 changes only the KLOL room guard and version while preserving NEXUS artifacts and phone limits", () => {
+test("R31 changes only room guards and versions while reproducing all artifacts within ES5/Rhino and phone limits", () => {
   execFileSync(process.execPath, ["scripts/build-messengerbot-v1-strict.mjs", "--service", "nexus"], { cwd: root });
   assert.equal(read("v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js"), klol);
-  assert.equal(klol.split(klolNexusRoomGuard).length, 2, "exactly one early room guard");
-  const previousKLOL = klol.replace(`${klolNexusRoomGuard}\n`, "")
-    .replaceAll("KLOL_KAKAO_BOT_V40_R30_2026_10_27", "KLOL_KAKAO_BOT_V40_R29_2026_10_14");
+  const previousKLOL = klol.replace(`${klolMainRoomGuard}\n`, "")
+    .replaceAll("KLOL_KAKAO_BOT_V40_R31_2026_10_27", "KLOL_KAKAO_BOT_V40_R29_2026_10_14");
   assert.equal(createHash("sha256").update(previousKLOL).digest("hex"), "ae3909a24b5fb33a93a81ac7f99a8a9067ee135fe850aec9e6173f11524bed6c");
-  assert.equal(createHash("sha256").update(nexus).digest("hex"), "e18a5f7afb501a960fc5269cd3fbb46b131e670f4ba63babe08e2a7886ff7e9f");
-  assert.equal(createHash("sha256").update(companion).digest("hex"), "bf3fdd3cecf928ffd202f0e7967b7d5e6f1b3ea46e11ba68b6a5e47414171766");
+  const previousNexusGuard = 'if(String(packageName||"")!=="com.kakao.talk"||(String(room)!=="NEXUS"&&String(room)!=="NEXUS 구인구직방"))return;';
+  const previousNexus = nexus.replace(nexusMainRoomGuard, previousNexusGuard)
+    .replaceAll("NEXUS_KAKAO_BOT_V40_R31_2026_10_27", "NEXUS_KAKAO_BOT_V40_R29_2026_10_27");
+  const previousCompanion = companion.replace(nexusNoticeRoomGuard, previousNexusGuard)
+    .replaceAll("NEXUS_SITE_NOTICE_COMPANION_1.0.4", "NEXUS_SITE_NOTICE_COMPANION_1.0.3");
+  assert.equal(createHash("sha256").update(previousNexus).digest("hex"), "e18a5f7afb501a960fc5269cd3fbb46b131e670f4ba63babe08e2a7886ff7e9f");
+  assert.equal(createHash("sha256").update(previousCompanion).digest("hex"), "bf3fdd3cecf928ffd202f0e7967b7d5e6f1b3ea46e11ba68b6a5e47414171766");
   assert.equal(read("nexus/NEXUS_KAKAO_BOT_MESSENGERBOT_R.js"), nexusMessengerbotSource(klol));
   assert.equal(companion, nexusCompanionSource(klolCompanion));
   const acorn = createRequire(import.meta.url)("next/dist/compiled/acorn");
-  for (const value of [klol, klolCompanion, nexus, companion]) {
+  for (const [value, guard] of [[klol, klolMainRoomGuard], [klolCompanion, klolNoticeRoomGuard], [nexus, nexusMainRoomGuard], [companion, nexusNoticeRoomGuard]]) {
+    assert.equal(value.split(guard).length, 2, "exactly one room allowlist");
     assert.ok(value.replace(/\r?\n/gu, "\r\n").length < 65535);
-    assert.ok(Object.values(analyzeRhinoStatic(acorn.parse(value, { ecmaVersion: 5 }))).every((items) => items.length === 0));
+    const ast = acorn.parse(value, { ecmaVersion: 5 });
+    const first = ast.body.find((node) => node.type === "FunctionDeclaration" && node.id.name === "response").body.body[0];
+    assert.equal(value.slice(first.start, first.end), guard, "allowlist is the first callback operation");
+    assert.ok(Object.values(analyzeRhinoStatic(ast)).every((items) => items.length === 0));
   }
+  assert.throws(() => nexusMessengerbotSource(klol.replace(klolMainRoomGuard, "")), /expected room allowlist/);
+  assert.throws(() => nexusCompanionSource(klolCompanion.replace(klolNoticeRoomGuard, "")), /expected room allowlist/);
 });
 
-test("KLOL R30 ignores NEXUS rooms before any reply, request or storage access and preserves warm settings", () => {
+test("KLOL R31 ignores NEXUS rooms before any reply, request or storage access and preserves warm settings", () => {
   const original = new Map(Object.entries({ ...klolSettings, ...syntheticNexus,
     KLOL_RECRUIT_LAST_HASH_UNIFIED_V24: "existing-klol-state", NEXUS_RECRUIT_LAST_HASH_UNIFIED_V24: "existing-nexus-state",
   }));
@@ -108,7 +118,7 @@ test("KLOL R30 ignores NEXUS rooms before any reply, request or storage access a
   assert.equal(bot.reads.length, initialReads);
   assert.deepEqual(bot.writes, []);
   assert.deepEqual(data, original);
-  for (const room of ["K롤방 구인구직방", "기존 소통방"]) {
+  for (const room of ["K롤방 구인구직방", "LOL - K"]) {
     const active = runtime(klol, data);
     assert.deepEqual(reply(active, "구인현황", room), ["synthetic server response"]);
     assert.equal(active.calls[0].url, "https://k-lol-gg.vercel.app/api/integrations/kakao/v4/commands");
@@ -131,8 +141,8 @@ test("main and companion callbacks reject the other service's rooms without requ
   };
   for (const [source, rooms, messages] of [
     [nexus, ["K롤방 구인구직방", "기존 소통방"], ["구인현황", "봇버전", "내전구인 협곡"]],
-    [klolCompanion, ["NEXUS", "NEXUS 구인구직방"], ["사이트알림상태", "사이트알림버전", "사이트알림연동 " + code]],
-    [companion, ["K롤방 구인구직방", "기존 소통방"], ["사이트알림상태", "사이트알림버전", "사이트알림연동 " + code]],
+    [klolCompanion, ["NEXUS", "NEXUS 구인구직방", "LOL - K"], ["사이트알림상태", "사이트알림버전", "사이트알림연동 " + code]],
+    [companion, ["K롤방 구인구직방", "기존 소통방", "NEXUS"], ["사이트알림상태", "사이트알림버전", "사이트알림연동 " + code]],
   ]) {
     const original = new Map(Object.entries(settings));
     const bot = runtime(source, new Map(original));
@@ -144,8 +154,8 @@ test("main and companion callbacks reject the other service's rooms without requ
     assert.deepEqual(bot.data, original);
   }
   for (const [source, rooms, origin] of [
-    [klolCompanion, ["K롤방 구인구직방", "기존 소통방"], "https://k-lol-gg.vercel.app"],
-    [companion, ["NEXUS", "NEXUS 구인구직방"], "https://nexus.example.test"],
+    [klolCompanion, ["K롤방 구인구직방", "K롤방구인구직방"], "https://k-lol-gg.vercel.app"],
+    [companion, ["NEXUS구인구직방", "NEXUS 구인구직방"], "https://nexus.example.test"],
   ]) {
     for (const room of rooms) {
       const bot = runtime(source, new Map(Object.entries(settings)));
@@ -153,6 +163,51 @@ test("main and companion callbacks reject the other service's rooms without requ
       assert.equal(bot.calls[0].url, origin + "/api/integrations/kakao/site-notices");
       assert.equal(bot.calls[0].body.action, "REGISTER");
       for (const [key, value] of Object.entries({ ...klolSettings, ...syntheticNexus })) assert.equal(bot.data.get(key), value);
+    }
+  }
+});
+
+test("four phone profiles allow only exact normalized rooms from Kakao, including whitespace aliases", () => {
+  const code = "a".repeat(32);
+  const settings = { ...klolSettings, ...syntheticNexus,
+    KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_TARGET_ID: "b".repeat(32), KLOL_SITE_NOTICE_REGISTRATION_CODE: code,
+    NEXUS_SITE_NOTICE_ENABLED: "true", NEXUS_SITE_NOTICE_TARGET_ID: "c".repeat(32), NEXUS_SITE_NOTICE_REGISTRATION_CODE: code,
+  };
+  const aliases = (room) => [room, room.replaceAll(" ", ""), `\t\u200B${room}\u2060\uFEFF\n`, room.split("").join("\u200C\u200D\u00A0\u3000")];
+  const rooms = ["LOL - K", "K롤방 구인구직방", "NEXUS", "NEXUS구인구직방"];
+  const nearMatches = ["", "기존 소통방", "nexus", "Nexus", "nexus구인구직방", "NEXUS-구인구직방", "NEXUS2", "NEXUS 구인구직방2",
+    "다른NEXUS", "NEXUS 공지방", "lol-k", "LOL K", "LOL–K", "LOL - K 2", "K롤방", "K롤방구인구직방2", "다른K롤방구인구직방"];
+  const profiles = [
+    { name: "KLOL main", source: klol, allowed: rooms.slice(0, 2), origin: klolSettings.KLOL_V2_BASE_URL, notice: false },
+    { name: "NEXUS main", source: nexus, allowed: rooms.slice(2), origin: syntheticNexus.NEXUS_V2_BASE_URL, notice: false },
+    { name: "KLOL companion", source: klolCompanion, allowed: [rooms[1]], origin: klolSettings.KLOL_V2_BASE_URL, notice: true },
+    { name: "NEXUS companion", source: companion, allowed: [rooms[3]], origin: syntheticNexus.NEXUS_V2_BASE_URL, notice: true },
+  ];
+  for (const profile of profiles) {
+    const messages = profile.notice ? ["사이트알림진단", "사이트알림상태", "사이트알림버전", "사이트알림연동 " + code] : ["봇버전", "등록도움말", "구인현황", "내전구인 협곡"];
+    const original = new Map(Object.entries(settings));
+    const blocked = runtime(profile.source, new Map(original));
+    const initial = { reads: blocked.reads.length, logs: blocked.logs.length, timers: blocked.timers.length };
+    const blockedRooms = rooms.filter((room) => !profile.allowed.includes(room)).flatMap(aliases).concat(nearMatches);
+    for (const room of blockedRooms) for (const message of messages) {
+      assert.deepEqual(reply(blocked, message, room), [], `${profile.name} rejects ${JSON.stringify(room)}`);
+    }
+    for (const room of profile.allowed.flatMap(aliases)) for (const packageName of ["", "other.app", "com.kakao.talk.extra", " com.kakao.talk", null]) {
+      for (const message of messages) assert.deepEqual(reply(blocked, message, room, packageName), [], `${profile.name} rejects wrong package`);
+    }
+    assert.equal(blocked.calls.length, 0, profile.name);
+    assert.equal(blocked.reads.length, initial.reads, profile.name);
+    assert.equal(blocked.logs.length, initial.logs, profile.name);
+    assert.equal(blocked.timers.length, initial.timers, profile.name);
+    assert.deepEqual(blocked.writes, [], profile.name);
+    assert.deepEqual(blocked.data, original, profile.name);
+    for (const room of profile.allowed.flatMap(aliases).concat(profile.allowed.map((room) => new String(room)))) {
+      const active = runtime(profile.source, new Map(original));
+      const message = profile.notice ? "사이트알림연동 " + code : "구인현황";
+      assert.ok(reply(active, message, room).length > 0, `${profile.name} allows ${JSON.stringify(room)}`);
+      assert.equal(active.calls.length, 1);
+      assert.equal(active.calls[0].url, profile.origin + (profile.notice ? "/api/integrations/kakao/site-notices" : "/api/integrations/kakao/v4/commands"));
+      for (const [key, value] of Object.entries({ ...klolSettings, ...syntheticNexus })) assert.equal(active.data.get(key), value);
     }
   }
 });

@@ -629,7 +629,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R30_2026_10_27\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R31_2026_10_27\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
   );
 });
 
@@ -825,9 +825,9 @@ test("command and form predicates are byte-derived and behaviorally equal to V1"
   }
 });
 
-test("one public command performs one five-second signed gateway request without room binding", async () => {
+test("one public command in either allowed room performs one five-second signed gateway request without room binding", async () => {
   const artifact = await readFile(artifactPath, "utf8");
-  for (const room of ["K롤방 구인구직방", "K롤방 고객센터"]) {
+  for (const room of ["K롤방 구인구직방", "LOL - K"]) {
     const strict = evaluate(artifact);
     assert.deepEqual(replyFor(strict, "5인파티", { room }), ["[V1 server reply]"]);
     assert.equal(strict.http.calls, 1);
@@ -1209,7 +1209,7 @@ test("R27 local diagnostics bypass request state, deduplication and notification
     logs.length = 0;
     const replies = replyFor(runtime, message, { imageDB });
     assert.equal(replies.length, 1, message);
-    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R30_2026_10_27/u);
+    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R31_2026_10_27/u);
     assert.match(replies[0], /내전상세 1/u);
     assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] RETURNED"]);
   }
@@ -1221,10 +1221,10 @@ test("R27 diagnostic distinguishes reply failure and tolerates unavailable loggi
   const runtime = evaluate(await readFile(artifactPath, "utf8"));
   const logs = [];
   runtime.Log = { i: (code) => logs.push(code) };
-  runtime.response("room", "봇속도", "sender", false, { reply() { throw new Error("private transport error"); } });
+  runtime.response("LOL - K", "봇속도", "sender", false, { reply() { throw new Error("private transport error"); } }, null, "com.kakao.talk");
   assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] REPLY_ERROR"]);
   logs.length = 0;
-  runtime.response("room", "봇속도", "sender", false, { reply() { return false; } });
+  runtime.response("LOL - K", "봇속도", "sender", false, { reply() { return false; } }, null, "com.kakao.talk");
   assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] REJECTED"]);
   runtime.Log.i = () => { throw new Error("logger unavailable"); };
   assert.equal(replyFor(runtime, "봇속도").length, 1);
@@ -1298,7 +1298,7 @@ test("R29 retries an undelivered reply without suppressing the later successful 
       return true;
     } };
     for (let index = 0; index < 3; index += 1) {
-      runtime.response("합성방", "상세 7", "합성사용자", true, replier, {}, "com.kakao.talk", false, "same-failed-reply-log", "channel", "synthetic-user");
+      runtime.response("K롤방 구인구직방", "상세 7", "합성사용자", true, replier, {}, "com.kakao.talk", false, "same-failed-reply-log", "channel", "synthetic-user");
       bodies.push(runtime.http.body);
     }
     assert.equal(runtime.http.calls, 3, failure);

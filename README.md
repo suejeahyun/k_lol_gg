@@ -1,6 +1,6 @@
 # K-LOL.GG V2
 
-**2026-10-27 카카오 서비스 방 분리 수정**: K-LOL 일반 봇 R30은 NEXUS 두 방을 조회·답장 전에 차단합니다. 같은 휴대폰의 기존 K-LOL 프로필에 적용하는 업데이트이며 실제 폰 교체는 대기 중입니다. NEXUS 코드·서버·DB는 유지합니다. [원인·검증·설치 안내](docs/qa-evidence/kakao-service-room-isolation-2026-10-27/README.md).
+**2026-10-27 카카오 네 프로필 방 제한 1.0.1**: K-LOL/NEXUS 일반 봇 R31은 각 서비스의 지정된 두 방만, 알림 companion 1.0.4는 각 구인구직방만 허용합니다. 공백·보이지 않는 문자 차이를 정규화하고 다른 방은 조회·답장 전에 차단합니다. 전체 교체 파일 4개를 준비하며 실제 폰 설치는 별도 확인 대상입니다. [검증·설치 안내](docs/qa-evidence/kakao-four-room-2026-10-27/README.md).
 
 **2026-10-27 NEXUS.GG 별도 서비스**: [운영 사이트](https://nexus-gg-kr.vercel.app)에 같은 기능을 별도 Neon DB·인증 키·카카오 방 설정으로 배포했습니다. 기존 업무 자료를 복사하지 않고 시작합니다. 현재 NEXUS source는 `4bb8f7a3`, `nexus-mascot-theme-v1.0.2`이며 NEXI 마스코트 테마의 상세 화면·모바일 대비와 Next 보안 업데이트를 적용했습니다. [전체 점검·배포](docs/qa-evidence/nexus-full-audit-2026-10-27/README.md). 별도 Riot 운영 키 신청 `898158` 접수와 사이트 소유 인증을 완료했고 **Pending Review** 상태입니다. 키 승인 전 외부 연동은 비활성이고 휴대폰 설치는 별도 진행 상태입니다. [운영 안내](docs/operations/NEXUS_RUNBOOK.md), [검증·배포](docs/qa-evidence/nexus-riot-verification-2026-10-27/README.md).
 

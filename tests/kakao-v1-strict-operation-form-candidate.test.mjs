@@ -57,13 +57,13 @@ test("V1-strict ordinary label discussion performs no request or local dedupe wr
     return { ok: true, status: 200, body: { reply: "unexpected" } };
   };
   bot.response(
-    "K롤방 고객센터",
+    "LOL - K",
     "건의 사유 를 같이 생각해요\n건의 내용 도 정리할게요",
     "홍길동",
     true,
     { reply: (value) => replies.push(String(value)) },
     null,
-    "com.xfl.msgbot",
+    "com.kakao.talk",
     false,
     "log-operation-prose",
     "channel-operation-prose",
@@ -96,13 +96,13 @@ test("V1-strict accepts standalone wrapper titles but ignores wrappers embedded 
     return { ok: true, status: 200, body: { reply: "unexpected" } };
   };
   bot.response(
-    "K롤방 고객센터",
+    "LOL - K",
     "공지에 &lt;외출&gt;이라고 적어 주세요.",
     "홍길동",
     true,
     { reply() {} },
     null,
-    "com.xfl.msgbot",
+    "com.kakao.talk",
     false,
     "log-operation-wrapper-prose",
     "channel-operation-wrapper-prose",
@@ -122,13 +122,13 @@ test("V1-strict response forwards one incomplete form request to the FEATURES ga
     return { ok: false, status: 400, body: { reply: "[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: 건의 내용" } };
   };
   bot.response(
-    "K롤방 고객센터",
+    "LOL - K",
     "본인 이름 및 닉네임: 홍길동/테스터\n건의 사유: 편의성\n건의 내용:",
     "홍길동",
     true,
     { reply: (value) => replies.push(String(value)) },
     null,
-    "com.xfl.msgbot",
+    "com.kakao.talk",
     false,
     "log-operation-incomplete",
     "channel-operation-incomplete",
@@ -151,13 +151,13 @@ test("V1-strict canonicalizes tolerant label spelling before gateway classificat
     return { ok: true, status: 200, body: { reply: "접수" } };
   };
   bot.response(
-    "K롤방 고객센터",
+    "LOL - K",
     "１） 본 인 이 름 및 닉 네 임： 홍길동/테스터\r\n２＼． 건 의 사 유： 편의성\r\n３） 건 의 내 용： 개선",
     "홍길동",
     true,
     { reply() {} },
     null,
-    "com.xfl.msgbot",
+    "com.kakao.talk",
     false,
     "log-operation-tolerant",
     "channel-operation-tolerant",

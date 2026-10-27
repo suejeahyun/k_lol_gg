@@ -7,7 +7,7 @@ setDataBase:function(key,value){DataBase.setDataBase("NEXUS_"+String(key).replac
  * The source callback's one-argument Replier is the only message destination.
  * No room-name lookup, Api.replyRoom, channelId, or ordinary command replies.
  */
-var KLOL_SITE_NOTICE_CODE_VERSION = "NEXUS_SITE_NOTICE_COMPANION_1.0.3";
+var KLOL_SITE_NOTICE_CODE_VERSION = "NEXUS_SITE_NOTICE_COMPANION_1.0.4";
 function createKlolSiteNoticeWorker(io) {
   var session = null;
   var ledgerKey = "KLOL_SITE_NOTICE_LEDGER_V1";
@@ -192,7 +192,7 @@ try {
 }
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
-  if(String(packageName||"")!=="com.kakao.talk"||(String(room)!=="NEXUS"&&String(room)!=="NEXUS 구인구직방"))return;
+  if(String(packageName)!=="com.kakao.talk"||!/^NEXUS구인구직방$/.test(String(room).replace(/[\s\u200B-\u200D\u2060\uFEFF]/g,"")))return;
   var message = String(msg);
   var diagnostic = message === "사이트알림진단" || message === "사이트알림버전" || message === "사이트알림상태";
   if (!diagnostic && !/^사이트알림연동 [a-f0-9]{32}$/.test(message)) return;

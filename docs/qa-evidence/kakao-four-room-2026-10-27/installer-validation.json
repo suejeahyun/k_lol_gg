@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-10-27T11:52:42.391Z",
+  "mode": "LOCAL_VM_ONLY_NO_NETWORK",
+  "checks": [
+    {
+      "name": "delivered_artifacts_ES5_Rhino_limits_single_callback_and_metadata",
+      "passed": true
+    },
+    {
+      "name": "four_profile_positive_room_allowlists_and_request_signatures",
+      "passed": true
+    },
+    {
+      "name": "all_other_rooms_aliases_and_packages_stop_before_callback_side_effects",
+      "passed": true
+    },
+    {
+      "name": "KLOL_companion_startup_writes_only_code_revision_and_preserves_configuration",
+      "passed": true
+    },
+    {
+      "name": "KLOL_companion_missing_or_invalid_configuration_fails_closed",
+      "passed": true
+    },
+    {
+      "name": "both_companions_consumed_code_stays_consumed_after_same_artifact_recompile",
+      "passed": true
+    },
+    {
+      "name": "NEXUS_target_and_auth_match_prior_setup_with_only_namespaced_writes",
+      "passed": true
+    }
+  ],
+  "failures": [],
+  "artifacts": [
+    {
+      "file": "01_KLOLMain.js",
+      "sha256": "c68960b885acedaef7122ea8fb0e81cdebe1d2420a60a92bb3c216183dcac329",
+      "lfCharacters": 61578,
+      "crlfCharacters": 63355
+    },
+    {
+      "file": "02_KLOLM.js",
+      "sha256": "898bbaaf188b8c2c75c8d4846367a5839bebf0cd57ec0bc508fa1e7c34399191",
+      "lfCharacters": 13224,
+      "crlfCharacters": 13466
+    },
+    {
+      "file": "03_NEXUS-Main.js",
+      "sha256": "873a0e627d66dbdd1879126cf4c89c6c509f36647e2ae065b13592905ae77327",
+      "lfCharacters": 63022,
+      "crlfCharacters": 64826
+    },
+    {
+      "file": "04_NEXUS-otue.js",
+      "sha256": "c9a05ee764db519d233304bf148cc05d6f04d4f313bbc56b18f1fd61629b6e7c",
+      "lfCharacters": 13467,
+      "crlfCharacters": 13714
+    }
+  ],
+  "runtimeCases": {
+    "allowed": 27,
+    "blocked": 268,
+    "wrongPackage": 336,
+    "invalidKlolSetup": 14
+  },
+  "phoneInstallation": "PENDING_USER_INSTALL",
+  "actualChatDelivery": "NOT_TESTED",
+  "passed": true,
+  "limitations": [
+    "KLOL persisted credentials and target are preserved, but current phone storage and current server authorization are not inspected.",
+    "KLOL companion validates target format locally; server acceptance of that target is a separate signed registration boundary.",
+    "VM Jsoup records requests in memory only; no network, chat, production database, or operating-system phone storage is accessed."
+  ]
+}

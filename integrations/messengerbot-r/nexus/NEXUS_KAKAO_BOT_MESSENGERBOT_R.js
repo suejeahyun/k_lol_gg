@@ -182,7 +182,7 @@ send:send,
 shouldSuppressReply:shouldSuppressReply,
 markReplySent:markReplySent
 };}());
-var BOT_CODE_VERSION = "NEXUS_KAKAO_BOT_V40_R29_2026_10_27";
+var BOT_CODE_VERSION = "NEXUS_KAKAO_BOT_V40_R31_2026_10_27";
 var BASE_URL="";
 var WEB_INHOUSE_RESULT_UPLOAD_URL=BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL=BASE_URL + "/admin/discipline/new";
@@ -1733,7 +1733,7 @@ return "[NEXUS.GG 내전 참가 방법 안내]\n\n1. 최근 봇 명단 전체 �
   "협곡: 이름/top,mid 또는 이름/all\n칼바람·증바람: 이름만 입력\n회원 연결은 접수 후 진행합니다.\n최신 양식에서 이름·라인·시간 수정\n삭제: 번호 행을 남기고 이름만 비우기\n사이트 신청·운영진 확정 항목은 보호됩니다.\n양식코드·번호 유지\n저장 상태 확인: 내전상세 번호로 다시 조회\n새 모집 만들기: 내전구인\n취소: 내전상세 번호 삭제 이름\n라인 수정: 내전상세 번호 수정 이름/top,mid";
 };
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
-if(String(packageName||"")!=="com.kakao.talk"||(String(room)!=="NEXUS"&&String(room)!=="NEXUS 구인구직방"))return;
+if(String(packageName)!=="com.kakao.talk"||!/^(NEXUS|NEXUS구인구직방)$/.test(String(room).replace(/[\s\u200B-\u200D\u2060\uFEFF]/g,"")))return;
 if(!nexusConfigureLinks())return;
 var localText = String(msg || "");
 var diagnostic = normalizeCommandText(localText.replace(/[\u200B-\u200D\u2060\uFEFF]/g, ""));
