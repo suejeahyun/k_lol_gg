@@ -292,6 +292,18 @@ try {
   const staleMutation = browser.waitForResponse("/api/auth/me/player", 412);
   await submitWithEnter(browser);
   await staleMutation;
+  await browser.waitFor(`(() => {
+    const input = document.querySelector('input[name="riotId"]');
+    const conflict = document.querySelector('section[role="alert"]');
+    return input instanceof HTMLInputElement && input.dataset.browserQaInstance === 'before-412' &&
+      conflict?.textContent?.includes(${JSON.stringify(externalBody.riotId)}) &&
+      [...document.querySelectorAll('button')].some(button => button.textContent?.trim() === '입력 버리고 최신값 사용');
+  })()`, "HTTP 412 to preserve the draft and present the latest server values for review");
+  assert.equal(await browser.evaluate<boolean>(`(() => {
+    const button = [...document.querySelectorAll('button')].find(button => button.textContent?.trim() === '입력 버리고 최신값 사용');
+    if (!(button instanceof HTMLButtonElement)) return false;
+    button.click(); return true;
+  })()`), true);
   await browser.waitFor(
     `(() => {
       const riotId = document.querySelector('input[name="riotId"]');
@@ -313,7 +325,7 @@ try {
         peakTierScore.value === '450' &&
         !riotId.dataset.browserQaInstance;
     })()`,
-    "HTTP 412 to remount the form with the latest server values",
+    "explicit latest-value choice to remount the form with the latest server values",
   );
   const afterStaleAttempt = await playerSnapshot();
   assert.equal(afterStaleAttempt.revision, afterBrowserSave.revision + 1);
@@ -332,7 +344,7 @@ try {
   const overview = await readRenderedProfile(browser);
   assert.equal(overview.facts["이름"], externalBody.memberName);
 
-  process.stdout.write("[db-account-browser] owner name/Riot ID/tier keyboard save, rendered refresh, and 412 remount passed\n");
+  process.stdout.write("[db-account-browser] owner name/Riot ID/tier keyboard save, rendered refresh, and 412 draft-preserving resolution passed\n");
 } finally {
   await browser.close();
 }

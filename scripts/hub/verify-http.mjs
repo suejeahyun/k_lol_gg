@@ -155,9 +155,28 @@ try {
     assert.ok(!html.includes(privateSite.name), "Draft site must remain private.");
     assert.ok(!html.includes(additionalRoom.displayName), "Public directory must not expose room metadata.");
   }
-  for (const path of ["/players", "/competitions", "/api/admin/site-settings", "/api/admin/users", "/api/auth/signup", "/api/cron/security-maintenance"]) {
+  for (const path of ["/players", "/competitions", "/api/admin/site-settings", "/api/cron/security-maintenance"]) {
     status(await request(path, { headers: { Cookie: adminCookie } }), 404, `hub excludes child-only route ${path}`);
   }
+
+  step = "ordinary hub signup and recovery";
+  const memberLoginId = `hub-member-${randomBytes(8).toString("hex")}`;
+  const memberPassword = `Synthetic-member-${randomBytes(18).toString("base64url")}123`;
+  const memberBody = { loginId: memberLoginId, password: memberPassword, termsAccepted: true, privacyAccepted: true };
+  const memberHeaders = { ...headers, "Content-Type": "application/json", "Idempotency-Key": `hub-http-signup-${randomUUID()}` };
+  const signedUp = await request("/api/auth/signup", { method: "POST", headers: memberHeaders, body: JSON.stringify(memberBody) });
+  status(signedUp, 201, "hub signup accepts no game profile");
+  const member = (await signedUp.json()).account;
+  assert.equal(member.role, "USER"); assert.equal(member.status, "APPROVED"); assert.equal(member.player, null);
+  const signupReplay = await request("/api/auth/signup", { method: "POST", headers: memberHeaders, body: JSON.stringify(memberBody) });
+  status(signupReplay, 201, "hub signup replays without creating another member");
+  assert.equal((await signupReplay.json()).account.id, member.id);
+  const memberLogin = await request("/api/auth/login", { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ loginId: memberLoginId, password: memberPassword }) });
+  status(memberLogin, 200, "ordinary hub member can log in");
+  const memberCookie = cookieFrom(memberLogin, "gg_hub_account_session");
+  status(await request("/api/admin/users", { headers: { Cookie: memberCookie } }), 401, "ordinary account cannot access administrator recovery");
+  const reset = await request("/api/auth/reset-requests", { method: "POST", headers: { ...headers, "Content-Type": "application/json", "Idempotency-Key": `hub-http-recovery-${randomUUID()}` }, body: JSON.stringify({ loginId: memberLoginId }) });
+  status(reset, 202, "ordinary hub member can request password recovery");
 
   step = "logout and session revocation";
   const administratorLogout = await request("/api/admin/logout", { method: "POST", headers: { ...headers, Cookie: adminCookie } });

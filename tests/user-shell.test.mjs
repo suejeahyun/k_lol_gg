@@ -44,7 +44,8 @@ test("일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 
   const loginPage = await readFile(new URL("../src/app/(public)/login/page.tsx", import.meta.url), "utf8");
   const authForms = await readFile(new URL("../src/components/accounts/account-auth-forms.tsx", import.meta.url), "utf8");
   const navigation = await readFile(new URL("../src/components/navigation/user-site-navigation.tsx", import.meta.url), "utf8");
-  assert.match(loginPage, /normalizeAccountNext\(\(await searchParams\)\.next, "\/"\)/);
+  assert.match(loginPage, /const params = await searchParams/);
+  assert.match(loginPage, /normalizeAccountNext\(params\.next, "\/"\)/);
   assert.match(authForms, /nextPath = "\/"/);
   assert.match(authForms, /홈으로 이동합니다/);
   assert.match(authForms, /\/account\/password\?required=1&next=/);

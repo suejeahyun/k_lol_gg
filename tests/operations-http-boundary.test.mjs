@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import vm from "node:vm";
 
 async function source(path) {
   return readFile(new URL(`../${path}`, import.meta.url), "utf8");
@@ -45,7 +46,7 @@ test("Vercel schedules destruction ratings, statistics, MMR, Riot and daily Kaka
   const [route, verifier, configuration] = await Promise.all([
     source("src/app/api/cron/kakao-daily-close/route.ts"),
     source("src/modules/operations/infrastructure/vercel-kakao-daily-close.ts"),
-    source("vercel.json"),
+    source("vercel.ts"),
   ]);
   assert.match(route, /export async function GET/);
   assert.match(route, /process\.env\.CRON_SECRET/);
@@ -55,7 +56,9 @@ test("Vercel schedules destruction ratings, statistics, MMR, Riot and daily Kaka
   assert.match(verifier, /timingSafeEqual/);
   assert.match(verifier, /recruitingOperatingDateKey/);
   assert.doesNotMatch(verifier, /OPERATIONS_JOB_SECRET|process\.env|console\./);
-  assert.deepEqual(JSON.parse(configuration).crons, [{
+  const scope = { process: { env: { NEXT_PUBLIC_SERVICE_ID: "klol" } } };
+  vm.runInNewContext(configuration.replace("export const config", "globalThis.config"), scope);
+  assert.deepEqual(JSON.parse(JSON.stringify(scope.config.crons)), [{
     path: "/api/cron/destruction-ratings",
     schedule: "* * * * *",
   }, {
@@ -73,4 +76,19 @@ test("Vercel schedules destruction ratings, statistics, MMR, Riot and daily Kaka
   }, { path: "/api/cron/support-retention", schedule: "0 19 * * *",
   }, { path: "/api/cron/security-maintenance", schedule: "30 19 * * *",
   }]);
+});
+
+test("managed sites retain local projection and retention without external jobs", async () => {
+  const configuration = await source("vercel.ts");
+  for (const service of ["community", "hub"]) {
+    const scope = { process: { env: { NEXT_PUBLIC_SERVICE_ID: service } } };
+    vm.runInNewContext(configuration.replace("export const config", "globalThis.config"), scope);
+    assert.deepEqual(JSON.parse(JSON.stringify(scope.config.crons)), service === "community" ? [
+      { path: "/api/cron/destruction-ratings", schedule: "* * * * *" },
+      { path: "/api/cron/statistics-projection", schedule: "*/5 * * * *" },
+      { path: "/api/cron/mmr-projection", schedule: "*/5 * * * *" },
+      { path: "/api/cron/support-retention", schedule: "0 19 * * *" },
+      { path: "/api/cron/security-maintenance", schedule: "30 19 * * *" },
+    ] : [{ path: "/api/cron/community-sites", schedule: "* * * * *" }]);
+  }
 });

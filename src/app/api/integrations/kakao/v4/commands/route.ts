@@ -17,6 +17,8 @@ import { KakaoV4CommandService } from "@/modules/recruiting/kakao-v4/application
 import { KakaoV4CommandDispatcher } from "@/modules/recruiting/kakao-v4/dispatcher";
 import { classifyKakaoV4Command } from "@/modules/recruiting/kakao-v4/classifier";
 import { kakaoV4OperationFeature } from "@/modules/recruiting/kakao-v4/operation-access";
+import { communityModuleForKakaoCommand } from "@/modules/community-sites/domain/module-access";
+import { requireCommunityModule } from "@/modules/community-sites/infrastructure/module-access";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 import {
   KAKAO_V4_COMMAND_CONTRACT,
@@ -109,6 +111,13 @@ async function handleCommand(request: Request, traceId: string) {
 
   // Read current settings for every authenticated request, including receipt replays.
   const classification = classifyKakaoV4Command({ profileId: envelope.profileId, text: envelope.text });
+  const communityModule = classification.kind === "UNKNOWN"
+    ? classification.partyForm ? "recruiting" : null
+    : communityModuleForKakaoCommand(classification.command);
+  if (communityModule) {
+    const moduleFailure = await requireCommunityModule(request, communityModule);
+    if (moduleFailure) return moduleFailure;
+  }
   if (!await isRuntimeKakaoFeatureEnabled(kakaoV4OperationFeature(classification), envelope.text)) {
     return kakaoV4ProblemResponse("OPERATION_DISABLED", traceId);
   }

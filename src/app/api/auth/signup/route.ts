@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 import { ACCOUNT_HTTP_PROBLEMS } from "@/modules/accounts/application/account-http-problems";
 import {
   fingerprintAccountMutation,
   normalizeLoginId,
   parseSignupInput,
+  parseHubSignupInput,
 } from "@/modules/accounts/domain/account-contracts";
 import {
   accountMutationResponse,
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
   if (featureFailure) return featureFailure;
   const body = await readJsonBody(request, { maximumBytes: 8 * 1024 });
   if (!body.ok) return problemResponse(problemForJsonBodyError(body.error), { traceId });
-  const input = parseSignupInput(body.value);
+  const input = SERVICE_BRAND.id === "hub" ? parseHubSignupInput(body.value) : parseSignupInput(body.value);
   if (!input.ok) return problemResponse(ACCOUNT_HTTP_PROBLEMS.invalidInput, { traceId });
 
   const rateLimit = await guardAccountOperationAttempt(request, "signup", input.value.loginId);
@@ -58,8 +60,11 @@ export async function POST(request: NextRequest) {
     requestFingerprint: fingerprintAccountMutation({
       action: "signup",
       loginId: input.value.loginIdNormalized,
-      memberName: input.value.memberNameNormalized,
-      riotId: `${input.value.nicknameNormalized}#${input.value.tagLineNormalized}`,
+      service: SERVICE_BRAND.id,
+      ...("memberNameNormalized" in input.value ? {
+        memberName: input.value.memberNameNormalized,
+        riotId: `${input.value.nicknameNormalized}#${input.value.tagLineNormalized}`,
+      } : {}),
       password: input.value.password,
     }),
   });
@@ -78,7 +83,9 @@ export async function POST(request: NextRequest) {
   try {
     const passwordHash = await hashPassword(input.value.password);
     return accountMutationResponse(
-      await repository.signup(input.value, passwordHash, command.command),
+      await ("memberNameNormalized" in input.value
+        ? repository.signup(input.value, passwordHash, command.command, SERVICE_BRAND.id === "community")
+        : repository.signupHubAccount(input.value, passwordHash, command.command)),
       traceId,
     );
   } catch {

@@ -29,7 +29,7 @@ function continueWithTrustedAdminPath(request: NextRequest) {
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   if (SERVICE_BRAND.id === "hub") {
@@ -38,6 +38,15 @@ export function proxy(request: NextRequest) {
     if (decision.kind === "method-not-allowed") return new Response(null, { status: 405, headers: { Allow: decision.allow.join(", "), "Cache-Control": "no-store" } });
     if (decision.kind === "redirect") return NextResponse.redirect(new URL(decision.destination, request.url), 307);
     return pathname.startsWith("/admin/") ? continueWithTrustedAdminPath(request) : NextResponse.next();
+  }
+
+  if (SERVICE_BRAND.id === "community") {
+    const { requireCommunityPublicationAccess } = await import("@/modules/community-sites/infrastructure/publication-access");
+    const publicationFailure = await requireCommunityPublicationAccess(request);
+    if (publicationFailure) return publicationFailure;
+    const { requireCommunityModuleForRequest } = await import("@/modules/community-sites/infrastructure/module-access");
+    const moduleFailure = await requireCommunityModuleForRequest(request);
+    if (moduleFailure) return moduleFailure;
   }
 
   const accountLegacyDestinations: Record<string, string> = {

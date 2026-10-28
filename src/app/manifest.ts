@@ -1,7 +1,18 @@
 import { SERVICE_BRAND } from "@/lib/service-brand";
 import type { MetadataRoute } from "next";
 
-export default function manifest(): MetadataRoute.Manifest {
+export const dynamic = "force-dynamic";
+
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  if (SERVICE_BRAND.id === "community") {
+    const { readRuntimeCommunitySiteConfiguration } = await import("@/modules/community-sites/infrastructure/runtime-site-configuration");
+    const runtime = await readRuntimeCommunitySiteConfiguration().catch(() => null);
+    const config = runtime?.configuration;
+    return { id: "/", name: config?.name ?? SERVICE_BRAND.name, short_name: (config?.name ?? SERVICE_BRAND.name).slice(0, 24),
+      description: config?.description || "함께 만드는 우리 커뮤니티", start_url: "/", scope: "/", display: "browser", lang: "ko-KR",
+      theme_color: config?.primaryColor ?? "#536dfe", background_color: config?.templateId === "club" ? "#f6f8f5" : "#0d1425",
+      icons: [{ src: config?.logoUrl || "/icons/hub/mark.svg", sizes: "any" }] };
+  }
   if (SERVICE_BRAND.id === "hub") return { id: "/", name: "GG HUB", short_name: "GG HUB", description: "여러 독립 커뮤니티 사이트와 방을 관리하는 중앙 서비스", start_url: "/", scope: "/", display: "browser", background_color: "#f5f7f7", theme_color: "#123b3b", lang: "ko-KR", icons: [{ src: "/icons/hub/mark.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }] };
   const isNexus = SERVICE_BRAND.id === "nexus";
   const iconPrefix = isNexus ? "/icons/nexus" : "/icons";

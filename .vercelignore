@@ -6,6 +6,10 @@
 !.env.example
 .next
 .next/**
+.next-sso-hub
+.next-sso-hub/**
+.next-sso-child
+.next-sso-child/**
 node_modules
 node_modules/**
 # Historical QA captures and reports are not application deployment inputs.

@@ -627,7 +627,7 @@ try {
   assert.equal(selfProfileFormHtml.includes('name="currentTier"'), true);
   assert.equal(selfProfileFormHtml.includes('name="peakTier"'), true);
   assert.equal(selfProfileFormHtml.includes("내 플레이어 정보 저장"), true);
-  assert.equal(selfProfileFormHtml.includes("기존 Riot 전적 연동이 자동 해제"), true);
+  assert.equal(selfProfileFormHtml.includes("Riot ID 변경 시 기존 전적 연동이 해제됩니다"), true);
 
   const selfProfileBody = {
     riotId: `${selfProfileNextGameName}#N01`,
@@ -2455,7 +2455,8 @@ try {
     headers: { cookie: superAdminCookie },
   });
   assert.equal(adminUsersPage.status, 200);
-  assert.match(await adminUsersPage.text(), /가입 승인, 역할, 복구 요청과 소프트 삭제/);
+  const adminUsersHtml = await adminUsersPage.text();
+  assert.equal(adminUsersHtml.includes("사용자 계정") && adminUsersHtml.includes("복구 요청") && adminUsersHtml.includes("삭제 범위"), true, "administrator account list must expose account management and recovery controls");
   const adminDetailPage = await fetch(`${origin}/admin/users/${claimAccountId}`, {
     headers: { cookie: adminCookie },
   });

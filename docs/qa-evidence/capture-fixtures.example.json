@@ -16,7 +16,8 @@
     "userAccountId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
     "mmrReviewId": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
     "destructionPlayerId": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
-    "pendingId": "ffffffff-ffff-4fff-8fff-ffffffffffff"
+    "pendingId": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+    "siteId": "00000000-0000-4000-8000-000000000051"
   },
   "routes": {
     "/admin/kakao/recruits": {

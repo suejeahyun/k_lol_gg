@@ -1,4 +1,5 @@
 import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 import Link from "next/link";
 import { AlertTriangle, CalendarCheck2, Gamepad2, Swords } from "@/components/theme/theme-icons";
 
@@ -56,6 +57,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   }
   return (
     <AccountShell activeTab={tab} title={account.loginId} status={{ label: statusLabels[account.status], state: account.status }} action={<AccountLogoutButton />}>
+      {SERVICE_BRAND.id === "community" && !account.player && !account.playerClaim ? <p className={styles.notice}>GG HUB로 가입한 계정은 <Link href="/account/community-profile">게임 프로필을 등록</Link>한 뒤 가입 승인과 경기 참가를 진행할 수 있습니다.</p> : null}
       {account.mustChangePassword ? <p className={styles.notice}>임시 비밀번호를 사용 중입니다. 다른 기능을 사용하기 전에 <Link href="/account/password?required=1">비밀번호를 변경해 주세요.</Link></p> : null}
       <nav className="task-links" aria-label="내 활동 바로가기"><Link href="/applications">내 참가 신청</Link><Link href="/matches/submissions">내 제출 내역</Link><Link href="/tools/team-balance/drafts">내 저장 팀</Link><Link href="/help/contact">계정·탈퇴 문의</Link></nav>
       {tab === "overview" ? (

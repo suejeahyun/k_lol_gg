@@ -22,6 +22,13 @@ export type SignupInput = Readonly<{
   tagLineNormalized: string;
 }>;
 
+export type HubSignupInput = Readonly<{
+  kind: "HUB";
+  loginId: string;
+  loginIdNormalized: string;
+  password: string;
+}>;
+
 export type UserLoginInput = Readonly<{ loginId: string; password: string }>;
 export type PasswordChangeInput = Readonly<{
   currentPassword: string;
@@ -288,6 +295,15 @@ export function parseSignupInput(value: unknown): ParseResult<SignupInput> {
   };
 }
 
+/** The hub never invents a player identity or accepts role/status from signup. */
+export function parseHubSignupInput(value: unknown): ParseResult<HubSignupInput> {
+  const record = exactRecord(value, ["loginId", "password", "termsAccepted", "privacyAccepted"]);
+  if (!record || record.termsAccepted !== true || record.privacyAccepted !== true) return { ok: false };
+  const loginId = safeText(record.loginId, 4, 64);
+  if (!loginId || !loginIdPattern.test(loginId) || !validateNewPassword(record.password)) return { ok: false };
+  return { ok: true, value: { kind: "HUB", loginId, loginIdNormalized: normalizeLoginId(loginId), password: record.password } };
+}
+
 export function parseUserLoginInput(value: unknown): ParseResult<UserLoginInput> {
   const record = exactRecord(value, ["loginId", "password"]);
   const loginId = record ? safeText(record.loginId, 1, 64) : null;
@@ -369,6 +385,15 @@ export function parseOwnPlayerInput(value: unknown): ParseResult<OwnPlayerInput>
   } catch {
     return { ok: false };
   }
+}
+
+export type CommunityProfileInput = Readonly<{ memberName: string; nickname: string; tagLine: string }>;
+export function parseCommunityProfileInput(value: unknown): ParseResult<CommunityProfileInput> {
+  const record = exactRecord(value, ["memberName", "riotId"]);
+  if (!record) return { ok: false };
+  const parsed = parseOwnPlayerInput({ ...record, peakTier: null, currentTier: null });
+  if (!parsed.ok || !parsed.value.memberName) return { ok: false };
+  return { ok: true, value: { memberName: parsed.value.memberName, nickname: parsed.value.nickname, tagLine: parsed.value.tagLine } };
 }
 
 export function parseAccountReasonInput(value: unknown): ParseResult<AccountReasonInput> {

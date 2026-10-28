@@ -84,12 +84,13 @@ export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
       {message ? <div className={styles.message} data-tone={message.tone} role={message.tone === "error" ? "alert" : "status"} aria-live="polite">
         {message.text}
       </div> : null}
-      <div className={styles.links}>{SERVICE_BRAND.id !== "hub" ? <><Link href={`/signup?next=${encodeURIComponent(safeNext)}`}>회원가입 후 계속하기</Link><Link href="/forgot-password">비밀번호 도움</Link></> : null}<Link href="/admin/login">관리자 로그인</Link></div>
+      <div className={styles.links}><Link href={`/signup?next=${encodeURIComponent(safeNext)}`}>회원가입 후 계속하기</Link><Link href="/forgot-password">비밀번호 도움</Link><Link href="/admin/login">관리자 로그인</Link></div>
     </form>
   );
 }
 
 export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
+  const hubAccount = SERVICE_BRAND.id === "hub";
   const safeNext = normalizeAccountNext(nextPath, "/");
   const loginHref = `/login?next=${encodeURIComponent(safeNext)}`;
   const [busy, setBusy] = useState(false);
@@ -115,8 +116,7 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
     const payload = {
       loginId: String(data.get("loginId") ?? ""),
       password: String(data.get("password") ?? ""),
-      memberName: String(data.get("memberName") ?? ""),
-      riotId: String(data.get("riotId") ?? ""),
+      ...(!hubAccount ? { memberName: String(data.get("memberName") ?? ""), riotId: String(data.get("riotId") ?? "") } : {}),
       termsAccepted: data.get("termsAccepted") === "on",
       privacyAccepted: data.get("privacyAccepted") === "on",
     };
@@ -152,9 +152,9 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
   if (completed) return <div ref={completionRef} tabIndex={-1} className={styles.form} role="status">
     <h2>가입 결과</h2>
     <p className={styles.message} data-tone="success">{message?.text}</p>
-    <p>로그인 후 내 계정에서 승인·플레이어 연결 상태를 확인할 수 있어요.</p>
+    <p>{hubAccount ? "로그인 후 커뮤니티 개설을 신청하고 신청 진행 상황을 확인할 수 있어요." : "로그인 후 내 계정에서 승인·플레이어 연결 상태를 확인할 수 있어요."}</p>
     <Link className={styles.primaryLink} href={loginHref}>로그인하고 계속하기</Link>
-    <Link href="/help/contact">가입·플레이어 연결 문의</Link>
+    <Link href="/help/contact">{hubAccount ? "가입 문의" : "가입·플레이어 연결 문의"}</Link>
   </div>;
 
   return (
@@ -168,7 +168,7 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
         const input = event.currentTarget;
         input.setCustomValidity(!input.value || validateNewPassword(input.value) ? "" : "비밀번호는 10~128자로 문자와 숫자를 모두 포함해 주세요.");
       }} /><small>10자 이상 · 문자와 숫자 포함</small></label>
-      <label className={styles.field}>회원명<input name="memberName" autoComplete="name" minLength={2} maxLength={100} required aria-invalid={invalidField === "memberName" || undefined} /></label>
+      {!hubAccount ? <><label className={styles.field}>회원명<input name="memberName" autoComplete="name" minLength={2} maxLength={100} required aria-invalid={invalidField === "memberName" || undefined} /></label>
       <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={22} required aria-invalid={invalidField === "riotId" || undefined} onInput={(event) => {
         const input = event.currentTarget;
         try {
@@ -178,11 +178,11 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
           canonicalRiotId({ gameName: gameName ?? "", tagLine: tagLine ?? "" });
           input.setCustomValidity("");
         } catch { input.setCustomValidity("게임 이름#태그 형식으로 입력해 주세요. 게임 이름은 최대 16자, 태그는 최대 5자입니다."); }
-      }} /><small>게임 이름 최대 16자 · 태그 최대 5자</small></label>
+      }} /><small>게임 이름 최대 16자 · 태그 최대 5자</small></label></> : null}
       <label className={styles.check}><input name="termsAccepted" type="checkbox" required /><span><Link href="/terms" target="_blank">이용약관</Link>을 확인했고 계정 운영 규칙에 동의합니다.</span></label>
-      <label className={styles.check}><input name="privacyAccepted" type="checkbox" required /><span><Link href="/privacy" target="_blank">개인정보 처리 안내</Link>에 따른 계정·회원명·Riot ID 처리에 동의합니다.</span></label>
+      <label className={styles.check}><input name="privacyAccepted" type="checkbox" required /><span><Link href="/privacy" target="_blank">개인정보 처리 안내</Link>에 따른 {hubAccount ? "계정 정보" : "계정·회원명·Riot ID"} 처리에 동의합니다.</span></label>
       <button className={styles.submit} type="submit" disabled={busy}>{busy ? "가입 중…" : "가입하기"}</button>
-      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "신규 플레이어: 즉시 승인 · 기존 플레이어: 관리자 확인 후 연결"}</div>
+      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? (hubAccount ? "일반 회원으로 가입됩니다. 커뮤니티 개설은 GG HUB 운영팀의 승인이 필요합니다." : SERVICE_BRAND.id === "community" ? "가입 후 이 커뮤니티 운영진의 승인을 기다려 주세요. 기존 플레이어 연결은 별도 확인합니다." : "신규 플레이어: 즉시 승인 · 기존 플레이어: 관리자 확인 후 연결")}</div>
       <div className={styles.links}><Link href={loginHref}>이미 계정이 있어요</Link></div>
     </form>
   );

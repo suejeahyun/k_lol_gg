@@ -20,6 +20,9 @@ import { HomeGuideArt } from "@/components/home/home-guide-art";
 import { NexusHomeHero, NexusMascotCrew } from "@/components/home/nexus-home";
 import { SERVICE_BRAND } from "@/lib/service-brand";
 import { HubDirectory } from "@/components/hub/hub-directory";
+import { ManagedCommunityHome } from "@/components/community-sites/managed-community-home";
+import { readRuntimeCommunitySiteConfiguration } from "@/modules/community-sites/infrastructure/runtime-site-configuration";
+import type { Metadata } from "next";
 import { MediaCarousel } from "@/app/(public)/(media)/media-carousel";
 import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
@@ -35,9 +38,16 @@ import effects from "./home-effects.module.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = SERVICE_BRAND.id === "hub"
+export async function generateMetadata(): Promise<Metadata> {
+  if (SERVICE_BRAND.id === "community") {
+    const runtime = await readRuntimeCommunitySiteConfiguration().catch(() => null);
+    return { title: { absolute: runtime?.configuration.name ?? SERVICE_BRAND.name },
+      description: runtime?.configuration.description || "함께 만드는 우리 커뮤니티", alternates: { canonical: "/" } };
+  }
+  return SERVICE_BRAND.id === "hub"
   ? { title: "커뮤니티 중앙 관리", description: "K-LOL, NEXUS와 여러 독립 커뮤니티 사이트를 둘러보고 사이트와 방을 관리하세요.", alternates: { canonical: "/" } }
   : createRouteMetadata("/");
+}
 
 const taskCards = [
   { title: "오늘 내전 참가", href: "/applications", icon: CalendarDays, tone: "sky", status: null },
@@ -91,6 +101,7 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
 
 export default async function HomePage() {
   if (SERVICE_BRAND.id === "hub") return <HubDirectory overview />;
+  if (SERVICE_BRAND.id === "community") return <ManagedCommunityHome />;
   const [homeResult, session, dailyChampionResult, rankingResult] = await Promise.all([
     loadRuntimeHomeSnapshot(),
     getCurrentSession("ACCOUNT"),

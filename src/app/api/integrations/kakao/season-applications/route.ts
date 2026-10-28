@@ -7,6 +7,7 @@ import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/r
 import { FEATURES_KAKAO_ROOM_COMMAND, MAXIMUM_KAKAO_BODY_BYTES, recordKakaoWebhookRejection } from "@/modules/recruiting/infrastructure/kakao-http-request";
 import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";
 import { legacyKakaoInstallationId } from "@/modules/recruiting/infrastructure/kakao-signature";
+import { requireCommunityModule } from "@/modules/community-sites/infrastructure/module-access";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,6 +17,10 @@ export async function POST(request: Request) {
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseSeasonSnapshotBody(prepared.body);
+    if (["RESERVE", "SYNC", "ADD_PARTICIPANT"].includes(command.action)) {
+      const moduleFailure = await requireCommunityModule(request, "recruiting");
+      if (moduleFailure) return moduleFailure;
+    }
     if (kakaoSeasonCommandAccess(command.action) === "TRUSTED_OPERATOR") {
       const { getRuntimeKakaoRoomRegistry } = await import("@/modules/recruiting/kakao-access/runtime");
       const registry = getRuntimeKakaoRoomRegistry();

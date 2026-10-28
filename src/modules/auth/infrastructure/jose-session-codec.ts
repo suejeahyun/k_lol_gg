@@ -8,7 +8,7 @@ import {
   type AuthSessionSeed,
 } from "../domain/auth-session";
 import type { SessionSigningKeyring } from "./versioned-secret-keyring";
-import { SERVICE_BRAND, type ServiceId } from "../../../lib/service-brand";
+import { requireManagedCommunityId, SERVICE_BRAND, type ServiceId } from "../../../lib/service-brand";
 
 const ALGORITHM = "HS256";
 const DEFAULT_TTL_SECONDS = 30 * 60;
@@ -32,8 +32,10 @@ export class JoseSessionCodec {
   private readonly issuer: string;
   private readonly audience: string;
 
-  constructor(secretOrKeyring: string | SessionSigningKeyring, serviceId: ServiceId = SERVICE_BRAND.id) {
-    this.issuer = { klol: "k-lol-gg-v2", nexus: "nexus-gg", hub: "gg-community-hub" }[serviceId];
+  constructor(secretOrKeyring: string | SessionSigningKeyring, serviceId: ServiceId = SERVICE_BRAND.id, communityId = SERVICE_BRAND.communityId) {
+    this.issuer = serviceId === "community"
+      ? `gg-community:${requireManagedCommunityId(communityId)}`
+      : { klol: "k-lol-gg-v2", nexus: "nexus-gg", hub: "gg-community-hub" }[serviceId];
     this.audience = `${this.issuer}-web`;
     if (typeof secretOrKeyring === "string") {
       const key = new TextEncoder().encode(secretOrKeyring);

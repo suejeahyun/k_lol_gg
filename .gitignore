@@ -40,6 +40,7 @@ yarn-error.log*
 !.env.example
 !.env.nexus.example
 !.env.hub.example
+!.env.community.example
 
 # vercel
 .vercel
@@ -47,3 +48,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.next-sso-hub/
+.next-sso-child/

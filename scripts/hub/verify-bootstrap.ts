@@ -2,9 +2,10 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
+import { readMigrationFiles } from "drizzle-orm/migrator";
 import { bootstrapHubDatabase, hubBootstrapTarget } from "./empty-database";
 import { createDatabase } from "../../src/platform/db/database";
-import { applyMigrations } from "../../src/platform/db/migrate";
+import { applyMigrations, defaultMigrationsFolder } from "../../src/platform/db/migrate";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 import { verifyPasswordHash } from "../../src/modules/auth/infrastructure/node-password";
 import { PostgresCommunityNetworkRepository } from "../../src/modules/community-network/infrastructure/postgres-community-network-repository";
@@ -33,7 +34,7 @@ try {
   const administrator = { loginId: "synthetic-hub-owner", password };
   const initialized = await bootstrapHubDatabase(fresh.pool, fresh.name, administrator);
   assert.equal(initialized.state, "initialized");
-  assert.equal(initialized.migrationCount, 51);
+  assert.equal(initialized.migrationCount, readMigrationFiles({ migrationsFolder: defaultMigrationsFolder }).length);
   const accounts = (await fresh.pool.query("select role, status, must_change_password, password_hash from auth.user_accounts")).rows;
   assert.equal(accounts.length, 1);
   assert.equal(accounts[0].role, "SUPER_ADMIN"); assert.equal(accounts[0].status, "APPROVED"); assert.equal(accounts[0].must_change_password, true);

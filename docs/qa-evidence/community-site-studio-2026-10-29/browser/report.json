@@ -1,0 +1,397 @@
+{
+  "recordedAt": "2026-10-28T17:59:40.888Z",
+  "localOnly": true,
+  "syntheticDataOnly": true,
+  "successful": true,
+  "checks": [
+    {
+      "check": "01-signup-320: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "01-signup-320: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "01-signup-320: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "hub signup needs no game identity",
+      "passed": true
+    },
+    {
+      "check": "ordinary signup completes from the UI",
+      "passed": true
+    },
+    {
+      "check": "browser login creates a purpose-bound HttpOnly account session",
+      "passed": true
+    },
+    {
+      "check": "arena template preserves custom identity and color",
+      "passed": true
+    },
+    {
+      "check": "02-theme-arena-1440: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "02-theme-arena-1440: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "02-theme-arena-1440: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "lounge template preserves custom identity and color",
+      "passed": true
+    },
+    {
+      "check": "02-theme-lounge-1440: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "02-theme-lounge-1440: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "02-theme-lounge-1440: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "club template preserves custom identity and color",
+      "passed": true
+    },
+    {
+      "check": "02-theme-club-1440: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "02-theme-club-1440: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "02-theme-club-1440: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "03-editor-390: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "03-editor-390: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "03-editor-390: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "04-editor-320: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "04-editor-320: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "04-editor-320: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 1 is visible",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 2 is visible",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 3 is visible",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 4 is visible",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 5 is visible",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 6 is visible",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 7 is visible",
+      "passed": true
+    },
+    {
+      "check": "narrow editor keyboard focus 8 is visible",
+      "passed": true
+    },
+    {
+      "check": "disabling a module waits for impact confirmation",
+      "passed": true
+    },
+    {
+      "check": "canceling the warning preserves enabled modules",
+      "passed": true
+    },
+    {
+      "check": "confirmed match disable also disables dependent balance and rankings",
+      "passed": true
+    },
+    {
+      "check": "enabling balance restores its required match module",
+      "passed": true
+    },
+    {
+      "check": "home sections can move above the introduction without losing it",
+      "passed": true
+    },
+    {
+      "check": "05-module-confirmation-result-320: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "05-module-confirmation-result-320: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "05-module-confirmation-result-320: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "configured template is submitted for review",
+      "passed": true
+    },
+    {
+      "check": "module choices persist in the submitted application",
+      "passed": true
+    },
+    {
+      "check": "custom home order persists in the application",
+      "passed": true
+    },
+    {
+      "check": "06-owner-list-320: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "06-owner-list-320: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "06-owner-list-320: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "owner editing persists a draft through the UI",
+      "passed": true
+    },
+    {
+      "check": "approval is disabled while provider setup is unavailable",
+      "passed": true
+    },
+    {
+      "check": "reviewer sees the submitted configuration without editing ownership fields",
+      "passed": true
+    },
+    {
+      "check": "07-admin-review-1440: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "07-admin-review-1440: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "07-admin-review-1440: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "08-admin-review-320: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "08-admin-review-320: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "08-admin-review-320: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "reviewer can request changes through the UI",
+      "passed": true
+    },
+    {
+      "check": "owner can read the review explanation",
+      "passed": true
+    },
+    {
+      "check": "resubmission clears old review feedback and returns to the queue",
+      "passed": true
+    },
+    {
+      "check": "09-owner-resubmitted-320: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "check": "09-owner-resubmitted-320: document landmarks and language",
+      "passed": true
+    },
+    {
+      "check": "09-owner-resubmitted-320: WCAG A/AA axe checks",
+      "passed": true
+    },
+    {
+      "check": "interactive flows produce no uncaught browser exceptions",
+      "passed": true
+    },
+    {
+      "check": "all page requests stay on the guarded loopback app",
+      "passed": true
+    }
+  ],
+  "snapshots": [
+    {
+      "name": "01-signup-320",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 0,
+      "violations": [],
+      "screenshot": "01-signup-320.png"
+    },
+    {
+      "name": "02-theme-arena-1440",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "02-theme-arena-1440.png"
+    },
+    {
+      "name": "02-theme-lounge-1440",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "02-theme-lounge-1440.png"
+    },
+    {
+      "name": "02-theme-club-1440",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "02-theme-club-1440.png"
+    },
+    {
+      "name": "03-editor-390",
+      "width": 390,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "03-editor-390.png"
+    },
+    {
+      "name": "04-editor-320",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "04-editor-320.png"
+    },
+    {
+      "name": "05-module-confirmation-result-320",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "05-module-confirmation-result-320.png"
+    },
+    {
+      "name": "06-owner-list-320",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 0,
+      "violations": [],
+      "screenshot": "06-owner-list-320.png"
+    },
+    {
+      "name": "07-admin-review-1440",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "07-admin-review-1440.png"
+    },
+    {
+      "name": "08-admin-review-320",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "08-admin-review-320.png"
+    },
+    {
+      "name": "09-owner-resubmitted-320",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "mainCount": 1,
+      "h1Count": 1,
+      "lang": "ko",
+      "previews": 1,
+      "violations": [],
+      "screenshot": "09-owner-resubmitted-320.png"
+    }
+  ],
+  "failureState": null,
+  "exceptionCount": 0,
+  "blockedExternalOriginCount": 0
+}

@@ -40,6 +40,8 @@ const status = load("components/status-panel.tsx", { "@/components/theme/theme-i
 const content = load("components/not-found-content.tsx", { "next/link": Link, "@/components/status-panel": status });
 const common = { "next/link": Link, "@/components/not-found-content": content };
 const hubShell = load("components/hub/hub-shell.tsx", {
+  "@/modules/auth/infrastructure/runtime-session": { getCurrentSession: async () => null },
+  "@/components/accounts/account-logout-button": { AccountLogoutButton: () => null },
   "next/link": Link,
   "@/components/theme/theme-icons": icons,
   "@/components/admin/admin-logout-button": { AdminLogoutButton: () => null },
@@ -56,6 +58,7 @@ const publicShell = load("components/site-shell.tsx", {
   },
 });
 const publicLayout = load("app/(public)/layout.tsx", {
+  "@/components/community-sites/managed-community-shell": { ManagedCommunityShell: () => { throw new Error("Child-only shell must not render on legacy sites"); } },
   "@/components/site-shell": publicShell,
   "@/components/hub/hub-shell": hubShell,
   "@/components/navigation/list-return": { ListNavigationMemory: () => null },
@@ -131,7 +134,8 @@ test("the central hub root recovery keeps its independent shell and no child-ser
   assert.equal((html.match(/<main(?:\s|>)/gu) ?? []).length, 1);
   assert.equal((html.match(/<h1(?:\s|>)/gu) ?? []).length, 1);
   assert.match(html, /GG HUB/u);
-  assert.match(html, /href="\/admin\/community-network"/u);
+  assert.match(html, /href="\/sites\/new"/u);
+  assert.match(html, /href="\/admin\/login"/u);
   assert.match(html, /중앙 사이트 홈으로/u);
   assert.doesNotMatch(html, /href="\/players"|data-ui-scope="public"|class="site-header"/u);
 });

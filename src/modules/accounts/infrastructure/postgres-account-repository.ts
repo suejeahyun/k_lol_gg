@@ -49,6 +49,10 @@ import type { AccountRepository, UserLoginResult } from "../application/ports/ac
 import {
   ACCOUNT_PRIVACY_VERSION,
   ACCOUNT_TERMS_VERSION,
+  HUB_ACCOUNT_PRIVACY_VERSION,
+  HUB_ACCOUNT_TERMS_VERSION,
+  COMMUNITY_ACCOUNT_PRIVACY_VERSION,
+  COMMUNITY_ACCOUNT_TERMS_VERSION,
 } from "../domain/account-policies";
 import {
   normalizeAccountIdentity,
@@ -67,6 +71,7 @@ import {
   type OwnPlayerInput,
   type SafeAccountMutationResponse,
   type SignupInput,
+  type HubSignupInput,
   type UserLoginInput,
 } from "../domain/account-contracts";
 
@@ -739,7 +744,7 @@ async function insertStatusHistory(
 }
 
 export class PostgresAccountRepository implements AccountRepository {
-  constructor(private readonly database: V2Database) {}
+  constructor(private readonly database: V2Database, private readonly requirePlayerForApproval = true) {}
 
   async authenticateUser(input: UserLoginInput, now: Date): Promise<UserLoginResult> {
     const normalized = normalizeLoginId(input.loginId);
@@ -1090,11 +1095,74 @@ export class PostgresAccountRepository implements AccountRepository {
     return row?.userAccountId ?? null;
   }
 
+  async signupHubAccount(
+    input: HubSignupInput,
+    passwordHash: string,
+    command: AccountMutationCommand,
+  ): Promise<AccountMutationOutcome> {
+    try {
+      return await withTransaction(this.database, async (transaction) => {
+        const started = await startMutation(transaction, command, "account:signup");
+        if (started.replay) return started.replay;
+        const existing = (await transaction.select({ id: userAccounts.id }).from(userAccounts)
+          .where(eq(userAccounts.loginIdNormalized, input.loginIdNormalized)).for("update").limit(1))[0];
+        if (existing) return { type: "conflict", reason: "LOGIN_ID_EXISTS" };
+        const accountId = randomUUID();
+        await transaction.insert(userAccounts).values({
+          id: accountId,
+          loginId: input.loginId,
+          loginIdNormalized: input.loginIdNormalized,
+          passwordHash,
+          role: "USER",
+          status: "APPROVED",
+          revision: 1,
+          passwordChangedAt: command.now,
+          statusChangedAt: command.now,
+          statusReasonPublic: "GG HUB 일반 회원 가입이 완료되었습니다.",
+          termsAcceptedAt: command.now,
+          termsVersion: HUB_ACCOUNT_TERMS_VERSION,
+          privacyAcceptedAt: command.now,
+          privacyVersion: HUB_ACCOUNT_PRIVACY_VERSION,
+          createdAt: command.now,
+          updatedAt: command.now,
+        });
+        await insertStatusHistory(transaction, {
+          actorId: accountId, userAccountId: accountId, action: "HUB_ACCOUNT_SIGNUP_APPROVED",
+          previousStatus: null, nextStatus: "APPROVED",
+          publicReason: "GG HUB 일반 회원 가입이 완료되었습니다.",
+          internalReason: "게임 프로필과 커뮤니티 소속 없이 일반 회원으로 가입했습니다.", now: command.now,
+        });
+        await transaction.insert(auditEvents).values({
+          requestId: command.requestId, actorUserAccountId: accountId,
+          action: "HUB_ACCOUNT_SIGNUP_APPROVED", targetType: "USER_ACCOUNT", targetId: accountId,
+          afterJson: { id: accountId, role: "USER", status: "APPROVED", revision: 1 },
+          metadataJson: { playerBinding: "NONE", termsVersion: HUB_ACCOUNT_TERMS_VERSION, privacyVersion: HUB_ACCOUNT_PRIVACY_VERSION },
+          createdAt: command.now,
+        });
+        const dto = await accountDto(transaction, accountId);
+        if (!dto) throw new Error("Signed-up hub account could not be reloaded.");
+        const outcome: Extract<AccountMutationOutcome, { type: "success" }> = {
+          type: "success", status: 201,
+          response: { message: "GG HUB 가입이 완료되었습니다. 로그인 후 커뮤니티 개설을 신청할 수 있습니다.", account: selfDto(dto) },
+          revision: dto.revision, replayed: false,
+        };
+        await saveReceipt(transaction, command, started.identity, outcome, accountId);
+        return outcome;
+      });
+    } catch (error) {
+      if (errorConstraint(error) === "user_accounts_login_id_normalized_uidx") return { type: "conflict", reason: "LOGIN_ID_EXISTS" };
+      throw error;
+    }
+  }
+
   async signup(
     input: SignupInput,
     passwordHash: string,
     command: AccountMutationCommand,
+    approvalRequired = false,
   ): Promise<AccountMutationOutcome> {
+    const termsVersion = approvalRequired ? COMMUNITY_ACCOUNT_TERMS_VERSION : ACCOUNT_TERMS_VERSION;
+    const privacyVersion = approvalRequired ? COMMUNITY_ACCOUNT_PRIVACY_VERSION : ACCOUNT_PRIVACY_VERSION;
     try {
       return await withTransaction(this.database, async (transaction) => {
         const started = await startMutation(transaction, command, "account:signup");
@@ -1131,10 +1199,10 @@ export class PostgresAccountRepository implements AccountRepository {
         // the same transaction. An existing unowned identity remains a manual
         // claim so signup cannot take over another player's record.
         const requiresManualPlayerClaim = existingPlayer !== undefined;
-        const initialAccountStatus = requiresManualPlayerClaim ? "PENDING" : "APPROVED";
+        const initialAccountStatus = requiresManualPlayerClaim || approvalRequired ? "PENDING" : "APPROVED";
         const initialStatusReason = requiresManualPlayerClaim
           ? "기존 플레이어 연결을 관리자에게 확인하고 있습니다."
-          : "가입과 동시에 자동 승인되었습니다.";
+          : approvalRequired ? "커뮤니티 운영진의 가입 승인을 기다리고 있습니다." : "가입과 동시에 자동 승인되었습니다.";
         const accountId = randomUUID();
         await transaction.insert(userAccounts).values({
           id: accountId,
@@ -1143,14 +1211,14 @@ export class PostgresAccountRepository implements AccountRepository {
           passwordHash,
           role: "USER",
           status: initialAccountStatus,
-          revision: requiresManualPlayerClaim ? 0 : 1,
+          revision: initialAccountStatus === "PENDING" ? 0 : 1,
           passwordChangedAt: command.now,
           statusChangedAt: command.now,
           statusReasonPublic: initialStatusReason,
           termsAcceptedAt: command.now,
-          termsVersion: ACCOUNT_TERMS_VERSION,
+          termsVersion,
           privacyAcceptedAt: command.now,
-          privacyVersion: ACCOUNT_PRIVACY_VERSION,
+          privacyVersion,
           createdAt: command.now,
           updatedAt: command.now,
         });
@@ -1178,9 +1246,9 @@ export class PostgresAccountRepository implements AccountRepository {
             nicknameNormalized: input.nicknameNormalized,
             tagLine: input.tagLine,
             tagLineNormalized: input.tagLineNormalized,
-            status: "ACTIVE",
-            deactivatedAt: null,
-            accountLifecycleDeactivatedAt: null,
+            status: approvalRequired ? "INACTIVE" : "ACTIVE",
+            deactivatedAt: approvalRequired ? command.now : null,
+            accountLifecycleDeactivatedAt: approvalRequired ? command.now : null,
             createdAt: command.now,
             updatedAt: command.now,
           });
@@ -1200,7 +1268,7 @@ export class PostgresAccountRepository implements AccountRepository {
             : "신규 플레이어와 함께 가입 정보가 접수되었습니다.",
           now: command.now,
         });
-        if (!claimCreated) {
+        if (initialAccountStatus === "APPROVED") {
           await insertStatusHistory(transaction, {
             actorId: accountId,
             userAccountId: accountId,
@@ -1221,14 +1289,14 @@ export class PostgresAccountRepository implements AccountRepository {
           afterJson: { id: accountId, role: "USER", status: "PENDING", revision: 0 },
           metadataJson: {
             playerBinding: claimCreated ? "PENDING_MANUAL_CLAIM" : "NEW_PLAYER_CREATED",
-            approvalMode: claimCreated ? "MANUAL_PLAYER_CLAIM" : "AUTOMATIC_SIGNUP_PENDING",
+            approvalMode: claimCreated ? "MANUAL_PLAYER_CLAIM" : approvalRequired ? "MANUAL_COMMUNITY_APPROVAL" : "AUTOMATIC_SIGNUP_PENDING",
             ownershipVerified: false,
-            termsVersion: ACCOUNT_TERMS_VERSION,
-            privacyVersion: ACCOUNT_PRIVACY_VERSION,
+            termsVersion,
+            privacyVersion,
           },
           createdAt: command.now,
         });
-        if (!claimCreated) {
+        if (initialAccountStatus === "APPROVED") {
           await transaction.insert(auditEvents).values({
             requestId: command.requestId,
             actorUserAccountId: accountId,
@@ -1241,8 +1309,8 @@ export class PostgresAccountRepository implements AccountRepository {
               playerBinding: "NEW_PLAYER_CREATED",
               approvalMode: "AUTOMATIC_SIGNUP",
               ownershipVerified: false,
-              termsVersion: ACCOUNT_TERMS_VERSION,
-              privacyVersion: ACCOUNT_PRIVACY_VERSION,
+              termsVersion,
+              privacyVersion,
             },
             createdAt: command.now,
           });
@@ -1256,7 +1324,7 @@ export class PostgresAccountRepository implements AccountRepository {
           response: {
             message: claimCreated
               ? "가입 신청이 접수되었습니다. 기존 플레이어 연결은 관리자 수동 검토 후 확정됩니다."
-              : "가입과 자동 승인이 완료되었습니다. 로그인 후 서비스를 이용해 주세요.",
+              : approvalRequired ? "가입 신청이 접수되었습니다. 로그인 후 운영진의 승인 상태를 확인해 주세요." : "가입과 자동 승인이 완료되었습니다. 로그인 후 서비스를 이용해 주세요.",
             account: selfDto(dto),
           },
           revision: dto.revision,
@@ -1535,7 +1603,7 @@ export class PostgresAccountRepository implements AccountRepository {
         });
       }
 
-      if (nextStatus === "APPROVED") {
+      if (nextStatus === "APPROVED" && this.requirePlayerForApproval) {
         const linkedPlayer = (
           await transaction
             .select()

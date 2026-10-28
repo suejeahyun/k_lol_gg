@@ -1,0 +1,88 @@
+{
+  "origin": "http://127.0.0.1:60516",
+  "capturedAt": "2026-10-28T17:30:00.675Z",
+  "routes": [
+    {
+      "index": 1,
+      "name": "new-site-desktop",
+      "group": "public",
+      "session": "account",
+      "requestedPath": "/sites/new",
+      "requestedUrl": "http://127.0.0.1:60516/sites/new",
+      "finalUrl": "http://127.0.0.1:60516/sites/new",
+      "finalPath": "/sites/new",
+      "status": 200,
+      "title": "커뮤니티 만들기 | GG HUB",
+      "heading": "우리 커뮤니티 만들기",
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "capturedWidth": 1440,
+      "capturedHeight": 4218,
+      "textSample": "본문으로 이동\nGG HUB\n커뮤니티 중앙 관리\n사이트 둘러보기\n내 사이트\n사이트 만들기\n\nGG HUB · COMMUNITY STUDIO\n\n우리 커뮤니티 만들기\n테마와 기능을 고르고, 우리 커뮤니티에 맞게 운영하세요.\n내 사이트\n커뮤니티의 첫인상\n커뮤니티 기본 정보\n커뮤니티 이름\n사이트 식별 주소\n영문·숫자·하이픈 3~40자. 실제 배포 주소는 개설 과정에서 확인됩니다.\n소개\n최대 300자. 모든 테마에서 같은 소개를 사용합니다",
+      "issues": [],
+      "screenshot": "001-new-site-desktop.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "mobile": false
+      }
+    },
+    {
+      "index": 2,
+      "name": "new-site-narrow",
+      "group": "public",
+      "session": "account",
+      "requestedPath": "/sites/new",
+      "requestedUrl": "http://127.0.0.1:60516/sites/new",
+      "finalUrl": "http://127.0.0.1:60516/sites/new",
+      "finalPath": "/sites/new",
+      "status": 200,
+      "title": "커뮤니티 만들기 | GG HUB",
+      "heading": "우리 커뮤니티 만들기",
+      "hasHorizontalOverflow": true,
+      "scrollWidth": 367,
+      "clientWidth": 320,
+      "capturedWidth": 367,
+      "capturedHeight": 6794,
+      "textSample": "본문으로 이동\nGG HUB\n사이트 둘러보기\n내 사이트\n사이트 만들기\n\nGG HUB · COMMUNITY STUDIO\n\n우리 커뮤니티 만들기\n테마와 기능을 고르고, 우리 커뮤니티에 맞게 운영하세요.\n내 사이트\n커뮤니티의 첫인상\n커뮤니티 기본 정보\n커뮤니티 이름\n사이트 식별 주소\n영문·숫자·하이픈 3~40자. 실제 배포 주소는 개설 과정에서 확인됩니다.\n소개\n최대 300자. 모든 테마에서 같은 소개를 사용합니다.\n세 가지 테마\n\n",
+      "issues": [
+        "HORIZONTAL_OVERFLOW"
+      ],
+      "screenshot": "002-new-site-narrow.png",
+      "viewport": {
+        "width": 320,
+        "height": 800,
+        "mobile": true
+      }
+    },
+    {
+      "index": 3,
+      "name": "signup-narrow",
+      "group": "public",
+      "session": "anonymous",
+      "requestedPath": "/signup",
+      "requestedUrl": "http://127.0.0.1:60516/signup",
+      "finalUrl": "http://127.0.0.1:60516/signup",
+      "finalPath": "/signup",
+      "status": 200,
+      "title": "가입 신청 | GG HUB",
+      "heading": "회원가입",
+      "hasHorizontalOverflow": true,
+      "scrollWidth": 367,
+      "clientWidth": 320,
+      "capturedWidth": 367,
+      "capturedHeight": 1043,
+      "textSample": "본문으로 이동\nGG HUB\n사이트 둘러보기\n내 사이트\n사이트 만들기\n회원가입\n로그인 아이디\n4~64자 · 한글, 영문, 숫자, . _ -\n비밀번호\n10자 이상 · 문자와 숫자 포함\n이용약관을 확인했고 계정 운영 규칙에 동의합니다.\n개인정보 처리 안내에 따른 계정 정보 처리에 동의합니다.\n가입하기\n일반 회원으로 가입됩니다. 커뮤니티 개설은 GG HUB 운영팀의 승인이 필요합니다.\n이미 계정이 있어요\nGG HUB\n\n각자의 커뮤니티",
+      "issues": [
+        "HORIZONTAL_OVERFLOW"
+      ],
+      "screenshot": "003-signup-narrow.png",
+      "viewport": {
+        "width": 320,
+        "height": 800,
+        "mobile": true
+      }
+    }
+  ]
+}

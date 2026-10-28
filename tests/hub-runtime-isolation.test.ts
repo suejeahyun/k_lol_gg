@@ -38,12 +38,12 @@ test("all three services reject each other's sessions even when the signing key 
 });
 
 test("hub allows only its navigation, required auth operations, registry and read-only assets", () => {
-  for (const path of ["/", "/community-network", "/admin/community-network", "/admin/login", "/admin/security", "/login", "/account/password", "/forbidden", "/api/auth/me", "/api/health", "/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/_next/static/chunks/app.js", "/icons/hub/mark.svg", "/images/hub/social.svg"]) {
+  for (const path of ["/", "/community-network", "/admin/community-network", "/admin/login", "/admin/security", "/login", "/signup", "/forgot-password", "/terms", "/privacy", "/help/contact", "/sites", "/sites/new", "/admin/community-sites", "/admin/users", "/api/admin/users", "/api/cron/community-sites", "/sso/authorize", "/account/password", "/forbidden", "/api/auth/me", "/api/health", "/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/_next/static/chunks/app.js", "/icons/hub/mark.svg", "/images/hub/social.svg"]) {
     assert.equal(resolveHubRoute(path, "GET").kind, "allow", path);
     assert.equal(resolveHubRoute(path, "HEAD").kind, "allow", path);
     assert.equal(resolveHubRoute(path, "POST").kind, "method-not-allowed", path);
   }
-  for (const path of ["/api/admin/login", "/api/admin/logout", "/api/auth/login", "/api/auth/logout"]) {
+  for (const path of ["/api/admin/login", "/api/admin/logout", "/api/auth/login", "/api/auth/logout", "/api/auth/signup", "/api/auth/reset-requests", "/api/support", "/api/auth/community-sso/authorize", "/api/auth/community-sso/exchange"]) {
     assert.equal(resolveHubRoute(path, "POST").kind, "allow", path);
     assert.equal(resolveHubRoute(path, "GET").kind, "method-not-allowed", path);
   }
@@ -55,8 +55,15 @@ test("hub allows only its navigation, required auth operations, registry and rea
 });
 
 test("hub denies child routes, unregistered APIs and encoded/static-prefix escapes", () => {
-  for (const path of ["/players", "/rankings/mmr", "/recruits", "/competitions", "/signup", "/account/profile", "/api/auth/signup", "/api/auth/me/player", "/api/admin/site-settings", "/api/admin/users", "/api/admin/security/totp", "/api/admin/security/totp/setup", "/api/kakao/v4/webhook", "/api/cron/security-maintenance", "/api/future-route", "/api/admin/community-network/extra", "/app/login", "/admin/users", "/icons/klol-mark.svg", "/images/nexus/mascot-board.png", "/icons/hub/../klol.svg", "/icons/hub/%2e%2e/klol.svg", "/%61dmin/community-network", "//admin/community-network", "/admin\\community-network", "/_next/data/build/admin/users.json", "/_next/image", "/_next/webpack-hmr"]) {
+  for (const path of ["/players", "/rankings/mmr", "/recruits", "/competitions", "/account/profile", "/api/auth/me/player", "/api/admin/site-settings", "/api/admin/security/totp", "/api/admin/security/totp/setup", "/api/kakao/v4/webhook", "/api/cron/security-maintenance", "/api/future-route", "/api/admin/community-network/extra", "/app/login", "/icons/klol-mark.svg", "/images/nexus/mascot-board.png", "/icons/hub/../klol.svg", "/icons/hub/%2e%2e/klol.svg", "/%61dmin/community-network", "//admin/community-network", "/admin\\community-network", "/_next/data/build/admin/users.json", "/_next/image", "/_next/webpack-hmr"]) {
     for (const method of ["GET", "POST", "PUT", "DELETE"]) assert.equal(resolveHubRoute(path, method).kind, "not-found", `${method} ${path}`);
   }
   assert.equal(resolveHubRoute("/_next/webpack-hmr", "GET", true).kind, "allow");
+});
+
+test("hub allows exact site and recovery actions without opening arbitrary administrator routes", () => {
+  const id = "00000000-0000-4000-8000-000000000001";
+  for (const path of [`/sites/${id}`, `/admin/community-sites/${id}`, `/admin/users/${id}`]) assert.equal(resolveHubRoute(path, "GET").kind, "allow");
+  for (const path of [`/api/community-sites/${id}`, `/api/admin/community-sites/${id}`, `/api/admin/users/${id}/password-reset`]) assert.equal(resolveHubRoute(path, "PATCH").kind, "allow");
+  for (const path of ["/sites/not-an-id", `/api/community-sites/${id}/unknown`, `/api/admin/users/${id}/unknown`, `/api/auth/community-sso/callback`]) assert.equal(resolveHubRoute(path, "GET").kind, "not-found");
 });

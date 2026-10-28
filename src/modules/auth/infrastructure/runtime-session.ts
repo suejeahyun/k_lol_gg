@@ -129,9 +129,14 @@ async function validateRuntimeSessionToken(token: string): Promise<AuthSession |
 }
 export const getCurrentSession = cache(async (purpose: "ACCOUNT" | "ADMIN") => {
   const token = (await cookies()).get(sessionCookieName(purpose))?.value;
+  return getRuntimeSessionFromToken(token, purpose);
+});
+
+/** Proxy supplies its request cookie explicitly; it has no route-handler cookies() scope. */
+export async function getRuntimeSessionFromToken(token: string | undefined, purpose: "ACCOUNT" | "ADMIN") {
   const session = token ? await validateRuntimeSessionToken(token) : null;
   return session?.purpose === purpose ? session : null;
-});
+}
 
 export type RuntimeSessionRevocationResult = "revoked" | "no-session" | "unavailable";
 

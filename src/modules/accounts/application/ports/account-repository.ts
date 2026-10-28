@@ -12,6 +12,7 @@ import type {
   PasswordChangeInput,
   OwnPlayerInput,
   SignupInput,
+  HubSignupInput,
   UserLoginInput,
 } from "../../domain/account-contracts";
 
@@ -35,6 +36,12 @@ export interface AccountRepository {
   resolvePlayerAccount(playerIdOrLegacyId: string): Promise<string | null>;
   signup(
     input: SignupInput,
+    passwordHash: string,
+    command: AccountMutationCommand,
+    approvalRequired?: boolean,
+  ): Promise<AccountMutationOutcome>;
+  signupHubAccount(
+    input: HubSignupInput,
     passwordHash: string,
     command: AccountMutationCommand,
   ): Promise<AccountMutationOutcome>;

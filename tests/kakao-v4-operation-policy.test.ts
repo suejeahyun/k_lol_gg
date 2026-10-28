@@ -12,6 +12,7 @@ import * as scope from "../src/modules/recruiting/kakao-v4/installation-scope";
 import * as classifier from "../src/modules/recruiting/kakao-v4/classifier";
 import * as operationAccess from "../src/modules/recruiting/kakao-v4/operation-access";
 import * as adminDomain from "../src/modules/recruiting/kakao-admin/domain";
+import * as communityModuleAccess from "../src/modules/community-sites/domain/module-access";
 
 function load(path: string, dependencies: Record<string, unknown>) {
   const code = ts.transpileModule(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"), {
@@ -26,6 +27,7 @@ function load(path: string, dependencies: Record<string, unknown>) {
 }
 
 function harness() {
+  const disabledCommunityModules = new Set<string>();
   let settingsReads = 0;
   let settingsUnavailable = false;
   const settings = { globalEnabled: true, maintenanceMode: false, recruitingEnabled: true,
@@ -49,6 +51,8 @@ function harness() {
     "@/modules/recruiting/kakao-v4/application": application,
     "@/modules/recruiting/kakao-v4/classifier": classifier,
     "@/modules/recruiting/kakao-v4/operation-access": operationAccess,
+    "@/modules/community-sites/domain/module-access": communityModuleAccess,
+    "@/modules/community-sites/infrastructure/module-access": { requireCommunityModule: async (_request: Request, moduleId: string) => disabledCommunityModules.has(moduleId) ? Response.json({ code: "COMMUNITY_MODULE_DISABLED" }, { status: 403 }) : null },
     "@/modules/recruiting/kakao-v4/dispatcher": { KakaoV4CommandDispatcher: class {
       async dispatch(_context: unknown, command: unknown) {
         dispatches.push(command); return { legacyReply: "synthetic-dispatch-reached", replayed: false };
@@ -74,9 +78,22 @@ function harness() {
         "x-klol-key-id": "synthetic", "x-klol-signature": signature }, body,
     });
   }
-  return { settings, dispatches, request, post: route.POST as (request: Request) => Promise<Response>,
+  return { settings, dispatches, request, disabledCommunityModules, post: route.POST as (request: Request) => Promise<Response>,
     settingsReads: () => settingsReads, unavailable: () => { settingsUnavailable = true; } };
 }
+
+test("managed community recruiting pause blocks authenticated new commands but retains guidance and status", async () => {
+  const h = harness();
+  h.disabledCommunityModules.add("recruiting");
+  const blocked = await h.post(h.request("5인파티"));
+  assert.equal(blocked.status, 403);
+  assert.equal((await blocked.json()).code, "COMMUNITY_MODULE_DISABLED");
+  assert.equal(h.dispatches.length, 0);
+  assert.equal((await h.post(h.request("구인도움말"))).status, 200);
+  assert.equal((await h.post(h.request("내전현황", "FEATURES"))).status, 200);
+  h.disabledCommunityModules.delete("recruiting");
+  assert.equal((await h.post(h.request("5인파티"))).status, 200);
+});
 
 test("signed V4 requests honor global/maintenance switches and fail closed before dispatch", async () => {
   for (const disabled of ["global", "maintenance", "database"] as const) {

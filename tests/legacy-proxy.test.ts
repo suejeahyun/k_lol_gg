@@ -4,12 +4,12 @@ import { NextRequest } from "next/server";
 
 import { proxy } from "../src/proxy";
 
-test("legacy proxy는 GET/HEAD만 308로 이동하고 query allowlist를 적용한다", () => {
-  const home = proxy(new NextRequest("https://v2.example/app?source=pwa&token=drop"));
+test("legacy proxy는 GET/HEAD만 308로 이동하고 query allowlist를 적용한다", async () => {
+  const home = await proxy(new NextRequest("https://v2.example/app?source=pwa&token=drop"));
   assert.equal(home.status, 308);
   assert.equal(home.headers.get("location"), "https://v2.example/?source=pwa");
 
-  const players = proxy(
+  const players = await proxy(
     new NextRequest(
       "https://v2.example/app/players?q=Sky%20Fox%23V2&page=2&token=drop&next=https://evil.example",
     ),
@@ -17,75 +17,75 @@ test("legacy proxy는 GET/HEAD만 308로 이동하고 query allowlist를 적용�
   assert.equal(players.status, 308);
   assert.equal(players.headers.get("location"), "https://v2.example/players?q=Sky+Fox%23V2&page=2");
 
-  const mutation = proxy(new NextRequest("https://v2.example/app/players", { method: "POST" }));
+  const mutation = await proxy(new NextRequest("https://v2.example/app/players", { method: "POST" }));
   assert.equal(mutation.status, 405);
   assert.equal(mutation.headers.get("allow"), "GET, HEAD");
   assert.equal(mutation.headers.has("location"), false);
 });
 
-test("UUID mapping이 없는 legacy player detail은 영구 redirect하지 않는다", () => {
-  const legacyDetail = proxy(new NextRequest("https://v2.example/app/players/42"));
+test("UUID mapping이 없는 legacy player detail은 영구 redirect하지 않는다", async () => {
+  const legacyDetail = await proxy(new NextRequest("https://v2.example/app/players/42"));
   assert.equal(legacyDetail.headers.get("x-middleware-next"), "1");
   assert.equal(legacyDetail.headers.has("location"), false);
 });
 
-test("legacy account adapters preserve only reviewed canonical intent", () => {
-  const login = proxy(new NextRequest("https://v2.example/app/login?next=%2Fplayers%3Fmine%3D1"));
+test("legacy account adapters preserve only reviewed canonical intent", async () => {
+  const login = await proxy(new NextRequest("https://v2.example/app/login?next=%2Fplayers%3Fmine%3D1"));
   assert.equal(login.status, 308);
   assert.equal(
     login.headers.get("location"),
     "https://v2.example/login?next=%2Fplayers%3Fmine%3D1",
   );
 
-  const adminEscape = proxy(new NextRequest("https://v2.example/app/login?next=%2Fadmin%2Fusers"));
+  const adminEscape = await proxy(new NextRequest("https://v2.example/app/login?next=%2Fadmin%2Fusers"));
   assert.equal(adminEscape.headers.get("location"), "https://v2.example/login?next=%2Faccount");
 
-  const duplicateNext = proxy(new NextRequest("https://v2.example/app/login?next=%2Fplayers&next=%2Faccount"));
+  const duplicateNext = await proxy(new NextRequest("https://v2.example/app/login?next=%2Fplayers&next=%2Faccount"));
   assert.equal(duplicateNext.status, 400);
-  const unknown = proxy(new NextRequest("https://v2.example/app/account?token=drop"));
+  const unknown = await proxy(new NextRequest("https://v2.example/app/account?token=drop"));
   assert.equal(unknown.status, 400);
 
-  const tier = proxy(new NextRequest("https://v2.example/account/tier"));
+  const tier = await proxy(new NextRequest("https://v2.example/account/tier"));
   assert.equal(tier.headers.get("location"), "https://v2.example/account?tab=player");
-  const mePlayer = proxy(new NextRequest("https://v2.example/me/player"));
+  const mePlayer = await proxy(new NextRequest("https://v2.example/me/player"));
   assert.equal(mePlayer.headers.get("location"), "https://v2.example/account?tab=player");
-  const mutation = proxy(new NextRequest("https://v2.example/me/player", { method: "POST" }));
+  const mutation = await proxy(new NextRequest("https://v2.example/me/player", { method: "POST" }));
   assert.equal(mutation.status, 405);
 });
 
-test("legacy statistics routes use one allowlisted canonical ranking destination", () => {
+test("legacy statistics routes use one allowlisted canonical ranking destination", async () => {
   const seasonId = "10000000-0000-4000-8000-000000000000";
   for (const source of [
     `/statistics?seasonId=${seasonId}&minParticipation=5&token=drop`,
     `/app/rankings?seasonId=${seasonId}&minParticipation=5&next=https://evil.example`,
     `/app/matches?tab=rankings&seasonId=${seasonId}&minParticipation=5&token=drop`,
   ]) {
-    const response = proxy(new NextRequest(`https://v2.example${source}`));
+    const response = await proxy(new NextRequest(`https://v2.example${source}`));
     assert.equal(response.status, 308);
     assert.equal(
       response.headers.get("location"),
       `https://v2.example/rankings?seasonId=${seasonId}&minParticipation=5`,
     );
   }
-  const mutation = proxy(new NextRequest("https://v2.example/statistics", { method: "POST" }));
+  const mutation = await proxy(new NextRequest("https://v2.example/statistics", { method: "POST" }));
   assert.equal(mutation.status, 405);
   assert.equal(mutation.headers.get("allow"), "GET, HEAD");
 });
 
-test("reviewed administrator aliases resolve to their canonical integrated views", () => {
-  const ai = proxy(new NextRequest("https://v2.example/admin/ai-requests?token=drop"));
+test("reviewed administrator aliases resolve to their canonical integrated views", async () => {
+  const ai = await proxy(new NextRequest("https://v2.example/admin/ai-requests?token=drop"));
   assert.equal(ai.status, 308);
   assert.equal(ai.headers.get("location"), "https://v2.example/admin/logs?view=ai-requests");
 
-  const player = proxy(new NextRequest("https://v2.example/admin/players/player-7/edit"));
+  const player = await proxy(new NextRequest("https://v2.example/admin/players/player-7/edit"));
   assert.equal(player.status, 308);
   assert.equal(player.headers.get("location"), "https://v2.example/admin/players/player-7?mode=edit");
 
-  const mutation = proxy(new NextRequest("https://v2.example/admin/kakao/stats", { method: "POST" }));
+  const mutation = await proxy(new NextRequest("https://v2.example/admin/kakao/stats", { method: "POST" }));
   assert.equal(mutation.status, 405);
   assert.equal(mutation.headers.get("allow"), "GET, HEAD");
 
-  const canonical = proxy(new NextRequest("https://v2.example/admin/logs?view=stats"));
+  const canonical = await proxy(new NextRequest("https://v2.example/admin/logs?view=stats"));
   assert.equal(canonical.headers.get("x-middleware-next"), "1");
   assert.equal(canonical.headers.has("location"), false);
 });

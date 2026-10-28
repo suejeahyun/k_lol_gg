@@ -15,7 +15,7 @@ const source = `
   import { Search, Crown } from './src/components/theme/theme-icons.tsx';
   process.stdout.write(JSON.stringify({
     name: SERVICE_BRAND.name,
-    manifest: manifest(),
+    manifest: await manifest(),
     home: createRouteMetadata('/'),
     routes: SEO_ROUTE_CONTRACTS,
     playerUrl: absoluteSiteUrl('/players'),

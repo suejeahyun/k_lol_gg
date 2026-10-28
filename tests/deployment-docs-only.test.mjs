@@ -13,7 +13,7 @@ function gitFor(files) {
 }
 test("only documentation changed since the actual successful deployment can skip", () => {
   assert.equal(shouldSkipDocsOnlyDeployment(environment, gitFor(["README.md", "docs/releases/registry.json"])), true);
-  for (const file of ["src/app/page.tsx", "vercel.json", "package-lock.json", "drizzle/0044_vengeful_trauma.sql", ".env.example", "public/icon.png", "docs-runtime.js"]) {
+  for (const file of ["src/app/page.tsx", "vercel.json", "vercel.ts", "package-lock.json", "drizzle/0044_vengeful_trauma.sql", ".env.example", "public/icon.png", "docs-runtime.js"]) {
     assert.equal(shouldSkipDocsOnlyDeployment(environment, gitFor(["docs/STATUS.md", file])), false);
   }
 });

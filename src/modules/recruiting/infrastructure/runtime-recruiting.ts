@@ -2,7 +2,9 @@ import "server-only";
 
 import { getDatabase } from "@/platform/db/client";
 
-import { RecruitingCommandHandler } from "../application/command-handler";
+import { RecruitingApplicationError, RecruitingCommandHandler } from "../application/command-handler";
+import { isCommunityRecruitingNewWork } from "@/modules/community-sites/domain/module-access";
+import { isRuntimeCommunityModuleEnabled } from "@/modules/community-sites/infrastructure/module-access";
 import type { RecruitingCommand } from "../application/commands";
 import type { RecruitingCompatTargetInput, RecruitingPartyReplayInput } from "../application/ports";
 import { PostgresRecruitingAdapter } from "./postgres-recruiting-adapter";
@@ -27,7 +29,10 @@ export class RuntimeRecruitingService {
     });
   }
 
-  handle(command: RecruitingCommand) {
+  async handle(command: RecruitingCommand) {
+    if (isCommunityRecruitingNewWork(command.type) && !await isRuntimeCommunityModuleEnabled("recruiting")) {
+      throw new RecruitingApplicationError("FORBIDDEN", "이 커뮤니티의 새 모집·참가 접수가 중지되어 있습니다.");
+    }
     return this.handler.handle(command);
   }
 

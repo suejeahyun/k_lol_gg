@@ -1,8 +1,10 @@
 .shell { min-height: 100svh; display: flex; flex-direction: column; color: var(--foreground); }
+.accountControls { display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;font-size:.75rem;min-width:0; }
+.accountControls a { display:inline-flex;align-items:center;min-height:2.75rem;white-space:nowrap; }
 .skip { position: absolute; top: -5rem; left: 1rem; z-index: 100; padding: .8rem 1rem; border-radius: .5rem; color: white; background: #123b3b; }
 .skip:focus { top: .75rem; }
 .topbar { background: #fff; border-bottom: 1px solid var(--border); }
-.topbarInner { max-width: 78rem; padding: 0 2rem; margin: auto; min-height: 5rem; display: flex; align-items: center; gap: 1.4rem; }
+.topbarInner { max-width: 78rem; padding: 0 2rem; margin: auto; min-height: 5rem; display: flex; flex-wrap:wrap; align-items: center; gap: 1.4rem; }
 .brand { display: flex; align-items: center; gap: .65rem; color: #152a35; white-space: nowrap; }
 .brand > span { width: 2.35rem; height: 2.35rem; display: grid; place-items: center; border-radius: .65rem; background: #123b3b; color: #8ae0c6; }
 .brand strong { font-size: 1.2rem; letter-spacing: -.035em; }
@@ -20,7 +22,7 @@
 .role { color: #627079; }
 .content { flex: 1; min-width: 0; }
 .content:focus { outline: none; }
-.footer { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; width: min(100% - 4rem, 74rem); margin: auto; padding: 1.8rem 0 2rem; border-top: 1px solid var(--border); color: #6c7a83; font-size: .75rem; }
+.footer { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; width: min(100% - 4rem, 74rem); margin: auto; padding: 1.8rem 0 2rem; border-top: 1px solid var(--border); color: #56676f; font-size: .75rem; }
 .footer strong { letter-spacing: -.03em; color: #30454e; }
 .footer p { margin: 0; }
 .footer a { margin-left: auto; min-height: 2.75rem; display: inline-flex; align-items: center; }
@@ -82,5 +84,6 @@
 .directoryHeading h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); letter-spacing: -.045em; margin: 1rem 0; }
 .directoryHeading > p:last-child { color: #687b82; font-size: .9rem; line-height: 1.8; }
 .shell :is(a, button):focus-visible { outline: 3px solid #23876c; outline-offset: 4px; }
+@media (max-width: 440px) { .topbarInner { flex-wrap: wrap; padding-block: .75rem; } .navigation { flex-basis: 100%; margin-left: 0; justify-content: space-between; flex-wrap: wrap; } .adminbar > div { flex-wrap: wrap; margin-left: 0; } }
 @media (max-width: 850px) { .serviceLabel { display: none; } .hero { gap: 1.5rem; padding: 2rem; } .hero h1 { font-size: 2rem; } .desktopBreak { display: none; } .managementCallout { align-items: flex-start; flex-direction: column; } }
 @media (max-width: 640px) { .topbarInner { min-height: 4.5rem; padding: 0 1rem; gap: .6rem; } .brand strong { font-size: 1rem; } .brand > span { width: 2rem; height: 2rem; } .navigation { gap: .7rem; font-size: .72rem; } .navigation .manage, .navigation .current { padding: 0 .65rem; } .page { padding: 1.25rem 1rem 2.5rem; } .hero { grid-template-columns: 1fr; padding: 1.6rem 1.4rem; } .hero h1 { font-size: 2rem; } .heroDescription { font-size: .8rem; } .heroActions { gap: .8rem; font-size: .72rem; } .topology { max-width: 22rem; margin: auto; } .sectionHeading { align-items: flex-start; flex-direction: column; gap: .6rem; } .directory { padding-top: 2rem; } .grid { grid-template-columns: 1fr; } .footer { width: calc(100% - 2rem); gap: .4rem 1rem; } .footer a { margin-left: 0; } .footer p { width: calc(100% - 5rem); } .adminbar { font-size: .7rem; flex-wrap: wrap; gap: .2rem; } .adminbar > div { gap: .65rem; margin-left: auto; } .role { display: none; } }

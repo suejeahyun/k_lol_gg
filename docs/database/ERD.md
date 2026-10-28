@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `0f4987005a3f92a71f0302663d7f5e2843228cb3f27d506b5d9caa7317257837`
-- Tables: 118
-- Foreign keys: 178
+- Schema SHA-256: `28bbfc2d993da7c519f2da813182703a0bab2ebd9f01a94237552ddb4fe9e46a`
+- Tables: 125
+- Foreign keys: 189
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -99,6 +99,32 @@ erDiagram
         timestamp_with_time_zone created_at "NOT NULL"
         timestamp_with_time_zone updated_at "NOT NULL"
     }
+    auth__community_sso_clients {
+        uuid site_id PK, FK "NOT NULL"
+        bytea secret_hash "NOT NULL"
+        timestamp_with_time_zone revoked_at "nullable"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
+    auth__community_sso_codes {
+        uuid id PK "NOT NULL"
+        bytea code_hash UK "NOT NULL"
+        uuid site_id FK "NOT NULL"
+        uuid user_account_id FK "NOT NULL"
+        integer auth_version "NOT NULL"
+        session_purpose purpose "NOT NULL"
+        varchar_500 callback_url "NOT NULL"
+        varchar_43 code_challenge "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone expires_at "NOT NULL"
+        timestamp_with_time_zone consumed_at "nullable"
+    }
+    auth__community_sso_identities {
+        varchar_300 hub_issuer PK "NOT NULL"
+        uuid hub_subject PK "NOT NULL"
+        uuid user_account_id FK, UK "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+    }
     auth__login_rate_limit_buckets {
         login_rate_limit_scope scope "NOT NULL"
         bytea key_hash "NOT NULL"
@@ -155,13 +181,17 @@ erDiagram
         timestamp_with_time_zone updated_at "NOT NULL"
         timestamp_with_time_zone deleted_at "nullable"
     }
+    auth__community_sso_clients ||--o{ auth__community_sso_codes : "site_id to site_id"
     auth__user_accounts o|--o{ auth__account_mutation_receipts : "actor_user_account_id to id"
     auth__user_accounts o|--o{ auth__account_status_history : "actor_user_account_id to id"
     auth__user_accounts ||--o{ auth__account_status_history : "user_account_id to id"
     auth__user_accounts ||--o| auth__admin_totp_credentials : "user_account_id to id"
+    auth__user_accounts ||--o{ auth__community_sso_codes : "user_account_id to id"
+    auth__user_accounts ||--o| auth__community_sso_identities : "user_account_id to id"
     auth__user_accounts o|--o{ auth__password_reset_requests : "resolved_by_user_account_id to id"
     auth__user_accounts ||--o{ auth__password_reset_requests : "user_account_id to id"
     auth__user_accounts ||--o{ auth__sessions : "user_account_id to id"
+    community_sites__sites ||--o| auth__community_sso_clients : "site_id to id"
 ```
 
 ## catalog
@@ -247,6 +277,74 @@ erDiagram
     auth__user_accounts ||--o{ community_network__command_receipts : "actor_user_account_id to id"
     auth__user_accounts o|--o{ community_network__registry_state : "updated_by_user_account_id to id"
     community_network__communities ||--o{ community_network__rooms : "community_id to id"
+```
+
+## community_sites
+
+```mermaid
+erDiagram
+    community_sites__command_receipts {
+        uuid id PK "NOT NULL"
+        uuid actor_user_account_id FK "NOT NULL"
+        uuid site_id FK "NOT NULL"
+        bytea key_hash "NOT NULL"
+        bytea request_hash "NOT NULL"
+        jsonb response_json "NOT NULL"
+        integer response_status "NOT NULL"
+        bigint revision "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone expires_at "NOT NULL"
+    }
+    community_sites__provisioning_jobs {
+        uuid id PK "NOT NULL"
+        uuid site_id FK "NOT NULL"
+        varchar_24 kind "NOT NULL"
+        varchar_16 status "NOT NULL"
+        jsonb configuration_json "NOT NULL"
+        bigint site_revision "NOT NULL"
+        uuid requested_by_user_account_id FK "NOT NULL"
+        varchar_64 checkpoint "NOT NULL"
+        integer attempt_count "NOT NULL"
+        jsonb resource_json "NOT NULL"
+        varchar_96 error_code "nullable"
+        uuid lease_token "nullable"
+        timestamp_with_time_zone lease_expires_at "nullable"
+        timestamp_with_time_zone next_attempt_at "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+        timestamp_with_time_zone completed_at "nullable"
+    }
+    community_sites__runtime_configuration {
+        integer id PK "NOT NULL"
+        uuid community_id "NOT NULL"
+        uuid owner_user_account_id FK "NOT NULL"
+        varchar_16 publication_state "NOT NULL"
+        jsonb configuration_json "NOT NULL"
+        bigint revision "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
+    community_sites__sites {
+        uuid id PK "NOT NULL"
+        uuid owner_user_account_id FK "NOT NULL"
+        varchar_64 slug "NOT NULL"
+        jsonb configuration_json "NOT NULL"
+        jsonb published_configuration_json "nullable"
+        varchar_24 status "NOT NULL"
+        bigint revision "NOT NULL"
+        varchar_1000 review_reason "nullable"
+        uuid reviewed_by_user_account_id FK "nullable"
+        timestamp_with_time_zone reviewed_at "nullable"
+        varchar_300 origin UK "nullable"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
+    auth__user_accounts ||--o{ community_sites__command_receipts : "actor_user_account_id to id"
+    auth__user_accounts ||--o{ community_sites__provisioning_jobs : "requested_by_user_account_id to id"
+    auth__user_accounts ||--o{ community_sites__runtime_configuration : "owner_user_account_id to id"
+    auth__user_accounts ||--o{ community_sites__sites : "owner_user_account_id to id"
+    auth__user_accounts o|--o{ community_sites__sites : "reviewed_by_user_account_id to id"
+    community_sites__sites ||--o{ community_sites__command_receipts : "site_id to id"
+    community_sites__sites ||--o{ community_sites__provisioning_jobs : "site_id to id"
 ```
 
 ## competition

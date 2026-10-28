@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next-sso-hub/**",
+    ".next-sso-child/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

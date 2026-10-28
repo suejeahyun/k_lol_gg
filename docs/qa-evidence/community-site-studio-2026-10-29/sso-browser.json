@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "syntheticOnly": true,
+  "productionBundles": [
+    "hub",
+    "community"
+  ],
+  "distinctOrigins": true,
+  "operatingServicesConfigured": false,
+  "checks": [
+    "production application ready: hub",
+    "production application ready: community",
+    "unpublished anonymous home and local signup blocked",
+    "cross-site Strict-cookie owner ACCOUNT SSO and owner preview passed",
+    "fresh-password hub USER becomes only pre-provisioned local SUPER_ADMIN",
+    "nonowner cannot create a local identity before publication",
+    "published member consent creates only local USER/PENDING and INACTIVE profile",
+    "pending member cannot recruit; real local-admin approval activates profile, then member SSO can create first recruitment"
+  ]
+}

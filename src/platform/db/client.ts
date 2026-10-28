@@ -8,6 +8,7 @@ declare global {
   var __klolV2DatabaseHandle: DatabaseHandle | undefined;
   var __nexusDatabaseHandle: DatabaseHandle | undefined;
   var __ggHubDatabaseHandle: DatabaseHandle | undefined;
+  var __ggCommunityDatabaseHandles: Map<string, DatabaseHandle> | undefined;
 }
 
 function readPoolMax(): number {
@@ -23,6 +24,17 @@ export function getDatabaseHandle(): DatabaseHandle {
   }
 
   const connectionString = requireRuntimeDatabaseUrl();
+  if (SERVICE_BRAND.id === "community") {
+    const communityId = SERVICE_BRAND.communityId;
+    if (!communityId) throw new Error("Managed community identity is missing.");
+    const handles = globalThis.__ggCommunityDatabaseHandles ??= new Map();
+    let handle = handles.get(communityId);
+    if (!handle) {
+      handle = createDatabaseHandle(connectionString, { max: readPoolMax() });
+      handles.set(communityId, handle);
+    }
+    return handle;
+  }
   if (SERVICE_BRAND.id === "hub") {
     globalThis.__ggHubDatabaseHandle ??= createDatabaseHandle(connectionString, { max: readPoolMax() });
     return globalThis.__ggHubDatabaseHandle;

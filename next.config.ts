@@ -18,7 +18,9 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  ...(process.env.V2_E2E_BUILD === "true" && /^\.next-sso-(hub|child)$/.test(process.env.NEXT_DIST_DIR ?? "") ? { distDir: process.env.NEXT_DIST_DIR, typescript: { tsconfigPath: `.private/${process.env.NEXT_DIST_DIR!.slice(1)}-tsconfig.json` } } : {}),
   poweredByHeader: false,
+  outputFileTracingIncludes: { "/api/cron/community-sites": ["./drizzle/**/*"] },
   images: {
     minimumCacheTTL: 60 * 60 * 24 * 7,
     remotePatterns: [

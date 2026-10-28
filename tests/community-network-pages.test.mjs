@@ -34,6 +34,7 @@ function harness(kind, { state = "ready", communities = [], snapshot = emptySnap
   const pageModule = { exports: {} };
   const modules = {
     "react/jsx-runtime": jsxRuntime,
+    "@/modules/community-sites/infrastructure/runtime": { getRuntimeCommunitySitesRepository: () => null },
     "@/lib/service-brand": { SERVICE_BRAND: { id: serviceId } },
     "next/link": (props) => createElement("a", props),
     "next/navigation": { notFound() { calls.push(["notFound"]); throw notFound; } },

@@ -131,7 +131,7 @@ export async function bootstrapHubDatabase(pool: Pool, expectedDatabaseName: str
       await transaction.insert(networkCommunities).values([...snapshot.communities]);
       await transaction.insert(networkRooms).values([...snapshot.rooms]);
       await transaction.insert(communityNetworkState).values({ id: 1, revision: 1, updatedByUserAccountId: administratorId });
-      await transaction.execute("update operations.site_settings set brand_name = 'GG HUB', tagline = '독립된 커뮤니티를 한곳에서', features_json = '{}'::jsonb, ai_allowed_roles_json = '[]'::jsonb, support_url = null where id = 1");
+      await transaction.execute("update operations.site_settings set brand_name = 'GG HUB', tagline = '독립된 커뮤니티를 한곳에서', features_json = '{\"registrations\":true,\"matchSubmissions\":false,\"teamBalance\":false,\"kakaoHelp\":false,\"riotIntegration\":false,\"aiAssistant\":false}'::jsonb, ai_allowed_roles_json = '[]'::jsonb, support_url = null where id = 1");
       await transaction.insert(auditEvents).values({
         requestId: randomUUID(), actorUserAccountId: administratorId, action: bootstrapAction, targetType: "HUB", targetId: bootstrapVersion,
         afterJson: { communities: 2, rooms: 4, administratorsCreated: 1, revision: 1 },

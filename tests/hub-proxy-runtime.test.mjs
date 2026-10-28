@@ -16,10 +16,10 @@ const source = `
     adminCookie: ADMIN_SESSION_COOKIE_NAME,
     accountCookie: ACCOUNT_SESSION_COOKIE_NAME,
     next: [normalizeInternalNext('/admin/users'), normalizeInternalNext('/admin/community-network'), normalizeAccountNext('/players'), normalizeAccountNext('/account/password')],
-    responses: calls.map(([path,method]) => {
-      const response = proxy(new NextRequest('https://hub.example'+path, { method, headers: {[ADMIN_REQUEST_PATH_HEADER]: '/admin/users'} }));
+    responses: await Promise.all(calls.map(async ([path,method]) => {
+      const response = await proxy(new NextRequest('https://hub.example'+path, { method, headers: {[ADMIN_REQUEST_PATH_HEADER]: '/admin/users'} }));
       return {path,status:response.status,location:response.headers.get('location'),next:response.headers.get('x-middleware-next'),trustedPath:response.headers.get('x-middleware-request-'+ADMIN_REQUEST_PATH_HEADER),allow:response.headers.get('allow')};
-    })
+    }))
   }));
 `;
 
@@ -32,7 +32,7 @@ test("hub proxy applies to all paths, preserves trusted administrator path and u
   assert.deepEqual(result.matcher, ["/:path*"]);
   assert.equal(result.adminCookie, "gg_hub_session");
   assert.equal(result.accountCookie, "gg_hub_account_session");
-  assert.deepEqual(result.next, ["/admin", "/admin/community-network", "/account", "/account/password"]);
+  assert.deepEqual(result.next, ["/admin/users", "/admin/community-network", "/account", "/account/password"]);
   assert.equal(result.responses[0].location, "https://hub.example/admin/community-network");
   assert.equal(result.responses[1].location, "https://hub.example/");
   assert.equal(result.responses[2].next, "1");

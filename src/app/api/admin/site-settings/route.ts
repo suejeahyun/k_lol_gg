@@ -4,7 +4,8 @@ import {
   operationsActor, operationsErrorResponse, operationsMutationResponse, operationsUnavailableResponse,
   prepareOperationsMutation, requireOperationsApiSession,
 } from "@/modules/operations/infrastructure/operations-http";
-import { formatRevisionEtag, noStoreJsonResponse, readValidatedTraceId } from "@/platform/http";
+import { definePublicProblem, formatRevisionEtag, noStoreJsonResponse, problemResponse, readValidatedTraceId } from "@/platform/http";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,10 @@ export async function PUT(request: Request) {
   if (!prepared.ok) return prepared.response;
   const patch = parseSiteSettingsPatch(prepared.body);
   if (!patch) return operationsErrorResponse(new Error("INVALID_INPUT"), prepared.traceId);
+  if (SERVICE_BRAND.id === "community" && Object.keys(patch).some((key) => !["supportUrl", "internalMaintenanceNote"].includes(key))) {
+    return problemResponse(definePublicProblem({ code: "COMMUNITY_SETTINGS_MANAGED_BY_HUB", status: 409,
+      title: "이 설정은 GG HUB에서 관리합니다.", detail: "커뮤니티 이름·소개·기능은 GG HUB의 내 사이트에서 변경하고 게시해 주세요. 이 API에서는 지원 URL과 비공개 운영 메모만 저장할 수 있습니다." }), { traceId: prepared.traceId });
+  }
   const repository = getRuntimeOperationsRepository();
   if (!repository) return operationsUnavailableResponse(prepared.traceId);
   try {

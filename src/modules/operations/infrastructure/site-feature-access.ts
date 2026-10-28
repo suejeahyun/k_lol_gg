@@ -3,6 +3,7 @@ import "server-only";
 import type { PublicFeatureFlags } from "../domain/site-settings";
 import { getRuntimeOperationsRepository } from "./runtime-operations";
 import { definePublicProblem, problemResponse, readValidatedTraceId } from "@/platform/http";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 export type SiteFeatureKey = keyof PublicFeatureFlags;
 export type SiteFeatureState = "enabled" | "disabled" | "unavailable";
@@ -35,6 +36,19 @@ export function siteFeatureLabel(feature: SiteFeatureKey) {
 }
 
 export async function readSiteFeatureState(feature: SiteFeatureKey): Promise<SiteFeatureState> {
+  if (SERVICE_BRAND.id === "community") {
+    try {
+      const { readRuntimeCommunitySiteConfiguration } = await import("@/modules/community-sites/infrastructure/runtime-site-configuration");
+      const runtime = await readRuntimeCommunitySiteConfiguration();
+      if (!runtime) return "unavailable";
+      // Existing submission/lineup history must stay reachable when new work stops.
+      // Actual create actions are checked separately on each server request.
+      if (feature === "matchSubmissions" || feature === "teamBalance") return "enabled";
+      if (feature === "registrations") return runtime.configuration.modules.members ? "enabled" : "disabled";
+      if (feature === "aiAssistant") return "disabled";
+      return runtime.configuration.modules[feature] ? "enabled" : "disabled";
+    } catch { return "unavailable"; }
+  }
   const repository = getRuntimeOperationsRepository();
   if (!repository) return "unavailable";
   try {
@@ -47,6 +61,11 @@ export async function readSiteFeatureState(feature: SiteFeatureKey): Promise<Sit
 
 /** Fail closed when the settings store cannot be read. */
 export async function requireSiteFeature(request: Request, feature: SiteFeatureKey) {
+  if (SERVICE_BRAND.id === "community") {
+    const { requireCommunityModuleForRequest } = await import("@/modules/community-sites/infrastructure/module-access");
+    const failure = await requireCommunityModuleForRequest(request);
+    if (failure) return failure;
+  }
   const state = await readSiteFeatureState(feature);
   if (state === "enabled") return null;
   const traceId = readValidatedTraceId(request.headers);

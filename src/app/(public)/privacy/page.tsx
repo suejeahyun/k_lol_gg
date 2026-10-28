@@ -4,13 +4,16 @@ import { UsagePreference } from "@/components/usage/usage-preference";
 import Link from "next/link";
 
 import styles from "@/components/accounts/account-access.module.css";
-import { ACCOUNT_PRIVACY_VERSION } from "@/modules/accounts/domain/account-policies";
+import { ACCOUNT_PRIVACY_VERSION, COMMUNITY_ACCOUNT_PRIVACY_VERSION } from "@/modules/accounts/domain/account-policies";
+import { HubPrivacy } from "@/components/accounts/hub-account-policies";
 
 export const metadata = createRouteMetadata("/privacy");
 
 export default function PrivacyPage() {
+  if (SERVICE_BRAND.id === "hub") return <HubPrivacy />;
   return <div className={styles.page}><article className={styles.policy}>
-    <header><h1>개인정보 처리 안내</h1><p>정책 식별자 {ACCOUNT_PRIVACY_VERSION} · 시행 2026년 10월 2일</p></header>
+    <header><h1>개인정보 처리 안내</h1><p>정책 식별자 {SERVICE_BRAND.id === "community" ? COMMUNITY_ACCOUNT_PRIVACY_VERSION : ACCOUNT_PRIVACY_VERSION} · 시행 {SERVICE_BRAND.id === "community" ? "2026년 10월 29일" : "2026년 10월 2일"}</p></header>
+    {SERVICE_BRAND.id === "community" ? <section><h2>GG HUB 로그인 연결</h2><p>연결 로그인에 동의하면 GG HUB로부터 고유 계정 식별자를 받아 이 커뮤니티의 계정에 연결합니다. GG HUB 비밀번호나 중앙 운영 권한·다른 커뮤니티의 회원 기록은 받지 않습니다. 게임 프로필은 이 사이트에 직접 등록하며, 가입 승인은 이 커뮤니티 운영진이 결정합니다.</p></section> : null}
     <section><h2>1. 처리하는 정보</h2><p>가입 시 로그인 아이디, 비밀번호, 회원명, Riot ID, 약관·개인정보 안내 동의 시점과 버전을 처리합니다. 비밀번호 원문은 저장하지 않고 scrypt 해시만 저장합니다.</p></section>
     <section><h2>2. 이용 목적</h2><p>계정 인증, 가입·플레이어 연결 검토, 승인과 이용 제한, 비밀번호 복구, 관리자 보안, 요청 속도 제한, 오류 조사와 변경 감사에 사용합니다.</p></section>
     <section><h2>3. 세션과 보안 기록</h2><p>일반 계정 세션은 최대 7일, 비밀번호로 로그인한 관리자 세션은 최대 30분의 별도 HttpOnly 쿠키로 유지합니다. DB에는 세션 토큰 원문 대신 해시, 만료·폐기 시각과 권한 버전을 저장합니다. 보안 변경 시 모든 세션을 폐기합니다.</p></section>

@@ -1,6 +1,6 @@
 # MMR 경기 반영 예약 작업
 
-`GET /api/cron/mmr-projection`은 기존 MMR 서비스의 `catchUp()`을 호출한다. `vercel.json`의 주기는 5분이다. 공개 랭킹 조회는 쓰기를 실행하지 않는다. 시즌 통계와 별도 영수증을 사용하므로 기존 통계 outbox 소비와 경쟁하지 않는다.
+`GET /api/cron/mmr-projection`은 기존 MMR 서비스의 `catchUp()`을 호출한다. `vercel.ts`의 주기는 5분이다. 공개 랭킹 조회는 쓰기를 실행하지 않는다. 시즌 통계와 별도 영수증을 사용하므로 기존 통계 outbox 소비와 경쟁하지 않는다.
 
 ## 실행과 보호
 

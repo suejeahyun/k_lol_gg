@@ -176,7 +176,8 @@ export class IsolatedChromium {
     private readonly client: CdpClient,
   ) {}
 
-  static async launch(origin: string) {
+  static async launch(origin: string, options: { localCertificateSpki?: string } = {}) {
+    if (options.localCertificateSpki && (!new Set(["127.0.0.1", "localhost"]).has(new URL(origin).hostname) || !/^[A-Za-z0-9+/]{43}=$/u.test(options.localCertificateSpki))) throw new Error("Certificate exception requires an exact synthetic loopback certificate fingerprint.");
     const chromePath = await findChromium();
     const profileDirectory = await mkdtemp(path.join(tmpdir(), "klol-v2-browser-"));
     const debugPort = await availablePort();
@@ -186,6 +187,7 @@ export class IsolatedChromium {
       "--disable-extensions",
       "--no-first-run",
       "--no-default-browser-check",
+      ...(options.localCertificateSpki ? [`--ignore-certificate-errors-spki-list=${options.localCertificateSpki}`] : []),
       `--remote-debugging-port=${debugPort}`,
       "--remote-allow-origins=*",
       `--user-data-dir=${profileDirectory}`,

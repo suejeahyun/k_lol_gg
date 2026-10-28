@@ -1,0 +1,341 @@
+{
+  "checkedAt": "2026-10-28T17:59:31.194Z",
+  "localOnly": true,
+  "syntheticDataOnly": true,
+  "productionAccess": false,
+  "externalProviderCalls": false,
+  "publicDirectoryFixtureOnly": true,
+  "passed": true,
+  "checks": [
+    {
+      "check": "actual Next hub home responds",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "server renders the standalone hub identity",
+      "passed": true
+    },
+    {
+      "check": "site applications require a user session",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "ordinary account cookie cannot authorize review API",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "synthetic administrator can read review queue",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "local provisioning remains disabled before approval tests",
+      "passed": true
+    },
+    {
+      "check": "a new hub member signs up without a Riot player identity",
+      "status": 201,
+      "expectedStatus": 201,
+      "passed": true
+    },
+    {
+      "check": "signup creates an approved USER without copied player data",
+      "passed": true
+    },
+    {
+      "check": "signup retry returns the original account",
+      "status": 201,
+      "expectedStatus": 201,
+      "passed": true
+    },
+    {
+      "check": "signup retry does not create a second account",
+      "passed": true
+    },
+    {
+      "check": "ordinary member status is durable in the synthetic database",
+      "passed": true
+    },
+    {
+      "check": "new member logs in through the real account endpoint",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "account cookie is HttpOnly and same-site",
+      "passed": true
+    },
+    {
+      "check": "login resolves the newly registered account",
+      "passed": true
+    },
+    {
+      "check": "approved USER submits a real site application",
+      "status": 201,
+      "expectedStatus": 201,
+      "passed": true
+    },
+    {
+      "check": "submission is owned and is not a provisioned site",
+      "passed": true
+    },
+    {
+      "check": "creation response exposes the site revision ETag",
+      "passed": true
+    },
+    {
+      "check": "same site request replays successfully",
+      "status": 201,
+      "expectedStatus": 201,
+      "passed": true
+    },
+    {
+      "check": "site replay keeps its identity and produces no duplicate",
+      "passed": true
+    },
+    {
+      "check": "same idempotency key rejects changed content",
+      "status": 409,
+      "expectedStatus": 409,
+      "passed": true
+    },
+    {
+      "check": "unknown module configuration is rejected",
+      "status": 400,
+      "expectedStatus": 400,
+      "passed": true
+    },
+    {
+      "check": "request cannot inject a different owner",
+      "status": 400,
+      "expectedStatus": 400,
+      "passed": true
+    },
+    {
+      "check": "owner reads applications",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "owner collection excludes other users' sites",
+      "passed": true
+    },
+    {
+      "check": "another account cannot read an owned application",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "another account cannot modify an owned application",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "ordinary USER cannot use administrator review route",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "foreign origin cannot update an application",
+      "status": 403,
+      "expectedStatus": 403,
+      "passed": true
+    },
+    {
+      "check": "missing origin cannot update an application",
+      "status": 403,
+      "expectedStatus": 403,
+      "passed": true
+    },
+    {
+      "check": "site updates require an explicit revision",
+      "status": 428,
+      "expectedStatus": 428,
+      "passed": true
+    },
+    {
+      "check": "stale revision cannot replace current settings",
+      "status": 412,
+      "expectedStatus": 412,
+      "passed": true
+    },
+    {
+      "check": "unsupported query cannot bypass site policy",
+      "status": 400,
+      "expectedStatus": 400,
+      "passed": true
+    },
+    {
+      "check": "administrator can inspect the submitted application",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "detail also reports provisioning setup unavailable",
+      "passed": true
+    },
+    {
+      "check": "approval cannot queue external work when provisioning is disabled",
+      "status": 503,
+      "expectedStatus": 503,
+      "passed": true
+    },
+    {
+      "check": "readiness failure has an actionable safe problem code",
+      "passed": true
+    },
+    {
+      "check": "disabled approval creates no provisioning job",
+      "passed": true
+    },
+    {
+      "check": "administrator can request changes without provider access",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "review feedback is stored as changes requested",
+      "passed": true
+    },
+    {
+      "check": "owner saves requested configuration changes",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "owner submit reaches SUBMITTED",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "durable state is SUBMITTED",
+      "passed": true
+    },
+    {
+      "check": "owner cancel reaches CANCELLED",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "durable state is CANCELLED",
+      "passed": true
+    },
+    {
+      "check": "owner submit reaches SUBMITTED",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "durable state is SUBMITTED",
+      "passed": true
+    },
+    {
+      "check": "administrator rejects with an explicit reason",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "rejection remains visible to the owner",
+      "passed": true
+    },
+    {
+      "check": "rejected application can be resubmitted by its owner",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "new submission clears stale review feedback",
+      "passed": true
+    },
+    {
+      "check": "public directory / renders",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "/ shows active published fields",
+      "passed": true
+    },
+    {
+      "check": "/ conceals drafts and unapproved application data",
+      "passed": true
+    },
+    {
+      "check": "/ does not expose ownership or provider metadata",
+      "passed": true
+    },
+    {
+      "check": "public directory /community-network renders",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "/community-network shows active published fields",
+      "passed": true
+    },
+    {
+      "check": "/community-network conceals drafts and unapproved application data",
+      "passed": true
+    },
+    {
+      "check": "/community-network does not expose ownership or provider metadata",
+      "passed": true
+    },
+    {
+      "check": "owner can see draft and published configuration separately",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "owner detail keeps private draft distinct from its published view",
+      "passed": true
+    },
+    {
+      "check": "synthetic application finishes cancelled without provisioning",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "new user's logout revokes the account session",
+      "status": 204,
+      "expectedStatus": 204,
+      "passed": true
+    },
+    {
+      "check": "revoked session cannot replay an earlier successful application",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "all HTTP checks leave external provisioning unqueued",
+      "passed": true
+    }
+  ],
+  "finalRevision": 9,
+  "finalStatus": "CANCELLED"
+}
