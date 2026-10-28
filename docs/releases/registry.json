@@ -2505,6 +2505,46 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "kakao-notification-room-routing",
+      "version": "1.0.0",
+      "gitTag": "kakao-notification-room-routing-v1.0.0",
+      "commit": "4c2eae4243bf31fefd0273a7a7f314f983cb462d",
+      "migrationHead": "0049_stable-recruit-codes",
+      "qaEvidence": "docs/qa-evidence/kakao-notification-routing-2026-10-28/README.md",
+      "patchNotes": "docs/patch-notes/kakao-notification-room-routing-v1.0.0.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED",
+        "reason": "Phone-only routing fix; no server, Vercel or database deployment."
+      },
+      "externalInstallations": [
+        {
+          "name": "KLOLMain",
+          "version": "KLOL_KAKAO_BOT_V40_R32_2026_10_28",
+          "status": "INSTALLED"
+        },
+        {
+          "name": "KLOLM",
+          "version": "KLOL_SITE_NOTICE_COMPANION_1.0.5",
+          "status": "INSTALLED"
+        },
+        {
+          "name": "NEXUS-Main",
+          "version": "NEXUS_KAKAO_BOT_V40_R32_2026_10_28",
+          "status": "INSTALLED"
+        },
+        {
+          "name": "NEXUS-otuce",
+          "version": "NEXUS_SITE_NOTICE_COMPANION_1.0.5",
+          "status": "INSTALLED"
+        },
+        {
+          "name": "KAKAO_ROOM_ROUTER",
+          "version": "1.0.0",
+          "status": "INSTALLED"
+        }
+      ]
     }
   ]
 }
