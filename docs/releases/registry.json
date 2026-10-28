@@ -2571,6 +2571,42 @@
         "status": "NOT_DEPLOYED",
         "reason": "Source, isolated PostgreSQL and local browser validation only. No production migration, deployment, rating recalculation or phone changes."
       }
+    },
+    {
+      "featureId": "community-network-registry",
+      "version": "0.1.1",
+      "gitTag": "community-network-registry-v0.1.1",
+      "commit": "5fe9ac98ccf676c56502101b91a560bd64a4f965",
+      "migrationHead": "0050_community-network-registry",
+      "qaEvidence": "docs/qa-evidence/community-network-production-2026-10-29/README.md",
+      "patchNotes": "docs/patch-notes/community-network-registry-v0.1.1.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "deploymentId": "dpl_nnAwySycvaNVhApHqEdqzXufvn19",
+        "url": "https://nexus-beic6v1r9-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://nexus-gg-kr.vercel.app",
+        "verifiedAt": "2026-10-28T15:29:47.756Z",
+        "healthStatus": "ready",
+        "provider": "vercel"
+      }
+    },
+    {
+      "featureId": "competition-mmr-integrity",
+      "version": "1.0.1",
+      "gitTag": "competition-mmr-integrity-v1.0.1",
+      "commit": "5fe9ac98ccf676c56502101b91a560bd64a4f965",
+      "migrationHead": "0050_community-network-registry",
+      "qaEvidence": "docs/qa-evidence/community-network-production-2026-10-29/README.md",
+      "patchNotes": "docs/patch-notes/competition-mmr-integrity-v1.0.1.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "deploymentId": "dpl_nnAwySycvaNVhApHqEdqzXufvn19",
+        "url": "https://nexus-beic6v1r9-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://nexus-gg-kr.vercel.app",
+        "verifiedAt": "2026-10-28T15:29:47.756Z",
+        "healthStatus": "ready",
+        "provider": "vercel"
+      }
     }
   ]
 }

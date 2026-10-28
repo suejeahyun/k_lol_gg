@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-28T15:31:06.807990+00:00",
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "directory": {
+    "title": "커뮤니티 둘러보기 | NEXUS.GG",
+    "readyEmptyState": true,
+    "loadErrorVisible": false
+  },
+  "adminUnauthenticated": {
+    "redirect": "/admin/login?next=%2Fadmin%2Fcommunity-network",
+    "loginFormVisible": true
+  },
+  "productionAuthenticatedWritesTested": false,
+  "localPreviewOpened": true,
+  "localPreviewUsesSyntheticData": true
+}

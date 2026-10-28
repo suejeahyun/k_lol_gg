@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-29 NEXUS 운영 반영 — 커뮤니티 등록 0.1.1·대회 MMR 일관성 1.0.1**: DB 백업·격리 복원 검증 후 migration 0050을 추가하고 NEXUS 운영 주소에 배포했습니다. [사이트·방 관리](https://nexus-gg-kr.vercel.app/admin/community-network), [공개 목록](https://nexus-gg-kr.vercel.app/community-network)을 활성화했습니다. 운영 HTTP 10건·카카오 서버 진단 4건과 실제 브라우저 확인 통과. K-LOL·폰·기존 점수 변경 없음. 독립 중앙 허브와 실제 사이트 간 공유는 후속 단계입니다. [배포·검증·복구 근거](docs/qa-evidence/community-network-production-2026-10-29/README.md).
+
 **2026-10-29 커뮤니티 연합 설계·등록 기반 및 대회/MMR 수정 — 로컬 검증 완료, 운영 미배포**: 독립 중앙 DB와 선택적 공유 구조를 결정하고 최고 관리자 사이트·방 등록/공개 목록을 구현했습니다. 선수 교체 자료 상속·10명 정원 초과·포지션 MMR 정렬 오류를 수정하고 표본 표시를 명확히 했습니다. 전체 check, 격리 DB, 실제 브라우저 13번째 방 저장 검증 통과. 동적 폰 설정·계정 연결·연합·공동 대회·새 MMR 산식은 후속 단계입니다. [실행 계획](docs/architecture/community-federation-execution-plan.md), [대회·MMR 전체 보고서](docs/architecture/drafts/balance-mmr-audit-2026-10-29.md), [QA 근거](docs/qa-evidence/community-network-2026-10-29/README.md).
 
 **2026-10-28 카카오 실제 방 식별 복구 1.0.0 — 휴대폰 적용 완료**: 일반 봇 R32 두 개·사이트 알림 1.0.5 두 개·공통 router 1.0.0의 설치 해시와 컴파일을 확인했습니다. 사용자 승인 후 PC 카카오톡 네 방의 버전 응답을 각각 1회 확인했고, 구인현황은 K-LOL 2건/NEXUS 0건으로 분리됐습니다. 양쪽 알림 세션 등록·상태는 정상이며 진단 봇은 OFF입니다. **새 사이트 충원 이벤트 자동 발송은 미검증**입니다. 전체 check 통과, 앱·서버·DB 교체 없음. [실기기 검증·남은 범위](docs/qa-evidence/kakao-notification-routing-2026-10-28/README.md), [변경 안내](docs/patch-notes/kakao-notification-room-routing-v1.0.0.md). 아래 설치 대기 기록은 각 이전 시점의 상태입니다.
