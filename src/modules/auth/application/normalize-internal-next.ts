@@ -1,4 +1,6 @@
 import { containsUnsafeText } from "@/platform/security/input-safety";
+import { SERVICE_BRAND } from "@/lib/service-brand";
+import { isHubNavigationPath } from "@/lib/hub-route-policy";
 
 const INTERNAL_ORIGIN = "https://internal.klol.invalid";
 
@@ -29,6 +31,7 @@ export function normalizeInternalNext(
       decodedPath.startsWith("//") ||
       containsUnsafeText(decodedUrl)
     ) return fallback;
+    if (SERVICE_BRAND.id === "hub" && !isHubNavigationPath(parsed.pathname)) return fallback;
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
     return fallback;

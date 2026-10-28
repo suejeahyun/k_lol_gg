@@ -7,6 +7,7 @@ import { SERVICE_BRAND } from "@/lib/service-brand";
 declare global {
   var __klolV2DatabaseHandle: DatabaseHandle | undefined;
   var __nexusDatabaseHandle: DatabaseHandle | undefined;
+  var __ggHubDatabaseHandle: DatabaseHandle | undefined;
 }
 
 function readPoolMax(): number {
@@ -22,6 +23,10 @@ export function getDatabaseHandle(): DatabaseHandle {
   }
 
   const connectionString = requireRuntimeDatabaseUrl();
+  if (SERVICE_BRAND.id === "hub") {
+    globalThis.__ggHubDatabaseHandle ??= createDatabaseHandle(connectionString, { max: readPoolMax() });
+    return globalThis.__ggHubDatabaseHandle;
+  }
   if (SERVICE_BRAND.id === "nexus") {
     globalThis.__nexusDatabaseHandle ??= createDatabaseHandle(connectionString, { max: readPoolMax() });
     return globalThis.__nexusDatabaseHandle;

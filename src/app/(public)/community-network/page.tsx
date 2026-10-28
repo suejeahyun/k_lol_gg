@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { SERVICE_BRAND } from "@/lib/service-brand";
+import { HubDirectory } from "@/components/hub/hub-directory";
 
 import { loadRuntimeCommunityNetwork } from "@/modules/community-network/infrastructure/runtime";
 
 import styles from "./network-directory.module.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "커뮤니티 둘러보기", description: "공개된 커뮤니티 소개를 살펴보고 새로운 사이트를 방문하세요.", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "커뮤니티 둘러보기", description: "공개된 커뮤니티 소개를 살펴보고 새로운 사이트를 방문하세요.", robots: { index: SERVICE_BRAND.id === "hub", follow: SERVICE_BRAND.id === "hub" }, alternates: { canonical: "/community-network" } };
 
 export default async function CommunityNetworkPage() {
+  if (SERVICE_BRAND.id === "hub") return <HubDirectory />;
   const result = await loadRuntimeCommunityNetwork((repository) => repository.getPublicDirectory());
   if (result.state === "disabled") notFound();
   return <main className={styles.page}>

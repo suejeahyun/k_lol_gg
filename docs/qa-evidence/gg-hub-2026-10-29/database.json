@@ -1,0 +1,41 @@
+{
+  "verifiedAt": "2026-10-28T16:05:38.421Z",
+  "project": "rough-band-61128165",
+  "database": "gg_hub",
+  "region": "aws-ap-southeast-1",
+  "beforeApplicationTables": 0,
+  "bootstrap": {
+    "service": "hub",
+    "databaseName": "gg_hub",
+    "state": "initialized",
+    "migrationCount": 51,
+    "communities": 2,
+    "rooms": 4,
+    "administratorsCreated": 1,
+    "childDataImported": false,
+    "phoneRoutingChanged": false,
+    "mustChangePassword": true
+  },
+  "replay": {
+    "service": "hub",
+    "databaseName": "gg_hub",
+    "state": "already-initialized",
+    "migrationCount": 51,
+    "modified": false
+  },
+  "initialPasswordHashVerified": true,
+  "populatedTables": {
+    "audit.events": 1,
+    "auth.user_accounts": 1,
+    "community_network.communities": 2,
+    "community_network.registry_state": 1,
+    "community_network.rooms": 4,
+    "operations.site_settings": 1,
+    "recruiting.kakao_operation_settings": 1,
+    "usage.collection": 1
+  },
+  "otherApplicationTablesEmpty": 110,
+  "childDatabaseAccessed": false,
+  "independentSessionKeys": true,
+  "credentialsIncluded": false
+}

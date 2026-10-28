@@ -3,6 +3,7 @@ import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import { basename, isAbsolute, relative, resolve } from "node:path";
 
 type FixtureRuntimeEnvironment = Readonly<{
+  NEXT_PUBLIC_SERVICE_ID?: string;
   NODE_ENV?: string;
   NEXT_PUBLIC_SITE_URL?: string;
   V2_PUBLIC_ORIGIN?: string;
@@ -133,6 +134,7 @@ export function isFixtureAuthEnvironmentEnabled(
   options: FixtureRuntimePolicyOptions = {},
 ): boolean {
   if (
+    (environment.NEXT_PUBLIC_SERVICE_ID?.trim() || "klol") !== "klol" ||
     environment.NODE_ENV !== "development" ||
     environment.V2_TEST_AUTH_ENABLED !== "true" ||
     environment.VERCEL ||

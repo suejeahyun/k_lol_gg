@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SERVICE_BRAND } from "@/lib/service-brand";
+import { resolveHubRoute } from "@/lib/hub-route-policy";
 
 import { ADMIN_REQUEST_PATH_HEADER } from "@/modules/auth/application/admin-request-path";
 import { resolveAdminLegacyDestination } from "@/modules/admin/domain/admin-route-contracts";
@@ -29,6 +31,14 @@ function continueWithTrustedAdminPath(request: NextRequest) {
 
 export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+
+  if (SERVICE_BRAND.id === "hub") {
+    const decision = resolveHubRoute(pathname, request.method, process.env.NODE_ENV === "development");
+    if (decision.kind === "not-found") return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
+    if (decision.kind === "method-not-allowed") return new Response(null, { status: 405, headers: { Allow: decision.allow.join(", "), "Cache-Control": "no-store" } });
+    if (decision.kind === "redirect") return NextResponse.redirect(new URL(decision.destination, request.url), 307);
+    return pathname.startsWith("/admin/") ? continueWithTrustedAdminPath(request) : NextResponse.next();
+  }
 
   const accountLegacyDestinations: Record<string, string> = {
     "/app/signup": "/signup",
@@ -124,5 +134,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/app/:path*", "/account/tier", "/me/player", "/statistics"],
+  // Match APIs and assets too: the independently deployed hub has an explicit
+  // route surface. Child services retain the existing routing behavior above.
+  matcher: ["/:path*"],
 };

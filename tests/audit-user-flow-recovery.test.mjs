@@ -40,6 +40,7 @@ function harness(file, name, initialProps, send) {
     const result = { exports: {} }; cache.set(filename, result);
     const code = ts.transpileModule(readFileSync(filename, "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
     vm.runInNewContext(code, {
+      process: { env: { NODE_ENV: "test", NEXT_PUBLIC_SERVICE_ID: "klol" } },
       exports: result.exports, TextEncoder, URL, URLSearchParams, crypto: webcrypto, requestAnimationFrame: callback => callback(), window: windowFixture, document: documentFixture,
       FormData: class { constructor(values) { this.values = values; } get(name) { return this.values[name] ?? null; } },
       fetch: async (url, options) => { requests.push({ url, ...options }); return send(requests.length, options); },

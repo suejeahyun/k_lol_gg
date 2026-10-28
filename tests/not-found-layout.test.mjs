@@ -7,15 +7,15 @@ import * as jsxRuntime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 
-function load(file, dependencies) {
+function load(file, dependencies, serviceId = "klol") {
   const compiled = ts.transpileModule(readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   const result = { exports: {} };
-  vm.runInNewContext(compiled, { exports: result.exports, process: { env: { NODE_ENV: "test" } }, require: (specifier) => {
+  vm.runInNewContext(compiled, { exports: result.exports, process: { env: { NODE_ENV: "test", NEXT_PUBLIC_SERVICE_ID: serviceId } }, require: (specifier) => {
     if (specifier === "react") return React;
     if (specifier === "react/jsx-runtime") return jsxRuntime;
-    if (specifier === "@/lib/service-brand") return load("lib/service-brand.ts", {});
+    if (specifier === "@/lib/service-brand") return load("lib/service-brand.ts", {}, serviceId);
     assert.ok(Object.hasOwn(dependencies, specifier), `Unexpected not-found dependency: ${specifier}`);
     return dependencies[specifier];
   } });
@@ -39,6 +39,12 @@ const icons = new Proxy({}, { get: () => () => React.createElement("svg", { "ari
 const status = load("components/status-panel.tsx", { "@/components/theme/theme-icons": icons });
 const content = load("components/not-found-content.tsx", { "next/link": Link, "@/components/status-panel": status });
 const common = { "next/link": Link, "@/components/not-found-content": content };
+const hubShell = load("components/hub/hub-shell.tsx", {
+  "next/link": Link,
+  "@/components/theme/theme-icons": icons,
+  "@/components/admin/admin-logout-button": { AdminLogoutButton: () => null },
+  "./hub.module.css": { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) },
+}, "hub");
 const publicShell = load("components/site-shell.tsx", {
   "next/link": Link,
   "next/image": ({ alt, src, className, width, height, sizes }) => React.createElement("img", { alt, src, className, width, height, sizes }),
@@ -51,12 +57,13 @@ const publicShell = load("components/site-shell.tsx", {
 });
 const publicLayout = load("app/(public)/layout.tsx", {
   "@/components/site-shell": publicShell,
+  "@/components/hub/hub-shell": hubShell,
   "@/components/navigation/list-return": { ListNavigationMemory: () => null },
   "@/components/navigation/workflow-navigation": { WorkflowNavigation: () => null },
   "@/components/usage/usage-tracker": { UsageTracker: () => null },
   "@/modules/usage/domain/usage": { usageEnabled: () => false },
 });
-const rootNotFound = load("app/not-found.tsx", { ...common, "@/components/site-shell": publicShell });
+const rootNotFound = load("app/not-found.tsx", { ...common, "@/components/site-shell": publicShell, "@/components/hub/hub-shell": hubShell });
 const publicNotFound = load("app/(public)/not-found.tsx", common);
 const adminNotFound = load("app/(admin)/admin/not-found.tsx", common);
 const adminShell = load("components/admin/admin-shell.tsx", {
@@ -103,6 +110,7 @@ test("admin not-found content stays behind its layout authorization and inside o
   const adminLayout = load("app/(admin)/admin/layout.tsx", {
     "next/headers": { headers: async () => new Headers({ "x-test-path": "/admin/matches/missing" }) },
     "@/components/admin/admin-shell": adminShell,
+    "@/components/hub/hub-shell": hubShell,
     "@/modules/auth/application/admin-request-path": { ADMIN_REQUEST_PATH_HEADER: "x-test-path" },
     "@/modules/auth/application/normalize-internal-next": { normalizeInternalNext: (value) => value },
     "@/modules/auth/infrastructure/server-authorization": { requirePageRole: async (role, path) => { checks.push({ role, path }); return { role: "ADMIN" }; } },
@@ -115,4 +123,15 @@ test("admin not-found content stays behind its layout authorization and inside o
   assert.equal((html.match(/<h1(?:\s|>)/gu) ?? []).length, 1);
   assert.match(html, /관리 홈으로 돌아가기/u);
   assert.match(html, /href="\/admin\/search"/u);
+});
+
+test("the central hub root recovery keeps its independent shell and no child-service navigation", async () => {
+  const root = load("app/not-found.tsx", { ...common, "@/components/site-shell": publicShell, "@/components/hub/hub-shell": hubShell }, "hub");
+  const html = renderToStaticMarkup(await resolveTree(root.default()));
+  assert.equal((html.match(/<main(?:\s|>)/gu) ?? []).length, 1);
+  assert.equal((html.match(/<h1(?:\s|>)/gu) ?? []).length, 1);
+  assert.match(html, /GG HUB/u);
+  assert.match(html, /href="\/admin\/community-network"/u);
+  assert.match(html, /중앙 사이트 홈으로/u);
+  assert.doesNotMatch(html, /href="\/players"|data-ui-scope="public"|class="site-header"/u);
 });

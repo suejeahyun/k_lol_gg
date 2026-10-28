@@ -33,7 +33,7 @@ export class JoseSessionCodec {
   private readonly audience: string;
 
   constructor(secretOrKeyring: string | SessionSigningKeyring, serviceId: ServiceId = SERVICE_BRAND.id) {
-    this.issuer = serviceId === "nexus" ? "nexus-gg" : "k-lol-gg-v2";
+    this.issuer = { klol: "k-lol-gg-v2", nexus: "nexus-gg", hub: "gg-community-hub" }[serviceId];
     this.audience = `${this.issuer}-web`;
     if (typeof secretOrKeyring === "string") {
       const key = new TextEncoder().encode(secretOrKeyring);

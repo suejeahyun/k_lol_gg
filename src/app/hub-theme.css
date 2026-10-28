@@ -1,0 +1,32 @@
+/* The independent central service has its own neutral theme. */
+[data-service="hub"] {
+  color-scheme: light;
+  --background: #f5f7f7;
+  --foreground: #253c46;
+  --card: #ffffff;
+  --card-foreground: #253c46;
+  --popover: #ffffff;
+  --popover-foreground: #253c46;
+  --primary: #1b7159;
+  --primary-hover: #165c49;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf1ee;
+  --secondary-foreground: #33584a;
+  --muted: #edf2f1;
+  --muted-foreground: #61757c;
+  --accent: #e6f2ec;
+  --accent-foreground: #245441;
+  --border: #dce4e6;
+  --input: #c0d0d1;
+  --ring: #23876c;
+  --destructive: #a53345;
+  --font-heading: var(--font-body);
+  --theme-world-image: none;
+  --theme-arena-image: none;
+  --theme-panel-image: none;
+  --theme-surface-background: #ffffff;
+  --theme-feature-background: #edf2f1;
+  --theme-page-background: #f5f7f7;
+}
+[data-service="hub"] body { background: #f5f7f7; }
+[data-service="hub"] body::before, [data-service="hub"] body::after { display: none; }

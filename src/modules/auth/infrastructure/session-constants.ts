@@ -1,7 +1,7 @@
 import { SERVICE_BRAND } from "@/lib/service-brand";
 
-export const ADMIN_SESSION_COOKIE_NAME = SERVICE_BRAND.id === "nexus" ? "nexus_session" : "klol_v2_session";
-export const ACCOUNT_SESSION_COOKIE_NAME = SERVICE_BRAND.id === "nexus" ? "nexus_account_session" : "klol_v2_account_session";
+export const ADMIN_SESSION_COOKIE_NAME = { klol: "klol_v2_session", nexus: "nexus_session", hub: "gg_hub_session" }[SERVICE_BRAND.id];
+export const ACCOUNT_SESSION_COOKIE_NAME = { klol: "klol_v2_account_session", nexus: "nexus_account_session", hub: "gg_hub_account_session" }[SERVICE_BRAND.id];
 // Backward-compatible name for the administrator elevation cookie.
 export const SESSION_COOKIE_NAME = ADMIN_SESSION_COOKIE_NAME;
 

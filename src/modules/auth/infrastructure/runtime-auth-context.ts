@@ -60,6 +60,6 @@ function databaseContext(): DatabaseRuntimeAuthContext | null {
 }
 
 export function resolveRuntimeAuthContext(): RuntimeAuthContext | null {
-  if (SERVICE_BRAND.id !== "nexus" && isFixtureAuthRuntimeEnabled()) return fixtureContext();
+  if (SERVICE_BRAND.id === "klol" && isFixtureAuthRuntimeEnabled()) return fixtureContext();
   return databaseContext();
 }

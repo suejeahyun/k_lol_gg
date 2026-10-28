@@ -4,19 +4,25 @@ export type DatabaseRuntimeEnvironment = Readonly<Record<string, string | undefi
   NEXT_PUBLIC_SERVICE_ID?: string;
   DATABASE_URL?: string;
   NEXUS_DATABASE_URL?: string;
+  HUB_DATABASE_URL?: string;
 }>;
 
-/** Selection is explicit: a missing NEXUS URL can never select the K-LOL DB. */
+/** Each deployment selects only its own database; missing configuration fails closed. */
 function runtimeEnvironment(): DatabaseRuntimeEnvironment {
   // Pin the runtime to the same build-time service as the UI/cookies, even if a
   // deployment accidentally omits NEXT_PUBLIC_SERVICE_ID at server startup.
-  return { NEXT_PUBLIC_SERVICE_ID: SERVICE_BRAND.id, DATABASE_URL: process.env.DATABASE_URL, NEXUS_DATABASE_URL: process.env.NEXUS_DATABASE_URL };
+  return {
+    NEXT_PUBLIC_SERVICE_ID: SERVICE_BRAND.id,
+    DATABASE_URL: process.env.DATABASE_URL,
+    NEXUS_DATABASE_URL: process.env.NEXUS_DATABASE_URL,
+    HUB_DATABASE_URL: process.env.HUB_DATABASE_URL,
+  };
 }
 
 export function configuredRuntimeDatabaseUrl(environment: DatabaseRuntimeEnvironment = runtimeEnvironment()): string | undefined {
-  return getServiceBrand(environment.NEXT_PUBLIC_SERVICE_ID ?? "klol").id === "nexus"
-    ? environment.NEXUS_DATABASE_URL
-    : environment.DATABASE_URL;
+  const service = getServiceBrand(environment.NEXT_PUBLIC_SERVICE_ID ?? "klol").id;
+  if (service === "hub") return environment.HUB_DATABASE_URL;
+  return service === "nexus" ? environment.NEXUS_DATABASE_URL : environment.DATABASE_URL;
 }
 
 function postgresUrl(value: string, name: string): URL {
@@ -41,13 +47,21 @@ export function databaseTargetIdentity(value: string): string {
 }
 
 export function requireRuntimeDatabaseUrl(environment: DatabaseRuntimeEnvironment = runtimeEnvironment()): string {
-  const nexus = getServiceBrand(environment.NEXT_PUBLIC_SERVICE_ID ?? "klol").id === "nexus";
-  const name = nexus ? "NEXUS_DATABASE_URL" : "DATABASE_URL";
+  const service = getServiceBrand(environment.NEXT_PUBLIC_SERVICE_ID ?? "klol").id;
+  const name = service === "hub" ? "HUB_DATABASE_URL" : service === "nexus" ? "NEXUS_DATABASE_URL" : "DATABASE_URL";
   const value = configuredRuntimeDatabaseUrl(environment);
   if (!value) throw new Error(`${name} is not configured for this server runtime.`);
   postgresUrl(value, name);
-  if (nexus && environment.DATABASE_URL && databaseTargetIdentity(value) === databaseTargetIdentity(environment.DATABASE_URL)) {
+  if (service === "nexus" && environment.DATABASE_URL && databaseTargetIdentity(value) === databaseTargetIdentity(environment.DATABASE_URL)) {
     throw new Error("NEXUS_DATABASE_URL must identify a different database from DATABASE_URL.");
+  }
+  if (service === "hub") {
+    for (const childName of ["DATABASE_URL", "NEXUS_DATABASE_URL"] as const) {
+      const childUrl = environment[childName];
+      if (childUrl && databaseTargetIdentity(value) === databaseTargetIdentity(childUrl)) {
+        throw new Error(`HUB_DATABASE_URL must identify a different database from ${childName}.`);
+      }
+    }
   }
   return value;
 }

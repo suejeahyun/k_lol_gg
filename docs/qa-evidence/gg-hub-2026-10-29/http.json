@@ -1,0 +1,191 @@
+{
+  "checkedAt": "2026-10-28T16:11:21.439Z",
+  "localOnly": true,
+  "syntheticDataOnly": true,
+  "productionAccess": false,
+  "passed": true,
+  "checks": [
+    {
+      "check": "standalone hub home",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "registry requires administrator authentication",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "initial owner can use ordinary login",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "temporary password cannot obtain an administrator session",
+      "status": 403,
+      "expectedStatus": 403,
+      "passed": true
+    },
+    {
+      "check": "ordinary account session cannot authorize the management API",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "password changes through the real revision and idempotency guarded API",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "old account session status remains safe to query",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "revoked session cannot replay a password change",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "changed password can obtain an administrator session",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "child-site cookie name cannot authorize hub management",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "administrator reads isolated site and room registry",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "new independent site and thirteenth room save without source changes",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "same registry command replays without duplicating the new room",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "stale registry version is rejected",
+      "status": 412,
+      "expectedStatus": 412,
+      "passed": true
+    },
+    {
+      "check": "same idempotency key cannot accept a different registry command",
+      "status": 409,
+      "expectedStatus": 409,
+      "passed": true
+    },
+    {
+      "check": "foreign origin cannot mutate the registry",
+      "status": 403,
+      "expectedStatus": 403,
+      "passed": true
+    },
+    {
+      "check": "registry reload preserves the committed dynamic configuration",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "/ renders newly listed sites",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "/community-network renders newly listed sites",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "hub excludes child-only route /players",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "hub excludes child-only route /competitions",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "hub excludes child-only route /api/admin/site-settings",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "hub excludes child-only route /api/admin/users",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "hub excludes child-only route /api/auth/signup",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "hub excludes child-only route /api/cron/security-maintenance",
+      "status": 404,
+      "expectedStatus": 404,
+      "passed": true
+    },
+    {
+      "check": "administrator logout succeeds",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "logged-out administrator token is rejected",
+      "status": 401,
+      "expectedStatus": 401,
+      "passed": true
+    },
+    {
+      "check": "changed owner password remains usable for ordinary login",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true
+    },
+    {
+      "check": "ordinary account logout succeeds",
+      "status": 204,
+      "expectedStatus": 204,
+      "passed": true
+    },
+    {
+      "check": "logged-out account token returns no account",
+      "status": 200,
+      "passed": true
+    }
+  ],
+  "finalRevision": 2,
+  "finalSiteCount": 4,
+  "finalRoomCount": 13
+}

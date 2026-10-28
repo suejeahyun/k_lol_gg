@@ -4,9 +4,9 @@ import type { Metadata, MetadataRoute } from "next";
 export const SITE_NAME = SERVICE_BRAND.name;
 export const SITE_LOCALE = "ko_KR";
 export const SITE_LANGUAGE = "ko-KR";
-export const SITE_DESCRIPTION = "한국 리그 오브 레전드 내전 커뮤니티의 플레이어 전적, 최근 경기, 시즌 랭킹, 구인과 팀 도구를 확인하세요.";
+export const SITE_DESCRIPTION = SERVICE_BRAND.id === "hub" ? "독립된 커뮤니티 사이트를 둘러보고 여러 사이트와 방을 한곳에서 관리하세요." : "한국 리그 오브 레전드 내전 커뮤니티의 플레이어 전적, 최근 경기, 시즌 랭킹, 구인과 팀 도구를 확인하세요.";
 
-export const SOCIAL_IMAGE = Object.freeze(SERVICE_BRAND.id === "nexus" ? {
+export const SOCIAL_IMAGE = Object.freeze(SERVICE_BRAND.id === "hub" ? { url: "/icons/hub/mark.svg", width: 64, height: 64, alt: "GG HUB 커뮤니티 중앙 관리" } : SERVICE_BRAND.id === "nexus" ? {
   url: "/images/nexus/mascot-board.png",
   width: 1254,
   height: 1254,

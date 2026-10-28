@@ -116,6 +116,8 @@ test("fixture authentication requires a live short-lived verifier proof on loopb
   try {
     writeProof(loopback.V2_PUBLIC_ORIGIN);
     assert.equal(isFixtureAuthEnvironmentEnabled(loopback, options), true);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, NEXT_PUBLIC_SERVICE_ID: "hub" }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, NEXT_PUBLIC_SERVICE_ID: "nexus" }, options), false);
 
     const localhost = { ...loopback, V2_PUBLIC_ORIGIN: "http://localhost:3300" };
     writeProof(localhost.V2_PUBLIC_ORIGIN);

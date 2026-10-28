@@ -8,6 +8,7 @@ import styles from "./account-access.module.css";
 import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
 import { validateNewPassword } from "@/modules/accounts/domain/account-contracts";
 import { canonicalRiotId } from "@/modules/riot/domain/riot-integration";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 type Message = Readonly<{ text: string; tone: "error" | "success" }> | null;
 
@@ -83,7 +84,7 @@ export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
       {message ? <div className={styles.message} data-tone={message.tone} role={message.tone === "error" ? "alert" : "status"} aria-live="polite">
         {message.text}
       </div> : null}
-      <div className={styles.links}><Link href={`/signup?next=${encodeURIComponent(safeNext)}`}>회원가입 후 계속하기</Link><Link href="/forgot-password">비밀번호 도움</Link><Link href="/admin/login">관리자 로그인</Link></div>
+      <div className={styles.links}>{SERVICE_BRAND.id !== "hub" ? <><Link href={`/signup?next=${encodeURIComponent(safeNext)}`}>회원가입 후 계속하기</Link><Link href="/forgot-password">비밀번호 도움</Link></> : null}<Link href="/admin/login">관리자 로그인</Link></div>
     </form>
   );
 }

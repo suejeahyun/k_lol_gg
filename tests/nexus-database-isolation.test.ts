@@ -25,7 +25,7 @@ test("NEXUS rejects the same physical database even with different credentials a
     DATABASE_URL: "postgresql://old@ep-example.c-2.us-east-2.aws.neon.tech/neondb",
     NEXUS_DATABASE_URL: "postgresql://new@ep-example-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require",
   }), /different database/);
-  assert.throws(() => configuredRuntimeDatabaseUrl({ NEXT_PUBLIC_SERVICE_ID: "typo", DATABASE_URL: "postgres://localhost/klol" }), /must be klol or nexus/);
+  assert.throws(() => configuredRuntimeDatabaseUrl({ NEXT_PUBLIC_SERVICE_ID: "typo", DATABASE_URL: "postgres://localhost/klol" }), /must be klol, nexus, or hub/);
 });
 
 test("fresh bootstrap requires the explicit service, database identity, and creation intent", () => {

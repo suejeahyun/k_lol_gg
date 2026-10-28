@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ShieldX } from "@/components/theme/theme-icons";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 export default function ForbiddenPage() {
   return (
@@ -7,7 +8,7 @@ export default function ForbiddenPage() {
       <section className="empty-state" aria-labelledby="forbidden-title">
         <ShieldX aria-hidden="true" />
         <h1 id="forbidden-title">이 공간을 열 권한이 없어요.</h1>
-        <Link className="button" href="/account">내 계정 상태</Link>
+        <Link className="button" href={SERVICE_BRAND.id === "hub" ? "/admin/login" : "/account"}>{SERVICE_BRAND.id === "hub" ? "중앙 관리자 로그인" : "내 계정 상태"}</Link>
         <Link className="button button--primary" href="/">홈으로 돌아가기</Link>
       </section>
     </div>

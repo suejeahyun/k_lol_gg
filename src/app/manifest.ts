@@ -2,6 +2,7 @@ import { SERVICE_BRAND } from "@/lib/service-brand";
 import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
+  if (SERVICE_BRAND.id === "hub") return { id: "/", name: "GG HUB", short_name: "GG HUB", description: "여러 독립 커뮤니티 사이트와 방을 관리하는 중앙 서비스", start_url: "/", scope: "/", display: "browser", background_color: "#f5f7f7", theme_color: "#123b3b", lang: "ko-KR", icons: [{ src: "/icons/hub/mark.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }] };
   const isNexus = SERVICE_BRAND.id === "nexus";
   const iconPrefix = isNexus ? "/icons/nexus" : "/icons";
   return {

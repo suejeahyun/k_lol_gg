@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { normalizeAccountNext } from "@/modules/auth/application/normalize-internal-next";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 import styles from "./account-access.module.css";
 
@@ -18,7 +19,7 @@ function messageFrom(value: unknown) {
 
 export function AccountPasswordForm({ revision, nextPath = "/account" }: { revision: number; nextPath?: string }) {
   const router = useRouter();
-  const loginHref = `/login?next=${encodeURIComponent(normalizeAccountNext(nextPath))}`;
+  const loginHref = SERVICE_BRAND.id === "hub" ? "/admin/login?next=%2Fadmin%2Fcommunity-network" : `/login?next=${encodeURIComponent(normalizeAccountNext(nextPath))}`;
   const [currentRevision, setCurrentRevision] = useState(revision);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: "error" | "success" } | null>(null);

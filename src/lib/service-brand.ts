@@ -1,4 +1,4 @@
-export type ServiceId = "klol" | "nexus";
+export type ServiceId = "klol" | "nexus" | "hub";
 
 const SERVICE_BRANDS = Object.freeze({
   klol: Object.freeze({
@@ -18,12 +18,20 @@ const SERVICE_BRANDS = Object.freeze({
     // A new service must never fall back to the existing community's website.
     defaultOrigin: "http://localhost:3000",
   }),
+  hub: Object.freeze({
+    id: "hub" as const,
+    name: "GG HUB",
+    shortName: "GG HUB",
+    initials: "GG",
+    storagePrefix: "gg-hub",
+    defaultOrigin: "http://localhost:3000",
+  }),
 });
 
 export function getServiceBrand(serviceId: string | undefined = process.env.NEXT_PUBLIC_SERVICE_ID) {
   const id = serviceId?.trim() || "klol";
-  if (id !== "klol" && id !== "nexus") {
-    throw new Error("NEXT_PUBLIC_SERVICE_ID must be klol or nexus.");
+  if (id !== "klol" && id !== "nexus" && id !== "hub") {
+    throw new Error("NEXT_PUBLIC_SERVICE_ID must be klol, nexus, or hub.");
   }
   return SERVICE_BRANDS[id];
 }

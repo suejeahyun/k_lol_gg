@@ -4,6 +4,8 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { ADMIN_REQUEST_PATH_HEADER } from "@/modules/auth/application/admin-request-path";
 import { normalizeInternalNext } from "@/modules/auth/application/normalize-internal-next";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
+import { SERVICE_BRAND } from "@/lib/service-brand";
+import { HubShell } from "@/components/hub/hub-shell";
 
 export const metadata: Metadata = {
   title: "관리자",
@@ -16,5 +18,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     "/admin",
   );
   const session = await requirePageRole("ADMIN", requestPath);
+  if (SERVICE_BRAND.id === "hub") return <HubShell session={session}>{children}</HubShell>;
   return <AdminShell session={session}>{children}</AdminShell>;
 }

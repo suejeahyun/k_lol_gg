@@ -107,7 +107,7 @@ function createThemeIcon(name: ThemeIconName, LineIcon: LucideIcon) {
   const { atlas, column, row } = themeIconMap[name];
   function ThemeIcon({ size = 24, className, style, children, ...props }: ThemeIconProps) {
     const labelled = Boolean(props["aria-label"] || props["aria-labelledby"]);
-    if (SERVICE_BRAND.id === "nexus") {
+    if (SERVICE_BRAND.id === "nexus" || SERVICE_BRAND.id === "hub") {
       return <LineIcon size={size} role={labelled ? "img" : undefined} aria-hidden={labelled ? undefined : true} focusable="false" {...props} data-theme-icon={name} className={className ? `theme-icon ${className}` : "theme-icon"} style={style}>{children}</LineIcon>;
     }
     return (

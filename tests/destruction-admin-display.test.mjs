@@ -34,6 +34,7 @@ function harness() {
       compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
     }).outputText;
     vm.runInNewContext(code, {
+      process: { env: { NODE_ENV: "test", NEXT_PUBLIC_SERVICE_ID: "klol" } },
       exports: loaded.exports, URL, URLSearchParams,
       require(specifier) {
         if (specifier.startsWith("node:")) return requireNode(specifier);
