@@ -67,7 +67,7 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
         body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(API_TIMEOUT_MS), redirect: "error", cache: "no-store" });
     } catch { throw new CommunitySiteProvisioningError("PROVIDER_UNAVAILABLE"); }
     if (allowMissing && response.status === 404) return null;
-    if (!response.ok) throw new CommunitySiteProvisioningError(response.status === 401 || response.status === 403 ? "PROVIDER_AUTH_FAILED" : response.status === 429 || response.status === 402 ? "PROVIDER_LIMIT" : "PROVIDER_UNAVAILABLE");
+    if (!response.ok) throw new CommunitySiteProvisioningError(response.status === 401 || response.status === 403 ? "PROVIDER_AUTH_FAILED" : response.status === 409 ? "RESOURCE_CONFLICT" : response.status === 429 || response.status === 402 ? "PROVIDER_LIMIT" : "PROVIDER_UNAVAILABLE");
     if (response.status === 204) return {};
     try { return object(await response.json()); } catch { throw new CommunitySiteProvisioningError("INVALID_PROVIDER_RESULT"); }
   }
@@ -114,6 +114,14 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
       const markers = entries.filter((entry) => entry.key === key);
       if (markers.length !== 1 || markers[0].value !== value || !Array.isArray(markers[0].target) || !markers[0].target.includes("production")) throw new CommunitySiteProvisioningError("RESOURCE_CONFLICT");
     }
+  }
+  private async ensureProductionDomain(projectId: string, name: string) {
+    // Generated project aliases may be truncated or changed after a collision. Claim the exact
+    // production origin before putting it into the child environment or central SSO registry.
+    let domain = await this.api("vercel", `/v9/projects/${projectId}/domains/${name}`, "GET", undefined, true);
+    if (!domain) domain = await this.api("vercel", `/v10/projects/${projectId}/domains`, "POST", { name });
+    if (domain?.name !== name || domain.projectId !== projectId || domain.verified !== true
+      || domain.redirect || domain.gitBranch || domain.customEnvironmentId) throw new CommunitySiteProvisioningError("RESOURCE_CONFLICT");
   }
   private async ensurePrivateBlob(siteId: string, projectId: string, existingStoreId?: string) {
     const name = `GG-${siteId}-${this.derive(siteId, "blob-ownership").slice(0, 22)}`;
@@ -231,6 +239,7 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
         this.verifyVercelProject(site.id, projectName, resources.vercelProjectId),
         this.childConnection(site.id, resources),
       ]);
+      await this.ensureProductionDomain(resources.vercelProjectId, new URL(origin).hostname);
       const blobStoreId = await this.ensurePrivateBlob(site.id, resources.vercelProjectId, resources.blobStoreId);
       const signing = this.derive(site.id, "session");
       const totp = this.derive(site.id, "totp");
@@ -277,8 +286,11 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
       if (deployment?.projectId !== resources.vercelProjectId || meta.ggHubCommunityId !== site.id || meta.ggHubJobId !== job.id || meta.ggHubEngineRef !== resources.engineRef) throw new CommunitySiteProvisioningError("RESOURCE_CONFLICT");
       if (deployment.readyState === "ERROR" || deployment.readyState === "CANCELED") throw new CommunitySiteProvisioningError("PROVISIONING_FAILED");
       if (deployment.readyState !== "READY") return { ...advance("DEPLOYMENT_CREATED"), pending: true };
-      const aliases = deployment.alias;
-      if (!Array.isArray(aliases) || !aliases.includes(`${projectName}.vercel.app`)) throw new CommunitySiteProvisioningError("VERIFICATION_FAILED");
+      // deployment.alias is a creation-time snapshot and does not include domains added later.
+      // The live alias target proves that the expected origin serves this exact deployment.
+      const alias = await this.api("vercel", `/v4/aliases/${new URL(origin).hostname}`);
+      if (alias?.alias !== new URL(origin).hostname || alias.projectId !== resources.vercelProjectId
+        || alias.deploymentId !== resources.vercelDeploymentId || alias.redirect || alias.deletedAt) throw new CommunitySiteProvisioningError("VERIFICATION_FAILED");
       return advance("DEPLOYMENT_READY");
     }
     if (job.checkpoint === "DEPLOYMENT_READY" || job.checkpoint === "VERIFIED") {

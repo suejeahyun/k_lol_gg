@@ -83,6 +83,10 @@ function harness() {
     if (p === `/v1/storage/stores/${blobStore.id}/connections`) { blobConnected = true; return new Response(null, { status: 204 }); }
     if (p === `/v9/projects/${vercelProject.id}/env/env_blob` && call.method === "PATCH") { blobSensitive = true; return Response.json(blobToken()); }
     if (p.endsWith("/env")) return Response.json(call.method === "POST" ? { created: call.body, failed: [] } : { envs: [...markers, ...(blobConnected ? [blobToken()] : [])] });
+    if (p === `/v9/projects/${vercelProject.id}/domains/${new URL(origin).hostname}` || p === `/v10/projects/${vercelProject.id}/domains`) {
+      return Response.json({ name: new URL(origin).hostname, projectId: vercelProject.id, verified: true, gitBranch: null, redirect: null });
+    }
+    if (p === `/v4/aliases/${new URL(origin).hostname}`) return Response.json({ alias: new URL(origin).hostname, projectId: vercelProject.id, deploymentId: resources.vercelDeploymentId });
     if (p.startsWith("/v9/projects/") || p === "/v11/projects") return Response.json(vercelProject);
     if (p === "/v7/deployments") return Response.json({ deployments: [], pagination: { next: null } });
     if (p === "/v13/deployments") return Response.json({ id: "dpl_created" });
@@ -220,6 +224,47 @@ test("private Blob creation connects production only and protects its token with
   const protect = h.calls.find((call) => call.method === "PATCH")!;
   assert.deepEqual(protect.body, { type: "sensitive" });
   assert.equal(h.calls.some((call) => call.url.pathname.startsWith("/v1/projects/") && call.url.pathname.includes("/env/")), false, "never request decrypted credentials");
+});
+
+test("exact production domain is registered before environment publication and reused on retry", async () => {
+  const h = harness();
+  h.override((call) => call.method === "GET" && call.url.pathname.includes("/domains/") ? new Response(null, { status: 404 }) : undefined);
+  await h.provider.step(input("PROJECT_CREATED"));
+  const registration = h.calls.findIndex((call) => call.method === "POST" && call.url.pathname.endsWith("/domains"));
+  const environmentWrite = h.calls.findIndex((call) => call.method === "POST" && call.url.pathname.endsWith("/env"));
+  assert.ok(registration >= 0 && registration < environmentWrite);
+  assert.deepEqual(h.calls[registration].body, { name: new URL(origin).hostname }, "no force, transfer or preview assignment is permitted");
+  h.override(undefined); h.calls.length = 0;
+  await h.provider.step(input("PROJECT_CREATED"));
+  assert.equal(h.calls.some((call) => call.method !== "GET" && call.url.pathname.includes("/domains")), false);
+});
+
+test("foreign, unverified, redirect and preview domains stop publication without takeover", async () => {
+  for (const extra of [{ projectId: "prj_foreign" }, { name: "foreign.vercel.app" }, { verified: false },
+    { redirect: "foreign.example" }, { gitBranch: "preview" }, { customEnvironmentId: "env_preview" }]) {
+    const h = harness();
+    h.override((call) => call.url.pathname.includes("/domains/") ? Response.json({ name: new URL(origin).hostname, projectId: vercelProject.id, verified: true, ...extra }) : undefined);
+    await assert.rejects(h.provider.step(input("PROJECT_CREATED")), /RESOURCE_CONFLICT/);
+    assert.equal(h.calls.some((call) => call.method !== "GET"), false);
+  }
+  const conflict = harness();
+  conflict.override((call) => call.url.pathname.includes("/domains/") ? new Response(null, { status: 404 })
+    : call.url.pathname.endsWith("/domains") ? new Response(null, { status: 409 }) : undefined);
+  await assert.rejects(conflict.provider.step(input("PROJECT_CREATED")), /RESOURCE_CONFLICT/);
+  assert.equal(conflict.calls.some((call) => ["PATCH", "DELETE"].includes(call.method)), false);
+  assert.equal(conflict.calls.some((call) => call.method === "POST" && call.url.pathname.endsWith("/env")), false);
+});
+
+test("ready deployment requires the current exact domain target rather than a stale alias snapshot", async () => {
+  const valid = harness();
+  valid.override((call) => call.url.pathname === "/v13/deployments/dpl_fixture" ? Response.json({ id: "dpl_fixture", projectId: vercelProject.id, readyState: "READY", alias: ["truncated-default.vercel.app"],
+    meta: { ggHubJobId: jobId, ggHubCommunityId: siteId, ggHubEngineRef: resources.engineRef } }) : undefined);
+  assert.equal((await valid.provider.step(input("DEPLOYMENT_CREATED"))).checkpoint, "DEPLOYMENT_READY");
+  for (const extra of [{ deploymentId: "dpl_foreign" }, { projectId: "prj_foreign" }, { alias: "foreign.vercel.app" }, { redirect: "foreign.example" }, { deletedAt: 123 }]) {
+    const h = harness();
+    h.override((call) => call.url.pathname.startsWith("/v4/aliases/") ? Response.json({ alias: new URL(origin).hostname, projectId: vercelProject.id, deploymentId: resources.vercelDeploymentId, ...extra }) : undefined);
+    await assert.rejects(h.provider.step(input("DEPLOYMENT_CREATED")), /VERIFICATION_FAILED/);
+  }
 });
 
 test("public, foreign or broadly connected Blob stores are never adopted", async () => {

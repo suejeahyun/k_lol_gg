@@ -35,3 +35,22 @@ test("cron rejects missing/incorrect bearer, extra query, non-hub runtime before
   const failed = await handleCommunitySitesCron(request(`Bearer ${secret}`), { enabled: true, secret, run: async () => { throw new Error("sensitive provider value"); } });
   assert.equal(failed.status, 503); assert.doesNotMatch(await failed.text(), /sensitive provider value/);
 });
+test("an intentionally disabled provisioner authenticates first and skips database/provider work without hiding a disabled hub runtime", async () => {
+  const secret = "synthetic-cron-secret-with-at-least-32-characters";
+  let calls = 0;
+  const run = async () => { calls += 1; throw new Error("database and provider must not be opened"); };
+  const dependencies = { enabled: true, provisioningEnabled: false, secret, run };
+  const request = (authorization?: string, suffix = "", method = "GET") => new Request(`https://hub.example/api/cron/community-sites${suffix}`, { method, headers: authorization ? { authorization } : {} });
+  for (const req of [request(), request("Bearer incorrect"), request(`Bearer ${secret}`, "?force=true"), request(`Bearer ${secret}`, "", "POST")]) {
+    assert.equal((await handleCommunitySitesCron(req, dependencies)).status, 401);
+  }
+  const response = await handleCommunitySitesCron(request(`Bearer ${secret}`), dependencies);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { job: "community-sites", kind: "disabled" });
+  assert.match(response.headers.get("cache-control") ?? "", /no-store/);
+  assert.equal(response.headers.get("retry-after"), null);
+  assert.equal((await handleCommunitySitesCron(request(`Bearer ${secret}`), { ...dependencies, enabled: false })).status, 503);
+  assert.equal(calls, 0, "authentication failures and planned disablement never touch the queue or provider");
+  const enabled = await handleCommunitySitesCron(request(`Bearer ${secret}`), { ...dependencies, provisioningEnabled: true, run: async () => { calls += 1; return { kind: "idle" as const }; } });
+  assert.equal(enabled.status, 200); assert.deepEqual(await enabled.json(), { job: "community-sites", kind: "idle" }); assert.equal(calls, 1);
+});

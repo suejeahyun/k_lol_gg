@@ -10,6 +10,7 @@ export const maxDuration = 180;
 export const preferredRegion = "sin1";
 export async function GET(request: Request) {
   return handleCommunitySitesCron(request, { enabled: isCommunitySitesEnabled(), secret: process.env.CRON_SECRET,
+    provisioningEnabled: process.env.HUB_PROVISIONING_ENABLED === "true",
     run: async () => {
       const database = getDatabase();
       return runNextCommunitySiteProvisioningJob(database, createVercelNeonProvisioningProvider(database));

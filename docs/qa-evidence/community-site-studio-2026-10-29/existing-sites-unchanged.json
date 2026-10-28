@@ -1,0 +1,15 @@
+{
+  "verifiedAt": "2026-10-28T18:07:59.778Z",
+  "sites": [
+    {
+      "alias": "k-lol-gg.vercel.app",
+      "deploymentId": "dpl_6B2a4crdWnPW6WctV4GoGP24bH2v",
+      "unchanged": true
+    },
+    {
+      "alias": "nexus-gg-kr.vercel.app",
+      "deploymentId": "dpl_4x3vz5msZg8Sumv7Cd1vQpy8XpRa",
+      "unchanged": true
+    }
+  ]
+}

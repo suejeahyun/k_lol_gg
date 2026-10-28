@@ -1,0 +1,22 @@
+{
+  "verifiedAt": "2026-10-28T18:04:35.488Z",
+  "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
+  "sourceSha": "1cdc78c431819b06aca6f7d34db54120a961ed73",
+  "studioEnabled": true,
+  "automaticProvisioningEnabled": false,
+  "blockingCondition": "Dedicated Vercel provisioning credential pending user login",
+  "updatedKeys": [
+    "HUB_VERCEL_TEAM_ID",
+    "HUB_NEON_API_KEY",
+    "HUB_NEON_ORG_ID",
+    "HUB_NEON_REGION",
+    "HUB_PROVISIONING_MASTER_KEY",
+    "HUB_ENGINE_GITHUB_REPO_ID",
+    "CRON_SECRET",
+    "COMMUNITY_SITES_ENABLED",
+    "HUB_PROVISIONING_ENABLED",
+    "HUB_ENGINE_GIT_REF"
+  ],
+  "secretValuesIncluded": false,
+  "childProjectsChanged": false
+}

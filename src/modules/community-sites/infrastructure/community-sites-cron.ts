@@ -7,7 +7,7 @@ const problems = {
   unavailable: definePublicProblem({ code: "COMMUNITY_SITE_JOB_UNAVAILABLE", status: 503, title: "사이트 개설 작업을 사용할 수 없습니다.", detail: "개설 작업과 공급자 설정을 확인해 주세요." }),
 };
 export async function handleCommunitySitesCron(request: Request, dependencies: {
-  enabled: boolean; secret: string | undefined; run: () => Promise<CommunitySiteProvisioningRunResult>;
+  enabled: boolean; provisioningEnabled?: boolean; secret: string | undefined; run: () => Promise<CommunitySiteProvisioningRunResult>;
 }): Promise<Response> {
   const traceId = readValidatedTraceId(request.headers);
   const url = new URL(request.url);
@@ -15,6 +15,9 @@ export async function handleCommunitySitesCron(request: Request, dependencies: {
     return problemResponse(problems.authentication, { traceId });
   }
   if (!dependencies.enabled) return problemResponse(problems.unavailable, { traceId });
+  if (dependencies.provisioningEnabled === false) {
+    return noStoreJsonResponse({ job: "community-sites", kind: "disabled" }, { traceId });
+  }
   try {
     const result = await dependencies.run();
     return noStoreJsonResponse({ job: "community-sites", kind: result.kind, ...(result.errorCode ? { errorCode: result.errorCode } : {}) }, { traceId });

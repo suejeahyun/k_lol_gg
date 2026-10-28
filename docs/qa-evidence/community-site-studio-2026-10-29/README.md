@@ -15,7 +15,7 @@
 - 격리 PostgreSQL: 최종 0051의 fresh 1 + upgrade/baseline 8 + repository/worker 12 + child bootstrap 7 = 28/28. 공개 쓰기 성공 후 응답 유실·소유자 중지·관찰 전용 복구와 쓰기 전 권한 중지 시 비공개 유지도 포함한다.
 - [실제 두 사이트 SSO](auth-sso.md): 최종 스키마의 서로 다른 HTTPS origin과 운영용 빌드로 8단계 검증, exit 0. Strict 쿠키, 소유자 전용 미리보기, 관리자 비밀번호 재확인, 일반 회원 PENDING·프로필 입력·실제 운영진 승인·첫 모집 작성을 확인했다. 일회성 DB·서버·인증서를 정리했다.
 - [운영 HUB migration](database-production.json): 복구 branch를 확보하고 migration 51→52 추가·재실행, 기존 중앙 계정·사이트·방 수 보존, 신규 신청 0을 확인했다. K-LOL/NEXUS DB는 접근하지 않았다.
-- 최종 전체 `npm run check`: lint·typecheck·ERD, 계약 796 + 단위 1,277 PASS·기존 SKIP1, 홈 이미지 검증과 운영용 빌드 통과. 최종 리뷰에서 팀 기능 중지 시 직접 계산 페이지 차단, 자식의 중복 브랜드/기능 설정 차단, 활성 모듈 메뉴 누락을 수정하고 재검증했다. 현재 트리와 전체 Git 이력 비밀정보 검사 통과.
+- 최종 전체 `npm run check`: lint·typecheck·ERD, 계약 796 + 단위 1,281 PASS·기존 SKIP1, 홈 이미지 검증과 운영용 빌드 통과. 최종 리뷰에서 팀 기능 중지 시 직접 계산 페이지 차단, 자식의 중복 브랜드/기능 설정 차단, 활성 모듈 메뉴 누락을 수정했다. 실제 공급자 검증에서 확인한 긴 주소 자동 축약은 환경 게시 전 정확한 도메인 등록과 실제 배포 대상 조회로 보완했다. 개설 기능 비활성 중 인증된 cron은 DB·공급자 호출 없이 `disabled`로 종료한다. 현재 트리와 전체 Git 이력 비밀정보 검사 통과.
 
 ## 릴리스 전에 완료할 검사
 
