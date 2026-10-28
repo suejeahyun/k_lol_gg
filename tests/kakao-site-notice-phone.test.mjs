@@ -4,11 +4,13 @@ import { createRequire } from "node:module";
 import test from "node:test";
 import vm from "node:vm";
 import { analyzeRhinoStatic } from "../scripts/lib/messengerbot-rhino-static.mjs";
+import { createRoomRouterHarness } from "./helpers/messengerbot-room-router-harness.mjs";
 const path = new URL("../integrations/messengerbot-r/site-notices/KLOL_SITE_NOTICE_COMPANION.js", import.meta.url);
 const source = readFileSync(path, "utf8");
 const factory = source.slice(0, source.indexOf("var KLOL_SITE_NOTICE ="));
 function setup(store = {}, options = {}) {
-  const context = vm.createContext({}); vm.runInContext(factory, context);
+  const router = createRoomRouterHarness();
+  const context = vm.createContext({ require: router.require }); vm.runInContext(factory, context);
   const event = { id: "00000000-0000-4000-8000-000000000001", leaseToken: "a".repeat(64), targetHash: "b".repeat(64), text: "합성 내전 안내", leaseUntil: "2026-09-22T01:02:00.000Z" };
   const calls = []; const replies = [];
   let acknowledgeFails = options.acknowledgeFails;
@@ -24,7 +26,7 @@ function setup(store = {}, options = {}) {
   vm.runInContext(source.slice(source.indexOf("function response(")), context);
   const replier = { reply: (text) => { replies.push(text); if (options.throwAfterSend) throw Error("UNCERTAIN"); return options.accepted; } };
   const register = () => { store.KLOL_SITE_NOTICE_ENABLED = "true"; store.KLOL_SITE_NOTICE_REGISTRATION_CODE = "c".repeat(32); return worker.register("사이트알림연동 " + "c".repeat(32), true, replier, "com.kakao.talk"); };
-  return { worker, register, store, replies, calls, replier, response: context.response, onStartCompile: context.onStartCompile };
+  return { worker, register, store, replies, calls, replier, handler: router.handler("KLOL_NOTICE"), onStartCompile: context.onStartCompile };
 }
 
 test("companion is ES5 and below both editor character limits", () => {
@@ -42,7 +44,7 @@ test("exact status/version commands are local and preserve OFF, settings and the
     assert.equal(s.worker.handleMessage(message, true, s.replier, "com.kakao.talk"), true);
   }
   assert.match(s.replies[0], /휴대폰 알림: 꺼짐\n수신 세션: 등록 필요/);
-  assert.match(s.replies[1], /KLOL_SITE_NOTICE_COMPANION_1\.0\.4$/);
+  assert.match(s.replies[1], /KLOL_SITE_NOTICE_COMPANION_1\.0\.5$/);
   assert.equal(s.worker.status(), "DISABLED"); assert.equal(s.calls.length, 0); assert.deepEqual(s.store, storeBefore);
   s.register(); const afterRegistration = { ...s.store }; const callsBefore = s.calls.length;
   const otherReplies = []; const other = { reply: (text) => otherReplies.push(text) };
@@ -90,15 +92,15 @@ test("OFF and repeated registration replies cannot enable polling or replace a s
   s.worker.poll(); assert.equal(s.replies.at(-1), "합성 내전 안내"); assert.equal(otherReplies.length, 1);
 });
 
-test("installed response callback reports status and registration without queue delivery", () => {
+test("router-registered handler reports status and registration without queue delivery", () => {
   const s = setup({ KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_REGISTRATION_CODE: "c".repeat(32) }, { throwAfterSend: true });
-  s.response("K롤방 구인구직방", "사이트알림상태", "unused", true, s.replier, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림상태", "unused", true, s.replier, null, "com.kakao.talk");
   assert.match(s.replies[0], /등록 필요/); assert.deepEqual(s.calls, []);
-  s.response("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "unused", true, s.replier, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "unused", true, s.replier, null, "com.kakao.talk");
   assert.equal(s.worker.status(), "REGISTERED", "feedback SDK failure cannot undo the successful registration");
   assert.deepEqual(s.calls.map((call) => call.action), ["REGISTER"]);
   s.onStartCompile(); assert.equal(s.worker.status(), "REGISTRATION_REQUIRED");
-  s.response("K롤방 구인구직방", "사이트알림상태", "unused", true, s.replier, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림상태", "unused", true, s.replier, null, "com.kakao.talk");
   assert.match(s.replies.at(-1), /등록 필요/); assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "");
   assert.deepEqual(s.calls.map((call) => call.action), ["REGISTER"]);
 });
@@ -136,8 +138,10 @@ test("explicit SDK rejection is retryable after manual session renewal", () => {
 
 function runtime(options = {}) {
   const logs = [], replies = [], timers = [];
+  const router = createRoomRouterHarness();
   const store = { KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_REGISTRATION_CODE: "c".repeat(32) };
   const context = vm.createContext({
+    require: router.require,
     KLOL_SITE_NOTICE_SETUP_FAILED: options.setupFails === true,
     Log: { i: (value) => logs.push(value) },
     DataBase: {
@@ -152,19 +156,20 @@ function runtime(options = {}) {
     clearInterval: () => {},
   });
   vm.runInContext(source, context);
+  const handler = router.handler("KLOL_NOTICE");
   const replier = { reply(text) {
     assert.equal(this, replier, "SDK method retains its original receiver");
     if (options.replyFails) throw Error("synthetic-private-value");
     replies.push(text); return options.accepted;
   } };
-  return { context, store, logs, replies, timers, replier,
-    send: (message, group = true, app = "com.kakao.talk") => context.response("K롤방 구인구직방", message, "private-sender", group, replier, null, app) };
+  return { context, store, logs, replies, timers, replier, handler,
+    send: (message, group = true, app = "com.kakao.talk") => handler("K롤방 구인구직방", message, "private-sender", group, replier, null, app) };
 }
 
 test("whole installed runtime answers local diagnostics without credentials, network or registration", () => {
   const s = runtime(); const before = { ...s.store };
   s.send("사이트알림버전"); s.send("사이트알림진단"); s.send("사이트알림상태");
-  assert.match(s.replies[0], /COMPANION_1\.0\.4$/);
+  assert.match(s.replies[0], /COMPANION_1\.0\.5$/);
   assert.match(s.replies[1], /초기화: READY/);
   assert.match(s.replies[2], /등록 필요/);
   assert.deepEqual(s.store, before); assert.equal(s.timers.length, 1);
@@ -178,7 +183,7 @@ test("initialization failures leave version and fixed failure-stage diagnostics 
     const s = runtime({ [flag]: true });
     assert.equal(s.context.KLOL_SITE_NOTICE, null);
     s.send("사이트알림버전"); s.send("사이트알림진단"); s.send("사이트알림상태");
-    assert.match(s.replies[0], /COMPANION_1\.0\.4$/);
+    assert.match(s.replies[0], /COMPANION_1\.0\.5$/);
     assert.ok(s.replies[1].includes("초기화: " + stage));
     assert.ok(s.replies[2].includes("초기화 실패: " + stage));
     assert.doesNotThrow(() => s.context.onStartCompile());
@@ -192,7 +197,7 @@ test("rejected callback contexts stay silent and record only fixed local diagnos
   const initialLogs = s.logs.length;
   s.send("사이트알림진단", false, "other.private.app"); s.send("사이트알림진단", true, "other.private.app");
   assert.equal(s.logs.length, initialLogs, "untrusted apps must stop at the outer guard before diagnostics");
-  s.context.response("K롤방 구인구직방", "사이트알림진단", "sender", true, {}, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림진단", "sender", true, {}, null, "com.kakao.talk");
   assert.deepEqual(s.replies, []); assert.deepEqual(s.store, before);
   assert.ok(s.logs.includes("[KLOL_SITE_NOTICE] REPLIER_MISSING"));
   const count = s.logs.length;
@@ -214,9 +219,9 @@ test("reported open-chat false group flag still answers version, diagnostics and
   for (const flag of [false, undefined, null, 0]) {
     const s = runtime(); const before = { ...s.store };
     for (const message of ["사이트알림버전", "사이트알림진단", "사이트알림상태"]) {
-      s.context.response("K롤방 구인구직방", message, "sender", flag, s.replier, null, "com.kakao.talk");
+      s.handler("K롤방 구인구직방", message, "sender", flag, s.replier, null, "com.kakao.talk");
     }
-    assert.match(s.replies[0], /COMPANION_1\.0\.4$/);
+    assert.match(s.replies[0], /COMPANION_1\.0\.5$/);
     assert.match(s.replies[1], /그룹 표시: 꺼짐\/미제공 \(호환 처리\)/);
     assert.match(s.replies[1], /초기화: READY/);
     assert.match(s.replies[2], /등록 필요/);
@@ -228,16 +233,16 @@ test("reported open-chat false group flag still answers version, diagnostics and
 
 test("false group flag requires exact one-use code and retains only explicitly registered session", () => {
   const s = setup({ KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_REGISTRATION_CODE: "c".repeat(32) });
-  s.response("K롤방 구인구직방", "사이트알림연동 " + "d".repeat(32), "sender", false, s.replier, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림연동 " + "d".repeat(32), "sender", false, s.replier, null, "com.kakao.talk");
   s.worker.poll(); assert.equal(s.calls.length, 0);
   assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "c".repeat(32));
-  s.response("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "sender", false, s.replier, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "sender", false, s.replier, null, "com.kakao.talk");
   assert.equal(s.worker.status(), "REGISTERED");
   assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "");
   const otherReplies = []; const other = { reply: (text) => otherReplies.push(text) };
   // A different callback session in an allowed room must not replace the target.
-  s.response("K롤방 구인구직방", "사이트알림진단", "sender", false, other, null, "com.kakao.talk");
-  s.response("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "sender", false, other, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림진단", "sender", false, other, null, "com.kakao.talk");
+  s.handler("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "sender", false, other, null, "com.kakao.talk");
   assert.equal(otherReplies.length, 2, "both callbacks pass the room guard and exercise session retention");
   s.worker.poll(); s.worker.poll();
   assert.equal(s.replies.filter((text) => text === "합성 내전 안내").length, 1);
@@ -248,7 +253,7 @@ test("false group flag requires exact one-use code and retains only explicitly r
 test("false group flag never permits debug, missing-package or other-app registration", () => {
   for (const app of ["", undefined, "debug", "other.app"]) {
     const s = setup({ KLOL_SITE_NOTICE_ENABLED: "true", KLOL_SITE_NOTICE_REGISTRATION_CODE: "c".repeat(32) });
-    s.response("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "sender", false, s.replier, null, app);
+    s.handler("K롤방 구인구직방", "사이트알림연동 " + "c".repeat(32), "sender", false, s.replier, null, app);
     s.worker.poll(); assert.deepEqual(s.calls, []); assert.deepEqual(s.replies, []);
     assert.equal(s.store.KLOL_SITE_NOTICE_REGISTRATION_CODE, "c".repeat(32));
   }

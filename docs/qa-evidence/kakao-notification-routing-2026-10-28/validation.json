@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "feature": "kakao-notification-room-routing",
+  "version": "1.0.0",
+  "verifiedDate": "2026-10-28",
+  "timezone": "Asia/Seoul",
+  "phoneInstallation": {
+    "status": "INSTALLED",
+    "platform": "Android 16",
+    "messengerBotVersion": "0.7.29a",
+    "kakaoTalkVersion": "26.9.1",
+    "profiles": [
+      {
+        "role": "KLOL_MAIN",
+        "version": "KLOL_KAKAO_BOT_V40_R32_2026_10_28",
+        "installedHashMatched": true,
+        "compile": "PASS"
+      },
+      {
+        "role": "KLOL_NOTICE",
+        "version": "KLOL_SITE_NOTICE_COMPANION_1.0.5",
+        "installedHashMatched": true,
+        "compile": "PASS"
+      },
+      {
+        "role": "NEXUS_MAIN",
+        "version": "NEXUS_KAKAO_BOT_V40_R32_2026_10_28",
+        "installedHashMatched": true,
+        "compile": "PASS"
+      },
+      {
+        "role": "NEXUS_NOTICE",
+        "version": "NEXUS_SITE_NOTICE_COMPANION_1.0.5",
+        "installedHashMatched": true,
+        "compile": "PASS"
+      }
+    ],
+    "sharedModule": {
+      "name": "KAKAO_ROOM_ROUTER",
+      "version": "1.0.0",
+      "installedHashMatched": true,
+      "load": "PASS"
+    },
+    "diagnosticProfile": "OFF",
+    "finalDeviceAudit": {
+      "activeProductionProfiles": 4,
+      "diagnosticProfileActive": false,
+      "installedFilesCompared": 5,
+      "allInstalledFileHashesMatched": true,
+      "existingSettingsFilesCompared": 14,
+      "allExistingSettingsByteIdentical": true,
+      "registrationCodesConsumed": 2,
+      "routerErrorLogCount": 0
+    }
+  },
+  "roomRouting": {
+    "identityFields": [
+      "androidUser",
+      "notificationShortcutId"
+    ],
+    "identityRepresentation": "exact strings",
+    "registeredRoomCount": 4,
+    "usesThreadIdForRoomIdentity": false,
+    "rawIdentifiersPublished": false
+  },
+  "liveVerification": {
+    "pcKakaoTalkUseExplicitlyAuthorized": true,
+    "versionReplies": {
+      "status": "PASS",
+      "roomsChecked": 4,
+      "expectedRepliesPerRoom": 1,
+      "observedRepliesPerRoom": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "recruitmentSeparation": {
+      "status": "PASS",
+      "observedKlolCount": 2,
+      "observedNexusCount": 0,
+      "scope": "counts observed during verification"
+    },
+    "siteNoticeSessions": {
+      "registration": "PASS",
+      "statusQuery": "PASS",
+      "servicesChecked": 2
+    },
+    "newAutomaticSiteNoticeDelivery": "NOT_VERIFIED",
+    "syntheticProductionEventsCreated": false
+  },
+  "localVerification": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "lint": {
+      "errors": 0,
+      "warnings": 89
+    },
+    "typecheck": "PASS",
+    "erd": {
+      "status": "PASS",
+      "tables": 114,
+      "foreignKeys": 175
+    },
+    "contractTests": {
+      "passed": 771,
+      "failed": 0,
+      "skipped": 0
+    },
+    "unitTests": {
+      "passed": 1201,
+      "failed": 0,
+      "skipped": 1
+    },
+    "homeGuideArt": {
+      "status": "PASS",
+      "images": 68
+    },
+    "productionBuild": {
+      "status": "PASS",
+      "nextVersion": "16.4.3",
+      "staticPages": 101
+    },
+    "routerNodeTests": {
+      "passed": 18,
+      "failed": 0
+    },
+    "routerRhinoJvm": {
+      "version": "1.7.15.1",
+      "interpretedAssertions": 52,
+      "compiledAssertions": 52,
+      "strictFatalWarnings": 0,
+      "concurrentDistinctMessages": "PASS"
+    },
+    "phoneLongBundleExactString": "PASS",
+    "secretScanCurrentTree": "PASS"
+  },
+  "changeBoundary": {
+    "messengerBotAppReplaced": false,
+    "websiteDeployed": false,
+    "databaseMigrationApplied": false,
+    "existingApplicationDataDeleted": false
+  },
+  "privacy": {
+    "shortcutIdsIncluded": false,
+    "displayNamesIncluded": false,
+    "credentialsIncluded": false,
+    "registrationCodesIncluded": false,
+    "chatTranscriptsIncluded": false
+  },
+  "limitations": [
+    "Session registration and status confirmation do not establish delivery of a newly generated automatic site notice.",
+    "No synthetic production data was created to exercise automatic site notice delivery."
+  ]
+}

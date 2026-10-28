@@ -49,6 +49,26 @@ export const klolNoticeRoomGuard = 'if(String(packageName)!=="com.kakao.talk"||!
 export const nexusMainRoomGuard = 'if(String(packageName)!=="com.kakao.talk"||!/^(NEXUS|NEXUS구인구직방)$/.test(String(room).replace(/[\\s\\u200B-\\u200D\\u2060\\uFEFF]/g,"")))return;';
 export const nexusNoticeRoomGuard = 'if(String(packageName)!=="com.kakao.talk"||!/^NEXUS구인구직방$/.test(String(room).replace(/[\\s\\u200B-\\u200D\\u2060\\uFEFF]/g,"")))return;';
 
+export function kakaoRoomRoutingBinding(role) {
+  if (!["KLOL_MAIN", "KLOL_NOTICE", "NEXUS_MAIN", "NEXUS_NOTICE"].includes(role)) throw new Error("Unknown phone routing role");
+  return [
+    "var KAKAO_ROOM_HANDLER=response;",
+    "response=function(){};",
+    `var KAKAO_ROOM_ROUTE=require("KAKAO_ROOM_ROUTER").create("${role}",KAKAO_ROOM_HANDLER);`,
+    "function onNotificationPosted(sbn){KAKAO_ROOM_ROUTE(sbn);}",
+    ...(role.endsWith("_NOTICE") ? [
+      "var KAKAO_ROOM_COMPILE=onStartCompile;",
+      "onStartCompile=function(){try{KAKAO_ROOM_ROUTE.stop();}finally{KAKAO_ROOM_COMPILE();}};",
+    ] : ["function onStartCompile(){KAKAO_ROOM_ROUTE.stop();}"]),
+  ].join("\n");
+}
+
+function withoutRoomRoutingBinding(source, role) {
+  const binding = kakaoRoomRoutingBinding(role);
+  if (!source.endsWith(`${binding}\n`) || source.split(binding).length !== 2) throw new Error("Phone artifact must end with its exact room router binding");
+  return source.slice(0, -binding.length - 1);
+}
+
 function replaceResponseRoomGuard(source, expected, replacement) {
   const entry = /function response\([^\n]+\) \{\n/u.exec(source);
   if (!entry) throw new Error("Phone response entry missing");
@@ -59,6 +79,7 @@ function replaceResponseRoomGuard(source, expected, replacement) {
 }
 
 export function nexusMessengerbotSource(klolSource) {
+  klolSource = withoutRoomRoutingBinding(klolSource, "KLOL_MAIN");
   const marker = "var KLOL_V1_GATEWAY =";
   const start = klolSource.indexOf(marker);
   if (start < 0) throw new Error("K-LOL transport marker missing");
@@ -70,7 +91,7 @@ export function nexusMessengerbotSource(klolSource) {
     .replaceAll('"event-log-"', '"event-nexus-log-"')
     .replaceAll('"event-boot-"', '"event-nexus-boot-"')
     .replace('var BASE_URL="https://k-lol-gg.vercel.app";', 'var BASE_URL="";')
-    .replaceAll("KLOL_KAKAO_BOT_V40_R31_2026_10_27", "NEXUS_KAKAO_BOT_V40_R31_2026_10_27");
+    .replaceAll("KLOL_KAKAO_BOT_V40_R32_2026_10_28", "NEXUS_KAKAO_BOT_V40_R32_2026_10_28");
   // The new community has no approved invite links or entry code. Refer to its
   // own configured site instead of silently retaining K-LOL invites.
   source = source.replace(/sourceReplier\.reply\(joinTone\[0\] \+ .*? \+ joinTone\[1\]\);/u,
@@ -97,12 +118,13 @@ export function nexusMessengerbotSource(klolSource) {
     '}catch(ignoredNexusConfiguration){return false;}',
     '}',
   ].join("\n");
-  return `${nexusDatabase}\n${source}\n${configuration}\n`;
+  return `${nexusDatabase}\n${source}\n${configuration}\n${kakaoRoomRoutingBinding("NEXUS_MAIN")}\n`;
 }
 
 export function nexusCompanionSource(klolSource) {
-  const source = replaceResponseRoomGuard(klolSource.replace(/\r\n?/gu, "\n"), klolNoticeRoomGuard, `  ${nexusNoticeRoomGuard}`)
+  const unboundSource = withoutRoomRoutingBinding(klolSource.replace(/\r\n?/gu, "\n"), "KLOL_NOTICE");
+  const source = replaceResponseRoomGuard(unboundSource, klolNoticeRoomGuard, `  ${nexusNoticeRoomGuard}`)
     .replace(/\bDataBase\./gu, "NEXUS_DB.")
-    .replaceAll('"KLOL_SITE_NOTICE_COMPANION_1.0.4"', '"NEXUS_SITE_NOTICE_COMPANION_1.0.4"');
-  return `${nexusDatabase}\n${source}`;
+    .replaceAll('"KLOL_SITE_NOTICE_COMPANION_1.0.5"', '"NEXUS_SITE_NOTICE_COMPANION_1.0.5"');
+  return `${nexusDatabase}\n${source}${kakaoRoomRoutingBinding("NEXUS_NOTICE")}\n`;
 }

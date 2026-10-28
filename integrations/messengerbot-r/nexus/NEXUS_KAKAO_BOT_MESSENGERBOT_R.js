@@ -2,8 +2,7 @@ var NEXUS_DB={
 getDataBase:function(key){return DataBase.getDataBase("NEXUS_"+String(key).replace(/^KLOL_/,""));},
 setDataBase:function(key,value){DataBase.setDataBase("NEXUS_"+String(key).replace(/^KLOL_/,""),value);}
 };
-var KLOL_V1_GATEWAY = (function(){
-var CON="KLOL_KAKAO_COMMAND_V4";
+var KLOL_V1_GATEWAY = (function(){var CON="KLOL_KAKAO_COMMAND_V4";
 var PROTO="KLOL_KAKAO_V1_STRICT";
 var FORMAT="V1_SERVER_EXACT";
 var ENDPOINT="/api/integrations/kakao/v4/commands";
@@ -26,48 +25,34 @@ var LIMIT=256;
 var startMs=0;
 var netMs=0;
 var timing=null;
-function clean(value){
-return String(value==null?"":value).replace(/^\s+|\s+$/g,"");}
-function setting(key){
-if(Object.prototype.hasOwnProperty.call(settings,key))return settings[key];
-try{
-settings[key]=clean(String(NEXUS_DB.getDataBase(key)||""));}catch(ignored){
-settings[key]="";}
+function clean(value){return String(value==null?"":value).replace(/^\s+|\s+$/g,"");}
+function setting(key){if(Object.prototype.hasOwnProperty.call(settings,key))return settings[key];
+try{settings[key]=clean(String(NEXUS_DB.getDataBase(key)||""));}catch(ignored){settings[key]="";}
 return settings[key];}
-function utf8(value){
-return new java.lang.String(String(value)).getBytes(java.nio.charset.StandardCharsets.UTF_8);}
-function hex(bytes){
-var builder=new java.lang.StringBuilder(bytes.length * 2);
+function utf8(value){return new java.lang.String(String(value)).getBytes(java.nio.charset.StandardCharsets.UTF_8);}
+function hex(bytes){var builder=new java.lang.StringBuilder(bytes.length * 2);
 var index=0;
 var value=0;
-for(index=0;index<bytes.length;index += 1){
-value=bytes[index] & 255;
+for(index=0;index<bytes.length;index += 1){value=bytes[index] & 255;
 if(value<16)builder.append("0");
 builder.append(java.lang.Integer.toHexString(value));}
 return String(builder.toString());}
-function sha256(value){
-return hex(java.security.MessageDigest.getInstance("SHA-256").digest(utf8(value)));}
-function hmac(secret,value){
-var mac=javax.crypto.Mac.getInstance("HmacSHA256");
+function sha256(value){return hex(java.security.MessageDigest.getInstance("SHA-256").digest(utf8(value)));}
+function hmac(secret,value){var mac=javax.crypto.Mac.getInstance("HmacSHA256");
 mac.init(new javax.crypto.spec.SecretKeySpec(utf8(secret),"HmacSHA256"));
 return hex(mac.doFinal(utf8(value)));}
-function secret(key,label){
-var value=setting(key);
+function secret(key,label){var value=setting(key);
 if(utf8(value).length<32)throw new Error(label + " 비공개 설정을 확인해 주세요.");
 return value;}
-function profile(value){
-if(value!=="RECRUIT"&&value!=="FEATURES")throw new Error("봇 기능 구분을 확인해 주세요.");
+function profile(value){if(value!=="RECRUIT"&&value!=="FEATURES")throw new Error("봇 기능 구분을 확인해 주세요.");
 return value;}
-function baseUrl(){
-var value="";
+function baseUrl(){var value="";
 if(origin!==null)return origin;
 value=setting(URL_KEY).replace(/\/+$/,"");
-if(!/^https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::443)?$/.test(value)){
-throw new Error("HTTPS 서버 주소 설정을 확인해 주세요.");}
+if(!/^https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::443)?$/.test(value)){throw new Error("HTTPS 서버 주소 설정을 확인해 주세요.");}
 origin=value;
 return origin;}
-function beginRequest(logId,userHash,sender){
-startMs=new Date().getTime();
+function beginRequest(logId,userHash,sender){startMs=new Date().getTime();
 netMs=-1;
 settings={};
 inst={};
@@ -76,46 +61,34 @@ logKey=clean(logId);
 userKey=clean(userHash);
 who=clean(sender);
 active=null;}
-function finish(){
-if(netMs<0)return;
+function finish(){if(netMs<0)return;
 timing="[봇 속도]\n처리: " +(new Date().getTime()- startMs)+ "ms\n서버 왕복: " + netMs + "ms";}
-function speed(){
-return(timing||"내전상세 1을 보낸 뒤 다시 입력해주세요.")+ "\n수신 전 대기는 제외";}
-function installationId(pid){
-var sel=profile(pid);
-if(!inst[sel]){
-inst[sel]="install-" + hmac(
+function speed(){return(timing||"내전상세 1을 보낸 뒤 다시 입력해주세요.")+ "\n수신 전 대기는 제외";}
+function installationId(pid){var sel=profile(pid);
+if(!inst[sel]){inst[sel]="install-" + hmac(
 secret(ID_KEY,"익명 식별 키"),
 "installation-id\nKLOL_V4\n" + sel
 ).substring(0,32);}
 return inst[sel];}
-function senderId(sender){
-var stable=userKey;
+function senderId(sender){var stable=userKey;
 var prefix=stable?"sender-user-":"sender-display-";
 if(!stable)stable=clean(sender)||who;
 return prefix + hmac(
 secret(ID_KEY,"익명 식별 키"),
 "sender-id\n" + stable
 ).substring(0,32);}
-function nextId(pid){
-if(logKey){
-return "event-nexus-log-" + sha256(profile(pid)+ "\n" + BOOT_ID + "\n" + logKey).substring(0,32);}
+function nextId(pid){if(logKey){return "event-nexus-log-" + sha256(profile(pid)+ "\n" + BOOT_ID + "\n" + logKey).substring(0,32);}
 seq += 1;
 return "event-nexus-boot-" + BOOT_ID + "-" + String(seq);}
-function json(value){
-try{
-return JSON.parse(String(value||""));}catch(ignored){
-return null;}
+function json(value){try{return JSON.parse(String(value||""));}catch(ignored){return null;}
 }
-function delivery(pid,text,sender){
-var key=logKey?profile(pid)+ "\n" + logKey:"";
+function delivery(pid,text,sender){var key=logKey?profile(pid)+ "\n" + logKey:"";
 var cached=key?sent[key]:null;
 var eventId="";
 var body="";
 if(cached)return cached;
 eventId=nextId(pid);
-body=JSON.stringify({
-profileId:profile(pid),
+body=JSON.stringify({profileId:profile(pid),
 installationId:installationId(pid),
 senderId:senderId(sender),
 eventId:eventId,
@@ -126,21 +99,18 @@ protocol:PROTO,
 responseFormat:FORMAT
 });
 cached={eventId:eventId,body:body};
-if(key){
-sent[key]=cached;
+if(key){sent[key]=cached;
 order.push(key);
 if(order.length>LIMIT)delete sent[order.shift()];}
 return cached;}
-function send(pid,text,sender){
-var keyId=setting(KEY_ID)||"current";
+function send(pid,text,sender){var keyId=setting(KEY_ID)||"current";
 var item=delivery(pid,text,sender);
 active=item;
 item.reply=null;
 var material=CON + "\n" + keyId + "\n" + sha256(item.body);
 var netAt=new Date().getTime();
 var response=null;
-try{
-response=org.jsoup.Jsoup.connect(baseUrl()+ ENDPOINT)
+try{response=org.jsoup.Jsoup.connect(baseUrl()+ ENDPOINT)
 .ignoreContentType(true)
 .ignoreHttpErrors(true)
 .method(org.jsoup.Connection.Method.POST)
@@ -151,30 +121,23 @@ response=org.jsoup.Jsoup.connect(baseUrl()+ ENDPOINT)
 .header("Idempotency-Key",item.eventId)
 .timeout(5000)
 .requestBody(item.body)
-.execute();}finally{
-netMs=Math.max(0,new Date().getTime()- netAt);}
+.execute();}finally{netMs=Math.max(0,new Date().getTime()- netAt);}
 var raw=String(response.body()||"");
 var status=response.statusCode();
 var replayed=clean(response.header("Idempotency-Replayed"))==="true";
 var body=json(raw);
 item.reply=status>=200&&status<300&&body&&body.ok!==false&&!(Number(body.statusCode)>=400)?body.reply:null;
-return{
-ok:status>=200&&status<300,
+return{ok:status>=200&&status<300,
 status:status,
 body:body,
 traceId:clean(response.header("X-Trace-Id")),
 replayed:replayed
 };}
-function shouldSuppressReply(){
-return Boolean(active&&active.replySent);}
-function markReplySent(value){
-if(active&&typeof active.reply==="string"&&active.reply!==""&&active.reply===String(value))active.replySent=true;}
-function replyText(result){
-if(result&&result.body&&typeof result.body.reply==="string"){
-return String(result.body.reply);}
+function shouldSuppressReply(){return Boolean(active&&active.replySent);}
+function markReplySent(value){if(active&&typeof active.reply==="string"&&active.reply!==""&&active.reply===String(value))active.replySent=true;}
+function replyText(result){if(result&&result.body&&typeof result.body.reply==="string"){return String(result.body.reply);}
 return "";}
-return{
-beginRequest:beginRequest,
+return{beginRequest:beginRequest,
 finish:finish,
 speed:speed,
 replyText:replyText,
@@ -182,7 +145,7 @@ send:send,
 shouldSuppressReply:shouldSuppressReply,
 markReplySent:markReplySent
 };}());
-var BOT_CODE_VERSION = "NEXUS_KAKAO_BOT_V40_R31_2026_10_27";
+var BOT_CODE_VERSION = "NEXUS_KAKAO_BOT_V40_R32_2026_10_28";
 var BASE_URL="";
 var WEB_INHOUSE_RESULT_UPLOAD_URL=BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL=BASE_URL + "/admin/discipline/new";
@@ -203,16 +166,13 @@ var lastRecruitHash="";
 var OPERATION_FORM_SAVE_KEY="KLOL_OPERATION_FORM_LAST_HASH_V1";
 var lastOperationFormHash="";
 var KLOL_V1_OPERATION_RAW_TEXT="";
-function botDiagLog(code){
-try{Log.i("[NEXUS_DIAG] " + code);}catch(ignored){}
+function botDiagLog(code){try{Log.i("[NEXUS_DIAG] " + code);}catch(ignored){}
 }
-function isOpenChatBotInhouseLoadingNotice(text,sender){
-var normalizedSender=trimText(normalizeText(String(sender||"")));
+function isOpenChatBotInhouseLoadingNotice(text,sender){var normalizedSender=trimText(normalizeText(String(sender||"")));
 var normalizedText=trimText(normalizeText(String(text||""))).replace(/[ \t]+/g," ");
 return normalizedSender.indexOf("\uC624\uD508\uCC44\uD305\uBD07")>=0&&
 /^\uB0B4\uC804\uAD6C\uC778 \uC591\uC2DD \uBD88\uB7EC\uC624\uB294 \uC911(?:\u2026|\.{3})?$/.test(normalizedText);}
-function isRetiredScrimInput(value){
-var text=normalizePartyMemberMutationCommandText(value).replace(/ᄍ/g,"ㅉ");
+function isRetiredScrimInput(value){var text=normalizePartyMemberMutationCommandText(value).replace(/ᄍ/g,"ㅉ");
 var member=null;
 if(text.indexOf("//")===0||/^\/\s/.test(text))return false;
 if(text.charAt(0)==="/")text=text.substring(1);
@@ -221,8 +181,7 @@ if(/[\r\n\u2028\u2029]/.test(text))return false;
 member=parseMemberMutationCommand(text);
 if(member&&member.surface==="SCRIM")return true;
 return /^(?:멸망전\s*)?스크림\s*(?:(?:구인|모집|현황|목록|상세|참가|확정|취소|마감|종료)(?:\s*#?\d+)?(?:\s+.*)?|#?\s*\d{1,2}\s*(?:쫑|ㅉ|마감|종료))$/.test(text)||/^멸망전\s*스크림$/.test(text);}
-function handleCopyRosterForm(text,room,sender,replier){
-var normalized=normalizePartyMemberMutationCommandText(text);
+function handleCopyRosterForm(text,room,sender,replier){var normalized=normalizePartyMemberMutationCommandText(text);
 var header=null;
 if(normalized.indexOf("//")===0||/^\/\s/.test(normalized))return false;
 if(normalized.charAt(0)==="/")normalized=normalized.substring(1);
@@ -231,49 +190,33 @@ if(!header||!/^\s*(?:\d{1,2}|TOP|JUG|MID|ADC|SUP|탑|정글|미드|원딜|서폿
 if(isKlolBotEchoSender(sender))return true;
 handlePartyRecruitApi("",room||RECRUIT_ROOM_LABEL,String(text||""),sender,replier,"명단 저장",header[1]==="내전"?"FEATURES":"RECRUIT");
 return true;}
-function v1GatewaySucceeded(result){
-return Boolean(result&&result.ok&&v1GatewayFailureStatus(result)<400&&(!result.body||result.body.ok!==false));}
-function v1GatewayFailureStatus(result){
-var status=Number(result&&result.status||0);
+function v1GatewaySucceeded(result){return Boolean(result&&result.ok&&v1GatewayFailureStatus(result)<400&&(!result.body||result.body.ok!==false));}
+function v1GatewayFailureStatus(result){var status=Number(result&&result.status||0);
 var bodyStatus=Number(result&&result.body&&result.body.statusCode||0);
 if((status===0||(status>=200&&status<300))&&bodyStatus>=400)return bodyStatus;
 return status;}
-function v1GatewayFailureNotice(result,title){
-var status=v1GatewayFailureStatus(result);
+function v1GatewayFailureNotice(result,title){var status=v1GatewayFailureStatus(result);
 var code=String(result&&result.body&&result.body.code||"");
-if(code==="WRONG_PROFILE"){
-return "[NEXUS.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.";}
-if(code==="KAKAO_V4_TIMESTAMP_STALE"){
-return "[NEXUS.GG 휴대폰 시간 확인]\n휴대폰 날짜와 시간을 자동으로 설정한 뒤 다시 시도해 주세요.";}
-if(code==="INVALID_SIGNATURE"){
-return "[NEXUS.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.";}
-if(status===401||status===403){
-return title + "\n요청 권한을 확인하지 못했습니다. 최신 전체 설치본인지 확인해 주세요.";}
-if(status===400){
-var validationReply=String(result&&result.body&&result.body.reply||"");
+if(code==="WRONG_PROFILE"){return "[NEXUS.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.";}
+if(code==="KAKAO_V4_TIMESTAMP_STALE"){return "[NEXUS.GG 휴대폰 시간 확인]\n휴대폰 날짜와 시간을 자동으로 설정한 뒤 다시 시도해 주세요.";}
+if(code==="INVALID_SIGNATURE"){return "[NEXUS.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.";}
+if(status===401||status===403){return title + "\n요청 권한을 확인하지 못했습니다. 최신 전체 설치본인지 확인해 주세요.";}
+if(status===400){var validationReply=String(result&&result.body&&result.body.reply||"");
 if(validationReply!=="")return validationReply;
 return title + "\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.";}
 return title + "\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.";}
-function normalizePartyMemberMutationCommandText(value){
-var text=String(value||"");
-try{
-text=String(java.text.Normalizer.normalize(text,java.text.Normalizer.Form.NFKC));}catch(ignoredJavaNormalizationError){
-try{
-if(typeof text.normalize==="function")text=text.normalize("NFKC");}catch(ignoredJsNormalizationError){String(ignoredJsNormalizationError);}
+function normalizePartyMemberMutationCommandText(value){var text=String(value||"");
+try{text=String(java.text.Normalizer.normalize(text,java.text.Normalizer.Form.NFKC));}catch(ignoredJavaNormalizationError){try{if(typeof text.normalize==="function")text=text.normalize("NFKC");}catch(ignoredJsNormalizationError){String(ignoredJsNormalizationError);}
 }
 return trimText(normalizeText(text).replace(/＃/g,"#")).replace(/[ \t]+/g," ");}
-function partyMemberMutationNameLength(value){
-return String(value||"").replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,"_").length;}
-function parsePartyMemberMutationCommand(value){
-var parsed=parseMemberMutationCommand(value);
+function partyMemberMutationNameLength(value){return String(value||"").replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,"_").length;}
+function parsePartyMemberMutationCommand(value){var parsed=parseMemberMutationCommand(value);
 if(!parsed||parsed.surface!=="PARTY")return null;
-return{
-command:parsed.command==="ADD"?"PARTY_MEMBER_ADD":"PARTY_MEMBER_REMOVE",
+return{command:parsed.command==="ADD"?"PARTY_MEMBER_ADD":"PARTY_MEMBER_REMOVE",
 recruitNumber:parsed.recruitNumber,
 name:parsed.name
 };}
-function parseMemberMutationCommand(value){
-var text=normalizePartyMemberMutationCommandText(value);
+function parseMemberMutationCommand(value){var text=normalizePartyMemberMutationCommandText(value);
 var match=null;
 var recruitNumber=0;
 var name="";
@@ -291,15 +234,13 @@ name=String(match[4]||"").replace(/^[ \t]+|[ \t]+$/g,"").replace(/[ \t]+/g," ");
 if(recruitNumber<1||recruitNumber>99||partyMemberMutationNameLength(name)<1||partyMemberMutationNameLength(name)>80)return null;
 if((/[\/,，、]/.test(name)&&!(prefix.indexOf("내전")===0&&/추가|추기|등록|참가|수정/.test(action)&&(/^[^/]+(\/[^/]*){3,}$/.test(name)||/^[^/]+\/[a-z,\/ ]+$/i.test(name))))||/[;；]/.test(name)||/^(?:추가|추기|등록|참가|수정|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name))return null;
 if(/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name))return null;
-return{
-surface:prefix.indexOf("내전")===0?"INHOUSE":prefix.indexOf("스크림")===0?"SCRIM":"PARTY",
+return{surface:prefix.indexOf("내전")===0?"INHOUSE":prefix.indexOf("스크림")===0?"SCRIM":"PARTY",
 profileId:prefix.indexOf("내전")===0?"FEATURES":"RECRUIT",
 command:(/추가|추기|등록|참가|수정/.test(action)?"ADD":"REMOVE"),
 recruitNumber:recruitNumber,
 name:name
 };}
-function handleMemberMutationCommand(text,room,sender,replier){
-var parsed=parseMemberMutationCommand(text);
+function handleMemberMutationCommand(text,room,sender,replier){var parsed=parseMemberMutationCommand(text);
 if(!parsed)return false;
 handlePartyRecruitApi(
 parsed.command,
@@ -311,8 +252,7 @@ replier,
 parsed.profileId
 );
 return true;}
-function handleRecruitCodeCommand(value,room,sender,replier){
-var text=normalizePartyMemberMutationCommandText(value),match=null;
+function handleRecruitCodeCommand(value,room,sender,replier){var text=normalizePartyMemberMutationCommandText(value),match=null;
 if(/[\r\n\u2028\u2029]/.test(text)||text.indexOf("//")===0||/^\/\s/.test(text))return false;
 if(text.charAt(0)==="/")text=text.substring(1);
 match=/^(?:구인상세|상세)\s+(\S+)(?:\s+(.+))?$/.exec(text);
@@ -322,13 +262,11 @@ if(!match||!/^[2-9A-HJ-NP-Z]{5}-[2-9A-HJ-NP-Z]{5}$/.test(match[1].toUpperCase())
 if(isKlolBotEchoSender(sender))return true;
 handlePartyRecruitApi("",room||RECRUIT_ROOM_LABEL,String(value||""),sender,replier,"파티 모집","RECRUIT");
 return true;}
-function handleInhouseFinishCommand(value,room,sender,replier){
-var text=normalizePartyMemberMutationCommandText(value).replace(/ᄍ/g,"ㅉ");
+function handleInhouseFinishCommand(value,room,sender,replier){var text=normalizePartyMemberMutationCommandText(value).replace(/ᄍ/g,"ㅉ");
 if(!/^\/?내전[^\S\r\n\u2028\u2029]*#?[^\S\r\n\u2028\u2029]*[1-9]\d{0,2}[^\S\r\n\u2028\u2029]*(?:쫑|ㅉ|마감|종료)$/.test(text))return false;
 if(!isKlolBotEchoSender(sender))handlePartyRecruitApi("",room,String(value),sender,replier,"내전 마감","FEATURES");
 return true;}
-function v1ExtractSeasonRecruitNoFromSnapshot(text){
-var lines=normalizeText(String(text||"")).split("\n");
+function v1ExtractSeasonRecruitNoFromSnapshot(text){var lines=normalizeText(String(text||"")).split("\n");
 var headerText=lines.slice(0,8).join("\n");
 var match=headerText.match(/(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i);
 if(!match)match=headerText.match(/#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i);
@@ -336,10 +274,8 @@ if(!match)match=headerText.match(/(?:협곡\s*내전|협곡내전|내전)\s*(?:�
 if(!match)match=headerText.match(/(?:협곡\s*내전|협곡내전|내전)\s*#\s*(\d{1,3})/i);
 if(match&&Number(match[1])>=1&&Number(match[1])<=999)return Number(match[1]);
 return 1;}
-function v1SeasonApplyCompleteNotice(){
-return "[NEXUS.GG 구인구직방 참가 자동 등록 완료]\n내전 시작 10분전에 디스코드 내전 대기방으로 와주세요.";}
-function isSeasonApplySnapshotEnvelope(text){
-var normalized=trimText(normalizeText(String(text||"")));
+function v1SeasonApplyCompleteNotice(){return "[NEXUS.GG 구인구직방 참가 자동 등록 완료]\n내전 시작 10분전에 디스코드 내전 대기방으로 와주세요.";}
+function isSeasonApplySnapshotEnvelope(text){var normalized=trimText(normalizeText(String(text||"")));
 var legacyForm=false;
 if(normalized.indexOf("//")===0||/^\/\s/.test(normalized))return false;
 if(normalized.charAt(0)==="/")normalized=normalized.substring(1);
@@ -349,8 +285,7 @@ return /^\s*📢\s*내전하실분\s*#\s*\d{1,3}\s*$/m.test(normalized)&&
 /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+(?:[01]?\d|2[0-3])\s*:\s*[0-5]\d\s*시작(?:\s+.*?)?\s*$/m.test(normalized)&&
 /^\s*👥\s*\d{1,2}\s*\/\s*\d{1,2}\s*명\s*$/m.test(normalized)&&
 legacyForm;}
-function isCompleteEmptySeasonApplySnapshot(text){
-var lines=[];
+function isCompleteEmptySeasonApplySnapshot(text){var lines=[];
 var capacityMatch=null;
 var capacity=0;
 var slots={};
@@ -367,19 +302,16 @@ if(!capacityMatch)return false;
 capacity=Number(capacityMatch[1]);
 if(capacity<2||capacity>20)return false;
 lines=text.split("\n");
-for(i=0;i<lines.length;i += 1){
-row=trimText(String(lines[i]||"")).match(/^(\d{1,2})\s*\\?\s*[.)]\s*(.*)$/);
+for(i=0;i<lines.length;i += 1){row=trimText(String(lines[i]||"")).match(/^(\d{1,2})\s*\\?\s*[.)]\s*(.*)$/);
 if(!row)continue;
 slotNo=Number(row[1]);
 if(slotNo<1||slotNo>capacity)return false;
 value=trimText(String(row[2]||""));
 if(value!=="")return false;
 slots[String(slotNo)]=true;}
-for(i=1;i<=capacity;i += 1){
-if(!slots[String(i)])return false;}
+for(i=1;i<=capacity;i += 1){if(!slots[String(i)])return false;}
 return Object.keys(slots).length===capacity;}
-function isSeasonApplyCandidateMessage(text){
-var lines=[];
+function isSeasonApplyCandidateMessage(text){var lines=[];
 var i=0;
 var line="";
 var row=null;
@@ -387,212 +319,158 @@ text=normalizeText(String(text||""));
 if(isPartyRecruitLikeMessage(text)&&!isSeasonApplySnapshotEnvelope(text))return false;
 if(!hasSeasonApplyForm(text)&&!hasSeasonApplyWord(text))return false;
 lines=text.split("\n");
-for(i=0;i<lines.length;i++){
-line=trimText(String(lines[i]||""));
+for(i=0;i<lines.length;i++){line=trimText(String(lines[i]||""));
 if(isSeasonApplyExampleLine(line))continue;
 row=line.match(/^(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*)$/);
 if(row&&trimText(String(row[2]||""))!="")return true;}
 return isCompleteEmptySeasonApplySnapshot(text);}
-function sendSearchPlayerCommand(text,room,sender,replier){
-var result=null;
+function sendSearchPlayerCommand(text,room,sender,replier){var result=null;
 var reply="";
-try{
-result=KLOL_V1_GATEWAY.send("FEATURES",text,sender);
-if(v1GatewayFailureStatus(result)===429){
-replier.reply("[전적 검색 제한]\n잠시 후 다시 시도해주세요.");
+try{result=KLOL_V1_GATEWAY.send("FEATURES",text,sender);
+if(v1GatewayFailureStatus(result)===429){replier.reply("[전적 검색 제한]\n잠시 후 다시 시도해주세요.");
 return;}
-if(!v1GatewaySucceeded(result)){
-replier.reply(v1GatewayFailureNotice(result,"[전적 검색 오류]"));
+if(!v1GatewaySucceeded(result)){replier.reply(v1GatewayFailureNotice(result,"[전적 검색 오류]"));
 return;}
 reply=KLOL_V1_GATEWAY.replyText(result);
-if(reply!=""){
-replier.reply(reply);
+if(reply!=""){replier.reply(reply);
 return;}
-replier.reply("[전적 검색 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");}catch(error){
-replier.reply("[전적 검색 처리 오류]\n잠시 후 다시 시도해주세요.");}
+replier.reply("[전적 검색 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");}catch(error){replier.reply("[전적 검색 처리 오류]\n잠시 후 다시 시도해주세요.");}
 }
-function sendOpenchatCommand(text,replier){
-var result=null;
+function sendOpenchatCommand(text,replier){var result=null;
 var reply="";
-try{
-result=KLOL_V1_GATEWAY.send("FEATURES",text,"");
-if(!v1GatewaySucceeded(result)){
-replier.reply(v1GatewayFailureNotice(result,"[전적/명령어 서버 오류]"));
+try{result=KLOL_V1_GATEWAY.send("FEATURES",text,"");
+if(!v1GatewaySucceeded(result)){replier.reply(v1GatewayFailureNotice(result,"[전적/명령어 서버 오류]"));
 return;}
 reply=KLOL_V1_GATEWAY.replyText(result);
-if(reply!=""){
-replier.reply(reply);
+if(reply!=""){replier.reply(reply);
 return;}
-replier.reply("[전적/명령어 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");}catch(error){
-replier.reply("[전적/명령어 처리 오류]\n잠시 후 다시 시도해주세요.");}
+replier.reply("[전적/명령어 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");}catch(error){replier.reply("[전적/명령어 처리 오류]\n잠시 후 다시 시도해주세요.");}
 }
-function fetchSeasonRecruitStatusText(roomLabel,text,sender){
-var result=null;
+function fetchSeasonRecruitStatusText(roomLabel,text,sender){var result=null;
 var reply="";
-try{
-result=KLOL_V1_GATEWAY.send("FEATURES",text,sender);
+try{result=KLOL_V1_GATEWAY.send("FEATURES",text,sender);
 if(!result.body)return "[내전현황 API 오류]\nJSON 응답이 아닙니다.\n잠시 후 다시 시도해주세요.";
 if(!v1GatewaySucceeded(result))return v1GatewayFailureNotice(result,"[내전현황 오류]");
 if(result.body.empty===true)return "__NO_SEASON_RECRUIT_STATUS__";
 reply=KLOL_V1_GATEWAY.replyText(result);
 if(reply!="")return reply;
-return "[내전현황]\n현황 응답이 비어 있습니다.";}catch(error){
-return "[내전현황 API 오류]\n잠시 후 다시 시도해주세요.";}
+return "[내전현황]\n현황 응답이 비어 있습니다.";}catch(error){return "[내전현황 API 오류]\n잠시 후 다시 시도해주세요.";}
 }
-function handleSeasonApplyMessage(roomLabel,text,sender,replier){
-var hash="";
+function handleSeasonApplyMessage(roomLabel,text,sender,replier){var hash="";
 var saved="";
 var result=null;
 var reply="";
 var recruitNo=v1ExtractSeasonRecruitNoFromSnapshot(text);
-try{
-text=normalizeText(text);
+try{text=normalizeText(text);
 hash=makeHash("season-apply:" + roomLabel + ":" + sender + ":" + String(Math.floor(new Date().getTime()/ 10000))+ ":" + String(recruitNo)+ ":" + text);
 if(lastRecruitHash==hash)return;
 saved=NEXUS_DB.getDataBase(RECRUIT_SAVE_KEY);
-if(saved==hash){
-lastRecruitHash=hash;
+if(saved==hash){lastRecruitHash=hash;
 return;}
 result=KLOL_V1_GATEWAY.send("FEATURES",text,sender);
-if(!v1GatewaySucceeded(result)){
-replier.reply(v1GatewayFailureNotice(result,"[참가 신청 등록 오류]"));
+if(!v1GatewaySucceeded(result)){replier.reply(v1GatewayFailureNotice(result,"[참가 신청 등록 오류]"));
 return;}
 reply=KLOL_V1_GATEWAY.replyText(result);
-if(reply!=""){
-if(replier.reply(reply)===false)return;
+if(reply!=""){if(replier.reply(reply)===false)return;
 lastRecruitHash=hash;
 NEXUS_DB.setDataBase(RECRUIT_SAVE_KEY,hash);
 return;}
-if(result.body&&result.body.ok===true&&Number(result.body.pending||0)===0){
-if(replier.reply(v1SeasonApplyCompleteNotice())===false)return;
+if(result.body&&result.body.ok===true&&Number(result.body.pending||0)===0){if(replier.reply(v1SeasonApplyCompleteNotice())===false)return;
 lastRecruitHash=hash;
 NEXUS_DB.setDataBase(RECRUIT_SAVE_KEY,hash);
 return;}
-replier.reply("[참가 신청 등록 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");}catch(error){
-replier.reply("[참가 신청 등록 API 오류]\n잠시 후 다시 시도해주세요.");}
+replier.reply("[참가 신청 등록 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");}catch(error){replier.reply("[참가 신청 등록 API 오류]\n잠시 후 다시 시도해주세요.");}
 }
-function handlePartyRecruitApi(apiTag,roomLabel,text,sender,replier,label,profileId){
-var result=null;
+function handlePartyRecruitApi(apiTag,roomLabel,text,sender,replier,label,profileId){var result=null;
 var reply="";
-try{
-result=KLOL_V1_GATEWAY.send(profileId||"RECRUIT",text,sender);
-if(!v1GatewaySucceeded(result)){
-replier.reply(v1GatewayFailureNotice(result,"[NEXUS.GG " + label + "]"));
+try{result=KLOL_V1_GATEWAY.send(profileId||"RECRUIT",text,sender);
+if(!v1GatewaySucceeded(result)){replier.reply(v1GatewayFailureNotice(result,"[NEXUS.GG " + label + "]"));
 return false;}
 reply=KLOL_V1_GATEWAY.replyText(result);
-if(result.body&&(result.body.ignored===true||result.body.empty===true)&&!result.body.reply){
-return v1GatewaySucceeded(result);}
-if(result.body&&result.body.reply!==undefined&&String(result.body.reply||"")===""&&result.ok){
-return result.body.ok!==false;}
-if(reply!=""){
-return replier.reply(reply)!==false&&v1GatewaySucceeded(result);}
+if(result.body&&(result.body.ignored===true||result.body.empty===true)&&!result.body.reply){return v1GatewaySucceeded(result);}
+if(result.body&&result.body.reply!==undefined&&String(result.body.reply||"")===""&&result.ok){return result.body.ok!==false;}
+if(reply!=""){return replier.reply(reply)!==false&&v1GatewaySucceeded(result);}
 replier.reply("[NEXUS.GG " + label + "]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
-return false;}catch(error){
-replier.reply("[NEXUS.GG " + label + "]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+return false;}catch(error){replier.reply("[NEXUS.GG " + label + "]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
 return false;}
 }
-function fetchPartyRecruitStatusText(silentWhenEmpty,messageText,room,sender){
-var result=null;
-try{
-result=KLOL_V1_GATEWAY.send("RECRUIT",messageText,sender);
+function fetchPartyRecruitStatusText(silentWhenEmpty,messageText,room,sender){var result=null;
+try{result=KLOL_V1_GATEWAY.send("RECRUIT",messageText,sender);
 if(!v1GatewaySucceeded(result))return v1GatewayFailureNotice(result,"[NEXUS.GG 구인구직 현황]");
 if(result.body&&result.body.empty===true&&silentWhenEmpty)return "__NO_ACTIVE_PARTY_RECRUIT__";
-return KLOL_V1_GATEWAY.replyText(result);}catch(error){
-return "[NEXUS.GG 구인구직 현황]\n\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.";}
+return KLOL_V1_GATEWAY.replyText(result);}catch(error){return "[NEXUS.GG 구인구직 현황]\n\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.";}
 }
-function handleOperationFormMessage(room,text,sender,replier){
-var hash="";
+function handleOperationFormMessage(room,text,sender,replier){var hash="";
 var saved="";
 var result=null;
 var reply="";
-try{
-text=canonicalizeOperationCandidateForGateway(KLOL_V1_OPERATION_RAW_TEXT||text);
+try{text=canonicalizeOperationCandidateForGateway(KLOL_V1_OPERATION_RAW_TEXT||text);
 hash=makeHash("operation-form:" + room + ":" + sender + ":" + text);
 if(lastOperationFormHash==hash)return;
 saved=NEXUS_DB.getDataBase(OPERATION_FORM_SAVE_KEY);
-if(saved==hash){
-lastOperationFormHash=hash;
+if(saved==hash){lastOperationFormHash=hash;
 return;}
 result=KLOL_V1_GATEWAY.send("FEATURES",text,sender);
-if(!v1GatewaySucceeded(result)){
-replier.reply(v1GatewayFailureNotice(result,"[NEXUS.GG 운영 양식]"));
+if(!v1GatewaySucceeded(result)){replier.reply(v1GatewayFailureNotice(result,"[NEXUS.GG 운영 양식]"));
 return;}
-if(result.body&&result.body.duplicate===true&&v1GatewaySucceeded(result)){
-lastOperationFormHash=hash;
+if(result.body&&result.body.duplicate===true&&v1GatewaySucceeded(result)){lastOperationFormHash=hash;
 NEXUS_DB.setDataBase(OPERATION_FORM_SAVE_KEY,hash);
 return;}
 reply=KLOL_V1_GATEWAY.replyText(result);
-if(reply!=""){
-if(replier.reply(reply)===false)return;
-if(v1GatewaySucceeded(result)){
-lastOperationFormHash=hash;
+if(reply!=""){if(replier.reply(reply)===false)return;
+if(v1GatewaySucceeded(result)){lastOperationFormHash=hash;
 NEXUS_DB.setDataBase(OPERATION_FORM_SAVE_KEY,hash);}
 return;}
-replier.reply("[NEXUS.GG 운영 양식]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");}catch(error){
-replier.reply("[NEXUS.GG 운영 양식]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");}
+replier.reply("[NEXUS.GG 운영 양식]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");}catch(error){replier.reply("[NEXUS.GG 운영 양식]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");}
 }
-function handleManagedImage(room,sender,imageBase64,replier){
-return false;}
-function replyManagedImageFallback(room,sender,replier){
-return false;}
-function normalizeOperationCandidateText(value){
-var input=String(value||"");
+function handleManagedImage(room,sender,imageBase64,replier){return false;}
+function replyManagedImageFallback(room,sender,replier){return false;}
+function normalizeOperationCandidateText(value){var input=String(value||"");
 var output="";
 var index=0;
 var code=0;
 input=input.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
 input=input.replace(/[\u00a0\u2007\u202f\u3000]/g," ");
-for(index=0;index<input.length;index += 1){
-code=input.charCodeAt(index);
+for(index=0;index<input.length;index += 1){code=input.charCodeAt(index);
 output += code>=65281&&code<=65374?String.fromCharCode(code - 65248):input.charAt(index);}
 return output;}
-function makeOperationCandidateLabelRegex(label){
-var compact=normalizeOperationCandidateText(label).replace(/\s+/g,"");
+function makeOperationCandidateLabelRegex(label){var compact=normalizeOperationCandidateText(label).replace(/\s+/g,"");
 var pattern="";
 var index=0;
 var character="";
-for(index=0;index<compact.length;index += 1){
-character=compact.charAt(index).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+for(index=0;index<compact.length;index += 1){character=compact.charAt(index).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 if(index>0)pattern += "\\s*";
 pattern += character;}
 return new RegExp(
 "^\\s*(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?(?:[.)]\\s*)?)?" +
 pattern + "(?:\\s*:\\s*|\\s+|(?=$)|(?=\\())"
 );}
-function hasOperationCandidateLabelWithSyntax(text,label){
-var lines=normalizeOperationCandidateText(text).split("\n");
+function hasOperationCandidateLabelWithSyntax(text,label){var lines=normalizeOperationCandidateText(text).split("\n");
 var pattern=makeOperationCandidateLabelRegex(label);
 var index=0;
-for(index=0;index<lines.length;index += 1){
-if(hasOperationCandidateFieldSyntax(lines[index])&&pattern.test(lines[index]))return true;}
+for(index=0;index<lines.length;index += 1){if(hasOperationCandidateFieldSyntax(lines[index])&&pattern.test(lines[index]))return true;}
 return false;}
-function hasOperationCandidateFieldSyntax(line){
-line=normalizeOperationCandidateText(line);
+function hasOperationCandidateFieldSyntax(line){line=normalizeOperationCandidateText(line);
 return /^\s*(?:\(\s*)?\d+\s*(?:\\\s*)?[.)]/.test(line)||/:/.test(line);}
-function operationCandidateDefinitions(){
-return [
+function operationCandidateDefinitions(){return [
 ["friends","지인",["지인 이름","지인 닉네임","이용기간","디스코드 닉네임 변경"]],
 ["suggestions","건의",["본인 이름 및 닉네임","건의 사유","건의 내용"]],
 ["meetups","(?:모임|정모)",["주최자 이름 및 닉네임","일자","장소","참여자 명단"]],
 ["leaves","외출",["이름 및 닉네임","외출기간","외출사유","외출범위"]]
 ];}
-function detectOperationFormHeaderType(text,forms){
-var lines=normalizeOperationCandidateText(text).split("\n");
+function detectOperationFormHeaderType(text,forms){var lines=normalizeOperationCandidateText(text).split("\n");
 var formIndex=0;
 var lineIndex=0;
 var pattern=null;
-for(formIndex=0;formIndex<forms.length;formIndex += 1){
-pattern=new RegExp(
+for(formIndex=0;formIndex<forms.length;formIndex += 1){pattern=new RegExp(
 "^\\s*(?:[-*#>》•▪▶]\\s*)?(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?[.)]\\s*)?" +
 "(?:<|&lt;)\\s*" + forms[formIndex][1] + "\\s*(?:>|&gt;)\\s*$",
 "i"
 );
-for(lineIndex=0;lineIndex<lines.length;lineIndex += 1){
-if(pattern.test(lines[lineIndex]))return forms[formIndex][0];}
+for(lineIndex=0;lineIndex<lines.length;lineIndex += 1){if(pattern.test(lines[lineIndex]))return forms[formIndex][0];}
 }
 return "";}
-function detectOperationFormCandidateType(text){
-var forms=operationCandidateDefinitions();
+function detectOperationFormCandidateType(text){var forms=operationCandidateDefinitions();
 var normalized=normalizeOperationCandidateText(text);
 var headerType=detectOperationFormHeaderType(normalized,forms);
 var bestType="";
@@ -602,21 +480,15 @@ var formIndex=0;
 var labelIndex=0;
 var score=0;
 if(headerType!="")return headerType;
-for(formIndex=0;formIndex<forms.length;formIndex += 1){
-score=0;
-for(labelIndex=0;labelIndex<forms[formIndex][2].length;labelIndex += 1){
-if(hasOperationCandidateLabelWithSyntax(normalized,forms[formIndex][2][labelIndex]))score += 1;}
-if(score>bestScore){
-bestType=forms[formIndex][0];
+for(formIndex=0;formIndex<forms.length;formIndex += 1){score=0;
+for(labelIndex=0;labelIndex<forms[formIndex][2].length;labelIndex += 1){if(hasOperationCandidateLabelWithSyntax(normalized,forms[formIndex][2][labelIndex]))score += 1;}
+if(score>bestScore){bestType=forms[formIndex][0];
 bestScore=score;
-tied=false;}else if(score==bestScore&&score>0){
-tied=true;}
+tied=false;}else if(score==bestScore&&score>0){tied=true;}
 }
 return bestScore>=2&&!tied?bestType:"";}
-function isOperationFormCandidateMessage(text){
-return detectOperationFormCandidateType(text)!="";}
-function canonicalizeOperationCandidateForGateway(text){
-var normalized=normalizeOperationCandidateText(text);
+function isOperationFormCandidateMessage(text){return detectOperationFormCandidateType(text)!="";}
+function canonicalizeOperationCandidateForGateway(text){var normalized=normalizeOperationCandidateText(text);
 var formType=detectOperationFormCandidateType(normalized);
 var forms=operationCandidateDefinitions();
 var labels=[];
@@ -625,12 +497,9 @@ var formIndex=0;
 var lineIndex=0;
 var labelIndex=0;
 var match=null;
-for(formIndex=0;formIndex<forms.length;formIndex += 1){
-if(forms[formIndex][0]==formType)labels=forms[formIndex][2];}
+for(formIndex=0;formIndex<forms.length;formIndex += 1){if(forms[formIndex][0]==formType)labels=forms[formIndex][2];}
 if(formType=="")return trimText(normalized);
-for(lineIndex=0;lineIndex<lines.length;lineIndex += 1){
-for(labelIndex=0;labelIndex<labels.length;labelIndex += 1){
-if(!hasOperationCandidateFieldSyntax(lines[lineIndex]))continue;
+for(lineIndex=0;lineIndex<lines.length;lineIndex += 1){for(labelIndex=0;labelIndex<labels.length;labelIndex += 1){if(!hasOperationCandidateFieldSyntax(lines[lineIndex]))continue;
 match=makeOperationCandidateLabelRegex(labels[labelIndex]).exec(lines[lineIndex]);
 if(!match)continue;
 lines[lineIndex]=labels[labelIndex] + ": " + lines[lineIndex].substring(match[0].length);
@@ -1798,3 +1667,8 @@ WEB_ACCOUNT_DISCIPLINE_URL=url+"/account#discipline";
 return true;
 }catch(ignoredNexusConfiguration){return false;}
 }
+var KAKAO_ROOM_HANDLER=response;
+response=function(){};
+var KAKAO_ROOM_ROUTE=require("KAKAO_ROOM_ROUTER").create("NEXUS_MAIN",KAKAO_ROOM_HANDLER);
+function onNotificationPosted(sbn){KAKAO_ROOM_ROUTE(sbn);}
+function onStartCompile(){KAKAO_ROOM_ROUTE.stop();}

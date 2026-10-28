@@ -4,7 +4,7 @@
 
 운영 서버의 배포·DB migration 근거는 [현재 상태](../../docs/STATUS.md)와 [기능 릴리스 기록](../../docs/releases/registry.json)을 따른다. 서버 배포와 휴대폰 JavaScript 설치는 별도로 확인한다. 고정 모집코드·명단버전이 있는 전체 양식 복사는 기존 compact copy 전달과 호환되지만, `구인상세 모집코드`·`상세 모집코드 추가/삭제 이름`·`모집코드ㅉ` 명령을 쓰려면 R29 설치가 필요하다.
 
-사용자가 확인한 **MessengerBot R 앱 버전은 0.7.29a**다. 이것은 아래 봇 JavaScript 버전과 다르다. 현재 공개 생성 기준은 **R31** (`KLOL_KAKAO_BOT_V40_R31_2026_10_27`)이며 실제 휴대폰 설치는 미확인이다. R31은 `LOL - K`, `K롤방 구인구직방`만 허용하고 다른 방의 응답·서버 요청·저장을 시작 전에 차단한다. NEXUS는 별도 R31로 자기 두 방만 허용한다. 신규 프로필은 비공개 설치본을 최신 공개 생성본에서 다시 생성하고 버전·해시를 확인한 뒤 아래 **비공개 한 파일만** 전체 복사한다. 기존 네 프로필의 전체 교체는 [방 제한 검증·교체 안내](../../docs/qa-evidence/kakao-four-room-2026-10-27/README.md)와 로컬 `.private/room-bots-r31/INSTALL.md`를 따른다. 해당 묶음의 KLOLMain/KLOLM은 휴대폰의 기존 인증 설정을 보존하는 업데이트다.
+사용자가 확인한 **MessengerBot R 앱 버전은 0.7.29a**다. 이것은 아래 봇 JavaScript 버전과 다르다. 현재 공개 생성 기준은 **R32** (`KLOL_KAKAO_BOT_V40_R32_2026_10_28`, `NEXUS_KAKAO_BOT_V40_R32_2026_10_28`)와 companion **1.0.5**이며 실제 휴대폰 설치 완료와 구분한다. R31 실기기에서 Legacy `room`이 방 이름 대신 발신자 이름으로 전달되는 것을 확인해, R32는 원본 명령 처리기를 보존하면서 검증된 원본 알림 경로로 연결한다. 기존 네 프로필을 교체하며 공통 모듈과 네 방 ID 등록이 모두 필요하다. 신규 프로필은 비공개 설치본을 최신 공개 생성본에서 다시 생성하고 버전·해시를 확인한 뒤 아래 **비공개 한 파일만** 전체 복사한다. 기존 프로필 업데이트는 각 프로필의 인증 설정을 보존하는 비공개 전달본을 사용한다. R31 묶음을 R32 설치본으로 사용하지 않는다.
 
 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
 
@@ -19,18 +19,35 @@ V1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내�
 - 파티·구인 계열: `RECRUIT` (스크림은 종료 안내만 표시)
 - 내전·전적·랭킹·운영 양식 계열: `FEATURES`
 
-카카오 알림 parser의 방 이름은 서버 인증이나 서버 프로필 라우팅에 쓰지 않는다. R31은 공백·보이지 않는 문자를 제거한 뒤 지정한 방 이름과 정확히 일치하는 경우만 처리한다. 같은 표시 이름의 별개 방까지 구분하는 채널 인증은 아니므로 MessengerBot R의 구독 대상도 지정한 방만 선택한다.
+카카오 알림 parser의 방 이름이나 발신자 이름을 방 식별에 쓰지 않는다. R32는 `com.kakao.talk` 원본 알림의 Android 사용자와 `Notification.getShortcutId()`가 제공하는 플랫폼 대화방 식별자 `shortcutId`를 사전에 등록한 방과 대조한다. 통과한 알림만 기존 처리기에 지정 방 이름으로 전달하며, 답장은 같은 알림에서 캡처한 RemoteInput/PendingIntent를 사용한다. 공개 `response`는 비활성화해 SDK 자동 콜백과 원본 알림의 중복 처리를 막는다. 실기기에서 방마다 같은 값으로 관측된 extras의 `threadId`는 방 등록에 사용하지 않으며, `chatLogId`는 메시지 중복 판별에만 사용한다.
+
+## R32 공통 모듈과 네 방 등록
+
+`room-routing/KAKAO_ROOM_ROUTER.js`를 휴대폰의 **`/sdcard/msgbot/global_modules/KAKAO_ROOM_ROUTER.js`**에 설치한다. 앱의 기본 경로를 변경했다면 해당 경로의 `global_modules`를 사용한다. 이것은 다섯 번째 봇 프로필이 아닌 `require("KAKAO_ROOM_ROUTER")` 공통 라이브러리다. 각 `Bots/<프로필>/modules` 또는 `Bots/<프로필>`에 같은 이름의 파일이 있으면 전역 모듈보다 먼저 읽히므로 이전 사본이 없는지 확인한다. 모듈이 없거나 로드에 실패하면 컴파일 실패로 처리하며 Legacy 경로로 돌아가지 않는다.
+
+네 프로필이 공유하는 `DataBase` 키 **`KAKAO_ROOM_BINDINGS_V1`**에 `version: 1`, 새로운 문자열 `revision`, 다음 네 `slots`를 모두 등록한다. 각 슬롯은 `{user, shortcutId}`로 구성한다. `user`는 Android 사용자 번호의 십진 문자열이며, `shortcutId`는 해당 실제 방에서 직접 보낸 방 확인 명령의 알림에 있는 플랫폼 대화방 식별자 **원문 문자열**이다. `shortcutId`를 숫자로 변환하거나 공백·대소문자를 바꾸지 않는다. 닉네임·메시지 본문·최근 알림에서 식별값을 추측하지 않는다. 실제 식별값은 공개 문서나 Git에 기록하지 않는다.
+
+| 등록 슬롯 | 사용자가 지정한 방 | 처리 프로필 역할 |
+| --- | --- | --- |
+| `KLOL_MAIN` | `LOL - K` | `KLOL_MAIN` |
+| `KLOL_RECRUIT` | `K롤방 구인구직방` | `KLOL_MAIN`, `KLOL_NOTICE` |
+| `NEXUS_MAIN` | `NEXUS` | `NEXUS_MAIN` |
+| `NEXUS_RECRUIT` | `NEXUS구인구직방` | `NEXUS_MAIN`, `NEXUS_NOTICE` |
+
+네 슬롯 중 누락·형식 오류·중복 방 ID가 하나라도 있으면 모든 역할의 처리를 차단한다. 이 등록 키는 두 서비스가 의도적으로 공유하며 `NEXUS_` 접두어를 붙이지 않는다. 서버 인증 키·신청·알림 ledger는 기존처럼 서비스별로 분리한다. 등록을 변경할 때는 네 프로필을 모두 중지하고 새 revision으로 완전한 등록을 저장한 뒤 모두 재컴파일한다.
+
+재컴파일 hook은 이전 router의 `stop()`을 먼저 호출한다. companion은 이어서 기존 worker와 타이머·등록 세션을 종료한다. 종료된 실행 컨텍스트의 원본 알림과 보관 중인 Replier는 더 이상 전송하지 않는다.
 
 ## 일반 봇을 교체할 때의 순서
 
-1. 휴대폰 MessengerBot R에서 기존 K-LOL 봇을 중지한다.
-2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
+1. 휴대폰 MessengerBot R에서 교체할 네 프로필을 중지한다.
+2. 기존 소스·앱 설정·DataBase 저장소를 휴대폰 밖의 안전한 장소에 백업한다. 위 공통 모듈과 네 방 등록을 먼저 준비한다.
 3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
 4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
-5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R31_2026_10_27`를 검색한다.
-6. 마지막 줄이 단독 `}`이고 파일 안에 `function response(`가 한 번만 있는지 확인한다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_R32_2026_10_28`를 검색한다. NEXUS 프로필에는 `NEXUS_KAKAO_BOT_V40_R32_2026_10_28`를 확인한다.
+6. 원본 `function response(`가 한 번 있고, 마지막 연결부에 정확한 역할의 `require("KAKAO_ROOM_ROUTER").create(...)`, 원본 알림 hook, 재컴파일 종료 hook이 포함됐는지 확인한다. 끝 일부만 따로 덧붙이지 않는다.
 7. 저장·컴파일 후 봇을 다시 시작한다.
-8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
+8. 같은 봇 프로필의 응답 대상에 자기 서비스의 구인구직방과 기능방 두 곳만 활성화한다. 실제 방 분리는 위 Android 사용자·대화방 `shortcutId` 등록으로 확인한다.
 9. 두 방에서 각각 `봇버전`과 `/봇버전`을 확인한다.
 10. `오픈채팅봇`의 `입장시 할 일` 안내 뒤 서로 다른 네 가지 톤 중 하나로 완성된 안내 한 건만 표시되는지 확인한다.
 
@@ -40,10 +57,10 @@ V1/V40 원본 fixture는 보존한다. R24/R25는 파티·사이트 연동 내�
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| R31 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,732 | 65,515 | 1,784 | `ed0e458aec2cc7f56c8920c2855e5fb33b2fe185efba41f3eff0c3be8c181bbc` |
+| R32 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,858 | 65,515 | 1,658 | `bf80f801265459699f46590d6cda32828846f194a06fe8506a81563845dbf181` |
 | 과거 R29 휴대폰 설치본 검증 이력 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,884 | 63,667 | 1,784 | `7641aa4fa9f4e753d1059b79ce25ce0a8a53d19f0d999ec74871e52d7260a9c1` |
 
-공개 R31 값은 2026-10-27, 과거 비공개 R29 값은 2026-10-14 로컬 생성 근거이며 실기기 설치 증거가 아니다. 위 R29 private 해시를 현재 R31 설치본으로 사용하지 않는다. 이번 네 파일의 검증값은 [실제 전달 파일 검증](../../docs/qa-evidence/kakao-four-room-2026-10-27/installer-validation.json)에 있다. 공개·비공개 빌드는 LF와 CRLF 모두 MessengerBot R의 65,535자 제한 미만인지, ES5 parser와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 검사한다. 원본 fixture를 바꾸지 않고 생성본의 주석·빈 줄·행 선행 들여쓰기를 제거하며 유지보수하는 어댑터·전송 코드의 토큰 사이 공백만 축약한다. 문자열·정규식과 승인 변경 밖의 V1 실행문 동일성은 보존한다. 어댑터·전송 코드는 명시적 세미콜론 뒤 닫는 중괄호 앞의 줄바꿈만 제거하며 Acorn 토큰 동일성을 검사한다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.
+공개 R32 값은 2026-10-28, 과거 비공개 R29 값은 2026-10-14 로컬 생성 근거이며 실기기 설치 증거가 아니다. 과거 private 해시를 현재 설치본으로 사용하지 않는다. R32 비공개 전달본은 해당 묶음의 검증값을 확인한다. 공개·비공개 빌드는 LF와 CRLF 모두 MessengerBot R의 65,535자 제한 미만인지, ES5 parser와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 검사한다. 원본 fixture를 바꾸지 않고 생성본의 주석·빈 줄·행 선행 들여쓰기를 제거하며 유지보수하는 어댑터·전송 코드의 토큰 사이 공백만 축약한다. 문자열·정규식과 승인 변경 밖의 V1 실행문 동일성은 보존한다. 어댑터·전송 코드는 명시적 세미콜론 뒤 닫는 중괄호 앞과 여는 중괄호 바로 뒤의 줄바꿈을 줄인다. R32 연결부·버전을 제외한 기존 코드의 AST 동일성을 확인했다. 기존 R22 private 파일은 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_BEFORE_R23_fb49755f34eb49e9b12fe723d3b7f44b.js`에 보존했다.
 
 R28 private 백업: `.private/backups/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.pre-r29-reconstructed-2a787419.js` (이전 공개 소스와 동일한 비공개 설정으로 재생성하여 기존 SHA-256 `2a7874198cdfb97116a5572afdbdc77a4129654617730752fa120f4f9ee98b37` 일치 확인).
 

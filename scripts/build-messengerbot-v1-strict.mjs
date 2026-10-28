@@ -5,7 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { analyzeRhinoStatic } from "./lib/messengerbot-rhino-static.mjs";
-import { messengerbotService, nexusMessengerbotSource, nexusCompanionSource, klolMainRoomGuard } from "./build-messengerbot-service.mjs";
+import { messengerbotService, nexusMessengerbotSource, nexusCompanionSource, klolMainRoomGuard, kakaoRoomRoutingBinding } from "./build-messengerbot-service.mjs";
 
 const require = createRequire(import.meta.url);
 const acorn = require("next/dist/compiled/acorn");
@@ -138,7 +138,8 @@ function compactBundleSource(value) {
 // Preserve V1 executable lines verbatim; only the maintained adapter/transport
 // omit horizontal padding beside delimiters and unambiguous operators. Token offsets protect strings and
 // regular expressions. Remove a newline only after an explicit semicolon and
-// before a closing block; all automatic-semicolon boundaries remain intact.
+// before a closing block or immediately after an opening block; all
+// automatic-semicolon boundaries remain intact.
 function compactAdapterSource(value) {
   const source = compactBundleSource(value);
   const tokens = [...acorn.tokenizer(source, { ecmaVersion: 5, allowReserved: true })];
@@ -148,7 +149,8 @@ function compactAdapterSource(value) {
     const current = tokens[index];
     const gap = source.slice(previous.end, current.start);
     const closesTerminatedBlock = previous.type.label === ";" && current.type.label === "}" && /^[ \t\r\n]+$/u.test(gap);
-    if (closesTerminatedBlock || /^[ \t]+$/u.test(gap) && [previous, current].some((token) => [",", ";", "(", ")", "{", "}", "=", "==/!=/===/!==", "&&", "||", "</>/<=/>=", "?", ":"].includes(token.type.label))) {
+    const opensBlock = previous.type.label === "{" && /^[ \t\r\n]+$/u.test(gap);
+    if (closesTerminatedBlock || opensBlock || /^[ \t]+$/u.test(gap) && [previous, current].some((token) => [",", ";", "(", ")", "{", "}", "=", "==/!=/===/!==", "&&", "||", "</>/<=/>=", "?", ":"].includes(token.type.label))) {
       result = result.slice(0, previous.end) + result.slice(current.start);
     }
   }
@@ -350,7 +352,7 @@ const recruitHelpBinding = [
   "    \"협곡: 이름/top,mid 또는 이름/all\\n칼바람·증바람: 이름만 입력\\n회원 연결은 접수 후 진행합니다.\\n최신 양식에서 이름·라인·시간 수정\\n삭제: 번호 행을 남기고 이름만 비우기\\n사이트 신청·운영진 확정 항목은 보호됩니다.\\n양식코드·번호 유지\\n저장 상태 확인: 내전상세 번호로 다시 조회\\n새 모집 만들기: 내전구인\\n취소: 내전상세 번호 삭제 이름\\n라인 수정: 내전상세 번호 수정 이름/top,mid\";",
   "};",
 ].map((line) => line.startsWith("  ") ? line.slice(2) : line).join("\n");
-const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n${recruitHelpBinding}\n\n${entry}\n`;
+const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n${recruitHelpBinding}\n\n${entry}\n${kakaoRoomRoutingBinding("KLOL_MAIN")}\n`;
 // The canonical V1 source contains many blank spacer lines. MessengerBot R may
 // store pasted LF text as CRLF, so remove only blank lines while preserving
 // every executable/comment line and the human-readable layout.

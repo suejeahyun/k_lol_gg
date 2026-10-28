@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-28 카카오 실제 방 식별 복구 1.0.0 — 휴대폰 적용 완료**: 일반 봇 R32 두 개·사이트 알림 1.0.5 두 개·공통 router 1.0.0의 설치 해시와 컴파일을 확인했습니다. 사용자 승인 후 PC 카카오톡 네 방의 버전 응답을 각각 1회 확인했고, 구인현황은 K-LOL 2건/NEXUS 0건으로 분리됐습니다. 양쪽 알림 세션 등록·상태는 정상이며 진단 봇은 OFF입니다. **새 사이트 충원 이벤트 자동 발송은 미검증**입니다. 전체 check 통과, 앱·서버·DB 교체 없음. [실기기 검증·남은 범위](docs/qa-evidence/kakao-notification-routing-2026-10-28/README.md), [변경 안내](docs/patch-notes/kakao-notification-room-routing-v1.0.0.md). 아래 설치 대기 기록은 각 이전 시점의 상태입니다.
+
 **2026-10-27 카카오 네 프로필 방 제한 1.0.1**: K-LOL/NEXUS 일반 봇 R31은 각 서비스의 지정된 두 방만, 알림 companion 1.0.4는 각 구인구직방만 허용합니다. 공백·보이지 않는 문자 차이를 정규화하고 다른 방은 조회·답장 전에 차단합니다. 전체 교체 파일 4개를 준비하며 실제 폰 설치는 별도 확인 대상입니다. [검증·설치 안내](docs/qa-evidence/kakao-four-room-2026-10-27/README.md).
 
 **2026-10-27 NEXUS.GG 별도 서비스**: [운영 사이트](https://nexus-gg-kr.vercel.app)에 같은 기능을 별도 Neon DB·인증 키·카카오 방 설정으로 배포했습니다. 기존 업무 자료를 복사하지 않고 시작합니다. 현재 NEXUS source는 `4bb8f7a3`, `nexus-mascot-theme-v1.0.2`이며 NEXI 마스코트 테마의 상세 화면·모바일 대비와 Next 보안 업데이트를 적용했습니다. [전체 점검·배포](docs/qa-evidence/nexus-full-audit-2026-10-27/README.md). 별도 Riot 운영 키 신청 `898158` 접수와 사이트 소유 인증을 완료했고 **Pending Review** 상태입니다. 키 승인 전 외부 연동은 비활성이고 휴대폰 설치는 별도 진행 상태입니다. [운영 안내](docs/operations/NEXUS_RUNBOOK.md), [검증·배포](docs/qa-evidence/nexus-riot-verification-2026-10-27/README.md).

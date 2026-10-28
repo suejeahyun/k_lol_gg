@@ -9,6 +9,7 @@ import test from "node:test";
 import vm from "node:vm";
 
 import { analyzeRhinoStatic } from "../scripts/lib/messengerbot-rhino-static.mjs";
+import { createRoomRouterHarness } from "./helpers/messengerbot-room-router-harness.mjs";
 
 const require = createRequire(import.meta.url);
 const acorn = require("next/dist/compiled/acorn");
@@ -213,8 +214,12 @@ function makeRuntime({ responseBody = { reply: "[V1 server reply]" }, responseSt
 
 function evaluate(source, options) {
   const runtime = makeRuntime(options);
+  const router = createRoomRouterHarness();
+  runtime.require = router.require;
   vm.createContext(runtime);
   vm.runInContext(source, runtime, { timeout: 2_000 });
+  // Only the pinned historical oracle still has a callable public response.
+  runtime.domainHandler = sha256(source) === sourceSha256 ? runtime.response : router.handler("KLOL_MAIN");
   return runtime;
 }
 
@@ -222,7 +227,7 @@ function replyFor(runtime, message, options = {}) {
   const replies = [];
   const replier = { reply: (value) => replies.push(String(value)) };
   runtime.__testLogCounter = Number(runtime.__testLogCounter || 0) + 1;
-  runtime.response(
+  runtime.domainHandler(
     options.room ?? "K롤방 구인구직방",
     message,
     options.sender ?? "재현",
@@ -629,7 +634,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R31_2026_10_27\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_R32_2026_10_28\n\n내전상세 1을 보낸 뒤 다시 입력해주세요.\n수신 전 대기는 제외"],
   );
 });
 
@@ -1209,7 +1214,7 @@ test("R27 local diagnostics bypass request state, deduplication and notification
     logs.length = 0;
     const replies = replyFor(runtime, message, { imageDB });
     assert.equal(replies.length, 1, message);
-    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R31_2026_10_27/u);
+    assert.match(replies[0], /KLOL_KAKAO_BOT_V40_R32_2026_10_28/u);
     assert.match(replies[0], /내전상세 1/u);
     assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] RETURNED"]);
   }
@@ -1221,10 +1226,10 @@ test("R27 diagnostic distinguishes reply failure and tolerates unavailable loggi
   const runtime = evaluate(await readFile(artifactPath, "utf8"));
   const logs = [];
   runtime.Log = { i: (code) => logs.push(code) };
-  runtime.response("LOL - K", "봇속도", "sender", false, { reply() { throw new Error("private transport error"); } }, null, "com.kakao.talk");
+  runtime.domainHandler("LOL - K", "봇속도", "sender", false, { reply() { throw new Error("private transport error"); } }, null, "com.kakao.talk");
   assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] REPLY_ERROR"]);
   logs.length = 0;
-  runtime.response("LOL - K", "봇속도", "sender", false, { reply() { return false; } }, null, "com.kakao.talk");
+  runtime.domainHandler("LOL - K", "봇속도", "sender", false, { reply() { return false; } }, null, "com.kakao.talk");
   assert.deepEqual(logs, ["[KLOL_DIAG] RECEIVED", "[KLOL_DIAG] REJECTED"]);
   runtime.Log.i = () => { throw new Error("logger unavailable"); };
   assert.equal(replyFor(runtime, "봇속도").length, 1);
@@ -1298,7 +1303,7 @@ test("R29 retries an undelivered reply without suppressing the later successful 
       return true;
     } };
     for (let index = 0; index < 3; index += 1) {
-      runtime.response("K롤방 구인구직방", "상세 7", "합성사용자", true, replier, {}, "com.kakao.talk", false, "same-failed-reply-log", "channel", "synthetic-user");
+      runtime.domainHandler("K롤방 구인구직방", "상세 7", "합성사용자", true, replier, {}, "com.kakao.talk", false, "same-failed-reply-log", "channel", "synthetic-user");
       bodies.push(runtime.http.body);
     }
     assert.equal(runtime.http.calls, 3, failure);

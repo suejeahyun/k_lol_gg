@@ -1,27 +1,27 @@
 # 사이트 내전 충원 알림 companion
 
-2026-10-27 현재 생성본은 `KLOL_SITE_NOTICE_COMPANION_1.0.4` / `NEXUS_SITE_NOTICE_COMPANION_1.0.4`다. K-LOL은 `K롤방 구인구직방`, NEXUS는 `NEXUS구인구직방`에서만 등록·진단하며 공백·zero-width 문자는 정규화한다. 네 기존 프로필 교체와 새 등록 코드는 [최신 안내](../../../docs/qa-evidence/kakao-four-room-2026-10-27/README.md)를 따른다. 아래 1.0.3 실기기 기록은 이전 버전의 관측이며 1.0.4 설치 증거가 아니다.
+2026-10-28 현재 생성본은 `KLOL_SITE_NOTICE_COMPANION_1.0.5` / `NEXUS_SITE_NOTICE_COMPANION_1.0.5`다. K-LOL은 사전 등록한 `K롤방 구인구직방`, NEXUS는 `NEXUS구인구직방`의 Android 사용자·플랫폼 대화방 `shortcutId` 원문 문자열이 일치하는 알림에서만 등록·진단한다. `/sdcard/msgbot/global_modules/KAKAO_ROOM_ROUTER.js` 공통 모듈과 네 방이 모두 등록된 `KAKAO_ROOM_BINDINGS_V1`이 필요하다. [공통 모듈·등록·교체 안내](../MESSENGERBOT_R_INSTALL.md)를 따른다. 아래 1.0.3 실기기 기록은 이전 버전의 관측이며 1.0.5 설치 증거가 아니다.
 
 서버 SITE 참가로 본 참가가 9명 이하에서 10명이 될 때, 해당 내전을 사용하는 **FEATURES** 설치 범위의 지정된 카카오 세션으로 안내를 전달한다. 기존 phone adapter와 command classifier의 내전 프로필이 FEATURES이므로 파티용 RECRUIT scope와 섞지 않는다. 예비 참가, 이름/라인 수정, 10명 상태 저장 재시도, 회원 연결은 새 충원 이벤트를 만들지 않는다. 취소 뒤 다시 10명이 되면 별개의 새 안내다. 명단·회원명·방이름은 알림 payload와 서버 로그에 넣지 않는다.
 
-**기본 OFF. 실제 기기 설치·송수신 확인 전 운영 활성화로 표시하지 않는다.** 기존 R24/R25 한 파일은 그대로 두고 알림 전용 별도 봇 하나만 추가한다. 이 파일은 일반 명령어에 답하지 않는다. 기존 두 프로필을 추가 설치하는 것과 다르다.
+**기본 OFF. 실제 기기 설치·송수신 확인 전 운영 활성화로 표시하지 않는다.** 일반 명령 봇과 알림 전용 companion은 별도 프로필로 유지하며 기존 프로필이 있으면 전체 교체한다. 이 파일은 일반 명령어에 답하지 않는다. 공통 모듈을 추가 봇으로 생성하지 않는다.
 
 이전 오픈채팅 호환 버전은 `KLOL_SITE_NOTICE_COMPANION_1.0.3`다. 일반 R25의 실기기 응답은 확인했다. 1.0.2 실기기 로그에서 실제 내전 구인 오픈채팅 메시지의 그룹 표시가 꺼져 응답을 차단한 것을 확인했다. 1.0.3은 그룹 표시를 필수 조건에서 제외했다. 사용자 제공 09:32~09:33 실기기 로그로 1.0.3 버전·진단 응답과 초기화 READY를 확인했다. 수신 등록·실제 충원 수신은 아직 확인하지 않았다.
 
 ## MessengerBot R 0.7.29a 기준
 
-현재 설치 버전이 0.7.29a이므로 0.7.34a에 추가된 channelId 인자나 최신 API2를 사용하지 않는다. 기존 운영 설치본에서 사용하는 `response(room, msg, sender, isGroupChat, replier, imageDB, packageName)`, `replier.reply(text)`, DataBase, Jsoup, Java 암호화를 재사용한다. 공식 [0.7.34a·0.7.36a 릴리스 기록](https://github.com/MessengerBotTeam/msgbot-old-release/releases)은 channelId 추가와 이후 Legacy 축소를 보여준다.
+현재 설치 버전이 0.7.29a이므로 최신 API2로 전환하지 않는다. 1.0.5는 `onNotificationPosted`와 공통 모듈로 원본 알림의 Android 사용자·대화방 `shortcutId`를 검증하고, 기존 `response(room, msg, sender, isGroupChat, replier, imageDB, packageName)` 본문에 전달한다. 공개 Legacy 콜백은 비활성화한다. `replier.reply(text)`, DataBase, Jsoup, Java 암호화를 재사용하며 모듈은 같은 원본 알림의 답장 Action을 고정한다. 공식 [0.7.34a·0.7.36a 릴리스 기록](https://github.com/MessengerBotTeam/msgbot-old-release/releases)은 channelId 추가와 이후 Legacy 축소를 보여준다.
 
 `Api.replyRoom(방이름, ...)`로 찾지 않는다. 운영자가 **원하는 오픈채팅방에 일회용 등록 명령을 직접 보낼 때 받은 replier 객체**만 유지한다. 따라서 같은 이름의 다른 방이나 이후 명령의 방으로 바뀌지 않는다. 패키지는 `com.kakao.talk`만 허용하며 다른 앱이나 패키지가 없는 콜백은 차단한다. 1.0.3부터 개인방/그룹방을 그룹 표시 값으로 자동 구분하지 않는다. 반드시 알림 받을 실제 내전 구인 오픈채팅방에서 직접 등록한다.
 
-앱 재시작·재컴파일은 수신 세션을 영속화할 수 없으므로 등록을 해제한다. 새 등록 코드로 다시 등록하기 전에는 poll/발송하지 않는다. 서버 큐는 만료 전까지 보관한다. 0.7.29a 실제 기기에서 비동기 replier 세션 수명과 30초 타이머 지속 실행은 아직 미확인이다. 이를 설치 검사의 필수 조건으로 둔다. 앱 업데이트는 요구하지 않는다.
+앱 재시작·재컴파일은 수신 세션을 영속화할 수 없으므로 등록을 해제한다. 재컴파일 hook은 이전 router를 먼저 중지하고 기존 companion worker·타이머·세션을 종료한다. 수신 세션을 다시 등록하기 전에는 poll/발송하지 않는다. 이미 소비한 등록 코드는 새로 발급하며, 아직 사용하지 않은 코드는 유지할 수 있다. 서버 큐는 만료 전까지 보관한다. 0.7.29a 실제 기기에서 비동기 replier 세션 수명과 30초 타이머 지속 실행은 별도 검증 대상이다. 이를 설치 검사의 필수 조건으로 둔다. 앱 업데이트는 요구하지 않는다.
 
 ## 설치 준비 및 명시적 연결
 
 1. 서버 migration을 먼저 반영하되 `KAKAO_SITE_NOTICE_ENABLED`는 미설정 또는 `false`로 유지한다.
 2. 저장소에서 `node scripts/build-private-site-notice-companion.mjs`를 실행하면 `.private/KLOL_SITE_NOTICE_COMPANION_PRIVATE.js`와 `.private/site-notice-setup.json`을 만든다. 둘 다 git 제외이며 비밀값을 포함한다. 공개 채팅·Git·로그에 올리지 않는다. 공개 소스는 `KLOL_SITE_NOTICE_COMPANION.js`다.
 3. 실제 연결 준비가 끝나면 `node scripts/build-private-site-notice-companion.mjs --enable`로 휴대폰용 활성 설치본을 준비한다. 이 명령은 로컬 파일만 생성하며 서버 환경이나 휴대폰을 변경하지 않는다. 이전 파일은 `.private/backups/`에 보관한다. target ID는 유지하며 등록 코드는 매 빌드 새로 발급한다.
-4. MessengerBot R 0.7.29a에서 **새 Legacy 봇 하나**에 비공개 JS 전체를 붙인다. 기존 일반 응답 봇은 변경하지 않는다. 해당 companion은 하나만 실행한다.
+4. 공통 모듈과 네 방 등록을 준비한 MessengerBot R 0.7.29a에서 **별도 Legacy 봇 하나**에 비공개 JS 전체를 붙인다. 기존 companion 프로필이 있으면 전체 교체하며 중복 생성하지 않는다. 같은 서비스의 companion은 하나만 실행한다. 일반 봇도 R32 전체 교체 지침을 따른다.
 5. setup JSON의 `targetHash`를 서버 `KAKAO_SITE_NOTICE_TARGET_HASH`에 설정한다. 이 값은 임의 방이름 해시가 아니라 명시 등록 대상으로 생성한 난수 ID의 HMAC이다. 서버의 기존 V4 identity/signing 설정과 휴대폰 설정이 같아야 한다.
 6. 합성 환경에서 아래 검사 후, 실제 대상 방과 앱 권한·절전 설정을 확인하고 서버 `KAKAO_SITE_NOTICE_ENABLED=true`를 반영한다. 활성화 시점 이후 새 SITE 충원만 큐에 저장하며 과거 충원을 소급 발송하지 않는다.
 7. setup JSON의 `registrationMessage`를 **지정할 그룹방에 운영자가 한 번 직접 전송**한다. 코드는 기기에서 먼저 소모되며 서버 REGISTER가 성공한 뒤 그 수신 세션만 유지한다. 봇은 고정된 등록 성공 안내만 답하고, 등록코드·대상 hash·설정·서버 원문을 재출력하지 않는다. 실패 안내가 나오면 새 등록 코드가 담긴 설치본을 생성·적용한 뒤 다시 등록한다. 같은 코드를 반복 전송하지 않는다.
@@ -33,7 +33,7 @@ companion이 구독하는 카카오 그룹방에서 다음 문구를 **슬래시
 
 | 입력 | 확인 내용 |
 |---|---|
-| `사이트알림버전` | `KLOL_SITE_NOTICE_COMPANION_1.0.4` 버전, 초기화 실패에도 허용된 구인방에서 응답 |
+| `사이트알림버전` | `KLOL_SITE_NOTICE_COMPANION_1.0.5` 버전, companion 초기화 실패에도 원본 알림 검증을 통과한 구인방에서 응답 |
 | `사이트알림진단` | 메시지 수신·카카오 패키지·그룹 표시·초기화 단계. 정상 단계 READY |
 | `사이트알림상태` | 버전, 휴대폰 알림 켜짐/꺼짐, 수신 세션 등록됨/등록 필요 |
 

@@ -6,8 +6,9 @@ import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import test from "node:test";
 import vm from "node:vm";
-import { klolMainRoomGuard, klolNoticeRoomGuard, nexusMainRoomGuard, nexusNoticeRoomGuard, nexusCompanionSource, nexusMessengerbotSource, nexusPrivatePreamble, nexusPrivateSettings } from "../scripts/build-messengerbot-service.mjs";
+import { klolMainRoomGuard, klolNoticeRoomGuard, nexusMainRoomGuard, nexusNoticeRoomGuard, nexusCompanionSource, nexusMessengerbotSource, nexusPrivatePreamble, nexusPrivateSettings, kakaoRoomRoutingBinding } from "../scripts/build-messengerbot-service.mjs";
 import { analyzeRhinoStatic } from "../scripts/lib/messengerbot-rhino-static.mjs";
+import { createRoomRouterHarness } from "./helpers/messengerbot-room-router-harness.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (path) => readFileSync(resolve(root, "integrations/messengerbot-r", path), "utf8");
@@ -28,14 +29,16 @@ const klolSettings = {
   KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT: "klol-current",
 };
 
-function runtime(source, data = new Map()) {
+function runtime(source, data = new Map(), { unavailableModule = false } = {}) {
   const calls = [], reads = [], writes = [], timers = [], logs = [];
+  const router = createRoomRouterHarness();
   function JavaString(value) { this.value = String(value); }
   JavaString.prototype.getBytes = function () { return Buffer.from(this.value, "utf8"); };
   function StringBuilder() { this.value = ""; }
   StringBuilder.prototype.append = function (value) { this.value += value; return this; };
   StringBuilder.prototype.toString = function () { return this.value; };
   const context = vm.createContext({
+    require: unavailableModule ? () => { throw new Error("synthetic missing router"); } : router.require,
     DataBase: {
       getDataBase(key) { reads.push(key); return data.get(key) ?? ""; },
       setDataBase(key, value) { writes.push(key); data.set(key, String(value)); },
@@ -65,29 +68,47 @@ function runtime(source, data = new Map()) {
     } } } },
     Log: { i(value) { logs.push(value); } }, setInterval(fn) { timers.push(fn); return timers.length; }, clearInterval() {},
   });
-  vm.runInContext(source, context, { timeout: 2000 });
-  return { context, calls, reads, writes, data, timers, logs };
+  let initializationError;
+  try { vm.runInContext(source, context, { timeout: 2000 }); }
+  catch (error) { if (!unavailableModule) throw error; initializationError = error; }
+  return { context, calls, reads, writes, data, timers, logs, router, initializationError };
 }
 
 function reply(bot, message, room = "NEXUS", packageName = "com.kakao.talk", sender = "합성참가자") {
   const replies = [];
-  bot.context.response(room, message, sender, true, { reply: (text) => replies.push(String(text)) }, {}, packageName, false, "same-log", "unused-channel", "same-user");
+  assert.equal(bot.router.registrations.length, 1);
+  bot.router.registrations[0].handler(room, message, sender, true, { reply: (text) => replies.push(String(text)) }, {}, packageName, false, "same-log", "unused-channel", "same-user");
   return replies;
 }
 
-test("R31 changes only room guards and versions while reproducing all artifacts within ES5/Rhino and phone limits", () => {
+function semanticHash(value) {
+  const acorn = createRequire(import.meta.url)("next/dist/compiled/acorn");
+  const ast = acorn.parse(value, { ecmaVersion: 5 });
+  return createHash("sha256").update(JSON.stringify(ast, (key, item) => ["start", "end", "raw"].includes(key) ? undefined : item)).digest("hex");
+}
+
+function withoutRouter(value, role) {
+  const binding = kakaoRoomRoutingBinding(role);
+  assert.ok(value.endsWith(`${binding}\n`));
+  assert.equal(value.split(binding).length, 2);
+  return value.slice(0, -binding.length - 1);
+}
+
+test("R32 adds routing bindings while preserving domain ASTs, reproducible builds and ES5/Rhino phone limits", () => {
   execFileSync(process.execPath, ["scripts/build-messengerbot-v1-strict.mjs", "--service", "nexus"], { cwd: root });
   assert.equal(read("v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js"), klol);
-  const previousKLOL = klol.replace(`${klolMainRoomGuard}\n`, "")
-    .replaceAll("KLOL_KAKAO_BOT_V40_R31_2026_10_27", "KLOL_KAKAO_BOT_V40_R29_2026_10_14");
-  assert.equal(createHash("sha256").update(previousKLOL).digest("hex"), "ae3909a24b5fb33a93a81ac7f99a8a9067ee135fe850aec9e6173f11524bed6c");
+  // Pinned R29 AST hashes ignore adapter whitespace compaction. The strict V1
+  // suite separately retains its original function-line and provenance hashes.
+  const previousKLOL = withoutRouter(klol, "KLOL_MAIN").replace(`${klolMainRoomGuard}\n`, "")
+    .replaceAll("KLOL_KAKAO_BOT_V40_R32_2026_10_28", "KLOL_KAKAO_BOT_V40_R29_2026_10_14");
+  assert.equal(semanticHash(previousKLOL), "a0f1c0e0c69a54f63a9d3043425bb071ac3608412abc7a3745085411b2bf2083");
   const previousNexusGuard = 'if(String(packageName||"")!=="com.kakao.talk"||(String(room)!=="NEXUS"&&String(room)!=="NEXUS 구인구직방"))return;';
-  const previousNexus = nexus.replace(nexusMainRoomGuard, previousNexusGuard)
-    .replaceAll("NEXUS_KAKAO_BOT_V40_R31_2026_10_27", "NEXUS_KAKAO_BOT_V40_R29_2026_10_27");
-  const previousCompanion = companion.replace(nexusNoticeRoomGuard, previousNexusGuard)
-    .replaceAll("NEXUS_SITE_NOTICE_COMPANION_1.0.4", "NEXUS_SITE_NOTICE_COMPANION_1.0.3");
-  assert.equal(createHash("sha256").update(previousNexus).digest("hex"), "e18a5f7afb501a960fc5269cd3fbb46b131e670f4ba63babe08e2a7886ff7e9f");
-  assert.equal(createHash("sha256").update(previousCompanion).digest("hex"), "bf3fdd3cecf928ffd202f0e7967b7d5e6f1b3ea46e11ba68b6a5e47414171766");
+  const previousNexus = withoutRouter(nexus, "NEXUS_MAIN").replace(nexusMainRoomGuard, previousNexusGuard)
+    .replaceAll("NEXUS_KAKAO_BOT_V40_R32_2026_10_28", "NEXUS_KAKAO_BOT_V40_R29_2026_10_27");
+  const previousCompanion = withoutRouter(companion, "NEXUS_NOTICE").replace(nexusNoticeRoomGuard, previousNexusGuard)
+    .replaceAll("NEXUS_SITE_NOTICE_COMPANION_1.0.5", "NEXUS_SITE_NOTICE_COMPANION_1.0.3");
+  assert.equal(semanticHash(previousNexus), "08b0ed497d22a88bc8de8ddb2565a618bd95c61d85d2fa301fd0748a0f71da86");
+  assert.equal(semanticHash(previousCompanion), "40bd224e51a12e00009b62c67f950322d1d6c43b4d5743cdb47c6213d8ece7f5");
   assert.equal(read("nexus/NEXUS_KAKAO_BOT_MESSENGERBOT_R.js"), nexusMessengerbotSource(klol));
   assert.equal(companion, nexusCompanionSource(klolCompanion));
   const acorn = createRequire(import.meta.url)("next/dist/compiled/acorn");
@@ -103,7 +124,76 @@ test("R31 changes only room guards and versions while reproducing all artifacts 
   assert.throws(() => nexusCompanionSource(klolCompanion.replace(klolNoticeRoomGuard, "")), /expected room allowlist/);
 });
 
-test("KLOL R31 ignores NEXUS rooms before any reply, request or storage access and preserves warm settings", () => {
+test("all four profiles bind one handler to the correct shared module role and only forward raw notifications", () => {
+  for (const [source, role, room] of [
+    [klol, "KLOL_MAIN", "LOL - K"], [klolCompanion, "KLOL_NOTICE", "K롤방 구인구직방"],
+    [nexus, "NEXUS_MAIN", "NEXUS"], [companion, "NEXUS_NOTICE", "NEXUS 구인구직방"],
+  ]) {
+    const bot = runtime(source, new Map(Object.entries({ ...klolSettings, ...syntheticNexus })));
+    assert.equal(bot.router.handler(role), bot.context.KAKAO_ROOM_HANDLER);
+    assert.notEqual(bot.context.response, bot.context.KAKAO_ROOM_HANDLER);
+    const before = { reads: bot.reads.length, writes: bot.writes.length, logs: bot.logs.length };
+    const replies = [];
+    for (const message of ["봇버전", "구인현황", "사이트알림진단", "사이트알림연동 " + "c".repeat(32)]) {
+      bot.context.response(room, message, "synthetic sender", true, { reply: (value) => replies.push(value) }, null, "com.kakao.talk");
+    }
+    const sbn = { syntheticNotification: role };
+    bot.context.onNotificationPosted(sbn);
+    assert.equal(bot.router.notifications.length, 1);
+    assert.equal(bot.router.notifications[0].role, role);
+    assert.equal(bot.router.notifications[0].sbn, sbn, "raw Android object must not be coerced or rebuilt");
+    assert.deepEqual(replies, []);
+    assert.deepEqual(bot.calls, []);
+    assert.deepEqual({ reads: bot.reads.length, writes: bot.writes.length, logs: bot.logs.length }, before);
+  }
+});
+
+test("a missing shared module leaves every public response disabled without a legacy fallback", () => {
+  for (const source of [klol, klolCompanion, nexus, companion]) {
+    const bot = runtime(source, new Map(Object.entries({ ...klolSettings, ...syntheticNexus })), { unavailableModule: true });
+    assert.match(bot.initializationError?.message ?? "", /synthetic missing router/);
+    const before = { reads: bot.reads.length, writes: bot.writes.length, logs: bot.logs.length };
+    for (const room of ["LOL - K", "K롤방 구인구직방", "NEXUS", "NEXUS 구인구직방"]) {
+      for (const message of ["봇버전", "구인현황", "사이트알림상태"]) {
+        assert.doesNotThrow(() => bot.context.response(room, message, "sender", true, { reply() { assert.fail("legacy reply fallback"); } }, null, "com.kakao.talk"));
+      }
+    }
+    assert.equal(bot.router.registrations.length, 0);
+    assert.deepEqual(bot.calls, []);
+    assert.deepEqual({ reads: bot.reads.length, writes: bot.writes.length, logs: bot.logs.length }, before);
+  }
+});
+
+test("recompilation stops each raw router and retains the companion's existing session cleanup", () => {
+  for (const [source, role] of [
+    [klol, "KLOL_MAIN"], [klolCompanion, "KLOL_NOTICE"],
+    [nexus, "NEXUS_MAIN"], [companion, "NEXUS_NOTICE"],
+  ]) {
+    const bot = runtime(source);
+    let workerStops = 0;
+    if (role.endsWith("_NOTICE")) {
+      const worker = bot.context.KLOL_SITE_NOTICE;
+      const stop = worker.stop;
+      worker.stop = function () {
+        assert.deepEqual(bot.router.stops, [role], "raw routing must stop before companion session cleanup");
+        workerStops += 1;
+        return stop.call(this);
+      };
+    }
+    bot.context.onStartCompile();
+    assert.deepEqual(bot.router.stops, [role]);
+    assert.equal(workerStops, role.endsWith("_NOTICE") ? 1 : 0);
+    assert.deepEqual(bot.calls, []);
+    assert.deepEqual(bot.writes, []);
+    if (role.endsWith("_NOTICE")) {
+      bot.context.KAKAO_ROOM_ROUTE.stop = () => { throw new Error("synthetic router stop failure"); };
+      assert.throws(() => bot.context.onStartCompile(), /synthetic router stop failure/);
+      assert.equal(workerStops, 2, "a router stop failure must still clean up the notice session");
+    }
+  }
+});
+
+test("KLOL routed handlers ignore NEXUS rooms before any reply, request or storage access and preserve warm settings", () => {
   const original = new Map(Object.entries({ ...klolSettings, ...syntheticNexus,
     KLOL_RECRUIT_LAST_HASH_UNIFIED_V24: "existing-klol-state", NEXUS_RECRUIT_LAST_HASH_UNIFIED_V24: "existing-nexus-state",
   }));

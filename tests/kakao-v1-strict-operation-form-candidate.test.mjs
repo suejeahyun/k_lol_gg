@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import test from "node:test";
 import vm from "node:vm";
+import { createRoomRouterHarness } from "./helpers/messengerbot-room-router-harness.mjs";
 
 const artifactPath = resolve(
   import.meta.dirname,
@@ -13,7 +14,9 @@ async function runtime() {
   const source = await readFile(artifactPath, "utf8");
   const stored = new Map();
   const databaseWrites = [];
+  const router = createRoomRouterHarness();
   const context = vm.createContext({
+    require: router.require,
     DataBase: {
       getDataBase(key) { return stored.get(String(key)) ?? ""; },
       setDataBase(key, value) {
@@ -25,6 +28,7 @@ async function runtime() {
     __databaseWrites: databaseWrites,
   });
   new vm.Script(source, { filename: artifactPath }).runInContext(context);
+  context.domainHandler = router.handler("KLOL_MAIN");
   return context;
 }
 
@@ -56,7 +60,7 @@ test("V1-strict ordinary label discussion performs no request or local dedupe wr
     calls.push("unexpected");
     return { ok: true, status: 200, body: { reply: "unexpected" } };
   };
-  bot.response(
+  bot.domainHandler(
     "LOL - K",
     "건의 사유 를 같이 생각해요\n건의 내용 도 정리할게요",
     "홍길동",
@@ -95,7 +99,7 @@ test("V1-strict accepts standalone wrapper titles but ignores wrappers embedded 
     calls.push("unexpected");
     return { ok: true, status: 200, body: { reply: "unexpected" } };
   };
-  bot.response(
+  bot.domainHandler(
     "LOL - K",
     "공지에 &lt;외출&gt;이라고 적어 주세요.",
     "홍길동",
@@ -112,7 +116,7 @@ test("V1-strict accepts standalone wrapper titles but ignores wrappers embedded 
   assert.deepEqual(bot.__databaseWrites, []);
 });
 
-test("V1-strict response forwards one incomplete form request to the FEATURES gateway", async () => {
+test("V1-strict registered handler forwards one incomplete form request to the FEATURES gateway", async () => {
   const bot = await runtime();
   const calls = [];
   const replies = [];
@@ -121,7 +125,7 @@ test("V1-strict response forwards one incomplete form request to the FEATURES ga
     calls.push({ profileId, text, sender });
     return { ok: false, status: 400, body: { reply: "[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: 건의 내용" } };
   };
-  bot.response(
+  bot.domainHandler(
     "LOL - K",
     "본인 이름 및 닉네임: 홍길동/테스터\n건의 사유: 편의성\n건의 내용:",
     "홍길동",
@@ -150,7 +154,7 @@ test("V1-strict canonicalizes tolerant label spelling before gateway classificat
     calls.push({ profileId, text });
     return { ok: true, status: 200, body: { reply: "접수" } };
   };
-  bot.response(
+  bot.domainHandler(
     "LOL - K",
     "１） 본 인 이 름 및 닉 네 임： 홍길동/테스터\r\n２＼． 건 의 사 유： 편의성\r\n３） 건 의 내 용： 개선",
     "홍길동",

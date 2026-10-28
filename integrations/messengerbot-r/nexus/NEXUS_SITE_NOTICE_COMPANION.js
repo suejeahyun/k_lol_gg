@@ -7,7 +7,7 @@ setDataBase:function(key,value){DataBase.setDataBase("NEXUS_"+String(key).replac
  * The source callback's one-argument Replier is the only message destination.
  * No room-name lookup, Api.replyRoom, channelId, or ordinary command replies.
  */
-var KLOL_SITE_NOTICE_CODE_VERSION = "NEXUS_SITE_NOTICE_COMPANION_1.0.4";
+var KLOL_SITE_NOTICE_CODE_VERSION = "NEXUS_SITE_NOTICE_COMPANION_1.0.5";
 function createKlolSiteNoticeWorker(io) {
   var session = null;
   var ledgerKey = "KLOL_SITE_NOTICE_LEDGER_V1";
@@ -232,3 +232,9 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
   } catch (ignoredResponseFailure) { if (diagnostic) klolSiteNoticeLog("CALLBACK_FAILED"); }
 }
 function onStartCompile() { if (KLOL_SITE_NOTICE) KLOL_SITE_NOTICE.stop(); }
+var KAKAO_ROOM_HANDLER=response;
+response=function(){};
+var KAKAO_ROOM_ROUTE=require("KAKAO_ROOM_ROUTER").create("NEXUS_NOTICE",KAKAO_ROOM_HANDLER);
+function onNotificationPosted(sbn){KAKAO_ROOM_ROUTE(sbn);}
+var KAKAO_ROOM_COMPILE=onStartCompile;
+onStartCompile=function(){try{KAKAO_ROOM_ROUTE.stop();}finally{KAKAO_ROOM_COMPILE();}};
