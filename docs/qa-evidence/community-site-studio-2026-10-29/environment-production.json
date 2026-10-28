@@ -1,7 +1,7 @@
 {
-  "verifiedAt": "2026-10-28T18:04:35.488Z",
+  "verifiedAt": "2026-10-28T18:14:38.125Z",
   "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
-  "sourceSha": "1cdc78c431819b06aca6f7d34db54120a961ed73",
+  "sourceSha": "dd71d851ce18473b1d9a89703374fe5cbc9bf46b",
   "studioEnabled": true,
   "automaticProvisioningEnabled": false,
   "blockingCondition": "Dedicated Vercel provisioning credential pending user login",

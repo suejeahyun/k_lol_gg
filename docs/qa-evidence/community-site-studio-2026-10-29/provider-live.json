@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-10-28T18:20:21.047Z",
+  "releaseCommit": "dd71d851ce18473b1d9a89703374fe5cbc9bf46b",
+  "scope": "Disposable QA child and loopback synthetic HUB database only",
+  "productionHubDataUnmodified": true,
+  "provider": {
+    "actualNeonProjectCreated": true,
+    "actualVercelProjectCreated": true,
+    "actualPrivateBlobStoreCreated": true,
+    "apiAuthentication": "Existing Vercel CLI OAuth held in memory; dedicated Neon API key after CLI OAuth expiry. CLI bearer was not copied into server environment.",
+    "productionWorkerWithDedicatedVercelTokenVerified": false,
+    "environmentSecretsProductionOnly": true,
+    "blobTokenValueNeverRead": true,
+    "exactDomainRegisteredAndVerified": true,
+    "liveAliasProjectAndDeploymentMatch": true,
+    "gitSourceShaAndGithubCommitShaMatch": true,
+    "unitTestsPassed": 20
+  },
+  "bootstrap": {
+    "firstDeadlineSeconds": 32,
+    "firstAttemptCancelled": true,
+    "retryDeadlineSeconds": 85,
+    "retryElapsedMs": 67924,
+    "journalEntries": 52,
+    "businessTablesAuditedInitially": 125,
+    "noBusinessDataCopied": true,
+    "onlySyntheticOwnerCreated": true,
+    "appliedMigrationHead": "0051_community-site-provisioning",
+    "appliedMigrationHash": "326601ec4f197169fee49d4408dbb2107283395ca4cd692a2e29f6ea53fa2aca",
+    "finalMigrationFreshLiveVerified": false,
+    "limitation": "The disposable child was bootstrapped before the final unreleased 0051 central ACTIVATING check constraint update. Child runtime fields are identical. Final 0051 was not replayed over the older journal entry; fresh final-schema coverage is supplied by isolated DB tests, not this live smoke."
+  },
+  "runtimeChecks": {
+    "privateAnonymousBlocked": true,
+    "ownerPrivatePreviewAccessible": true,
+    "localBrandWriteBlocked": true,
+    "privateBlobUploadAndAuthorizedRead": true,
+    "privateBlobAnonymousDenied": true,
+    "activationCommittedAndPublic": true,
+    "activationIdempotentSingleAudit": true,
+    "publishedThemeAndModuleMenuApplied": true,
+    "disabledNewWorkBlockedExistingAssetReadable": true,
+    "configurationRestoreRetainsDataAndReopensCreation": true,
+    "ownerPrivateAssetDeletionAndRetentionCleanup": true
+  },
+  "finalDeployment": {
+    "ready": true,
+    "exactSourceVerified": true,
+    "exactDomainTargetVerified": true,
+    "publicationState": "ACTIVE",
+    "revision": 3,
+    "existingQaPrivateAssetReady": true,
+    "existingQaGalleriesRetained": 2,
+    "activeQaSessionsRemaining": 0
+  },
+  "authScope": "Short-lived synthetic owner sessions were created only in the verified disposable child DB and revoked after HTTP tests. No production HUB registration or account was changed; production SSO end-to-end is not claimed by this smoke.",
+  "qaScriptCorrection": "The upload succeeded. An initial QA harness used asset.id instead of the documented asset.assetId and then requested /private-assets/undefined. After correcting the private harness, the existing READY image was recovered through the API list and its authenticated bytes matched the uploaded SHA-256. No product upload fix was required.",
+  "cleanup": {
+    "prepared": true,
+    "completed": true,
+    "ownerMarkersVerified": true,
+    "remoteSyntheticOwnerCount": 1,
+    "remoteOwnerSsoMappingVerified": true,
+    "remoteBusinessTablesChecked": 125,
+    "unexpectedBusinessRows": 0,
+    "targets": {
+      "vercelProjects": 1,
+      "neonProjects": 1,
+      "privateBlobStores": 1,
+      "loopbackSyntheticDatabases": 1
+    },
+    "completedAt": "2026-10-28T18:27:28.111Z",
+    "absenceVerified": true,
+    "remoteReadStatuses": [
+      404,
+      404,
+      404
+    ],
+    "localDatabaseAbsent": true,
+    "blobEmptyStoreRequirementVerified": true,
+    "qaFixtureDeletedThroughAuthenticatedAppAndCron": true,
+    "blobTokenRead": false
+  },
+  "sources": {
+    "vercelOpenApi": "https://openapi.vercel.sh",
+    "blobDeleteContract": "https://github.com/vercel/vercel/blob/main/packages/cli/src/commands/blob/store-remove.ts"
+  }
+}

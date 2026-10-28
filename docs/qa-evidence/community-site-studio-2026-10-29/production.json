@@ -1,9 +1,9 @@
 {
-  "verifiedAt": "2026-10-28T18:07:58.833Z",
-  "sourceSha": "1cdc78c431819b06aca6f7d34db54120a961ed73",
+  "verifiedAt": "2026-10-28T18:17:12.304Z",
+  "sourceSha": "dd71d851ce18473b1d9a89703374fe5cbc9bf46b",
   "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
-  "deploymentId": "dpl_2u2wwCzKh23aYGWC5YnJwPF99YrU",
-  "url": "https://gg-community-327ycc3c3-tjdmswo11-3715s-projects.vercel.app",
+  "deploymentId": "dpl_CHNC2L1CAvuBeyYMhDivs3fR1AW6",
+  "url": "https://gg-community-2v4wzeb8p-tjdmswo11-3715s-projects.vercel.app",
   "alias": "https://gg-community-hub.vercel.app",
   "mode": "production",
   "readyState": "READY",
@@ -140,6 +140,12 @@
     {
       "path": "/api/cron/community-sites",
       "status": 401,
+      "passed": true
+    },
+    {
+      "path": "authenticated cron while provisioning disabled",
+      "status": 200,
+      "providerSkipped": true,
       "passed": true
     },
     {

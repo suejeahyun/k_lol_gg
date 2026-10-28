@@ -1,6 +1,6 @@
 # K-LOL.GG V2
 
-**2026-10-29 GG HUB 개설 스튜디오 0.1.0 — 릴리스 검증 중**: [전체 기획](docs/product/gg-hub-platform-plan-v1.md)의 첫 단계로 중앙 가입, 개설 신청·심사, 세 테마, 기능 켜기/중지, 초안·게시와 독립 사이트 개설을 구현했습니다. 기능을 꺼도 기록은 보존하고 새 기능은 기존 사이트에서 자동으로 켜지지 않습니다. HTTP 64·브라우저 63·DB 28·서로 다른 HTTPS 사이트의 SSO 8단계를 확인했습니다. HUB migration 0051 적용·기존 자료 보존 확인, 자동 개설의 전용 Vercel 연결은 로그인 대기입니다. [설정 안내](docs/product/gg-hub-site-settings-guide.md), [현재 배포·남은 조건](docs/qa-evidence/community-site-studio-2026-10-29/README.md). 제휴·공유·공동 대회와 동적 폰 설정은 후속 단계입니다.
+**2026-10-29 GG HUB 개설 스튜디오 0.1.0 — 설정·신청 운영 반영, 자동 개설 연결 대기**: [전체 기획](docs/product/gg-hub-platform-plan-v1.md)의 첫 단계로 중앙 가입, 개설 신청·심사, 세 테마, 기능 켜기/중지, 초안·게시와 독립 사이트 개설을 구현했습니다. 기능을 꺼도 기록은 보존하고 새 기능은 기존 사이트에서 자동으로 켜지지 않습니다. source `dd71d851`, 운영 HTTP 28·로컬 HTTP 64·브라우저 63·DB 28·서로 다른 HTTPS 사이트의 SSO 8단계를 확인했습니다. HUB migration 0051 적용·기존 자료 보존 확인, 자동 개설의 전용 Vercel 연결은 로그인 대기입니다. [설정 안내](docs/product/gg-hub-site-settings-guide.md), [현재 배포·남은 조건](docs/qa-evidence/community-site-studio-2026-10-29/README.md). 제휴·공유·공동 대회와 동적 폰 설정은 후속 단계입니다.
 
 **2026-10-29 GG HUB 0.1.0 — 독립 중앙 사이트 운영 배포**: [GG HUB](https://gg-community-hub.vercel.app)에서 K-LOL/NEXUS와 추가 사이트·방을 관리합니다. 전용 Vercel/Neon/DB/인증을 구성하고 두 사이트·네 방만 등록했습니다. NEXUS 내부의 기존 등록 기능은 비활성화했으며 회원·경기·MMR·폰은 유지합니다. 전체 check·로컬 HTTP 30·허브 운영 24·NEXUS 운영 10·카카오 진단 4 PASS. 실제 사이트 API/계정 연결·연합·공동 대회·동적 폰 설정은 후속 범위입니다. [운영 안내](docs/operations/gg-hub.md), [검증·배포 근거](docs/qa-evidence/gg-hub-2026-10-29/README.md). 아래 기록은 각 이전 시점의 상태입니다.
 
