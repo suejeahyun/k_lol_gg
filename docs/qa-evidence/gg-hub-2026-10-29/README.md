@@ -27,4 +27,15 @@
 
 ## 배포
 
-운영 배포 ID와 공개 주소 smoke 결과는 배포 완료 후 이 디렉터리의 별도 근거와 릴리스 등록에 연결한다. 로컬 확인을 운영 반영으로 대신 기록하지 않는다.
+소스 `2bea3cbad7933bc508e871d34ec03aaa624c4315`, tag `community-hub-v0.1.0`.
+
+| 서비스 | Vercel deployment | 운영 결과 |
+|---|---|---|
+| GG HUB | `dpl_2LUeq1vEbtqBZHFDkNcdE9inmLnZ` | [gg-community-hub.vercel.app](https://gg-community-hub.vercel.app), READY, health ready |
+| NEXUS | `dpl_4x3vz5msZg8Sumv7Cd1vQpy8XpRa` | [nexus-gg-kr.vercel.app](https://nexus-gg-kr.vercel.app), READY, health ready |
+
+허브 [후보 24건](candidate.json) 및 [운영 24건](production.json) 통과. 별도 계정 로그인과 임시 비밀번호의 관리자 접근 거부, 공개 사이트 목록, 권한/자식 API 차단을 확인했다. 확인용 세션은 로그아웃했으며 최초 비밀번호 변경은 사용자가 진행한다. [실제 운영 화면](home-production.jpg)도 확인했다.
+
+NEXUS는 기존 등록 자료가 비어 있음을 읽기 확인한 뒤 `COMMUNITY_NETWORK_ENABLED=false`만 변경했다. 다른 환경변수는 보존했다. [후보](nexus-candidate.json)와 [운영](nexus-production.json) 각 10건 통과. 비활성 공개 경로는 Next streamed notFound 특성상 HTTP 200이지만 404 안내와 noindex를 출력하며 등록 목록이 없다. 등록 API는 명시적인 `COMMUNITY_NETWORK_UNAVAILABLE` 503으로 비활성화된다. 기존 마스코트 홈·모집·플레이어·MMR·Riot 소유 인증은 유지한다. [카카오 서명 진단 4건](kakao-server.json) 통과, 실제 방 메시지 발송과 폰 변경은 없었다.
+
+새 후보 검증에만 사용한 Vercel automation bypass 키는 매번 철회했다. 운영 보호 설정은 유지했다. K-LOL 프로젝트는 변경하지 않았으며 health ready를 읽기 확인했다. NEXUS 복구 대상은 이전 `dpl_nnAwySycvaNVhApHqEdqzXufvn19`이고 필요 시 기능 플래그만 이전 true로 복구할 수 있다. DB/테이블 삭제는 필요 없다.

@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-29 GG HUB 0.1.0 — 독립 중앙 사이트 운영 배포**: [GG HUB](https://gg-community-hub.vercel.app)에서 K-LOL/NEXUS와 추가 사이트·방을 관리합니다. 전용 Vercel/Neon/DB/인증을 구성하고 두 사이트·네 방만 등록했습니다. NEXUS 내부의 기존 등록 기능은 비활성화했으며 회원·경기·MMR·폰은 유지합니다. 전체 check·로컬 HTTP 30·허브 운영 24·NEXUS 운영 10·카카오 진단 4 PASS. 실제 사이트 API/계정 연결·연합·공동 대회·동적 폰 설정은 후속 범위입니다. [운영 안내](docs/operations/gg-hub.md), [검증·배포 근거](docs/qa-evidence/gg-hub-2026-10-29/README.md). 아래 기록은 각 이전 시점의 상태입니다.
+
 **2026-10-29 NEXUS 운영 반영 — 커뮤니티 등록 0.1.1·대회 MMR 일관성 1.0.1**: DB 백업·격리 복원 검증 후 migration 0050을 추가하고 NEXUS 운영 주소에 배포했습니다. [사이트·방 관리](https://nexus-gg-kr.vercel.app/admin/community-network), [공개 목록](https://nexus-gg-kr.vercel.app/community-network)을 활성화했습니다. 운영 HTTP 10건·카카오 서버 진단 4건과 실제 브라우저 확인 통과. K-LOL·폰·기존 점수 변경 없음. 독립 중앙 허브와 실제 사이트 간 공유는 후속 단계입니다. [배포·검증·복구 근거](docs/qa-evidence/community-network-production-2026-10-29/README.md).
 
 **2026-10-29 커뮤니티 연합 설계·등록 기반 및 대회/MMR 수정 — 로컬 검증 완료, 운영 미배포**: 독립 중앙 DB와 선택적 공유 구조를 결정하고 최고 관리자 사이트·방 등록/공개 목록을 구현했습니다. 선수 교체 자료 상속·10명 정원 초과·포지션 MMR 정렬 오류를 수정하고 표본 표시를 명확히 했습니다. 전체 check, 격리 DB, 실제 브라우저 13번째 방 저장 검증 통과. 동적 폰 설정·계정 연결·연합·공동 대회·새 MMR 산식은 후속 단계입니다. [실행 계획](docs/architecture/community-federation-execution-plan.md), [대회·MMR 전체 보고서](docs/architecture/drafts/balance-mmr-audit-2026-10-29.md), [QA 근거](docs/qa-evidence/community-network-2026-10-29/README.md).

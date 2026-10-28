@@ -1,0 +1,31 @@
+{
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "checkedAt": "2026-10-28T16:22:19.235Z",
+  "businessMutationRequests": 0,
+  "results": [
+    {
+      "profileId": "RECRUIT",
+      "command": "V4상태",
+      "status": 200,
+      "brandedReply": true
+    },
+    {
+      "profileId": "RECRUIT",
+      "command": "도움말",
+      "status": 200,
+      "brandedReply": true
+    },
+    {
+      "profileId": "FEATURES",
+      "command": "V4상태",
+      "status": 200,
+      "brandedReply": true
+    },
+    {
+      "profileId": "FEATURES",
+      "command": "도움말",
+      "status": 200,
+      "brandedReply": true
+    }
+  ]
+}

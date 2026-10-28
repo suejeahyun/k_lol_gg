@@ -1,5 +1,13 @@
 # K-LOL.GG V2 상태
 
+## 2026-10-29 GG HUB 0.1.0 — 별도 중앙 사이트 운영 배포
+
+사용자의 구조 정정에 따라 독립 중앙 사이트 [GG HUB](https://gg-community-hub.vercel.app)를 배포했다. 소스 `2bea3cbad7933bc508e871d34ec03aaa624c4315`, 허브 deployment `dpl_2LUeq1vEbtqBZHFDkNcdE9inmLnZ`. 전용 Neon GG-HUB/gg_hub, 독립 관리자·인증 키·쿠키·JWT, 중앙 홈/관리 셸과 허용 경로 제한을 사용한다. 초기 등록은 두 실제 사이트·네 방뿐이며 기존 회원·모집·경기 자료는 복사하지 않았다.
+
+전체 check PASS(계약 786, 단위 1227+기존 SKIP1), 격리 bootstrap 6, 로컬 HTTP30, 허브 후보/운영 각24, 390px 화면 확인. NEXUS 빈 등록 기능만 OFF로 바꿔 같은 소스로 `dpl_4x3vz5msZg8Sumv7Cd1vQpy8XpRa` 배포, 후보/운영 각10 및 카카오 서버 진단4 PASS. K-LOL 변경 없음, 폰 설치 없음, 기존 점수/운영 데이터 변경 없음. 허브와 NEXUS 임시 후보 검증 키는 철회했다.
+
+로컬 허브는 별도 합성 DB의 미리보기로 열어두었다. 중앙 최초 계정은 독립 임시 비밀번호 변경이 필요하다. 실제 API 연결·내 소속·연합·공동 대회·운영 기록 공유·동적 폰 배포는 후속 구현이다. [QA와 배포 기록](qa-evidence/gg-hub-2026-10-29/README.md), [실행 계획](architecture/community-federation-execution-plan.md). 아래 기록은 이전 상태다.
+
 ## 2026-10-29 NEXUS 운영 반영 — 등록 기반 0.1.1·대회 MMR 일관성 1.0.1
 
 사용자의 운영 배포 요청에 따라 소스 `5fe9ac98ccf676c56502101b91a560bd64a4f965`, deployment `dpl_nnAwySycvaNVhApHqEdqzXufvn19`를 NEXUS 운영 alias로 승격했다. 백업·별도 로컬 복원 대조 후 migration 50→51을 적용하고 재실행 no-op·기존 구조/행 보존을 확인했다. 새 등록 테이블은 빈 상태다. `COMMUNITY_NETWORK_ENABLED=true`만 추가했다.

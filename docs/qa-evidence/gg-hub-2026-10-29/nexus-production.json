@@ -1,0 +1,64 @@
+{
+  "verifiedAt": "2026-10-28T16:22:21.612Z",
+  "deploymentId": "dpl_4x3vz5msZg8Sumv7Cd1vQpy8XpRa",
+  "url": "https://nexus-kwntjq5j7-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://nexus-gg-kr.vercel.app",
+  "sourceSha": "2bea3cbad7933bc508e871d34ec03aaa624c4315",
+  "healthStatus": "ready",
+  "previousDeploymentId": "dpl_nnAwySycvaNVhApHqEdqzXufvn19",
+  "registryEnabled": false,
+  "phoneChanged": false,
+  "klolModified": false,
+  "databaseMigration": false,
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/community-network",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/rankings/mmr",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/players",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/recruits",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/admin/login",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/community-network",
+      "status": 503,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/site-settings",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "/riot.txt",
+      "status": 200,
+      "passed": true
+    }
+  ]
+}
