@@ -105,7 +105,13 @@ export function replaceDestructionParticipant(input: Readonly<{
     reason,
     effectiveAt: input.effectiveAt,
   });
-  const participants = Object.freeze(input.participants.map((entry) => entry.id === participant.id ? Object.freeze({ ...entry, playerId: input.incomingPlayerId, position: input.incomingPosition, aramRecord: undefined, aramCollection: undefined, minimumBid: undefined }) : entry));
+  // A replacement keeps the roster seat and its historical purchase price,
+  // but none of the outgoing player's measurements or linked-account evidence.
+  const participants = Object.freeze(input.participants.map((entry) => entry.id === participant.id ? Object.freeze({
+    ...entry, playerId: input.incomingPlayerId, position: input.incomingPosition,
+    aramRecord: undefined, aramCollection: undefined, minimumBid: undefined,
+    provisionalRating: undefined, ratingCollection: undefined, selfReportedRecord: undefined,
+  }) : entry));
   const teamMembers = participants.filter((entry) => entry.teamId === participant.teamId).map((entry) => ({
     participantId: entry.id,
     playerId: entry.playerId,

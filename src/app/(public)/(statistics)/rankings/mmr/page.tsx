@@ -2,7 +2,7 @@ import { createRouteMetadata } from "@/modules/seo/domain/site-seo";
 import Link from "next/link";
 import { Activity, Gauge, Search } from "@/components/theme/theme-icons";
 
-import { MMR_POSITIONS, parseMmrPlayerQuery } from "@/modules/mmr";
+import { MMR_CONFIDENCE_SAMPLE_TARGET, MMR_POSITIONS, parseMmrPlayerQuery } from "@/modules/mmr";
 import { loadRuntimeMmr } from "@/modules/mmr/infrastructure/runtime-mmr";
 import { formatOptionalKoreanDateTime } from "@/platform/time/format-korean-date-time";
 
@@ -62,6 +62,7 @@ export default async function MmrRankingPage({ searchParams }: {
             <article><span>반영 대기</span><strong>{result.data.summary.pendingSourceCount}</strong></article>
           </section>
           <p>마지막 집계: {formatOptionalKoreanDateTime(result.data.summary.calculatedAt)} · 공개된 경기 결과가 반영됩니다.</p>
+          <p>종합 표본 충족도는 전체 반영 경기 수가 {MMR_CONFIDENCE_SAMPLE_TARGET}경기에 도달한 비율입니다. 예측 정확도나 특정 포지션의 신뢰도를 뜻하지 않습니다.</p>
           {result.data.summary.formulaTransition === "ADMIN_RECALCULATION_REQUIRED" ? <section className={styles.state} role="status" data-mmr-formula-transition="ADMIN_RECALCULATION_REQUIRED"><h2>이전 공식의 MMR 표시 중</h2><p>적용 공식: {result.data.summary.formulaVersion ?? "기존"} · 관리자 재계산 승인 후 갱신</p></section> : null}
           {result.data.summary.status === "EMPTY" ? (
             <section className={styles.state} role="status"><Activity aria-hidden="true" /><h2>표시할 MMR이 아직 없어요</h2></section>
@@ -70,7 +71,7 @@ export default async function MmrRankingPage({ searchParams }: {
           ) : (
             <section className={styles.board} aria-labelledby="mmr-board-title">
               <header><h2 id="mmr-board-title">{positionLabel} MMR 순위</h2><p>{result.data.players.total}명</p></header>
-              <ol>{result.data.players.items.map((player, index) => { const rank = (result.data.players.page - 1) * result.data.players.pageSize + index + 1; const confidence = player.confidence >= .8 ? "high" : player.confidence >= .5 ? "medium" : "low"; const selectedPosition = query?.position ? player.positions[query.position] : null; return <li key={player.playerId} data-rank={rank} data-confidence={confidence}><b>{rank}</b><Link href={`/players/${player.playerId}`}><strong>{player.displayName}</strong><small>{player.riotId}</small></Link><span><small>{positionLabel} MMR</small>{(selectedPosition?.score ?? player.overallScore).toFixed(2)}</span><span><small>종합 신뢰도</small>{Math.round(player.confidence * 100)}%</span><span><small>{positionLabel} 표본</small>{selectedPosition?.sampleSize ?? player.sampleSize}</span></li>; })}</ol>
+              <ol>{result.data.players.items.map((player, index) => { const rank = (result.data.players.page - 1) * result.data.players.pageSize + index + 1; const confidence = player.confidence >= .8 ? "high" : player.confidence >= .5 ? "medium" : "low"; const selectedPosition = query?.position ? player.positions[query.position] : null; return <li key={player.playerId} data-rank={rank} data-confidence={confidence}><b>{rank}</b><Link href={`/players/${player.playerId}`}><strong>{player.displayName}</strong><small>{player.riotId}</small></Link><span><small>{positionLabel} MMR</small>{(selectedPosition?.score ?? player.overallScore).toFixed(2)}</span><span><small>종합 표본 충족도</small>{Math.round(player.confidence * 100)}%</span><span><small>{positionLabel} 표본</small>{selectedPosition?.sampleSize ?? player.sampleSize}</span></li>; })}</ol>
             </section>
           )}
           {result.data.summary.status !== "EMPTY" && pageCount > 1 && result.data.players.items.length > 0 ? <nav className="pagination" aria-label="MMR 랭킹 페이지">

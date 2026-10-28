@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-29 커뮤니티 연합 설계·등록 기반 및 대회/MMR 수정 — 로컬 검증 완료, 운영 미배포**: 독립 중앙 DB와 선택적 공유 구조를 결정하고 최고 관리자 사이트·방 등록/공개 목록을 구현했습니다. 선수 교체 자료 상속·10명 정원 초과·포지션 MMR 정렬 오류를 수정하고 표본 표시를 명확히 했습니다. 전체 check, 격리 DB, 실제 브라우저 13번째 방 저장 검증 통과. 동적 폰 설정·계정 연결·연합·공동 대회·새 MMR 산식은 후속 단계입니다. [실행 계획](docs/architecture/community-federation-execution-plan.md), [대회·MMR 전체 보고서](docs/architecture/drafts/balance-mmr-audit-2026-10-29.md), [QA 근거](docs/qa-evidence/community-network-2026-10-29/README.md).
+
 **2026-10-28 카카오 실제 방 식별 복구 1.0.0 — 휴대폰 적용 완료**: 일반 봇 R32 두 개·사이트 알림 1.0.5 두 개·공통 router 1.0.0의 설치 해시와 컴파일을 확인했습니다. 사용자 승인 후 PC 카카오톡 네 방의 버전 응답을 각각 1회 확인했고, 구인현황은 K-LOL 2건/NEXUS 0건으로 분리됐습니다. 양쪽 알림 세션 등록·상태는 정상이며 진단 봇은 OFF입니다. **새 사이트 충원 이벤트 자동 발송은 미검증**입니다. 전체 check 통과, 앱·서버·DB 교체 없음. [실기기 검증·남은 범위](docs/qa-evidence/kakao-notification-routing-2026-10-28/README.md), [변경 안내](docs/patch-notes/kakao-notification-room-routing-v1.0.0.md). 아래 설치 대기 기록은 각 이전 시점의 상태입니다.
 
 **2026-10-27 카카오 네 프로필 방 제한 1.0.1**: K-LOL/NEXUS 일반 봇 R31은 각 서비스의 지정된 두 방만, 알림 companion 1.0.4는 각 구인구직방만 허용합니다. 공백·보이지 않는 문자 차이를 정규화하고 다른 방은 조회·답장 전에 차단합니다. 전체 교체 파일 4개를 준비하며 실제 폰 설치는 별도 확인 대상입니다. [검증·설치 안내](docs/qa-evidence/kakao-four-room-2026-10-27/README.md).

@@ -32,7 +32,7 @@ async function render(searchParams, { total = 21, count = 10, state = "ready", s
     "./mmr.module.css": { __esModule: true, default: new Proxy({}, { get: (_target, key) => String(key) }) },
     "@/modules/seo/domain/site-seo": { createRouteMetadata: () => ({}) },
     "@/components/theme/theme-icons": Object.fromEntries(["Activity", "Gauge", "Search", "Sparkles"].map(name => [name, () => null])),
-    "@/modules/mmr": { MMR_POSITIONS: positions, parseMmrPlayerQuery },
+    "@/modules/mmr": { MMR_CONFIDENCE_SAMPLE_TARGET: 30, MMR_POSITIONS: positions, parseMmrPlayerQuery },
     "@/platform/time/format-korean-date-time": { formatOptionalKoreanDateTime: () => "2026. 10. 5." },
     "@/modules/mmr/infrastructure/runtime-mmr": {
       loadRuntimeMmr: async (read) => {
@@ -101,7 +101,9 @@ test("selected position displays the score used to rank and that position's samp
   assert.match(mid.html, /미드 MMR 순위/u);
   assert.match(mid.html, /<small>미드 MMR<\/small>76\.25/u);
   assert.match(mid.html, /<small>미드 표본<\/small>7/u);
-  assert.match(mid.html, /종합 신뢰도/u);
+  assert.match(mid.html, /종합 표본 충족도/u);
+  assert.match(mid.html, /30경기에 도달한 비율/u);
+  assert.match(mid.html, /예측 정확도나 특정 포지션의 신뢰도를 뜻하지 않습니다/u);
   assert.doesNotMatch(mid.html, /53\.24/u);
   const top = await render({ position: "TOP" }, { count: 1 });
   assert.match(top.html, /<small>탑 MMR<\/small>0\.00/u);

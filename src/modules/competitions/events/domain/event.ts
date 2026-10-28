@@ -21,6 +21,7 @@ import {
 
 export const EVENT_FORMATS = ["POSITION", "ARAM"] as const;
 export type EventFormat = (typeof EVENT_FORMATS)[number];
+const EVENT_TEAM_PARTICIPANT_COUNT = 10;
 
 export type EventSettings = Readonly<{
   title: string;
@@ -271,7 +272,7 @@ export function startEventRecruitment(aggregate: EventAggregate, now: string) {
 
 export function closeEventRecruitment(aggregate: EventAggregate, now: string) {
   const activeCount = aggregate.participants.filter((participant) => participant.status === "ACTIVE").length;
-  failUnless(activeCount === 10, "PRECONDITION_FAILED", "Exactly ten active participants are required to close recruitment.");
+  failUnless(activeCount === EVENT_TEAM_PARTICIPANT_COUNT, "PRECONDITION_FAILED", "Exactly ten active participants are required to close recruitment.");
   try {
     return updated(aggregate, now, {
       lifecycle: transitionEventLifecycle(aggregate.lifecycle, { type: "CLOSE_RECRUITMENT", participantsReady: true }),
@@ -326,6 +327,12 @@ function ensureParticipantUnique(
   }
 }
 
+function requireParticipantCapacity(aggregate: EventAggregate, additionalCount: number) {
+  const activeCount = aggregate.participants.filter((participant) => participant.status === "ACTIVE").length;
+  failUnless(activeCount + additionalCount <= EVENT_TEAM_PARTICIPANT_COUNT, "PRECONDITION_FAILED",
+    "This event's team builder supports at most ten active participants.");
+}
+
 export function upsertOwnEventApplication(
   aggregate: EventAggregate,
   input: EventParticipantInput & Readonly<{ ownerUserAccountId: string }>,
@@ -337,11 +344,13 @@ export function upsertOwnEventApplication(
   if (!current) {
     const participant = participantFromInput(aggregate, input, "USER_APPLICATION");
     ensureParticipantUnique(aggregate.participants, participant);
+    requireParticipantCapacity(aggregate, 1);
     return updated(aggregate, now, { participants: Object.freeze([...aggregate.participants, participant]) });
   }
   failUnless(current.playerId === input.playerId, "INVALID_INPUT", "An application cannot be moved to another player.");
   failUnless(current.id === input.id, "INVALID_INPUT", "Application updates must retain their participant identifier.");
   const preference = validatePreference(aggregate.settings.format, input);
+  if (current.status === "CANCELLED") requireParticipantCapacity(aggregate, 1);
   return updated(aggregate, now, {
     participants: Object.freeze(aggregate.participants.map((participant) =>
       participant.id === current.id
@@ -381,6 +390,7 @@ export function addAdminEventParticipants(
     ensureParticipantUnique(participants, participant);
     participants.push(participant);
   }
+  requireParticipantCapacity(aggregate, inputs.length);
   return updated(aggregate, now, { participants: Object.freeze(participants) });
 }
 
@@ -403,7 +413,7 @@ export function eventTeamBalanceParticipants(aggregate: EventAggregate): readonl
   const active = aggregate.participants
     .filter((participant) => participant.status === "ACTIVE")
     .sort((left, right) => compareCanonicalIdentifiers(left.playerId, right.playerId));
-  failUnless(active.length === 10, "PRECONDITION_FAILED", "S06 team balance requires exactly ten active participants.");
+  failUnless(active.length === EVENT_TEAM_PARTICIPANT_COUNT, "PRECONDITION_FAILED", "S06 team balance requires exactly ten active participants.");
   return Object.freeze(active.map((participant) => Object.freeze({
     participantId: participant.id,
     playerId: participant.playerId,

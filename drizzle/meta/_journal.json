@@ -351,6 +351,13 @@
       "when": 1791907441396,
       "tag": "0049_stable-recruit-codes",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1793198974280,
+      "tag": "0050_community-network-registry",
+      "breakpoints": true
     }
   ]
 }

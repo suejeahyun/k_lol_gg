@@ -1,0 +1,35 @@
+.page { max-width: 82rem; margin: 0 auto; padding: clamp(1rem, 3vw, 2.5rem); color: var(--foreground); }
+.header, .toolbar, .sectionTitle, .savebar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.header { margin-bottom: 1.5rem; }
+.header h1 { font-size: clamp(1.7rem, 3vw, 2.4rem); margin: .35rem 0; }
+.header p, .sectionTitle p, .hint { color: var(--muted-foreground); line-height: 1.65; }
+.header a { color: var(--primary); text-decoration: underline; text-underline-offset: .25rem; }
+.eyebrow { font-weight: 700; letter-spacing: .08em; }
+.notice { padding: 1rem 1.25rem; border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: .6rem; background: var(--muted); margin-bottom: 1.5rem; }
+.notice p { margin: .4rem 0 0; line-height: 1.65; }
+.toolbar { margin: 1rem 0; }
+.workspace { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.list { display: grid; gap: .5rem; }
+.list button { display: grid; text-align: left; gap: .35rem; padding: .85rem; background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: .6rem; overflow-wrap: anywhere; cursor: pointer; }
+.list button[aria-pressed="true"] { background: var(--accent); border-color: var(--primary); }
+.list span { font-size: .8rem; color: var(--muted-foreground); }
+.editor { border: 1px solid var(--border); border-radius: .8rem; min-width: 0; padding: 1.25rem; background: var(--card); }
+.editor legend { font-weight: 700; padding: 0 .4rem; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.fields label { display: grid; align-content: start; gap: .4rem; font-size: .9rem; font-weight: 600; min-width: 0; }
+.fields input:not([type="checkbox"]), .fields select, .fields textarea { min-height: 2.75rem; width: 100%; }
+.fields select, .fields textarea { border: 1px solid var(--input); border-radius: .5rem; background: var(--background); color: var(--foreground); padding: .65rem; font: inherit; }
+.wide { grid-column: 1 / -1; }
+.fields .check { display: flex; align-items: center; gap: .6rem; min-height: 2.75rem; align-self: end; }
+.check input { width: 1.1rem; height: 1.1rem; }
+.sectionTitle { margin-top: 1.75rem; }
+.sectionTitle h2 { margin: 0; font-size: 1.2rem; }
+.sectionTitle p { margin: .3rem 0 .6rem; font-size: .85rem; }
+.room { margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.empty { padding: 1.5rem; border: 1px dashed var(--border); border-radius: .7rem; color: var(--muted-foreground); line-height: 1.7; }
+.empty h2 { color: var(--foreground); }
+.savebar { justify-content: flex-start; margin: 1.5rem 0 .5rem; }
+.savebar span, .hint { font-size: .85rem; }
+.message { color: var(--foreground); padding: .8rem; background: var(--muted); border-radius: .5rem; }
+.error { color: var(--destructive); padding: .8rem; border: 1px solid var(--destructive); border-radius: .5rem; }
+@media (max-width: 720px) { .workspace { grid-template-columns: 1fr; } .list { grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); } .fields { grid-template-columns: 1fr; } .editor { padding: 1rem; } }

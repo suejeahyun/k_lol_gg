@@ -429,14 +429,15 @@ export class PostgresMmrRepository implements MmrRepository {
       ? or(ilike(players.nicknameNormalized, `%${normalizedQuery}%`), ilike(players.tagLineNormalized, `%${normalizedQuery}%`))
       : undefined;
     const where = and(eq(mmrPlayerProfiles.generation, generation), eq(players.status, "ACTIVE"), search);
+    // Match playerDtos' fallback instead of sorting missing position rows first.
     const scoreOrder = query.position
-      ? sql<number>`(
+      ? sql<number>`coalesce((
           select position_profile.score_bp
           from mmr.player_position_profiles position_profile
           where position_profile.generation = ${mmrPlayerProfiles.generation}
             and position_profile.player_id = ${mmrPlayerProfiles.playerId}
             and position_profile.position = ${query.position}
-        )`
+        ), ${mmrPlayerProfiles.overallScoreBp})`
       : mmrPlayerProfiles.overallScoreBp;
     const [rows, countRows] = await Promise.all([
       this.database

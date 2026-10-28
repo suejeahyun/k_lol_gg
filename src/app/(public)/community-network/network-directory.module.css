@@ -1,0 +1,16 @@
+.page { max-width: 78rem; margin: 0 auto; padding: clamp(1rem, 4vw, 3rem); color: var(--foreground); }
+.header { padding: clamp(1rem, 4vw, 3rem) 0; max-width: 48rem; }
+.header > p { font-size: .8rem; font-weight: 700; letter-spacing: .15em; color: var(--muted-foreground); }
+.header h1 { font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -.04em; line-height: 1.25; margin: 1rem 0; }
+.header > span, .note, .card > p { color: var(--muted-foreground); line-height: 1.7; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1.2rem; }
+.card { padding: 1.6rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); display: flex; flex-direction: column; align-items: flex-start; gap: .65rem; overflow-wrap: anywhere; }
+.monogram { display: grid; place-items: center; width: 3rem; height: 3rem; background: var(--accent); color: var(--accent-foreground); border-radius: .8rem; font-size: 1.5rem; font-weight: 700; }
+.card h2 { font-size: 1.4rem; margin: .4rem 0; }
+.card > p { flex: 1; white-space: pre-wrap; }
+.origin { color: var(--muted-foreground); font-size: .8rem; }
+.card a { color: var(--foreground); display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-top: 1px solid var(--border); width: 100%; font-weight: 700; }
+.card a:hover { color: var(--primary); }
+.empty { padding: 2rem; background: var(--muted); border-radius: 1rem; line-height: 1.8; }
+.empty h2 { font-size: 1.25rem; }
+.note { margin: 1.5rem 0; font-size: .85rem; }

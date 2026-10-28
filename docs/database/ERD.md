@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `dc3390315db7fd6675265dfdccb1ac3a2b863e491bce84bc8d1dec1a0da8f3cb`
-- Tables: 114
-- Foreign keys: 175
+- Schema SHA-256: `0f4987005a3f92a71f0302663d7f5e2843228cb3f27d506b5d9caa7317257837`
+- Tables: 118
+- Foreign keys: 178
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -202,6 +202,51 @@ erDiagram
     }
     auth__user_accounts ||--o{ catalog__champion_command_receipts : "actor_user_account_id to id"
     catalog__champions ||--o{ catalog__champion_outbox : "champion_key to key"
+```
+
+## community_network
+
+```mermaid
+erDiagram
+    community_network__command_receipts {
+        uuid id PK "NOT NULL"
+        uuid actor_user_account_id FK "NOT NULL"
+        bytea key_hash "NOT NULL"
+        bytea request_hash "NOT NULL"
+        jsonb response_json "NOT NULL"
+        bigint revision "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone expires_at "NOT NULL"
+    }
+    community_network__communities {
+        uuid id PK "NOT NULL"
+        varchar_64 slug UK "NOT NULL"
+        varchar_80 name "NOT NULL"
+        varchar_300 origin UK "NOT NULL"
+        varchar_600 description "NOT NULL"
+        varchar_16 state "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
+    community_network__registry_state {
+        integer id PK "NOT NULL"
+        bigint revision "NOT NULL"
+        uuid updated_by_user_account_id FK "nullable"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
+    community_network__rooms {
+        uuid id PK "NOT NULL"
+        uuid community_id FK "NOT NULL"
+        varchar_100 display_name "NOT NULL"
+        varchar_16 purpose "NOT NULL"
+        varchar_64 data_group_key "NOT NULL"
+        boolean active "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
+    auth__user_accounts ||--o{ community_network__command_receipts : "actor_user_account_id to id"
+    auth__user_accounts o|--o{ community_network__registry_state : "updated_by_user_account_id to id"
+    community_network__communities ||--o{ community_network__rooms : "community_id to id"
 ```
 
 ## competition

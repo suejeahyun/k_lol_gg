@@ -16,3 +16,4 @@ export const operationsSchema = pgSchema("operations");
 export const riotSchema = pgSchema("riot");
 export const disciplineSchema = pgSchema("discipline");
 export const legacySchema = pgSchema("legacy");
+export const communityNetworkSchema = pgSchema("community_network");

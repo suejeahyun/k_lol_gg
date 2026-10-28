@@ -40,6 +40,7 @@ if (
   contractScope !== "statistics" &&
   contractScope !== "team-tools" &&
   contractScope !== "mmr" &&
+  contractScope !== "community-network" &&
   contractScope !== "recruiting" &&
   contractScope !== "kakao-v4" &&
   contractScope !== "media" &&
@@ -51,7 +52,7 @@ if (
   contractScope !== "champions" &&
   contractScope !== "recovery"
 ) {
-  throw new Error("V2_DB_CONTRACT_SCOPE must be 'usage', 'all', 'accounts', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'kakao-v4', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', 'champions', or 'recovery'.");
+  throw new Error("V2_DB_CONTRACT_SCOPE must be 'usage', 'all', 'accounts', 'matches', 'statistics', 'team-tools', 'mmr', 'community-network', 'recruiting', 'kakao-v4', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', 'champions', or 'recovery'.");
 }
 
 type EphemeralCluster = Readonly<{
@@ -458,6 +459,8 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/team-score.contract.test.ts",
     "tests/database/mmr-projection.contract.test.ts",
     "tests/database/mmr-history.contract.test.ts",
+    "tests/database/mmr-ranking-read.contract.test.ts",
+    "tests/database/community-network.contract.test.ts",
     "tests/database/recruiting.contract.test.ts",
     "tests/database/operation-forms.contract.test.ts",
     "tests/database/kakao-assistant.contract.test.ts",
@@ -484,7 +487,8 @@ async function runContractTests(connectionString: string): Promise<void> {
     matches: ["tests/database/match-snapshot.contract.test.ts", "tests/database/match-authorization.contract.test.ts"],
     statistics: ["tests/database/statistics-projection.contract.test.ts"],
     "team-tools": ["tests/database/team-balance-draft.contract.test.ts", "tests/database/team-score.contract.test.ts"],
-    mmr: ["tests/database/mmr-history.contract.test.ts", "tests/database/mmr-projection.contract.test.ts"],
+    mmr: ["tests/database/mmr-history.contract.test.ts", "tests/database/mmr-projection.contract.test.ts", "tests/database/mmr-ranking-read.contract.test.ts"],
+    "community-network": ["tests/database/data-platform.contract.test.ts", "tests/database/community-network.contract.test.ts"],
     recruiting: ["tests/database/inhouse-migration.contract.test.ts", "tests/database/recruiting.contract.test.ts", "tests/database/operation-forms.contract.test.ts", "tests/database/kakao-assistant.contract.test.ts", "tests/database/kakao-form-snapshots.contract.test.ts", "tests/database/kakao-recruit-form-snapshots.contract.test.ts", "tests/database/kakao-room-registry.contract.test.ts", "tests/database/kakao-party-overview.contract.test.ts", "tests/database/season-platform.contract.test.ts", "tests/database/kakao-site-notices.contract.test.ts", "tests/kakao-v4-input-tolerance-p0.test.ts"],
     "kakao-v4": ["tests/kakao-v4-input-tolerance-p0.test.ts"],
     media: ["tests/database/media.contract.test.ts"],
@@ -1254,7 +1258,8 @@ export async function runDataContracts(): Promise<void> {
       testMode: process.env.V2_DB_TEST_MODE,
     });
     if (contractScope !== "all") {
-      await runContractTests(connectionString);
+      if (contractScope === "community-network") await runFreshThenUpgradeContractTests(connectionString);
+      else await runContractTests(connectionString);
       if (contractScope === "matches") await runMatchPublicHttpVerification(connectionString);
       if (contractScope === "accounts") await runAccountHttpVerification(connectionString);
       return;
@@ -1280,7 +1285,8 @@ export async function runDataContracts(): Promise<void> {
     cluster = await startEphemeralCluster();
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
     if (contractScope !== "all") {
-      await runContractTests(cluster.connectionString);
+      if (contractScope === "community-network") await runFreshThenUpgradeContractTests(cluster.connectionString);
+      else await runContractTests(cluster.connectionString);
       if (contractScope === "matches") await runMatchPublicHttpVerification(cluster.connectionString);
       if (contractScope === "accounts") await runAccountHttpVerification(cluster.connectionString);
       return;
