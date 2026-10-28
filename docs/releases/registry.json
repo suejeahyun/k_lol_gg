@@ -2545,6 +2545,32 @@
           "status": "INSTALLED"
         }
       ]
+    },
+    {
+      "featureId": "community-network-registry",
+      "version": "0.1.0",
+      "gitTag": "community-network-registry-v0.1.0",
+      "commit": "28791243f50cf74a944b7fccb037ce4e498f0128",
+      "migrationHead": "0050_community-network-registry",
+      "qaEvidence": "docs/qa-evidence/community-network-2026-10-29/README.md",
+      "patchNotes": "docs/patch-notes/community-network-registry-v0.1.0.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED",
+        "reason": "Source, isolated PostgreSQL and local browser validation only. No production migration, deployment, rating recalculation or phone changes."
+      }
+    },
+    {
+      "featureId": "competition-mmr-integrity",
+      "version": "1.0.0",
+      "gitTag": "competition-mmr-integrity-v1.0.0",
+      "commit": "28791243f50cf74a944b7fccb037ce4e498f0128",
+      "migrationHead": "0050_community-network-registry",
+      "qaEvidence": "docs/qa-evidence/community-network-2026-10-29/README.md",
+      "patchNotes": "docs/patch-notes/competition-mmr-integrity-v1.0.0.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED",
+        "reason": "Source, isolated PostgreSQL and local browser validation only. No production migration, deployment, rating recalculation or phone changes."
+      }
     }
   ]
 }
