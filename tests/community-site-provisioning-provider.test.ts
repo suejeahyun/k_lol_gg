@@ -42,6 +42,7 @@ function harness() {
   const calls: Call[] = [];
   const dbCalls: { action: string; setup: unknown }[] = [];
   const timeouts: number[] = [];
+  const metadataBackoffs: number[] = [];
   const timers = new Map<object, () => void>();
   let storedHash: Buffer | null = null;
   let poolCloses = 0;
@@ -122,11 +123,16 @@ function harness() {
   new Script(code).runInNewContext({ exports, require(id: string) { assert.ok(Object.hasOwn(dependencies, id), id); return dependencies[id]; },
     Buffer, URL, Response, process: { cwd: () => process.cwd() },
     AbortSignal: { timeout(ms: number) { timeouts.push(ms); return AbortSignal.timeout(ms); } },
-    setTimeout(callback: () => void, ms: number) { assert.equal(ms, 85_000); const key = {}; timers.set(key, callback); return key; },
+    setTimeout(callback: () => void, ms: number) {
+      const key = {};
+      if (ms === 85_000) timers.set(key, callback);
+      else { assert.ok([200, 500, 1_000].includes(ms)); metadataBackoffs.push(ms); void Promise.resolve().then(callback); }
+      return key;
+    },
     clearTimeout(key: object) { timers.delete(key); },
   });
   const factory = exports.createVercelNeonProvisioningProvider as (db: unknown, env: NodeJS.ProcessEnv, request: unknown) => CommunitySiteProvisioningProvider;
-  return { provider: factory(database, environment, request), calls, dbCalls, timeouts, markers, blobStore,
+  return { provider: factory(database, environment, request), calls, dbCalls, timeouts, metadataBackoffs, markers, blobStore,
     freshBlob() { blobConnected = false; blobSensitive = false; },
     alreadyActive() { publicationState = "ACTIVE"; },
     override(value: typeof override) { override = value; }, hangBootstrap() { initialize = async () => new Promise(() => undefined); },
@@ -224,6 +230,69 @@ test("private Blob creation connects production only and protects its token with
   const protect = h.calls.find((call) => call.method === "PATCH")!;
   assert.deepEqual(protect.body, { type: "sensitive" });
   assert.equal(h.calls.some((call) => call.url.pathname.startsWith("/v1/projects/") && call.url.pathname.includes("/env/")), false, "never request decrypted credentials");
+});
+
+test("successful Blob writes tolerate delayed confirmed metadata with bounded GETs and no duplicate mutations", async () => {
+  const h = harness(); h.freshBlob();
+  let connectionReadbacks = 0; let protectionReadbacks = 0;
+  h.override((call) => {
+    if (call.url.pathname === "/v1/storage/stores") return Response.json({ stores: [] });
+    if (call.url.pathname === `/v1/storage/stores/${h.blobStore.id}` && h.calls.some((entry) => entry.url.pathname.endsWith("/connections"))) {
+      connectionReadbacks += 1;
+      if (connectionReadbacks < 4) return Response.json({ store: { ...h.blobStore, projectsMetadata: [] } });
+    }
+    if (call.url.pathname === `/v9/projects/${vercelProject.id}/env` && call.method === "GET" && h.calls.some((entry) => entry.method === "PATCH")) {
+      protectionReadbacks += 1;
+      if (protectionReadbacks < 4) return Response.json({ envs: [...h.markers, { id: "env_blob", key: "BLOB_READ_WRITE_TOKEN", type: "encrypted", target: ["production"], contentHint: { type: "blob-read-write-token", storeId: h.blobStore.id } }] });
+    }
+    return undefined;
+  });
+  const result = await h.provider.step(input("PROJECT_CREATED"));
+  assert.equal(result.checkpoint, "ENVIRONMENT_CONFIGURED");
+  assert.equal(connectionReadbacks, 4); assert.equal(protectionReadbacks, 4);
+  assert.deepEqual(h.metadataBackoffs, [200, 500, 1_000, 200, 500, 1_000]);
+  assert.equal(h.calls.filter((call) => call.url.pathname === "/v1/storage/stores/blob" && call.method === "POST").length, 1);
+  assert.equal(h.calls.filter((call) => call.url.pathname.endsWith("/connections") && call.method === "POST").length, 1);
+  assert.equal(h.calls.filter((call) => call.method === "PATCH").length, 1);
+});
+
+test("unconfirmed Blob connection or token protection stops before environment publication with a retryable error", async () => {
+  for (const missing of ["connection", "protection"]) {
+    const h = harness(); h.freshBlob(); let readbacks = 0;
+    h.override((call) => {
+      if (missing === "connection" && call.url.pathname === `/v1/storage/stores/${h.blobStore.id}` && h.calls.some((entry) => entry.url.pathname.endsWith("/connections"))) {
+        readbacks += 1; return Response.json({ store: { ...h.blobStore, projectsMetadata: [] } });
+      }
+      if (missing === "protection" && call.url.pathname === `/v9/projects/${vercelProject.id}/env` && call.method === "GET" && h.calls.some((entry) => entry.method === "PATCH")) {
+        readbacks += 1; return Response.json({ envs: [...h.markers, { id: "env_blob", key: "BLOB_READ_WRITE_TOKEN", type: "encrypted", target: ["production"], contentHint: { type: "blob-read-write-token", storeId: h.blobStore.id } }] });
+      }
+      return undefined;
+    });
+    await assert.rejects(h.provider.step(input("PROJECT_CREATED")), /^Error: PROVIDER_UNAVAILABLE$/);
+    assert.equal(readbacks, 4); assert.deepEqual(h.metadataBackoffs, [200, 500, 1_000]);
+    assert.equal(h.calls.filter((call) => call.url.pathname.endsWith("/connections") && call.method === "POST").length, 1);
+    assert.equal(h.calls.filter((call) => call.method === "PATCH").length, missing === "protection" ? 1 : 0);
+    assert.equal(h.calls.some((call) => call.method === "POST" && call.url.pathname.endsWith("/env")), false);
+    assert.equal(h.calls.some((call) => call.url.pathname.includes("deployments")), false);
+  }
+});
+
+test("Blob ownership changes observed during readback fail immediately without using the retry budget", async () => {
+  for (const phase of ["connection", "protection"]) {
+    const h = harness(); h.freshBlob();
+    h.override((call) => {
+      if (phase === "connection" && call.url.pathname === `/v1/storage/stores/${h.blobStore.id}` && h.calls.some((entry) => entry.url.pathname.endsWith("/connections"))) {
+        return Response.json({ store: { ...h.blobStore, ownerId: "team_foreign", projectsMetadata: [] } });
+      }
+      if (phase === "protection" && call.url.pathname === `/v9/projects/${vercelProject.id}/env` && call.method === "GET" && h.calls.some((entry) => entry.method === "PATCH")) {
+        return Response.json({ envs: [...h.markers, { id: "env_blob", key: "BLOB_READ_WRITE_TOKEN", type: "encrypted", target: ["production"], contentHint: { type: "blob-read-write-token", storeId: "store_foreign" } }] });
+      }
+      return undefined;
+    });
+    await assert.rejects(h.provider.step(input("PROJECT_CREATED")), /^Error: RESOURCE_CONFLICT$/);
+    assert.deepEqual(h.metadataBackoffs, []);
+    assert.equal(h.calls.some((call) => call.method === "POST" && call.url.pathname.endsWith("/env")), false);
+  }
 });
 
 test("exact production domain is registered before environment publication and reused on retry", async () => {

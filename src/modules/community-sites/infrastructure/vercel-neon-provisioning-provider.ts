@@ -124,6 +124,7 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
       || domain.redirect || domain.gitBranch || domain.customEnvironmentId) throw new CommunitySiteProvisioningError("RESOURCE_CONFLICT");
   }
   private async ensurePrivateBlob(siteId: string, projectId: string, existingStoreId?: string) {
+    const readbackDelays = [0, 200, 500, 1_000];
     const name = `GG-${siteId}-${this.derive(siteId, "blob-ownership").slice(0, 22)}`;
     const listing = await this.api("vercel", "/v1/storage/stores");
     const matches = rows(listing?.stores).filter((entry) => entry.name === name);
@@ -148,9 +149,14 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
     let connections = await readOwnedStore();
     if (!connections.length) {
       await this.api("vercel", `/v1/storage/stores/${storeId}/connections`, "POST", { envVarEnvironments: ["production"], projectId, type: "integration" });
-      connections = await readOwnedStore();
+      // A successful connection write may precede its metadata readback. Never repeat the POST here.
+      for (const delay of readbackDelays) {
+        if (delay) await new Promise<void>((resolve) => setTimeout(resolve, delay));
+        connections = await readOwnedStore();
+        if (connections.length === 1) break;
+      }
     }
-    if (connections.length !== 1) throw new CommunitySiteProvisioningError("INVALID_PROVIDER_RESULT");
+    if (connections.length !== 1) throw new CommunitySiteProvisioningError("PROVIDER_UNAVAILABLE");
     const readTokenMetadata = async () => {
       const settings = await this.api("vercel", `/v9/projects/${projectId}/env`);
       const tokens = rows(settings?.envs).filter((entry) => entry.key === "BLOB_READ_WRITE_TOKEN");
@@ -165,9 +171,14 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
       const tokenId = identifier(token.id, /^[A-Za-z0-9_]+$/u);
       // The provider never reads, copies or persists this store's actual read-write token.
       await this.api("vercel", `/v9/projects/${projectId}/env/${tokenId}`, "PATCH", { type: "sensitive" });
-      token = await readTokenMetadata();
+      for (const delay of readbackDelays) {
+        if (delay) await new Promise<void>((resolve) => setTimeout(resolve, delay));
+        token = await readTokenMetadata();
+        if (token.type === "sensitive") break;
+        if (token.type !== "encrypted") throw new CommunitySiteProvisioningError("RESOURCE_CONFLICT");
+      }
     }
-    if (token.type !== "sensitive") throw new CommunitySiteProvisioningError("INVALID_PROVIDER_RESULT");
+    if (token.type !== "sensitive") throw new CommunitySiteProvisioningError("PROVIDER_UNAVAILABLE");
     return storeId;
   }
   async step(input: CommunitySiteProvisioningStepInput) {
