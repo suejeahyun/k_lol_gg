@@ -1,0 +1,16 @@
+{
+  "sourceSha": "ce31ea2c68192093700a79bda5d0add3cb3e77c0",
+  "fullCheckPassed": true,
+  "contractTestsPassed": 801,
+  "unitTestsPassed": 1286,
+  "existingUnitTestsSkipped": 1,
+  "lintPassed": true,
+  "typecheckPassed": true,
+  "erdPassed": true,
+  "homeArtPassed": true,
+  "buildPassed": true,
+  "currentTreeSecretScanPassed": true,
+  "testEnvironmentNote": "Initial run inherited HUB-specific environment and failed existing multi-brand fixtures. The standard neutral-environment full check passed. Production HUB also built successfully on Vercel.",
+  "providerFocusedTestsPassed": 28,
+  "brandRegressionAndCompatibilityTestsPassed": 44
+}

@@ -1,0 +1,185 @@
+{
+  "purpose": "GG HUB dedicated production worker disposable QA v1",
+  "engineRef": "7d669ec5bc2af56ab23c793f9a530bf5f6fbfc82",
+  "verified": {
+    "at": "2026-10-29T00:49:42.141Z",
+    "source": "7d669ec5bc2af56ab23c793f9a530bf5f6fbfc82",
+    "productionWorker": true,
+    "dedicatedProviderCredentials": true,
+    "checkpoint": "VERIFIED",
+    "siteState": "AWAITING_OWNER",
+    "childState": "AWAITING_OWNER",
+    "childRevision": 2,
+    "freshFinalMigrationVerified": true,
+    "childTablesChecked": 125,
+    "syntheticOwnerOnly": true,
+    "originalCentralCountsPreserved": true,
+    "uploadedFiles": 0,
+    "publicActivationRequested": false
+  },
+  "checkpoints": [
+    {
+      "action": "fixture-seeded",
+      "at": "2026-10-29T00:40:46.981Z",
+      "queueContainedOnlyQa": true
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:40:56.807Z",
+      "elapsedMs": 2357,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "DATABASE_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:41:08.165Z",
+      "elapsedMs": 5164,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "DATABASE_READY",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:41:17.268Z",
+      "elapsedMs": 1612,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "PROJECT_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:41:30.485Z",
+      "elapsedMs": 4349,
+      "uncertain": false,
+      "kind": "failed",
+      "errorCode": "INVALID_PROVIDER_RESULT",
+      "checkpoint": "PROJECT_CREATED",
+      "status": "FAILED"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:46:20.274Z",
+      "elapsedMs": 5151,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "ENVIRONMENT_CONFIGURED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:46:29.843Z",
+      "elapsedMs": 3020,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "DEPLOYMENT_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:47:21.985Z",
+      "elapsedMs": 1801,
+      "uncertain": false,
+      "kind": "pending",
+      "checkpoint": "DEPLOYMENT_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:49:05.698Z",
+      "elapsedMs": 1476,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "DEPLOYMENT_READY",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:49:24.734Z",
+      "elapsedMs": 3912,
+      "uncertain": false,
+      "kind": "completed",
+      "checkpoint": "VERIFIED",
+      "status": "SUCCEEDED"
+    },
+    {
+      "action": "verified",
+      "at": "2026-10-29T00:49:42.141Z",
+      "source": "7d669ec5bc2af56ab23c793f9a530bf5f6fbfc82",
+      "productionWorker": true,
+      "dedicatedProviderCredentials": true,
+      "checkpoint": "VERIFIED",
+      "siteState": "AWAITING_OWNER",
+      "childState": "AWAITING_OWNER",
+      "childRevision": 2,
+      "freshFinalMigrationVerified": true,
+      "childTablesChecked": 125,
+      "syntheticOwnerOnly": true,
+      "originalCentralCountsPreserved": true,
+      "uploadedFiles": 0,
+      "publicActivationRequested": false
+    },
+    {
+      "action": "cleanup-prepared",
+      "at": "2026-10-29T00:50:10.594Z",
+      "ownerMarkersVerified": true,
+      "childBusinessDataEmpty": true
+    },
+    {
+      "action": "cleanup-prepared",
+      "at": "2026-10-29T00:50:21.118Z",
+      "ownerMarkersVerified": true,
+      "childBusinessDataEmpty": true
+    },
+    {
+      "action": "cleanup",
+      "at": "2026-10-29T00:50:21.401Z",
+      "step": "blob-connection"
+    },
+    {
+      "action": "cleanup",
+      "at": "2026-10-29T00:50:22.958Z",
+      "step": "blob-store"
+    },
+    {
+      "action": "cleanup",
+      "at": "2026-10-29T00:50:24.078Z",
+      "step": "child-vercel-project"
+    },
+    {
+      "action": "cleanup",
+      "at": "2026-10-29T00:50:24.934Z",
+      "step": "child-neon-project"
+    },
+    {
+      "action": "cleanup",
+      "at": "2026-10-29T00:50:26.468Z",
+      "step": "central-synthetic-fixture"
+    }
+  ],
+  "cleanup": {
+    "preparedAt": "2026-10-29T00:50:21.117Z",
+    "childTablesChecked": 125,
+    "completed": [
+      "blob-connection",
+      "blob-store",
+      "child-vercel-project",
+      "child-neon-project",
+      "central-synthetic-fixture"
+    ],
+    "completedAt": "2026-10-29T00:50:26.470Z"
+  },
+  "syntheticFixture": {
+    "loginPossible": false,
+    "humanApprovalImpersonated": false,
+    "termsConsentFabricated": false,
+    "realMemberModified": false
+  },
+  "limitations": [
+    "Synthetic job fixture; normal registration, admin approval UI, SSO and owner activation are not tested by this probe.",
+    "Usage charges are permitted. No subscription, plan upgrade or paid seat is created by this tool."
+  ]
+}

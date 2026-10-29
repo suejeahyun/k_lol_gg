@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-10-29T00:51:06.252Z",
+  "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
+  "enabled": true,
+  "enabledAt": 1793235048536,
+  "disabledAt": null,
+  "definitions": [
+    {
+      "host": "gg-community-mfdut0k1w-tjdmswo11-3715s-projects.vercel.app",
+      "path": "/api/cron/community-sites",
+      "schedule": "* * * * *"
+    }
+  ],
+  "uiEnabledConfirmed": true,
+  "scheduledInvocationObserved": true,
+  "authenticatedWorkerVerified": true,
+  "scheduledInvocation": {
+    "at": "2026-10-29T00:51:33.178Z",
+    "requestId": "vstmd-1793235093178-53b3f153301d",
+    "path": "/api/cron/community-sites",
+    "method": "GET",
+    "status": 200,
+    "userAgent": "vercel-cron/1.0",
+    "deploymentId": "dpl_A1SajgHGJ7GVEr6aeCmF7CAscKEk",
+    "environment": "production",
+    "durationMs": 564,
+    "emptyQueue": true,
+    "manualRunButtonUsed": false,
+    "proof": "scheduled-invocation.jpg"
+  }
+}

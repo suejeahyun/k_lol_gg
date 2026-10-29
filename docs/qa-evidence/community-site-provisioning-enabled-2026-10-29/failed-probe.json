@@ -1,0 +1,119 @@
+{
+  "engineSha": "dd71d851ce18473b1d9a89703374fe5cbc9bf46b",
+  "checkpoints": [
+    {
+      "action": "fixture-seeded",
+      "at": "2026-10-29T00:23:54.238Z",
+      "queueContainedOnlyQa": true
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:24:02.352Z",
+      "elapsedMs": 2240,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "DATABASE_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:24:14.059Z",
+      "elapsedMs": 5731,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "DATABASE_READY",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:24:22.385Z",
+      "elapsedMs": 1704,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "PROJECT_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:24:32.608Z",
+      "elapsedMs": 3854,
+      "uncertain": false,
+      "kind": "failed",
+      "errorCode": "INVALID_PROVIDER_RESULT",
+      "checkpoint": "PROJECT_CREATED",
+      "status": "FAILED"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:32:34.964Z",
+      "elapsedMs": 4133,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "ENVIRONMENT_CONFIGURED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:32:45.768Z",
+      "elapsedMs": 3032,
+      "uncertain": false,
+      "kind": "progress",
+      "checkpoint": "DEPLOYMENT_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:33:10.114Z",
+      "elapsedMs": 1230,
+      "uncertain": false,
+      "kind": "pending",
+      "checkpoint": "DEPLOYMENT_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:33:46.374Z",
+      "elapsedMs": 1295,
+      "uncertain": false,
+      "kind": "pending",
+      "checkpoint": "DEPLOYMENT_CREATED",
+      "status": "PENDING"
+    },
+    {
+      "action": "live-worker-request",
+      "at": "2026-10-29T00:34:30.801Z",
+      "elapsedMs": 1607,
+      "uncertain": false,
+      "kind": "failed",
+      "errorCode": "PROVISIONING_FAILED",
+      "checkpoint": "DEPLOYMENT_CREATED",
+      "status": "FAILED"
+    }
+  ],
+  "rootCauseOfFirstFailureConfirmed": false,
+  "firstFailureStage": "PROJECT_CREATED",
+  "firstFailureCode": "INVALID_PROVIDER_RESULT",
+  "manualQaBlobProtectionApplied": true,
+  "secondFailure": {
+    "stage": "DEPLOYMENT_CREATED",
+    "code": "PROVISIONING_FAILED",
+    "buildCode": "nextjs_docs",
+    "cause": "Custom brand short name contained an opening parenthesis inserted unescaped in RegExp"
+  },
+  "cleanup": {
+    "completedAt": "2026-10-29T00:37:47.097Z",
+    "completed": [
+      "blob-connection",
+      "blob-store",
+      "child-vercel-project",
+      "child-neon-project",
+      "central-synthetic-fixture"
+    ],
+    "childTablesChecked": 125,
+    "emptyBlobVerified": true,
+    "originalCentralCountsPreserved": true,
+    "originalManifestPreserved": true,
+    "auditHistoryPreserved": true
+  },
+  "secretValuesIncluded": false
+}

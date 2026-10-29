@@ -1,0 +1,161 @@
+{
+  "verifiedAt": "2026-10-29T00:45:22.901Z",
+  "sourceSha": "ce31ea2c68192093700a79bda5d0add3cb3e77c0",
+  "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
+  "deploymentId": "dpl_A1SajgHGJ7GVEr6aeCmF7CAscKEk",
+  "url": "https://gg-community-mfdut0k1w-tjdmswo11-3715s-projects.vercel.app",
+  "alias": "https://gg-community-hub.vercel.app",
+  "mode": "candidate",
+  "readyState": "READY",
+  "healthStatus": "ready",
+  "checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/community-network",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/signup",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/forgot-password",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/admin/login",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/terms",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/icons/hub/mark.svg",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/sites",
+      "status": 200,
+      "loginRedirectConfirmed": true,
+      "passed": true
+    },
+    {
+      "path": "/sites/new",
+      "status": 200,
+      "loginRedirectConfirmed": true,
+      "passed": true
+    },
+    {
+      "path": "/admin/community-sites",
+      "status": 307,
+      "loginRedirectConfirmed": true,
+      "passed": true
+    },
+    {
+      "path": "/api/community-sites",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/community-sites",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/community-network",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/users",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "/recruits",
+      "status": 404,
+      "passed": true
+    },
+    {
+      "path": "/players",
+      "status": 404,
+      "passed": true
+    },
+    {
+      "path": "/api/admin/site-settings",
+      "status": 404,
+      "passed": true
+    },
+    {
+      "path": "/api/kakao/v4",
+      "status": 404,
+      "passed": true
+    },
+    {
+      "path": "/api/cron/mmr-projection",
+      "status": 404,
+      "passed": true
+    },
+    {
+      "path": "/api/cron/community-sites",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "authenticated cron with empty queue",
+      "status": 200,
+      "emptyQueueConfirmed": true,
+      "passed": true
+    },
+    {
+      "path": "cross-origin signup",
+      "status": 403,
+      "passed": true
+    }
+  ],
+  "automaticProvisioningEnabled": true,
+  "privateCredentialsIncluded": false,
+  "productionAccountsCreated": false,
+  "temporaryVerificationCredentialRevoked": true
+}

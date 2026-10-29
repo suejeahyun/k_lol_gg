@@ -1,0 +1,17 @@
+{
+  "verifiedAt": "2026-10-29T00:51:06.624Z",
+  "aliases": [
+    {
+      "alias": "k-lol-gg.vercel.app",
+      "projectId": "prj_yeGD9GzHJk6pZCcIIjJ8grGPgW8q",
+      "deploymentId": "dpl_6B2a4crdWnPW6WctV4GoGP24bH2v",
+      "unchanged": true
+    },
+    {
+      "alias": "nexus-gg-kr.vercel.app",
+      "projectId": "prj_qozFsYmEO7ZoL0jZAnBNCVc1nF8i",
+      "deploymentId": "dpl_4x3vz5msZg8Sumv7Cd1vQpy8XpRa",
+      "unchanged": true
+    }
+  ]
+}

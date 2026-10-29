@@ -1,0 +1,56 @@
+{
+  "verifiedAt": "2026-10-29T00:46:49.148Z",
+  "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
+  "sourceSha": "ce31ea2c68192093700a79bda5d0add3cb3e77c0",
+  "childEngineSha": "7d669ec5bc2af56ab23c793f9a530bf5f6fbfc82",
+  "automaticProvisioningEnabled": true,
+  "tokenExpiresOn": "2027-01-27",
+  "newSubscription": false,
+  "planUpgrade": false,
+  "usageBasedChargesAuthorized": true,
+  "credentials": [
+    {
+      "key": "HUB_VERCEL_TOKEN",
+      "type": "sensitive",
+      "target": [
+        "production"
+      ]
+    },
+    {
+      "key": "HUB_NEON_API_KEY",
+      "type": "sensitive",
+      "target": [
+        "production"
+      ]
+    },
+    {
+      "key": "HUB_PROVISIONING_MASTER_KEY",
+      "type": "sensitive",
+      "target": [
+        "production"
+      ]
+    },
+    {
+      "key": "CRON_SECRET",
+      "type": "sensitive",
+      "target": [
+        "production"
+      ]
+    },
+    {
+      "key": "HUB_PROVISIONING_ENABLED",
+      "type": "plain",
+      "target": [
+        "production"
+      ]
+    },
+    {
+      "key": "HUB_ENGINE_GIT_REF",
+      "type": "plain",
+      "target": [
+        "production"
+      ]
+    }
+  ],
+  "secretValuesIncluded": false
+}
