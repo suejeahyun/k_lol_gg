@@ -1,5 +1,5 @@
 import { SERVICE_BRAND } from "@/lib/service-brand";
-import { hasForeignKakaoServiceHeader, KAKAO_SERVICE_NAME_PATTERN } from "./service-brand";
+import { hasForeignKakaoServiceHeader, KAKAO_SERVICE_NAME_PATTERN, KAKAO_SERVICE_SHORT_NAME_PATTERN } from "./service-brand";
 import type { RecruitPartyType } from "../domain/recruiting";
 import { formatRecruitFormReference, parseRecruitFormReference } from "../domain/kakao-recruit-reference";
 
@@ -17,8 +17,8 @@ const START_TIME_LABEL = /^\s*[》>]?\s*(?:게임\s*)?(?:시작|출발)\s*(?:시
 const GAME_INFO_LABEL = /^\s*[》>]?\s*게임\s*(?:정보|종류)?\s*[:：]\s*(.*?)\s*$/u;
 const ORGANIZER_LABEL = /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?\s*(.*?)\s*$/u;
 const DETAIL_HEADER = new RegExp(String.raw`^\s*\[\s*${KAKAO_SERVICE_NAME_PATTERN}\s+구인\s*상세\s*#\s*(\d+)\s*\]\s*$`, "iu");
-const BRAND_FORM_PREFIX = new RegExp(String.raw`^\s*\[?${SERVICE_BRAND.shortName}`, "u");
-const BRACKETED_BRAND_FORM_PREFIX = new RegExp(String.raw`^\s*\[${SERVICE_BRAND.shortName}`, "u");
+const BRAND_FORM_PREFIX = new RegExp(String.raw`^\s*\[?${KAKAO_SERVICE_SHORT_NAME_PATTERN}`, "u");
+const BRACKETED_BRAND_FORM_PREFIX = new RegExp(String.raw`^\s*\[${KAKAO_SERVICE_SHORT_NAME_PATTERN}`, "u");
 const DETAIL_SUMMARY = /^\s*#\s*(\d+)\s*[·ㆍ|]\s*(.*?)\s*[·ㆍ|]\s*(\d+)\s*\/\s*(\d+)(?:\s|$)/u;
 const RESERVE_COUNT_SUMMARY = /^\s*예비\s*[:：]\s*\d+\s*명(?:\s|$)/u;
 const MERGED_ROW = /\s+(?:(?:예비|후보|대기)\s*[0-9]{0,2}\s*[.):：.]|[0-9]{1,2}\s*[.)]|(?:TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：])/iu;
@@ -124,7 +124,7 @@ function normalizePartyText(value: string) {
       return DETAIL_HEADER.test(structural) || DETAIL_SUMMARY.test(structural) || RESERVE_COUNT_SUMMARY.test(structural) || /^\s*\[파티\s*#\d+\]/u.test(structural)
         ? structural : line;
     }).join("\n")
-    .replace(/^\s*\[파티\s*#(\d+)\]\s*(.+?)\s*·\s*(\d+)\/(\d+)명\s*$/gmu, `[${SERVICE_BRAND.name} 구인상세 #$1]\n#$1 · $2 · $3/$4`)
+    .replace(/^\s*\[파티\s*#(\d+)\]\s*(.+?)\s*·\s*(\d+)\/(\d+)명\s*$/gmu, (_line, number, title, count, maximum) => `[${SERVICE_BRAND.name} 구인상세 #${number}]\n#${number} · ${title} · ${count}/${maximum}`)
     .trim();
 }
 
