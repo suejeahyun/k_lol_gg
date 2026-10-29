@@ -143,7 +143,7 @@ test("site applications isolate owners and durably queue reviewed provisioning w
         site = await repository.getSite(owner, site.id, "owner");
         assert.equal(site.configuration.name, "게시 중 저장한 다음 초안");
         assert.equal(site.publishedConfiguration!.name, "게시할 이름");
-        assert.deepEqual(await repository.getPublicSites(), [{ id: site.id, name: "게시할 이름", description: site.publishedConfiguration!.description, origin: "https://synthetic.example" }]);
+        assert.deepEqual(await repository.getPublicSites(), [{ id: site.id, slug: site.configuration.slug, name: "게시할 이름", description: site.publishedConfiguration!.description, origin: "https://synthetic.example" }]);
         assert.doesNotMatch(JSON.stringify(await repository.getPublicSites()), /게시 중 저장|ownerUserAccountId|latestJob|reviewReason|configuration/);
       });
       await t.test("worker failure is sanitized, reapproval resumes the same resources, and overlapping workers claim only once", async () => {

@@ -10,6 +10,8 @@
 .next-sso-hub/**
 .next-sso-child
 .next-sso-child/**
+.next-intro-qa
+.next-intro-qa/**
 node_modules
 node_modules/**
 # Historical QA captures and reports are not application deployment inputs.

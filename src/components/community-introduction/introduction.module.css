@@ -1,0 +1,9 @@
+.content { min-width: 0; color: var(--foreground); overflow-wrap: anywhere; }
+.banner { display: block; width: 100%; max-height: 24rem; aspect-ratio: 16 / 6; object-fit: cover; border-radius: .8rem; background: var(--muted); margin-bottom: 1.5rem; }
+.summary { margin: 0 0 1.7rem; font-size: clamp(1.05rem, 2vw, 1.25rem); font-weight: 650; line-height: 1.8; white-space: pre-wrap; }
+.section { padding-block: 1.4rem; border-top: 1px solid var(--border); }
+.section h2, .section h3 { margin: 0 0 .7rem; font-size: 1rem; font-weight: 750; }
+.section p { margin: 0; white-space: pre-wrap; line-height: 1.9; font-size: .9rem; }
+.contact { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; color: var(--primary); font-weight: 650; text-decoration: underline; text-underline-offset: .2rem; }
+.contact:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+@media (max-width: 640px) { .banner { aspect-ratio: 16 / 9; } .section { padding-block: 1.2rem; } }

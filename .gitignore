@@ -50,3 +50,4 @@ yarn-error.log*
 next-env.d.ts
 .next-sso-hub/
 .next-sso-child/
+.next-intro-qa/

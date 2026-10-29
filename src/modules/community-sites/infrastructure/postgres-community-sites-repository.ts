@@ -63,11 +63,11 @@ export class PostgresCommunitySitesRepository implements CommunitySitesRepositor
 
   async getPublicSites(): Promise<CommunityPublicSite[]> {
     // Only the currently published public fields: never expose draft settings, ownership, jobs or provider resources.
-    const rows = await this.database.select({ id: communitySites.id, origin: communitySites.origin,
+    const rows = await this.database.select({ id: communitySites.id, slug: communitySites.slug, origin: communitySites.origin,
       name: sql<string>`${communitySites.publishedConfigurationJson}->>'name'`,
       description: sql<string>`${communitySites.publishedConfigurationJson}->>'description'` }).from(communitySites)
       .where(eq(communitySites.status, "ACTIVE")).orderBy(asc(communitySites.createdAt), asc(communitySites.id));
-    return rows.map((row) => ({ id: row.id, name: row.name, description: row.description, origin: row.origin! }));
+    return rows.map((row) => ({ id: row.id, slug: row.slug, name: row.name, description: row.description, origin: row.origin! }));
   }
 
   async listSites(actor: TransactionSessionActor, scope: Scope): Promise<CommunitySite[]> {

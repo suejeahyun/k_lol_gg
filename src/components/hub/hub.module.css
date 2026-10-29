@@ -68,6 +68,24 @@
 .origin { color: #788890; font-size: .7rem; margin-bottom: 1rem; }
 .siteCard > a { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 2.8rem; padding-top: .9rem; border-top: 1px solid #e6ecee; color: #1c5c4d; font-size: .8rem; font-weight: 700; }
 .siteCard > a:hover { color: #087757; }
+.cardActions { display: flex; gap: .8rem; align-items: center; justify-content: space-between; width: 100%; padding-top: .65rem; border-top: 1px solid #e6ecee; }
+.cardActions a { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.75rem; font-size: .8rem; font-weight: 700; color: #1c5c4d; }
+.cardActions a:last-child { color: #4d616b; font-weight: 500; }
+.backLink { display: inline-flex; align-items: center; min-height: 2.75rem; margin-bottom: 1.1rem; font-size: .83rem; color: #345b50; }
+.detailHeader { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; padding-bottom: 1.8rem; }
+.detailHeader h1 { margin: .5rem 0; font-size: clamp(1.9rem, 4vw, 2.8rem); overflow-wrap: anywhere; }
+.detailHeader > div { min-width: 0; }
+.detailHeader > div > span { font-size: .85rem; color: #526970; overflow-wrap: anywhere; }
+.detailVisit { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 2.9rem; padding: .65rem 1.1rem; border-radius: .5rem; color: white; background: #164f40; flex-shrink: 0; font-weight: 650; font-size: .85rem; }
+.detailBody { padding: clamp(1.2rem, 3.5vw, 2.3rem); border: 1px solid var(--border); border-radius: 1rem; background: #fff; min-width: 0; }
+.introductionUpdated { margin: 1rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border); color: #526970; font-size: .75rem; line-height: 1.7; }
+.introductionStatus { padding: 1rem; margin: 0 0 1.5rem; border: 1px solid #c9d9d2; border-radius: .6rem; background: #f0f6f3; color: #355a4c; line-height: 1.8; font-size: .85rem; }
+.registeredIntroduction h2 { margin: 0 0 .8rem; font-size: 1rem; }
+.registeredIntroduction p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.9; font-size: .9rem; }
+.detailFoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem 1rem; margin-top: 1.2rem; }
+.detailFoot p { margin: 0; color: #526970; font-size: .8rem; line-height: 1.7; }
+.detailFoot a { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; color: #1c5c4d; font-size: .8rem; font-weight: 650; }
+@media (max-width: 640px) { .detailHeader { flex-direction: column; align-items: stretch; } .detailVisit { align-self: flex-start; } }
 .directoryNote { display: flex; align-items: flex-start; gap: .4rem; margin: 1.2rem 0 0; color: #6c7c84; font-size: .72rem; line-height: 1.7; }
 .directoryNote svg { flex-shrink: 0; margin-top: .1rem; }
 .empty { padding: 2rem; border: 1px dashed #bbcfc7; border-radius: .75rem; background: #f8fbfa; color: #657970; }

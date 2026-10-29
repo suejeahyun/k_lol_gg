@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `28bbfc2d993da7c519f2da813182703a0bab2ebd9f01a94237552ddb4fe9e46a`
-- Tables: 125
-- Foreign keys: 189
+- Schema SHA-256: `256cb3ab2e6a81b145d344229670cb404c705959cc32fb0d4816faa1cccd0e36`
+- Tables: 126
+- Foreign keys: 190
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -1196,6 +1196,21 @@ erDiagram
         timestamp_with_time_zone created_at "NOT NULL"
         timestamp_with_time_zone expires_at "NOT NULL"
     }
+    operations__community_introduction {
+        integer id PK "NOT NULL"
+        bigint revision "NOT NULL"
+        boolean published "NOT NULL"
+        varchar_160 summary "NOT NULL"
+        varchar_3000 introduction "NOT NULL"
+        varchar_600 activities "NOT NULL"
+        varchar_160 activity_hours "NOT NULL"
+        varchar_1000 joining_info "NOT NULL"
+        varchar_500 contact_url "nullable"
+        varchar_500 banner_url "nullable"
+        uuid updated_by_user_account_id FK "nullable"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
     operations__job_nonce_bindings {
         uuid id PK "NOT NULL"
         varchar_64 job_name "NOT NULL"
@@ -1244,6 +1259,7 @@ erDiagram
     }
     auth__user_accounts ||--o{ operations__ai_request_ledger : "actor_user_account_id to id"
     auth__user_accounts ||--o{ operations__command_receipts : "actor_user_account_id to id"
+    auth__user_accounts o|--o{ operations__community_introduction : "updated_by_user_account_id to id"
     auth__user_accounts o|--o{ operations__maintenance_runs : "actor_user_account_id to id"
     auth__user_accounts o|--o{ operations__site_settings : "updated_by_user_account_id to id"
 ```

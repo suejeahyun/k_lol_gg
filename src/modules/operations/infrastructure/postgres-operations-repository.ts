@@ -4,6 +4,7 @@ import { and, asc, count, desc, eq, inArray, isNull, lte, lt, or, sql } from "dr
 
 import { authorizeAiRequest, updateSiteSettings, type PublicFeatureFlags, type SiteSettings } from "../domain/site-settings";
 import { buildCsvBackup } from "../domain/csv-backup";
+import { createDefaultCommunityIntroduction, validateCommunityIntroduction, type CommunityIntroductionSnapshot } from "../domain/community-introduction";
 import type {
   AiCompletionPort,
   AiRequestLedgerDto,
@@ -28,6 +29,7 @@ import { matchRateLimitBuckets, matchSeries } from "@/platform/db/schema/matches
 import { mmrPlayerProfiles } from "@/platform/db/schema/mmr";
 import {
   aiRequestLedger,
+  communityIntroduction,
   jobNonceBindings,
   maintenanceRuns,
   operationsCommandReceipts,
@@ -97,6 +99,14 @@ function settingsFromRow(row: typeof siteSettings.$inferSelect): SiteSettings {
   };
 }
 
+function introductionFromRow(row: typeof communityIntroduction.$inferSelect): CommunityIntroductionSnapshot {
+  return { revision: row.revision, updatedAt: row.updatedAt.toISOString(), profile: validateCommunityIntroduction({
+    published: row.published, summary: row.summary, introduction: row.introduction,
+    activities: row.activities, activityHours: row.activityHours, joiningInfo: row.joiningInfo,
+    contactUrl: row.contactUrl, bannerUrl: row.bannerUrl,
+  }) };
+}
+
 function requestIdentity(metadata: OperationsCommandMetadata) {
   return {
     keyHash: hash(`klol-v2:operations-key:v1\0${metadata.requestKey}`),
@@ -111,10 +121,10 @@ function sameBytes(left: Buffer | Uint8Array, right: Buffer | Uint8Array) {
 async function requireTransactionActor(
   transaction: V2Transaction,
   actor: OperationsActor,
-  minimumRole: "USER" | "SUPER_ADMIN",
+  minimumRole: "USER" | "ADMIN" | "SUPER_ADMIN",
 ) {
-  const policy = minimumRole === "SUPER_ADMIN"
-    ? { ...ADMIN_MUTATION_SESSION_POLICY, minimumRole: "SUPER_ADMIN" as const }
+  const policy = minimumRole !== "USER"
+    ? { ...ADMIN_MUTATION_SESSION_POLICY, minimumRole }
     : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY;
   const locked = await lockTransactionSessionActor(transaction, actor.session, new Date(), policy);
   if (!locked || locked.id !== actor.session.userAccountId || locked.role !== actor.role) {
@@ -246,6 +256,38 @@ export class PostgresOperationsRepository implements OperationsQueryPort, Operat
     private readonly database: V2Database,
     private readonly ai: AiCompletionPort = new DisabledAiCompletionAdapter(),
   ) {}
+
+  async getCommunityIntroduction(): Promise<CommunityIntroductionSnapshot> {
+    const row = (await this.database.select().from(communityIntroduction).where(eq(communityIntroduction.id, 1)).limit(1))[0];
+    return row ? introductionFromRow(row) : { revision: 0, updatedAt: null, profile: createDefaultCommunityIntroduction() };
+  }
+
+  async updateCommunityIntroduction(input: Parameters<OperationsCommandPort["updateCommunityIntroduction"]>[0]) {
+    const profile = validateCommunityIntroduction(input.profile);
+    return withTransaction(this.database, async (transaction) => {
+      const actor = await requireTransactionActor(transaction, input.actor, "ADMIN");
+      const scope = "operations.community-introduction.update";
+      const replay = await readReceipt<{ introduction: CommunityIntroductionSnapshot }>(transaction, actor.id, scope, input.metadata);
+      if (replay) return replay;
+      // Serialize the absent-row case as well as later updates; different admins use different receipt locks.
+      await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended('operations.community-introduction.singleton', 0))`);
+      const row = (await transaction.select().from(communityIntroduction).where(eq(communityIntroduction.id, 1)).for("update").limit(1))[0];
+      const current = row ? introductionFromRow(row) : { revision: 0, updatedAt: null, profile: createDefaultCommunityIntroduction() };
+      if (current.revision !== input.metadata.expectedRevision) throw new OperationsError("STALE_COMMUNITY_INTRODUCTION_REVISION");
+      const now = new Date();
+      const next: CommunityIntroductionSnapshot = { revision: current.revision + 1, updatedAt: now.toISOString(), profile };
+      const values = { ...profile, revision: next.revision, updatedByUserAccountId: actor.id, updatedAt: now };
+      if (row) await transaction.update(communityIntroduction).set(values).where(eq(communityIntroduction.id, 1));
+      else await transaction.insert(communityIntroduction).values({ id: 1, ...values, createdAt: now });
+      const body = { introduction: next };
+      await writeReceipt(transaction, { actorId: actor.id, scope, metadata: input.metadata, status: 200, body, revision: next.revision, now });
+      await writeAuditAndOutbox(transaction, { actorId: actor.id, requestId: input.metadata.requestId,
+        action: "COMMUNITY_INTRODUCTION_UPDATED", targetType: "COMMUNITY_INTRODUCTION", targetId: "GLOBAL",
+        revision: next.revision, before: { revision: current.revision, published: current.profile.published },
+        after: { revision: next.revision, published: profile.published }, now });
+      return { status: 200, body, revision: next.revision, replayed: false };
+    });
+  }
 
   async getSiteSettings() {
     const row = (await this.database.select().from(siteSettings).where(eq(siteSettings.id, 1)).limit(1))[0];

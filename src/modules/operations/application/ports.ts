@@ -2,6 +2,7 @@ import type { AuthRole, AuthSessionAccountStatus } from "@/modules/auth/domain/a
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
 import type { SiteSettings, SiteSettingsPatch } from "../domain/site-settings";
+import type { CommunityIntroduction, CommunityIntroductionSnapshot } from "../domain/community-introduction";
 import type { OperationalHealthSnapshot } from "./operational-health";
 
 export type OperationsActor = Readonly<{
@@ -88,6 +89,7 @@ export type AiRequestResultBody = Readonly<{
 }>;
 
 export interface OperationsQueryPort {
+  getCommunityIntroduction(): Promise<CommunityIntroductionSnapshot>;
   getSiteSettings(): Promise<SiteSettings>;
   getDashboard(): Promise<PublicOperationsDashboardDto>;
   getOperationalHealth(): Promise<OperationalHealthSnapshot>;
@@ -98,6 +100,11 @@ export interface OperationsQueryPort {
 }
 
 export interface OperationsCommandPort {
+  updateCommunityIntroduction(input: Readonly<{
+    actor: OperationsActor;
+    metadata: OperationsCommandMetadata;
+    profile: CommunityIntroduction;
+  }>): Promise<OperationsCommandResult<{ introduction: CommunityIntroductionSnapshot }>>;
   updateSettings(input: Readonly<{
     actor: OperationsActor;
     metadata: OperationsCommandMetadata;

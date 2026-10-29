@@ -1,0 +1,72 @@
+{
+  "localOnly": true,
+  "brand": "nexus",
+  "passed": true,
+  "testedAt": "2026-10-29T10:43:32.679Z",
+  "checks": [
+    {
+      "name": "anonymous admin GET rejected with 401",
+      "passed": true
+    },
+    {
+      "name": "USER account session cannot authorize separate admin session (401)",
+      "passed": true
+    },
+    {
+      "name": "ADMIN GET empty default and revision ETag",
+      "passed": true
+    },
+    {
+      "name": "default introduction unpublished",
+      "passed": true
+    },
+    {
+      "name": "PUT missing Origin rejected",
+      "passed": true
+    },
+    {
+      "name": "PUT foreign Origin rejected",
+      "passed": true
+    },
+    {
+      "name": "unsafe URL rejected",
+      "passed": true
+    },
+    {
+      "name": "ADMIN publishes via real CAS mutation",
+      "passed": true
+    },
+    {
+      "name": "identical retry replays without increment",
+      "passed": true
+    },
+    {
+      "name": "same idempotency key with changed body rejected",
+      "passed": true
+    },
+    {
+      "name": "stale revision rejected",
+      "passed": true
+    },
+    {
+      "name": "public DTO exact allowlist and canonical origin; no private identity/revision",
+      "passed": true
+    },
+    {
+      "name": "public unexpected query rejected",
+      "passed": true
+    },
+    {
+      "name": "unpublish removes public DTO while retaining admin content",
+      "passed": true
+    },
+    {
+      "name": "legacy site settings unchanged after introduction mutations",
+      "passed": true
+    },
+    {
+      "name": "real NEXUS admin editor SSR renders saved synthetic profile",
+      "passed": true
+    }
+  ]
+}

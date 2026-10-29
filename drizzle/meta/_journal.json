@@ -365,6 +365,13 @@
       "when": 1793209938012,
       "tag": "0051_community-site-provisioning",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1793270136390,
+      "tag": "0052_community-introduction",
+      "breakpoints": true
     }
   ]
 }

@@ -30,7 +30,7 @@ const HUB_API_METHODS: Readonly<Record<string, readonly string[]>> = {
 };
 const HUB_METADATA = new Set(["/robots.txt", "/sitemap.xml", "/manifest.webmanifest"]);
 const UUID_SEGMENT = "[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
-const HUB_DETAIL_PAGE = new RegExp(`^/(?:sites|admin/community-sites|admin/users)/${UUID_SEGMENT}$`, "u");
+const HUB_DETAIL_PAGE = new RegExp(`^/(?:sites|community-network|admin/community-sites|admin/users)/${UUID_SEGMENT}$`, "u");
 const HUB_SITE_API = new RegExp(`^/api/(admin/)?community-sites/${UUID_SEGMENT}$`, "u");
 const HUB_USER_API = new RegExp(`^/api/admin/users/${UUID_SEGMENT}(?:/(approve|reject|suspend|reset-pending|restore|role|password-reset|delete|details))?$`, "u");
 const HUB_SUPPORT_DETAIL = new RegExp(`^/admin/operation-forms/suggestions/${UUID_SEGMENT}$`, "u");

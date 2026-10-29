@@ -49,7 +49,7 @@ export default function SettingsForm({ initial, managed = false }: { initial: Si
       <fieldset disabled={state === "saving"} className={styles.form} style={{ border: 0, padding: 0, minWidth: 0 }}>
       <legend className="sr-only">사이트 설정</legend>
       {!managed ? <><label className={styles.field}><span>브랜드 이름</span><input value={settings.brandName} maxLength={80} onChange={(event) => setSettings({ ...settings, brandName: event.target.value })} /></label>
-      <label className={styles.field}><span>소개 문구</span><input value={settings.tagline} maxLength={160} onChange={(event) => setSettings({ ...settings, tagline: event.target.value })} /></label>
+      <label className={styles.field}><span>사이트 기본 소개 문구</span><input value={settings.tagline} maxLength={160} onChange={(event) => setSettings({ ...settings, tagline: event.target.value })} /></label>
       </> : null}
       <label className={styles.field}><span>지원 URL (HTTPS)</span><input type="url" value={settings.supportUrl ?? ""} onChange={(event) => setSettings({ ...settings, supportUrl: event.target.value || null })} /></label>
       {!managed ? <><div className={styles.checks} aria-label="기능 스위치">

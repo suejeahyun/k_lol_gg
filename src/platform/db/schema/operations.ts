@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
   index,
   integer,
@@ -52,6 +53,31 @@ export const siteSettings = operationsSchema.table(
     check("site_settings_revision_nonnegative", sql`${table.revision} >= 0`),
     check("site_settings_ai_rate_range", sql`${table.aiRequestsPerHour} BETWEEN 1 AND 1000`),
     check("site_settings_ai_cost_range", sql`${table.aiDailyCostLimitMicros} BETWEEN 0 AND 1000000000`),
+  ],
+);
+
+// Site-owned public introduction is independent of HUB provisioning configuration.
+export const communityIntroduction = operationsSchema.table(
+  "community_introduction",
+  {
+    id: integer("id").primaryKey(),
+    revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+    published: boolean("published").default(false).notNull(),
+    summary: varchar("summary", { length: 160 }).default("").notNull(),
+    introduction: varchar("introduction", { length: 3_000 }).default("").notNull(),
+    activities: varchar("activities", { length: 600 }).default("").notNull(),
+    activityHours: varchar("activity_hours", { length: 160 }).default("").notNull(),
+    joiningInfo: varchar("joining_info", { length: 1_000 }).default("").notNull(),
+    contactUrl: varchar("contact_url", { length: 500 }),
+    bannerUrl: varchar("banner_url", { length: 500 }),
+    updatedByUserAccountId: uuid("updated_by_user_account_id").references(() => userAccounts.id, { onDelete: "set null" }),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    check("community_introduction_singleton", sql`${table.id} = 1`),
+    check("community_introduction_revision_nonnegative", sql`${table.revision} >= 0`),
+    check("community_introduction_published_content", sql`NOT ${table.published} OR (length(trim(${table.summary})) > 0 AND length(trim(${table.introduction})) > 0)`),
   ],
 );
 

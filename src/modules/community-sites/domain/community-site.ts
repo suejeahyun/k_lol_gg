@@ -4,7 +4,7 @@ export const COMMUNITY_SITE_STATUSES = ["SUBMITTED", "CHANGES_REQUESTED", "REJEC
 export type CommunitySiteStatus = typeof COMMUNITY_SITE_STATUSES[number];
 export type CommunitySiteJobKind = "PROVISION" | "PUBLISH_CONFIGURATION" | "ACTIVATE_SITE";
 export type CommunitySiteJobStatus = "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";
-export type CommunityPublicSite = Readonly<{ id: string; name: string; description: string; origin: string }>;
+export type CommunityPublicSite = Readonly<{ id: string; slug: string; name: string; description: string; origin: string }>;
 export type CommunitySiteJobSummary = Readonly<{
   id: string; kind: CommunitySiteJobKind; status: CommunitySiteJobStatus; checkpoint: string;
   attemptCount: number; errorCode: string | null; createdAt: string; updatedAt: string;

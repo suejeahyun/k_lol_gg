@@ -43,7 +43,7 @@ const icons = {
 
 function WorkspaceLinks({ closeMenu }: { closeMenu?: () => void }) {
   const pathname = usePathname();
-  return ADMIN_WORKSPACES.map((workspace) => {
+  return <>{ADMIN_WORKSPACES.map((workspace) => {
     const Icon = icons[workspace.icon];
     const active = isAdminWorkspaceActive(pathname, workspace.href);
     return (
@@ -57,7 +57,9 @@ function WorkspaceLinks({ closeMenu }: { closeMenu?: () => void }) {
         <span>{workspace.label}</span>
       </Link>
     );
-  });
+  })}<Link href="/admin/community-introduction" aria-current={pathname === "/admin/community-introduction" ? "page" : undefined} onClick={closeMenu}>
+    <BookOpenCheck aria-hidden="true" /><span>커뮤니티 소개</span>
+  </Link></>;
 }
 
 export function AdminWorkspaceNavigation() {
@@ -72,6 +74,7 @@ export function AdminBreadcrumb() {
   const operations = isAdminWorkspaceActive(pathname, "/admin/discipline");
   return <nav className={styles.breadcrumb} aria-label="관리자 위치" data-workspace={operations ? "operations" : undefined}>
     <Link href="/admin">관리자</Link>
+    {pathname === "/admin/community-introduction" ? <><span aria-hidden="true">/</span><span aria-current="page">커뮤니티 소개</span></> : null}
     {operations ? <>
       <span aria-hidden="true">/</span>
       <Link href="/admin/discipline">운영·감사</Link>
@@ -106,7 +109,8 @@ export function MobileAdminNavigation({ roleLabel }: { roleLabel: string }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const current = ADMIN_WORKSPACES.find((workspace) => isAdminWorkspaceActive(pathname, workspace.href));
-  const workHref = current && current.id !== "home" ? current.href : "/admin/players";
+  const introduction = pathname === "/admin/community-introduction";
+  const workHref = introduction ? "/admin/community-introduction" : current && current.id !== "home" ? current.href : "/admin/players";
 
   return (
     <>
@@ -122,7 +126,7 @@ export function MobileAdminNavigation({ roleLabel }: { roleLabel: string }) {
       ) : null}
       <nav className={styles.mobileBottom} aria-label="모바일 관리자 바로가기">
         <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined}><LayoutDashboard aria-hidden="true" /><span>홈</span></Link>
-        <Link href={workHref} aria-current={current && current.id !== "home" ? "page" : undefined}><Scale aria-hidden="true" /><span>{current?.id === "operations" ? "운영" : "작업"}</span></Link>
+        <Link href={workHref} aria-current={introduction || current && current.id !== "home" ? "page" : undefined}><Scale aria-hidden="true" /><span>{introduction ? "소개" : current?.id === "operations" ? "운영" : "작업"}</span></Link>
         <Link href="/admin/search" aria-current={pathname === "/admin/search" ? "page" : undefined}><Search aria-hidden="true" /><span>검색</span></Link>
         <button type="button" aria-controls="admin-mobile-menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Menu aria-hidden="true" /><span>메뉴</span></button>
       </nav>

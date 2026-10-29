@@ -75,7 +75,7 @@ export function operationsErrorResponse(error: unknown, traceId?: string) {
   if (error instanceof OperationsError) {
     if (error.code === "SESSION_STALE") return problemResponse(problems.unauthenticated, { traceId });
     if (error.code === "IDEMPOTENCY_MISMATCH") return problemResponse(problems.conflict, { traceId });
-    if (error.code === "STALE_SITE_SETTINGS_REVISION") return problemResponse(problems.precondition, { traceId });
+    if (error.code === "STALE_SITE_SETTINGS_REVISION" || error.code === "STALE_COMMUNITY_INTRODUCTION_REVISION") return problemResponse(problems.precondition, { traceId });
     if (error.code.startsWith("INVALID_")) return problemResponse(problems.invalid, { traceId });
     if (error.code === "JOB_NONCE_REPLAYED") return problemResponse(problems.job, { traceId });
   }

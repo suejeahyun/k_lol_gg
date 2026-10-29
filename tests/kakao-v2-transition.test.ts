@@ -99,10 +99,12 @@ test("Kakao HTTP verification reports allowlisted internal reasons without weake
 });
 
 test("V2 installation fingerprint is inside the HMAC material", { concurrency: false }, async () => {
-  const prior = process.env.KAKAO_WEBHOOK_SECRET_CURRENT; const priorBot = process.env.KAKAO_WEBHOOK_BOT_SENDER_ID; const now = new Date("2026-09-09T07:40:00.000Z");
-  process.env.KAKAO_WEBHOOK_SECRET_CURRENT = "0123456789abcdef0123456789abcdef";
-  process.env.KAKAO_WEBHOOK_BOT_SENDER_ID = `sender-${"e".repeat(32)}`;
+  const previous = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
+  const now = new Date("2026-09-09T07:40:00.000Z");
   try {
+    for (const key of ENV_KEYS) delete process.env[key];
+    process.env.KAKAO_WEBHOOK_SECRET_CURRENT = "0123456789abcdef0123456789abcdef";
+    process.env.KAKAO_WEBHOOK_BOT_SENDER_ID = `sender-${"e".repeat(32)}`;
     const body = "{}"; const timestamp = String(Math.floor(now.getTime() / 1_000)); const nonce = "nonce-installation-000001";
     const installationId = `install-${"a".repeat(32)}`; const roomId = `room-${"b".repeat(32)}`; const senderId = `sender-${"c".repeat(32)}`;
     const digest = kakaoWebhookBodyDigest(new TextEncoder().encode(body));
@@ -111,7 +113,13 @@ test("V2 installation fingerprint is inside the HMAC material", { concurrency: f
     const request = (install: string) => new Request("https://example.test/hook", { method: "POST", headers: { "x-klol-timestamp": timestamp, "x-klol-nonce": nonce, "x-klol-installation": install, "x-klol-room": roomId, "x-klol-sender": senderId, "x-klol-bot-self": "0", "x-klol-signature": signature }, body });
     const accepted = await verifyKakaoInstallationHttpRequest(request(installationId), now); assert.equal(accepted.ok, true); if (accepted.ok) assert.equal(accepted.value.intent.installationId, installationId);
     assert.deepEqual(await verifyKakaoInstallationHttpRequest(request(`install-${"d".repeat(32)}`), now), { ok: false, code: "INVALID_SIGNATURE" });
-  } finally { if (prior === undefined) delete process.env.KAKAO_WEBHOOK_SECRET_CURRENT; else process.env.KAKAO_WEBHOOK_SECRET_CURRENT = prior; if (priorBot === undefined) delete process.env.KAKAO_WEBHOOK_BOT_SENDER_ID; else process.env.KAKAO_WEBHOOK_BOT_SENDER_ID = priorBot; }
+  } finally {
+    for (const key of ENV_KEYS) {
+      const value = previous[key];
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 });
 
 test("V3 binds installation key id, delivery id, and bot version inside the HMAC material", { concurrency: false }, async () => {

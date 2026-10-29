@@ -482,6 +482,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/event-competition.contract.test.ts",
     "tests/database/destruction-competition.contract.test.ts",
     "tests/database/operations.contract.test.ts",
+    "tests/database/community-introduction.contract.test.ts",
     "tests/database/storage-probe.contract.test.ts",
     "tests/database/operational-health.contract.test.ts",
     "tests/database/riot.contract.test.ts",
@@ -505,7 +506,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     media: ["tests/database/media.contract.test.ts"],
     events: ["tests/database/event-competition.contract.test.ts"],
     destruction: ["tests/database/destruction-competition.contract.test.ts"],
-    operations: ["tests/database/operations.contract.test.ts", "tests/database/storage-probe.contract.test.ts", "tests/database/operational-health.contract.test.ts"],
+    operations: ["tests/database/data-platform.contract.test.ts", "tests/database/operations.contract.test.ts", "tests/database/community-introduction.contract.test.ts", "tests/database/storage-probe.contract.test.ts", "tests/database/operational-health.contract.test.ts"],
     riot: ["tests/database/riot.contract.test.ts", "tests/database/riot-production.contract.test.ts"],
     discipline: ["tests/database/discipline.contract.test.ts"],
     champions: ["tests/database/champion-catalog.contract.test.ts"],
@@ -1269,7 +1270,7 @@ export async function runDataContracts(): Promise<void> {
       testMode: process.env.V2_DB_TEST_MODE,
     });
     if (contractScope !== "all") {
-      if (contractScope === "community-network" || contractScope === "community-sites") await runFreshThenUpgradeContractTests(connectionString);
+      if (["community-network", "community-sites", "operations"].includes(contractScope)) await runFreshThenUpgradeContractTests(connectionString);
       else await runContractTests(connectionString);
       if (contractScope === "matches") await runMatchPublicHttpVerification(connectionString);
       if (contractScope === "accounts") await runAccountHttpVerification(connectionString);
@@ -1296,7 +1297,7 @@ export async function runDataContracts(): Promise<void> {
     cluster = await startEphemeralCluster();
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
     if (contractScope !== "all") {
-      if (contractScope === "community-network" || contractScope === "community-sites") await runFreshThenUpgradeContractTests(cluster.connectionString);
+      if (["community-network", "community-sites", "operations"].includes(contractScope)) await runFreshThenUpgradeContractTests(cluster.connectionString);
       else await runContractTests(cluster.connectionString);
       if (contractScope === "matches") await runMatchPublicHttpVerification(cluster.connectionString);
       if (contractScope === "accounts") await runAccountHttpVerification(cluster.connectionString);

@@ -67,3 +67,12 @@ test("hub allows exact site and recovery actions without opening arbitrary admin
   for (const path of [`/api/community-sites/${id}`, `/api/admin/community-sites/${id}`, `/api/admin/users/${id}/password-reset`]) assert.equal(resolveHubRoute(path, "PATCH").kind, "allow");
   for (const path of ["/sites/not-an-id", `/api/community-sites/${id}/unknown`, `/api/admin/users/${id}/unknown`, `/api/auth/community-sso/callback`]) assert.equal(resolveHubRoute(path, "GET").kind, "not-found");
 });
+
+test("hub introduction detail is read-only and never exposes a child introduction editor or API", () => {
+  const id = "00000000-0000-4000-8000-000000000001";
+  for (const method of ["GET", "HEAD"]) assert.equal(resolveHubRoute(`/community-network/${id}`, method).kind, "allow");
+  for (const method of ["POST", "PUT", "PATCH", "DELETE"]) assert.equal(resolveHubRoute(`/community-network/${id}`, method).kind, "method-not-allowed");
+  for (const path of ["/community-network/not-an-id", `/community-network/${id}/edit`, "/admin/community-introduction", "/api/admin/community-introduction", "/api/community-introduction"]) {
+    assert.equal(resolveHubRoute(path, "GET").kind, "not-found", path);
+  }
+});
