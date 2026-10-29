@@ -69,7 +69,15 @@ class VercelNeonProvisioningProvider implements CommunitySiteProvisioningProvide
     if (allowMissing && response.status === 404) return null;
     if (!response.ok) throw new CommunitySiteProvisioningError(response.status === 401 || response.status === 403 ? "PROVIDER_AUTH_FAILED" : response.status === 409 ? "RESOURCE_CONFLICT" : response.status === 429 || response.status === 402 ? "PROVIDER_LIMIT" : "PROVIDER_UNAVAILABLE");
     if (response.status === 204) return {};
-    try { return object(await response.json()); } catch { throw new CommunitySiteProvisioningError("INVALID_PROVIDER_RESULT"); }
+    try {
+      // This connection endpoint acknowledges creation with an empty 201. The caller must still
+      // verify the owned store's production connection; other endpoints require their JSON result.
+      if (provider === "vercel" && method === "POST" && response.status === 201 && /^\/v1\/storage\/stores\/store_[A-Za-z0-9]+\/connections$/u.test(path)) {
+        const body = await response.text();
+        return body.length === 0 ? {} : object(JSON.parse(body));
+      }
+      return object(await response.json());
+    } catch { throw new CommunitySiteProvisioningError("INVALID_PROVIDER_RESULT"); }
   }
   private neonProjectName(siteId: string) { return `GG-${siteId}-${this.derive(siteId, "neon-ownership").slice(0, 22)}`; }
   private async childConnection(siteId: string, resources: Readonly<Record<string, string>>) {

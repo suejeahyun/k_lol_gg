@@ -50,6 +50,7 @@ function harness() {
   let publicationState = "AWAITING_OWNER";
   let blobConnected = true;
   let blobSensitive = true;
+  let connectionAcknowledgementStatus = 201;
   let initialize: ((pool: FixturePool) => Promise<unknown>) | undefined;
   let override: ((call: Call) => Response | Promise<Response> | undefined) | undefined;
   const markers = [
@@ -81,7 +82,7 @@ function harness() {
     if (p === "/v1/storage/stores") return Response.json({ stores: [blobStore] });
     if (p === "/v1/storage/stores/blob") return Response.json({ store: blobStore });
     if (p === `/v1/storage/stores/${blobStore.id}`) return Response.json({ store: { ...blobStore, projectsMetadata: blobConnected ? [{ projectId: vercelProject.id, environments: ["production"] }] : [] } });
-    if (p === `/v1/storage/stores/${blobStore.id}/connections`) { blobConnected = true; return new Response(null, { status: 204 }); }
+    if (p === `/v1/storage/stores/${blobStore.id}/connections`) { blobConnected = true; return new Response(null, { status: connectionAcknowledgementStatus }); }
     if (p === `/v9/projects/${vercelProject.id}/env/env_blob` && call.method === "PATCH") { blobSensitive = true; return Response.json(blobToken()); }
     if (p.endsWith("/env")) return Response.json(call.method === "POST" ? { created: call.body, failed: [] } : { envs: [...markers, ...(blobConnected ? [blobToken()] : [])] });
     if (p === `/v9/projects/${vercelProject.id}/domains/${new URL(origin).hostname}` || p === `/v10/projects/${vercelProject.id}/domains`) {
@@ -134,6 +135,7 @@ function harness() {
   const factory = exports.createVercelNeonProvisioningProvider as (db: unknown, env: NodeJS.ProcessEnv, request: unknown) => CommunitySiteProvisioningProvider;
   return { provider: factory(database, environment, request), calls, dbCalls, timeouts, metadataBackoffs, markers, blobStore,
     freshBlob() { blobConnected = false; blobSensitive = false; },
+    connectionAcknowledgement(status: number) { connectionAcknowledgementStatus = status; },
     alreadyActive() { publicationState = "ACTIVE"; },
     override(value: typeof override) { override = value; }, hangBootstrap() { initialize = async () => new Promise(() => undefined); },
     async expireDatabase() { for (let i = 0; i < 30 && !timers.size; i++) await Promise.resolve(); assert.equal(timers.size, 1); for (const callback of timers.values()) callback(); },
@@ -230,6 +232,31 @@ test("private Blob creation connects production only and protects its token with
   const protect = h.calls.find((call) => call.method === "PATCH")!;
   assert.deepEqual(protect.body, { type: "sensitive" });
   assert.equal(h.calls.some((call) => call.url.pathname.startsWith("/v1/projects/") && call.url.pathname.includes("/env/")), false, "never request decrypted credentials");
+});
+
+test("Blob connection also accepts an empty 204 while requiring the owned production readback", async () => {
+  const h = harness(); h.freshBlob(); h.connectionAcknowledgement(204);
+  const result = await h.provider.step(input("PROJECT_CREATED"));
+  assert.equal(result.checkpoint, "ENVIRONMENT_CONFIGURED");
+  const connection = h.calls.findIndex((call) => call.url.pathname.endsWith("/connections") && call.method === "POST");
+  assert.ok(connection >= 0);
+  assert.ok(h.calls.slice(connection + 1).some((call) => call.url.pathname === `/v1/storage/stores/${h.blobStore.id}` && call.method === "GET"));
+});
+
+test("empty 201 responses remain invalid outside the exact Blob connection acknowledgement", async () => {
+  for (const endpoint of ["store-create", "bulk-environment"]) {
+    const h = harness(); h.freshBlob();
+    h.override((call) => {
+      if (endpoint === "store-create" && call.url.pathname === "/v1/storage/stores") return Response.json({ stores: [] });
+      if (endpoint === "store-create" && call.url.pathname === "/v1/storage/stores/blob" && call.method === "POST") return new Response(null, { status: 201 });
+      if (endpoint === "bulk-environment" && call.url.pathname.endsWith("/env") && call.method === "POST") return new Response(null, { status: 201 });
+      return undefined;
+    });
+    await assert.rejects(h.provider.step(input("PROJECT_CREATED")), /^Error: INVALID_PROVIDER_RESULT$/);
+    assert.equal(h.calls.some((call) => call.url.pathname.includes("deployments")), false);
+  }
+  const unexpectedStatus = harness(); unexpectedStatus.freshBlob(); unexpectedStatus.connectionAcknowledgement(200);
+  await assert.rejects(unexpectedStatus.provider.step(input("PROJECT_CREATED")), /^Error: INVALID_PROVIDER_RESULT$/);
 });
 
 test("successful Blob writes tolerate delayed confirmed metadata with bounded GETs and no duplicate mutations", async () => {
