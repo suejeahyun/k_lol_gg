@@ -1,0 +1,51 @@
+{
+  "command": "npm run check",
+  "exitCode": 0,
+  "sourceSha": "e262e231466ee814d2b10d29c1afdca946487bf2",
+  "neutralEnvironment": true,
+  "productionDatabaseAccess": false,
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 89
+  },
+  "typecheck": "PASS",
+  "erd": {
+    "tables": 126,
+    "foreignKeys": 190,
+    "status": "PASS"
+  },
+  "contracts": {
+    "passed": 802,
+    "failed": 0
+  },
+  "unit": {
+    "passed": 1322,
+    "failed": 0,
+    "skipped": 1
+  },
+  "homeGuideArt": {
+    "validated": 68,
+    "duplicates": 0
+  },
+  "productionBuild": "PASS",
+  "staticPagesGenerated": 99,
+  "privateLogSha256": "5e638d9d2d80e22539e8b40d9100d4eadf268d9b8a46d57ed8c64823e6d7ba41",
+  "currentTreeSecretScan": "PASS",
+  "fullHistorySecretScan": "NOT_RUN",
+  "databaseContracts": 18,
+  "localHttpChecks": 16,
+  "browser": {
+    "adminDesktopVisual": true,
+    "adminMobileVisual": true,
+    "hubProductionDetailNavigation": true,
+    "hubDesktopVisual": true,
+    "hubMobileVisual": true,
+    "requestedMobileWidth": 390,
+    "measuredDocumentWidth": 375,
+    "measuredScrollWidth": 375,
+    "temporaryViewportReset": true,
+    "adminBrowserSaveClick": "NOT_VERIFIED_INPUT_AUTOMATION_UNAVAILABLE",
+    "actualHttpSavePublishUnpublish": "PASS",
+    "localSyntheticDatabaseCleaned": true
+  }
+}

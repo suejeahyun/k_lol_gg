@@ -1,5 +1,7 @@
 # K-LOL.GG V2 상태
 
+**2026-10-29 커뮤니티 소개 1.0.0 — 세 사이트 운영 반영**: GG HUB의 소개 보기와 각 사이트 ADMIN/SUPER_ADMIN의 커뮤니티 소개 편집을 추가했습니다. 공개한 소개만 읽고 원본은 각 사이트 DB에 저장합니다. 기본 비공개·미리보기·동시 수정 보호를 제공하며 새 사이트 개설 엔진도 갱신했습니다. 기존 데이터 보존·세 DB 백업 복원·전체 check·DB18·실제 HTTP16·운영 HTTP 확인 완료. source `e262e231466ee814d2b10d29c1afdca946487bf2`, migration0052. [운영 안내](operations/community-introduction.md), [각 배포 ID·검증·복구](qa-evidence/community-introduction-v1.0.0-2026-10-29/README.md). 이전 기록은 해당 시점 상태입니다.
+
 ## 2026-10-29 GG HUB 개설 스튜디오 0.1.1 — 자동 개설 운영 활성화
 
 사용자가 승인한 전용 Vercel 토큰을 production 민감 환경 변수에 연결했다. 만료일은 2027-01-27이며 새 구독·요금제 변경 없이 기존 요금제의 사용량 비용만 허용했다. HUB source `ce31ea2c68192093700a79bda5d0add3cb3e77c0`, deployment `dpl_A1SajgHGJ7GVEr6aeCmF7CAscKEk`의 운영 READY·source·alias·HTTP 28조건을 확인했다. 새 사이트 엔진은 `7d669ec5bc2af56ab23c793f9a530bf5f6fbfc82`에 고정했다.

@@ -1,0 +1,18 @@
+{
+  "verifiedAt": "2026-10-29T10:58:09.260Z",
+  "service": "nexus",
+  "mode": "candidate",
+  "origin": "https://nexus-o3pl3pn0a-tjdmswo11-3715s-projects.vercel.app",
+  "deploymentId": "dpl_3zmfMmG3xbdjcAd38dDQGkHESzAM",
+  "projectId": "prj_qozFsYmEO7ZoL0jZAnBNCVc1nF8i",
+  "sourceSha": "e262e231466ee814d2b10d29c1afdca946487bf2",
+  "passed": true,
+  "tests": [
+    "health ready HTTP 200",
+    "correct public brand",
+    "no unpublished introduction exposure",
+    "introduction editor authentication",
+    "editor page protected"
+  ],
+  "productionDataWrites": 0
+}

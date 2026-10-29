@@ -1,0 +1,24 @@
+{
+  "verifiedAt": "2026-10-29T11:00:24.173Z",
+  "service": "nexus",
+  "mode": "production",
+  "origin": "https://nexus-gg-kr.vercel.app",
+  "deploymentId": "dpl_3zmfMmG3xbdjcAd38dDQGkHESzAM",
+  "projectId": "prj_qozFsYmEO7ZoL0jZAnBNCVc1nF8i",
+  "sourceSha": "e262e231466ee814d2b10d29c1afdca946487bf2",
+  "passed": true,
+  "tests": [
+    "health ready HTTP 200",
+    "correct public brand",
+    "no unpublished introduction exposure",
+    "unpublished response comes from the introduction API",
+    "existing page /players",
+    "existing page /recruits",
+    "existing page /rankings/mmr",
+    "existing page /admin/login",
+    "existing settings authentication",
+    "introduction editor authentication",
+    "editor page protected"
+  ],
+  "productionDataWrites": 0
+}

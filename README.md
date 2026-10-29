@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-10-29 커뮤니티 소개 1.0.0 — 세 사이트 운영 반영**: GG HUB의 소개 보기와 각 사이트 ADMIN/SUPER_ADMIN의 커뮤니티 소개 편집을 추가했습니다. 공개한 소개만 읽고 원본은 각 사이트 DB에 저장합니다. 기본 비공개·미리보기·동시 수정 보호를 제공하며 새 사이트 개설 엔진도 갱신했습니다. 기존 데이터 보존·세 DB 백업 복원·전체 check·DB18·실제 HTTP16·운영 HTTP 확인 완료. [설정 안내](docs/operations/community-introduction.md), [검증·배포](docs/qa-evidence/community-introduction-v1.0.0-2026-10-29/README.md). 아래는 이전 시점의 기록입니다.
+
 **2026-10-29 GG HUB 개설 스튜디오 0.1.1 — 자동 개설 운영 활성화**: [GG HUB](https://gg-community-hub.vercel.app)에 전용 Vercel 연결을 적용하고 승인된 신청의 자동 개설 예약 실행을 켰습니다. 실제 운영 worker가 독립 DB·사이트를 생성해 소유자 공개 확인 대기까지 완료했습니다. Blob 연결의 빈 201 응답과 사용자 지정 이름의 특수문자 오류를 수정했습니다. 전체 check 계약 801·단위 1,286(+기존 SKIP 1), 후보/운영 각 28조건 통과. 검증용 자원 정리 완료, 기존 K-LOL/NEXUS 유지. 새 구독·요금제 변경 없이 사용량 비용만 허용한 범위입니다. [검증·범위](docs/qa-evidence/community-site-provisioning-enabled-2026-10-29/README.md), [변경 안내](docs/patch-notes/community-site-studio-v0.1.1.md). 아래는 이전 시점의 기록입니다.
 
 **2026-10-29 GG HUB 개설 스튜디오 0.1.0 — 설정·신청 운영 반영, 자동 개설 연결 대기**: [전체 기획](docs/product/gg-hub-platform-plan-v1.md)의 첫 단계로 중앙 가입, 개설 신청·심사, 세 테마, 기능 켜기/중지, 초안·게시와 독립 사이트 개설을 구현했습니다. 기능을 꺼도 기록은 보존하고 새 기능은 기존 사이트에서 자동으로 켜지지 않습니다. source `dd71d851`, 운영 HTTP 28·로컬 HTTP 64·브라우저 63·DB 28·서로 다른 HTTPS 사이트의 SSO 8단계를 확인했습니다. HUB migration 0051 적용·기존 자료 보존 확인, 자동 개설의 전용 Vercel 연결은 로그인 대기입니다. [설정 안내](docs/product/gg-hub-site-settings-guide.md), [현재 배포·남은 조건](docs/qa-evidence/community-site-studio-2026-10-29/README.md). 제휴·공유·공동 대회와 동적 폰 설정은 후속 단계입니다.

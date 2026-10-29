@@ -1,0 +1,24 @@
+{
+  "verifiedAt": "2026-10-29T11:03:18.306Z",
+  "service": "klol",
+  "mode": "candidate",
+  "origin": "https://k-lol-8aavyt301-tjdmswo11-3715s-projects.vercel.app",
+  "deploymentId": "dpl_HtzjhJqxoXt2J9NTyZtVAzcqd2QB",
+  "projectId": "prj_yeGD9GzHJk6pZCcIIjJ8grGPgW8q",
+  "sourceSha": "e262e231466ee814d2b10d29c1afdca946487bf2",
+  "passed": true,
+  "tests": [
+    "health ready HTTP 200",
+    "correct public brand",
+    "no unpublished introduction exposure",
+    "unpublished response comes from the introduction API",
+    "existing page /players",
+    "existing page /recruits",
+    "existing page /rankings/mmr",
+    "existing page /admin/login",
+    "existing settings authentication",
+    "introduction editor authentication",
+    "editor page protected"
+  ],
+  "productionDataWrites": 0
+}

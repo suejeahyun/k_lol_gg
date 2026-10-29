@@ -1,0 +1,40 @@
+{
+  "checkedOn": "2026-10-29",
+  "evidenceKind": "sanitized aggregate of observed command output",
+  "rawLogFile": null,
+  "command": "$env:V2_DB_CONTRACT_SCOPE='operations'; npm run test:db",
+  "finalExitCode": 0,
+  "database": {
+    "engine": "PostgreSQL 18",
+    "environment": "isolated loopback disposable test cluster",
+    "productionAccess": false,
+    "clusterStoppedAndDisposableDirectoryRemoved": true
+  },
+  "migrationHead": "0052_community-introduction",
+  "migrationSqlSha256": "d7e5f0a8dd00a2d2aa03b26a963a09591ef6c4c963da5673f4099ec6118de7ce",
+  "nodeTestRunnerReportedPassed": 18,
+  "nodeTestRunnerReportedFailed": 0,
+  "files": [
+    { "file": "tests/database/fresh-install.contract.test.ts", "passed": 1 },
+    { "file": "tests/database/data-platform.contract.test.ts", "passed": 8 },
+    { "file": "tests/database/operations.contract.test.ts", "passed": 1 },
+    { "file": "tests/database/community-introduction.contract.test.ts", "passed": 6 },
+    { "file": "tests/database/storage-probe.contract.test.ts", "passed": 1 },
+    { "file": "tests/database/operational-health.contract.test.ts", "passed": 1 }
+  ],
+  "verifiedIntroductionContracts": [
+    "Missing singleton reads as unpublished revision zero without inserting a row.",
+    "Concurrent first writes by ADMIN and SUPER_ADMIN produce one success and one stale-revision rejection.",
+    "Same-actor replay returns the stored result; changed content with the same key is rejected.",
+    "Different actors using the same key do not share receipts.",
+    "Public projection contains only version, configured origin, allowlisted profile fields and update time.",
+    "Unpublishing immediately withdraws the repository public projection while retaining the draft.",
+    "USER, ACCOUNT-purpose sessions, revoked sessions and suspended actors cannot mutate or replay.",
+    "Exactly three committed changes produce three receipts, audit events and outbox events.",
+    "Audit excludes draft text and existing site_settings rows remain unchanged."
+  ],
+  "notes": [
+    "Counts are the Node test runner totals, including parent tests reported by node:test.",
+    "This report summarizes the final successful tool output; it is not a retained raw terminal log."
+  ]
+}

@@ -2661,6 +2661,26 @@
         "verifiedAt": "2026-10-29T00:50:40.646Z",
         "healthStatus": "ready"
       }
+    },
+    {
+      "featureId": "community-introduction",
+      "version": "1.0.0",
+      "gitTag": "community-introduction-v1.0.0",
+      "commit": "e262e231466ee814d2b10d29c1afdca946487bf2",
+      "releasedAt": "2026-10-29T11:03:52.787Z",
+      "migrationHead": "0052_community-introduction",
+      "qaEvidence": "docs/qa-evidence/community-introduction-v1.0.0-2026-10-29/README.md",
+      "patchNotes": "docs/patch-notes/community-introduction-v1.0.0.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_63MvHbqjy4fM8mwUNQHdNJMmKJ6w",
+        "url": "https://gg-community-7ubc8cqf7-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://gg-community-hub.vercel.app",
+        "verifiedAt": "2026-10-29T10:58:39.326Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

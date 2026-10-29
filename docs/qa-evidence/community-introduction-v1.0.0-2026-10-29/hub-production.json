@@ -1,0 +1,26 @@
+{
+  "verifiedAt": "2026-10-29T10:58:39.326Z",
+  "service": "hub",
+  "mode": "production",
+  "origin": "https://gg-community-hub.vercel.app",
+  "deploymentId": "dpl_63MvHbqjy4fM8mwUNQHdNJMmKJ6w",
+  "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
+  "sourceSha": "e262e231466ee814d2b10d29c1afdca946487bf2",
+  "passed": true,
+  "tests": [
+    "health ready HTTP 200",
+    "correct public brand",
+    "no unpublished introduction exposure",
+    "introduction editor authentication",
+    "editor page protected",
+    "directory loaded",
+    "registered detail links",
+    "detail /community-network/7d31ecd3-d660-497e-951b-bfd90a005ba6",
+    "detail /community-network/47c56e4f-54ca-4090-9731-fdeac4f127c3",
+    "unknown community hidden",
+    "public introduction is read only",
+    "hub child routes remain isolated",
+    "cron retains authentication"
+  ],
+  "productionDataWrites": 0
+}
