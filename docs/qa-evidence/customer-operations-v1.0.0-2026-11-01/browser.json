@@ -1,0 +1,23 @@
+{
+  "testedAt": "2026-10-31T17:58:15.177Z",
+  "syntheticOnly": true,
+  "supportPagination": "PASS",
+  "supportStatusFilter": "PASS",
+  "ownerNextStep": "PASS",
+  "mobileOwnerOverflow": false,
+  "mobileSupportSubmit": "PASS",
+  "receiptFocus": "PASS",
+  "mobileReceiptOverflow": false,
+  "browserInquiryVisibleToAdmin": true,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "screenshots": [
+    "support-inbox.png",
+    "owner-mobile.png",
+    "support-receipt-mobile.png"
+  ],
+  "actualCustomerReplySent": false,
+  "productionDataWrites": 0
+}

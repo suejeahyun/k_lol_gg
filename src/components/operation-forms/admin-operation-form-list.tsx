@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SERVICE_BRAND } from "@/lib/service-brand";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import {
@@ -13,22 +14,25 @@ export { ADMIN_OPERATION_FORM_LABELS as typeLabels } from "@/modules/admin/domai
 export const operationFormStatusLabels = Object.freeze({ PENDING: "대기", IN_REVIEW: "검토 중", COMPLETED: "완료", REJECTED: "반려", CANCELLED: "취소" });
 
 export async function AdminOperationFormList({ selectedType, selectedStatus, selectedPage }: { selectedType?: string; selectedStatus?: string; selectedPage?: string }) {
-  await requirePageRole("ADMIN", selectedType ? `/admin/operation-forms/${selectedType}` : "/admin/operation-forms");
-  const formType = isOperationFormType(selectedType) ? selectedType : undefined;
+  const hubSupport = SERVICE_BRAND.id === "hub";
+  const listPath = hubSupport ? "/admin/operation-forms/suggestions" : "/admin/operation-forms";
+  await requirePageRole("ADMIN", hubSupport ? listPath : selectedType ? `/admin/operation-forms/${selectedType}` : listPath);
+  const formType = hubSupport ? "suggestions" : isOperationFormType(selectedType) ? selectedType : undefined;
   const status = isOperationFormStatus(selectedStatus) ? selectedStatus : undefined;
   const page = selectedPage && /^[1-9]\d*$/u.test(selectedPage) && Number.isSafeInteger(Number(selectedPage)) ? Number(selectedPage) : 1;
   const result = await loadRuntimeOperationForms((service) => service.list({ formType, status, page }));
   const pageHref = (targetPage: number) => {
     const params = new URLSearchParams();
-    if (formType) params.set("type", formType);
+    if (formType && !hubSupport) params.set("type", formType);
     if (status) params.set("status", status);
     if (targetPage > 1) params.set("page", String(targetPage));
-    return `/admin/operation-forms${params.size ? `?${params}` : ""}`;
+    return `${listPath}${params.size ? `?${params}` : ""}`;
   };
   return <main className={styles.page}>
-    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · 운영 신청서</span><h1>{formType ? typeLabels[formType] : "운영 신청서"}</h1></div><Link className={styles.link} href="/admin/discipline">운영·감사</Link></header>
-    <form className={styles.filters} method="get" action="/admin/operation-forms">
-      <label>유형<select name="type" defaultValue={formType ?? ""}><option value="">전체 유형</option>{OPERATION_FORM_TYPES.map((type) => <option key={type} value={type}>{typeLabels[type]}{result.state === "ready" ? ` (${result.data.counts[type]}건)` : ""}</option>)}</select></label>
+    <header className={styles.header}><div><span className={styles.eyebrow}>관리자 · {hubSupport ? "고객지원" : "운영 신청서"}</span><h1>{hubSupport ? "고객 문의" : formType ? typeLabels[formType] : "운영 신청서"}</h1></div><Link className={styles.link} href={hubSupport ? "/admin/community-sites" : "/admin/discipline"}>{hubSupport ? "사이트 개설 심사" : "운영·감사"}</Link></header>
+    {hubSupport ? <p className={styles.summary}>문의 내용을 확인하고 입력된 연락 방법으로 답변해 주세요. 상태와 관리 메모 저장은 고객에게 답변을 발송하지 않습니다.</p> : null}
+    <form className={styles.filters} method="get" action={listPath}>
+      {!hubSupport ? <label>유형<select name="type" defaultValue={formType ?? ""}><option value="">전체 유형</option>{OPERATION_FORM_TYPES.map((type) => <option key={type} value={type}>{typeLabels[type]}{result.state === "ready" ? ` (${result.data.counts[type]}건)` : ""}</option>)}</select></label> : null}
       <label>상태<select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{OPERATION_FORM_STATUSES.map((item) => <option key={item} value={item}>{operationFormStatusLabels[item]}</option>)}</select></label><button type="submit">필터 적용</button>
     </form>
     {result.state === "ready" ? <p className={styles.summary}>{formType ? `${typeLabels[formType]} 전체 ${result.data.counts[formType]}건` : `전체 신청 ${Object.values(result.data.counts).reduce((sum, count) => sum + count, 0)}건`} · 현재 조건 {result.data.total}건 중 {result.data.items.length}건 표시</p> : null}

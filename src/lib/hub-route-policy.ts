@@ -52,7 +52,11 @@ function isCanonicalPath(pathname: string): boolean {
 }
 
 export function resolveHubRoute(pathname: string, method: string, development = false): HubRouteDecision {
-  if (!isCanonicalPath(pathname)) return { kind: "not-found" };
+  // Next development chunks include encoded [route] and [turbopack] names.
+  // Decode only brackets in that asset namespace; encoded separators remain forbidden.
+  const canonicalPath = development && pathname.startsWith("/_next/static/")
+    ? pathname.replace(/%5b/giu, "[").replace(/%5d/giu, "]") : pathname;
+  if (!isCanonicalPath(canonicalPath)) return { kind: "not-found" };
   const siteApi = HUB_SITE_API.exec(pathname);
   const userApi = HUB_USER_API.exec(pathname);
   const apiMethods = HUB_API_METHODS[pathname]

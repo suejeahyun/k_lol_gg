@@ -44,11 +44,14 @@ function harness(path: string, exported: string, initialProps: Record<string, un
     "@/components/ui/button": { Button: "button" }, "@/components/ui/input": { Input: "input" },
     "@/components/forms/use-unsaved-changes": { useUnsavedChanges() {} },
     "./site-configuration-editor": { SiteConfigurationEditor: "editor" },
+    "./site-owner-guidance": { SiteOwnerGuidance: "owner-guide" },
+    "@/modules/recruiting/operation-forms/site-support": { SUPPORT_CATEGORIES: ["오류 신고"] },
+    "@/components/usage/usage-actions": { recordUsageAction() {} },
     "@/modules/community-sites/domain/site-configuration": configuration,
     "@/modules/community-network/domain/community-network": network,
     "./site-workbench.module.css": { default: {} }, "./network.module.css": { default: {} }, "./hub.module.css": { default: {} },
     "@/components/theme/theme-icons": { ArrowRight: "svg", ExternalLink: "svg" },
-  }, { window: { confirm: () => confirms }, FormData: class { constructor(private data: Record<string, unknown> = {}) {} get(key: string) { return this.data[key] ?? null; } }, fetch: async (url: string, init?: RequestInit) => { requests.push({ url, init }); assert.ok(responses.length, "Unexpected request"); return responses.shift(); } });
+  }, { window: { confirm: () => confirms }, requestAnimationFrame: (fn: () => void) => fn(), FormData: class { constructor(private data: Record<string, unknown> = {}) {} get(key: string) { return this.data[key] ?? null; } }, fetch: async (url: string, init?: RequestInit) => { requests.push({ url, init }); assert.ok(responses.length, "Unexpected request"); return responses.shift(); } });
   const Component = source[exported] as (props: Record<string, unknown>) => ReactNode;
   let props = initialProps;
   const render = () => { cursor = 0; return Component(props); };
@@ -59,6 +62,34 @@ function harness(path: string, exported: string, initialProps: Record<string, un
 }
 const config = { ...configuration.createDefaultCommunitySiteConfig(), name: "테스트 커뮤니티", slug: "test-club" };
 const community = { id: randomUUID(), slug: "test", name: "테스트", origin: "https://test.example", description: "함께 게임", state: "LISTED" as const };
+
+const supportFields = { nickname: "합성 문의자", replyTo: "qa@example.invalid", category: "오류 신고", content: "합성 검증 문의", consent: "on" };
+test("support preserves the exact request after an uncertain result and ignores changed retry fields", async () => {
+  const receiptId = randomUUID();
+  const h = harness("src/components/navigation/support-form.tsx", "SupportForm", {}, [new Response("unreadable", { status: 201 }), Response.json({ receiptId })]);
+  await h.submit(supportFields);
+  assert.equal(elements(h.render()).find((item) => item.type === "fieldset")?.props.disabled, true);
+  assert.ok(text(h.render()).includes("원래 문의의 접수 결과 확인"));
+  await h.submit({ ...supportFields, content: "재시도 중 바뀐 입력" });
+  assert.equal(h.requests[0].init?.body, h.requests[1].init?.body);
+  assert.equal(new Headers(h.requests[0].init?.headers).get("Idempotency-Key"), new Headers(h.requests[1].init?.headers).get("Idempotency-Key"));
+  assert.ok(h.requests[0].init?.signal); assert.ok(text(h.render()).includes(receiptId));
+});
+test("support same-render double submit cannot produce two requests", async () => {
+  let resolve!: (response: Response) => void;
+  const h = harness("src/components/navigation/support-form.tsx", "SupportForm", {}, [new Promise<Response>((done) => { resolve = done; })]);
+  const submit = elements(h.render()).find((item) => item.type === "form")!.props.onSubmit as (event: unknown) => Promise<void>;
+  const event = { preventDefault() {}, currentTarget: supportFields };
+  const first = submit(event); await submit(event); assert.equal(h.requests.length, 1);
+  resolve(Response.json({ receiptId: randomUUID() })); await first;
+});
+test("support validation rejection allows correcting the input with a new request key", async () => {
+  const h = harness("src/components/navigation/support-form.tsx", "SupportForm", {}, [Response.json({ detail: "입력을 확인하세요" }, { status: 400 }), Response.json({ receiptId: randomUUID() })]);
+  await h.submit(supportFields);
+  assert.equal(elements(h.render()).find((item) => item.type === "fieldset")?.props.disabled, false);
+  await h.submit({ ...supportFields, content: "수정한 문의" });
+  assert.notEqual(new Headers(h.requests[0].init?.headers).get("Idempotency-Key"), new Headers(h.requests[1].init?.headers).get("Idempotency-Key"));
+});
 
 test("new site retries a malformed successful response with the original idempotency key and draft", async () => {
   const saved = { id: randomUUID(), revision: 1, status: "SUBMITTED", configuration: config, latestJob: null, updatedAt: "2026-10-31T00:00:00Z" };

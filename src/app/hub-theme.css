@@ -27,6 +27,16 @@
   --theme-surface-background: #ffffff;
   --theme-feature-background: #edf2f1;
   --theme-page-background: #f5f7f7;
+  --admin-accent: var(--primary);
+  --admin-accent-soft: var(--accent);
+  --admin-border: var(--border);
+  --admin-border-strong: var(--input);
+  --admin-danger: var(--destructive);
+  --admin-focus: var(--ring);
+  --admin-muted: var(--muted-foreground);
+  --admin-surface: var(--card);
+  --admin-surface-muted: var(--muted);
+  --admin-text: var(--foreground);
 }
 [data-service="hub"] body { background: #f5f7f7; }
 [data-service="hub"] body::before, [data-service="hub"] body::after { display: none; }

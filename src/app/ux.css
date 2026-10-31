@@ -84,6 +84,7 @@ html { scroll-padding-top: 7rem; }
 .help-page details { margin-block: .8rem; padding: 1rem; border: 1px solid var(--border); border-radius: .8rem; background: var(--theme-surface-background); }
 .help-page summary { min-height: 44px; font-weight: 700; cursor: pointer; }
 .support-form { display: grid; gap: 1rem; max-width: 700px; }
+.support-form fieldset { display: grid; gap: 1rem; min-width: 0; margin: 0; padding: 0; border: 0; }
 .support-form label { display: grid; gap: .4rem; font-weight: 700; }
 .support-form input, .support-form select, .support-form textarea { width: 100%; min-height: 44px; padding: .7rem; border: 1px solid var(--input); border-radius: .65rem; background: var(--card); color: var(--foreground); font: inherit; }
 .support-form textarea { min-height: 160px; resize: vertical; }

@@ -30,9 +30,9 @@ export function HubShell({ children, session }: { children: React.ReactNode; ses
     </header>
     {session ? <div className={styles.adminbar}>
       <span><span className={styles.dot} /> 중앙 운영자 공간</span>
-      <div><Link href="/admin/community-network">사이트·방 등록부</Link><Link href="/admin/users">회원·복구 요청</Link><Link href="/account/password?next=%2Fadmin%2Fcommunity-sites">비밀번호 변경</Link><span className={styles.role}>{session.role === "SUPER_ADMIN" ? "최고 관리자" : "관리자"}</span><AdminLogoutButton /></div>
+      <div><Link href="/admin/community-network">사이트·방 등록부</Link><Link href="/admin/operation-forms/suggestions">고객 문의</Link><Link href="/admin/users">회원·복구 요청</Link><Link href="/account/password?next=%2Fadmin%2Fcommunity-sites">비밀번호 변경</Link><span className={styles.role}>{session.role === "SUPER_ADMIN" ? "최고 관리자" : "관리자"}</span><AdminLogoutButton /></div>
     </div> : null}
     <div id="hub-content" className={styles.content} tabIndex={-1}>{children}</div>
-    <footer className={styles.footer}><strong>GG HUB</strong><p>각자의 커뮤니티를, 함께 관리하는 공간.</p><Link href="/admin/login">중앙 관리자 로그인</Link></footer>
+    <footer className={styles.footer}><strong>GG HUB</strong><p>각자의 커뮤니티를, 함께 관리하는 공간.</p><Link href="/help/contact">도움·문의</Link><Link href="/terms">이용약관</Link><Link href="/privacy">개인정보 처리 안내</Link><Link href="/admin/login">중앙 관리자 로그인</Link></footer>
   </div>;
 }

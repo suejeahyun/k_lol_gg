@@ -1,0 +1,68 @@
+{
+  "localOnly": true,
+  "brand": "hub",
+  "passed": true,
+  "testedAt": "2026-10-31T17:56:32.121Z",
+  "checks": [
+    {
+      "name": "support rejects missing Origin",
+      "passed": true
+    },
+    {
+      "name": "support returns only receipt metadata",
+      "passed": true
+    },
+    {
+      "name": "same support request replays without duplicate",
+      "passed": true
+    },
+    {
+      "name": "consent is required by server",
+      "passed": true
+    },
+    {
+      "name": "anonymous inquiry read rejected",
+      "passed": true
+    },
+    {
+      "name": "member session cannot read admin inquiries",
+      "passed": true
+    },
+    {
+      "name": "admin sees one inquiry after retry",
+      "passed": true
+    },
+    {
+      "name": "authorized admin can update inquiry state",
+      "passed": true
+    },
+    {
+      "name": "stale review cannot overwrite a newer decision",
+      "passed": true
+    },
+    {
+      "name": "HUB admin filter and next page use allowed routes",
+      "passed": true
+    },
+    {
+      "name": "HUB next inquiry page opens",
+      "passed": true
+    },
+    {
+      "name": "HUB child-community routes remain blocked",
+      "passed": true
+    },
+    {
+      "name": "public support form and persistent help link render",
+      "passed": true
+    },
+    {
+      "name": "owner can open the submitted site and load its real state",
+      "passed": true
+    },
+    {
+      "name": "legacy site settings preserved",
+      "passed": true
+    }
+  ]
+}

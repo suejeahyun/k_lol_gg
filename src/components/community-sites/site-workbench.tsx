@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useUnsavedChanges } from "@/components/forms/use-unsaved-changes";
 import { SiteConfigurationEditor } from "./site-configuration-editor";
+import { SiteOwnerGuidance } from "./site-owner-guidance";
 import { createDefaultCommunitySiteConfig, validateCommunitySiteConfig, type CommunitySiteConfig } from "@/modules/community-sites/domain/site-configuration";
 import type { CommunitySite, CommunitySiteStatus } from "@/modules/community-sites/domain/community-site";
 import styles from "./site-workbench.module.css";
@@ -152,6 +153,7 @@ export function SiteWorkbench({ mode, siteId }: { mode: "list" | "create" | "own
         {site.origin ? <a href={site.origin} target="_blank" rel="noopener noreferrer">{site.origin} ↗</a> : <p>사이트 주소는 승인 후 실제 발급되면 표시됩니다.</p>}
         {site.status === "AWAITING_OWNER" && !admin ? <><p>사이트의 화면과 운영진 로그인을 확인하고 운영을 시작해 주세요.</p><Button onClick={() => command("activate")} disabled={busy || jobBusy}>{jobBusy && site.latestJob?.kind === "ACTIVATE_SITE" ? "공개 처리 중" : "확인 완료 · 운영 시작"}</Button></> : null}
       </section> : null}
+      {!admin && site ? <SiteOwnerGuidance site={site} /> : null}
       <div className={styles.workspace}><section><SiteConfigurationEditor key={selectedId || "new"} configuration={configuration} onChange={edit} disabled={busy || admin || (!!site && !editableStates.includes(site.status))} lockSlug={!!site && ["ACTIVE", "AWAITING_OWNER", "ACTIVATING"].includes(site.status)} />
         {!admin ? <div className={styles.savebar}>
           {isNew ? <><p>신청 후 GG HUB 운영자가 검토합니다. 기존 커뮤니티의 회원·경기 자료는 복사하지 않습니다.</p><Button onClick={() => command("submit")} disabled={busy}>개설 신청하기</Button></> : site && editableStates.includes(site.status) ? <>
