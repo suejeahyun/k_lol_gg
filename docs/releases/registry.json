@@ -2701,6 +2701,26 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "customer-operations",
+      "version": "1.0.0",
+      "gitTag": "customer-operations-v1.0.0",
+      "commit": "f655981059e9217657019feec43443a224048437",
+      "releasedAt": "2026-10-31T18:04:36.819Z",
+      "migrationHead": "0052_community-introduction",
+      "qaEvidence": "docs/qa-evidence/customer-operations-v1.0.0-2026-11-01/README.md",
+      "patchNotes": "docs/patch-notes/customer-operations-v1.0.0.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_4pgKdc4X2oQ8GsXgerEr2EEFMic3",
+        "url": "https://gg-community-7osqsg9co-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://gg-community-hub.vercel.app",
+        "verifiedAt": "2026-10-31T18:01:33.897Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

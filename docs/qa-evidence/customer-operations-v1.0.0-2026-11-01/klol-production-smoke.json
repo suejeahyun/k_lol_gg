@@ -1,0 +1,26 @@
+{
+  "verifiedAt": "2026-10-31T18:04:25.125Z",
+  "service": "klol",
+  "mode": "production",
+  "origin": "https://k-lol-gg.vercel.app",
+  "deploymentId": "dpl_13dKWEz6Vw1qyoy4mhK1SHhQ7pzR",
+  "projectId": "prj_yeGD9GzHJk6pZCcIIjJ8grGPgW8q",
+  "sourceSha": "f655981059e9217657019feec43443a224048437",
+  "passed": true,
+  "tests": [
+    "health ready HTTP 200",
+    "correct public brand",
+    "no unpublished introduction exposure",
+    "unpublished response comes from the introduction API",
+    "existing page /players",
+    "existing page /recruits",
+    "existing page /rankings/mmr",
+    "existing page /admin/login",
+    "existing settings authentication",
+    "introduction editor authentication",
+    "editor page protected",
+    "support form available",
+    "inquiries require administrator authentication"
+  ],
+  "productionDataWrites": 0
+}

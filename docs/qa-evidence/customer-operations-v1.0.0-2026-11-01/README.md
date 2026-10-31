@@ -23,6 +23,14 @@ DB 스키마/API 계약·권한·기존 보관 기간·휴대폰 설치본·MMR 
 
 ## 배포와 복구
 
-전체 검사 최종 결과와 각 운영 배포는 후속 근거로 기록한다. 아직 이 문서만으로 운영 배포 완료를 주장하지 않는다. migration head `0052_community-introduction` 유지, migration 실행 없음. 이전 세 프로젝트 배포 ID와 개설 엔진 SHA를 기록하고 문제가 생기면 같은 프로젝트의 이전 배포와 엔진 설정으로 복원한다.
+source `f655981059e9217657019feec43443a224048437`, tag `customer-operations-v1.0.0`를 세 프로젝트에 배포했다. 각 후보를 검증한 뒤 운영 alias로 승격했으며 READY·동일 source·실제 alias·health를 확인했다. 후보 43개 + 운영 43개, 총 86조건 PASS. 문의 폼과 관리자 인증 경계, 기존 페이지, HUB 디렉터리와 격리를 확인했다. 운영 접수나 고객 자료 변경은 수행하지 않았다. [최종 검사](checks.json) · [배포·이전 ID](production.json) · [개설 엔진](engine-pin.json).
+
+| 서비스 | 주소 | 배포 ID | 후보 / 운영 검사 |
+| --- | --- | --- | --- |
+| HUB | [운영 주소](https://gg-community-hub.vercel.app) | `dpl_4pgKdc4X2oQ8GsXgerEr2EEFMic3` | 17 / 17 |
+| NEXUS | [운영 주소](https://nexus-gg-kr.vercel.app) | `dpl_HdSTqgX3K3DeWYGEPNPnb1Sqyvy9` | 13 / 13 |
+| KLOL | [운영 주소](https://k-lol-gg.vercel.app) | `dpl_13dKWEz6Vw1qyoy4mhK1SHhQ7pzR` | 13 / 13 |
+
+이번에 만든 HUB·NEXUS 검증용 보호 우회 키는 철회했다. K-LOL은 기존 자동화 검증 설정을 재사용했으며 변경하지 않았다. 새 사이트 개설 엔진도 같은 source로 고정했다. migration head `0052_community-introduction` 유지, migration 실행 없음. 문제 발생 시 `production.json`에 기록된 해당 프로젝트의 이전 배포를 다시 승격하고, HUB의 `HUB_ENGINE_GIT_REF`를 `41963855c695f98375b2bcaef805eccae9bf5844`로 복원해 이전 엔진을 사용하는 HUB 배포를 반영한다. 기존 태그는 이동하지 않는다.
 
 유료 출시, 전체 고객지원 대화/자동 답변, 실제 고객 개설·첫 모집 완주, 기존 계정 연결, 동적 폰 연결, 제휴·공동 대회는 별도 미완료 범위다. 과거 릴리스의 확인 창 이탈 테스트를 이번 문의 제출 검사로 대체하지 않는다.

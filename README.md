@@ -1,5 +1,7 @@
 # K-LOL.GG V2
 
+**2026-11-01 고객 문의·운영 시작 안내 1.0.0 — GG HUB·NEXUS·K-LOL 운영 반영**: HUB 고객 문의의 필터·페이지 이동과 관리자 대비, 접수 재시도·중복 보호, 소유자의 개설 상태별 다음 행동을 보완했습니다. source `f6559810`, 전체 check(계약 804·단위 1,339+기존 SKIP 1), 격리 HTTP 15, 실제 모바일 문의→관리자 확인, 후보/운영 합계 86조건 PASS. 실제 과금·구독·환불·동적 폰 설정·제휴·공동 대회는 완료 범위가 아닙니다. [사업화 기준](docs/product/gg-hub-commercial-readiness-v1.md), [변경 안내](docs/patch-notes/customer-operations-v1.0.0.md), [검증·배포·복구](docs/qa-evidence/customer-operations-v1.0.0-2026-11-01/README.md). 아래는 이전 시점의 기록입니다.
+
 **2026-10-31 운영 화면 사용성·복구 개선 1.0.0 — GG HUB·NEXUS·K-LOL 운영 반영**: 편집 이탈/재조회 보호, 중복 제출·통신 실패 복구, 전체 탭 입력 검사, 개설 진행 갱신, HUB 검색, 카카오 방 관리 요청 재확인, 한국 시간과 모바일 표시 등 28개 개선을 적용했습니다. source `41963855`, 전체 check(계약 802·단위 1,333+기존 SKIP 1), 격리 HTTP 16, 세 서비스 후보/운영 각 36조건 PASS. 운영 DB·MMR·휴대폰 설치본은 유지했습니다. 브라우저 검색/입력은 확인했으나 확인 창·캡처는 도구 응답 문제로 미완료입니다. [변경 안내](docs/patch-notes/platform-usability-v1.0.0.md), [검증·배포·복구](docs/qa-evidence/platform-usability-v1.0.0-2026-10-31/README.md). 아래는 이전 시점의 기록입니다.
 
 
