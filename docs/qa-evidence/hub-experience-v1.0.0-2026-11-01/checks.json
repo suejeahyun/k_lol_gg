@@ -1,0 +1,35 @@
+{
+  "sourceSha": "824e7723bbff3216a940b8c88ba6e6953e18a4bc",
+  "command": "npm run check",
+  "exitCode": 0,
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 89
+  },
+  "typecheck": "PASS",
+  "erd": {
+    "tables": 126,
+    "foreignKeys": 190,
+    "status": "PASS"
+  },
+  "contracts": {
+    "passed": 804,
+    "failed": 0
+  },
+  "unit": {
+    "passed": 1344,
+    "failed": 0,
+    "skipped": 1
+  },
+  "homeGuideArt": 68,
+  "productionBuild": "PASS",
+  "staticPages": 99,
+  "currentTreeSecretScan": "PASS",
+  "fullHistorySecretScan": "NOT_RUN",
+  "fullCheckLogSha256": "9cca35a13f621d776c30f4ddc89a27c35376ee0218527dceee6b083e20e4d908",
+  "isolatedHttpChecks": 19,
+  "localServerStopped": true,
+  "isolatedDatabaseCleaned": true,
+  "phoneChanged": false,
+  "databaseSchemaChanged": false
+}

@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-10-31T18:26:45.187Z",
+  "origin": "https://gg-community-hub.vercel.app",
+  "themeSwitch": "PASS",
+  "selectedThemeLoginReturn": "PASS",
+  "homeHeading": "PASS",
+  "mobile390Overflow": false,
+  "productionDataWrites": 0,
+  "viewportReset": true,
+  "screenshots": [
+    "home-production.png",
+    "home-production-mobile.png"
+  ]
+}

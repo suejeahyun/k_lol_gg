@@ -1,0 +1,11 @@
+{
+  "verifiedAt": "2026-10-31T18:24:18.911Z",
+  "projectId": "prj_WyTZh3ShDdc6A5d5y2e1bYC6S8aZ",
+  "previousEngineRef": "f655981059e9217657019feec43443a224048437",
+  "engineRef": "824e7723bbff3216a940b8c88ba6e6953e18a4bc",
+  "updatedKeys": [
+    "HUB_ENGINE_GIT_REF"
+  ],
+  "secretsChanged": false,
+  "planChanged": false
+}

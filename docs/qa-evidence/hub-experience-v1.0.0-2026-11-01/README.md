@@ -15,14 +15,20 @@ HUB의 테마 체험, 선택을 보존하는 로그인·신청, 성공한 신청
 - 390px 운영 홈·첫 화면과 320px 첫 화면에서 가로 넘침이 없음을 확인했다. 모바일 상태 필터·키보드 방향키 테마 선택을 확인했다.
 - 첫 HTTP 검증의 문자열 비교는 React의 텍스트 구분 주석을 고려해 실제 링크 주소로 수정했다. 기존 계약 테스트에는 새 테마 컴포넌트 의존성을 추가했다. 검사를 느슨하게 하거나 기존 권한 검증을 삭제하지 않았다.
 
-최종 `npm run check` PASS: 계약 804개, 단위 1,344개 통과·기존 1개 건너뜀, 타입 검사·ERD·아트 검사·운영 빌드 통과. ESLint 오류 0개, 기존 경고 89개. 브라우저 검증 후 임시 서버를 종료하고 격리 DB를 정리했다. [브라우저 결과](browser.json) · [HTTP 결과](local-http.json). 운영 배포 근거는 배포 후 기록한다.
+최종 `npm run check` PASS: 계약 804개, 단위 1,344개 통과·기존 1개 건너뜀, 타입 검사·ERD·아트 검사·운영 빌드 통과. ESLint 오류 0개, 기존 경고 89개. 브라우저 검증 후 임시 서버를 종료하고 격리 DB를 정리했다. [브라우저 결과](browser.json) · [HTTP 결과](local-http.json). [최종 검사](checks.json) · [운영 배포](production.json).
 
 ![운영 홈 — 합성 검증 자료](owner-desktop.png)
 
 [모바일 운영 홈](owner-mobile.png) · [모바일 테마 선택](home-mobile.png)
 
+운영 브라우저에서도 Lounge 전환과 로그인 복귀 주소 보존을 확인했다. 390px 화면의 콘텐츠 폭과 표시 폭은 모두 375px로 가로 넘침이 없다. 임시 화면 크기를 복원하고 아래 운영 홈을 확인했다. 전체 페이지 캡처가 응답하지 않아 일반 화면 캡처를 사용했다. [운영 브라우저 결과](production-browser.json) · [운영 모바일 화면](home-production-mobile.png).
+
+![실제 운영 GG HUB 첫 화면](home-production.png)
+
 ## 배포와 한계
 
 이번 기능의 배포 대상은 GG HUB와 신규 사이트 개설 엔진이다. 기존 K-LOL/NEXUS의 운영 배포와 휴대폰은 교체하지 않는다. 실제 결제, 전체 사업화 요구, 사이트 간 제휴·공동 대회·동적 방 연결의 완료를 의미하지 않는다. 테마 미리보기는 구성 예시이며 실제 회원·모집 실적을 표시하지 않는다.
 
-migration head `0052_community-introduction` 유지. 배포 ID·이전 배포·엔진 SHA와 복구 방법은 최종 운영 검증 후 기록한다.
+source `824e7723bbff3216a940b8c88ba6e6953e18a4bc`, tag `hub-experience-v1.0.0`를 [GG HUB](https://gg-community-hub.vercel.app)에 배포했다. 배포 `dpl_5CEvvhjE1TNHxjwYkVxQxKdHnYCp`의 READY·동일 source·운영 alias·health를 확인했다. 후보 21개 + 운영 21개, 총 42조건 PASS. 공개 목록·소개·기존 인증 경계·문의·세 테마 선택 전달을 확인했고 운영 자료는 쓰지 않았다. [후보 검사](hub-candidate-smoke.json) · [운영 검사](hub-production-smoke.json) · [배포·이전 ID](production.json) · [개설 엔진](engine-pin.json).
+
+새 사이트 엔진도 같은 source로 고정했다. 후보 검증용 임시 키는 철회했다. K-LOL/NEXUS alias는 기존 배포를 유지함을 재확인했다. migration head `0052_community-introduction` 유지, migration 실행 없음. 복구가 필요하면 HUB 이전 배포 `dpl_4pgKdc4X2oQ8GsXgerEr2EEFMic3`를 다시 승격하고 `HUB_ENGINE_GIT_REF`를 `f655981059e9217657019feec43443a224048437`로 복원하여 이전 엔진을 사용하는 HUB 배포를 반영한다. 기존 tag는 이동하지 않는다.
