@@ -25,7 +25,7 @@ export function DestructionLiveStatus({ tournamentId, revision, enabled = true, 
         const body = await response.json() as { destruction?: { revision: number } };
         if (!Number.isSafeInteger(body.destruction?.revision)) throw new Error("invalid revision");
         if (stopped) return;
-        setState("live"); setCheckedAt(new Date().toLocaleTimeString("ko-KR"));
+        setState("live"); setCheckedAt(new Date().toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul" }));
         if (body.destruction!.revision > revision) router.refresh();
       } catch { if (!stopped) setState(navigator.onLine ? "error" : "offline"); }
       finally { window.clearTimeout(timeout); inFlight = false; }

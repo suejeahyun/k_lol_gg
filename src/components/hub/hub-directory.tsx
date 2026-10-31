@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ExternalLink as ArrowUpRight, AppWindow as Building2, LibraryBig as Layers3, Share2 as Network, ShieldCheck } from "@/components/theme/theme-icons";
 import { listHubCommunities } from "@/modules/community-network/infrastructure/hub-community-directory";
+import { CommunityCards } from "./community-cards";
 import styles from "./hub.module.css";
 
 export async function HubDirectory({ overview = false }: { overview?: boolean }) {
@@ -25,16 +26,10 @@ export async function HubDirectory({ overview = false }: { overview?: boolean })
       <div className={styles.sectionHeading}><div><p className={styles.sectionEyebrow}>EXPLORE COMMUNITIES</p><h2 id="communities-title">{unavailable ? "확인된 사이트" : "등록된 사이트"} <span>{communities.length}</span></h2></div><p>공개 소개를 확인하고 사이트로 이동하세요.</p></div>
       {unavailable && communities.length === 0 ? <div className={styles.empty} role="status"><h3>사이트 목록을 불러오지 못했습니다</h3><p>잠시 후 다시 확인해 주세요. 등록된 사이트가 없다는 뜻은 아닙니다.</p></div>
         : communities.length === 0 ? <div className={styles.empty}><Building2 size={30} aria-hidden="true" /><h3>첫 커뮤니티를 기다리고 있습니다</h3><p>테마와 기능을 선택해 우리 커뮤니티를 시작해 보세요.</p><Link href="/sites/new">개설 신청하기 <ArrowRight size={16} aria-hidden="true" /></Link></div>
-          : <div className={styles.grid}>{communities.map((community) => <article key={community.id} className={styles.siteCard}>
-            <div className={styles.cardTop}><span className={styles.monogram} aria-hidden="true">{Array.from(community.name)[0]}</span><span className={styles.siteType}>독립 커뮤니티</span></div>
-            <h3>{community.name}</h3><p className={styles.siteDescription}>{community.description || "사이트에서 커뮤니티의 활동과 소식을 확인해 보세요."}</p>
-            <span className={styles.origin}>{new URL(community.origin).hostname}</span>
-            <div className={styles.cardActions}><Link href={`/community-network/${community.id}`} aria-label={`${community.name} 소개 보기`}>소개 보기<ArrowRight size={17} aria-hidden="true" /></Link>
-              <a href={community.origin} target="_blank" rel="noopener noreferrer" aria-label={`${community.name} 사이트 방문 (새 창)`}>사이트 방문<ArrowUpRight size={17} aria-hidden="true" /></a></div>
-          </article>)}</div>}
+          : <CommunityCards communities={communities} />}
       <p className={styles.directoryNote}><ShieldCheck size={16} aria-hidden="true" /> 가입과 활동은 각 사이트에서 진행합니다. 이 목록은 가입한 사이트 목록이나 실시간 연결 상태가 아닙니다.</p>
       {unavailable && communities.length > 0 ? <p className={styles.directoryNote} role="status">일부 사이트 정보는 현재 불러오지 못했습니다. 확인된 사이트를 먼저 표시합니다.</p> : null}
     </section>
-    {overview ? <section className={styles.managementCallout} aria-labelledby="hub-management-title"><div><span className={styles.calloutIcon}><Layers3 size={24} aria-hidden="true" /></span><div><h2 id="hub-management-title">커뮤니티가 늘어도, 관리하는 곳은 하나.</h2><p>사이트마다 대화방·구인구직방을 구성하고 필요한 방을 더 등록할 수 있습니다.</p></div></div><Link href="/admin/community-network">사이트와 방 관리 <ArrowRight size={18} aria-hidden="true" /></Link></section> : null}
+    {overview ? <section className={styles.managementCallout} aria-labelledby="hub-management-title"><div><span className={styles.calloutIcon}><Layers3 size={24} aria-hidden="true" /></span><div><h2 id="hub-management-title">커뮤니티가 늘어도, 관리하는 곳은 하나.</h2><p>신청한 사이트의 진행 상태를 확인하고 테마와 기능을 관리하세요.</p></div></div><Link href="/sites">내 사이트 관리 <ArrowRight size={18} aria-hidden="true" /></Link></section> : null}
   </main>;
 }

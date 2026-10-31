@@ -105,3 +105,10 @@
 @media (max-width: 440px) { .topbarInner { flex-wrap: wrap; padding-block: .75rem; } .navigation { flex-basis: 100%; margin-left: 0; justify-content: space-between; flex-wrap: wrap; } .adminbar > div { flex-wrap: wrap; margin-left: 0; } }
 @media (max-width: 850px) { .serviceLabel { display: none; } .hero { gap: 1.5rem; padding: 2rem; } .hero h1 { font-size: 2rem; } .desktopBreak { display: none; } .managementCallout { align-items: flex-start; flex-direction: column; } }
 @media (max-width: 640px) { .topbarInner { min-height: 4.5rem; padding: 0 1rem; gap: .6rem; } .brand strong { font-size: 1rem; } .brand > span { width: 2rem; height: 2rem; } .navigation { gap: .7rem; font-size: .72rem; } .navigation .manage, .navigation .current { padding: 0 .65rem; } .page { padding: 1.25rem 1rem 2.5rem; } .hero { grid-template-columns: 1fr; padding: 1.6rem 1.4rem; } .hero h1 { font-size: 2rem; } .heroDescription { font-size: .8rem; } .heroActions { gap: .8rem; font-size: .72rem; } .topology { max-width: 22rem; margin: auto; } .sectionHeading { align-items: flex-start; flex-direction: column; gap: .6rem; } .directory { padding-top: 2rem; } .grid { grid-template-columns: 1fr; } .footer { width: calc(100% - 2rem); gap: .4rem 1rem; } .footer a { margin-left: 0; } .footer p { width: calc(100% - 5rem); } .adminbar { font-size: .7rem; flex-wrap: wrap; gap: .2rem; } .adminbar > div { gap: .65rem; margin-left: auto; } .role { display: none; } }
+
+.search { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; margin-top:1.25rem; }
+.search label { font-size:.85rem; font-weight:650; }
+.search input { flex:1 1 16rem; min-width:0; background:#fff; color:#17352b; }
+.searchResult { font-size:.8rem; color:#526970; margin:.75rem 0 1rem; }
+.siteCard { min-width:0; }
+.siteCard h3, .origin { overflow-wrap:anywhere; }

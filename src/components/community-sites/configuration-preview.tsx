@@ -25,7 +25,7 @@ export function ConfigurationPreview({ configuration, compact = false }: {
       <div className={styles.previewBar}><span className={styles.browserDots} aria-hidden="true">● ● ●</span><span>{configuration.slug || "사이트 주소"}</span><span>미리보기</span></div>
       <div className={styles.previewNavigation}>
         <strong className={styles.previewBrand}>
-          <span className={styles.previewLogo}>{configuration.name.trim().slice(0, 1) || "G"}
+          <span className={styles.previewLogo}>{Array.from(configuration.name.trim())[0] || "G"}
             {logoUrl && <img key={logoUrl} src={logoUrl} alt="" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.hidden = true; }} />}
           </span>
           {configuration.name.trim() || "커뮤니티 이름"}

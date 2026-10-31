@@ -5,6 +5,7 @@ import { Script } from "node:vm";
 import test from "node:test";
 import { createElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import * as jsx from "react/jsx-runtime";
+import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import * as introductionDomain from "../src/modules/operations/domain/community-introduction";
@@ -22,6 +23,10 @@ function load(path: string, dependencies: Record<string, unknown>, globals: Reco
 const css = { default: {} };
 const link = { default: ({ children, ...props }: { children: ReactNode; href: string }) => createElement("a", props, children) };
 const icons = { ArrowRight: () => null, ExternalLink: () => null };
+const cards = load("src/components/hub/community-cards.tsx", {
+  "react/jsx-runtime": jsx, react: React, "next/link": link, "./hub.module.css": css,
+  "@/components/theme/theme-icons": icons, "@/components/ui/button": { Button: "button" }, "@/components/ui/input": { Input: "input" },
+});
 const content = load("src/components/community-introduction/introduction-content.tsx", {
   "react/jsx-runtime": jsx, "@/modules/operations/domain/community-introduction": introductionDomain, "./introduction.module.css": css,
 });
@@ -97,7 +102,7 @@ test("detail page only fetches a registered public site and does not fetch remot
 test("HUB cards offer separate introduction and visit actions without requesting child profiles", async () => {
   let listCalls = 0;
   const source = load("src/components/hub/hub-directory.tsx", {
-    "react/jsx-runtime": jsx, "next/link": link, "./hub.module.css": css,
+    "react/jsx-runtime": jsx, "next/link": link, "./hub.module.css": css, "./community-cards": cards,
     "@/components/theme/theme-icons": { ...icons, AppWindow: () => null, LibraryBig: () => null, Share2: () => null, ShieldCheck: () => null },
     "@/modules/community-network/infrastructure/hub-community-directory": {
       listHubCommunities: async () => { listCalls++; return { communities: [community], unavailable: true }; },
@@ -132,7 +137,7 @@ function elements(node: ReactNode): Element[] {
   const element = node as Element;
   return [element, ...elements(element.props.children as ReactNode)];
 }
-function formHarness(responses: Response[]) {
+function formHarness(responses: Response[], confirm = true) {
   const hooks: unknown[] = []; let cursor = 0;
   const requests: { url: string; init?: RequestInit }[] = [];
   const source = load("src/app/(admin)/admin/community-introduction/introduction-form.tsx", {
@@ -141,10 +146,11 @@ function formHarness(responses: Response[]) {
       useRef(initial: unknown) { const index = cursor++; if (!(index in hooks)) hooks[index] = { current: initial }; return hooks[index]; },
       useEffect() {},
     },
+    "@/components/forms/use-unsaved-changes": { useUnsavedChanges() {} },
     "@/components/ui/button": { Button: "button" }, "@/components/ui/input": { Input: "input" },
     "@/components/community-introduction/introduction-content": content,
     "@/modules/operations/domain/community-introduction": introductionDomain, "./introduction-editor.module.css": css,
-  }, { crypto: { randomUUID }, fetch: async (url: string, init?: RequestInit) => { requests.push({ url, init }); assert.ok(responses.length); return responses.shift(); } });
+  }, { AbortSignal, window: { confirm: () => confirm }, crypto: { randomUUID }, fetch: async (url: string, init?: RequestInit) => { requests.push({ url, init }); assert.ok(responses.length); return responses.shift(); } });
   const Form = source.CommunityIntroductionForm as (props: { initial: introductionDomain.CommunityIntroductionSnapshot; communityName: string }) => ReactNode;
   const initial = { revision: 3, updatedAt: null, profile: profile() };
   function render() { cursor = 0; return Form({ initial, communityName: "사이트" }); }
@@ -175,4 +181,14 @@ test("revision conflict keeps edited text and explicitly offers a fresh reload",
   const html = renderToStaticMarkup(h.render());
   assert.ok(html.includes("충돌 시 보존할 내용")); assert.ok(html.includes("다른 관리자가 먼저 저장했습니다"));
   assert.ok(html.includes("편집 취소하고 최신 소개 불러오기")); assert.ok(html.includes('role="alert"'));
+});
+
+
+test("introduction reload cancellation preserves a dirty draft without a request", async () => {
+  const h = formHarness([], false);
+  h.changeIntro("보존할 소개");
+  const reload = elements(h.render()).find((element) => element.props.type === "button")!;
+  await (reload.props.onClick as () => Promise<void>)();
+  assert.equal(h.requests.length, 0);
+  assert.ok(elements(h.render()).some((element) => element.props.value === "보존할 소개"));
 });

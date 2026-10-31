@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import { useUnsavedChanges } from "@/components/forms/use-unsaved-changes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IntroductionContent } from "@/components/community-introduction/introduction-content";
@@ -24,12 +25,8 @@ export function CommunityIntroductionForm({ initial, communityName }: { initial:
   const [invalidField, setInvalidField] = useState<string | null>(null);
   const pending = useRef<{ payload: string; revision: number; key: string } | null>(null);
   const dirty = JSON.stringify(profile) !== JSON.stringify(saved.profile);
-  useEffect(() => {
-    if (!dirty) return;
-    const preventUnload = (event: BeforeUnloadEvent) => event.preventDefault();
-    window.addEventListener("beforeunload", preventUnload);
-    return () => window.removeEventListener("beforeunload", preventUnload);
-  }, [dirty]);
+  useUnsavedChanges(dirty);
+  const inFlight = useRef(false);
   function edit(patch: Partial<CommunityIntroduction>) { setProfile((current) => ({ ...current, ...patch })); setMessage(""); setError(false); setInvalidField(null); }
   function accept(snapshot: CommunityIntroductionSnapshot) {
     if (!Number.isSafeInteger(snapshot.revision) || snapshot.revision < 0) throw new Error("INVALID_RESPONSE");
@@ -37,18 +34,20 @@ export function CommunityIntroductionForm({ initial, communityName }: { initial:
     setSaved({ ...snapshot, profile: normalized }); setProfile(normalized); pending.current = null;
   }
   async function reload() {
-    if (busy) return;
+    if (inFlight.current) return;
+    if (dirty && !window.confirm("편집 중인 소개를 버리고 최신 소개를 불러올까요?")) return;
+    inFlight.current = true;
     setBusy(true); setMessage(""); setError(false);
     try {
-      const response = await fetch("/api/admin/community-introduction", { credentials: "same-origin", cache: "no-store" });
+      const response = await fetch("/api/admin/community-introduction", { credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(20_000) });
       if (!response.ok) throw new Error("LOAD_FAILED");
       const body = await response.json() as { introduction: CommunityIntroductionSnapshot };
       accept(body.introduction); setInvalidField(null); setMessage("최신 소개를 불러왔습니다.");
     } catch { setError(true); setMessage("불러오지 못했습니다. 편집 중인 내용은 유지됩니다."); }
-    finally { setBusy(false); }
+    finally { inFlight.current = false; setBusy(false); }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (busy || !dirty) return;
+    event.preventDefault(); if (inFlight.current || !dirty) return;
     let normalized: CommunityIntroduction;
     try { normalized = validateCommunityIntroduction(profile); }
     catch (cause) {
@@ -57,9 +56,10 @@ export function CommunityIntroductionForm({ initial, communityName }: { initial:
     }
     const payload = JSON.stringify(normalized);
     if (pending.current?.payload !== payload || pending.current.revision !== saved.revision) pending.current = { payload, revision: saved.revision, key: crypto.randomUUID() };
+    inFlight.current = true;
     setBusy(true); setMessage(""); setError(false); setInvalidField(null);
     try {
-      const response = await fetch("/api/admin/community-introduction", { method: "PUT", credentials: "same-origin", headers: {
+      const response = await fetch("/api/admin/community-introduction", { method: "PUT", credentials: "same-origin", signal: AbortSignal.timeout(20_000), headers: {
         "Content-Type": "application/json", "If-Match": `"${saved.revision}"`, "Idempotency-Key": pending.current.key,
       }, body: payload });
       if (!response.ok) {
@@ -75,7 +75,7 @@ export function CommunityIntroductionForm({ initial, communityName }: { initial:
       accept(body.introduction);
       setMessage(body.introduction.profile.published ? "공개 소개를 저장했습니다. GG HUB에서 소개를 다시 열면 최신 내용을 확인할 수 있습니다." : "소개를 비공개로 저장했습니다. 작성한 내용은 유지됩니다.");
     } catch { setError(true); setMessage("저장 결과를 확인하지 못했습니다. 같은 내용으로 다시 저장하면 중복 요청을 방지해 처리합니다."); }
-    finally { setBusy(false); }
+    finally { inFlight.current = false; setBusy(false); }
   }
   return <div className={styles.workspace}>
     <form onSubmit={save} className={styles.form} aria-busy={busy}>

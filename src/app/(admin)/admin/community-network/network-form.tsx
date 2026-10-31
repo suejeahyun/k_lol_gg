@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import { useUnsavedChanges } from "@/components/forms/use-unsaved-changes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { COMMUNITY_NETWORK_LIMITS, type CommunityNetworkCommunity, type CommunityNetworkRoom, type CommunityNetworkSnapshot } from "@/modules/community-network/domain/community-network";
+import { COMMUNITY_NETWORK_LIMITS, parseCommunityNetworkInput, type CommunityNetworkCommunity, type CommunityNetworkRoom, type CommunityNetworkSnapshot } from "@/modules/community-network/domain/community-network";
 
 import styles from "./network.module.css";
 
@@ -23,15 +24,12 @@ export default function NetworkForm({ initial }: { initial: CommunityNetworkSnap
   const community = snapshot.communities.find((item) => item.id === selected);
   const rooms = snapshot.rooms.filter((room) => room.communityId === selected);
 
-  useEffect(() => {
-    if (!dirty) return;
-    function preventUnload(event: BeforeUnloadEvent) { event.preventDefault(); }
-    window.addEventListener("beforeunload", preventUnload);
-    return () => window.removeEventListener("beforeunload", preventUnload);
-  }, [dirty]);
+  useUnsavedChanges(dirty);
+  const inFlight = useRef(false);
+  const saved = useRef(initial);
 
   function changed(next: CommunityNetworkSnapshot) {
-    setSnapshot(next); setDirty(true); setMessage(""); setError(false);
+    setSnapshot(next); setDirty(JSON.stringify(next) !== JSON.stringify(saved.current)); setMessage(""); setError(false);
   }
   function editCommunity(patch: Partial<CommunityNetworkCommunity>) {
     changed({ ...snapshot, communities: snapshot.communities.map((item) => item.id === selected ? { ...item, ...patch } : item),
@@ -60,27 +58,39 @@ export default function NetworkForm({ initial }: { initial: CommunityNetworkSnap
     changed({ ...snapshot, rooms: snapshot.rooms.filter((room) => room.id !== id) });
   }
   function rememberSaved(next: CommunityNetworkSnapshot) {
+    saved.current = next;
     setSavedIds({ communities: new Set(next.communities.map((item) => item.id)), rooms: new Set(next.rooms.map((item) => item.id)) });
   }
   async function reload() {
+    if (inFlight.current) return;
+    if (dirty && !window.confirm("저장하지 않은 사이트·방 설정을 버리고 최신 정보를 불러올까요?")) return;
+    inFlight.current = true;
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/admin/community-network", { credentials: "same-origin", cache: "no-store" });
+      const response = await fetch("/api/admin/community-network", { credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(20_000) });
       if (!response.ok) throw new Error("LOAD_FAILED");
       const body = await response.json() as { snapshot: CommunityNetworkSnapshot };
       rememberSaved(body.snapshot);
       setSnapshot(body.snapshot); setSelected(body.snapshot.communities.some((item) => item.id === selected) ? selected : body.snapshot.communities[0]?.id ?? "");
       setDirty(false); setError(false); request.current = null; setMessage("최신 등록 정보를 불러왔습니다.");
     } catch { setError(true); setMessage("불러오지 못했습니다. 현재 편집 내용은 유지됩니다."); }
-    finally { setBusy(false); }
+    finally { inFlight.current = false; setBusy(false); }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); if (busy || !dirty) return;
-    setBusy(true); setMessage("");
+    event.preventDefault(); if (inFlight.current || !dirty) return;
+    // Validate every tab, including edits hidden behind another selected community.
+    for (const item of snapshot.communities) {
+      try { parseCommunityNetworkInput({ communities: [item], rooms: snapshot.rooms.filter((room) => room.communityId === item.id) }); }
+      catch { setSelected(item.id); setError(true); setMessage(`${item.name || "이름 없는 커뮤니티"}의 이름·식별자·HTTPS 사이트 주소·방 설정을 확인해 주세요.`); return; }
+    }
+    try { parseCommunityNetworkInput({ communities: snapshot.communities, rooms: snapshot.rooms }); }
+    catch { setError(true); setMessage("사이트 식별자나 주소가 중복되지 않았는지 확인해 주세요."); return; }
+    inFlight.current = true;
+    setBusy(true); setMessage(""); setError(false);
     const payload = JSON.stringify({ communities: snapshot.communities, rooms: snapshot.rooms });
     if (request.current?.payload !== payload) request.current = { payload, key: crypto.randomUUID() };
     try {
-      const response = await fetch("/api/admin/community-network", { method: "PUT", credentials: "same-origin", headers: {
+      const response = await fetch("/api/admin/community-network", { method: "PUT", credentials: "same-origin", signal: AbortSignal.timeout(20_000), headers: {
         "Content-Type": "application/json", "If-Match": `"${snapshot.revision}"`, "Idempotency-Key": request.current.key,
       }, body: payload });
       if (!response.ok) {
@@ -96,7 +106,7 @@ export default function NetworkForm({ initial }: { initial: CommunityNetworkSnap
       rememberSaved(body.snapshot);
       setSnapshot(body.snapshot); setDirty(false); setError(false); request.current = null; setMessage("등록 정보를 저장했습니다. 실제 사이트·봇 연결은 변경하지 않았습니다.");
     } catch { setError(true); setMessage("저장 결과를 확인하지 못했습니다. 같은 내용으로 다시 저장하면 중복 요청을 방지해 처리합니다."); }
-    finally { setBusy(false); }
+    finally { inFlight.current = false; setBusy(false); }
   }
 
   return <form onSubmit={save} aria-busy={busy}>
@@ -118,11 +128,11 @@ export default function NetworkForm({ initial }: { initial: CommunityNetworkSnap
           <label>이름<Input required maxLength={80} value={community.name} onChange={(event) => editCommunity({ name: event.target.value })} /></label>
           <label>주소용 이름<Input required maxLength={64} placeholder="예: nexus" value={community.slug} onChange={(event) => editCommunity({ slug: event.target.value })} /></label>
           <label className={styles.wide}>사이트 주소<Input required type="url" maxLength={255} placeholder="https://example.com" value={community.origin} onChange={(event) => editCommunity({ origin: event.target.value })} /></label>
-          <label className={styles.wide}>공개 소개<textarea rows={3} maxLength={500} value={community.description} onChange={(event) => editCommunity({ description: event.target.value })} /></label>
+          <label className={styles.wide}>공개 소개<textarea rows={3} maxLength={600} value={community.description} onChange={(event) => editCommunity({ description: event.target.value })} /></label>
           <label>공개 상태<select value={community.state} onChange={(event) => editCommunity({ state: event.target.value as CommunityNetworkCommunity["state"] })}>
             {Object.entries(states).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
           </select></label>
-          <p className={styles.hint}>공개 목록에는 이름·주소·소개만 표시됩니다. 보관하면 이 커뮤니티의 등록 방도 사용 해제됩니다.</p>
+          <p className={styles.hint}>공개 목록에는 이름·주소·소개만 표시됩니다. 보관하면 이 커뮤니티의 등록 방도 사용 해제됩니다. 다시 공개할 때 필요한 방의 등록 사용을 직접 켜 주세요.</p>
         </div>
         <div className={styles.sectionTitle}><div><h2>카카오톡 방</h2><p>같은 커뮤니티에서 같은 공유 그룹을 지정한 방끼리 모집을 공유하도록 준비합니다.</p></div>
           <Button type="button" variant="outline" disabled={community.state === "ARCHIVED" || snapshot.rooms.length >= COMMUNITY_NETWORK_LIMITS.rooms} onClick={() => addRoom(rooms.some((room) => room.purpose === "CHAT") ? "RECRUIT" : "CHAT")}>방 추가</Button></div>

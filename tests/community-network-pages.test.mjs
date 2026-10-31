@@ -11,6 +11,7 @@ const sources = Object.fromEntries([
   ["public", "../src/app/(public)/community-network/page.tsx"],
   ["admin", "../src/app/(admin)/admin/community-network/page.tsx"],
   ["hub", "../src/components/hub/hub-directory.tsx"],
+  ["cards", "../src/components/hub/community-cards.tsx"],
   ["directory", "../src/modules/community-network/infrastructure/hub-community-directory.ts"],
 ].map(([kind, filename]) => [kind, ts.transpileModule(readFileSync(new URL(filename, import.meta.url), "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
@@ -35,6 +36,8 @@ function harness(kind, { state = "ready", communities = [], snapshot = emptySnap
   const pageModule = { exports: {} };
   const modules = {
     "react/jsx-runtime": jsxRuntime,
+    react: { useId: () => "search", useState: (value) => [value, () => {}] },
+    "@/components/ui/button": { Button: "button" }, "@/components/ui/input": { Input: "input" },
     "server-only": {},
     "@/modules/community-sites/infrastructure/runtime": { getRuntimeCommunitySitesRepository: () => null, isCommunitySitesEnabled: () => managedEnabled },
     "@/lib/service-brand": { SERVICE_BRAND: { id: serviceId } },
@@ -79,6 +82,9 @@ function harness(kind, { state = "ready", communities = [], snapshot = emptySnap
     },
   });
   modules["@/modules/community-network/infrastructure/hub-community-directory"] = directoryModule.exports;
+  const cardsModule = { exports: {} };
+  vm.runInNewContext(sources.cards, { exports: cardsModule.exports, URL, require: (id) => modules[id] });
+  modules["./community-cards"] = cardsModule.exports;
   const hubModule = { exports: {} };
   vm.runInNewContext(sources.hub, {
     exports: hubModule.exports, URL,
