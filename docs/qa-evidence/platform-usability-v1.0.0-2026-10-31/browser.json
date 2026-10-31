@@ -1,0 +1,21 @@
+{
+  "verifiedAt": "2026-10-31T12:35:47.480Z",
+  "localIntroduction": {
+    "syntheticOnly": true,
+    "inputAndPreview": "PASS",
+    "discardDialogCancelAndNavigation": "NOT_VERIFIED"
+  },
+  "productionHub": {
+    "initialTwoCards": "PASS",
+    "fullWidthNexusSearchOneCard": "PASS",
+    "noResultsMessage": "PASS",
+    "clearingSearchRestoresTwoCards": "PASS",
+    "resetButtonClick": "NOT_VERIFIED",
+    "screenshot": "NOT_CAPTURED",
+    "responsiveViewport": "NOT_VERIFIED"
+  },
+  "limitation": "The in-app browser stopped responding to dialog, click and screenshot operations after the local confirm dialog. DOM-backed input/search checks succeeded in a separate tab. No screenshot or completed dialog/browser-navigation test is claimed.",
+  "localQaCleanup": "COMPLETE",
+  "syntheticDatabaseDropped": true,
+  "productionDataWrites": 0
+}

@@ -43,10 +43,29 @@ GG HUB·기존 커뮤니티·신규 관리형 사이트의 사용성 및 요청 
 - 첫 전체 검사 도중 추가한 fieldset의 닫는 태그 누락을 운영 빌드가 검출했다. 수정 후 전체 검사를 처음부터 다시 통과했다. 최초 실패 로그와 최종 성공 로그를 로컬 비공개 경로에 보존한다.
 - 브라우저에서는 실제 소개 입력과 미리보기 반영을 확인했다. 확인 창 클릭 후 자동화 도구의 응답이 멈춰 취소/이동의 브라우저 종단 검증은 아직 완료하지 못했다. 해당 보호 로직의 회귀 테스트와 실제 저장 HTTP 검증은 통과했다.
 
-운영 배포·비밀정보 검사·브라우저 최종 상태는 후속 검증 결과로 이 문서에 갱신한다. 아직 운영 배포 완료를 의미하지 않는다.
+- 현재 소스 트리의 비밀정보 검사 PASS. 전체 Git 이력 재검사는 이번 범위에 포함하지 않았다.
+- 운영 HUB에서 초기 두 사이트 목록, 전각 `ＮＥＸＵＳ` 검색 시 한 건 표시, 결과 없음 안내, 입력을 비웠을 때 두 건 복원을 확인했다. 검색 초기화 버튼 클릭·화면 캡처·반응형 실측은 브라우저 도구 응답 문제로 완료하지 못했다. [확인 범위](browser.json).
+- 격리 HTTP 검증 서버를 종료하고 해당 검증에서 생성한 합성 DB만 정리했다. 운영 데이터 쓰기 없음.
+
+## 운영 반영
+
+2026-10-31 source `41963855c695f98375b2bcaef805eccae9bf5844`를 세 프로젝트에 각각 후보 배포하고 읽기 전용 smoke 후 승격했다. 같은 소스에 `platform-usability-v1.0.0` tag를 연결한다. 이 문서·증거 추가 커밋은 기능 소스 커밋과 구분한다.
+
+| 서비스 | 운영 주소 | 배포 ID | 후보 / 운영 확인 |
+| --- | --- | --- | --- |
+| GG HUB | https://gg-community-hub.vercel.app | `dpl_AAYJXuoiDottuuoQCe51WSNrZ1HS` | 14 / 14 PASS |
+| NEXUS | https://nexus-gg-kr.vercel.app | `dpl_FYchJh4fDkoLEG4xBMni5QTH6eEY` | 11 / 11 PASS |
+| K-LOL | https://k-lol-gg.vercel.app | `dpl_9A4gmXQf6swxptgTa7S4B2T6d4Q8` | 11 / 11 PASS |
+
+각 운영 alias의 대상 배포·소스 일치, health ready, 서비스 브랜드, 비공개 소개 미노출, 관리자 인증 경계를 확인했다. 커뮤니티 사이트의 선수·모집·랭킹과 HUB 목록·소개·검색 UI·cron 인증도 포함한다. 후보 확인에 새로 만든 임시 보호 우회 값은 확인 후 폐기했다.
+
+HUB의 신규 개설 엔진 `HUB_ENGINE_GIT_REF`도 같은 source로 고정했다. 이번 변경에서 새 운영 사이트를 실제로 개설하지는 않았으며 전체 계약·단위 테스트와 기존 서버 경로 점검을 근거로 삼는다.
+
+- [전체 검사](checks.json), [격리 실제 HTTP 16개](local-http.json), [배포·이전 버전](production.json), [개설 엔진 핀](engine-pin.json).
+- [HUB 후보](hub-candidate.json) / [운영](hub-production.json), [NEXUS 후보](nexus-candidate.json) / [운영](nexus-production.json), [K-LOL 후보](klol-candidate.json) / [운영](klol-production.json).
 
 ## 운영 보존 및 복구
 
-이 변경은 schema migration이나 운영 데이터 수정 작업이 없다. 사이트별 후보 배포를 읽기 전용 smoke로 확인한 뒤 승격한다. 이전 별칭 배포를 기록하고 문제가 생기면 같은 프로젝트의 이전 배포를 재승격한다. 새 개설 엔진 핀도 이전 SHA로 복원할 수 있으며 이미 존재하는 사이트의 자료를 지우지 않는다.
+이 변경은 schema migration이나 운영 데이터 수정 작업이 없다. 문제가 생기면 `production.json`의 같은 프로젝트 `previousDeploymentId`를 다시 승격한다. 개설 엔진도 `engine-pin.json`의 `previousEngineRef`로 환경 변수를 복원하고 HUB를 그 설정으로 다시 배포한다. 이미 존재하는 사이트의 자료를 지우지 않는다.
 
 자동 개설·SSO·방 라우터 확장·제휴·공동 대회·MMR 새 산식은 이번 개선의 완료 범위에 포함하지 않는다. 실제 휴대폰 설치본은 R32/companion 1.0.5/router 1.0.0을 유지한다. 원래 분석 보고서의 운영 집계는 로컬 분석 산출물로 두고 기능 릴리스에 올리지 않는다.

@@ -1,5 +1,8 @@
 # K-LOL.GG V2 상태
 
+**2026-10-31 운영 화면 사용성·복구 개선 1.0.0 — GG HUB·NEXUS·K-LOL 운영 반영**: 편집 이탈/재조회 보호, 중복 제출·통신 실패 복구, 전체 탭 입력 검사, 개설 진행 갱신, HUB 검색, 카카오 방 관리 요청 재확인, 한국 시간과 모바일 표시 등 28개 개선을 적용했습니다. source `41963855`, 전체 check(계약 802·단위 1,333+기존 SKIP 1), 격리 HTTP 16, 세 서비스 후보/운영 각 36조건 PASS. 운영 DB·MMR·휴대폰 설치본은 유지했습니다. 브라우저 검색/입력은 확인했으나 확인 창·캡처는 도구 응답 문제로 미완료입니다. [변경 안내](patch-notes/platform-usability-v1.0.0.md), [검증·배포·복구](qa-evidence/platform-usability-v1.0.0-2026-10-31/README.md). 아래는 이전 시점의 기록입니다.
+
+
 **2026-10-29 커뮤니티 소개 1.0.0 — 세 사이트 운영 반영**: GG HUB의 소개 보기와 각 사이트 ADMIN/SUPER_ADMIN의 커뮤니티 소개 편집을 추가했습니다. 공개한 소개만 읽고 원본은 각 사이트 DB에 저장합니다. 기본 비공개·미리보기·동시 수정 보호를 제공하며 새 사이트 개설 엔진도 갱신했습니다. 기존 데이터 보존·세 DB 백업 복원·전체 check·DB18·실제 HTTP16·운영 HTTP 확인 완료. source `e262e231466ee814d2b10d29c1afdca946487bf2`, migration0052. [운영 안내](operations/community-introduction.md), [각 배포 ID·검증·복구](qa-evidence/community-introduction-v1.0.0-2026-10-29/README.md). 이전 기록은 해당 시점 상태입니다.
 
 ## 2026-10-29 GG HUB 개설 스튜디오 0.1.1 — 자동 개설 운영 활성화
