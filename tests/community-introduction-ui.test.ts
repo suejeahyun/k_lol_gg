@@ -103,6 +103,7 @@ test("HUB cards offer separate introduction and visit actions without requesting
   let listCalls = 0;
   const source = load("src/components/hub/hub-directory.tsx", {
     "react/jsx-runtime": jsx, "next/link": link, "./hub.module.css": css, "./community-cards": cards,
+    "./template-showcase": { TemplateShowcase: () => null },
     "@/components/theme/theme-icons": { ...icons, AppWindow: () => null, LibraryBig: () => null, Share2: () => null, ShieldCheck: () => null },
     "@/modules/community-network/infrastructure/hub-community-directory": {
       listHubCommunities: async () => { listCalls++; return { communities: [community], unavailable: true }; },

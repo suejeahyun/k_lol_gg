@@ -46,6 +46,7 @@ function harness(kind, { state = "ready", communities = [], snapshot = emptySnap
     "./network.module.css": { __esModule: true, default: {} },
     "./network-directory.module.css": { __esModule: true, default: {} },
     "./hub.module.css": { __esModule: true, default: {} },
+    "./template-showcase": { TemplateShowcase: () => null },
     "@/components/theme/theme-icons": new Proxy({}, { get: () => () => null }),
     "./network-form": ({ initial }) => {
       calls.push(["form", initial]);

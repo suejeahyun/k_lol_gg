@@ -81,7 +81,10 @@
 .mediaPlaceholders { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-top: .8rem; }
 .mediaPlaceholders span { display: grid; place-content: center; min-height: 3.5rem; border: 1px dashed #8b9cb34d; border-radius: .5rem; color: var(--preview-muted); }
 .previewFootnote { color: var(--preview-muted); text-align: center; padding: .5rem 1rem 1rem; margin: 0; font-size: .63rem; line-height: 1.6; }
-.compact .previewSections { grid-template-columns: 1fr; }
+.compact .previewSections { display: none; }
+.preview.compact[data-template] .previewHero { min-height: 13rem; margin: 0; border-radius: 0; }
+.compact .heroContent h3 { font-size: clamp(1.15rem, 2.3vw, 1.8rem); word-break: keep-all; }
+.compact .previewFootnote { padding-top: .8rem; }
 .validationError { color: var(--destructive); background: color-mix(in srgb, var(--destructive) 8%, var(--background)); border-radius: .5rem; padding: .8rem; font-size: .85rem; }
 .changeNotice { color: var(--muted-foreground); min-height: 1.2em; margin: 0; font-size: .8rem; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

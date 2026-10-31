@@ -1,28 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useUnsavedChanges } from "@/components/forms/use-unsaved-changes";
 import { SiteConfigurationEditor } from "./site-configuration-editor";
 import { SiteOwnerGuidance } from "./site-owner-guidance";
-import { createDefaultCommunitySiteConfig, validateCommunitySiteConfig, type CommunitySiteConfig } from "@/modules/community-sites/domain/site-configuration";
+import { SiteOwnerOverview } from "./site-owner-overview";
+import { createDefaultCommunitySiteConfig, validateCommunitySiteConfig, type CommunitySiteConfig, type CommunityTemplateId } from "@/modules/community-sites/domain/site-configuration";
 import type { CommunitySite, CommunitySiteStatus } from "@/modules/community-sites/domain/community-site";
+import { COMMUNITY_SITE_STATUS_LABELS as statusLabels } from "@/modules/community-sites/domain/site-overview";
 import styles from "./site-workbench.module.css";
 
-const statusLabels: Record<CommunitySiteStatus, string> = {
-  SUBMITTED: "심사 대기", CHANGES_REQUESTED: "보완 요청", REJECTED: "반려", CANCELLED: "신청 취소",
-  APPROVED: "개설 대기", PROVISIONING: "개설 중", AWAITING_OWNER: "소유자 확인 대기", ACTIVATING: "공개 처리·상태 확인 중", ACTIVE: "운영 중", FAILED: "개설 확인 필요",
-};
 const editableStates: CommunitySiteStatus[] = ["SUBMITTED", "CHANGES_REQUESTED", "REJECTED", "CANCELLED", "ACTIVE"];
 const time = (value: string) => new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" }).format(new Date(value));
 
-export function SiteWorkbench({ mode, siteId }: { mode: "list" | "create" | "owner" | "review"; siteId?: string }) {
+export function SiteWorkbench({ mode, siteId, initialTemplate = "arena" }: { mode: "list" | "create" | "owner" | "review"; siteId?: string; initialTemplate?: CommunityTemplateId }) {
+  const router = useRouter();
   const admin = mode === "review";
   const api = admin ? "/api/admin/community-sites" : "/api/community-sites";
   const [sites, setSites] = useState<CommunitySite[]>([]);
   const [selectedId, setSelectedId] = useState(siteId ?? "");
-  const [configuration, setConfiguration] = useState<CommunitySiteConfig>(() => createDefaultCommunitySiteConfig());
+  const [configuration, setConfiguration] = useState<CommunitySiteConfig>(() => createDefaultCommunitySiteConfig(initialTemplate));
   const [loaded, setLoaded] = useState(mode === "create");
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -80,7 +80,7 @@ export function SiteWorkbench({ mode, siteId }: { mode: "list" | "create" | "own
     return () => { disposed = true; window.clearInterval(timer); };
   }, [hasPendingJobs, busy, load, selectedId, dirty]);
 
-  function edit(next: CommunitySiteConfig) { setConfiguration(next); setDirty(JSON.stringify(next) !== JSON.stringify(site?.configuration ?? createDefaultCommunitySiteConfig())); setMessage(""); setError(false); }
+  function edit(next: CommunitySiteConfig) { setConfiguration(next); setDirty(JSON.stringify(next) !== JSON.stringify(site?.configuration ?? createDefaultCommunitySiteConfig(initialTemplate))); setMessage(""); setError(false); }
   function select(item: CommunitySite) {
     if (inFlight.current) return;
     if ((dirty || reason.trim()) && !window.confirm("저장하지 않은 편집 내용과 심사 안내를 버리고 이동할까요?")) return;
@@ -130,20 +130,19 @@ export function SiteWorkbench({ mode, siteId }: { mode: "list" | "create" | "own
       setSites((items) => items.some((item) => item.id === saved.id) ? items.map((item) => item.id === saved.id ? saved : item) : [saved, ...items]);
       setSelectedId(saved.id); setConfiguration(saved.configuration); setDirty(false); setReason(""); setRefreshWarning(""); pending.current = null;
       setMessage(action === "activate" ? "공개 처리를 요청했습니다. 완료되면 운영 중으로 표시됩니다." : action === "approve" ? "승인했습니다. 개설 작업의 진행 상태를 확인해 주세요." : action === "publish" ? "게시를 요청했습니다. 사이트 적용이 끝나면 상태가 갱신됩니다." : action === "update" ? "초안을 저장했습니다. 운영 사이트에는 게시 후 적용됩니다." : "요청을 저장했습니다.");
+      if (isNew) router.replace(`/sites/${saved.id}`);
     } catch { setError(true); setMessage("처리 결과를 확인하지 못했습니다. 같은 내용으로 다시 시도하면 중복 요청을 방지합니다."); }
     finally { inFlight.current = false; setBusy(false); }
   }
 
-  return <main className={styles.page} aria-busy={busy}>
+  return <main className={styles.page} aria-busy={busy || !loaded}>
     <header className={styles.header}><div><p>GG HUB · COMMUNITY STUDIO</p><h1>{admin ? "사이트 개설 심사" : isNew ? "우리 커뮤니티 만들기" : mode === "list" ? "내가 운영하는 사이트" : "사이트 꾸미기와 기능 관리"}</h1>
-      <span>{admin ? "신청 내용을 검토하고 개설 작업의 상태를 확인하세요." : "테마와 기능을 고르고, 우리 커뮤니티에 맞게 운영하세요."}</span></div>
-      <div className={styles.actions}><Link href="/sites">내 사이트</Link>{mode !== "create" && !admin ? <Link href="/sites/new">새 사이트 신청</Link> : null}{!isNew ? <Button variant="outline" onClick={reload} disabled={busy}>상태 새로고침</Button> : null}</div></header>
+      <span>{admin ? "신청 내용을 검토하고 개설 작업의 상태를 확인하세요." : mode === "list" ? "확인할 일부터 차근차근. 신청과 운영을 한곳에서 관리하세요." : "테마와 기능을 고르고, 우리 커뮤니티에 맞게 운영하세요."}</span></div>
+      <div className={styles.actions}>{mode !== "list" ? <Link href="/sites">내 사이트</Link> : null}{mode !== "create" && !admin ? <Link className={styles.createAction} href="/sites/new">+ 새 사이트 신청</Link> : null}{!isNew ? <Button variant="outline" onClick={reload} disabled={busy}>상태 새로고침</Button> : null}</div></header>
     {message ? <p className={error ? styles.error : styles.message} role={error ? "alert" : "status"}>{message}</p> : null}
     {refreshWarning ? <p className={styles.message} role="status">{refreshWarning}</p> : null}
-    {!loaded ? <p role="status">신청 정보를 불러오는 중입니다…</p> : null}
-    {mode === "list" && loaded ? <section className={styles.cards} aria-label="내 사이트 목록">
-      {sites.length === 0 && !error ? <div className={styles.empty}><h2>첫 커뮤니티를 시작해 보세요</h2><p>세 가지 테마와 사용할 기능을 선택해 개설을 신청할 수 있습니다.</p><Link href="/sites/new">사이트 만들기 →</Link></div> : sites.map((item) => <article className={styles.card} key={item.id}><span className={styles.badge}>{statusLabels[item.status]}</span><h2>{item.configuration.name}</h2><p>{item.configuration.description}</p><small>최근 변경 {time(item.updatedAt)}</small><Link href={`/sites/${item.id}`}>설정과 진행 상태 →</Link>{item.origin ? <a href={item.origin} target="_blank" rel="noopener noreferrer">사이트 방문 ↗</a> : null}</article>)}
-    </section> : null}
+    {!loaded ? <div className={styles.loading}><p role="status">신청 정보를 불러오는 중입니다…</p><div aria-hidden="true"><span /><span /><span /></div></div> : null}
+    {mode === "list" && loaded && (!error || sites.length > 0) ? <SiteOwnerOverview sites={sites} /> : null}
     {admin && loaded ? <nav className={styles.tabs} aria-label="심사할 사이트">{sites.length === 0 && !error ? <p>접수된 신청이 없습니다.</p> : sites.map((item) => <button type="button" key={item.id} onClick={() => select(item)} disabled={busy} aria-pressed={selectedId === item.id}><strong>{item.configuration.name}</strong><span>{statusLabels[item.status]}</span></button>)}</nav> : null}
     {(isNew || site) && mode !== "list" ? <>
       {site ? <section className={styles.progress} aria-label="개설 진행 상태"><div><span className={styles.badge}>{statusLabels[site.status]}</span><span>최근 변경 {time(site.updatedAt)}</span></div>

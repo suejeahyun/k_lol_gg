@@ -7,6 +7,7 @@ import { isValidElement, type ReactElement, type ReactNode } from "react";
 import * as jsx from "react/jsx-runtime";
 import ts from "typescript";
 import * as configuration from "../src/modules/community-sites/domain/site-configuration";
+import * as overview from "../src/modules/community-sites/domain/site-overview";
 import * as network from "../src/modules/community-network/domain/community-network";
 
 function load(path: string, dependencies: Record<string, unknown>, globals: Record<string, unknown> = {}) {
@@ -30,7 +31,7 @@ function text(value: ReactNode): string {
   return value == null ? "" : String(value);
 }
 function harness(path: string, exported: string, initialProps: Record<string, unknown>, responses: (Response | Promise<Response>)[] = []) {
-  const hooks: unknown[] = []; let cursor = 0; let confirms = true; let refreshes = 0;
+  const hooks: unknown[] = []; let cursor = 0; let confirms = true; let refreshes = 0; const replacements: string[] = [];
   const requests: { url: string; init?: RequestInit }[] = [];
   const source = load(path, {
     "react/jsx-runtime": jsx,
@@ -40,11 +41,13 @@ function harness(path: string, exported: string, initialProps: Record<string, un
       useRef(initial: unknown) { const index = cursor++; if (!(index in hooks)) hooks[index] = { current: initial }; return hooks[index]; },
       useEffect() {}, useCallback(fn: unknown) { return fn; }, useTransition() { return [false, (fn: () => void) => fn()]; }, useId() { return "search"; },
     },
-    "next/link": { default: "a" }, "next/navigation": { useRouter: () => ({ refresh: () => { refreshes++; } }) },
+    "next/link": { default: "a" }, "next/navigation": { useRouter: () => ({ refresh: () => { refreshes++; }, replace: (path: string) => { replacements.push(path); } }) },
     "@/components/ui/button": { Button: "button" }, "@/components/ui/input": { Input: "input" },
     "@/components/forms/use-unsaved-changes": { useUnsavedChanges() {} },
     "./site-configuration-editor": { SiteConfigurationEditor: "editor" },
     "./site-owner-guidance": { SiteOwnerGuidance: "owner-guide" },
+    "./site-owner-overview": { SiteOwnerOverview: "owner-overview" },
+    "@/modules/community-sites/domain/site-overview": overview,
     "@/modules/recruiting/operation-forms/site-support": { SUPPORT_CATEGORIES: ["오류 신고"] },
     "@/components/usage/usage-actions": { recordUsageAction() {} },
     "@/modules/community-sites/domain/site-configuration": configuration,
@@ -58,7 +61,7 @@ function harness(path: string, exported: string, initialProps: Record<string, un
   const button = (label: string) => { const item = elements(render()).find((item) => item.type === "button" && text(item.props.children as ReactNode) === label); assert.ok(item, `Button missing: ${label}`); return item; };
   const click = async (label: string) => { await (button(label).props.onClick as () => unknown)(); };
   const submit = async (fields?: Record<string, unknown>) => { const form = elements(render()).find((item) => item.type === "form")!; await (form.props.onSubmit as (event: unknown) => unknown)({ preventDefault() {}, currentTarget: fields }); };
-  return { source, render, button, click, submit, requests, setConfirm: (value: boolean) => { confirms = value; }, setProps: (value: Record<string, unknown>) => { props = value; }, refreshes: () => refreshes };
+  return { source, render, button, click, submit, requests, replacements, setConfirm: (value: boolean) => { confirms = value; }, setProps: (value: Record<string, unknown>) => { props = value; }, refreshes: () => refreshes };
 }
 const config = { ...configuration.createDefaultCommunitySiteConfig(), name: "테스트 커뮤니티", slug: "test-club" };
 const community = { id: randomUUID(), slug: "test", name: "테스트", origin: "https://test.example", description: "함께 게임", state: "LISTED" as const };
@@ -101,6 +104,34 @@ test("new site retries a malformed successful response with the original idempot
   assert.equal(new Headers(h.requests[0].init?.headers).get("Idempotency-Key"), new Headers(h.requests[1].init?.headers).get("Idempotency-Key"));
   assert.equal(h.requests[0].init?.body, h.requests[1].init?.body);
   assert.ok(text(h.render()).includes("심사 대기"));
+  assert.deepEqual(h.replacements, [`/sites/${saved.id}`]);
+});
+
+test("a chosen template initializes the real creation form and survives a failed submission", async () => {
+  const h = harness("src/components/community-sites/site-workbench.tsx", "SiteWorkbench", { mode: "create", initialTemplate: "lounge" }, [Response.json({}, { status: 503 })]);
+  await h.click("개설 신청하기");
+  const sent = JSON.parse(String(h.requests[0].init?.body));
+  assert.equal(sent.configuration.templateId, "lounge");
+  assert.equal(sent.configuration.primaryColor, configuration.COMMUNITY_TEMPLATES[1].defaultColor);
+  assert.equal((elements(h.render()).find(item => item.type === "editor")!.props.configuration as configuration.CommunitySiteConfig).templateId, "lounge");
+  assert.deepEqual(h.replacements, []);
+});
+
+test("creation preserves only an allowlisted template through sign-in", async () => {
+  const paths: string[] = [];
+  const page = load("src/app/(public)/sites/new/page.tsx", {
+    "react/jsx-runtime": jsx, "next/navigation": { notFound() { throw new Error("NOT_FOUND"); } },
+    "@/lib/service-brand": { SERVICE_BRAND: { id: "hub" } },
+    "@/modules/auth/infrastructure/server-authorization": { requirePageRole: async (_role: string, path: string) => { paths.push(path); } },
+    "@/modules/community-sites/domain/site-configuration": configuration,
+    "@/components/community-sites/site-workbench": { SiteWorkbench: "workbench" },
+  }).default as (props: {searchParams: Promise<{theme?: string | string[]}>}) => Promise<ReactElement<{initialTemplate: string}>>;
+  for (const theme of ["arena", "lounge", "club", "https://outside.invalid", ["club", "lounge"], undefined]) {
+    const result = await page({ searchParams: Promise.resolve({ theme }) });
+    const expected = typeof theme === "string" && ["arena", "lounge", "club"].includes(theme) ? theme : undefined;
+    assert.equal(result.props.initialTemplate, expected ?? "arena");
+    assert.equal(paths.at(-1), expected ? `/sites/new?theme=${expected}` : "/sites/new");
+  }
 });
 
 test("same-render double submit sends only one site creation request", async () => {

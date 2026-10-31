@@ -1,0 +1,32 @@
+{
+  "testedAt": "2026-10-31T18:21:53.933Z",
+  "syntheticOnly": true,
+  "themeSelection": "PASS",
+  "keyboardThemeSelection": "PASS",
+  "signInPreservesLounge": "PASS",
+  "createReplacesCanonicalUrl": "PASS",
+  "reloadRestoresSavedSite": "PASS",
+  "siteCounts": {
+    "all": 7,
+    "attention": 4,
+    "active": 1
+  },
+  "failedPublicationRetainsActiveState": "PASS",
+  "searchAndStateIntersection": "PASS",
+  "noResultsAndReset": "PASS",
+  "separateEmptyOwner": "PASS",
+  "mobileStateFilter": "PASS",
+  "overflow": {
+    "owner390": false,
+    "home390": false,
+    "home320": false
+  },
+  "screenshots": [
+    "owner-desktop.png",
+    "owner-mobile.png",
+    "home-mobile.png",
+    "first-site.png"
+  ],
+  "productionDataWrites": 0,
+  "realCommunityProvisioned": false
+}
